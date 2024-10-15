@@ -7,5 +7,7 @@ export type screensArrayType = {
 
 export type projectManagementAppContextType  = {
     screenState: string,
-     setScreenState: React.Dispatch<React.SetStateAction<string>>
+    setScreenState: React.Dispatch<React.SetStateAction<string>>,
+    isAuthenticated: boolean,
+    setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>
 }
