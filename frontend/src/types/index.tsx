@@ -11,3 +11,18 @@ export type projectManagementAppContextType  = {
     isAuthenticated: boolean,
     setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>
 }
+
+export interface Project {
+    id: number;
+    name: string;
+    clientName: string;
+    estimatedCost: number;
+    startDate: string;
+    endDate: string;
+    status: string;
+    progress: number;
+  }
+  
+  export interface ProjectItemProps {
+    project: Project;
+  }
