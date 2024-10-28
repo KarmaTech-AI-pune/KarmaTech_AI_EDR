@@ -1,0 +1,395 @@
+{
+  "Users": [
+    {
+      "Id": 1,
+      "Username": "john_doe",
+      "PasswordHash": "hashed_password",
+      "Email": "john@example.com",
+      "Phone": "1234567890",
+      "RoleId": 1,
+      "IsActive": true,
+      "LastLogin": "2023-05-01T10:00:00Z"
+    },
+    {
+      "Id": 2,
+      "Username": "jane_smith",
+      "PasswordHash": "hashed_password",
+      "Email": "jane@example.com",
+      "Phone": "9876543210",
+      "RoleId": 2,
+      "IsActive": true,
+      "LastLogin": "2023-05-02T09:30:00Z"
+    }
+  ],
+  "Roles": [
+    {
+      "Id": 1,
+      "Name": "Project Manager",
+      "Description": "Manages projects"
+    },
+    {
+      "Id": 2,
+      "Name": "Team Member",
+      "Description": "Works on project tasks"
+    }
+  ],
+  "Projects": [
+    {
+      "Id": 1,
+      "Name": "Water Treatment Plant",
+      "Description": "Construction of new water treatment facility",
+      "StatusId": 1,
+      "StartDate": "2023-06-01",
+      "EndDate": "2024-06-01",
+      "Budget": 1000000,
+      "ClientId": 1,
+      "ProjectManagerId": 1
+    },
+    {
+      "Id": 2,
+      "Name": "Sewage System Upgrade",
+      "Description": "Upgrading city sewage system",
+      "StatusId": 2,
+      "StartDate": "2023-07-01",
+      "EndDate": "2024-12-31",
+      "Budget": 2000000,
+      "ClientId": 2,
+      "ProjectManagerId": 1
+    }
+  ],
+  "FeasibilityStudies": [
+    {
+      "Id": 1,
+      "ProjectId": 1,
+      "StrategicRanking": 8,
+      "EstimatedCost": 900000,
+      "EstimatedRevenue": 1200000,
+      "SuccessProbability": 0.8,
+      "FundingStream": "Municipal Budget",
+      "ContractTypeId": 1,
+      "CompetitionAnalysis": "Low competition in the area",
+      "QualifyingCriteria": "ISO 9001 certified",
+      "SubmissionDate": "2023-05-15"
+    }
+  ],
+  "GoNoGoDecisions": [
+    {
+      "Id": 1,
+      "ProjectId": 1,
+      "DecisionStatusId": 1,
+      "TotalScore": 85,
+      "Comments": "Project aligns with our strategic goals",
+      "ApproverId": 1,
+      "DecisionDate": "2023-05-20"
+    }
+  ],
+  "WbsTasks": [
+    {
+      "Id": 1,
+      "ProjectId": 1,
+      "ParentTaskId": null,
+      "Name": "Site Preparation",
+      "Description": "Prepare construction site",
+      "TaskTypeId": 1,
+      "StartDate": "2023-06-01",
+      "EndDate": "2023-06-30",
+      "PlannedCost": 100000,
+      "ActualCost": 0,
+      "StatusId": 1
+    },
+    {
+      "Id": 2,
+      "ProjectId": 1,
+      "ParentTaskId": null,
+      "Name": "Foundation Work",
+      "Description": "Lay foundation for the plant",
+      "TaskTypeId": 1,
+      "StartDate": "2023-07-01",
+      "EndDate": "2023-08-31",
+      "PlannedCost": 200000,
+      "ActualCost": 0,
+      "StatusId": 1
+    }
+  ],
+  "ResourceAllocations": [
+    {
+      "Id": 1,
+      "ResourceId": 1,
+      "TaskId": 1,
+      "AllocatedHours": 160,
+      "StartDate": "2023-06-01",
+      "EndDate": "2023-06-30"
+    },
+    {
+      "Id": 2,
+      "ResourceId": 2,
+      "TaskId": 2,
+      "AllocatedHours": 320,
+      "StartDate": "2023-07-01",
+      "EndDate": "2023-08-31"
+    }
+  ],
+  "Resources": [
+    {
+      "Id": 1,
+      "Name": "John Doe",
+      "ResourceTypeId": 1,
+      "CostRate": 100,
+      "SkillLevelId": 3
+    },
+    {
+      "Id": 2,
+      "Name": "Jane Smith",
+      "ResourceTypeId": 1,
+      "CostRate": 90,
+      "SkillLevelId": 2
+    }
+  ],
+  "SkillMatrix": [
+    {
+      "Id": 1,
+      "ResourceId": 1,
+      "SkillId": 1,
+      "ProficiencyLevel": 4
+    },
+    {
+      "Id": 2,
+      "ResourceId": 1,
+      "SkillId": 2,
+      "ProficiencyLevel": 3
+    },
+    {
+      "Id": 3,
+      "ResourceId": 2,
+      "SkillId": 1,
+      "ProficiencyLevel": 3
+    }
+  ],
+  "ChangeRequests": [
+    {
+      "Id": 1,
+      "ProjectId": 1,
+      "Description": "Increase project scope to include additional filtration system",
+      "StatusId": 1,
+      "CostImpact": 100000,
+      "ScheduleImpact": 30,
+      "RequestorId": 2,
+      "ApproverId": 1,
+      "RequestDate": "2023-08-15",
+      "ApprovalDate": null
+    }
+  ],
+  "Documents": [
+    {
+      "Id": 1,
+      "ProjectId": 1,
+      "Name": "Project Charter",
+      "FilePath": "/documents/project_1_charter.pdf",
+      "DocumentTypeId": 1,
+      "Version": 1,
+      "UploaderId": 1,
+      "UploadDate": "2023-05-25T14:30:00Z"
+    }
+  ],
+  "Clients": [
+    {
+      "Id": 1,
+      "Name": "City of Watertown",
+      "ContactPerson": "Mayor Johnson",
+      "Email": "mayor@watertown.gov",
+      "Phone": "1122334455"
+    },
+    {
+      "Id": 2,
+      "Name": "Greenville Municipality",
+      "ContactPerson": "City Manager Brown",
+      "Email": "manager@greenville.gov",
+      "Phone": "5544332211"
+    }
+  ],
+  "Invoices": [
+    {
+      "Id": 1,
+      "ProjectId": 1,
+      "Amount": 100000,
+      "InvoiceDate": "2023-07-01",
+      "DueDate": "2023-07-31",
+      "StatusId": 1
+    }
+  ],
+  "Payments": [
+    {
+      "Id": 1,
+      "InvoiceId": 1,
+      "Amount": 100000,
+      "PaymentDate": "2023-07-25",
+      "PaymentMethod": "Bank Transfer"
+    }
+  ],
+  "Notifications": [
+    {
+      "Id": 1,
+      "UserId": 1,
+      "Message": "New change request submitted for Water Treatment Plant project",
+      "IsRead": false,
+      "CreatedAt": "2023-08-15T10:00:00Z"
+    }
+  ],
+  "ProjectStatuses": [
+    {
+      "Id": 1,
+      "Name": "Active",
+      "Description": "Project is currently in progress"
+    },
+    {
+      "Id": 2,
+      "Name": "Planning",
+      "Description": "Project is in the planning phase"
+    },
+    {
+      "Id": 3,
+      "Name": "Completed",
+      "Description": "Project has been completed"
+    }
+  ],
+  "TaskTypes": [
+    {
+      "Id": 1,
+      "Name": "Construction",
+      "Description": "Physical construction work"
+    },
+    {
+      "Id": 2,
+      "Name": "Design",
+      "Description": "Design and planning work"
+    }
+  ],
+  "TaskStatuses": [
+    {
+      "Id": 1,
+      "Name": "Not Started",
+      "Description": "Task has not begun"
+    },
+    {
+      "Id": 2,
+      "Name": "In Progress",
+      "Description": "Task is currently being worked on"
+    },
+    {
+      "Id": 3,
+      "Name": "Completed",
+      "Description": "Task has been finished"
+    }
+  ],
+  "DecisionStatuses": [
+    {
+      "Id": 1,
+      "Name": "Approved",
+      "Description": "Decision has been approved"
+    },
+    {
+      "Id": 2,
+      "Name": "Rejected",
+      "Description": "Decision has been rejected"
+    },
+    {
+      "Id": 3,
+      "Name": "Pending",
+      "Description": "Decision is awaiting approval"
+    }
+  ],
+  "ContractTypes": [
+    {
+      "Id": 1,
+      "Name": "Fixed Price",
+      "Description": "Contract with a set price"
+    },
+    {
+      "Id": 2,
+      "Name": "Time and Materials",
+      "Description": "Contract based on time spent and materials used"
+    }
+  ],
+  "ResourceTypes": [
+    {
+      "Id": 1,
+      "Name": "Employee",
+      "Description": "Full-time employee"
+    },
+    {
+      "Id": 2,
+      "Name": "Contractor",
+      "Description": "External contractor"
+    }
+  ],
+  "Skills": [
+    {
+      "Id": 1,
+      "Name": "Project Management",
+      "Description": "Ability to manage projects effectively"
+    },
+    {
+      "Id": 2,
+      "Name": "Civil Engineering",
+      "Description": "Knowledge and skills in civil engineering"
+    }
+  ],
+  "SkillLevels": [
+    {
+      "Id": 1,
+      "Name": "Beginner",
+      "Description": "Entry-level proficiency"
+    },
+    {
+      "Id": 2,
+      "Name": "Intermediate",
+      "Description": "Mid-level proficiency"
+    },
+    {
+      "Id": 3,
+      "Name": "Expert",
+      "Description": "High-level proficiency"
+    }
+  ],
+  "DocumentTypes": [
+    {
+      "Id": 1,
+      "Name": "Project Charter",
+      "Description": "Official project initiation document"
+    },
+    {
+      "Id": 2,
+      "Name": "Technical Specification",
+      "Description": "Detailed technical requirements"
+    }
+  ],
+  "InvoiceStatuses": [
+    {
+      "Id": 1,
+      "Name": "Issued",
+      "Description": "Invoice has been issued to the client"
+    },
+    {
+      "Id": 2,
+      "Name": "Paid",
+      "Description": "Invoice has been paid by the client"
+    }
+  ],
+  "ChangeRequestStatuses": [
+    {
+      "Id": 1,
+      "Name": "Submitted",
+      "Description": "Change request has been submitted for review"
+    },
+    {
+      "Id": 2,
+      "Name": "Approved",
+      "Description": "Change request has been approved"
+    },
+    {
+      "Id": 3,
+      "Name": "Rejected",
+      "Description": "Change request has been rejected"
+    }
+  ]
+}

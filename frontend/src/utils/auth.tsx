@@ -1,14 +1,11 @@
 // File: frontend/src/utils/auth.ts
 // Purpose: Authentication utility functions
 import axios from 'axios';
+import { Credentials } from '../types';
 
-interface Credentials {
-    username: string;
-    password: string;
-  }
-  const API_BASE_URL = 'http://localhost:5245/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-  export const login = async (credentials: Credentials): Promise<boolean> => {
+export const login = async (credentials: Credentials): Promise<boolean> => {
     try {
       const response = await axios.post(`${API_BASE_URL}/user/login`, credentials);
       if (response.data.success) {
