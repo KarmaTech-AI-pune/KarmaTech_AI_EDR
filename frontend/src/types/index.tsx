@@ -5,24 +5,47 @@ export type screensArrayType = {
     [key : string] : JSX.Element
 }
 
+export type User = {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
 export type projectManagementAppContextType  = {
     screenState: string,
     setScreenState: React.Dispatch<React.SetStateAction<string>>,
     isAuthenticated: boolean,
     setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>
+    user: User | null;
+    setUser: React.Dispatch<React.SetStateAction<User | null>>;
+    handleLogout: () => void;
 }
 
-export interface Project {
-    id: number;
-    name: string;
-    clientName: string;
-    estimatedCost: number;
-    startDate: string;
-    endDate: string;
-    status: string;
-    progress: number;
-  }
+export type Project = {
+  id: number;
+  name: string;
+  clientName: string;
+  estimatedCost: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+  progress: number;
+}
   
-  export interface ProjectItemProps {
-    project: Project;
-  }
+export type ProjectItemProps = {
+  project: Project;
+}
+
+
+export type Credentials = {
+  username: string;
+  password: string;
+}
+
+export type LoginResponse = {
+  success: boolean;
+  message: string;
+  token?: string;
+  user?: User;
+}

@@ -3,10 +3,15 @@
 
 namespace NJSAPI.Models
 {
-    public class Project
+     public class Project
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        // TODO: Add more project properties
+        public string ClientName { get; set; }
+        public decimal EstimatedCost { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public string Status { get; set; }
+        public int Progress { get; set; }
     }
 }

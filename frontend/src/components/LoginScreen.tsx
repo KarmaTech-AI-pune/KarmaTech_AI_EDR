@@ -8,24 +8,28 @@ import {
     Box, 
     Alert
   } from '@mui/material';
-  import { login } from '../utils/auth';
+  import { authApi } from '../services/api';
   import { projectManagementAppContext } from '../App';
-  import { projectManagementAppContextType } from '../types';
+  import { projectManagementAppContextType, Credentials } from '../types';
   
   const LoginScreen: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { setScreenState, setIsAuthenticated } = useContext(projectManagementAppContext) as projectManagementAppContextType;
+    const { setScreenState, setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
   
     const handleLogin = async (e: React.FormEvent) => {
       e.preventDefault();
+      const credentials : Credentials = {
+        username,password
+      }
       try {
-        const success = await login({ username, password });
-        if (success) {
+        const result = await authApi.login(credentials);
+        if (result.success && result.user) {
+          setUser(result.user);
           setIsAuthenticated(true);
           setScreenState('Home');
-        } else {
+        }else {
           setError('Invalid username or password');
         }
       } catch (err) {
