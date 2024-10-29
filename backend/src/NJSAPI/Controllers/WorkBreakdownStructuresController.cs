@@ -1,8 +1,8 @@
 // File: src/NJSAPI/Controllers/WorkBreakdownStructuresController.cs
 using Microsoft.AspNetCore.Mvc;
-using NJSAPI.Interfaces;
-using NJSAPI.Models;
-using NJSAPI.Services;
+using NJS.Application.Interfaces;
+using NJS.Application.Services;
+using NJS.Domain.Entities;
 
 namespace NJSAPI.Controllers
 {

@@ -1,11 +1,11 @@
-// File: src/NJSAPI/Interfaces/IWorkBreakdownStructureRepository.cs
-using NJSAPI.Interfaces;
-using NJSAPI.Models;
-using NJSAPI.Services;
+﻿using NJS.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-using NJSAPI.Models;
-
-namespace NJSAPI.Interfaces
+namespace NJS.Application.Interfaces
 {
     public interface IWorkBreakdownStructureRepository
     {

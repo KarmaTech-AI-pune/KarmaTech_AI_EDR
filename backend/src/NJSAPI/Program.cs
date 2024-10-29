@@ -1,13 +1,9 @@
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using NJSAPI.Models;
-using NJSAPI.Interfaces;
-using NJSAPI.Services;
-using NJSAPI.Repositories;
-using System.Text; 
+using System.Text;
+using NJS.Application.Interfaces;
+using NJS.Application.Repositories;
+using NJS.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.

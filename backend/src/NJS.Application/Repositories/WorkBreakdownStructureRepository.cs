@@ -1,9 +1,7 @@
-using NJSAPI.Interfaces;
-using NJSAPI.Models;
-using System.Collections.Generic;
-using System.Linq;
+using NJS.Application.Interfaces;
+using NJS.Domain.Entities;
 
-namespace NJSAPI.Repositories
+namespace NJS.Application.Repositories
 {
     public class WorkBreakdownStructureRepository : IWorkBreakdownStructureRepository
     {

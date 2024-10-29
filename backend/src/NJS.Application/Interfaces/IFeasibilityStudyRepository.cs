@@ -1,12 +1,8 @@
-// File: src/NJSAPI/Interfaces/IFeasibilityStudyRepository.cs
-using NJSAPI.Interfaces;
-using NJSAPI.Models;
-using NJSAPI.Services;
+﻿using NJS.Domain.Entities;
 
-
-namespace NJSAPI.Interfaces
+namespace NJS.Application.Interfaces
 {
-   public interface IFeasibilityStudyRepository
+    public interface IFeasibilityStudyRepository
     {
         IEnumerable<FeasibilityStudy> GetAll();
         FeasibilityStudy GetById(int id);

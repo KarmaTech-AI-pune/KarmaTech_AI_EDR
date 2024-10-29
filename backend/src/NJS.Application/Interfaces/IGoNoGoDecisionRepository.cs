@@ -1,6 +1,6 @@
-using NJSAPI.Models;
+﻿using NJS.Domain.Entities;
 
-namespace NJSAPI.Interfaces
+namespace NJS.Application.Interfaces
 {
     public interface IGoNoGoDecisionRepository
     {

@@ -1,9 +1,6 @@
-// File: src/NJSAPI/Interfaces/IProjectRepository.cs
-using NJSAPI.Interfaces;
-using NJSAPI.Models;
-using NJSAPI.Services;
+﻿using NJS.Domain.Entities;
 
-namespace NJSAPI.Interfaces
+namespace NJS.Application.Interfaces
 {
     public interface IProjectRepository
     {

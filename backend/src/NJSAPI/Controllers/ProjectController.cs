@@ -1,9 +1,9 @@
 // File: backend/src/controllers/ProjectController.cs
 // Purpose: Controller for handling project-related requests
 using Microsoft.AspNetCore.Mvc;
-using NJSAPI.Interfaces;
-using NJSAPI.Models;
-using NJSAPI.Services;
+using NJS.Application.Interfaces;
+using NJS.Application.Services;
+using NJS.Domain.Entities;
 
 namespace NJSAPI.Controllers
 {

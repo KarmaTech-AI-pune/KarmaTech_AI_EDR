@@ -1,8 +1,7 @@
+using NJS.Application.Interfaces;
+using NJS.Domain.Entities;
 
-using NJSAPI.Interfaces;
-using NJSAPI.Models;
-
-namespace NJSAPI.Services
+namespace NJS.Application.Services
 {
     public class ProjectManagementService
     {

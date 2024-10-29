@@ -1,16 +1,11 @@
-// File: backend/src/services/AuthService.cs
-// Purpose: Service for handling authentication logic
-using System;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using NJS.Domain.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using NJSAPI.Models;
-using BC = BCrypt.Net.BCrypt;
-using NJSAPI.Interfaces;
 
-namespace NJSAPI.Services
+namespace NJS.Application.Services
 {
     public class AuthService
     {

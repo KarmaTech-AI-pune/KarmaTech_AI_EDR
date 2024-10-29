@@ -1,9 +1,12 @@
-// File: backend/src/models/FeasibilityStudy.cs
-// Purpose: Feasibility Study model definition
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace NJSAPI.Models
+namespace NJS.Domain.Entities
 {
-     public class FeasibilityStudy
+    public class FeasibilityStudy
     {
         public int Id { get; set; }
         public int ProjectId { get; set; }

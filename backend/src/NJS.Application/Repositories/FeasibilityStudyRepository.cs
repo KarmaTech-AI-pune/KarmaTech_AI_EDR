@@ -1,10 +1,7 @@
+using NJS.Application.Interfaces;
+using NJS.Domain.Entities;
 
-using NJSAPI.Interfaces;
-using NJSAPI.Models;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace NJSAPI.Repositories
+namespace NJS.Application.Repositories
 {
     public class FeasibilityStudyRepository : IFeasibilityStudyRepository
     {

@@ -7,7 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Folder Include="Entities\" />
 		<Folder Include="Database\" />
 		<Folder Include="Extensions\" />
 		<Folder Include="UnitOfWork\" />

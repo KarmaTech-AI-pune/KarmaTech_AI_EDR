@@ -1,9 +1,12 @@
-// File: backend/src/models/Project.cs
-// Purpose: Project model definition
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace NJSAPI.Models
+namespace NJS.Domain.Entities
 {
-     public class Project
+    public class Project
     {
         public int Id { get; set; }
         public string Name { get; set; }

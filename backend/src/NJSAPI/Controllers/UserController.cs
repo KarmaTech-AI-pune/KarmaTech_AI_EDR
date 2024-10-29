@@ -1,20 +1,11 @@
 // File: backend/src/controllers/UserController.cs
 // Purpose: Controller for handling user-related requests
-using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Logging;
-using NJSAPI.Interfaces;
-using NJSAPI.Models;
-using NJSAPI.Services;
-using BC = BCrypt.Net.BCrypt;
+using NJS.Application.Services;
+using NJS.Application.Dtos;
 
 namespace NJSAPI.Controllers
 {

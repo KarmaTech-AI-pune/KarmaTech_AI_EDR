@@ -1,10 +1,7 @@
 // File: backend/src/services/NotificationService.cs
 // Purpose: Service for handling notification logic
 
-using NJSAPI.Interfaces;
-using NJSAPI.Models;
-
-namespace NJSAPI.Services
+namespace NJS.Application.Services
 {
     public class NotificationService
     {
