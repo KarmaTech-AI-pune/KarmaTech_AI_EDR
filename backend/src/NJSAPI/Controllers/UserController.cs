@@ -95,7 +95,7 @@ namespace NJSAPI.Controllers
                     Id = 1,
                     Name = "Admin User",
                     Email = "admin@example.com",
-                    Avatar = null
+                    Avatar = null!
                 };
 
                 return Ok(new { success = true, user = userDto });
