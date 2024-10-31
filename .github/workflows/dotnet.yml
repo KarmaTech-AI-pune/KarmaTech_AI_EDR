@@ -17,9 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: List root directory
-      run: ls -R
-    - name: List files in NJSProjectManagementApp
-      run: ls -R NJSProjectManagementApp/ 
+      run: ls -R    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
