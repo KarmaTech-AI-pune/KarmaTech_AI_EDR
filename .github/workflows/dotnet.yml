@@ -21,8 +21,8 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore NJSProjectManagementApp/backend/src/NJSAPI.csproj
+      run: dotnet restore NJSProjectManagementApp/backend/src/NJSAPI/NJSAPI.csproj
     - name: Build
-      run: dotnet build NJSProjectManagementApp/backend/src/NJSAPI.csproj --no-restore
+      run: dotnet build NJSProjectManagementApp/backend/src/NJSAPI/NJSAPI.csproj --no-restore
     - name: Test
-      run: dotnet test NJSProjectManagementApp/backend/src/NJSAPI.csproj --no-build --verbosity normal
+      run: dotnet test NJSProjectManagementApp/backend/src/NJSAPI/NJSAPI.csproj --no-build --verbosity normal
