@@ -3,6 +3,9 @@
 
 -- TODO: Add table definitions
 
+
+CREATE DATABASE ProjectManagement;
+--USE ProjectManagement;
 -- Example:
 -- CREATE TABLE Projects (
 --     Id INT PRIMARY KEY IDENTITY(1,1),

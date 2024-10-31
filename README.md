@@ -15,3 +15,6 @@ TODO: List main features
 - Database: Microsoft SQL Server
 
 TODO: Add more details about the technology stack
+
+##Run the React app using below command
+npm run dev

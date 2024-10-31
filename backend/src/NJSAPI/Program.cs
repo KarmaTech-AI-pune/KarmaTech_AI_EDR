@@ -4,17 +4,16 @@ using System.Text;
 using NJS.Application.Interfaces;
 using NJS.Application.Repositories;
 using NJS.Application.Services;
+using NJS.Domain.Extensions;
+using NJS.Application.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
-builder.Services.AddControllers(); // This line registers all controllers
-builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
-builder.Services.AddScoped<IFeasibilityStudyRepository, FeasibilityStudyRepository>();
-builder.Services.AddScoped<IWorkBreakdownStructureRepository, WorkBreakdownStructureRepository>();
-builder.Services.AddScoped<IGoNoGoDecisionRepository, GoNoGoDecisionRepository>();
-builder.Services.AddScoped<AuthService>();
+builder.Services.AddControllers(); 
+builder.Services.AddDatabaseServices(builder.Configuration);
+builder.Services.AddApplicationServices();
 
-builder.Services.AddScoped<ProjectManagementService>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

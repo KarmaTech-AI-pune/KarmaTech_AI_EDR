@@ -106,16 +106,6 @@ namespace NJS.Application.Repositories
             {
                 _projects.Remove(project);
             }
-        }
-
-        IEnumerable<Project> IProjectRepository.GetAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        Project IProjectRepository.GetById(int id)
-        {
-            throw new NotImplementedException();
-        }
+        }       
     }
 }
