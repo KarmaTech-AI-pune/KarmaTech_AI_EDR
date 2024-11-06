@@ -1,4 +1,5 @@
-﻿namespace NJS.Domain.GenericRepository
+﻿//File: backend/src/NJS.Domain/GenericRepository/IRepository.cs
+namespace NJS.Domain.GenericRepository
 {
     public interface IRepository<T>
     {

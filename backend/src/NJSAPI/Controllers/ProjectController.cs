@@ -1,4 +1,4 @@
-// File: backend/src/controllers/ProjectController.cs
+// File: backend/src/NJSAPI/Controllers/ProjectController.cs
 // Purpose: Controller for handling project-related requests
 using Microsoft.AspNetCore.Mvc;
 using NJS.Application.Interfaces;
@@ -39,15 +39,36 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] Project project)
+        public IActionResult Create([FromBody] Project projectData)
         {
-            if (project == null)
+            Console.WriteLine(projectData);
+            if (projectData == null)
             {
                 return BadRequest();
             }
 
-            _projectRepository.Add(project);
-            return CreatedAtAction(nameof(GetById), new { id = project.Id }, project);
+            try
+            {
+                // Parse dates if they're provided
+                if (!string.IsNullOrEmpty(projectData.StartDate?.ToString()))
+                {
+                    DateTime.TryParse(projectData.StartDate.ToString(), out DateTime startDate);
+                    projectData.StartDate = startDate;
+                }
+
+                if (!string.IsNullOrEmpty(projectData.EndDate?.ToString()))
+                {
+                    DateTime.TryParse(projectData.EndDate.ToString(), out DateTime endDate);
+                    projectData.EndDate = endDate;
+                }
+
+                _projectRepository.Add(projectData);
+                return CreatedAtAction(nameof(GetById), new { id = projectData.Id }, projectData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
@@ -57,14 +78,35 @@ namespace NJSAPI.Controllers
             {
                 return BadRequest();
             }
-            var existingProject = _projectRepository.GetById(id);
-            if (existingProject == null)
-            {
-                return NotFound();
-            }
 
-            _projectRepository.Update(project);
-            return NoContent();
+            try
+            {
+                var existingProject = _projectRepository.GetById(id);
+                if (existingProject == null)
+                {
+                    return NotFound();
+                }
+
+                // Parse dates if they're provided
+                if (!string.IsNullOrEmpty(project.StartDate?.ToString()))
+                {
+                    DateTime.TryParse(project.StartDate.ToString(), out DateTime startDate);
+                    project.StartDate = startDate;
+                }
+
+                if (!string.IsNullOrEmpty(project.EndDate?.ToString()))
+                {
+                    DateTime.TryParse(project.EndDate.ToString(), out DateTime endDate);
+                    project.EndDate = endDate;
+                }
+
+                _projectRepository.Update(project);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]

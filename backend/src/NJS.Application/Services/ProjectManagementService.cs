@@ -1,3 +1,4 @@
+//File: backend/src/NJS.Application/Services/ProjectManagementService.cs
 using NJS.Application.Interfaces;
 using NJS.Domain.Entities;
 

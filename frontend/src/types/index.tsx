@@ -32,11 +32,14 @@ export type Project = {
   status: string;
   progress: number;
 }
+
+export type ProjectFormData = Omit<Project, 'id'>;
   
 export type ProjectItemProps = {
   project: Project;
+  onProjectDeleted?: (projectId: number) => void;
+  onProjectUpdated?: () => void;
 }
-
 
 export type Credentials = {
   username: string;
@@ -48,4 +51,10 @@ export type LoginResponse = {
   message: string;
   token?: string;
   user?: User;
+}
+
+export type ProjectFormType = {
+  project?: Project;
+  onSubmit: (data: ProjectFormData) => void;
+  onCancel?: () => void;
 }

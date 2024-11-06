@@ -20,20 +20,39 @@ import {
   
     const handleLogin = async (e: React.FormEvent) => {
       e.preventDefault();
+      setError('');
+      
       const credentials : Credentials = {
-        username,password
-      }
+        username,
+        password
+      };
+
       try {
+        console.log('Attempting login...'); // Debug log
         const result = await authApi.login(credentials);
-        if (result.success && result.user) {
-          setUser(result.user);
-          setIsAuthenticated(true);
-          setScreenState('Home');
-        }else {
-          setError('Invalid username or password');
+        console.log('Login response:', result); // Debug log
+        
+        if (result.success && result.token && result.user) {
+          // Wait for token to be set
+          localStorage.setItem('token', result.token);
+          console.log('Token set in localStorage'); // Debug log
+          
+          // Verify token is set before proceeding
+          const storedToken = localStorage.getItem('token');
+          if (storedToken) {
+            console.log('Token verified in localStorage'); // Debug log
+            setUser(result.user);
+            setIsAuthenticated(true);
+            setScreenState('Home');
+          } else {
+            setError('Failed to set authentication token');
+          }
+        } else {
+          setError(result.message || 'Invalid username or password');
         }
-      } catch (err) {
-        setError('An error occurred. Please try again.');
+      } catch (err: any) {
+        console.error('Login error:', err); // Debug log
+        setError(err.message || 'An error occurred. Please try again.');
       }
     };
   

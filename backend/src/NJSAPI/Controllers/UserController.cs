@@ -1,4 +1,4 @@
-// File: backend/src/controllers/UserController.cs
+// File: backend/src/NJSAPI/Controllers/UserController.cs
 // Purpose: Controller for handling user-related requests
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;

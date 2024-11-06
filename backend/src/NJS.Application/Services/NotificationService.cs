@@ -1,4 +1,4 @@
-// File: backend/src/services/NotificationService.cs
+// File: backend/src/NJS.Application/Services/NotificationService.cs
 // Purpose: Service for handling notification logic
 
 namespace NJS.Application.Services

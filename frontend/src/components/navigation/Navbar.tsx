@@ -15,9 +15,9 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useContext } from 'react';
-import { projectManagementAppContext } from '../App';
-import { projectManagementAppContextType } from '../types';
-import { authApi } from '../services/api';
+import { projectManagementAppContext } from '../../App';
+import { projectManagementAppContextType } from '../../types';
+import { authApi } from '../../services/api';
 const pages = ['Dashboard', 'Projects', 'Resources', 'Reports', 'Notifications'];
 
 export const Navbar = () => {

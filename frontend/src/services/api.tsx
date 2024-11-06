@@ -4,7 +4,6 @@
 import axios,{ AxiosInstance } from 'axios';
 import { Project, Credentials, User, LoginResponse } from '../types';
 
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const axiosInstance: AxiosInstance = axios.create({
@@ -21,21 +20,39 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Log the full request details
+    console.log('Request:', {
+      url: config.url,
+      method: config.method,
+      headers: config.headers,
+      data: config.data
+    });
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Add response interceptor to handle authentication errors
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('Response:', {
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
   (error) => {
+    console.error('Response error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+      config: error.config
+    });
     if (error.response?.status === 401) {
-      // Clean up on authentication error
       localStorage.removeItem('token');
-      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -64,17 +81,47 @@ export const projectApi = {
 
   create: async (project: Omit<Project, 'id'>): Promise<Project> => {
     try {
-      const response = await axiosInstance.post('/project', project);
+      // Format dates to match backend expectations
+      const formattedProject = {
+        ...project,
+        startDate: project.startDate ? new Date(project.startDate).toISOString() : null,
+        endDate: project.endDate ? new Date(project.endDate).toISOString() : null,
+        estimatedCost: Number(project.estimatedCost),
+        progress: Number(project.progress)
+      };
+
+      console.log('Creating project with formatted data:', formattedProject);
+      
+      const response = await axiosInstance.post('/project', formattedProject);
       return response.data;
-    } catch (error) {
-      console.error('Error creating project:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Project creation error:', {
+        requestData: project,
+        error: {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        }
+      });
+      throw new Error(
+        error.response?.data?.message || 
+        error.response?.data?.title ||
+        'Failed to create project'
+      );
     }
   },
 
   update: async (id: number, project: Project): Promise<void> => {
     try {
-      await axiosInstance.put(`/project/${id}`, project);
+      const formattedProject = {
+        ...project,
+        startDate: project.startDate ? new Date(project.startDate).toISOString() : null,
+        endDate: project.endDate ? new Date(project.endDate).toISOString() : null,
+        estimatedCost: Number(project.estimatedCost),
+        progress: Number(project.progress)
+      };
+
+      await axiosInstance.put(`/project/${id}`, formattedProject);
     } catch (error) {
       console.error(`Error updating project ${id}:`, error);
       throw error;
@@ -94,7 +141,6 @@ export const projectApi = {
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
-      console.log(credentials)
       const response = await axiosInstance.post('/user/login', credentials);
       const { success, user, token } = response.data;
       
@@ -104,11 +150,10 @@ export const authApi = {
       }
       
       return response.data;
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (error: any) {
       return {
         success: false,
-        message: 'An error occurred during login'
+        message: error.response?.data?.message || 'An error occurred during login'
       };
     }
   },
@@ -119,7 +164,6 @@ export const authApi = {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Always clean up local state, even if the API call fails
       localStorage.removeItem('token');
       delete axiosInstance.defaults.headers.common['Authorization'];
     }
@@ -133,14 +177,13 @@ export const authApi = {
       return false;
     }
   },
-/*
+
   getCurrentUser: async (): Promise<User | null> => {
     try {
       const response = await axiosInstance.get('/user/me');
       return response.data.user;
     } catch (error) {
-      console.error('Error fetching current user:', error);
       return null;
     }
-  }*/
+  }
 };

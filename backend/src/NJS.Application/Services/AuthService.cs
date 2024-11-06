@@ -1,3 +1,4 @@
+//File: backend/src/NJS.Application/Services/AuthService.cs
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using NJS.Domain.Entities;

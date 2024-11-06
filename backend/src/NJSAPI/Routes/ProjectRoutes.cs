@@ -1,4 +1,4 @@
-// File: backend/src/routes/ProjectRoutes.cs
+// File: backend/src/NJSAPI/Routes/ProjectRoutes.cs
 // Purpose: Route definitions for project-related endpoints
 
 using Microsoft.AspNetCore.Builder;

@@ -1,4 +1,5 @@
-﻿using NJS.Domain.Entities;
+﻿//File: backend/src/NJS.Application/Interfaces/IWorkBreakdownStructureRepository.cs
+using NJS.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

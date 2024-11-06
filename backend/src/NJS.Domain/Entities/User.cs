@@ -1,4 +1,5 @@
-﻿using System;
+﻿//File: backend/src/NJS.Domain/Entities/User.cs
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

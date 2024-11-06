@@ -1,3 +1,4 @@
+//File: backend/src/NJS.Application/Repositories/ProjectRepository.cs
 using NJS.Application.Interfaces;
 using NJS.Domain.Entities;
 
@@ -96,6 +97,7 @@ namespace NJS.Application.Repositories
                 existingProject.StartDate = project.StartDate;
                 existingProject.EndDate = project.EndDate;
                 existingProject.Status = project.Status;
+                existingProject.Progress = project.Progress; // Added missing Progress update
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿//File: backend/src/NJS.Domain/Entities/Project.cs
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;

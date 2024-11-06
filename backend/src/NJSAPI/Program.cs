@@ -1,3 +1,4 @@
+//File: backend/src/NJSAPI/Program.cs
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -13,7 +14,6 @@ builder.Services.AddControllers();
 builder.Services.AddDatabaseServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 
-
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -23,7 +23,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
         builder => builder
-            .WithOrigins("http://localhost:5173") // Replace with your frontend URL
+            .WithOrigins(
+                "http://localhost:5173", // Development port
+                "http://localhost:5245"  // Production port
+            )
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
@@ -53,11 +56,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseHttpsRedirection();
 
-// Use CORS
+// Use CORS before other middleware
 app.UseCors("AllowSpecificOrigin");
 
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 

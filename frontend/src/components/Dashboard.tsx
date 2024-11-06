@@ -2,10 +2,10 @@
 // Purpose: Main dashboard component displaying project overview and KPIs
 
 import { Box, Typography } from '@mui/material';
-import { ProjectList } from './ProjectList';
+import { ProjectList } from './projects/ProjectList';
 import { ResourceManagement } from './ResourceManagement';
 import { ReportsList } from './ReportsList';
-import { NotificationCenter } from './NotificationCenter';
+import { NotificationCenter } from './navigation/NotificationCenter';
 
 
 export const Dashboard = () => {

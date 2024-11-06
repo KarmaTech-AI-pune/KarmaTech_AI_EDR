@@ -1,4 +1,4 @@
-// File: src/NJSAPI/Controllers/WorkBreakdownStructuresController.cs
+// File: backend/src/NJSAPI/Controllers/WorkBreakdownStructuresController.cs
 using Microsoft.AspNetCore.Mvc;
 using NJS.Application.Interfaces;
 using NJS.Application.Services;

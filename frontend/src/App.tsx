@@ -2,70 +2,54 @@ import { screensArrayType, projectManagementAppContextType, User } from './types
 import { createContext, useState, useEffect } from 'react'
 import { Home } from './pages/Home'
 import { ProjectDetails } from './pages/ProjectDetails'
-import { Navbar } from './components/Navbar'
+import { Navbar } from './components/navigation/Navbar'
 import LoginScreen from './components/LoginScreen'
 import { Dashboard } from './components/Dashboard'
-import { ProjectList } from './components/ProjectList'
+import { ProjectList } from './components/projects/ProjectList'
 import { ResourceManagement } from './components/ResourceManagement'
 import { ReportsList } from './components/ReportsList'
-import { NotificationCenter } from './components/NotificationCenter'
+import { NotificationCenter } from './components/navigation/NotificationCenter'
 import { authApi } from './services/api'
 
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
 function App() {
-  // Screen state management
   const [screenState, setScreenState] = useState<string>("Login")
-  
-  // Authentication and user state management
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-  // Check authentication status on app load
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('token')
-        if (token) {
-          const isValid = await authApi.checkAuth()
-          if (isValid) {
-            // If we have a valid token, fetch user details
-            const userResponse = await fetch(`${API_BASE_URL}/user/me`, {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            })
-            if (userResponse.ok) {
-              const userData = await userResponse.json()
-              setUser(userData)
-              setIsAuthenticated(true)
-              setScreenState("Home")
-            } else {
-              handleLogout()
-            }
+        const isValid = await authApi.checkAuth();
+        
+        if (isValid) {
+          const userData = await authApi.getCurrentUser();
+          if (userData) {
+            setUser(userData);
+            setIsAuthenticated(true);
+            setScreenState("Home");
           } else {
-            handleLogout()
+            handleLogout();
           }
         }
       } catch (error) {
-        console.error('Auth check failed:', error)
-        handleLogout()
+        handleLogout();
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    checkAuth()
-  }, [])
-  // Logout helper function
+    checkAuth();
+  }, []);
+
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    setUser(null)
-    setIsAuthenticated(false)
-    setScreenState("Login")
-  }
+    authApi.logout();
+    setUser(null);
+    setIsAuthenticated(false);
+    setScreenState("Login");
+  };
 
   const screenArray : screensArrayType = {
     "Login": <LoginScreen />,
@@ -76,8 +60,20 @@ function App() {
     "Reports": <ReportsList />,
     "Notifications": <NotificationCenter />,
     "Project Details": <ProjectDetails />
-  }
+  };
 
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <projectManagementAppContext.Provider value={{
@@ -92,7 +88,7 @@ function App() {
       {isAuthenticated && <Navbar />}
       {screenArray[screenState]}
     </projectManagementAppContext.Provider>
-  )
+  );
 }
 
-export default App
+export default App;

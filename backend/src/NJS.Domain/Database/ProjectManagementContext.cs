@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿//File: backend/src/NJS.Domain/Database/ProjectManagementContext.cs
+using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Entities;
 using System;
 

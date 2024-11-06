@@ -1,4 +1,4 @@
-// File: backend/src/routes/UserRoutes.cs
+// File: backend/src/NJSAPI/Routes/UserRoutes.cs
 // Purpose: Route definitions for user-related endpoints
 
 using Microsoft.AspNetCore.Builder;

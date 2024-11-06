@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿//File: backend/src/NJS.Domain/GenericRepository/Repository.cs
+using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using System;
 using System.Collections.Generic;
