@@ -15,5 +15,7 @@ namespace NJS.Domain.Entities
         public string Rationale { get; set; }
         public DateTime DecisionDate { get; set; }
         public string DecisionMaker { get; set; }
+
+        public Project Project { get; set; }
     }
 }

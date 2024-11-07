@@ -1,21 +1,15 @@
 ﻿//File: backend/src/NJS.Domain/Entities/User.cs
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace NJS.Domain.Entities
 {
-    public class User
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string Username { get; set; }
-        public string PasswordHash { get; set; }
+    public class User: IdentityUser
+    {        
+      
         public string Avatar { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLogin { get; set; }
+
+        public ICollection<UserWBSTask> UserWBSTasks { get; set; }
     }
 }

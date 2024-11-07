@@ -20,5 +20,7 @@ namespace NJS.Domain.Entities
         public string FundingStream { get; set; }
         public string ContractType { get; set; }
         public string QualifyingCriteria { get; set; }
+
+        public Project Project { get; set; }
     }
 }

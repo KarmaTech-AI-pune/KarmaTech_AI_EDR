@@ -16,5 +16,10 @@ namespace NJS.Domain.Entities
         public DateTime EndDate { get; set; }
         public decimal Budget { get; set; }
         public List<string> Resources { get; set; }
+
+        public WorkBreakdownStructure WorkBreakdownStructure { get; set; }
+
+        // Many-to-many relationship with User
+        public ICollection<UserWBSTask> UserWBSTasks { get; set; }
     }
 }

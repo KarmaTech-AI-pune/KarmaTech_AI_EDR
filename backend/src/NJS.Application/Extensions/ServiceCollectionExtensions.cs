@@ -1,8 +1,7 @@
-﻿//File: backend/src/NJS.Application/Extensions/ServiceCollectionExtensions.cs
-using Microsoft.Extensions.DependencyInjection;
-using NJS.Application.Interfaces;
-using NJS.Application.Repositories;
+﻿using Microsoft.Extensions.DependencyInjection;
 using NJS.Application.Services;
+using NJS.Repositories.Interfaces;
+using NJS.Repositories.Repositories;
 
 namespace NJS.Application.Extensions
 {

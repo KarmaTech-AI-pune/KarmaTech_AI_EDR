@@ -1,12 +1,7 @@
 ﻿//File: backend/src/NJS.Application/Interfaces/IWorkBreakdownStructureRepository.cs
 using NJS.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace NJS.Application.Interfaces
+namespace NJS.Repositories.Interfaces
 {
     public interface IWorkBreakdownStructureRepository
     {

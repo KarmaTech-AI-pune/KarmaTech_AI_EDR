@@ -15,12 +15,11 @@ namespace NJS.Application.Services
         // Hardcoded demo user - in real applications, this should come from a secure database
         private static readonly User DemoUser = new User
         {
-            Id = 1,
-            Username = "admin",
+            Id = Guid.NewGuid().ToString(), 
+            UserName = "admin",
             // This is the hashed version of "password" using BCrypt
             //PasswordHash = "$2a$11$k7R1o/K7E1XR3CXfNcXYMe/hEJwNx3kHfKT8QrW4Sy.CRqkU3H9Nu",
-            PasswordHash ="password",
-            Name = "Admin User",
+            PasswordHash ="password",           
             Email = "admin@example.com",
             Avatar = null,
             CreatedAt = DateTime.UtcNow,
@@ -37,7 +36,7 @@ namespace NJS.Application.Services
             try
             {
                 // Check if username matches
-                if (username != DemoUser.Username)
+                if (username != DemoUser.UserName)
                 {
                     return (false, null, null);
                 }
@@ -72,7 +71,7 @@ namespace NJS.Application.Services
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("name", user.Name)
+                new Claim("name", user.UserName)
             };
 
             var token = new JwtSecurityToken(

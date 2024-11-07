@@ -11,7 +11,9 @@ namespace NJS.Domain.Entities
     {
         public int Id { get; set; }
         public int ProjectId { get; set; }
-        public string Structure { get; set; }
-        public List<WBSTask> Tasks { get; set; }
+        public string Structure { get; set; }       
+
+        public Project Project { get; set; }
+        public ICollection<WBSTask> Tasks { get; set; }
     }
 }

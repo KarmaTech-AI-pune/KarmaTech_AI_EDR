@@ -1,9 +1,9 @@
 // File: backend/src/NJSAPI/Controllers/ProjectController.cs
 // Purpose: Controller for handling project-related requests
 using Microsoft.AspNetCore.Mvc;
-using NJS.Application.Interfaces;
 using NJS.Application.Services;
 using NJS.Domain.Entities;
+using NJS.Repositories.Interfaces;
 
 namespace NJSAPI.Controllers
 {
@@ -39,7 +39,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] Project projectData)
+        public async Task<IActionResult> Create([FromBody] Project projectData)
         {
             Console.WriteLine(projectData);
             if (projectData == null)
@@ -62,7 +62,8 @@ namespace NJSAPI.Controllers
                     projectData.EndDate = endDate;
                 }
 
-                _projectRepository.Add(projectData);
+                await _projectRepository.Add(projectData).ConfigureAwait(false);
+
                 return CreatedAtAction(nameof(GetById), new { id = projectData.Id }, projectData);
             }
             catch (Exception ex)

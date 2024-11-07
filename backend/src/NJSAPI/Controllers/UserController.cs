@@ -39,7 +39,7 @@ namespace NJSAPI.Controllers
                     var userDto = new UserDto
                     {
                         Id = user.Id,
-                        Name = user.Name,
+                        Name = user.UserName,
                         Email = user.Email,
                         Avatar = user.Avatar
                     };
@@ -83,7 +83,7 @@ namespace NJSAPI.Controllers
                 // Return the demo user data
                 var userDto = new UserDto
                 {
-                    Id = 1,
+                    Id = Guid.NewGuid().ToString(),
                     Name = "Admin User",
                     Email = "admin@example.com",
                     Avatar = null!

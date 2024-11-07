@@ -1,7 +1,9 @@
 ﻿//File: backend/src/NJS.Application/Interfaces/IFeasibilityStudyRepository.cs
+
+//File: backend/src/NJS.Application/Interfaces/IFeasibilityStudyRepository.cs
 using NJS.Domain.Entities;
 
-namespace NJS.Application.Interfaces
+namespace NJS.Repositories.Interfaces
 {
     public interface IFeasibilityStudyRepository
     {

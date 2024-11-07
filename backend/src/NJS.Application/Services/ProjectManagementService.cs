@@ -1,6 +1,5 @@
-//File: backend/src/NJS.Application/Services/ProjectManagementService.cs
-using NJS.Application.Interfaces;
 using NJS.Domain.Entities;
+using NJS.Repositories.Interfaces;
 
 namespace NJS.Application.Services
 {

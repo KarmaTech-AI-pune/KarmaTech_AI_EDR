@@ -1,11 +1,19 @@
 //File: backend/src/NJS.Application/Repositories/ProjectRepository.cs
-using NJS.Application.Interfaces;
 using NJS.Domain.Entities;
+using NJS.Domain.GenericRepository;
+using NJS.Repositories.Interfaces;
 
-namespace NJS.Application.Repositories
+namespace NJS.Repositories.Repositories
 {
     public class ProjectRepository : IProjectRepository
     {
+        private readonly IRepository<Project> _repository;
+
+        public ProjectRepository(IRepository<Project> repository)
+        {
+            _repository = repository;
+        }
+
         private static List<Project> _projects = new List<Project>
     {
         new Project {
@@ -80,10 +88,11 @@ namespace NJS.Application.Repositories
             return _projects.FirstOrDefault(p => p.Id == id);
         }
 
-        public void Add(Project project)
+        public async Task Add(Project project)
         {
-            project.Id = _projects.Max(p => p.Id) + 1;
-            _projects.Add(project);
+
+            await _repository.AddAsync(project).ConfigureAwait(false);
+            await _repository.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public void Update(Project project)
@@ -108,6 +117,6 @@ namespace NJS.Application.Repositories
             {
                 _projects.Remove(project);
             }
-        }       
+        }
     }
 }

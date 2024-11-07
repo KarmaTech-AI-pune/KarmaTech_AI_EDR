@@ -1,10 +1,5 @@
 ﻿//File: backend/src/NJS.Domain/Entities/Project.cs
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NJS.Domain.Entities
 {
@@ -19,5 +14,9 @@ namespace NJS.Domain.Entities
         public DateTime? EndDate { get; set; }
         public string Status { get; set; }
         public int Progress { get; set; }
+
+        public ICollection<FeasibilityStudy>? FeasibilityStudies { get; set; }
+        public ICollection<GoNoGoDecision>? GoNoGoDecisions { get; set; }
+        public WorkBreakdownStructure? WorkBreakdownStructure { get; set; }
     }
 }

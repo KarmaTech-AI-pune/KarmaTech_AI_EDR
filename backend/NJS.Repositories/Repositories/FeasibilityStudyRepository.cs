@@ -1,8 +1,8 @@
 //File: backend/src/NJS.Application/Repositories/FeasibilityStudyRepository.cs
-using NJS.Application.Interfaces;
 using NJS.Domain.Entities;
+using NJS.Repositories.Interfaces;
 
-namespace NJS.Application.Repositories
+namespace NJS.Repositories.Repositories
 {
     public class FeasibilityStudyRepository : IFeasibilityStudyRepository
     {
