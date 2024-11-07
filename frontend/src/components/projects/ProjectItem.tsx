@@ -2,15 +2,18 @@ import { ListItem, ListItemText, Box, LinearProgress, Typography, Dialog, Dialog
 import {Button} from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { ProjectItemProps, ProjectFormData } from '../../types';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { projectApi } from '../../services/api';
 import { ProjectForm } from './ProjectForm';
+import { projectManagementAppContext } from '../../App';
 
 export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDeleted, onProjectUpdated }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const context = useContext(projectManagementAppContext);
 
-  const handleDeleteClick = () => {
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setDeleteDialogOpen(true);
   };
 
@@ -30,7 +33,8 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
     setDeleteDialogOpen(false);
   };
 
-  const handleEditClick = () => {
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setEditDialogOpen(true);
   };
 
@@ -40,7 +44,8 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
 
   const handleEditSubmit = async (formData: ProjectFormData) => {
     try {
-      await projectApi.update(project.id, { ...formData, id: project.id });
+      const updatedProject = { ...formData, id: project.id };
+      await projectApi.update(project.id, updatedProject);
       setEditDialogOpen(false);
       if (onProjectUpdated) {
         onProjectUpdated();
@@ -50,12 +55,43 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
     }
   };
 
+  const handleProjectClick = () => {
+    if (context?.setScreenState && context?.setSelectedProject) {
+      context.setSelectedProject(project);
+      context.setScreenState("Project Details");
+    }
+  };
+
   return (
     <>
-      <ListItem sx={{ bgcolor: '#e0e0e0', mb: 1, borderRadius: 1 }}>
+      <ListItem 
+        sx={{ 
+          bgcolor: '#e0e0e0', 
+          mb: 1, 
+          borderRadius: 1,
+          cursor: 'pointer',
+          '&:hover': {
+            bgcolor: '#d0d0d0'
+          }
+        }}
+        onClick={handleProjectClick}
+      >
         <ListItemText 
           primary={project.name}
-          secondary={`Status: ${project.status}`}
+          secondary={
+            <>
+              <Typography component="span" variant="body2">
+                Client: {project.clientName}
+              </Typography>
+              <br />
+              <Typography component="span" variant="body2">
+                Status: {project.status}
+              </Typography>
+              <Box sx={{ width: '100%', mt: 1 }}>
+                <LinearProgress variant="determinate" value={project.progress} />
+              </Box>
+            </>
+          }
         />
         <Button onClick={handleEditClick}><Edit/></Button>
         <Button sx={{color: 'red'}} onClick={handleDeleteClick}><Delete /></Button>

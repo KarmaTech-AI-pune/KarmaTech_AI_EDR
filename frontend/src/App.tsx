@@ -1,4 +1,4 @@
-import { screensArrayType, projectManagementAppContextType, User } from './types'
+import { screensArrayType, projectManagementAppContextType, User, Project } from './types'
 import { createContext, useState, useEffect } from 'react'
 import { Home } from './pages/Home'
 import { ProjectDetails } from './pages/ProjectDetails'
@@ -18,6 +18,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -49,6 +50,7 @@ function App() {
     setUser(null);
     setIsAuthenticated(false);
     setScreenState("Login");
+    setSelectedProject(null);
   };
 
   const screenArray : screensArrayType = {
@@ -83,7 +85,9 @@ function App() {
       setIsAuthenticated,
       user,
       setUser,
-      handleLogout
+      handleLogout,
+      selectedProject,
+      setSelectedProject
     }}>
       {isAuthenticated && <Navbar />}
       {screenArray[screenState]}

@@ -20,25 +20,36 @@ export type projectManagementAppContextType  = {
     user: User | null;
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
     handleLogout: () => void;
+    selectedProject?: Project | null;
+    setSelectedProject?: React.Dispatch<React.SetStateAction<Project | null>>;
 }
 
 export type Project = {
   id: number;
   name: string;
+  description: string;
   clientName: string;
   estimatedCost: number;
   startDate: string;
   endDate: string;
   status: string;
   progress: number;
+  budget?: number;
+  priority?: string;
 }
 
 export type ProjectFormData = Omit<Project, 'id'>;
-  
+
 export type ProjectItemProps = {
   project: Project;
   onProjectDeleted?: (projectId: number) => void;
   onProjectUpdated?: () => void;
+}
+
+export type ProjectFormType = {
+  project?: Project;
+  onSubmit: (data: ProjectFormData) => void;
+  onCancel?: () => void;
 }
 
 export type Credentials = {
@@ -51,10 +62,4 @@ export type LoginResponse = {
   message: string;
   token?: string;
   user?: User;
-}
-
-export type ProjectFormType = {
-  project?: Project;
-  onSubmit: (data: ProjectFormData) => void;
-  onCancel?: () => void;
 }
