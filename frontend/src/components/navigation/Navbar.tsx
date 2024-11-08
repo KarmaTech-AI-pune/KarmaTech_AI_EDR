@@ -1,5 +1,3 @@
-// File: frontend/src/components/Navbar.tsx
-// Purpose: basic Navbar to navigate between pages
 import React, { useState } from 'react';
 import {
   AppBar,
@@ -18,7 +16,8 @@ import { useContext } from 'react';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
 import { authApi } from '../../services/api';
-const pages = ['Dashboard', 'Projects', 'Resources', 'Reports', 'Notifications'];
+
+const pages = ['Projects', 'Opportunities'];
 
 export const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
@@ -46,6 +45,10 @@ export const Navbar = () => {
     handleCloseNavMenu();
   };
 
+  const handleLogoClick = () => {
+    setScreenState('Dashboard');
+  };
+
   const handleLogout = async () => {
     try {
       await authApi.logout();
@@ -57,7 +60,6 @@ export const Navbar = () => {
     handleCloseUserMenu();
   };
 
-
   return (
     <AppBar position="static">
       <Container maxWidth="xl">
@@ -67,6 +69,8 @@ export const Navbar = () => {
             noWrap
             component="div"
             sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
+            onClick={handleLogoClick}
+            style={{ cursor: 'pointer' }}
           >
             NJSEI PM
           </Typography>
@@ -112,6 +116,8 @@ export const Navbar = () => {
             noWrap
             component="div"
             sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}
+            onClick={handleLogoClick}
+            style={{ cursor: 'pointer' }}
           >
             NJSEI PM
           </Typography>
@@ -153,6 +159,11 @@ export const Navbar = () => {
               </MenuItem>
               <MenuItem onClick={handleCloseUserMenu}>
                 <Typography textAlign="center">Settings</Typography>
+              </MenuItem>
+              <MenuItem onClick={handleCloseUserMenu}>
+                <Typography textAlign="center">
+                  Notifications
+                </Typography>
               </MenuItem>
               <MenuItem onClick={handleLogout}>
                 <Typography textAlign="center">Logout</Typography>

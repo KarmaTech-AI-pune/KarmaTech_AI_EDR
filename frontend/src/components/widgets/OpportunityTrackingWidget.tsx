@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Typography, Paper, Grid, Alert, Button, Collapse } from '@mui/material';
-import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Typography, Paper, Grid, Alert, Button, Collapse, Chip } from '@mui/material';
+import { ExpandMore, ExpandLess, TrendingUp, AssignmentTurnedIn, MonetizationOn } from '@mui/icons-material';
 import { Project, ProjectStatus, OpportunityTracking } from '../../types';
 
 interface OpportunityTrackingWidgetProps {
@@ -17,17 +17,26 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({
   const [isExpanded, setIsExpanded] = useState(true);
 
   const handleCreateOpportunity = () => {
-    // TODO: Implement create opportunity functionality
     console.log('Create opportunity clicked');
+  };
+
+  const getStatusColor = (stage: string) => {
+    switch (stage?.toLowerCase()) {
+      case 'initial': return 'default';
+      case 'proposal': return 'primary';
+      case 'negotiation': return 'secondary';
+      case 'final': return 'success';
+      default: return 'default';
+    }
   };
 
   // If it's not an opportunity status project, show collapsible widget
   if (project.status !== ProjectStatus.Opportunity) {
     return (
-      <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
+      <Paper variant="outlined" sx={{ p: 2, mt: 2, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}>
         <Grid container spacing={1} alignItems="center" onClick={() => setIsExpanded(!isExpanded)}>
           <Grid item xs>
-            <Typography variant="h6">
+            <Typography variant="h6" color="text.primary">
               Opportunity Tracking
             </Typography>
           </Grid>
@@ -37,8 +46,8 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({
         </Grid>
         
         <Collapse in={isExpanded}>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-            Opportunity data not found
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Opportunity data not found for this project
           </Typography>
         </Collapse>
       </Paper>
@@ -57,14 +66,25 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({
   // If no opportunity tracking exists for an opportunity status project
   if (!opportunityTracking) {
     return (
-      <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
-        <Alert severity="info" sx={{ mb: 2 }}>
+      <Paper variant="outlined" sx={{ p: 3, mt: 2, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}>
+        <Alert 
+          severity="info" 
+          sx={{ 
+            mb: 2, 
+            '& .MuiAlert-icon': { color: 'primary.main' } 
+          }}
+        >
           No opportunity tracking details available.
         </Alert>
         <Button 
           variant="contained" 
           color="primary"
+          startIcon={<TrendingUp />}
           onClick={handleCreateOpportunity}
+          sx={{ 
+            textTransform: 'none', 
+            borderRadius: 2 
+          }}
         >
           Create Opportunity
         </Button>
@@ -74,35 +94,81 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({
 
   // Display opportunity tracking details
   return (
-    <Paper variant="outlined" sx={{ p: 2, mt: 2, backgroundColor: 'rgba(255, 171, 0, 0.1)' }}>
-      <Typography variant="h6" gutterBottom>
-        Detailed Opportunity Tracking
-      </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <Typography variant="body1" color="text.secondary">
-            Stage: {opportunityTracking.stage}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Strategic Ranking: {opportunityTracking.strategicRanking}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Bid Manager: {opportunityTracking.bidManager}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Contact Person: {opportunityTracking.contactPersonAtClient || 'Not specified'}
+    <Paper 
+      variant="outlined" 
+      sx={{ 
+        p: 3, 
+        mt: 2, 
+        backgroundColor: 'rgba(0, 105, 255, 0.04)', 
+        borderColor: 'primary.light' 
+      }}
+    >
+      <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+        <Grid item xs>
+          <Typography variant="h6" color="text.primary" gutterBottom>
+            Opportunity Details
           </Typography>
         </Grid>
+        <Grid item>
+          <Chip 
+            label={opportunityTracking.stage} 
+            color={getStatusColor(opportunityTracking.stage)} 
+            icon={<AssignmentTurnedIn />}
+            variant="outlined"
+          />
+        </Grid>
+      </Grid>
+      
+      <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          <Typography variant="body1" color="text.secondary">
-            Bid Fees: {opportunityTracking.bidFees ? `${project.currency} ${opportunityTracking.bidFees.toLocaleString()}` : 'Not specified'}
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Project Insights
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Chance of Project Happening: {opportunityTracking.percentageChanceOfProjectHappening}%
+          <Grid container spacing={1}>
+            <Grid item xs={12}>
+              <Typography variant="body2" color="text.primary">
+                Strategic Ranking: {opportunityTracking.strategicRanking}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body2" color="text.primary">
+                Bid Manager: {opportunityTracking.bidManager || 'Not assigned'}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body2" color="text.primary">
+                Contact Person: {opportunityTracking.contactPersonAtClient || 'Not specified'}
+              </Typography>
+            </Grid>
+          </Grid>
+        </Grid>
+        
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Financial Projection
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Likely Competition: {opportunityTracking.likelyCompetition || 'Not specified'}
-          </Typography>
+          <Grid container spacing={1}>
+            <Grid item xs={12}>
+              <Typography 
+                variant="body2" 
+                color="text.primary" 
+                sx={{ display: 'flex', alignItems: 'center' }}
+              >
+                <MonetizationOn sx={{ mr: 1, color: 'success.main', fontSize: 20 }} />
+                Bid Fees: {opportunityTracking.bidFees ? `${project.currency} ${opportunityTracking.bidFees.toLocaleString()}` : 'Not specified'}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body2" color="text.primary">
+                Chance of Project: {opportunityTracking.percentageChanceOfProjectHappening}%
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body2" color="text.primary">
+                Likely Competition: {opportunityTracking.likelyCompetition || 'Not specified'}
+              </Typography>
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
     </Paper>

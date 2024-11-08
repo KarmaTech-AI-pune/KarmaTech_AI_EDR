@@ -1,7 +1,6 @@
 import { screensArrayType, projectManagementAppContextType, User, Project } from './types'
 import { createContext, useState, useEffect } from 'react'
-import { Home } from './pages/Home'
-import { ProjectDetails } from './pages/ProjectDetails'
+import { Home, ProjectDetails, Opportunities } from './pages'
 import { Navbar } from './components/navigation/Navbar'
 import LoginScreen from './components/LoginScreen'
 import { Dashboard } from './components/Dashboard'
@@ -58,6 +57,7 @@ function App() {
     "Home": <Home />,
     "Dashboard": <Dashboard />,
     "Projects": <ProjectList />,
+    "Opportunities" : <Opportunities />,
     "Resources": <ResourceManagement />,
     "Reports": <ReportsList />,
     "Notifications": <NotificationCenter />,
