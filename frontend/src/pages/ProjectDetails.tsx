@@ -6,6 +6,7 @@ import { ProjectStatus, OpportunityTracking } from '../types';
 import { opportunityApi } from '../services/api';
 import ProjectInfoWidget from '../components/widgets/ProjectInfoWidget';
 import OpportunityTrackingWidget from '../components/widgets/OpportunityTrackingWidget';
+import DecisionWidget from '../components/widgets/DecisionWidget';
 
 export const ProjectDetails = () => {
   const context = useContext(projectManagementAppContext);
@@ -45,6 +46,12 @@ export const ProjectDetails = () => {
     }
   };
 
+  const handleProjectUpdate = (updatedProject: any) => {
+    if (context?.setSelectedProject) {
+      context.setSelectedProject(updatedProject);
+    }
+  };
+
   if (!project) {
     return (
       <Box sx={{ p: 3 }}>
@@ -77,6 +84,13 @@ export const ProjectDetails = () => {
         opportunityTracking={opportunityTracking}
         apiError={apiError}
       />
+
+      {project.status === ProjectStatus['Bid Submitted'] && (
+        <DecisionWidget 
+          project={project} 
+          onStatusUpdate={handleProjectUpdate} 
+        />
+      )}
     </Box>
   );
 };
