@@ -32,7 +32,7 @@ namespace NJS.Domain.Tests
                 EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
-                Status = "In Progress",
+                Status = ProjectStatus.InProgress,
                 Progress = 65
             };
 
@@ -58,7 +58,7 @@ namespace NJS.Domain.Tests
                 EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
-                Status = "In Progress",
+                Status = ProjectStatus.InProgress,
                 Progress = 65
             });
             context.Projects.Add(new Project
@@ -68,7 +68,7 @@ namespace NJS.Domain.Tests
                 EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
-                Status = "In Progress",
+                Status = ProjectStatus.InProgress,
                 Progress = 65
             });
             context.SaveChanges();
@@ -97,7 +97,7 @@ namespace NJS.Domain.Tests
                 EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
-                Status = "In Progress",
+                Status = ProjectStatus.InProgress,
                 Progress = 65
             };
             await context.Projects.AddAsync(project).ConfigureAwait(true);
@@ -126,7 +126,7 @@ namespace NJS.Domain.Tests
                 EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
-                Status = "In Progress",
+                Status = ProjectStatus.InProgress,
                 Progress = 65
             };
             context.Projects.Add(project);
@@ -155,7 +155,7 @@ namespace NJS.Domain.Tests
                 EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
-                Status = "In Progress",
+                Status = ProjectStatus.InProgress,
                 Progress = 65
             });
             context.Projects.Add(new Project
@@ -165,7 +165,7 @@ namespace NJS.Domain.Tests
                 EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
-                Status = "In Progress",
+                Status = ProjectStatus.InProgress,
                 Progress = 65
             });
             context.SaveChanges();
@@ -193,7 +193,7 @@ namespace NJS.Domain.Tests
                 EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
-                Status = "In Progress",
+                Status = ProjectStatus.InProgress,
                 Progress = 65
             });
             context.Projects.Add(new Project
@@ -203,7 +203,7 @@ namespace NJS.Domain.Tests
                 EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
-                Status = "In Progress",
+                Status = ProjectStatus.InProgress,
                 Progress = 65
             });
             context.SaveChanges();

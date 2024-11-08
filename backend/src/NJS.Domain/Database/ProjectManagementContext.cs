@@ -1,5 +1,4 @@
-﻿//File: backend/src/NJS.Domain/Database/ProjectManagementContext.cs
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Entities;
 using System;
 
@@ -12,9 +11,16 @@ namespace NJS.Domain.Database
         }
 
         public DbSet<Project> Projects {  get; set; }
+        public DbSet<OpportunityTracking> OpportunityTrackings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<OpportunityTracking>()
+                .HasOne(o => o.Project)
+                .WithMany(p => p.OpportunityTrackings)
+                .HasForeignKey(o => o.ProjectId);
         }
     }
 }

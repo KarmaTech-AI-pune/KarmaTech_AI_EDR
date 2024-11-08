@@ -2,7 +2,7 @@
 // Purpose: API service for making backend requests
 
 import axios,{ AxiosInstance } from 'axios';
-import { Project, Credentials, User, LoginResponse } from '../types';
+import { Project, Credentials, User, LoginResponse, OpportunityTracking } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -20,7 +20,6 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // Log the full request details
     console.log('Request:', {
       url: config.url,
       method: config.method,
@@ -58,6 +57,19 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+export const opportunityApi = {
+  getByProjectId: async (projectId: number): Promise<OpportunityTracking[]> => {
+    try {
+      const response = await axiosInstance.get(`/opportunity-tracking/project/${projectId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching opportunity tracking for project ${projectId}:`, error);
+      throw error;
+    }
+  }
+};
+
+// Rest of the file remains the same
 export const projectApi = {
   getAll: async (): Promise<Project[]> => {
     try {
@@ -81,11 +93,10 @@ export const projectApi = {
 
   create: async (project: Omit<Project, 'id'>): Promise<Project> => {
     try {
-      // Format dates to match backend expectations
       const formattedProject = {
         ...project,
-        startDate: project.startDate ? new Date(project.startDate).toISOString() : null,
-        endDate: project.endDate ? new Date(project.endDate).toISOString() : null,
+        startDate: undefined,
+        endDate: undefined,
         estimatedCost: Number(project.estimatedCost),
         progress: Number(project.progress)
       };
@@ -115,8 +126,8 @@ export const projectApi = {
     try {
       const formattedProject = {
         ...project,
-        startDate: project.startDate ? new Date(project.startDate).toISOString() : null,
-        endDate: project.endDate ? new Date(project.endDate).toISOString() : null,
+        startDate: project.startDate ? new Date(project.startDate).toISOString() : undefined,
+        endDate: project.endDate ? new Date(project.endDate).toISOString() : undefined,
         estimatedCost: Number(project.estimatedCost),
         progress: Number(project.progress)
       };

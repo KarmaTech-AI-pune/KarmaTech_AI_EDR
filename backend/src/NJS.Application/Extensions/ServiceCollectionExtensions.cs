@@ -1,5 +1,4 @@
-﻿//File: backend/src/NJS.Application/Extensions/ServiceCollectionExtensions.cs
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using NJS.Application.Interfaces;
 using NJS.Application.Repositories;
 using NJS.Application.Services;
@@ -14,6 +13,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IFeasibilityStudyRepository, FeasibilityStudyRepository>();
             services.AddScoped<IWorkBreakdownStructureRepository, WorkBreakdownStructureRepository>();
             services.AddScoped<IGoNoGoDecisionRepository, GoNoGoDecisionRepository>();
+            services.AddScoped<IOpportunityTrackingRepository, OpportunityTrackingRepository>();
             services.AddSingleton<AuthService>();
             services.AddScoped<ProjectManagementService>();
             return services;

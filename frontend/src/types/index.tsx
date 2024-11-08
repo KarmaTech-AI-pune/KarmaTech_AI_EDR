@@ -24,16 +24,32 @@ export type projectManagementAppContextType  = {
     setSelectedProject?: React.Dispatch<React.SetStateAction<Project | null>>;
 }
 
+export enum ProjectStatus {
+  'Opportunity' = 0,
+  'Decision Pending' = 1,
+  'Cancelled' = 2,
+  'Bid Submitted' = 3,
+  'Bid Rejected' = 4,
+  'Bid Accepted' = 5,
+  'In Progress'  = 6,
+  'Completed' = 7
+}
+
 export type Project = {
   id: number;
   name: string;
-  description: string;
   clientName: string;
+  clientSector: string;
+  sector: string;
   estimatedCost: number;
-  startDate: string;
-  endDate: string;
-  status: string;
+  startDate?: string;
+  endDate?: string;
+  status: ProjectStatus;
   progress: number;
+  contractType: string;
+  currency: string;
+  createdAt: string;
+  createdBy: string;
   budget?: number;
   priority?: string;
 }
@@ -62,4 +78,32 @@ export type LoginResponse = {
   message: string;
   token?: string;
   user?: User;
+}
+
+export type OpportunityTracking = {
+  id: number;
+  projectId: number;
+  stage: string;
+  strategicRanking: string;
+  bidFees?: number;
+  emd?: number;
+  formOfEMD?: string;
+  bidManager: string;
+  contactPersonAtClient?: string;
+  dateOfSubmission?: string;
+  percentageChanceOfProjectHappening?: number;
+  percentageChanceOfNJSSuccess?: number;
+  likelyCompetition?: string;
+  grossRevenue?: number;
+  netNJSRevenue?: number;
+  followUpComments?: string;
+  notes?: string;
+  probableQualifyingCriteria?: string;
+  month: number;
+  year: number;
+  trackedBy: string;
+  createdAt: string;
+  createdBy: string;
+  lastModifiedAt?: string;
+  lastModifiedBy?: string;
 }

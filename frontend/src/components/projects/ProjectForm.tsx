@@ -1,30 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardContent, CardActions, Box, Typography, TextField, MenuItem } from '@mui/material';
+import { Card, CardHeader, CardContent, CardActions, Box, Typography, TextField } from '@mui/material';
 import Button from '@mui/material/Button';
-import { ProjectFormType, ProjectFormData } from '../../types';
+import { ProjectFormType, ProjectFormData, ProjectStatus } from '../../types';
 
 export const ProjectForm = ({ project, onSubmit, onCancel }: ProjectFormType) => {
   const [formData, setFormData] = useState<ProjectFormData>({
     name: '',
     clientName: '',
+    clientSector: 'Default',
+    sector: 'Default',
     estimatedCost: 0,
-    startDate: new Date().toISOString().split('T')[0], // Set default to today
-    endDate: new Date().toISOString().split('T')[0], // Set default to today
-    status: 'Planning',
-    progress: 0
+    status: ProjectStatus.Opportunity,
+    progress: 0,
+    contractType: 'Default',
+    currency: 'INR',
+    createdAt: new Date().toISOString(),
+    createdBy: 'System'
   });
 
   useEffect(() => {
     if (project) {
-      setFormData({
-        name: project.name,
-        clientName: project.clientName,
-        estimatedCost: project.estimatedCost,
-        startDate: project.startDate?.split('T')[0] || new Date().toISOString().split('T')[0],
-        endDate: project.endDate?.split('T')[0] || new Date().toISOString().split('T')[0],
-        status: project.status,
-        progress: project.progress
-      });
+      const { id, ...projectData } = project;
+      setFormData(projectData);
     }
   }, [project]);
 
@@ -38,11 +35,15 @@ export const ProjectForm = ({ project, onSubmit, onCancel }: ProjectFormType) =>
     const submitData: ProjectFormData = {
       name: formData.name.trim(),
       clientName: formData.clientName.trim(),
+      clientSector: 'Default',
+      sector: 'Default',
       estimatedCost: Number(formData.estimatedCost) || 0,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      status: formData.status || 'Planning',
-      progress: Number(formData.progress) || 0
+      status: ProjectStatus.Opportunity,
+      progress: 0,
+      contractType: 'Default',
+      currency: 'INR',
+      createdAt: new Date().toISOString(),
+      createdBy: 'System'
     };
 
     console.log('Submitting form data:', submitData);
@@ -85,64 +86,13 @@ export const ProjectForm = ({ project, onSubmit, onCancel }: ProjectFormType) =>
             <TextField
               fullWidth
               type="number"
-              label="Estimated Cost"
+              label="Estimated Cost (INR)"
               value={formData.estimatedCost}
               onChange={(e) => setFormData({ ...formData, estimatedCost: Number(e.target.value) || 0 })}
               required
               variant="outlined"
               size="small"
               inputProps={{ min: 0 }}
-            />
-
-            <TextField
-              fullWidth
-              type="date"
-              label="Start Date"
-              value={formData.startDate}
-              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-              required
-              variant="outlined"
-              size="small"
-              InputLabelProps={{ shrink: true }}
-            />
-
-            <TextField
-              fullWidth
-              type="date"
-              label="End Date"
-              value={formData.endDate}
-              onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-              required
-              variant="outlined"
-              size="small"
-              InputLabelProps={{ shrink: true }}
-            />
-
-            <TextField
-              fullWidth
-              select
-              label="Status"
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              required
-              variant="outlined"
-              size="small"
-            >
-              <MenuItem value="Planning">Planning</MenuItem>
-              <MenuItem value="In Progress">In Progress</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
-            </TextField>
-
-            <TextField
-              fullWidth
-              type="number"
-              label="Progress (%)"
-              value={formData.progress}
-              onChange={(e) => setFormData({ ...formData, progress: Number(e.target.value) || 0 })}
-              required
-              variant="outlined"
-              size="small"
-              inputProps={{ min: 0, max: 100 }}
             />
           </Box>
         </CardContent>
