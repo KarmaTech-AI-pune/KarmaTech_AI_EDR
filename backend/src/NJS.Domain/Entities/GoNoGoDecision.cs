@@ -1,21 +1,191 @@
-﻿//File: backend/src/NJS.Domain/Entities/GoNoGoDecision.cs
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
+    [Table("GoNoGoDecisions")]
     public class GoNoGoDecision
     {
+        [Key]
         public int Id { get; set; }
-        public int ProjectId { get; set; }
-        public bool Decision { get; set; }
-        public string Rationale { get; set; }
-        public DateTime DecisionDate { get; set; }
-        public string DecisionMaker { get; set; }
 
-        public Project Project { get; set; }
+        // Foreign key to Project
+        [Required]
+        public int ProjectId { get; set; }
+
+        [ForeignKey("ProjectId")]
+        public virtual Project? Project { get; set; }
+
+        // Basic Information
+        [Required]
+        [StringLength(50)]
+        public string? BidType { get; set; } // Lumpsum/Item Rate
+
+        [Required]
+        [StringLength(50)]
+        public string? Sector { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TenderFee { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal EMDAmount { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public string? SubmissionMode { get; set; } // Online/Offline
+
+        // Scoring Criteria (0-10 scale for each)
+        [Required]
+        [Range(0, 10)]
+        public int MarketingPlanScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? MarketingPlanComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int ClientRelationshipScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? ClientRelationshipComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int ProjectKnowledgeScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? ProjectKnowledgeComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int TechnicalEligibilityScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? TechnicalEligibilityComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int FinancialEligibilityScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? FinancialEligibilityComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int StaffAvailabilityScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? StaffAvailabilityComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int CompetitionAssessmentScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? CompetitionAssessmentComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int CompetitivePositionScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? CompetitivePositionComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int FutureWorkPotentialScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? FutureWorkPotentialComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int ProfitabilityScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? ProfitabilityComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int ResourceAvailabilityScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? ResourceAvailabilityComments { get; set; }
+
+        [Required]
+        [Range(0, 10)]
+        public int BidScheduleScore { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string? BidScheduleComments { get; set; }
+
+        // Total Score and Decision
+        [Required]
+        public int TotalScore { get; set; }
+
+        [Required]
+        public GoNoGoStatus Status { get; set; }
+
+        [Required]
+        [StringLength(2000)]
+        public string? DecisionComments { get; set; }
+
+        // Approval Information
+        [Required]
+        public DateTime CompletedDate { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string? CompletedBy { get; set; }
+
+        public DateTime? ReviewedDate { get; set; }
+
+        [StringLength(100)]
+        public string? ReviewedBy { get; set; }
+
+        public DateTime? ApprovedDate { get; set; }
+
+        [StringLength(100)]
+        public string? ApprovedBy { get; set; }
+
+        // Action Plan for Amber Status
+        [StringLength(2000)]
+        public string? ActionPlan { get; set; }
+
+        // Audit Fields
+        [Required]
+        public DateTime CreatedAt { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string? CreatedBy { get; set; }
+
+        public DateTime? LastModifiedAt { get; set; }
+
+        [StringLength(100)]
+        public string? LastModifiedBy { get; set; }
+    }
+
+    public enum GoNoGoStatus
+    {
+        Green,  // GO - Proceed with proposal
+        Amber,  // GO with action plan
+        Red     // NO GO - Do not proceed
     }
 }

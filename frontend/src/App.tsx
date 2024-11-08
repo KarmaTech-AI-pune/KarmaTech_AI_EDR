@@ -9,6 +9,7 @@ import { ResourceManagement } from './components/ResourceManagement'
 import { ReportsList } from './components/ReportsList'
 import { NotificationCenter } from './components/navigation/NotificationCenter'
 import { authApi } from './services/api'
+import GoNoGoWidget from './components/widgets/GoNoGoWidget'
 
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
@@ -61,7 +62,8 @@ function App() {
     "Resources": <ResourceManagement />,
     "Reports": <ReportsList />,
     "Notifications": <NotificationCenter />,
-    "Project Details": <ProjectDetails />
+    "Project Details": <ProjectDetails />,
+    "Go/No Go Decision": <GoNoGoWidget />
   };
 
   if (isLoading) {
