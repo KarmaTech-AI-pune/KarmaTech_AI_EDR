@@ -1,4 +1,4 @@
-﻿//File: backend/src/NJS.Domain/Extensions/ServiceCollectionExtensions.cs
+//File: backend/src/NJS.Domain/Extensions/ServiceCollectionExtensions.cs
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

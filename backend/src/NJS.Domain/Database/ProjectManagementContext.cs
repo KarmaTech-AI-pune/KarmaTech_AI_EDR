@@ -1,4 +1,3 @@
-﻿//File: backend/src/NJS.Domain/Database/ProjectManagementContext.cs
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Entities;

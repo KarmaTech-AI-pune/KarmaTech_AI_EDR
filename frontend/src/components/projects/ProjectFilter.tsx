@@ -1,18 +1,34 @@
-import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
+import { ProjectStatus } from '../../types';
 
-export const ProjectFilter = () => {
+interface ProjectFilterProps {
+  onFilterChange: (status: ProjectStatus | '') => void;
+  currentFilter: ProjectStatus | '';
+}
+
+export const ProjectFilter: React.FC<ProjectFilterProps> = ({ onFilterChange, currentFilter }) => {
+  const handleChange = (event: SelectChangeEvent<ProjectStatus | ''>) => {
+    const selectedValue = event.target.value;
+    onFilterChange(selectedValue as ProjectStatus | '');
+  };
+
   return (
     <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-      <InputLabel>Filter</InputLabel>
+      <InputLabel>Status</InputLabel>
       <Select
-        label="Filter"
-        defaultValue=""
+        label="Status"
+        value={currentFilter}
+        onChange={handleChange}
       >
         <MenuItem value="">All</MenuItem>
-        <MenuItem value="in-progress">In Progress</MenuItem>
-        <MenuItem value="planning">Planning</MenuItem>
-        <MenuItem value="completed">Completed</MenuItem>
-        <MenuItem value="on-hold">On Hold</MenuItem>
+        <MenuItem value={ProjectStatus.Opportunity}>Opportunity</MenuItem>
+        <MenuItem value={ProjectStatus['Decision Pending']}>Decision Pending</MenuItem>
+        <MenuItem value={ProjectStatus.Cancelled}>Cancelled</MenuItem>
+        <MenuItem value={ProjectStatus['Bid Submitted']}>Bid Submitted</MenuItem>
+        <MenuItem value={ProjectStatus['Bid Rejected']}>Bid Rejected</MenuItem>
+        <MenuItem value={ProjectStatus['Bid Accepted']}>Bid Accepted</MenuItem>
+        <MenuItem value={ProjectStatus['In Progress']}>In Progress</MenuItem>
+        <MenuItem value={ProjectStatus.Completed}>Completed</MenuItem>
       </Select>
     </FormControl>
   );

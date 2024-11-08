@@ -1,7 +1,7 @@
 import { ListItem, ListItemText, Box, LinearProgress, Typography, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import {Button} from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { ProjectItemProps, ProjectFormData } from '../../types';
+import { ProjectItemProps, ProjectFormData, ProjectStatus } from '../../types';
 import { useState, useContext } from 'react';
 import { projectApi } from '../../services/api';
 import { ProjectForm } from './ProjectForm';
@@ -85,8 +85,17 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
               </Typography>
               <br />
               <Typography component="span" variant="body2">
-                Status: {project.status}
+                Status: {ProjectStatus[project.status]}
               </Typography>
+              {project.estimatedCost > 0 && (
+                <>
+                  <br />
+                  <Typography component="span" variant="body2">
+                    Estimated Cost: {project.currency} {project.estimatedCost.toLocaleString()}
+                  </Typography>
+                </>
+              )}
+              
               <Box sx={{ width: '100%', mt: 1 }}>
                 <LinearProgress variant="determinate" value={project.progress} />
               </Box>

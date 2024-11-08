@@ -2,6 +2,7 @@
 using NJS.Application.Services;
 using NJS.Repositories.Interfaces;
 using NJS.Repositories.Repositories;
+using NJS.Repositories.Interfaces;
 
 namespace NJS.Application.Extensions
 {
@@ -13,6 +14,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IFeasibilityStudyRepository, FeasibilityStudyRepository>();
             services.AddScoped<IWorkBreakdownStructureRepository, WorkBreakdownStructureRepository>();
             services.AddScoped<IGoNoGoDecisionRepository, GoNoGoDecisionRepository>();
+            services.AddScoped<IOpportunityTrackingRepository, OpportunityTrackingRepository>();
             services.AddSingleton<AuthService>();
             services.AddScoped<ProjectManagementService>();
             return services;

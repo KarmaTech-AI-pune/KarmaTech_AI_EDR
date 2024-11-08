@@ -34,7 +34,7 @@ namespace NJS.Domain.Tests
                 EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
-                Status = "In Progress",
+                Status = ProjectStatus.InProgress,
                 Progress = 65
             };
             context.Projects.Add(project);

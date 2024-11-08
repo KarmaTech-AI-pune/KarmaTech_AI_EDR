@@ -14,7 +14,7 @@ import {Button} from '@mui/material';
 import { ProjectFilter } from './ProjectFilter';
 import { ProjectItem } from './ProjectItem';
 import { projectApi} from '../../services/api';
-import { Project, ProjectFormData } from '../../types';
+import { Project, ProjectFormData, ProjectStatus } from '../../types';
 import { Pagination } from '../Pagination';
 import { ProjectForm } from './ProjectForm';
 
@@ -24,6 +24,7 @@ export const ProjectList: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ProjectStatus | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [projectsPerPage] = useState(5);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
@@ -52,6 +53,11 @@ export const ProjectList: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleStatusFilter = (status: ProjectStatus | '') => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+  };
+
   const handleProjectDeleted = (projectId: number) => {
     setProjects(projects.filter(project => project.id !== projectId));
   };
@@ -72,21 +78,11 @@ export const ProjectList: React.FC = () => {
       setSubmitting(true);
       setError(null);
 
-      // Log the form data being submitted
-      console.log('Submitting project form data:', formData);
-
-      // Validate required fields
       if (!formData.name?.trim()) {
         throw new Error('Project name is required');
       }
       if (!formData.clientName?.trim()) {
         throw new Error('Client name is required');
-      }
-      if (!formData.startDate) {
-        throw new Error('Start date is required');
-      }
-      if (!formData.endDate) {
-        throw new Error('End date is required');
       }
 
       await projectApi.create(formData);
@@ -110,10 +106,16 @@ export const ProjectList: React.FC = () => {
     setSuccessMessage(null);
   };
 
-  const filteredProjects = projects.filter(project =>
-    project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.clientName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProjects = projects.filter(project => {
+    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+      let matchesStatus = true
+      if(statusFilter !== '')
+      {
+        matchesStatus = project.status === statusFilter;
+      }
+    return matchesSearch && matchesStatus;
+  });
 
   const indexOfLastProject = currentPage * projectsPerPage;
   const indexOfFirstProject = indexOfLastProject - projectsPerPage;
@@ -167,14 +169,19 @@ export const ProjectList: React.FC = () => {
         >
           New Project
         </Button>
-        <ProjectFilter />
-        <TextField
-          label="Search projects"
-          variant="outlined"
-          size="small"
-          value={searchTerm}
-          onChange={handleSearch}
-        />
+        <Box sx={{ display: 'flex', gap:2}}>
+          <ProjectFilter 
+            onFilterChange={handleStatusFilter}
+            currentFilter={statusFilter}
+          />
+          <TextField
+            label="Search projects"
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </Box>
       </Box>
 
       <Divider sx={{ my: 2 }} />

@@ -66,14 +66,14 @@ function App() {
 
   if (isLoading) {
     return (
-      <div style={{ 
+      <span style={{ 
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
         height: '100vh' 
       }}>
         Loading...
-      </div>
+      </span>
     );
   }
 
