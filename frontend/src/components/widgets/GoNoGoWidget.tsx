@@ -13,10 +13,10 @@ import {
   Button,
   Paper,
   Grid,
-  IconButton,
   Collapse,
   Card,
-  CardContent
+  CardContent,
+  FormHelperText
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
@@ -41,6 +41,83 @@ interface HeaderInfo {
   emd: string;
   submissionType: string;
 }
+
+const scoringDescriptions: { [key: string]: { [key: string]: string } } = {
+  marketingPlan: {
+    high: 'Fits well with marketing strategy',
+    medium: 'Fits somewhat into the marketing strategy',
+    low: 'Does not fit with marketing strategy'
+  },
+  clientRelationship: {
+    high: 'Excellent relationships, no past problem projects',
+    medium: 'Fair/good relationships, some project problems',
+    low: 'Strained relationship(s), problem project(s), selectability questionable'
+  },
+  projectKnowledge: {
+    high: 'Strategic project, excellent knowledge of project development',
+    medium: 'Known about project, but some knowledge of project development',
+    low: 'Knew nothing about project prior to receipt of RFQ/RFP'
+  },
+  technicalEligibility: {
+    high: 'Meets all criteria on its own',
+    medium: 'Need of JV or some support to meet the criteria',
+    low: 'Does not meet qualification criteria'
+  },
+  financialEligibility: {
+    high: 'Meets all criteria on its own',
+    medium: 'Need of JV or some support to meet the criteria',
+    low: 'Does not meet qualification criteria'
+  },
+  keyStaffAvailability: {
+    high: 'All competent key staff available',
+    medium: 'Most competent key staff available but some outsourcing required',
+    low: 'Major outsourcing required'
+  },
+  projectCompetition: {
+    high: 'NJS has inside track, and competition is manageable',
+    medium: 'NJS faces formidable competition, and have limited intelligence on it',
+    low: 'Project appears to be wired for competition'
+  },
+  competitionPosition: {
+    high: 'NJS qualifications are technically superior',
+    medium: 'Qualifications are equivalent to competition, or we may have a slight edge',
+    low: 'NJS qualifications are lower to the competition'
+  },
+  futureWorkPotential: {
+    high: 'Project will lead to future work',
+    medium: 'Possible future work',
+    low: 'One-time project, no future work'
+  },
+  projectProfitability: {
+    high: 'Good profit potential',
+    medium: 'Competitive pricing, Moderate potential profit',
+    low: 'Risky and may lead to little/no profit'
+  },
+  projectSchedule: {
+    high: 'More than adequate, project will not adversely impact other projects',
+    medium: 'Adequate, other projects may be adversely impacted',
+    low: 'Not adequate, other projects will be adversely impacted'
+  },
+  bidTimeAndCosts: {
+    high: 'Favorable',
+    medium: 'Reasonable',
+    low: 'Constrained'
+  }
+};
+
+const scoreRanges = [
+  { value: 10, label: '10 - Excellent', range: 'high' },
+  { value: 9, label: '9 - Excellent', range: 'high' },
+  { value: 8, label: '8 - Excellent', range: 'high' },
+  { value: 7, label: '7 - Good', range: 'medium' },
+  { value: 6, label: '6 - Good', range: 'medium' },
+  { value: 5, label: '5 - Good', range: 'medium' },
+  { value: 4, label: '4 - Poor', range: 'low' },
+  { value: 3, label: '3 - Poor', range: 'low' },
+  { value: 2, label: '2 - Poor', range: 'low' },
+  { value: 1, label: '1 - Poor', range: 'low' },
+  { value: 0, label: '0 - Not Rated', range: 'low' }
+];
 
 const GoNoGoWidget: React.FC = () => {
   const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
@@ -97,13 +174,14 @@ const GoNoGoWidget: React.FC = () => {
     return { text: 'NO GO [Red]', color: '#f44336' };
   };
 
-  const renderScoreDescription = (score: number) => {
-    if (score >= 8) return '(Excellent)';
-    if (score >= 5) return '(Good)';
-    if (score >= 2) return '(Poor)';
-    return '(Not Rated)';
+  const getScoreDescription = (criteriaKey: string, score: number) => {
+    const range = scoreRanges.find(r => r.value === score)?.range;
+    return range ? scoringDescriptions[criteriaKey][range] : '';
   };
 
+  const showName = (key:string) => {
+    return key[0].toUpperCase() + key.replace(/([A-Z])/g, ' $1').trim().slice(1)
+  }
   return (
     <Box sx={{ p: 3, maxWidth: 1200, margin: 'auto' }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
@@ -167,24 +245,27 @@ const GoNoGoWidget: React.FC = () => {
               <Grid container spacing={2} alignItems="center">
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle1">
-                    {key.replace(/([A-Z])/g, ' $1').trim()}
+                    {showName(key)}
                   </Typography>
                 </Grid>
-                <Grid item xs={12} sm={3}>
-                  <TextField
-                    type="number"
-                    label="Score"
-                    value={value.score}
-                    onChange={(e) => handleCriteriaChange(key, 'score', parseInt(e.target.value) || 0)}
-                    InputProps={{ inputProps: { min: 0, max: 10 } }}
-                    fullWidth
-                    size="small"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={3}>
-                  <Typography variant="body2" color="textSecondary">
-                    {renderScoreDescription(value.score)}
-                  </Typography>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Score</InputLabel>
+                    <Select
+                      value={value.score}
+                      onChange={(e) => handleCriteriaChange(key, 'score', Number(e.target.value))}
+                      label="Score"
+                    >
+                      {scoreRanges.map((range) => (
+                        <MenuItem key={range.value} value={range.value}>
+                          {range.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    <FormHelperText>
+                      {getScoreDescription(key, value.score)}
+                    </FormHelperText>
+                  </FormControl>
                 </Grid>
                 <Grid item xs={12}>
                   <Button

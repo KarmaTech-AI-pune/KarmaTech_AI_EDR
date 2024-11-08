@@ -74,7 +74,14 @@ export const ProjectDetails = () => {
       >
         Back to Projects
       </Button>
-
+      {project.status === ProjectStatus['Bid Submitted'] && (
+        <Box sx={{ pb: 3}}>
+          <DecisionWidget 
+            project={project} 
+            onStatusUpdate={handleProjectUpdate} 
+          />
+        </Box>
+      )}
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <ProjectInfoWidget project={project} />
       </Paper>
@@ -84,13 +91,6 @@ export const ProjectDetails = () => {
         opportunityTracking={opportunityTracking}
         apiError={apiError}
       />
-
-      {project.status === ProjectStatus['Bid Submitted'] && (
-        <DecisionWidget 
-          project={project} 
-          onStatusUpdate={handleProjectUpdate} 
-        />
-      )}
     </Box>
   );
 };

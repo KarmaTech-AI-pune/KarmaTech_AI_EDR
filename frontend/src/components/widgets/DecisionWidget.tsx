@@ -14,7 +14,7 @@ const DecisionWidget: React.FC<DecisionWidgetProps> = ({ project, onStatusUpdate
   const [error, setError] = useState<string | null>(null);
 
   // Only render for projects with Decision Pending status
-  if (project.status !== ProjectStatus['Decision Pending']) {
+  if (project.status !== ProjectStatus['Bid Submitted']) {
     return null;
   }
 

@@ -10,6 +10,7 @@ import { ReportsList } from './components/ReportsList'
 import { NotificationCenter } from './components/navigation/NotificationCenter'
 import { authApi } from './services/api'
 import GoNoGoWidget from './components/widgets/GoNoGoWidget'
+import BidPreparationForm from './components/BidPreparationForm'
 
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
@@ -63,7 +64,8 @@ function App() {
     "Reports": <ReportsList />,
     "Notifications": <NotificationCenter />,
     "Project Details": <ProjectDetails />,
-    "Go/No Go Decision": <GoNoGoWidget />
+    "Go/No Go Decision": <GoNoGoWidget />,
+    'Bid Preparation' : <BidPreparationForm />
   };
 
   if (isLoading) {
