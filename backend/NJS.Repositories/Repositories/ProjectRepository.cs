@@ -8,6 +8,7 @@ namespace NJS.Repositories.Repositories
     public class ProjectRepository : IProjectRepository
     {
         private readonly IRepository<Project> _repository;
+        private readonly IOpportunityTrackingRepository _opportunityTrackingRepository;
 
         public ProjectRepository(IRepository<Project> repository)
         {
@@ -256,9 +257,14 @@ namespace NJS.Repositories.Repositories
 
         public async Task Add(Project project)
         {
-
+            //temporary dummy database addition
+            project.Id = _projects.Max(p => p.Id) + 1;
+            _projects.Add(project);
+            
+            /* when database is running
             await _repository.AddAsync(project).ConfigureAwait(false);
             await _repository.SaveChangesAsync().ConfigureAwait(false);
+            */
         }
 
         public void Update(Project project)
