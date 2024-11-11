@@ -1,347 +1,301 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Typography,
   Box,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Button,
+  Typography,
   Paper,
   Grid,
+  Button,
+  Alert,
+  Tooltip,
+  Chip,
+  Divider,
   Collapse,
-  Card,
-  CardContent,
-  FormHelperText
+  IconButton,
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CommentIcon from '@mui/icons-material/Comment';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { goNoGoApi } from '../../services/api';
+import GoNoGoForm from '../forms/GoNoGoForm';
+import { Project, GoNoGoDecision, GoNoGoStatus } from '../../types';
 
-interface ScoringCriteria {
-  byWhom: string;
-  byDate: string;
-  comments: string;
-  score: number;
-  showComments: boolean;
+interface GoNoGoWidgetProps {
+  projectId: number;
+  project: Project;
+  readOnly?: boolean;
 }
 
-interface HeaderInfo {
-  typeOfBid: string;
-  sector: string;
-  bdHead: string;
-  office: string;
-  regionalBDHead: string;
-  region: string;
-  typeOfClient: string;
-  tenderFee: string;
-  emd: string;
-  submissionType: string;
-}
-
-const scoringDescriptions: { [key: string]: { [key: string]: string } } = {
-  marketingPlan: {
-    high: 'Fits well with marketing strategy',
-    medium: 'Fits somewhat into the marketing strategy',
-    low: 'Does not fit with marketing strategy'
-  },
-  clientRelationship: {
-    high: 'Excellent relationships, no past problem projects',
-    medium: 'Fair/good relationships, some project problems',
-    low: 'Strained relationship(s), problem project(s), selectability questionable'
-  },
-  projectKnowledge: {
-    high: 'Strategic project, excellent knowledge of project development',
-    medium: 'Known about project, but some knowledge of project development',
-    low: 'Knew nothing about project prior to receipt of RFQ/RFP'
-  },
-  technicalEligibility: {
-    high: 'Meets all criteria on its own',
-    medium: 'Need of JV or some support to meet the criteria',
-    low: 'Does not meet qualification criteria'
-  },
-  financialEligibility: {
-    high: 'Meets all criteria on its own',
-    medium: 'Need of JV or some support to meet the criteria',
-    low: 'Does not meet qualification criteria'
-  },
-  keyStaffAvailability: {
-    high: 'All competent key staff available',
-    medium: 'Most competent key staff available but some outsourcing required',
-    low: 'Major outsourcing required'
-  },
-  projectCompetition: {
-    high: 'NJS has inside track, and competition is manageable',
-    medium: 'NJS faces formidable competition, and have limited intelligence on it',
-    low: 'Project appears to be wired for competition'
-  },
-  competitionPosition: {
-    high: 'NJS qualifications are technically superior',
-    medium: 'Qualifications are equivalent to competition, or we may have a slight edge',
-    low: 'NJS qualifications are lower to the competition'
-  },
-  futureWorkPotential: {
-    high: 'Project will lead to future work',
-    medium: 'Possible future work',
-    low: 'One-time project, no future work'
-  },
-  projectProfitability: {
-    high: 'Good profit potential',
-    medium: 'Competitive pricing, Moderate potential profit',
-    low: 'Risky and may lead to little/no profit'
-  },
-  projectSchedule: {
-    high: 'More than adequate, project will not adversely impact other projects',
-    medium: 'Adequate, other projects may be adversely impacted',
-    low: 'Not adequate, other projects will be adversely impacted'
-  },
-  bidTimeAndCosts: {
-    high: 'Favorable',
-    medium: 'Reasonable',
-    low: 'Constrained'
-  }
+const criteriaNames = {
+  marketingPlanScore: 'Marketing Plan',
+  clientRelationshipScore: 'Client Relationship',
+  projectKnowledgeScore: 'Project Knowledge',
+  technicalEligibilityScore: 'Technical Eligibility',
+  financialEligibilityScore: 'Financial Eligibility',
+  staffAvailabilityScore: 'Staff Availability',
+  competitionAssessmentScore: 'Competition Assessment',
+  competitivePositionScore: 'Competitive Position',
+  futureWorkPotentialScore: 'Future Work Potential',
+  profitabilityScore: 'Profitability',
+  resourceAvailabilityScore: 'Resource Availability',
+  bidScheduleScore: 'Bid Schedule'
 };
 
-const scoreRanges = [
-  { value: 10, label: '10 - Excellent', range: 'high' },
-  { value: 9, label: '9 - Excellent', range: 'high' },
-  { value: 8, label: '8 - Excellent', range: 'high' },
-  { value: 7, label: '7 - Good', range: 'medium' },
-  { value: 6, label: '6 - Good', range: 'medium' },
-  { value: 5, label: '5 - Good', range: 'medium' },
-  { value: 4, label: '4 - Poor', range: 'low' },
-  { value: 3, label: '3 - Poor', range: 'low' },
-  { value: 2, label: '2 - Poor', range: 'low' },
-  { value: 1, label: '1 - Poor', range: 'low' },
-  { value: 0, label: '0 - Not Rated', range: 'low' }
-];
+const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({ 
+  projectId, 
+  project, 
+  readOnly = false 
+}) => {
+  const [goNoGoDecision, setGoNoGoDecision] = useState<GoNoGoDecision | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isScoresExpanded, setIsScoresExpanded] = useState(true);
 
-const GoNoGoWidget: React.FC = () => {
-  const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
-    typeOfBid: '',
-    sector: '',
-    bdHead: '',
-    office: '',
-    regionalBDHead: '',
-    region: '',
-    typeOfClient: '',
-    tenderFee: '',
-    emd: '',
-    submissionType: ''
-  });
+  useEffect(() => {
+    const fetchGoNoGoData = async () => {
+      try {
+        const data = await goNoGoApi.getByProjectId(projectId);
+        
+        if (data && Object.keys(data).length > 0) {
+          setGoNoGoDecision(data);
+        } else {
+          setGoNoGoDecision(null);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching Go/No-Go data:', error);
+        setError('Failed to load Go/No-Go decision data');
+        setLoading(false);
+      }
+    };
 
-  const [criteria, setCriteria] = useState<{ [key: string]: ScoringCriteria }>({
-    marketingPlan: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    clientRelationship: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    projectKnowledge: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    technicalEligibility: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    financialEligibility: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    keyStaffAvailability: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    projectCompetition: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    competitionPosition: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    futureWorkPotential: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    projectProfitability: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    projectSchedule: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    bidTimeAndCosts: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false }
-  });
+    fetchGoNoGoData();
+  }, [projectId]);
 
-  const handleHeaderChange = (field: keyof HeaderInfo, value: string) => {
-    setHeaderInfo(prev => ({ ...prev, [field]: value }));
+  const handleSubmit = async (decision: GoNoGoDecision) => {
+    try {
+      let updatedDecision;
+      if (goNoGoDecision?.id) {
+        updatedDecision = await goNoGoApi.update(goNoGoDecision.id, {
+          ...decision,
+          projectId
+        });
+      } else {
+        updatedDecision = await goNoGoApi.create(projectId, decision);
+      }
+      setGoNoGoDecision(updatedDecision);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error saving Go/No-Go decision:', error);
+      setError('Failed to save Go/No-Go decision');
+    }
   };
 
-  const handleCriteriaChange = (
-    criteriaKey: string,
-    field: keyof ScoringCriteria,
-    value: string | number | boolean
-  ) => {
-    setCriteria(prev => ({
-      ...prev,
-      [criteriaKey]: { ...prev[criteriaKey], [field]: value }
-    }));
+  const getDecisionStatusDetails = (status: GoNoGoStatus) => {
+    switch (status) {
+      case 0:
+        return { text: 'GO [Green]', color: '#4caf50', icon: <CheckCircleIcon color="success" /> };
+      case 1:
+        return { text: 'GO [Amber]', color: '#ff9800', icon: <CheckCircleIcon color="warning" /> };
+      case 2:
+        return { text: 'NO GO [Red]', color: '#f44336', icon: <CancelIcon color="error" /> };
+      default:
+        return { text: 'NO GO [Red]', color: '#f44336', icon: <CancelIcon color="error" /> };
+    }
   };
 
-  const calculateTotalScore = () => {
-    return Object.values(criteria).reduce((sum, item) => sum + item.score, 0);
-  };
-
-  const getDecisionStatus = () => {
-    const totalScore = calculateTotalScore();
-    if (totalScore >= 84) return { text: 'GO [Green]', color: '#4caf50' };
-    if (totalScore >= 50) return { text: 'GO [Amber]', color: '#ff9800' };
-    return { text: 'NO GO [Red]', color: '#f44336' };
-  };
-
-  const getScoreDescription = (criteriaKey: string, score: number) => {
-    const range = scoreRanges.find(r => r.value === score)?.range;
-    return range ? scoringDescriptions[criteriaKey][range] : '';
-  };
-
-  const showName = (key:string) => {
-    return key[0].toUpperCase() + key.replace(/([A-Z])/g, ' $1').trim().slice(1)
+  if (loading) {
+    return <Box sx={{ p: 3 }}>Loading Go/No-Go decision data...</Box>;
   }
-  return (
-    <Box sx={{ p: 3, maxWidth: 1200, margin: 'auto' }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
-        Go/No Go Decision Form
-      </Typography>
 
-      <Accordion defaultExpanded>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Header Information</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Type of Bid</InputLabel>
-                <Select
-                  value={headerInfo.typeOfBid}
-                  onChange={(e) => handleHeaderChange('typeOfBid', e.target.value)}
-                  label="Type of Bid"
-                >
-                  <MenuItem value="Lumpsum">Lumpsum</MenuItem>
-                  <MenuItem value="ItemRate">Item Rate</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Sector"
-                value={headerInfo.sector}
-                onChange={(e) => handleHeaderChange('sector', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="BD Head"
-                value={headerInfo.bdHead}
-                onChange={(e) => handleHeaderChange('bdHead', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Office"
-                value={headerInfo.office}
-                onChange={(e) => handleHeaderChange('office', e.target.value)}
-              />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
 
-      <Box sx={{ mt: 4 }}>
+  if (isEditing && !readOnly) {
+    return (
+      <GoNoGoForm
+        project={project}
+        goNoGoDecision={goNoGoDecision}
+        onSubmit={handleSubmit}
+      />
+    );
+  }
+
+  if (!goNoGoDecision) {
+    return (
+      <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
         <Typography variant="h6" gutterBottom>
-          Scoring Criteria
+          Go/No Go Decision
         </Typography>
-        {Object.entries(criteria).map(([key, value]) => (
-          <Card key={key} sx={{ mb: 2 }}>
-            <CardContent>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle1">
-                    {showName(key)}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Score</InputLabel>
-                    <Select
-                      value={value.score}
-                      onChange={(e) => handleCriteriaChange(key, 'score', Number(e.target.value))}
-                      label="Score"
-                    >
-                      {scoreRanges.map((range) => (
-                        <MenuItem key={range.value} value={range.value}>
-                          {range.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    <FormHelperText>
-                      {getScoreDescription(key, value.score)}
-                    </FormHelperText>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <Button
-                    startIcon={<CommentIcon />}
-                    onClick={() => handleCriteriaChange(key, 'showComments', !value.showComments)}
-                    size="small"
-                  >
-                    {value.showComments ? 'Hide Comments' : 'Add Comments'}
-                  </Button>
-                </Grid>
-                <Grid item xs={12}>
-                  <Collapse in={value.showComments}>
-                    <Box sx={{ mt: 2 }}>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            label="By Whom"
-                            value={value.byWhom}
-                            onChange={(e) => handleCriteriaChange(key, 'byWhom', e.target.value)}
-                            size="small"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            type="date"
-                            label="By Date"
-                            value={value.byDate}
-                            onChange={(e) => handleCriteriaChange(key, 'byDate', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            size="small"
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <TextField
-                            fullWidth
-                            multiline
-                            rows={2}
-                            label="Comments/Actions"
-                            value={value.comments}
-                            onChange={(e) => handleCriteriaChange(key, 'comments', e.target.value)}
-                            size="small"
-                          />
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  </Collapse>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        ))}
+        <Typography variant="body1" color="text.secondary">
+          No decision has been made yet.
+        </Typography>
+        {!readOnly && (
+          <Button
+            variant="contained"
+            startIcon={<EditIcon />}
+            onClick={() => setIsEditing(true)}
+            sx={{ mt: 2 }}
+          >
+            Make Decision
+          </Button>
+        )}
+      </Paper>
+    );
+  }
+
+  const status = getDecisionStatusDetails(goNoGoDecision.status);
+  const scoreFields = Object.keys(criteriaNames);
+
+  return (
+    <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5" fontWeight="bold">
+          Go/No Go Decision
+        </Typography>
+        {!readOnly && (
+          <Button
+            variant="outlined"
+            startIcon={<EditIcon />}
+            onClick={() => setIsEditing(true)}
+            color="primary"
+          >
+            Edit Decision
+          </Button>
+        )}
       </Box>
 
-      <Paper elevation={3} sx={{ p: 3, mt: 4, bgcolor: '#f5f5f5' }}>
-        <Typography variant="h6" gutterBottom>
-          Decision Summary
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <Typography variant="body1">
-              Total Score: {calculateTotalScore()}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography 
-              variant="body1" 
-              sx={{ color: getDecisionStatus().color, fontWeight: 'bold' }}
-            >
-              Decision Status: {getDecisionStatus().text}
-            </Typography>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                Project Details
+              </Typography>
+              <Grid container spacing={1}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Bid Type: {goNoGoDecision.bidType || 'Not Specified'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Sector: {goNoGoDecision.sector || 'Not Specified'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Tender Fee: {goNoGoDecision.tenderFee}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Submission Mode: {goNoGoDecision.submissionMode}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                Decision Summary
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Typography variant="body1" sx={{ mr: 2 }}>
+                  Total Score: 
+                </Typography>
+                <Chip 
+                  label={goNoGoDecision.totalScore} 
+                  color={
+                    goNoGoDecision.status === GoNoGoStatus.Green ? 'success' : 
+                    goNoGoDecision.status === GoNoGoStatus.Amber ? 'warning' : 'error'
+                  } 
+                />
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="body1" sx={{ mr: 2 }}>
+                  Decision Status:
+                </Typography>
+                {status?.icon}
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    color: status?.color, 
+                    fontWeight: 'bold', 
+                    ml: 1 
+                  }}
+                >
+                  {status?.text}
+                </Typography>
+              </Box>
+            </Grid>
           </Grid>
         </Grid>
-      </Paper>
-    </Box>
+
+        <Grid item xs={12}>
+          <Divider sx={{ my: 2 }} />
+          <Button
+            onClick={() => setIsScoresExpanded(!isScoresExpanded)}
+            sx={{
+              width: '100%',
+              justifyContent: 'space-between',
+              textTransform: 'none',
+              p: 1,
+              color: 'text.primary',
+              '&:hover': {
+                backgroundColor: 'action.hover',
+              }
+            }}
+            endIcon={isScoresExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          >
+            <Typography variant="h6" fontWeight="bold" component="span">
+              Detailed Criteria Scores
+            </Typography>
+          </Button>
+          <Collapse in={isScoresExpanded}>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              {scoreFields.map((field) => {
+                const score = goNoGoDecision[field as keyof GoNoGoDecision] as number;
+                
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={field}>
+                    <Tooltip 
+                      title={`Score: ${score}`} 
+                      placement="top"
+                    >
+                      <Chip 
+                        label={`${criteriaNames[field as keyof typeof criteriaNames]}: ${score}`}
+                        color={
+                          score >= 8 ? 'success' : 
+                          score >= 5 ? 'warning' : 'error'
+                        }
+                        variant="outlined"
+                        sx={{ 
+                          width: '100%', 
+                          justifyContent: 'space-between',
+                          '& .MuiChip-label': { 
+                            width: '100%', 
+                            display: 'flex', 
+                            justifyContent: 'space-between' 
+                          }
+                        }}
+                      />
+                    </Tooltip>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Collapse>
+        </Grid>
+      </Grid>
+    </Paper>
   );
 };
 

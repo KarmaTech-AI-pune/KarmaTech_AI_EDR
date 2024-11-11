@@ -7,6 +7,7 @@ import { opportunityApi } from '../services/api';
 import ProjectInfoWidget from '../components/widgets/ProjectInfoWidget';
 import OpportunityTrackingWidget from '../components/widgets/OpportunityTrackingWidget';
 import DecisionWidget from '../components/widgets/DecisionWidget';
+import GoNoGoWidget from '../components/widgets/GoNoGoWidget';
 
 export const ProjectDetails = () => {
   const context = useContext(projectManagementAppContext);
@@ -86,11 +87,19 @@ export const ProjectDetails = () => {
         <ProjectInfoWidget project={project} />
       </Paper>
 
-      <OpportunityTrackingWidget 
-        project={project}
-        opportunityTracking={opportunityTracking}
-        apiError={apiError}
-      />
+      {project.status === ProjectStatus.Opportunity ? (
+        <OpportunityTrackingWidget 
+          project={project}
+          opportunityTracking={opportunityTracking}
+          apiError={apiError}
+        />
+      ) : (
+        
+          <GoNoGoWidget 
+            projectId={project.id} 
+            project={project}
+          />
+      )}
     </Box>
   );
 };

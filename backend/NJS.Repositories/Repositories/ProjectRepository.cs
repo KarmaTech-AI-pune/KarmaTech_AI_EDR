@@ -1,4 +1,3 @@
-//File: backend/src/NJS.Application/Repositories/ProjectRepository.cs
 using NJS.Domain.Entities;
 using NJS.Domain.GenericRepository;
 using NJS.Repositories.Interfaces;
@@ -9,14 +8,18 @@ namespace NJS.Repositories.Repositories
     {
         private readonly IRepository<Project> _repository;
         private readonly IOpportunityTrackingRepository _opportunityTrackingRepository;
+        private readonly IGoNoGoDecisionRepository _goNoGoDecisionRepository;
 
-        public ProjectRepository(IRepository<Project> repository)
+        public ProjectRepository(
+            IRepository<Project> repository,
+            IGoNoGoDecisionRepository goNoGoDecisionRepository)
         {
             _repository = repository;
+            _goNoGoDecisionRepository = goNoGoDecisionRepository;
         }
 
         private static List<Project> _projects = new List<Project>
-    {
+        {
             new Project {
                 Id = 1,
                 Name = "City Water Supply Upgrade",
@@ -278,7 +281,7 @@ namespace NJS.Repositories.Repositories
                 existingProject.StartDate = project.StartDate;
                 existingProject.EndDate = project.EndDate;
                 existingProject.Status = project.Status;
-                existingProject.Progress = project.Progress; // Added missing Progress update
+                existingProject.Progress = project.Progress;
             }
         }
 

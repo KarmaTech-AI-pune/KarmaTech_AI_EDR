@@ -1,8 +1,7 @@
 import { screensArrayType, projectManagementAppContextType, User, Project } from './types'
 import { createContext, useState, useEffect } from 'react'
-import { Home, ProjectDetails, Opportunities } from './pages'
+import { Home, ProjectDetails, Opportunities, LoginScreen } from './pages'
 import { Navbar } from './components/navigation/Navbar'
-import LoginScreen from './components/LoginScreen'
 import { Dashboard } from './components/Dashboard'
 import { ProjectList } from './components/projects/ProjectList'
 import { ResourceManagement } from './components/ResourceManagement'
@@ -10,7 +9,7 @@ import { ReportsList } from './components/ReportsList'
 import { NotificationCenter } from './components/navigation/NotificationCenter'
 import { authApi } from './services/api'
 import GoNoGoWidget from './components/widgets/GoNoGoWidget'
-import BidPreparationForm from './components/BidPreparationForm'
+import BidPreparationForm from './components/forms/BidPreparationForm'
 
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
@@ -64,7 +63,12 @@ function App() {
     "Reports": <ReportsList />,
     "Notifications": <NotificationCenter />,
     "Project Details": <ProjectDetails />,
-    "Go/No Go Decision": <GoNoGoWidget />,
+    "Go/No Go Decision": selectedProject ? (
+      <GoNoGoWidget 
+        projectId={selectedProject.id} 
+        project={selectedProject} 
+      /> 
+    ) : <div>No project selected</div>,
     'Bid Preparation' : <BidPreparationForm />
   };
 

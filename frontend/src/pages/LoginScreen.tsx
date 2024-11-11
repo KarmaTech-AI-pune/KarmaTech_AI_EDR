@@ -12,7 +12,7 @@ import {
   import { projectManagementAppContext } from '../App';
   import { projectManagementAppContextType, Credentials } from '../types';
   
-  const LoginScreen: React.FC = () => {
+  export const LoginScreen: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -121,5 +121,3 @@ import {
       </Box>
     );
   };
-  
-  export default LoginScreen;

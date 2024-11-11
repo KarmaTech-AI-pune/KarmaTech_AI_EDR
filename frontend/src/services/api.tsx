@@ -57,6 +57,38 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+export const goNoGoApi = {
+  getByProjectId: async (projectId: number) => {
+    try {
+      const response = await axiosInstance.get(`/GoNoGoDecision/project/${projectId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching go/no-go decision for project ${projectId}:`, error);
+      throw error;
+    }
+  },
+
+  create: async (projectId: number, data: any) => {
+    try {
+      const response = await axiosInstance.post(`/GoNoGoDecision/project/${projectId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error creating go/no-go decision for project ${projectId}:`, error);
+      throw error;
+    }
+  },
+
+  update: async (id: number, data: any) => {
+    try {
+      const response = await axiosInstance.put(`/GoNoGoDecision/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating go/no-go decision ${id}:`, error);
+      throw error;
+    }
+  }
+};
+
 export const opportunityApi = {
   getByProjectId: async (projectId: number): Promise<OpportunityTracking[]> => {
     try {

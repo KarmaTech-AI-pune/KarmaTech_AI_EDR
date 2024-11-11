@@ -1,4 +1,3 @@
-//File: backend/src/NJS.Domain/Entities/Project.cs
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -59,6 +58,9 @@ namespace NJS.Domain.Entities
         // Navigation property
         public virtual ICollection<OpportunityTracking>? OpportunityTrackings { get; set; }
 
+        // Navigation property for GoNoGoDecision
+        public virtual GoNoGoDecision? GoNoGoDecision { get; set; }
+
         // Audit Fields
         [Required]
         public DateTime CreatedAt { get; set; }
@@ -85,4 +87,3 @@ namespace NJS.Domain.Entities
         Completed
     }
 }
-
