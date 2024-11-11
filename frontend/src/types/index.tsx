@@ -22,6 +22,8 @@ export type projectManagementAppContextType  = {
     handleLogout: () => void;
     selectedProject?: Project | null;
     setSelectedProject?: React.Dispatch<React.SetStateAction<Project | null>>;
+    currentGoNoGoDecision: GoNoGoDecision | null;
+    setCurrentGoNoGoDecision: React.Dispatch<React.SetStateAction<GoNoGoDecision | null>>;
 }
 
 export enum ProjectStatus {

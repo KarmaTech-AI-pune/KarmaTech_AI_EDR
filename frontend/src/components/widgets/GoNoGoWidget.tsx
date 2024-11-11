@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Box,
   Typography,
@@ -10,21 +10,18 @@ import {
   Chip,
   Divider,
   Collapse,
-  IconButton,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { goNoGoApi } from '../../services/api';
-import GoNoGoForm from '../forms/GoNoGoForm';
-import { Project, GoNoGoDecision, GoNoGoStatus } from '../../types';
+import { Project, GoNoGoDecision, GoNoGoStatus, ProjectStatus } from '../../types';
+import { projectManagementAppContext } from '../../App';
 
 interface GoNoGoWidgetProps {
   projectId: number;
   project: Project;
-  readOnly?: boolean;
 }
 
 const criteriaNames = {
@@ -44,13 +41,12 @@ const criteriaNames = {
 
 const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({ 
   projectId, 
-  project, 
-  readOnly = false 
+  project
 }) => {
+  const context = useContext(projectManagementAppContext);
   const [goNoGoDecision, setGoNoGoDecision] = useState<GoNoGoDecision | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [isScoresExpanded, setIsScoresExpanded] = useState(true);
 
   useEffect(() => {
@@ -74,22 +70,10 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
     fetchGoNoGoData();
   }, [projectId]);
 
-  const handleSubmit = async (decision: GoNoGoDecision) => {
-    try {
-      let updatedDecision;
-      if (goNoGoDecision?.id) {
-        updatedDecision = await goNoGoApi.update(goNoGoDecision.id, {
-          ...decision,
-          projectId
-        });
-      } else {
-        updatedDecision = await goNoGoApi.create(projectId, decision);
-      }
-      setGoNoGoDecision(updatedDecision);
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error saving Go/No-Go decision:', error);
-      setError('Failed to save Go/No-Go decision');
+  const navigateToForm = () => {
+    if (context?.setScreenState && context?.setCurrentGoNoGoDecision) {
+      context.setCurrentGoNoGoDecision(goNoGoDecision);
+      context.setScreenState("Go/No Go Decision");
     }
   };
 
@@ -106,6 +90,21 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
     }
   };
 
+  // If project is in opportunity phase, only show the button
+  if (project.status === ProjectStatus.Opportunity) {
+    return (
+      <Button
+        variant="contained"
+        onClick={navigateToForm}
+        color="primary"
+        fullWidth
+        sx={{ mb: 2 }}
+      >
+        {goNoGoDecision ? 'View/Edit Go/No Go Decision' : 'Make Go/No Go Decision'}
+      </Button>
+    );
+  }
+
   if (loading) {
     return <Box sx={{ p: 3 }}>Loading Go/No-Go decision data...</Box>;
   }
@@ -118,16 +117,6 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
     );
   }
 
-  if (isEditing && !readOnly) {
-    return (
-      <GoNoGoForm
-        project={project}
-        goNoGoDecision={goNoGoDecision}
-        onSubmit={handleSubmit}
-      />
-    );
-  }
-
   if (!goNoGoDecision) {
     return (
       <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
@@ -137,16 +126,13 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
         <Typography variant="body1" color="text.secondary">
           No decision has been made yet.
         </Typography>
-        {!readOnly && (
-          <Button
-            variant="contained"
-            startIcon={<EditIcon />}
-            onClick={() => setIsEditing(true)}
-            sx={{ mt: 2 }}
-          >
-            Make Decision
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          onClick={navigateToForm}
+          sx={{ mt: 2 }}
+        >
+          Make Decision
+        </Button>
       </Paper>
     );
   }
@@ -160,16 +146,13 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
         <Typography variant="h5" fontWeight="bold">
           Go/No Go Decision
         </Typography>
-        {!readOnly && (
-          <Button
-            variant="outlined"
-            startIcon={<EditIcon />}
-            onClick={() => setIsEditing(true)}
-            color="primary"
-          >
-            Edit Decision
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          onClick={navigateToForm}
+          color="primary"
+        >
+          Edit Decision
+        </Button>
       </Box>
 
       <Grid container spacing={3}>

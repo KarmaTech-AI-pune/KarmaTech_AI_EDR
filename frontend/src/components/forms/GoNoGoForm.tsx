@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Accordion,
   AccordionSummary,
@@ -20,7 +20,8 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
-import { Project } from '../../types';
+import { Project, GoNoGoDecision, GoNoGoStatus } from '../../types';
+import { projectManagementAppContext } from '../../App';
 
 interface GoNoGoFormProps {
   project: Project;
@@ -126,7 +127,10 @@ const scoreRanges = [
   { value: 0, label: '0 - Not Rated', range: 'low' }
 ];
 
-const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ project, goNoGoDecision, onSubmit }) => {
+const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ project, onSubmit }) => {
+  const context = useContext(projectManagementAppContext);
+  const initialGoNoGoDecision = context?.currentGoNoGoDecision;
+  const [isEditing, setIsEditing] = useState(false);
   const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
     typeOfBid: '',
     sector: '',
@@ -156,38 +160,89 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ project, goNoGoDecision, onSubm
   });
 
   useEffect(() => {
-    if (goNoGoDecision) {
-      // Safely update headerInfo, checking for nested properties
+    if (initialGoNoGoDecision) {
+      // Map GoNoGoDecision to form state
+      setIsEditing(true);
       setHeaderInfo(prev => ({
         ...prev,
-        typeOfBid: goNoGoDecision.headerInfo?.typeOfBid || prev.typeOfBid,
-        sector: goNoGoDecision.headerInfo?.sector || prev.sector,
-        bdHead: goNoGoDecision.headerInfo?.bdHead || prev.bdHead,
-        office: goNoGoDecision.headerInfo?.office || prev.office
+        typeOfBid: initialGoNoGoDecision.bidType || '',
+        sector: initialGoNoGoDecision.sector || '',
+        submissionType: initialGoNoGoDecision.submissionMode || '',
+        tenderFee: initialGoNoGoDecision.tenderFee?.toString() || '',
+        emd: initialGoNoGoDecision.emdAmount?.toString() || ''
       }));
 
-      // Safely update criteria
-      if (goNoGoDecision.criteria) {
-        setCriteria(prev => {
-          const updatedCriteria = { ...prev };
-          Object.keys(updatedCriteria).forEach(key => {
-            if (goNoGoDecision.criteria[key]) {
-              updatedCriteria[key] = {
-                ...updatedCriteria[key],
-                score: goNoGoDecision.criteria[key].score || updatedCriteria[key].score,
-                byWhom: goNoGoDecision.criteria[key].byWhom || updatedCriteria[key].byWhom,
-                byDate: goNoGoDecision.criteria[key].byDate || updatedCriteria[key].byDate,
-                comments: goNoGoDecision.criteria[key].comments || updatedCriteria[key].comments
-              };
-            }
-          });
-          return updatedCriteria;
-        });
+      // Map scores and comments
+      setCriteria(prev => ({
+        ...prev,
+        marketingPlan: {
+          ...prev.marketingPlan,
+          score: initialGoNoGoDecision.marketingPlanScore || 0,
+          comments: initialGoNoGoDecision.marketingPlanComments || ''
+        },
+        clientRelationship: {
+          ...prev.clientRelationship,
+          score: initialGoNoGoDecision.clientRelationshipScore || 0,
+          comments: initialGoNoGoDecision.clientRelationshipComments || ''
+        },
+        projectKnowledge: {
+          ...prev.projectKnowledge,
+          score: initialGoNoGoDecision.projectKnowledgeScore || 0,
+          comments: initialGoNoGoDecision.projectKnowledgeComments || ''
+        },
+        technicalEligibility: {
+          ...prev.technicalEligibility,
+          score: initialGoNoGoDecision.technicalEligibilityScore || 0,
+          comments: initialGoNoGoDecision.technicalEligibilityComments || ''
+        },
+        financialEligibility: {
+          ...prev.financialEligibility,
+          score: initialGoNoGoDecision.financialEligibilityScore || 0,
+          comments: initialGoNoGoDecision.financialEligibilityComments || ''
+        },
+        keyStaffAvailability: {
+          ...prev.keyStaffAvailability,
+          score: initialGoNoGoDecision.staffAvailabilityScore || 0,
+          comments: initialGoNoGoDecision.staffAvailabilityComments || ''
+        },
+        projectCompetition: {
+          ...prev.projectCompetition,
+          score: initialGoNoGoDecision.competitionAssessmentScore || 0,
+          comments: initialGoNoGoDecision.competitionAssessmentComments || ''
+        },
+        competitionPosition: {
+          ...prev.competitionPosition,
+          score: initialGoNoGoDecision.competitivePositionScore || 0,
+          comments: initialGoNoGoDecision.competitivePositionComments || ''
+        },
+        futureWorkPotential: {
+          ...prev.futureWorkPotential,
+          score: initialGoNoGoDecision.futureWorkPotentialScore || 0,
+          comments: initialGoNoGoDecision.futureWorkPotentialComments || ''
+        },
+        projectProfitability: {
+          ...prev.projectProfitability,
+          score: initialGoNoGoDecision.profitabilityScore || 0,
+          comments: initialGoNoGoDecision.profitabilityComments || ''
+        },
+        projectSchedule: {
+          ...prev.projectSchedule,
+          score: initialGoNoGoDecision.bidScheduleScore || 0,
+          comments: initialGoNoGoDecision.bidScheduleComments || ''
+        },
+        bidTimeAndCosts: {
+          ...prev.bidTimeAndCosts,
+          score: initialGoNoGoDecision.resourceAvailabilityScore || 0,
+          comments: initialGoNoGoDecision.resourceAvailabilityComments || ''
+        }
+      }));
+
+      if (context?.setCurrentGoNoGoDecision) {
+        context.setCurrentGoNoGoDecision(null);
       }
     }
-  }, [goNoGoDecision]);
+  }, [initialGoNoGoDecision, context]);
 
-  // Rest of the component remains unchanged from the previous implementation
   const handleHeaderChange = (field: keyof HeaderInfo, value: string) => {
     setHeaderInfo(prev => ({ ...prev, [field]: value }));
   };
@@ -214,6 +269,13 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ project, goNoGoDecision, onSubm
     return { text: 'NO GO [Red]', color: '#f44336' };
   };
 
+  const getTotalScoreStatus = (): GoNoGoStatus => {
+    const totalScore = calculateTotalScore();
+    if (totalScore >= 84) return GoNoGoStatus.Green;
+    if (totalScore >= 50) return GoNoGoStatus.Amber;
+    return GoNoGoStatus.Red;
+  };
+
   const getScoreDescription = (criteriaKey: string, score: number) => {
     const range = scoreRanges.find(r => r.value === score)?.range;
     return range ? scoringDescriptions[criteriaKey][range] : '';
@@ -225,23 +287,58 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ project, goNoGoDecision, onSubm
 
   const handleSubmit = () => {
     if (onSubmit) {
-      const decision = {
-        headerInfo,
-        criteria,
+      const decision: Partial<GoNoGoDecision> = {
+        projectId: project.id,
+        bidType: headerInfo.typeOfBid,
+        sector: headerInfo.sector,
+        tenderFee: Number(headerInfo.tenderFee) || 0,
+        emdAmount: Number(headerInfo.emd) || 0,
+        submissionMode: headerInfo.submissionType,
+        marketingPlanScore: criteria.marketingPlan.score,
+        marketingPlanComments: criteria.marketingPlan.comments,
+        clientRelationshipScore: criteria.clientRelationship.score,
+        clientRelationshipComments: criteria.clientRelationship.comments,
+        projectKnowledgeScore: criteria.projectKnowledge.score,
+        projectKnowledgeComments: criteria.projectKnowledge.comments,
+        technicalEligibilityScore: criteria.technicalEligibility.score,
+        technicalEligibilityComments: criteria.technicalEligibility.comments,
+        financialEligibilityScore: criteria.financialEligibility.score,
+        financialEligibilityComments: criteria.financialEligibility.comments,
+        staffAvailabilityScore: criteria.keyStaffAvailability.score,
+        staffAvailabilityComments: criteria.keyStaffAvailability.comments,
+        competitionAssessmentScore: criteria.projectCompetition.score,
+        competitionAssessmentComments: criteria.projectCompetition.comments,
+        competitivePositionScore: criteria.competitionPosition.score,
+        competitivePositionComments: criteria.competitionPosition.comments,
+        futureWorkPotentialScore: criteria.futureWorkPotential.score,
+        futureWorkPotentialComments: criteria.futureWorkPotential.comments,
+        profitabilityScore: criteria.projectProfitability.score,
+        profitabilityComments: criteria.projectProfitability.comments,
+        resourceAvailabilityScore: criteria.bidTimeAndCosts.score,
+        resourceAvailabilityComments: criteria.bidTimeAndCosts.comments,
+        bidScheduleScore: criteria.projectSchedule.score,
+        bidScheduleComments: criteria.projectSchedule.comments,
         totalScore: calculateTotalScore(),
-        status: getDecisionStatus().text,
-        projectId: project.id
+        status: getTotalScoreStatus(),
+        completedDate: new Date(),
+        createdAt: new Date(),
+        createdBy: context?.user?.name || ''
       };
+
       onSubmit(decision);
     }
   };
 
-  // Existing render method remains the same
   return (
     <Box sx={{ p: 3, maxWidth: 1200, margin: 'auto' }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
-        Go/No Go Decision Form
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Go/No Go Decision Form
+        </Typography>
+        <Typography variant="h6" color="text.secondary">
+          Project: {project.name}
+        </Typography>
+      </Box>
 
       <Accordion defaultExpanded>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -401,7 +498,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ project, goNoGoDecision, onSubm
             color="primary"
             onClick={handleSubmit}
           >
-            {goNoGoDecision ? 'Update Decision' : 'Submit Decision'}
+            {isEditing ? 'Update Decision' : 'Submit Decision'}
           </Button>
         </Box>
       </Paper>

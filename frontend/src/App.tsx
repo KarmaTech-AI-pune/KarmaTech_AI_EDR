@@ -1,4 +1,4 @@
-import { screensArrayType, projectManagementAppContextType, User, Project } from './types'
+import { screensArrayType, projectManagementAppContextType, User, Project, GoNoGoDecision } from './types'
 import { createContext, useState, useEffect } from 'react'
 import { Home, ProjectDetails, Opportunities, LoginScreen } from './pages'
 import { Navbar } from './components/navigation/Navbar'
@@ -8,7 +8,7 @@ import { ResourceManagement } from './components/ResourceManagement'
 import { ReportsList } from './components/ReportsList'
 import { NotificationCenter } from './components/navigation/NotificationCenter'
 import { authApi } from './services/api'
-import GoNoGoWidget from './components/widgets/GoNoGoWidget'
+import GoNoGoForm from './components/forms/GoNoGoForm'
 import BidPreparationForm from './components/forms/BidPreparationForm'
 
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
@@ -19,6 +19,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [currentGoNoGoDecision, setCurrentGoNoGoDecision] = useState<GoNoGoDecision | null>(null)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -51,6 +52,7 @@ function App() {
     setIsAuthenticated(false);
     setScreenState("Login");
     setSelectedProject(null);
+    setCurrentGoNoGoDecision(null);
   };
 
   const screenArray : screensArrayType = {
@@ -64,10 +66,10 @@ function App() {
     "Notifications": <NotificationCenter />,
     "Project Details": <ProjectDetails />,
     "Go/No Go Decision": selectedProject ? (
-      <GoNoGoWidget 
-        projectId={selectedProject.id} 
-        project={selectedProject} 
-      /> 
+      <GoNoGoForm 
+        project={selectedProject}
+        goNoGoDecision={currentGoNoGoDecision}
+      />
     ) : <div>No project selected</div>,
     'Bid Preparation' : <BidPreparationForm />
   };
@@ -95,7 +97,9 @@ function App() {
       setUser,
       handleLogout,
       selectedProject,
-      setSelectedProject
+      setSelectedProject,
+      currentGoNoGoDecision,
+      setCurrentGoNoGoDecision
     }}>
       {isAuthenticated && <Navbar />}
       {screenArray[screenState]}
