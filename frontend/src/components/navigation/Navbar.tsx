@@ -17,6 +17,7 @@ import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
 import { authApi } from '../../services/api';
 
+
 const pages = ['Projects', 'Opportunities', 'Go/No Go Decision','Bid Preparation'];
 
 export const Navbar = () => {

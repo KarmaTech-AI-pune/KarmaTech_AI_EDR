@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Typography, Paper, Grid, Alert, Button, Collapse, Chip } from '@mui/material';
 import { ExpandMore, ExpandLess, TrendingUp, AssignmentTurnedIn, MonetizationOn } from '@mui/icons-material';
 import { Project, ProjectStatus, OpportunityTracking } from '../../types';
+import OpportunityForm from '../forms/OpportunityForm';
+import { opportunityApi } from '../../services/api';
+import { projectManagementAppContext } from '../../App';
 
 interface OpportunityTrackingWidgetProps {
   project: Project;
@@ -11,21 +14,56 @@ interface OpportunityTrackingWidgetProps {
 
 const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({ 
   project, 
-  opportunityTracking, 
-  apiError 
+  opportunityTracking: initialOpportunityTracking, 
+  apiError: initialApiError 
 }) => {
+  const context = useContext(projectManagementAppContext);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [opportunityTracking, setOpportunityTracking] = useState<OpportunityTracking | null>(initialOpportunityTracking);
+  const [apiError, setApiError] = useState<string | null>(initialApiError);
 
   const handleCreateOpportunity = () => {
-    console.log('Create opportunity clicked');
+    setIsFormOpen(true);
+    setFormError(null);
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setFormError(null);
+  };
+
+  const handleFormSubmit = async (data: any) => {
+    try {
+      if (!context?.user?.name) {
+        throw new Error('User not authenticated');
+      }
+
+      const submissionData = {
+        ...data,
+        createdBy: context.user.name,
+        createdAt: new Date().toISOString(),
+        lastModifiedBy: context.user.name,
+        lastModifiedAt: new Date().toISOString()
+      };
+
+      const newOpportunity = await opportunityApi.create(submissionData);
+      setOpportunityTracking(newOpportunity);
+      setIsFormOpen(false);
+      setFormError(null);
+    } catch (error: any) {
+      console.error('Error creating opportunity:', error);
+      setFormError(error.message || 'Failed to create opportunity');
+    }
   };
 
   const getStatusColor = (stage: string) => {
     switch (stage?.toLowerCase()) {
-      case 'initial': return 'default';
-      case 'proposal': return 'primary';
-      case 'negotiation': return 'secondary';
-      case 'final': return 'success';
+      case 'a': return 'success';
+      case 'b': return 'info';
+      case 'c': return 'warning';
+      case 'd': return 'error';
       default: return 'default';
     }
   };
@@ -47,7 +85,7 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({
         
         <Collapse in={isExpanded}>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            Opportunity data not found for this project
+            Opportunity tracking is only available for projects in Opportunity status
           </Typography>
         </Collapse>
       </Paper>
@@ -66,29 +104,38 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({
   // If no opportunity tracking exists for an opportunity status project
   if (!opportunityTracking) {
     return (
-      <Paper variant="outlined" sx={{ p: 3, mt: 2, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}>
-        <Alert 
-          severity="info" 
-          sx={{ 
-            mb: 2, 
-            '& .MuiAlert-icon': { color: 'primary.main' } 
-          }}
-        >
-          No opportunity tracking details available.
-        </Alert>
-        <Button 
-          variant="contained" 
-          color="primary"
-          startIcon={<TrendingUp />}
-          onClick={handleCreateOpportunity}
-          sx={{ 
-            textTransform: 'none', 
-            borderRadius: 2 
-          }}
-        >
-          Create Opportunity
-        </Button>
-      </Paper>
+      <>
+        <Paper variant="outlined" sx={{ p: 3, mt: 2, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}>
+          <Alert 
+            severity="info" 
+            sx={{ 
+              mb: 2, 
+              '& .MuiAlert-icon': { color: 'primary.main' } 
+            }}
+          >
+            No opportunity tracking details available.
+          </Alert>
+          <Button 
+            variant="contained" 
+            color="primary"
+            startIcon={<TrendingUp />}
+            onClick={handleCreateOpportunity}
+            sx={{ 
+              textTransform: 'none', 
+              borderRadius: 2 
+            }}
+          >
+            Create Opportunity
+          </Button>
+        </Paper>
+        <OpportunityForm
+          open={isFormOpen}
+          onClose={handleFormClose}
+          onSubmit={handleFormSubmit}
+          project={project}
+          error={formError}
+        />
+      </>
     );
   }
 
@@ -111,8 +158,8 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({
         </Grid>
         <Grid item>
           <Chip 
-            label={opportunityTracking.stage} 
-            color={getStatusColor(opportunityTracking.stage)} 
+            label={`Stage ${opportunityTracking.stage}`}
+            color={getStatusColor(opportunityTracking.stage)}
             icon={<AssignmentTurnedIn />}
             variant="outlined"
           />
@@ -161,6 +208,11 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({
             <Grid item xs={12}>
               <Typography variant="body2" color="text.primary">
                 Chance of Project: {opportunityTracking.percentageChanceOfProjectHappening}%
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body2" color="text.primary">
+                Chance of Success: {opportunityTracking.percentageChanceOfNJSSuccess}%
               </Typography>
             </Grid>
             <Grid item xs={12}>

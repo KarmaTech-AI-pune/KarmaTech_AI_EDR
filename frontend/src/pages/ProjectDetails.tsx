@@ -87,19 +87,19 @@ export const ProjectDetails = () => {
         <ProjectInfoWidget project={project} />
       </Paper>
 
-      {project.status === ProjectStatus.Opportunity ? (
+      
         <OpportunityTrackingWidget 
           project={project}
           opportunityTracking={opportunityTracking}
           apiError={apiError}
         />
-      ) : (
+      
         
           <GoNoGoWidget 
             projectId={project.id} 
             project={project}
           />
-      )}
+      
     </Box>
   );
 };

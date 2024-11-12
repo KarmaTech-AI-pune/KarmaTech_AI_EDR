@@ -117,15 +117,14 @@ export enum GoNoGoStatus {
 }
 
 export interface GoNoGoDecision {
-  id: number;
   projectId: number;
   bidType: string;
   sector: string;
   tenderFee: number;
   emdAmount: number;
-  submissionMode: string;
+  // Removed submissionMode
 
-  // Scoring Criteria
+  // Rest of the interface remains the same
   marketingPlanScore: number;
   marketingPlanComments: string;
   clientRelationshipScore: number;
@@ -154,22 +153,25 @@ export interface GoNoGoDecision {
   // Total Score and Decision
   totalScore: number;
   status: GoNoGoStatus;
-  decisionComments?: string;
+  decisionComments: string;
 
   // Approval Information
-  completedDate: Date;
+  completedDate: string;
   completedBy: string;
-  reviewedDate?: Date;
+  reviewedDate?: string;
   reviewedBy?: string;
-  approvedDate?: Date;
+  approvedDate?: string;
   approvedBy?: string;
 
   // Action Plan
   actionPlan?: string;
 
   // Audit Fields
-  createdAt: Date;
+  createdAt: string;
   createdBy: string;
-  lastModifiedAt?: Date;
+  lastModifiedAt?: string;
   lastModifiedBy?: string;
 }
+
+// Optional: Create a type for creating a new Go/No-Go decision
+export type CreateGoNoGoDecisionDto = Omit<GoNoGoDecision, 'id'> & { id?: number };

@@ -34,11 +34,9 @@ namespace NJS.Domain.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal EMDAmount { get; set; }
 
-        [Required]
-        [StringLength(20)]
-        public string? SubmissionMode { get; set; } // Online/Offline
+        // Removed SubmissionMode property
 
-        // Scoring Criteria (0-10 scale for each)
+        // Rest of the class remains the same (all other properties)
         [Required]
         [Range(0, 10)]
         public int MarketingPlanScore { get; set; }
@@ -142,7 +140,7 @@ namespace NJS.Domain.Entities
         [Required]
         public GoNoGoStatus Status { get; set; }
 
-        [Required]
+        
         [StringLength(2000)]
         public string? DecisionComments { get; set; }
 

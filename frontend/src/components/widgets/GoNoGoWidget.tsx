@@ -30,11 +30,12 @@ const criteriaNames = {
   projectKnowledgeScore: 'Project Knowledge',
   technicalEligibilityScore: 'Technical Eligibility',
   financialEligibilityScore: 'Financial Eligibility',
-  staffAvailabilityScore: 'Staff Availability',
-  competitionAssessmentScore: 'Competition Assessment',
-  competitivePositionScore: 'Competitive Position',
+  staffAvailabilityScore: 'Key Staff Availability',
+  competitionAssessmentScore: 'Project Competition',
+  competitivePositionScore: 'Relative Position to Competition',
   futureWorkPotentialScore: 'Future Work Potential',
   profitabilityScore: 'Profitability',
+  
   resourceAvailabilityScore: 'Resource Availability',
   bidScheduleScore: 'Bid Schedule'
 };
@@ -71,6 +72,7 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
   }, [projectId]);
 
   const navigateToForm = () => {
+    console.log(goNoGoDecision)
     if (context?.setScreenState && context?.setCurrentGoNoGoDecision) {
       context.setCurrentGoNoGoDecision(goNoGoDecision);
       context.setScreenState("Go/No Go Decision");
@@ -173,16 +175,13 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
                     Sector: {goNoGoDecision.sector || 'Not Specified'}
                   </Typography>
                 </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Tender Fee: {goNoGoDecision.tenderFee}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Submission Mode: {goNoGoDecision.submissionMode}
-                  </Typography>
-                </Grid>
+<Grid item xs={6}>
+  <Typography variant="body2" color="text.secondary">
+    Tender Fee: {goNoGoDecision.tenderFee}
+  </Typography>
+</Grid>
+
+
               </Grid>
             </Grid>
 

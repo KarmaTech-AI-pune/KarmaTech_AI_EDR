@@ -1,8 +1,8 @@
 // File: frontend/src/services/api.ts
 // Purpose: API service for making backend requests
 
-import axios,{ AxiosInstance } from 'axios';
-import { Project, Credentials, User, LoginResponse, OpportunityTracking } from '../types';
+import axios, { AxiosInstance } from 'axios';
+import { Project, Credentials, User, LoginResponse, OpportunityTracking, GoNoGoDecision } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -20,12 +20,6 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log('Request:', {
-      url: config.url,
-      method: config.method,
-      headers: config.headers,
-      data: config.data
-    });
     return config;
   },
   (error) => {
@@ -36,19 +30,12 @@ axiosInstance.interceptors.request.use(
 
 // Add response interceptor to handle authentication errors
 axiosInstance.interceptors.response.use(
-  (response) => {
-    console.log('Response:', {
-      status: response.status,
-      data: response.data
-    });
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.error('Response error:', {
+    console.error('Detailed Response error:', {
       status: error.response?.status,
       data: error.response?.data,
-      message: error.message,
-      config: error.config
+      message: error.message
     });
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
@@ -58,32 +45,76 @@ axiosInstance.interceptors.response.use(
 );
 
 export const goNoGoApi = {
-  getByProjectId: async (projectId: number) => {
+  getAll: async (): Promise<GoNoGoDecision[]> => {
     try {
-      const response = await axiosInstance.get(`/GoNoGoDecision/project/${projectId}`);
+      const response = await axiosInstance.get('GoNoGoDecision');
       return response.data;
     } catch (error) {
-      console.error(`Error fetching go/no-go decision for project ${projectId}:`, error);
+      console.error('Error fetching Go/No-Go decisions:', error);
       throw error;
     }
   },
 
-  create: async (projectId: number, data: any) => {
+  getById: async (id: number): Promise<GoNoGoDecision> => {
     try {
-      const response = await axiosInstance.post(`/GoNoGoDecision/project/${projectId}`, data);
+      const response = await axiosInstance.get(`GoNoGoDecision/${id}`);
       return response.data;
     } catch (error) {
+      console.error(`Error fetching Go/No-Go decision ${id}:`, error);
+      throw error;
+    }
+  },
+
+  getByProjectId: async (projectId: number): Promise<GoNoGoDecision | null> => {
+    try {
+      const response = await axiosInstance.get(`GoNoGoDecision/project/${projectId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return null;
+      }
+      console.error(`Error fetching Go/No-Go decision for project ${projectId}:`, error);
+      throw error;
+    }
+  },
+
+  create: async (projectId: number, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
+    try {
+      console.log(`Creating GoNoGo Decision for Project ${projectId}:`, JSON.stringify(data));
+      const response = await axiosInstance.post(`GoNoGoDecision`, data);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        const validationErrors = error.response.data.errors;
+        console.error('Validation Errors:', validationErrors);
+        throw new Error(validationErrors.join(', '));
+      }
       console.error(`Error creating go/no-go decision for project ${projectId}:`, error);
       throw error;
     }
   },
 
-  update: async (id: number, data: any) => {
+  update: async (id: number, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
     try {
-      const response = await axiosInstance.put(`/GoNoGoDecision/${id}`, data);
+      console.log(`Updating GoNoGo Decision ${id}:`, JSON.stringify(data));
+      const response = await axiosInstance.put(`GoNoGoDecision/${id}`, data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        const validationErrors = error.response.data.errors;
+        console.error('Validation Errors:', validationErrors);
+        throw new Error(validationErrors.join(', '));
+      }
       console.error(`Error updating go/no-go decision ${id}:`, error);
+      throw error;
+    }
+  },
+
+  delete: async (id: number): Promise<void> => {
+    try {
+      await axiosInstance.delete(`GoNoGoDecision/${id}`);
+    } catch (error) {
+      console.error(`Error deleting Go/No-Go decision ${id}:`, error);
       throw error;
     }
   }
@@ -92,20 +123,49 @@ export const goNoGoApi = {
 export const opportunityApi = {
   getByProjectId: async (projectId: number): Promise<OpportunityTracking[]> => {
     try {
-      const response = await axiosInstance.get(`/opportunity-tracking/project/${projectId}`);
+      const response = await axiosInstance.get(`opportunity-tracking/project/${projectId}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching opportunity tracking for project ${projectId}:`, error);
       throw error;
     }
+  },
+
+  create: async (data: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
+    try {
+      const response = await axiosInstance.post('opportunity-tracking', data);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        const validationErrors = error.response.data.errors;
+        console.error('Validation Errors:', validationErrors);
+        throw new Error(validationErrors.join(', '));
+      }
+      console.error('Error creating opportunity tracking:', error);
+      throw error;
+    }
+  },
+
+  update: async (id: number, data: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
+    try {
+      const response = await axiosInstance.put(`opportunity-tracking/${id}`, data);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        const validationErrors = error.response.data.errors;
+        console.error('Validation Errors:', validationErrors);
+        throw new Error(validationErrors.join(', '));
+      }
+      console.error(`Error updating opportunity tracking ${id}:`, error);
+      throw error;
+    }
   }
 };
 
-// Rest of the file remains the same
 export const projectApi = {
   getAll: async (): Promise<Project[]> => {
     try {
-      const response = await axiosInstance.get('/project');
+      const response = await axiosInstance.get('project');
       return response.data;
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -115,7 +175,7 @@ export const projectApi = {
 
   getById: async (id: number): Promise<Project> => {
     try {
-      const response = await axiosInstance.get(`/project/${id}`);
+      const response = await axiosInstance.get(`project/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching project ${id}:`, error);
@@ -135,7 +195,7 @@ export const projectApi = {
 
       console.log('Creating project with formatted data:', formattedProject);
       
-      const response = await axiosInstance.post('/project', formattedProject);
+      const response = await axiosInstance.post('project', formattedProject);
       return response.data;
     } catch (error: any) {
       console.error('Project creation error:', {
@@ -164,7 +224,7 @@ export const projectApi = {
         progress: Number(project.progress)
       };
 
-      await axiosInstance.put(`/project/${id}`, formattedProject);
+      await axiosInstance.put(`project/${id}`, formattedProject);
     } catch (error) {
       console.error(`Error updating project ${id}:`, error);
       throw error;
@@ -173,7 +233,7 @@ export const projectApi = {
 
   delete: async (id: number): Promise<void> => {
     try {
-      await axiosInstance.delete(`/project/${id}`);
+      await axiosInstance.delete(`project/${id}`);
     } catch (error) {
       console.error(`Error deleting project ${id}:`, error);
       throw error;
@@ -184,7 +244,7 @@ export const projectApi = {
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
-      const response = await axiosInstance.post('/user/login', credentials);
+      const response = await axiosInstance.post('user/login', credentials);
       const { success, user, token } = response.data;
       
       if (success && token) {
@@ -203,7 +263,7 @@ export const authApi = {
 
   logout: async (): Promise<void> => {
     try {
-      await axiosInstance.post('/user/logout');
+      await axiosInstance.post('user/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -214,7 +274,7 @@ export const authApi = {
 
   checkAuth: async (): Promise<boolean> => {
     try {
-      const response = await axiosInstance.get('/user/verify');
+      const response = await axiosInstance.get('user/verify');
       return response.data.valid;
     } catch (error) {
       return false;
@@ -223,7 +283,7 @@ export const authApi = {
 
   getCurrentUser: async (): Promise<User | null> => {
     try {
-      const response = await axiosInstance.get('/user/me');
+      const response = await axiosInstance.get('user/me');
       return response.data.user;
     } catch (error) {
       return null;
