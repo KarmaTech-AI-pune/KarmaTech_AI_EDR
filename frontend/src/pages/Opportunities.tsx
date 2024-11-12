@@ -15,14 +15,13 @@ import {
   ExpandMore as ExpandMoreIcon, 
   WorkOutline as WorkOutlineIcon 
 } from '@mui/icons-material';
-import { projectApi, opportunityApi } from '../services/api';
-import { Project, ProjectStatus, OpportunityTracking } from '../types';
+import { projectApi } from '../services/api';
+import { Project, ProjectStatus } from '../types';
 import OpportunityTrackingWidget from '../components/widgets/OpportunityTrackingWidget';
 
 export const Opportunities: React.FC = () => {
   const [opportunityProjects, setOpportunityProjects] = useState<Project[]>([]);
   const [expandedProjectId, setExpandedProjectId] = useState<number | null>(null);
-  const [opportunityTrackings, setOpportunityTrackings] = useState<{[key: number]: OpportunityTracking[]}>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,21 +42,7 @@ export const Opportunities: React.FC = () => {
     loadOpportunityProjects();
   }, []);
 
-  const toggleProjectExpansion = async (projectId: number) => {
-    // If project is being expanded and we don't have its tracking yet
-    if (expandedProjectId !== projectId && !opportunityTrackings[projectId]) {
-      try {
-        const tracking = await opportunityApi.getByProjectId(projectId);
-        setOpportunityTrackings(prev => ({
-          ...prev,
-          [projectId]: tracking
-        }));
-      } catch (err) {
-        console.error('Failed to fetch opportunity tracking', err);
-      }
-    }
-
-    // Toggle expansion
+  const toggleProjectExpansion = (projectId: number) => {
     setExpandedProjectId(expandedProjectId === projectId ? null : projectId);
   };
 
@@ -139,15 +124,7 @@ export const Opportunities: React.FC = () => {
                   </Grid>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <OpportunityTrackingWidget 
-                    project={project} 
-                    opportunityTracking={
-                      opportunityTrackings[project.id] 
-                      ? opportunityTrackings[project.id][0] 
-                      : null
-                    }
-                    apiError={null}
-                  />
+                  <OpportunityTrackingWidget project={project} />
                 </AccordionDetails>
               </Accordion>
             </Grid>

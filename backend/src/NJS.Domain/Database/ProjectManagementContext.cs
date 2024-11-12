@@ -16,6 +16,8 @@ namespace NJS.Domain.Database
         public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; }
         public DbSet<WBSTask> WBSTasks { get; set; }
         public DbSet<UserWBSTask> UserWBSTasks { get; set; }
+        public DbSet<OpportunityTracking> OpportunityTrackings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -23,6 +25,26 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<FeasibilityStudy>().Property(f => f.FinancialInformation).HasPrecision(18, 2);
             modelBuilder.Entity<Project>().Property(f => f.EstimatedCost).HasPrecision(18, 2);
             modelBuilder.Entity<WBSTask>().Property(f => f.Budget).HasPrecision(18, 2);
+            
+            // Configure OpportunityTracking decimal precisions
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.BidFees)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.EMD)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.PercentageChanceOfProjectHappening)
+                .HasPrecision(5, 2);
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.PercentageChanceOfNJSSuccess)
+                .HasPrecision(5, 2);
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.GrossRevenue)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.NetNJSRevenue)
+                .HasPrecision(18, 2);
         }
     }
 }
