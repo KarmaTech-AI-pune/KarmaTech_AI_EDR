@@ -13,6 +13,7 @@ export const Dashboard = () => {
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Typography variant="h4" gutterBottom>Dashboard</Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+        
         <Box sx={{ flexBasis: { xs: '100%', md: 'calc(50% - 12px)' } }}>
           <ProjectList />
         </Box>
@@ -24,7 +25,7 @@ export const Dashboard = () => {
         </Box>
         <Box sx={{ flexBasis: { xs: '100%', md: 'calc(50% - 12px)' } }}>
           <NotificationCenter />
-        </Box>
+        </Box> 
       </Box>
     </Box>
   );

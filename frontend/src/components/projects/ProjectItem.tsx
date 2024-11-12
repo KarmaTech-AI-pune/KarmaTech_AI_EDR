@@ -80,6 +80,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
           primary={project.name}
           secondary={
             <>
+            
               <Typography component="span" variant="body2">
                 Client: {project.clientName}
               </Typography>
@@ -95,15 +96,16 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
                   </Typography>
                 </>
               )}
+    
               
-              <Box sx={{ width: '100%', mt: 1 }}>
-                <LinearProgress variant="determinate" value={project.progress} />
-              </Box>
+               <LinearProgress variant="determinate" value={project.progress} />   
+                      
             </>
           }
-        />
+        />  
         <Button onClick={handleEditClick}><Edit/></Button>
         <Button sx={{color: 'red'}} onClick={handleDeleteClick}><Delete /></Button>
+      
       </ListItem>
 
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
@@ -130,7 +132,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
             onCancel={handleEditClose}
           />
         </DialogContent>
-      </Dialog>
+      </Dialog> 
     </>
   );
 };

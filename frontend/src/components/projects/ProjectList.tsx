@@ -156,6 +156,7 @@ export const ProjectList: React.FC = () => {
 
   return (
     <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
+     
       <Typography variant="h4" gutterBottom sx={{ color: '#004a7f' }}>Projects</Typography>
       
       {error && (
@@ -185,7 +186,7 @@ export const ProjectList: React.FC = () => {
       </Box>
 
       <Divider sx={{ my: 2 }} />
-
+ 
       <List>
         {currentProjects.map(project => (
           <ProjectItem 
@@ -196,22 +197,21 @@ export const ProjectList: React.FC = () => {
           />
         ))}
       </List>
-
       <Divider sx={{ my: 2 }} />
-
+ 
       <Pagination
         projectsPerPage={projectsPerPage}
         totalProjects={filteredProjects.length}
         paginate={paginate}
         currentPage={currentPage}
       />
-
+         
       <Snackbar
         open={!!successMessage}
         autoHideDuration={6000}
         onClose={handleSuccessMessageClose}
         message={successMessage}
-      />
+      /> 
     </Paper>
   );
 };
