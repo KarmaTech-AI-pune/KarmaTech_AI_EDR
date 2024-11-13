@@ -2,42 +2,61 @@ import { OpportunityTracking } from '../types';
 import { axiosInstance } from './axiosConfig';
 
 export const opportunityApi = {
-  getByProjectId: async (projectId: number): Promise<OpportunityTracking[]> => {
+  getAll: async (): Promise<OpportunityTracking[]> => {
     try {
-      const response = await axiosInstance.get(`opportunity-tracking/project/${projectId}`);
+      const response = await axiosInstance.get('/api/opportunitytracking');
       return response.data;
     } catch (error) {
-      console.error(`Error fetching opportunity tracking for project ${projectId}:`, error);
+      console.error('Error fetching opportunities:', error);
       throw error;
     }
   },
 
-  create: async (data: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
+  getById: async (id: number): Promise<OpportunityTracking> => {
     try {
-      const response = await axiosInstance.post('opportunity-tracking', data);
+      const response = await axiosInstance.get(`/api/opportunitytracking/${id}`);
       return response.data;
-    } catch (error: any) {
-      if (error.response?.status === 400) {
-        const validationErrors = error.response.data.errors;
-        console.error('Validation Errors:', validationErrors);
-        throw new Error(validationErrors.join(', '));
-      }
-      console.error('Error creating opportunity tracking:', error);
+    } catch (error) {
+      console.error(`Error fetching opportunity ${id}:`, error);
       throw error;
     }
   },
 
-  update: async (id: number, data: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
+  getByProjectId: async (projectId: number): Promise<OpportunityTracking[]> => {
     try {
-      const response = await axiosInstance.put(`opportunity-tracking/${id}`, data);
+      const response = await axiosInstance.get(`OpportunityTracking/project/${projectId}`);
       return response.data;
-    } catch (error: any) {
-      if (error.response?.status === 400) {
-        const validationErrors = error.response.data.errors;
-        console.error('Validation Errors:', validationErrors);
-        throw new Error(validationErrors.join(', '));
-      }
-      console.error(`Error updating opportunity tracking ${id}:`, error);
+    } catch (error) {
+      console.error(`Error fetching opportunities for project ${projectId}:`, error);
+      throw error;
+    }
+  },
+
+  create: async (opportunityTracking: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
+    try {
+      const response = await axiosInstance.post('/api/opportunitytracking', opportunityTracking);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating opportunity:', error);
+      throw error;
+    }
+  },
+
+  update: async (opportunityTracking: OpportunityTracking): Promise<OpportunityTracking> => {
+    try {
+      const response = await axiosInstance.put(`/api/opportunitytracking/${opportunityTracking.id}`, opportunityTracking);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating opportunity:', error);
+      throw error;
+    }
+  },
+
+  delete: async (id: number): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/api/opportunitytracking/${id}`);
+    } catch (error) {
+      console.error(`Error deleting opportunity ${id}:`, error);
       throw error;
     }
   }

@@ -4,7 +4,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
-
 internal class Program
 {
     private static async Task Main(string[] args)
