@@ -7,7 +7,7 @@ using NJS.Application.Extensions;
 
 internal class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
         // Add services to the container.
@@ -50,6 +50,9 @@ internal class Program
 
         builder.Services.AddAuthorization();
         var app = builder.Build();
+
+        // Initialize the database
+        await NJS.Domain.Extensions.ServiceCollectionExtensions.InitializeDatabaseAsync(app.Services);
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
