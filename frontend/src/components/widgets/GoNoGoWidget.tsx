@@ -35,7 +35,6 @@ const criteriaNames = {
   competitivePositionScore: 'Relative Position to Competition',
   futureWorkPotentialScore: 'Future Work Potential',
   profitabilityScore: 'Profitability',
-  
   resourceAvailabilityScore: 'Resource Availability',
   bidScheduleScore: 'Bid Schedule'
 };
@@ -53,7 +52,9 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
   useEffect(() => {
     const fetchGoNoGoData = async () => {
       try {
+        console.log('Fetching Go/No Go data for project:', projectId);
         const data = await goNoGoApi.getByProjectId(projectId);
+        console.log('Received Go/No Go data:', data);
         
         if (data && Object.keys(data).length > 0) {
           setGoNoGoDecision(data);
@@ -72,10 +73,38 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
   }, [projectId]);
 
   const navigateToForm = () => {
-    console.log(goNoGoDecision)
-    if (context?.setScreenState && context?.setCurrentGoNoGoDecision) {
+    console.log('Navigate to form called');
+    console.log('Context:', context);
+    console.log('Current Go/No Go Decision:', goNoGoDecision);
+    console.log('Project:', project);
+    
+    if (!context) {
+      console.error('Context is not available');
+      return;
+    }
+
+    if (!context.setScreenState) {
+      console.error('setScreenState is not available in context');
+      return;
+    }
+
+    if (!context.setCurrentGoNoGoDecision) {
+      console.error('setCurrentGoNoGoDecision is not available in context');
+      return;
+    }
+
+    if (!context.setSelectedProject) {
+      console.error('setSelectedProject is not available in context');
+      return;
+    }
+
+    try {
       context.setCurrentGoNoGoDecision(goNoGoDecision);
+      context.setSelectedProject(project);
       context.setScreenState("Go/No Go Decision");
+      console.log('Navigation completed');
+    } catch (error) {
+      console.error('Error during navigation:', error);
     }
   };
 
@@ -175,13 +204,11 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
                     Sector: {goNoGoDecision.sector || 'Not Specified'}
                   </Typography>
                 </Grid>
-<Grid item xs={6}>
-  <Typography variant="body2" color="text.secondary">
-    Tender Fee: {goNoGoDecision.tenderFee}
-  </Typography>
-</Grid>
-
-
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Tender Fee: {goNoGoDecision.tenderFee}
+                  </Typography>
+                </Grid>
               </Grid>
             </Grid>
 

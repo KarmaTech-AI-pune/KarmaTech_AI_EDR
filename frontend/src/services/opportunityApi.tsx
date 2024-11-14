@@ -4,7 +4,7 @@ import { axiosInstance } from './axiosConfig';
 export const opportunityApi = {
   getAll: async (): Promise<OpportunityTracking[]> => {
     try {
-      const response = await axiosInstance.get('/api/opportunitytracking');
+      const response = await axiosInstance.get('opportunitytracking');
       return response.data;
     } catch (error) {
       console.error('Error fetching opportunities:', error);
@@ -14,7 +14,7 @@ export const opportunityApi = {
 
   getById: async (id: number): Promise<OpportunityTracking> => {
     try {
-      const response = await axiosInstance.get(`/api/opportunitytracking/${id}`);
+      const response = await axiosInstance.get(`opportunitytracking/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching opportunity ${id}:`, error);
@@ -24,7 +24,7 @@ export const opportunityApi = {
 
   getByProjectId: async (projectId: number): Promise<OpportunityTracking[]> => {
     try {
-      const response = await axiosInstance.get(`OpportunityTracking/project/${projectId}`);
+      const response = await axiosInstance.get(`opportunitytracking/project/${projectId}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching opportunities for project ${projectId}:`, error);
@@ -34,7 +34,7 @@ export const opportunityApi = {
 
   create: async (opportunityTracking: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
     try {
-      const response = await axiosInstance.post('/api/opportunitytracking', opportunityTracking);
+      const response = await axiosInstance.post('opportunitytracking', opportunityTracking);
       return response.data;
     } catch (error) {
       console.error('Error creating opportunity:', error);
@@ -44,7 +44,7 @@ export const opportunityApi = {
 
   update: async (opportunityTracking: OpportunityTracking): Promise<OpportunityTracking> => {
     try {
-      const response = await axiosInstance.put(`/api/opportunitytracking/${opportunityTracking.id}`, opportunityTracking);
+      const response = await axiosInstance.put(`opportunitytracking/${opportunityTracking.id}`, opportunityTracking);
       return response.data;
     } catch (error) {
       console.error('Error updating opportunity:', error);
@@ -54,7 +54,7 @@ export const opportunityApi = {
 
   delete: async (id: number): Promise<void> => {
     try {
-      await axiosInstance.delete(`/api/opportunitytracking/${id}`);
+      await axiosInstance.delete(`opportunitytracking/${id}`);
     } catch (error) {
       console.error(`Error deleting opportunity ${id}:`, error);
       throw error;

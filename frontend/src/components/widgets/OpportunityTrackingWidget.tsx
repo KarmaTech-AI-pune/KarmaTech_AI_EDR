@@ -118,13 +118,7 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({ p
   }
 
   // Show API error if any
-  if (apiError) {
-    return (
-      <Alert severity="error" sx={{ mt: 2 }}>
-        {apiError}
-      </Alert>
-    );
-  }
+  
 
   // If no opportunity tracking exists for an opportunity status project
   if (!opportunityTracking) {
@@ -161,6 +155,13 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({ p
           error={formError}
         />
       </>
+    );
+  }
+  if (apiError) {
+    return (
+      <Alert severity="error" sx={{ mt: 2 }}>
+        {apiError}
+      </Alert>
     );
   }
 

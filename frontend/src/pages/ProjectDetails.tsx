@@ -94,12 +94,12 @@ export const ProjectDetails = () => {
           apiError={apiError}
         />
       
-        
+        {opportunityTracking &&
           <GoNoGoWidget 
             projectId={project.id} 
             project={project}
           />
-      
+        }
     </Box>
   );
 };
