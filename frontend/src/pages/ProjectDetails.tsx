@@ -42,8 +42,16 @@ export const ProjectDetails = () => {
   }, [project]);
 
   const handleBack = () => {
+    let back = 'Projects'
+    if(project?.status === ProjectStatus['Bid Accepted'] || project?.status === ProjectStatus['In Progress'] || project?.status === ProjectStatus['Completed'])
+    {
+      back = "Project Management"
+    }
+    else{
+      back = "Business Development"
+    }
     if (context?.setScreenState) {
-      context.setScreenState("Projects");
+      context.setScreenState(back);
     }
   };
 
@@ -90,8 +98,6 @@ export const ProjectDetails = () => {
       
         <OpportunityTrackingWidget 
           project={project}
-          opportunityTracking={opportunityTracking}
-          apiError={apiError}
         />
       
           <GoNoGoWidget 
