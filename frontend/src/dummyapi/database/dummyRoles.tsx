@@ -101,7 +101,7 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
     id: 'director',
     name: 'Director',
     permissions: [
-        PermissionType.VIEW_PROJECTS,
+      PermissionType.VIEW_PROJECTS,
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
       PermissionType.DELETE_PROJECT,
