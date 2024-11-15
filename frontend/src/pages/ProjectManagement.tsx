@@ -291,7 +291,5 @@ export const ProjectManagement: React.FC = () => {
         </Box>
       </Paper>
     </Container>
-  );
-};
-
-export default ProjectManagement;
+  )
+      }
