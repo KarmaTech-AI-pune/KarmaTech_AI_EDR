@@ -17,9 +17,9 @@ namespace NJS.Repositories.Repositories
             _goNoGoDecisionRepository = goNoGoDecisionRepository;
         }
 
-        public IEnumerable<Project> GetAll()
+        public async Task<IEnumerable<Project>> GetAll()
         {
-            return _repository.GetAllAsync().GetAwaiter().GetResult();
+            return  await _repository.GetAllAsync().ConfigureAwait(false);
         }
 
         public Project GetById(int id)

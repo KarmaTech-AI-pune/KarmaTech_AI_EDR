@@ -24,7 +24,7 @@ namespace NJS.Domain.GenericRepository
             await _dbSet.AddAsync(entity);
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync();
+        public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync().ConfigureAwait(false);
 
 
         public async Task<T?> GetByIdAsync(int? id)
