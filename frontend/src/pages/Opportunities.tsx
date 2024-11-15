@@ -15,7 +15,7 @@ import {
   ExpandMore as ExpandMoreIcon, 
   WorkOutline as WorkOutlineIcon 
 } from '@mui/icons-material';
-import { projectApi } from '../services/api';
+import { projectApi } from '../dummyapi/api';
 import { Project, ProjectStatus } from '../types';
 import OpportunityTrackingWidget from '../components/widgets/OpportunityTrackingWidget';
 

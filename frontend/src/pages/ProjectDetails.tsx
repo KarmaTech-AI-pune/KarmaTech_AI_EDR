@@ -3,7 +3,7 @@ import { ArrowBack } from '@mui/icons-material';
 import { useContext, useState, useEffect } from 'react';
 import { projectManagementAppContext } from '../App';
 import { ProjectStatus, OpportunityTracking } from '../types';
-import { opportunityApi } from '../services/api';
+import { opportunityApi } from '../dummyapi/api';
 import ProjectInfoWidget from '../components/widgets/ProjectInfoWidget';
 import OpportunityTrackingWidget from '../components/widgets/OpportunityTrackingWidget';
 import DecisionWidget from '../components/widgets/DecisionWidget';
@@ -94,12 +94,11 @@ export const ProjectDetails = () => {
           apiError={apiError}
         />
       
-        {opportunityTracking &&
           <GoNoGoWidget 
             projectId={project.id} 
             project={project}
           />
-        }
+        
     </Box>
   );
 };

@@ -15,7 +15,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { goNoGoApi } from '../../services/api';
+import { goNoGoApi } from '../../dummyapi/api';
 import { Project, GoNoGoDecision, GoNoGoStatus, ProjectStatus } from '../../types';
 import { projectManagementAppContext } from '../../App';
 

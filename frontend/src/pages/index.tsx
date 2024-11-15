@@ -1,5 +1,6 @@
-import { Home } from "./Home";
-import { Opportunities } from "./Opportunities";
-import { ProjectDetails } from "./ProjectDetails";
-import {LoginScreen} from "./LoginScreen"
-export {Home,Opportunities,ProjectDetails,LoginScreen}
+export { Home } from "./Home";
+export { Opportunities } from "./Opportunities";
+export { ProjectDetails } from "./ProjectDetails";
+export { LoginScreen } from "./LoginScreen";
+export { BusinessDevelopment } from "./BusinessDevelopment";
+export { ProjectManagement } from "./ProjectManagement";

@@ -15,10 +15,9 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { useContext } from 'react';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
-import { authApi } from '../../services/api';
+import { authApi } from '../../dummyapi/api';
 
-
-const pages = ['Projects', 'Opportunities', 'Go/No Go Decision','Bid Preparation'];
+const pages = ['Business Development', 'Project Management'];
 
 export const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);

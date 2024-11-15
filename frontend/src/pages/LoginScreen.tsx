@@ -8,7 +8,7 @@ import {
     Box, 
     Alert
 } from '@mui/material';
-import { authApi } from '../services/api';
+import { authApi } from '../dummyapi/api';
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
 

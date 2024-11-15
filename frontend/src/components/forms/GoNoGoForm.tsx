@@ -22,7 +22,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
 import { Project, GoNoGoDecision, GoNoGoStatus, projectManagementAppContextType } from '../../types';
 import { projectManagementAppContext } from '../../App';
-import { goNoGoApi } from '../../services/api';
+import { goNoGoApi } from '../../dummyapi/api';
 
 interface GoNoGoFormProps {
   project: Project;

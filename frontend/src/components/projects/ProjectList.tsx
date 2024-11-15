@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Typography, 
   Paper, 
@@ -13,12 +13,18 @@ import {
 import {Button} from '@mui/material';
 import { ProjectFilter } from './ProjectFilter';
 import { ProjectItem } from './ProjectItem';
-import { projectApi} from '../../services/api';
+import { projectApi} from '../../dummyapi/api';
 import { Project, ProjectFormData, ProjectStatus } from '../../types';
 import { Pagination } from '../Pagination';
 import { ProjectForm } from './ProjectForm';
+import { projectManagementAppContext } from '../../App';
 
-export const ProjectList: React.FC = () => {
+interface ProjectListProps {
+  pageType?: 'business-development' | 'project-management';
+}
+
+export const ProjectList: React.FC<ProjectListProps> = ({ pageType }) => {
+  const context = useContext(projectManagementAppContext);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -109,11 +115,27 @@ export const ProjectList: React.FC = () => {
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
-      let matchesStatus = true
-      if(statusFilter !== '')
-      {
-        matchesStatus = project.status === statusFilter;
-      }
+    
+    let matchesStatus = true;
+    if (statusFilter !== '') {
+      matchesStatus = project.status === statusFilter;
+    }
+
+    // Additional filtering based on page type
+    if (pageType === 'project-management') {
+      return matchesSearch && matchesStatus && [
+        ProjectStatus["Bid Accepted"],
+        ProjectStatus["Bid Submitted"],
+        ProjectStatus["In Progress"]
+      ].includes(project.status);
+    } else if (pageType === 'business-development') {
+      return matchesSearch && matchesStatus && ![
+        ProjectStatus["Bid Accepted"],
+        ProjectStatus["Bid Submitted"],
+        ProjectStatus["In Progress"]
+      ].includes(project.status);
+    }
+
     return matchesSearch && matchesStatus;
   });
 
@@ -156,8 +178,11 @@ export const ProjectList: React.FC = () => {
 
   return (
     <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
-     
-      <Typography variant="h4" gutterBottom sx={{ color: '#004a7f' }}>Projects</Typography>
+      <Typography variant="h4" gutterBottom sx={{ color: '#004a7f' }}>
+        {pageType === 'business-development' ? 'Business Development Projects' :
+         pageType === 'project-management' ? 'Project Management' :
+         'Projects'}
+      </Typography>
       
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>

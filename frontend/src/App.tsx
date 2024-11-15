@@ -1,13 +1,13 @@
 import { screensArrayType, projectManagementAppContextType, User, Project, GoNoGoDecision } from './types'
 import { createContext, useState, useEffect } from 'react'
-import { Home, ProjectDetails, Opportunities, LoginScreen } from './pages'
+import { Home, ProjectDetails, Opportunities, LoginScreen, BusinessDevelopment, ProjectManagement } from './pages'
 import { Navbar } from './components/navigation/Navbar'
 import { Dashboard } from './components/Dashboard'
 import { ProjectList } from './components/projects/ProjectList'
 import { ResourceManagement } from './components/ResourceManagement'
 import { ReportsList } from './components/ReportsList'
 import { NotificationCenter } from './components/navigation/NotificationCenter'
-import { authApi } from './services/api'
+import { authApi } from './dummyapi/api'
 import GoNoGoForm from './components/forms/GoNoGoForm'
 import BidPreparationForm from './components/forms/BidPreparationForm'
 
@@ -60,6 +60,8 @@ function App() {
     "Home": <Home />,
     "Dashboard": <Dashboard />,
     "Projects": <ProjectList />,
+    "Business Development": <BusinessDevelopment />,
+    "Project Management": <ProjectManagement />,
     "Opportunities" : <Opportunities />,
     "Resources": <ResourceManagement />,
     "Reports": <ReportsList />,
