@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppBar,
   Box,
@@ -15,14 +15,46 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { useContext } from 'react';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
-import { authApi } from '../../dummyapi/api';
-
-const pages = ['Business Development', 'Project Management'];
+import { authApi } from '../../dummyapi/authApi';
+import { rolesApi } from '../../dummyapi/rolesApi';
+import { PermissionType } from '../../dummyapi/database/dummyRoles';
 
 export const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const { setScreenState, setIsAuthenticated, user } = useContext(projectManagementAppContext) as projectManagementAppContextType
+
+  // Pages based on permissions
+  const [pages, setPages] = useState<string[]>([]);
+
+  useEffect(() => {
+    const checkUserPermissions = async () => {
+      const currentUser = await authApi.getCurrentUser();
+      
+      // If no user is logged in, clear pages
+      if (!currentUser || !currentUser.roleDetails) {
+        setPages([]);
+        return;
+      }
+
+      // Determine pages based on user's permissions
+      const availablePages = [];
+      console.log(currentUser.roleDetails.permissions)
+      // Check for Business Development permissions
+      if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_BUSINESS_DEVELOPMENT)) {
+        availablePages.push('Business Development');
+      }
+
+      // Check for Project Management permissions
+      if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_PROJECTS)) {
+        availablePages.push('Project Management');
+      }
+
+      setPages(availablePages);
+    };
+
+    checkUserPermissions();
+  }, []);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);

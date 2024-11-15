@@ -1,9 +1,12 @@
-import { Credentials, LoginResponse, User } from '../types';
+import { Credentials, LoginResponse, User, UserWithRole, Role } from '../types';
 import { 
     users, 
     validateUser, 
-    getUserByUsername 
+    getUserByUsername,
+    AuthUser 
 } from './database/dummyusers';
+import { rolesApi } from './rolesApi';
+import { UserRole } from './database/dummyusers';
 
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
@@ -14,16 +17,29 @@ export const authApi = {
         // Simulate token generation
         const token = `dummy_token_${user.username}_${Date.now()}`;
         
-        // Simulate storing token in localStorage
+        // Get role details
+        const roleDetails: Role = {
+          id: user.role,
+          name: user.role,
+          permissions: rolesApi.getRolePermissions(user.role)
+        };
+
+        // Create user with role details
+        const userWithRole: UserWithRole = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          roleDetails: roleDetails
+        };
+
+        // Store full user information in localStorage
         localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userWithRole));
         
         return {
           success: true,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email
-          },
+          user: userWithRole,
           token: token,
           message: 'Login successful'
         };
@@ -43,34 +59,28 @@ export const authApi = {
 
   logout: async (): Promise<void> => {
     try {
-      // Simulate logout by removing token
+      // Remove token and user information
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     } catch (error) {
       console.error('Logout error:', error);
     }
   },
 
   checkAuth: async (): Promise<boolean> => {
-    // Simulate authentication check by verifying token exists
+    // Check if both token and user exist
     const token = localStorage.getItem('token');
-    return !!token;
+    const user = localStorage.getItem('user');
+    return !!(token && user);
   },
 
-  getCurrentUser: async (): Promise<User | null> => {
+  getCurrentUser: async (): Promise<UserWithRole | null> => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return null;
-
-      // Extract username from token (in a real scenario, you'd decode the token)
-      const username = token.split('_')[1];
-      const user = getUserByUsername(username);
-
-      if (user) {
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email
-        };
+      // Retrieve user from localStorage
+      const storedUser = localStorage.getItem('user');
+      
+      if (storedUser) {
+        return JSON.parse(storedUser);
       }
 
       return null;

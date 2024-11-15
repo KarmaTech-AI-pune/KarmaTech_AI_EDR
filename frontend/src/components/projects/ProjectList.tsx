@@ -13,11 +13,13 @@ import {
 import {Button} from '@mui/material';
 import { ProjectFilter } from './ProjectFilter';
 import { ProjectItem } from './ProjectItem';
-import { projectApi} from '../../dummyapi/api';
-import { Project, ProjectFormData, ProjectStatus } from '../../types';
+import { projectApi } from '../../dummyapi/api';
+import { Project, ProjectFormData, ProjectStatus, UserWithRole } from '../../types';
 import { Pagination } from '../Pagination';
 import { ProjectForm } from './ProjectForm';
 import { projectManagementAppContext } from '../../App';
+import { authApi } from '../../dummyapi/authApi';
+import { PermissionType } from '../../dummyapi/database/dummyRoles';
 
 interface ProjectListProps {
   pageType?: 'business-development' | 'project-management';
@@ -35,8 +37,42 @@ export const ProjectList: React.FC<ProjectListProps> = ({ pageType }) => {
   const [projectsPerPage] = useState(5);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Permission states
+  const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
+  const [canViewProjects, setCanViewProjects] = useState(false);
+  const [canCreateProject, setCanCreateProject] = useState(false);
+
+  useEffect(() => {
+    const checkUserPermissions = async () => {
+      const user = await authApi.getCurrentUser();
+      
+      if (!user) {
+        setCurrentUser(null);
+        setCanViewProjects(false);
+        setCanCreateProject(false);
+        return;
+      }
+
+      setCurrentUser(user);
+
+      // Check if user has specific project permissions
+      if (user.roleDetails) {
+        setCanViewProjects(
+          user.roleDetails.permissions.includes(PermissionType.VIEW_PROJECTS)
+        );
+        setCanCreateProject(
+          user.roleDetails.permissions.includes(PermissionType.CREATE_PROJECT)
+        );
+      }
+    };
+
+    checkUserPermissions();
+  }, []);
 
   const fetchProjects = async () => {
+    if (!canViewProjects) return;
+
     try {
       setLoading(true);
       const data = await projectApi.getAll();
@@ -52,7 +88,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({ pageType }) => {
 
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [canViewProjects]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -73,11 +109,15 @@ export const ProjectList: React.FC<ProjectListProps> = ({ pageType }) => {
   };
 
   const handleNewProjectClick = () => {
-    setShowNewProjectForm(true);
-    setError(null);
+    if (canCreateProject) {
+      setShowNewProjectForm(true);
+      setError(null);
+    }
   };
 
   const handleProjectFormSubmit = async (formData: ProjectFormData) => {
+    if (!canCreateProject) return;
+
     if (submitting) return;
 
     try {
@@ -145,6 +185,14 @@ export const ProjectList: React.FC<ProjectListProps> = ({ pageType }) => {
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
+  if (!canViewProjects) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <Typography variant="h6">You do not have permission to view projects.</Typography>
+      </Box>
+    );
+  }
+
   if (loading && !showNewProjectForm) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -189,12 +237,14 @@ export const ProjectList: React.FC<ProjectListProps> = ({ pageType }) => {
       )}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Button 
-          variant={'contained'}
-          onClick={handleNewProjectClick}
-        >
-          New Project
-        </Button>
+        {canCreateProject && (
+          <Button 
+            variant={'contained'}
+            onClick={handleNewProjectClick}
+          >
+            New Project
+          </Button>
+        )}
         <Box sx={{ display: 'flex', gap:2}}>
           <ProjectFilter 
             onFilterChange={handleStatusFilter}

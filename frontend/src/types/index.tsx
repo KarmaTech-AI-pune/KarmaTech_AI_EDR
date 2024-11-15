@@ -1,6 +1,9 @@
 // File: frontend/src/types/index.ts
 // Purpose: typescript types
 
+import { UserRole } from '../dummyapi/database/dummyusers';
+import { PermissionType } from '../dummyapi/database/dummyRoles';
+
 export type screensArrayType = {
     [key : string] : JSX.Element
 }
@@ -10,6 +13,17 @@ export type User = {
   name: string;
   email: string;
   avatar?: string;
+  role: UserRole;
+}
+
+export type Role = {
+  id: string;
+  name: string;
+  permissions: PermissionType[];
+}
+
+export type UserWithRole = User & {
+  roleDetails: Role;
 }
 
 export type projectManagementAppContextType  = {
@@ -79,9 +93,10 @@ export type LoginResponse = {
   success: boolean;
   message: string;
   token?: string;
-  user?: User;
+  user?: UserWithRole;
 }
 
+// Rest of the existing types remain the same...
 export type OpportunityTracking = {
   id: number;
   projectId: number;
@@ -175,3 +190,9 @@ export interface GoNoGoDecision {
 
 // Optional: Create a type for creating a new Go/No-Go decision
 export type CreateGoNoGoDecisionDto = Omit<GoNoGoDecision, 'id'> & { id?: number };
+
+// Export types and enums related to roles
+export type { 
+  UserRole, 
+  PermissionType 
+};

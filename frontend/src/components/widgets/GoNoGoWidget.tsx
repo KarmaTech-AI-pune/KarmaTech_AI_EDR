@@ -18,6 +18,8 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { goNoGoApi } from '../../dummyapi/api';
 import { Project, GoNoGoDecision, GoNoGoStatus, ProjectStatus } from '../../types';
 import { projectManagementAppContext } from '../../App';
+import { authApi } from '../../dummyapi/authApi';
+import { PermissionType } from '../../dummyapi/database/dummyRoles';
 
 interface GoNoGoWidgetProps {
   projectId: number;
@@ -39,6 +41,8 @@ const criteriaNames = {
   bidScheduleScore: 'Bid Schedule'
 };
 
+const scoreFields = Object.keys(criteriaNames);
+
 const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({ 
   projectId, 
   project
@@ -48,13 +52,44 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isScoresExpanded, setIsScoresExpanded] = useState(true);
+  
+  // Permission states
+  const [canViewBusinessDevelopment, setCanViewBusinessDevelopment] = useState(false);
+  const [canEditBusinessDevelopment, setCanEditBusinessDevelopment] = useState(false);
+
+  useEffect(() => {
+    const checkUserPermissions = async () => {
+      const user = await authApi.getCurrentUser();
+      
+      if (!user) {
+        setCanViewBusinessDevelopment(false);
+        setCanEditBusinessDevelopment(false);
+        return;
+      }
+
+      // Check if user has specific business development permissions
+      if (user.roleDetails) {
+        setCanViewBusinessDevelopment(
+          user.roleDetails.permissions.includes(PermissionType.VIEW_BUSINESS_DEVELOPMENT)
+        );
+        setCanEditBusinessDevelopment(
+          user.roleDetails.permissions.includes(PermissionType.EDIT_BUSINESS_DEVELOPMENT)
+        );
+      }
+    };
+
+    checkUserPermissions();
+  }, []);
 
   useEffect(() => {
     const fetchGoNoGoData = async () => {
+      if (!canViewBusinessDevelopment) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        console.log('Fetching Go/No Go data for project:', projectId);
         const data = await goNoGoApi.getByProjectId(projectId);
-        console.log('Received Go/No Go data:', data);
         
         if (data && Object.keys(data).length > 0) {
           setGoNoGoDecision(data);
@@ -70,31 +105,13 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
     };
 
     fetchGoNoGoData();
-  }, [projectId]);
+  }, [projectId, canViewBusinessDevelopment]);
 
   const navigateToForm = () => {
-    console.log('Navigate to form called');
-    console.log('Context:', context);
-    console.log('Current Go/No Go Decision:', goNoGoDecision);
-    console.log('Project:', project);
-    
-    if (!context) {
-      console.error('Context is not available');
-      return;
-    }
+    if (!canEditBusinessDevelopment) return;
 
-    if (!context.setScreenState) {
-      console.error('setScreenState is not available in context');
-      return;
-    }
-
-    if (!context.setCurrentGoNoGoDecision) {
-      console.error('setCurrentGoNoGoDecision is not available in context');
-      return;
-    }
-
-    if (!context.setSelectedProject) {
-      console.error('setSelectedProject is not available in context');
+    if (!context?.setCurrentGoNoGoDecision || !context?.setSelectedProject || !context?.setScreenState) {
+      console.error('One or more context methods are not available');
       return;
     }
 
@@ -102,7 +119,6 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
       context.setCurrentGoNoGoDecision(goNoGoDecision);
       context.setSelectedProject(project);
       context.setScreenState("Go/No Go Decision");
-      console.log('Navigation completed');
     } catch (error) {
       console.error('Error during navigation:', error);
     }
@@ -110,20 +126,39 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
 
   const getDecisionStatusDetails = (status: GoNoGoStatus) => {
     switch (status) {
-      case 0:
-        return { text: 'GO [Green]', color: '#4caf50', icon: <CheckCircleIcon color="success" /> };
-      case 1:
-        return { text: 'GO [Amber]', color: '#ff9800', icon: <CheckCircleIcon color="warning" /> };
-      case 2:
-        return { text: 'NO GO [Red]', color: '#f44336', icon: <CancelIcon color="error" /> };
+      case GoNoGoStatus.Green:
+        return { 
+          text: 'GO [Green]', 
+          color: '#4caf50', 
+          icon: <CheckCircleIcon color="success" /> 
+        };
+      case GoNoGoStatus.Amber:
+        return { 
+          text: 'GO [Amber]', 
+          color: '#ff9800', 
+          icon: <CheckCircleIcon color="warning" /> 
+        };
+      case GoNoGoStatus.Red:
+        return { 
+          text: 'NO GO [Red]', 
+          color: '#f44336', 
+          icon: <CancelIcon color="error" /> 
+        };
       default:
-        return { text: 'NO GO [Red]', color: '#f44336', icon: <CancelIcon color="error" /> };
+        return { 
+          text: 'NO GO [Red]', 
+          color: '#f44336', 
+          icon: <CancelIcon color="error" /> 
+        };
     }
   };
 
+  // Rest of the component remains the same...
+  // (rendering logic, etc.)
+
   // If project is in opportunity phase, only show the button
   if (project.status === ProjectStatus.Opportunity) {
-    return (
+    return canEditBusinessDevelopment ? (
       <Button
         variant="contained"
         onClick={navigateToForm}
@@ -133,7 +168,7 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
       >
         {goNoGoDecision ? 'View/Edit Go/No Go Decision' : 'Make Go/No Go Decision'}
       </Button>
-    );
+    ) : null;
   }
 
   if (loading) {
@@ -148,8 +183,16 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
     );
   }
 
-  if (!goNoGoDecision) {
+  if (!canViewBusinessDevelopment) {
     return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="warning">You do not have permission to view Business Development information.</Alert>
+      </Box>
+    );
+  }
+
+  if (!goNoGoDecision) {
+    return canEditBusinessDevelopment ? (
       <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
         <Typography variant="h6" gutterBottom>
           Go/No Go Decision
@@ -165,11 +208,10 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
           Make Decision
         </Button>
       </Paper>
-    );
+    ) : null;
   }
 
   const status = getDecisionStatusDetails(goNoGoDecision.status);
-  const scoreFields = Object.keys(criteriaNames);
 
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
@@ -177,13 +219,15 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
         <Typography variant="h5" fontWeight="bold">
           Go/No Go Decision
         </Typography>
-        <Button
-          variant="contained"
-          onClick={navigateToForm}
-          color="primary"
-        >
-          Edit Decision
-        </Button>
+        {canEditBusinessDevelopment && (
+          <Button
+            variant="contained"
+            onClick={navigateToForm}
+            color="primary"
+          >
+            Edit Decision
+          </Button>
+        )}
       </Box>
 
       <Grid container spacing={3}>
@@ -232,16 +276,16 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
                 <Typography variant="body1" sx={{ mr: 2 }}>
                   Decision Status:
                 </Typography>
-                {status?.icon}
+                {status.icon}
                 <Typography 
                   variant="body1" 
                   sx={{ 
-                    color: status?.color, 
+                    color: status.color, 
                     fontWeight: 'bold', 
                     ml: 1 
                   }}
                 >
-                  {status?.text}
+                  {status.text}
                 </Typography>
               </Box>
             </Grid>

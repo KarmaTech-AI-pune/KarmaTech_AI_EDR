@@ -1,23 +1,58 @@
-import { ListItem, ListItemText, Box, LinearProgress, Typography, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import {Button} from '@mui/material';
+import { ListItem, ListItemText, LinearProgress, Typography, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Button } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { ProjectItemProps, ProjectFormData, ProjectStatus } from '../../types';
-import { useState, useContext } from 'react';
+import { ProjectItemProps, ProjectFormData, ProjectStatus, UserWithRole } from '../../types';
+import { useState, useContext, useEffect } from 'react';
 import { projectApi } from '../../dummyapi/api';
 import { ProjectForm } from './ProjectForm';
 import { projectManagementAppContext } from '../../App';
+import { authApi } from '../../dummyapi/authApi';
+import { PermissionType } from '../../dummyapi/database/dummyRoles';
 
 export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDeleted, onProjectUpdated }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
+  const [canEditProject, setCanEditProject] = useState(false);
+  const [canDeleteProject, setCanDeleteProject] = useState(false);
   const context = useContext(projectManagementAppContext);
+
+  useEffect(() => {
+    const checkUserPermissions = async () => {
+      const user = await authApi.getCurrentUser();
+      
+      if (!user) {
+        setCurrentUser(null);
+        setCanEditProject(false);
+        setCanDeleteProject(false);
+        return;
+      }
+
+      setCurrentUser(user);
+
+      // Check if user has specific project permissions
+      if (user.roleDetails) {
+        setCanEditProject(
+          user.roleDetails.permissions.includes(PermissionType.EDIT_PROJECT)
+        );
+        setCanDeleteProject(
+          user.roleDetails.permissions.includes(PermissionType.DELETE_PROJECT)
+        );
+      }
+    };
+
+    checkUserPermissions();
+  }, []);
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setDeleteDialogOpen(true);
+    if (canDeleteProject) {
+      setDeleteDialogOpen(true);
+    }
   };
 
   const handleDeleteConfirm = async () => {
+    if (!canDeleteProject) return;
     try {
       await projectApi.delete(project.id);
       setDeleteDialogOpen(false);
@@ -35,7 +70,9 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setEditDialogOpen(true);
+    if (canEditProject) {
+      setEditDialogOpen(true);
+    }
   };
 
   const handleEditClose = () => {
@@ -43,6 +80,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
   };
 
   const handleEditSubmit = async (formData: ProjectFormData) => {
+    if (!canEditProject) return;
     try {
       const updatedProject = { ...formData, id: project.id };
       await projectApi.update(project.id, updatedProject);
@@ -80,7 +118,6 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
           primary={project.name}
           secondary={
             <>
-            
               <Typography component="span" variant="body2">
                 Client: {project.clientName}
               </Typography>
@@ -97,15 +134,16 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
                 </>
               )}
     
-              
-               <LinearProgress variant="determinate" value={project.progress} />   
-                      
+              <LinearProgress variant="determinate" value={project.progress} />   
             </>
           }
         />  
-        <Button onClick={handleEditClick}><Edit/></Button>
-        <Button sx={{color: 'red'}} onClick={handleDeleteClick}><Delete /></Button>
-      
+        {canEditProject && (
+          <Button onClick={handleEditClick}><Edit/></Button>
+        )}
+        {canDeleteProject && (
+          <Button sx={{color: 'red'}} onClick={handleDeleteClick}><Delete /></Button>
+        )}
       </ListItem>
 
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>

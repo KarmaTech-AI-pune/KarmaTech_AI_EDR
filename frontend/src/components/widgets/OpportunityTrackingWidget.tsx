@@ -3,7 +3,7 @@ import { Typography, Paper, Grid, Alert, Button, Collapse, Chip } from '@mui/mat
 import { ExpandMore, ExpandLess, TrendingUp, AssignmentTurnedIn, MonetizationOn } from '@mui/icons-material';
 import { Project, ProjectStatus, OpportunityTracking } from '../../types';
 import OpportunityForm from '../forms/OpportunityForm';
-import { opportunityApi } from '../../services/api';
+import { opportunityApi } from '../../dummyapi/api';
 import { projectManagementAppContext } from '../../App';
 
 interface OpportunityTrackingWidgetProps {

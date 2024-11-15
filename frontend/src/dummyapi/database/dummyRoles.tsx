@@ -6,31 +6,12 @@ export enum PermissionType {
   CREATE_PROJECT = 'CREATE_PROJECT',
   EDIT_PROJECT = 'EDIT_PROJECT',
   DELETE_PROJECT = 'DELETE_PROJECT',
-
-  // Opportunity Permissions
-  VIEW_OPPORTUNITIES = 'VIEW_OPPORTUNITIES',
-  CREATE_OPPORTUNITY = 'CREATE_OPPORTUNITY',
-  EDIT_OPPORTUNITY = 'EDIT_OPPORTUNITY',
-  DELETE_OPPORTUNITY = 'DELETE_OPPORTUNITY',
-
-  // Go/No-Go Permissions
-  VIEW_GO_NO_GO = 'VIEW_GO_NO_GO',
-  CREATE_GO_NO_GO = 'CREATE_GO_NO_GO',
-  APPROVE_GO_NO_GO = 'APPROVE_GO_NO_GO',
-
-  // User Management Permissions
-  VIEW_USERS = 'VIEW_USERS',
-  CREATE_USER = 'CREATE_USER',
-  EDIT_USER = 'EDIT_USER',
-  DELETE_USER = 'DELETE_USER',
-
+  
   // Business Development Permissions
   VIEW_BUSINESS_DEVELOPMENT = 'VIEW_BUSINESS_DEVELOPMENT',
-  MANAGE_BUSINESS_DEVELOPMENT = 'MANAGE_BUSINESS_DEVELOPMENT',
-
-  // Reporting Permissions
-  VIEW_REPORTS = 'VIEW_REPORTS',
-  GENERATE_REPORTS = 'GENERATE_REPORTS',
+  CREATE_BUSINESS_DEVELOPMENT = 'CREATE_BUSINESS_DEVELOPMENT',
+  EDIT_BUSINESS_DEVELOPMENT = 'EDIT_BUSINESS_DEVELOPMENT',
+  DELETE_BUSINESS_DEVELOPMENT = 'DELETE_BUSINESS_DEVELOPMENT',
 
   // System Permissions
   SYSTEM_ADMIN = 'SYSTEM_ADMIN'
@@ -49,77 +30,100 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
   [UserRole.Admin]: {
     id: 'admin',
     name: 'Administrator',
-    permissions: Object.values(PermissionType)  // Full access
+    permissions:[
+        PermissionType.VIEW_PROJECTS,
+        PermissionType.CREATE_PROJECT,
+        PermissionType.EDIT_PROJECT,
+        PermissionType.DELETE_PROJECT,
+  
+        PermissionType.CREATE_BUSINESS_DEVELOPMENT,
+        PermissionType.EDIT_BUSINESS_DEVELOPMENT,
+        PermissionType.DELETE_BUSINESS_DEVELOPMENT,
+        PermissionType.VIEW_BUSINESS_DEVELOPMENT,
+
+        PermissionType.SYSTEM_ADMIN
+    ]  // Full access
   },
   [UserRole.ManagingDirector]: {
     id: 'managing_director',
     name: 'Managing Director',
     permissions: [
       PermissionType.VIEW_PROJECTS,
-      PermissionType.VIEW_OPPORTUNITIES,
-      PermissionType.VIEW_GO_NO_GO,
+      PermissionType.CREATE_PROJECT,
+      PermissionType.EDIT_PROJECT,
+      PermissionType.DELETE_PROJECT,
+
+      PermissionType.CREATE_BUSINESS_DEVELOPMENT,
+      PermissionType.EDIT_BUSINESS_DEVELOPMENT,
+      PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-      PermissionType.VIEW_REPORTS,
-      PermissionType.GENERATE_REPORTS,
-      PermissionType.APPROVE_GO_NO_GO
     ]
   },
   [UserRole.ProjectManager]: {
     id: 'project_manager',
     name: 'Project Manager',
     permissions: [
-      PermissionType.VIEW_PROJECTS,
+        PermissionType.VIEW_PROJECTS,
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
-      PermissionType.VIEW_GO_NO_GO,
-      PermissionType.VIEW_REPORTS
+      PermissionType.DELETE_PROJECT,
     ]
   },
   [UserRole.ProjectCoordinator]: {
     id: 'project_coordinator',
     name: 'Project Coordinator',
     permissions: [
-      PermissionType.VIEW_PROJECTS,
-      PermissionType.VIEW_GO_NO_GO
+        PermissionType.VIEW_PROJECTS,
+      PermissionType.CREATE_PROJECT,
+      PermissionType.EDIT_PROJECT,
+      PermissionType.DELETE_PROJECT,
     ]
   },
   [UserRole.BusinessDevelopmentManager]: {
     id: 'business_dev_manager',
     name: 'Business Development Manager',
     permissions: [
-      PermissionType.VIEW_OPPORTUNITIES,
-      PermissionType.CREATE_OPPORTUNITY,
-      PermissionType.EDIT_OPPORTUNITY,
+        PermissionType.CREATE_BUSINESS_DEVELOPMENT,
+      PermissionType.EDIT_BUSINESS_DEVELOPMENT,
+      PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-      PermissionType.CREATE_GO_NO_GO
+        PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
   },
   [UserRole.SalesProfessional]: {
     id: 'sales_professional',
     name: 'Sales Professional',
     permissions: [
-      PermissionType.VIEW_OPPORTUNITIES,
-      PermissionType.CREATE_OPPORTUNITY
+        PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
   },
   [UserRole.Director]: {
     id: 'director',
     name: 'Director',
     permissions: [
-      PermissionType.VIEW_PROJECTS,
-      PermissionType.VIEW_OPPORTUNITIES,
-      PermissionType.VIEW_GO_NO_GO,
-      PermissionType.VIEW_REPORTS
+        PermissionType.VIEW_PROJECTS,
+      PermissionType.CREATE_PROJECT,
+      PermissionType.EDIT_PROJECT,
+      PermissionType.DELETE_PROJECT,
+      PermissionType.CREATE_BUSINESS_DEVELOPMENT,
+      PermissionType.EDIT_BUSINESS_DEVELOPMENT,
+      PermissionType.DELETE_BUSINESS_DEVELOPMENT,
+      PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
   },
   [UserRole.RegionalDirector]: {
     id: 'regional_director',
     name: 'Regional Director',
     permissions: [
-      PermissionType.VIEW_PROJECTS,
-      PermissionType.VIEW_OPPORTUNITIES,
-      PermissionType.VIEW_GO_NO_GO,
-      PermissionType.VIEW_REPORTS
+        PermissionType.VIEW_PROJECTS,
+        PermissionType.CREATE_PROJECT,
+        PermissionType.EDIT_PROJECT,
+        PermissionType.DELETE_PROJECT,
+        
+        PermissionType.CREATE_BUSINESS_DEVELOPMENT,
+        PermissionType.EDIT_BUSINESS_DEVELOPMENT,
+      PermissionType.DELETE_BUSINESS_DEVELOPMENT,
+      PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
   }
 };
