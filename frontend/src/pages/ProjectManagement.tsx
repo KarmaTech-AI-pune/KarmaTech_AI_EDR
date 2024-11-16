@@ -6,8 +6,6 @@ import {
   Alert,
   TextField,
   Button,
-  Paper,
-  Container,
   Divider,
   IconButton
 } from '@mui/material';
@@ -28,17 +26,12 @@ export const ProjectManagement: React.FC = () => {
   const [canCreateProject, setCanCreateProject] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  
-  // New state for form visibility
   const [isCreatingProject, setIsCreatingProject] = useState(false);
-  
-  // Filtering and Pagination States
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [projectsPerPage] = useState(5);
 
-  // Project Management Specific Statuses
   const projectManagementStatuses: ProjectStatus[] = [
     ProjectStatus['In Progress'],
     ProjectStatus.Completed,
@@ -67,7 +60,6 @@ export const ProjectManagement: React.FC = () => {
 
         setCurrentUser(user);
 
-        // Check specific permissions for Project Management
         if (user.roleDetails) {
           const hasProjectViewPermission = user.roleDetails.permissions.includes(
             PermissionType.VIEW_PROJECTS
@@ -82,7 +74,6 @@ export const ProjectManagement: React.FC = () => {
           if (!hasProjectViewPermission) {
             setError('You do not have permission to view projects');
           } else {
-            // Fetch all projects
             await fetchProjects();
           }
         }
@@ -105,18 +96,13 @@ export const ProjectManagement: React.FC = () => {
 
   const handleSubmitProject = async (projectData: ProjectFormData) => {
     try {
-      // Ensure the project status is set to In Progress for Project Management
       const newProjectData = {
         ...projectData,
         status: ProjectStatus['In Progress']
       };
 
       await projectApi.create(newProjectData);
-      
-      // Refetch projects to ensure updated list
       await fetchProjects();
-      
-      // Close the form
       setIsCreatingProject(false);
     } catch (err) {
       console.error('Error creating project:', err);
@@ -125,15 +111,12 @@ export const ProjectManagement: React.FC = () => {
   };
 
   const handleProjectUpdated = async () => {
-    // Refetch projects after an update
     await fetchProjects();
   };
 
   const handleProjectDeleted = async (projectId: number) => {
     try {
       await projectApi.delete(projectId);
-      
-      // Refetch projects to ensure updated list
       await fetchProjects();
     } catch (err) {
       console.error('Error deleting project:', err);
@@ -155,20 +138,17 @@ export const ProjectManagement: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // Filter projects based on search, status, and project management statuses
   const filteredProjects = projects.filter(project => {
     const matchesSearch = 
       project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === '' || project.status === statusFilter;
-    
     const matchesProjectManagementStatuses = projectManagementStatuses.includes(project.status);
 
     return matchesSearch && matchesStatus && matchesProjectManagementStatuses;
   });
 
-  // Pagination
   const indexOfLastProject = currentPage * projectsPerPage;
   const indexOfFirstProject = indexOfLastProject - projectsPerPage;
   const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
@@ -184,112 +164,118 @@ export const ProjectManagement: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg">
-      <Paper elevation={3} sx={{ 
-        p: 3, 
-        mt: 4, 
-        backgroundColor: 'background.default',
-        borderRadius: 2
+    <Box
+      sx={{ 
+        p: 2,
+        bgcolor: '#ffffff',
+        borderRadius: '8px',
+        border: '1px solid #e0e0e0',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+      }}
+    >
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 3 
       }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3 
-        }}>
-          <Typography variant="h4" sx={{ 
-            color: 'primary.main', 
-            fontWeight: 600 
-          }}>
-            Project Management
-          </Typography>
-          
-          {canCreateProject && !isCreatingProject && (
-            <Button 
-              variant="contained" 
-              color="primary"
-              startIcon={<AddCircleOutlineIcon />}
-              onClick={handleCreateProject}
-              sx={{ 
-                textTransform: 'none',
-                borderRadius: 2,
-                px: 3
-              }}
-            >
-              New Project
-            </Button>
-          )}
-        </Box>
-
-        {isCreatingProject && (
-          <Box sx={{ mb: 3 }}>
-            <ProjectForm 
-              onSubmit={handleSubmitProject}
-              onCancel={handleCancelProject}
-            />
-          </Box>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 500,
+            color: '#1a237e'
+          }}
+        >
+          Project Management
+        </Typography>
+        
+        {canCreateProject && !isCreatingProject && (
+          <Button 
+            variant="contained" 
+            color="primary"
+            startIcon={<AddCircleOutlineIcon />}
+            onClick={handleCreateProject}
+            sx={{ 
+              textTransform: 'none',
+              borderRadius: 2,
+              px: 3
+            }}
+          >
+            New Project
+          </Button>
         )}
+      </Box>
 
-        <Divider sx={{ mb: 3 }} />
-
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3 
-        }}>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <ProjectFilter 
-              onFilterChange={handleStatusFilter}
-              currentFilter={statusFilter}
-              statuses={projectManagementStatuses}
-            />
-            
-            <TextField
-              variant="outlined"
-              size="small"
-              placeholder="Search projects"
-              value={searchTerm}
-              onChange={handleSearch}
-              InputProps={{
-                endAdornment: (
-                  <IconButton size="small">
-                    <SearchIcon />
-                  </IconButton>
-                ),
-                sx: { 
-                  borderRadius: 2,
-                  backgroundColor: 'background.paper'
-                }
-              }}
-              sx={{ 
-                width: 250,
-              }}
-            />
-          </Box>
-        </Box>
-
-        <GeneralProjectList 
-          projects={currentProjects}
-          emptyMessage="No project management projects found"
-          filterStatuses={projectManagementStatuses}
-          onProjectDeleted={handleProjectDeleted}
-          onProjectUpdated={handleProjectUpdated}
-        />
-
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          mt: 3 
-        }}>
-          <Pagination
-            projectsPerPage={projectsPerPage}
-            totalProjects={filteredProjects.length}
-            paginate={paginate}
-            currentPage={currentPage}
+      {isCreatingProject && (
+        <Box sx={{ mb: 3 }}>
+          <ProjectForm 
+            onSubmit={handleSubmitProject}
+            onCancel={handleCancelProject}
           />
         </Box>
-      </Paper>
-    </Container>
-  )
-      }
+      )}
+
+      <Divider sx={{ mb: 3 }} />
+
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 3 
+      }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <ProjectFilter 
+            onFilterChange={handleStatusFilter}
+            currentFilter={statusFilter}
+            statuses={projectManagementStatuses}
+          />
+          
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder="Search projects"
+            value={searchTerm}
+            onChange={handleSearch}
+            InputProps={{
+              endAdornment: (
+                <IconButton size="small">
+                  <SearchIcon />
+                </IconButton>
+              ),
+              sx: { 
+                borderRadius: 2,
+                backgroundColor: 'background.paper'
+              }
+            }}
+            sx={{ 
+              width: 250,
+            }}
+          />
+        </Box>
+      </Box>
+
+      <GeneralProjectList 
+        projects={currentProjects}
+        emptyMessage="No project management projects found"
+        filterStatuses={projectManagementStatuses}
+        onProjectDeleted={handleProjectDeleted}
+        onProjectUpdated={handleProjectUpdated}
+      />
+
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        mt: 3 
+      }}>
+        <Pagination
+          projectsPerPage={projectsPerPage}
+          totalProjects={filteredProjects.length}
+          paginate={paginate}
+          currentPage={currentPage}
+        />
+      </Box>
+    </Box>
+  );
+};
+
+export default ProjectManagement;
