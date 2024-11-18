@@ -33,7 +33,12 @@ namespace NJS.Domain.Tests
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
-                Progress = 65
+                Progress = 65,
+                ClientSector = "ClientSector",
+                ContractType = "ContractType",
+                CreatedBy = "Test",
+                Currency = "INR",
+                Sector = "Tet"
             };
 
             // Act
@@ -59,7 +64,12 @@ namespace NJS.Domain.Tests
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
-                Progress = 65
+                Progress = 65,
+                ClientSector = "ClientSector",
+                ContractType = "ContractType",
+                CreatedBy = "Test",
+                Currency = "INR",
+                Sector = "Tet"
             });
             context.Projects.Add(new Project
             {
@@ -69,7 +79,12 @@ namespace NJS.Domain.Tests
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
-                Progress = 65
+                Progress = 65,
+                ClientSector = "ClientSector",
+                ContractType = "ContractType",
+                CreatedBy = "Test",
+                Currency = "INR",
+                Sector = "Tet"
             });
             context.SaveChanges();
 
@@ -98,7 +113,12 @@ namespace NJS.Domain.Tests
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
-                Progress = 65
+                Progress = 65,
+                ClientSector = "ClientSector",
+                ContractType = "ContractType",
+                CreatedBy = "Test",
+                Currency = "INR",
+                Sector = "Tet"
             };
             await context.Projects.AddAsync(project).ConfigureAwait(true);
             await context.SaveChangesAsync().ConfigureAwait(true);
@@ -127,7 +147,12 @@ namespace NJS.Domain.Tests
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
-                Progress = 65
+                Progress = 65,
+                ClientSector = "ClientSector",
+                ContractType = "ContractType",
+                CreatedBy = "Test",
+                Currency = "INR",
+                Sector = "Tet"
             };
             context.Projects.Add(project);
             await context.SaveChangesAsync().ConfigureAwait(true);
@@ -156,7 +181,12 @@ namespace NJS.Domain.Tests
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
-                Progress = 65
+                Progress = 65,
+                ClientSector= "ClientSector",
+                ContractType= "ContractType",
+                CreatedBy="Test",
+                Currency="INR",
+                Sector="Tet"
             });
             context.Projects.Add(new Project
             {
@@ -166,7 +196,12 @@ namespace NJS.Domain.Tests
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
-                Progress = 65
+                Progress = 65,
+                ClientSector = "ClientSector",
+                ContractType = "ContractType",
+                CreatedBy = "Test",
+                Currency = "INR",
+                Sector = "Tet"
             });
             context.SaveChanges();
 
@@ -194,7 +229,12 @@ namespace NJS.Domain.Tests
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
-                Progress = 65
+                Progress = 65,
+                ClientSector = "ClientSector",
+                ContractType = "ContractType",
+                CreatedBy = "Test",
+                Currency = "INR",
+                Sector = "Tet"
             });
             context.Projects.Add(new Project
             {
@@ -204,7 +244,12 @@ namespace NJS.Domain.Tests
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
-                Progress = 65
+                Progress = 65,
+                ClientSector = "ClientSector",
+                ContractType = "ContractType",
+                CreatedBy = "Test",
+                Currency = "INR",
+                Sector = "Tet"
             });
             context.SaveChanges();
 

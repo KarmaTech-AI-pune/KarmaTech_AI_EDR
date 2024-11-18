@@ -49,9 +49,7 @@ internal class Program
 
         builder.Services.AddAuthorization();
         var app = builder.Build();
-
-        // Initialize the database
-        await NJS.Domain.Extensions.ServiceCollectionExtensions.InitializeDatabaseAsync(app.Services);
+      
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -66,7 +64,7 @@ internal class Program
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
-
+        app.SeedApplicationData();
         app.MapControllers(); // This line maps controller routes
 
         app.Run();

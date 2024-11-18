@@ -21,9 +21,9 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task< IActionResult> GetAll()
         {
-            var projects = _projectRepository.GetAll();
+            var projects = await _projectRepository.GetAll().ConfigureAwait(false);
             return Ok(projects);
         }
 

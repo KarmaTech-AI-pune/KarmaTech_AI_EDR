@@ -26,29 +26,6 @@ namespace NJS.Domain.Extensions
             // Register generic repository
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             return services;
-        }
-
-        public static async Task InitializeDatabaseAsync(IServiceProvider serviceProvider)
-        {
-            try
-            {
-                using (var scope = serviceProvider.CreateScope())
-                {
-                    var context = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
-
-                    // First apply any pending migrations
-                    await context.Database.MigrateAsync();
-
-                    // Seed data is now handled by HasData in ProjectManagementContext
-                    Console.WriteLine("Database initialization completed.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An error occurred while initializing the database: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                throw; // Re-throw to ensure the error is not silently swallowed
-            }
-        }
+        }       
     }
 }
