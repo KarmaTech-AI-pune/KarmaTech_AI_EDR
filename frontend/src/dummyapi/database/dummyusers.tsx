@@ -2,14 +2,12 @@ import { User } from '../../types';
 
 // Expanded Role enum to include more specific roles
 export enum UserRole {
-  Admin = 'Admin',
-  ProjectManager = 'Project Manager', //Project Management
-  ProjectCoordinator = 'Project Coordinator', //Project Management
-  Director = 'Director', //All
-  RegionalDirector = 'Regional Director', //All
-  ManagingDirector = 'Managing Director', //All
-  BusinessDevelopmentManager = 'Business Development Manager', //BD
-  SalesProfessional = 'Sales Professional' //BD
+  Admin = 'Admin', //Admin
+  ProjectManager = 'Project Manager', //PM
+  SeniorProjectManager = 'Senior Project Manager', //SPM
+  RegionalManager = 'Regional Manager', //RM
+  BusinessDevelopmentManager = 'Business Development Manager', //BDM
+  SubjectMatterExpert = 'Subject Matter Expert' //SME
 }
 
 // Extend the User type to include auth-related fields
@@ -27,39 +25,29 @@ const usersRawData = {
     "role": UserRole.Admin
   },
   "2" : {
-    "username": "projectmanager",
+    "username": "PM",
     "password": "password",
     "role": UserRole.ProjectManager
   },
   "3" : {
-    "username": "projectcoordinator",
+    "username": "SPM",
     "password": "password",
-    "role": UserRole.ProjectCoordinator 
+    "role": UserRole.SeniorProjectManager
   },
   "4" : {
-    "username": "director",
+    "username": "RM",
     "password": "password",
-    "role": UserRole.Director
-  },
-  "5" : {
-    "username": "regionaldirector",
-    "password": "password",
-    "role": UserRole.RegionalDirector
+    "role": UserRole.RegionalManager
   },
   "6" : {
-    "username": "managingdirector",
-    "password": "password",
-    "role": UserRole.ManagingDirector 
-  },
-  "7" : {
-    "username": "businessdevelopmentmanager",
+    "username": "BDM",
     "password": "password",
     "role": UserRole.BusinessDevelopmentManager
   },
-  "8" : {
-    "username": "salesprofessional",
+  "7" : {
+    "username": "SME",
     "password": "password",
-    "role": UserRole.SalesProfessional
+    "role": UserRole.SubjectMatterExpert
   },
 } as const;
 

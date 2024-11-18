@@ -1,4 +1,5 @@
 import { UserRole } from './dummyusers';
+
 // Comprehensive Permission Enum
 export enum PermissionType {
   // Project Permissions
@@ -17,7 +18,6 @@ export enum PermissionType {
   SYSTEM_ADMIN = 'SYSTEM_ADMIN'
 }
 
-
 // Role Definition with Permissions
 export interface RoleDefinition {
   id: string;
@@ -31,49 +31,44 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
     id: 'admin',
     name: 'Administrator',
     permissions:[
-        PermissionType.VIEW_PROJECTS,
-        PermissionType.CREATE_PROJECT,
-        PermissionType.EDIT_PROJECT,
-        PermissionType.DELETE_PROJECT,
-  
-        PermissionType.CREATE_BUSINESS_DEVELOPMENT,
-        PermissionType.EDIT_BUSINESS_DEVELOPMENT,
-        PermissionType.DELETE_BUSINESS_DEVELOPMENT,
-        PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-
-        PermissionType.SYSTEM_ADMIN
-    ]  // Full access
-  },
-  [UserRole.ManagingDirector]: {
-    id: 'managing_director',
-    name: 'Managing Director',
-    permissions: [
       PermissionType.VIEW_PROJECTS,
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
       PermissionType.DELETE_PROJECT,
-
+  
       PermissionType.CREATE_BUSINESS_DEVELOPMENT,
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-    ]
+
+      PermissionType.SYSTEM_ADMIN
+    ]  // Full access
   },
   [UserRole.ProjectManager]: {
     id: 'project_manager',
     name: 'Project Manager',
     permissions: [
-        PermissionType.VIEW_PROJECTS,
+      PermissionType.VIEW_PROJECTS,
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
       PermissionType.DELETE_PROJECT,
     ]
   },
-  [UserRole.ProjectCoordinator]: {
-    id: 'project_coordinator',
-    name: 'Project Coordinator',
+  [UserRole.SeniorProjectManager]: {
+    id: 'senior_project_manager',
+    name: 'Senior Project Manager',
     permissions: [
-        PermissionType.VIEW_PROJECTS,
+      PermissionType.VIEW_PROJECTS,
+      PermissionType.CREATE_PROJECT,
+      PermissionType.EDIT_PROJECT,
+      PermissionType.DELETE_PROJECT,
+    ]
+  },
+  [UserRole.RegionalManager]: {
+    id: 'regional_manager',
+    name: 'Regional Manager',
+    permissions: [
+      PermissionType.VIEW_PROJECTS,
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
       PermissionType.DELETE_PROJECT,
@@ -83,49 +78,22 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
     id: 'business_dev_manager',
     name: 'Business Development Manager',
     permissions: [
-        PermissionType.CREATE_BUSINESS_DEVELOPMENT,
-      PermissionType.EDIT_BUSINESS_DEVELOPMENT,
-      PermissionType.DELETE_BUSINESS_DEVELOPMENT,
-      PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-        PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-    ]
-  },
-  [UserRole.SalesProfessional]: {
-    id: 'sales_professional',
-    name: 'Sales Professional',
-    permissions: [
-        PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-    ]
-  },
-  [UserRole.Director]: {
-    id: 'director',
-    name: 'Director',
-    permissions: [
-      PermissionType.VIEW_PROJECTS,
-      PermissionType.CREATE_PROJECT,
-      PermissionType.EDIT_PROJECT,
-      PermissionType.DELETE_PROJECT,
       PermissionType.CREATE_BUSINESS_DEVELOPMENT,
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
   },
-  [UserRole.RegionalDirector]: {
-    id: 'regional_director',
-    name: 'Regional Director',
+  [UserRole.SubjectMatterExpert]: {
+    id: 'subject_matter_expert',
+    name: 'Subject Matter Expert',
     permissions: [
-        PermissionType.VIEW_PROJECTS,
-        PermissionType.CREATE_PROJECT,
-        PermissionType.EDIT_PROJECT,
-        PermissionType.DELETE_PROJECT,
-        
-        PermissionType.CREATE_BUSINESS_DEVELOPMENT,
-        PermissionType.EDIT_BUSINESS_DEVELOPMENT,
+      PermissionType.CREATE_BUSINESS_DEVELOPMENT,
+      PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
-  }
+  },
 };
 
 // Utility function to check if a user has a specific permission
