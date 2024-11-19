@@ -30,19 +30,19 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
   [UserRole.Admin]: {
     id: 'admin',
     name: 'Administrator',
-    permissions:[
+    permissions: [
       PermissionType.VIEW_PROJECTS,
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
       PermissionType.DELETE_PROJECT,
-  
+
       PermissionType.CREATE_BUSINESS_DEVELOPMENT,
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
 
       PermissionType.SYSTEM_ADMIN
-    ]  // Full access
+    ] // Full access
   },
   [UserRole.ProjectManager]: {
     id: 'project_manager',
@@ -72,6 +72,11 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
       PermissionType.DELETE_PROJECT,
+
+      PermissionType.CREATE_BUSINESS_DEVELOPMENT,
+      PermissionType.EDIT_BUSINESS_DEVELOPMENT,
+      PermissionType.DELETE_BUSINESS_DEVELOPMENT,
+      PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
   },
   [UserRole.BusinessDevelopmentManager]: {
@@ -94,6 +99,16 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
   },
+  [UserRole.BusinessDevelopmentHead]:{
+    id: 'business_dev_head',
+    name: 'Business Development Head',
+    permissions : [
+      PermissionType.CREATE_BUSINESS_DEVELOPMENT,
+      PermissionType.EDIT_BUSINESS_DEVELOPMENT,
+      PermissionType.DELETE_BUSINESS_DEVELOPMENT,
+      PermissionType.VIEW_BUSINESS_DEVELOPMENT,
+    ]
+  }
 };
 
 // Utility function to check if a user has a specific permission

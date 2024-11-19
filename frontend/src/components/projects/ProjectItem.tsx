@@ -4,7 +4,7 @@ import { Edit, Delete } from '@mui/icons-material';
 import { ProjectItemProps, ProjectFormData, ProjectStatus, UserWithRole } from '../../types';
 import { useState, useContext, useEffect } from 'react';
 import { projectApi } from '../../dummyapi/api';
-import { ProjectForm } from './ProjectForm';
+import { ProjectForm } from '../forms/ProjectForm';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../dummyapi/database/dummyRoles';

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -18,40 +18,18 @@ import { DateField } from '@mui/x-date-pickers/DateField';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
+import { OpportunityTracking } from '../../types';
+import { getUsersByRole, UserRole } from '../../dummyapi/database/dummyusers';
 
 interface OpportunityFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
-  project: any;
-  error?: string | null;
+  onSubmit: (data: OpportunityTracking) => void;
+  project?: Partial<OpportunityTracking>;
+  error?: string;
 }
 
-interface FormData {
-  projectId: number;
-  stage: string;
-  strategicRanking: string;
-  bidFees: number;
-  emd: number;
-  formOfEMD: string;
-  bidManager: string;
-  contactPersonAtClient: string;
-  dateOfSubmission: Date | null;
-  percentageChanceOfProjectHappening: number;
-  percentageChanceOfNJSSuccess: number;
-  likelyCompetition: string;
-  dateOfResult: Date | null;
-  grossRevenue: number;
-  netNJSRevenue: number;
-  followUpComments: string;
-  notes: string;
-  probableQualifyingCriteria: string;
-  month: number;
-  year: number;
-  trackedBy: string;
-}
-
-const OpportunityForm: React.FC<OpportunityFormProps> = ({
+export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   open,
   onClose,
   onSubmit,
@@ -59,29 +37,57 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
   error
 }) => {
   const context = useContext(projectManagementAppContext);
-  const [formData, setFormData] = useState<FormData>({
-    projectId: project.id,
-    stage: '',
-    strategicRanking: '',
-    bidFees: 0,
-    emd: 0,
-    formOfEMD: '',
-    bidManager: '',
-    contactPersonAtClient: '',
-    dateOfSubmission: new Date(),
-    percentageChanceOfProjectHappening: 0,
-    percentageChanceOfNJSSuccess: 0,
-    likelyCompetition: '',
-    dateOfResult: null,
-    grossRevenue: 0,
-    netNJSRevenue: 0,
-    followUpComments: '',
-    notes: '',
-    probableQualifyingCriteria: '',
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
-    trackedBy: context?.user?.name || ''
+  const [regionalManagers, setRegionalManagers] = useState<{id: number, name: string}[]>([]);
+  const [formData, setFormData] = useState<Partial<OpportunityTracking>>({
+    projectId: project?.projectId || 0,
+    stage: project?.stage || '',
+    strategicRanking: project?.strategicRanking || '',
+    bidFees: project?.bidFees || 0,
+    emd: project?.emd || 0,
+    formOfEMD: project?.formOfEMD || '',
+    bidManagerId: project?.bidManagerId || 0,
+    contactPersonAtClient: project?.contactPersonAtClient || '',
+    dateOfSubmission: project?.dateOfSubmission || new Date().toISOString().split('T')[0],
+    percentageChanceOfProjectHappening: project?.percentageChanceOfProjectHappening || 0,
+    percentageChanceOfNJSSuccess: project?.percentageChanceOfNJSSuccess || 0,
+    likelyCompetition: project?.likelyCompetition || '',
+    grossRevenue: project?.grossRevenue || 0,
+    netNJSRevenue: project?.netNJSRevenue || 0,
+    followUpComments: project?.followUpComments || '',
+    notes: project?.notes || '',
+    probableQualifyingCriteria: project?.probableQualifyingCriteria || '',
+    operation: project?.operation || '',
+    workName: project?.workName || '',
+    client: project?.client || '',
+    clientSector: project?.clientSector || '',
+    likelyStartDate: project?.likelyStartDate || new Date().toISOString().split('T')[0],
+    status: project?.status || '',
+    currency: project?.currency || 'INR',
+    capitalValue: project?.capitalValue || 0,
+    durationOfProject: project?.durationOfProject || 0,
+    fundingStream: project?.fundingStream || '',
+    contractType: project?.contractType || ''
   });
+
+  useEffect(() => {
+    // Fetch Regional Managers when component mounts
+    const managers = getUsersByRole(UserRole.RegionalManager);
+    setRegionalManagers(managers.map(manager => ({
+      id: manager.id,
+      name: manager.name
+    })));
+  }, []);
+
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        ...project,
+        bidManagerId: project.bidManagerId || 0,
+        dateOfSubmission: project.dateOfSubmission || new Date().toISOString().split('T')[0],
+        likelyStartDate: project.likelyStartDate || new Date().toISOString().split('T')[0]
+      });
+    }
+  }, [project]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
     const { name, value } = e.target;
@@ -99,21 +105,23 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
     }));
   };
 
-  const handleDateChange = (field: keyof Pick<FormData, 'dateOfSubmission' | 'dateOfResult'>) => (value: Date | null) => {
+  const handleDateChange = (field: keyof Pick<OpportunityTracking, 'dateOfSubmission' | 'likelyStartDate'>) => (value: Date | null) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: value ? value.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit(formData as OpportunityTracking);
   };
+
+  const isEditMode = Boolean(project?.id);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Create New Opportunity</DialogTitle>
+      <DialogTitle>{isEditMode ? 'Edit Opportunity' : 'Create New Opportunity'}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           {error && (
@@ -128,7 +136,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 <Select
                   labelId="stage-label"
                   name="stage"
-                  value={formData.stage}
+                  value={formData.stage || ''}
                   onChange={handleChange}
                   label="Stage"
                   required
@@ -146,7 +154,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 <Select
                   labelId="strategic-ranking-label"
                   name="strategicRanking"
-                  value={formData.strategicRanking}
+                  value={formData.strategicRanking || ''}
                   onChange={handleChange}
                   label="Strategic Ranking"
                   required
@@ -163,7 +171,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 label="Bid Fees"
                 name="bidFees"
                 type="number"
-                value={formData.bidFees}
+                value={formData.bidFees || 0}
                 onChange={handleNumberChange}
               />
             </Grid>
@@ -173,7 +181,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 label="EMD"
                 name="emd"
                 type="number"
-                value={formData.emd}
+                value={formData.emd || 0}
                 onChange={handleNumberChange}
               />
             </Grid>
@@ -182,26 +190,35 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 fullWidth
                 label="Form of EMD"
                 name="formOfEMD"
-                value={formData.formOfEMD}
+                value={formData.formOfEMD || ''}
                 onChange={handleChange}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Bid Manager"
-                name="bidManager"
-                value={formData.bidManager}
-                onChange={handleChange}
-                required
-              />
+              <FormControl fullWidth>
+                <InputLabel id="bid-manager-label">Bid Manager</InputLabel>
+                <Select
+                  labelId="bid-manager-label"
+                  name="bidManagerId"
+                  value={String(formData.bidManagerId || '')}
+                  onChange={handleChange}
+                  label="Bid Manager"
+                  required
+                >
+                  {regionalManagers.map((manager) => (
+                    <MenuItem key={manager.id} value={String(manager.id)}>
+                      {manager.name} (ID: {manager.id})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Contact Person at Client"
                 name="contactPersonAtClient"
-                value={formData.contactPersonAtClient}
+                value={formData.contactPersonAtClient || ''}
                 onChange={handleChange}
               />
             </Grid>
@@ -209,7 +226,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DateField
                   label="Date of Submission"
-                  value={formData.dateOfSubmission}
+                  value={formData.dateOfSubmission ? new Date(formData.dateOfSubmission) : null}
                   onChange={handleDateChange('dateOfSubmission')}
                   format="dd/MM/yyyy"
                   fullWidth
@@ -223,7 +240,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 name="percentageChanceOfProjectHappening"
                 type="number"
                 inputProps={{ min: 0, max: 100, step: 0.01 }}
-                value={formData.percentageChanceOfProjectHappening}
+                value={formData.percentageChanceOfProjectHappening || 0}
                 onChange={handleNumberChange}
               />
             </Grid>
@@ -234,7 +251,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 name="percentageChanceOfNJSSuccess"
                 type="number"
                 inputProps={{ min: 0, max: 100, step: 0.01 }}
-                value={formData.percentageChanceOfNJSSuccess}
+                value={formData.percentageChanceOfNJSSuccess || 0}
                 onChange={handleNumberChange}
               />
             </Grid>
@@ -245,7 +262,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 name="likelyCompetition"
                 multiline
                 rows={2}
-                value={formData.likelyCompetition}
+                value={formData.likelyCompetition || ''}
                 onChange={handleChange}
               />
             </Grid>
@@ -256,7 +273,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 name="probableQualifyingCriteria"
                 multiline
                 rows={2}
-                value={formData.probableQualifyingCriteria}
+                value={formData.probableQualifyingCriteria || ''}
                 onChange={handleChange}
               />
             </Grid>
@@ -267,7 +284,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 name="followUpComments"
                 multiline
                 rows={2}
-                value={formData.followUpComments}
+                value={formData.followUpComments || ''}
                 onChange={handleChange}
               />
             </Grid>
@@ -278,31 +295,162 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 name="notes"
                 multiline
                 rows={2}
-                value={formData.notes}
+                value={formData.notes || ''}
                 onChange={handleChange}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Tracked By"
-                name="trackedBy"
-                value={formData.trackedBy}
+                label="Operation"
+                name="operation"
+                value={formData.operation || ''}
                 onChange={handleChange}
                 required
               />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Work Name"
+                name="workName"
+                value={formData.workName || ''}
+                onChange={handleChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Client"
+                name="client"
+                value={formData.client || ''}
+                onChange={handleChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Client Sector"
+                name="clientSector"
+                value={formData.clientSector || ''}
+                onChange={handleChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DateField
+                  label="Likely Start Date"
+                  value={formData.likelyStartDate ? new Date(formData.likelyStartDate) : null}
+                  onChange={handleDateChange('likelyStartDate')}
+                  format="dd/MM/yyyy"
+                  fullWidth
+                />
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel id="status-label">Status</InputLabel>
+                <Select
+                  labelId="status-label"
+                  name="status"
+                  value={formData.status || ''}
+                  onChange={handleChange}
+                  label="Status"
+                  required
+                >
+                  <MenuItem value="Bid Under Preparation">Bid Under Preparation</MenuItem>
+                  <MenuItem value="Bid Submitted">Bid Submitted</MenuItem>
+                  <MenuItem value="Bid Rejected">Bid Rejected</MenuItem>
+                  <MenuItem value="Bid Accepted">Bid Accepted</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel id="currency-label">Currency</InputLabel>
+                <Select
+                  labelId="currency-label"
+                  name="currency"
+                  value={formData.currency || 'INR'}
+                  onChange={handleChange}
+                  label="Currency"
+                  required
+                >
+                  <MenuItem value="INR">INR</MenuItem>
+                  <MenuItem value="USD">USD</MenuItem>
+                  <MenuItem value="EUR">EUR</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Capital Value"
+                name="capitalValue"
+                type="number"
+                value={formData.capitalValue || 0}
+                onChange={handleNumberChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Duration of Project (Months)"
+                name="durationOfProject"
+                type="number"
+                value={formData.durationOfProject || 0}
+                onChange={handleNumberChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel id="funding-stream-label">Funding Stream</InputLabel>
+                <Select
+                  labelId="funding-stream-label"
+                  name="fundingStream"
+                  value={formData.fundingStream || ''}
+                  onChange={handleChange}
+                  label="Funding Stream"
+                  required
+                >
+                  <MenuItem value="Government Budget">Government Budget</MenuItem>
+                  <MenuItem value="Government Grant">Government Grant</MenuItem>
+                  <MenuItem value="Multilateral Funding">Multilateral Funding</MenuItem>
+                  <MenuItem value="Private Investment">Private Investment</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel id="contract-type-label">Contract Type</InputLabel>
+                <Select
+                  labelId="contract-type-label"
+                  name="contractType"
+                  value={formData.contractType || ''}
+                  onChange={handleChange}
+                  label="Contract Type"
+                  required
+                >
+                  <MenuItem value="EPC">EPC</MenuItem>
+                  <MenuItem value="Item Rate">Item Rate</MenuItem>
+                  <MenuItem value="Lump Sum">Lump Sum</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained" color="primary">
-            Create Opportunity
+            {isEditMode ? 'Update Opportunity' : 'Create Opportunity'}
           </Button>
         </DialogActions>
       </form>
     </Dialog>
   );
 };
-
-export default OpportunityForm;

@@ -4,77 +4,62 @@ import {
   Paper, 
   List,
   Box,
-  Divider
+  Divider,
+  Button
 } from '@mui/material';
 import { ProjectItem } from './ProjectItem';
 import { Project, ProjectStatus } from '../../types';
 
-interface ProjectListProps {
-  projects?: Project[];
-  pageType?: 'business-development' | 'project-management';
+export interface GeneralProjectListProps {
+  projects: Project[];
   title?: string;
+  emptyMessage?: string;
+  actionLabel?: string;
+  onCreateAction?: () => void;
   onProjectDeleted?: (projectId: number) => void;
   onProjectUpdated?: () => void;
+  filterStatuses?: ProjectStatus[];
 }
 
-export const ProjectList: React.FC<ProjectListProps> = ({ 
-  projects = [], 
-  pageType,
-  title = 'Projects', 
-  onProjectDeleted, 
-  onProjectUpdated 
+export const GeneralProjectList: React.FC<GeneralProjectListProps> = ({ 
+  projects, 
+  emptyMessage = 'No projects found',
+  onProjectDeleted,
+  onProjectUpdated,
+  filterStatuses
 }) => {
-  // Filter projects based on pageType if specified
-  const filteredProjects = pageType 
-    ? projects.filter(project => {
-        if (pageType === 'project-management') {
-          return [
-            ProjectStatus['Bid Accepted'], 
-            ProjectStatus['Bid Submitted'], 
-            ProjectStatus['In Progress']
-          ].includes(project.status);
-        } else if (pageType === 'business-development') {
-          return ![
-            ProjectStatus['Bid Accepted'], 
-            ProjectStatus['Bid Submitted'], 
-            ProjectStatus['In Progress']
-          ].includes(project.status);
-        }
-        return true;
-      })
+  // Filter projects based on provided statuses
+  const filteredProjects = filterStatuses 
+    ? projects.filter(project => filterStatuses.includes(project.status))
     : projects;
 
   if (filteredProjects.length === 0) {
     return (
-      <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
-        <Typography variant="h4" gutterBottom sx={{ color: '#004a7f' }}>
-          {title}
-        </Typography>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <Typography variant="body1">No projects found</Typography>
+    
+        <Box >
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            {emptyMessage}
+          </Typography>
+        
         </Box>
-      </Paper>
     );
   }
 
   return (
-    <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
-      <Typography variant="h4" gutterBottom sx={{ color: '#004a7f' }}>
-        {title}
-      </Typography>
-      
-      <Divider sx={{ my: 2 }} />
- 
-      <List>
-        {filteredProjects.map(project => (
-          <ProjectItem 
-            key={project.id} 
-            project={project} 
-            onProjectDeleted={onProjectDeleted}
-            onProjectUpdated={onProjectUpdated}
-          />
-        ))}
-      </List>
-    </Paper>
+      <Box>
+        
+       
+ <List>
+   {filteredProjects.map(project => (
+     <ProjectItem 
+       key={project.id} 
+       project={project} 
+       onProjectDeleted={onProjectDeleted}
+       onProjectUpdated={onProjectUpdated}
+     />
+   ))}
+ </List>
+      </Box>
+   
   );
 };

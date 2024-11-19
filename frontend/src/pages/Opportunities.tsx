@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Typography, 
   Container, 
   Box, 
-  Paper, 
   CircularProgress, 
   Alert, 
   Grid, 
@@ -15,35 +14,48 @@ import {
   ExpandMore as ExpandMoreIcon, 
   WorkOutline as WorkOutlineIcon 
 } from '@mui/icons-material';
-import { projectApi } from '../dummyapi/api';
-import { Project, ProjectStatus } from '../types';
-import OpportunityTrackingWidget from '../components/widgets/OpportunityTrackingWidget';
+import { OpportunityTracking } from '../types';
+import { projectManagementAppContext } from '../App';
+import { UserRole } from '../dummyapi/database/dummyusers';
+import { opportunityApi } from '../dummyapi/opportunityApi';
 
 export const Opportunities: React.FC = () => {
-  const [opportunityProjects, setOpportunityProjects] = useState<Project[]>([]);
-  const [expandedProjectId, setExpandedProjectId] = useState<number | null>(null);
+  const [opportunities, setOpportunities] = useState<OpportunityTracking[]>([]);
+  const [expandedOpportunityId, setExpandedOpportunityId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
-    const loadOpportunityProjects = async () => {
+    const loadOpportunities = async () => {
       try {
         setIsLoading(true);
-        const projects = await projectApi.getAll();
-        const opportunityProjects = projects.filter(p => p.status === ProjectStatus.Opportunity);
-        setOpportunityProjects(opportunityProjects);
+        
+        // If logged in user is a Regional Manager, filter opportunities
+        if (context?.user?.role === UserRole.RegionalManager && context.user.id) {
+          // Get opportunities for this user
+          console.log("RM")
+          const userOpportunities = await opportunityApi.getByUserId(context.user.id);
+          setOpportunities(userOpportunities);
+        } else {
+          console.log("not RM")
+          // Get all opportunities for other roles
+          const allOpportunities = await opportunityApi.getAll();
+          setOpportunities(allOpportunities);
+        }
+        
         setIsLoading(false);
       } catch (err) {
-        setError('Failed to load opportunity projects');
+        setError('Failed to load opportunities');
         setIsLoading(false);
       }
     };
 
-    loadOpportunityProjects();
-  }, []);
+    loadOpportunities();
+  }, [context?.user]);
 
-  const toggleProjectExpansion = (projectId: number) => {
-    setExpandedProjectId(expandedProjectId === projectId ? null : projectId);
+  const toggleOpportunityExpansion = (opportunityId: number) => {
+    setExpandedOpportunityId(expandedOpportunityId === opportunityId ? null : opportunityId);
   };
 
   if (isLoading) {
@@ -80,22 +92,22 @@ export const Opportunities: React.FC = () => {
         </Typography>
       </Box>
 
-      {opportunityProjects.length === 0 ? (
+      {opportunities.length === 0 ? (
         <Alert 
           severity="info" 
           sx={{ 
             '& .MuiAlert-icon': { color: 'primary.main' } 
           }}
         >
-          No opportunity projects found.
+          No opportunities found.
         </Alert>
       ) : (
         <Grid container spacing={3}>
-          {opportunityProjects.map(project => (
-            <Grid item xs={12} key={project.id}>
+          {opportunities.map(opportunity => (
+            <Grid item xs={12} key={opportunity.id}>
               <Accordion 
-                expanded={expandedProjectId === project.id}
-                onChange={() => toggleProjectExpansion(project.id)}
+                expanded={expandedOpportunityId === opportunity.id}
+                onChange={() => toggleOpportunityExpansion(opportunity.id)}
                 sx={{ 
                   boxShadow: 'none', 
                   border: '1px solid', 
@@ -113,18 +125,20 @@ export const Opportunities: React.FC = () => {
                   <Grid container alignItems="center" spacing={2}>
                     <Grid item xs>
                       <Typography variant="h6" color="text.primary">
-                        {project.name}
+                        {opportunity.workName}
                       </Typography>
                     </Grid>
                     <Grid item>
                       <Typography variant="body2" color="text.secondary">
-                        {ProjectStatus[project.status]}
+                        {opportunity.status}
                       </Typography>
                     </Grid>
                   </Grid>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <OpportunityTrackingWidget project={project} />
+                  <Typography variant="body1">Client: {opportunity.client}</Typography>
+                  <Typography variant="body1">Client Sector: {opportunity.clientSector}</Typography>
+                  <Typography variant="body1">Operation: {opportunity.operation}</Typography>
                 </AccordionDetails>
               </Accordion>
             </Grid>

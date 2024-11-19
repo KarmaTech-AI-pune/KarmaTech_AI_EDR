@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from 'react';
 import { Typography, Paper, Grid, Alert, Button, Collapse, Chip } from '@mui/material';
 import { ExpandMore, ExpandLess, TrendingUp, AssignmentTurnedIn, MonetizationOn } from '@mui/icons-material';
 import { Project, ProjectStatus, OpportunityTracking } from '../../types';
-import OpportunityForm from '../forms/OpportunityForm';
+import {OpportunityForm} from '../forms/OpportunityForm';
 import { opportunityApi } from '../../dummyapi/api';
 import { projectManagementAppContext } from '../../App';
 
@@ -14,15 +14,15 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({ p
   const context = useContext(projectManagementAppContext);
   const [isExpanded, setIsExpanded] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | undefined>();
   const [opportunityTracking, setOpportunityTracking] = useState<OpportunityTracking | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | undefined>();
 
   const fetchOpportunityTracking = async () => {
     try {
       setIsLoading(true);
-      setApiError(null);
+      setApiError(undefined);
       const trackings = await opportunityApi.getByProjectId(project.id);
       // Get the most recent tracking if any exists
       setOpportunityTracking(trackings.length > 0 ? trackings[0] : null);
@@ -40,15 +40,15 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({ p
 
   const handleCreateOpportunity = () => {
     setIsFormOpen(true);
-    setFormError(null);
+    setFormError(undefined);
   };
 
   const handleFormClose = () => {
     setIsFormOpen(false);
-    setFormError(null);
+    setFormError(undefined);
   };
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: OpportunityTracking) => {
     try {
       if (!context?.user?.name) {
         throw new Error('User not authenticated');
@@ -65,7 +65,7 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({ p
       const newOpportunity = await opportunityApi.create(submissionData);
       setOpportunityTracking(newOpportunity);
       setIsFormOpen(false);
-      setFormError(null);
+      setFormError(undefined);
       
       // Refresh the data after successful submission
       await fetchOpportunityTracking();
@@ -118,10 +118,27 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({ p
   }
 
   // Show API error if any
-  
+  if (apiError) {
+    return (
+      <Alert severity="error" sx={{ mt: 2 }}>
+        {apiError}
+      </Alert>
+    );
+  }
 
   // If no opportunity tracking exists for an opportunity status project
   if (!opportunityTracking) {
+    const initialOpportunityData: Partial<OpportunityTracking> = {
+      projectId: project.id,
+      workName: project.name,
+      clientSector: project.clientSector,
+      currency: project.currency,
+      contractType: project.contractType,
+      status: ProjectStatus[project.status],
+      likelyStartDate: project.startDate || new Date().toISOString().split('T')[0],
+      dateOfSubmission: new Date().toISOString().split('T')[0]
+    };
+
     return (
       <>
         <Paper variant="outlined" sx={{ p: 3, mt: 2, backgroundColor: 'rgba(0, 0, 0, 0.02)' }}>
@@ -151,17 +168,10 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({ p
           open={isFormOpen}
           onClose={handleFormClose}
           onSubmit={handleFormSubmit}
-          project={project}
+          project={initialOpportunityData}
           error={formError}
         />
       </>
-    );
-  }
-  if (apiError) {
-    return (
-      <Alert severity="error" sx={{ mt: 2 }}>
-        {apiError}
-      </Alert>
     );
   }
 
@@ -206,7 +216,7 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({ p
               </Grid>
               <Grid item xs={12}>
                 <Typography variant="body2" color="text.primary">
-                  Bid Manager: {opportunityTracking.bidManager || 'Not assigned'}
+                  Bid Manager: {opportunityTracking.bidManagerId || 'Not assigned'}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
@@ -255,7 +265,7 @@ const OpportunityTrackingWidget: React.FC<OpportunityTrackingWidgetProps> = ({ p
         open={isFormOpen}
         onClose={handleFormClose}
         onSubmit={handleFormSubmit}
-        project={project}
+        project={opportunityTracking}
         error={formError}
       />
     </>

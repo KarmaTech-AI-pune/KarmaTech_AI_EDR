@@ -3,14 +3,13 @@ import { createContext, useState, useEffect } from 'react'
 import { Home, ProjectDetails, Opportunities, LoginScreen, BusinessDevelopment, ProjectManagement } from './pages'
 import { Navbar } from './components/navigation/Navbar'
 import { Dashboard } from './components/Dashboard'
-import { ProjectList } from './components/projects/ProjectList'
 import { ResourceManagement } from './components/ResourceManagement'
 import { ReportsList } from './components/ReportsList'
 import { NotificationCenter } from './components/navigation/NotificationCenter'
 import { authApi } from './dummyapi/api'
 import GoNoGoForm from './components/forms/GoNoGoForm'
 import BidPreparationForm from './components/forms/BidPreparationForm'
-
+import { Forms } from './pages/Forms'
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
 function App() {
@@ -59,7 +58,6 @@ function App() {
     "Login": <LoginScreen />,
     "Home": <Home />,
     "Dashboard": <Dashboard />,
-    "Projects": <ProjectList />,
     "Business Development": <BusinessDevelopment />,
     "Project Management": <ProjectManagement />,
     "Opportunities" : <Opportunities />,
@@ -73,6 +71,7 @@ function App() {
         goNoGoDecision={currentGoNoGoDecision}
       />
     ) : <div>No project selected</div>,
+    'Forms' : <Forms />,
     'Bid Preparation' : <BidPreparationForm />
   };
 

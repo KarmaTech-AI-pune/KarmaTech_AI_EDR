@@ -96,7 +96,6 @@ export type LoginResponse = {
   user?: UserWithRole;
 }
 
-// Rest of the existing types remain the same...
 export type OpportunityTracking = {
   id: number;
   projectId: number;
@@ -105,7 +104,7 @@ export type OpportunityTracking = {
   bidFees?: number;
   emd?: number;
   formOfEMD?: string;
-  bidManager: string;
+  bidManagerId: number;
   contactPersonAtClient?: string;
   dateOfSubmission?: string;
   percentageChanceOfProjectHappening?: number;
@@ -116,14 +115,32 @@ export type OpportunityTracking = {
   followUpComments?: string;
   notes?: string;
   probableQualifyingCriteria?: string;
-  month: number;
-  year: number;
-  trackedBy: string;
-  createdAt: string;
-  createdBy: string;
-  lastModifiedAt?: string;
-  lastModifiedBy?: string;
+  operation: string;
+  workName: string;
+  client: string;
+  clientSector: string;
+  likelyStartDate: string;
+  status: string;
+  currency: string;
+  capitalValue: number;
+  durationOfProject: number;
+  fundingStream: string;
+  contractType: string;
 }
+
+export type OpportunityItemProps = {
+  opportunity: OpportunityTracking;
+  onOpportunityDeleted?: (opportunityId: number) => void;
+  onOpportunityUpdated?: () => void;
+};
+
+export type OpportunityFormData = Omit<OpportunityTracking, 'id'>;
+
+export type OpportunityFormProps = {
+  opportunity?: OpportunityTracking;
+  onSubmit: (data: OpportunityFormData) => void;
+  onCancel?: () => void;
+};
 
 export enum GoNoGoStatus {
   'Green' = 0,

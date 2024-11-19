@@ -10,7 +10,7 @@ const opportunityTrackingRawData =  {
     "bidFees": 75000,
     "emd": 150000,
     "formOfEMD": "Bank Guarantee",
-    "bidManager": "John Smith",
+    "bidManagerId": 6,
     "contactPersonAtClient": "Rajesh Kumar",
     "dateOfSubmission": "2023-12-15",
     "percentageChanceOfProjectHappening": 75.5,
@@ -21,13 +21,17 @@ const opportunityTrackingRawData =  {
     "followUpComments": "Client very interested in smart solutions",
     "notes": "Need to focus on IoT integration",
     "probableQualifyingCriteria": "Similar project experience, Local presence",
-    "month": 11,
-    "year": 2023,
-    "trackedBy": "System",
-    "createdAt": "2023-11-01",
-    "createdBy": "System",
-    "lastModifiedAt": "2023-11-15",
-    "lastModifiedBy": "System"
+    "operation": "Mumbai",
+    "workName": "Smart City Project",
+    "client": "Mumbai Municipal Corporation", 
+    "clientSector": "Government",
+    "likelyStartDate": "2024-03-01",
+    "status": "Bid Submitted",
+    "currency": "INR",
+    "capitalValue": 500000000,
+    "durationOfProject": 36,
+    "fundingStream": "Government Budget",
+    "contractType": "EPC"
   },
   "2":{
     "id": 2,
@@ -37,7 +41,7 @@ const opportunityTrackingRawData =  {
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManager": "Sarah Johnson",
+    "bidManagerId": 7,
     "contactPersonAtClient": "Amit Patel",
     "dateOfSubmission": "2023-12-30",
     "percentageChanceOfProjectHappening": 60.0,
@@ -48,13 +52,17 @@ const opportunityTrackingRawData =  {
     "followUpComments": "Technical presentation scheduled",
     "notes": "Focus on flood prediction systems",
     "probableQualifyingCriteria": "Similar project experience, Local presence",
-    "month": 11,
-    "year": 2023,
-    "trackedBy": "System",
-    "createdAt": "2023-11-15",
-    "createdBy": "System",
-    "lastModifiedAt": "2023-11-20",
-    "lastModifiedBy": "System"
+    "operation": "Pune",
+    "workName": "River Rejuvenation",
+    "client": "Pune Municipal Corporation",
+    "clientSector": "Government", 
+    "likelyStartDate": "2024-06-01",
+    "status": "Bid Under Preparation",
+    "currency": "INR",
+    "capitalValue": 250000000,
+    "durationOfProject": 24,
+    "fundingStream": "Government Grant",
+    "contractType": "Item Rate"
   },
   "3":{
     "id": 3,
@@ -64,7 +72,7 @@ const opportunityTrackingRawData =  {
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManager": "John Johnson",
+    "bidManagerId": 6,
     "contactPersonAtClient": "Amita Patel",
     "dateOfSubmission": "2023-12-30",
     "percentageChanceOfProjectHappening": 60.0,
@@ -75,13 +83,17 @@ const opportunityTrackingRawData =  {
     "followUpComments": "Technical presentation scheduled",
     "notes": "Focus on flood prediction systems",
     "probableQualifyingCriteria": "Similar project experience, Local presence",
-    "month": 11,
-    "year": 2023,
-    "trackedBy": "System",
-    "createdAt": "2023-11-15",
-    "createdBy": "System",
-    "lastModifiedAt": "2023-11-20",
-    "lastModifiedBy": "System"
+    "operation": "Nagpur",
+    "workName": "Sewage Treatment Plant",
+    "client": "Nagpur Municipal Corporation",
+    "clientSector": "Government",
+    "likelyStartDate": "2024-04-01", 
+    "status": "Bid Submitted",
+    "currency": "INR",
+    "capitalValue": 400000000,
+    "durationOfProject": 30,
+    "fundingStream": "Multilateral Funding",
+    "contractType": "Lump Sum"
   },
   "4":{
     "id": 4,
@@ -91,7 +103,7 @@ const opportunityTrackingRawData =  {
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManager": "Sarah Johnson",
+    "bidManagerId": 7,
     "contactPersonAtClient": "Amit Patel",
     "dateOfSubmission": "2023-12-30",
     "percentageChanceOfProjectHappening": 60.0,
@@ -102,13 +114,17 @@ const opportunityTrackingRawData =  {
     "followUpComments": "Technical presentation scheduled",
     "notes": "Focus on flood prediction systems",
     "probableQualifyingCriteria": "Similar project experience, Local presence",
-    "month": 11,
-    "year": 2023,
-    "trackedBy": "System",
-    "createdAt": "2023-11-15",
-    "createdBy": "System",
-    "lastModifiedAt": "2023-11-20",
-    "lastModifiedBy": "System"
+    "operation": "Nashik",
+    "workName": "Water Supply Scheme",
+    "client": "Nashik Municipal Corporation", 
+    "clientSector": "Government",
+    "likelyStartDate": "2024-08-01",
+    "status": "Bid Under Preparation", 
+    "currency": "INR",
+    "capitalValue": 600000000,
+    "durationOfProject": 48,
+    "fundingStream": "Government Budget",
+    "contractType": "EPC"
   }
 } as const;
 
@@ -121,7 +137,7 @@ export const opportunityTrackings: OpportunityTracking[] =  Object.values(opport
   bidFees: tracking.bidFees,
   emd: tracking.emd,
   formOfEMD: tracking.formOfEMD,
-  bidManager: tracking.bidManager,
+  bidManagerId: tracking.bidManagerId,
   contactPersonAtClient: tracking.contactPersonAtClient,
   dateOfSubmission: tracking.dateOfSubmission,
   percentageChanceOfProjectHappening: tracking.percentageChanceOfProjectHappening,
@@ -132,13 +148,17 @@ export const opportunityTrackings: OpportunityTracking[] =  Object.values(opport
   followUpComments: tracking.followUpComments,
   notes: tracking.notes,
   probableQualifyingCriteria: tracking.probableQualifyingCriteria,
-  month: tracking.month,
-  year: tracking.year,
-  trackedBy: tracking.trackedBy,
-  createdAt: tracking.createdAt,
-  createdBy: tracking.createdBy,
-  lastModifiedAt: tracking.lastModifiedAt,
-  lastModifiedBy: tracking.lastModifiedBy
+  operation: tracking.operation,
+  workName: tracking.workName,
+  client: tracking.client,
+  clientSector: tracking.clientSector,
+  likelyStartDate: tracking.likelyStartDate,
+  status: tracking.status,
+  currency: tracking.currency,
+  capitalValue: tracking.capitalValue,
+  durationOfProject: tracking.durationOfProject,
+  fundingStream: tracking.fundingStream,
+  contractType: tracking.contractType
 }));
 
 // Utility functions
@@ -158,13 +178,6 @@ export const getOpportunitiesByStrategicRanking = (ranking: string): Opportunity
   return opportunityTrackings.filter(opportunity => opportunity.strategicRanking === ranking);
 };
 
-export const getOpportunitiesByBidManager = (bidManager: string): OpportunityTracking[] => {
-  return opportunityTrackings.filter(opportunity => opportunity.bidManager === bidManager);
+export const getOpportunitiesByBidManager = (bidManagerId: number): OpportunityTracking[] => {
+  return opportunityTrackings.filter(opportunity => opportunity.bidManagerId === bidManagerId);
 };
-
-export const getOpportunitiesByMonthYear = (month: number, year: number): OpportunityTracking[] => {
-  return opportunityTrackings.filter(opportunity => 
-    opportunity.month === month && opportunity.year === year
-  );
-};
-

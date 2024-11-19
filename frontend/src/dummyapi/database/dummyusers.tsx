@@ -7,6 +7,7 @@ export enum UserRole {
   SeniorProjectManager = 'Senior Project Manager', //SPM
   RegionalManager = 'Regional Manager', //RM
   BusinessDevelopmentManager = 'Business Development Manager', //BDM
+  BusinessDevelopmentHead = 'Bussines Development Head',
   SubjectMatterExpert = 'Subject Matter Expert' //SME
 }
 
@@ -20,46 +21,88 @@ export interface AuthUser extends User {
 // Raw users data
 const usersRawData = {
   "1" : {
+    "name": "Admin User",
     "username": "admin",
     "password": "password",
     "role": UserRole.Admin
   },
   "2" : {
-    "username": "PM",
+    "name": "John Doe",
+    "username": "PM1",
     "password": "password",
     "role": UserRole.ProjectManager
   },
   "3" : {
-    "username": "SPM",
+    "name": "Jane Smith",
+    "username": "PM2",
+    "password": "password",
+    "role": UserRole.ProjectManager
+  },
+  "4" : {
+    "name": "Mike Johnson",
+    "username": "SPM1", 
     "password": "password",
     "role": UserRole.SeniorProjectManager
   },
-  "4" : {
-    "username": "RM",
+  "5" : {
+    "name": "Emily Davis",
+    "username": "SPM2",
+    "password": "password", 
+    "role": UserRole.SeniorProjectManager
+  },
+  "6" : {
+    "name": "David Wilson",
+    "username": "RM1",
     "password": "password",
     "role": UserRole.RegionalManager
   },
-  "6" : {
-    "username": "BDM",
+  "7" : {
+    "name": "Sarah Thompson",
+    "username": "RM2",
+    "password": "password",
+    "role": UserRole.RegionalManager  
+  },
+  "8" : {
+    "name": "Chris Lee",
+    "username": "BDM1",
     "password": "password",
     "role": UserRole.BusinessDevelopmentManager
   },
-  "7" : {
-    "username": "SME",
+  "9" : {
+    "name": "Lisa Chen",
+    "username": "BDM2",
+    "password": "password",
+    "role": UserRole.BusinessDevelopmentManager
+  },
+  "10" : {
+    "name": "Mark Taylor",
+    "username": "SME1",
     "password": "password",
     "role": UserRole.SubjectMatterExpert
+  },
+  "11" : {
+    "name": "Jennifer Harris",  
+    "username": "SME2",
+    "password": "password",
+    "role": UserRole.SubjectMatterExpert
+  },
+  "12" : {
+    "name": "Barry Thompson",
+    "username": "RM3",
+    "password": "password",
+    "role": UserRole.RegionalManager  
   },
 } as const;
 
 // Transform into typed array
-export const users: AuthUser[] = Object.values(usersRawData).map(user => ({
-  id: 1, // Adding required User fields
-  name: 'Admin User',
-  email: 'admin@example.com',
+export const users: AuthUser[] = Object.entries(usersRawData).map(([id, user]) => ({
+  id: Number(id),
+  name: user.name,
+  email: `${user.username}@example.com`,
   username: user.username,
   password: user.password,
   role: user.role,
-  createdAt: new Date().toISOString(), // Adding additional fields
+  createdAt: new Date().toISOString(),
   lastLogin: null
 }));
 

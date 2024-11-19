@@ -2,52 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
-  Grid, 
-  Alert,
   TextField,
   Button,
-  Container,
   Divider,
-  IconButton
+  IconButton,
+  Alert
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { GeneralProjectList } from '../components/projects/GeneralProjectList';
-import { ProjectFilter } from '../components/projects/ProjectFilter';
-import { ProjectForm } from '../components/projects/ProjectForm';
+import { OpportunityList } from '../components/projects/OpportunityList';
+import { OpportunityForm } from '../components/forms/OpportunityForm';
 import { Pagination } from '../components/Pagination';
 import { authApi } from '../dummyapi/authApi';
-import { UserWithRole, Project, ProjectStatus, ProjectFormData } from '../types';
+import { UserWithRole, OpportunityTracking } from '../types';
 import { PermissionType } from '../dummyapi/database/dummyRoles';
-import { projectApi } from '../dummyapi/projectApi';
+import { opportunityApi } from '../dummyapi/opportunityApi';
+import { UserRole } from '../dummyapi/database/dummyusers';
 
 export const BusinessDevelopment: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
-  const [canViewBusinessDevelopment, setCanViewBusinessDevelopment] = useState(false);
-  const [canCreateBusinessDevelopment, setCanCreateBusinessDevelopment] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [canViewOpportunities, setCanViewOpportunities] = useState(false);
+  const [canCreateOpportunity, setCanCreateOpportunity] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+  const [formError, setFormError] = useState<string | undefined>();
+  const [opportunities, setOpportunities] = useState<OpportunityTracking[]>([]);
+  const [isCreatingOpportunity, setIsCreatingOpportunity] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ProjectStatus | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [projectsPerPage] = useState(5);
+  const [opportunitiesPerPage] = useState(5);
 
-  const businessDevStatuses: ProjectStatus[] = [
-    ProjectStatus.Opportunity,
-    ProjectStatus['Decision Pending'],
-    ProjectStatus.Cancelled,
-    ProjectStatus['Bid Submitted'],
-    ProjectStatus['Bid Rejected']
-  ];
-
-  const fetchProjects = async () => {
+  const fetchOpportunities = async () => {
     try {
-      const allProjects = await projectApi.getAll();
-      setProjects(allProjects);
-    } catch (err) {
-      console.error('Error fetching projects:', err);
-      setError('Failed to fetch projects');
+      const response = await opportunityApi.getAll();
+      setOpportunities(response);
+      setError(undefined);
+    } catch (err: any) {
+      console.error('Error fetching opportunities:', err);
+      setError(err.message || 'Failed to fetch opportunities');
     }
   };
 
@@ -64,24 +55,24 @@ export const BusinessDevelopment: React.FC = () => {
         setCurrentUser(user);
 
         if (user.roleDetails) {
-          const hasBusinessDevViewPermission = user.roleDetails.permissions.includes(
+          const hasOpportunityViewPermission = user.roleDetails.permissions.includes(
             PermissionType.VIEW_BUSINESS_DEVELOPMENT
           );
-          const hasBusinessDevCreatePermission = user.roleDetails.permissions.includes(
+          const hasOpportunityCreatePermission = user.roleDetails.permissions.includes(
             PermissionType.CREATE_BUSINESS_DEVELOPMENT
           );
           
-          setCanViewBusinessDevelopment(hasBusinessDevViewPermission);
-          setCanCreateBusinessDevelopment(hasBusinessDevCreatePermission);
+          setCanViewOpportunities(hasOpportunityViewPermission);
+          setCanCreateOpportunity(hasOpportunityCreatePermission);
 
-          if (!hasBusinessDevViewPermission) {
-            setError('You do not have permission to view Business Development projects');
+          if (!hasOpportunityViewPermission) {
+            setError('You do not have permission to view opportunities');
           } else {
-            await fetchProjects();
+            await fetchOpportunities();
           }
         }
-      } catch (err) {
-        setError('Error checking user permissions');
+      } catch (err: any) {
+        setError(err.message || 'Error checking user permissions');
         console.error(err);
       }
     };
@@ -89,46 +80,72 @@ export const BusinessDevelopment: React.FC = () => {
     checkUserPermissions();
   }, []);
 
+  const initialOpportunityData: Partial<OpportunityTracking> = {
+    client: '',
+    status: 'Bid Under Preparation',
+    projectId: 0,
+    stage: 'A',
+    strategicRanking: 'M',
+    bidManagerId: 0,
+    operation: '',
+    workName: '',
+    clientSector: '',
+    likelyStartDate: new Date().toISOString().split('T')[0],
+    currency: 'INR',
+    capitalValue: 0,
+    durationOfProject: 0,
+    fundingStream: 'Government Budget',
+    contractType: 'EPC'
+  };
+
   const handleCreateOpportunity = () => {
-    if (canCreateBusinessDevelopment) {
-      setIsCreatingProject(true);
-    } else {
-      alert('You do not have permission to create business opportunities');
+    if (canCreateOpportunity) {
+      setIsCreatingOpportunity(true);
+      setFormError(undefined);
     }
   };
 
-  const handleSubmitProject = async (projectData: ProjectFormData) => {
+  const handleSubmitOpportunity = async (opportunityData: OpportunityTracking) => {
     try {
-      const newProjectData = {
-        ...projectData,
-        status: ProjectStatus.Opportunity
+      if (!currentUser?.name) {
+        throw new Error('User not authenticated');
+      }
+
+      const submissionData = {
+        ...opportunityData,
+        createdBy: currentUser.name,
+        createdAt: new Date().toISOString(),
+        lastModifiedBy: currentUser.name,
+        lastModifiedAt: new Date().toISOString()
       };
 
-      await projectApi.create(newProjectData);
-      await fetchProjects();
-      setIsCreatingProject(false);
-    } catch (err) {
-      console.error('Error creating project:', err);
-      setError('Failed to create project');
+      await opportunityApi.create(submissionData);
+      await fetchOpportunities();
+      setIsCreatingOpportunity(false);
+      setFormError(undefined);
+    } catch (err: any) {
+      console.error('Error creating opportunity:', err);
+      setFormError(err.message || 'Failed to create opportunity');
     }
   };
 
-  const handleProjectUpdated = async () => {
-    await fetchProjects();
+  const handleOpportunityUpdated = async () => {
+    await fetchOpportunities();
   };
 
-  const handleProjectDeleted = async (projectId: number) => {
+  const handleOpportunityDeleted = async (opportunityId: number) => {
     try {
-      await projectApi.delete(projectId);
-      await fetchProjects();
-    } catch (err) {
-      console.error('Error deleting project:', err);
-      setError('Failed to delete project');
+      await opportunityApi.delete(opportunityId);
+      await fetchOpportunities();
+    } catch (err: any) {
+      console.error('Error deleting opportunity:', err);
+      setError(err.message || 'Failed to delete opportunity');
     }
   };
 
-  const handleCancelProject = () => {
-    setIsCreatingProject(false);
+  const handleCancelOpportunity = () => {
+    setIsCreatingOpportunity(false);
+    setFormError(undefined);
   };
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,25 +153,24 @@ export const BusinessDevelopment: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleStatusFilter = (status: ProjectStatus | '') => {
-    setStatusFilter(status);
-    setCurrentPage(1);
-  };
+  const filteredOpportunities = opportunities.filter(opportunity => {
+    // If user is a Regional Manager, only show opportunities with their ID as Bid Manager
+    if (currentUser?.role === UserRole.RegionalManager) {
+      return opportunity.bidManagerId === currentUser.id;
+    }
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = 
-      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+    // For other roles, keep existing search logic
+    const searchTermLower = searchTerm.toLowerCase();
+    const workName = opportunity.workName?.toLowerCase() || '';
+    const client = opportunity.client?.toLowerCase() || '';
     
-    const matchesStatus = statusFilter === '' || project.status === statusFilter;
-    const matchesBusinessDevStatuses = businessDevStatuses.includes(project.status);
-
-    return matchesSearch && matchesStatus && matchesBusinessDevStatuses;
+    return client.includes(searchTermLower) ||
+           workName.includes(searchTermLower);
   });
 
-  const indexOfLastProject = currentPage * projectsPerPage;
-  const indexOfFirstProject = indexOfLastProject - projectsPerPage;
-  const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
+  const indexOfLastOpportunity = currentPage * opportunitiesPerPage;
+  const indexOfFirstOpportunity = indexOfLastOpportunity - opportunitiesPerPage;
+  const currentOpportunities = filteredOpportunities.slice(indexOfFirstOpportunity, indexOfLastOpportunity);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -192,7 +208,7 @@ export const BusinessDevelopment: React.FC = () => {
           Business Development
         </Typography>
         
-        {canCreateBusinessDevelopment && !isCreatingProject && (
+        {canCreateOpportunity && (
           <Button 
             variant="contained" 
             color="primary"
@@ -209,14 +225,13 @@ export const BusinessDevelopment: React.FC = () => {
         )}
       </Box>
 
-      {isCreatingProject && (
-        <Box sx={{ mb: 3 }}>
-          <ProjectForm 
-            onSubmit={handleSubmitProject}
-            onCancel={handleCancelProject}
-          />
-        </Box>
-      )}
+      <OpportunityForm
+        open={isCreatingOpportunity}
+        onSubmit={handleSubmitOpportunity}
+        onClose={handleCancelOpportunity}
+        project={initialOpportunityData}
+        error={formError}
+      />
 
       <Divider sx={{ mb: 3 }} />
 
@@ -226,43 +241,34 @@ export const BusinessDevelopment: React.FC = () => {
         alignItems: 'center', 
         mb: 3 
       }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <ProjectFilter 
-            onFilterChange={handleStatusFilter}
-            currentFilter={statusFilter}
-            statuses={businessDevStatuses}
-          />
-          
-          <TextField
-            variant="outlined"
-            size="small"
-            placeholder="Search projects"
-            value={searchTerm}
-            onChange={handleSearch}
-            InputProps={{
-              endAdornment: (
-                <IconButton size="small">
-                  <SearchIcon />
-                </IconButton>
-              ),
-              sx: { 
-                borderRadius: 2,
-                backgroundColor: 'background.paper'
-              }
-            }}
-            sx={{ 
-              width: 250,
-            }}
-          />
-        </Box>
+        <TextField
+          variant="outlined"
+          size="small"
+          placeholder="Search opportunities"
+          value={searchTerm}
+          onChange={handleSearch}
+          InputProps={{
+            endAdornment: (
+              <IconButton size="small">
+                <SearchIcon />
+              </IconButton>
+            ),
+            sx: { 
+              borderRadius: 2,
+              backgroundColor: 'background.paper'
+            }
+          }}
+          sx={{ 
+            width: 250,
+          }}
+        />
       </Box>
 
-      <GeneralProjectList 
-        projects={currentProjects}
-        emptyMessage="No business development projects found"
-        filterStatuses={businessDevStatuses}
-        onProjectDeleted={handleProjectDeleted}
-        onProjectUpdated={handleProjectUpdated}
+      <OpportunityList
+        opportunities={currentOpportunities}
+        emptyMessage="No business development opportunities found"
+        onOpportunityDeleted={handleOpportunityDeleted}
+        onOpportunityUpdated={handleOpportunityUpdated}
       />
 
       <Box sx={{ 
@@ -271,8 +277,8 @@ export const BusinessDevelopment: React.FC = () => {
         mt: 3 
       }}>
         <Pagination
-          projectsPerPage={projectsPerPage}
-          totalProjects={filteredProjects.length}
+          projectsPerPage={opportunitiesPerPage}
+          totalProjects={filteredOpportunities.length}
           paginate={paginate}
           currentPage={currentPage}
         />

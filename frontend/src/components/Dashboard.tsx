@@ -1,5 +1,4 @@
 import { Box, Typography } from '@mui/material';
-import { ProjectList } from './projects/ProjectList';
 import { ResourceManagement } from './ResourceManagement';
 import { BusinessDevelopment, ProjectManagement } from '../pages';
 import { ReportsList } from './ReportsList';

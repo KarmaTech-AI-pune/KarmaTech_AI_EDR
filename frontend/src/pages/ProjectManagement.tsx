@@ -11,9 +11,9 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { GeneralProjectList } from '../components/projects/GeneralProjectList';
+import { GeneralProjectList } from '../components/projects/ProjectList';
 import { ProjectFilter } from '../components/projects/ProjectFilter';
-import { ProjectForm } from '../components/projects/ProjectForm';
+import { ProjectForm } from '../components/forms/ProjectForm';
 import { Pagination } from '../components/Pagination';
 import { authApi } from '../dummyapi/authApi';
 import { UserWithRole, Project, ProjectStatus, ProjectFormData } from '../types';
