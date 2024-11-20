@@ -108,6 +108,16 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
+  },
+  [UserRole.VicePresidentBD]: {
+    id: 'vice_president_bd',
+    name: 'Vice President BD',
+    permissions: [
+      PermissionType.CREATE_BUSINESS_DEVELOPMENT,
+      PermissionType.EDIT_BUSINESS_DEVELOPMENT,
+      PermissionType.DELETE_BUSINESS_DEVELOPMENT,
+      PermissionType.VIEW_BUSINESS_DEVELOPMENT,
+    ]
   }
 };
 

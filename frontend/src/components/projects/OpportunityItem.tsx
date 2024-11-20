@@ -140,8 +140,9 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   };
 
   const handleOpportunityClick = () => {
-    if (context?.setScreenState) {
-      context.setScreenState("Opportunity Details");
+    if (context?.setScreenState && context?.setSelectedProject) {
+      context.setSelectedProject(opportunity);
+      context.setScreenState("Business Development Details");
     }
   };
 

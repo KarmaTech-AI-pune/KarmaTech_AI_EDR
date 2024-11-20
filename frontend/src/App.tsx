@@ -1,6 +1,6 @@
-import { screensArrayType, projectManagementAppContextType, User, Project, GoNoGoDecision } from './types'
+import { screensArrayType, projectManagementAppContextType, User, Project, GoNoGoDecision, OpportunityTracking } from './types'
 import { createContext, useState, useEffect } from 'react'
-import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement } from './pages'
+import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails } from './pages'
 import { Navbar } from './components/navigation/Navbar'
 import { Dashboard } from './components/Dashboard'
 import { ResourceManagement } from './components/ResourceManagement'
@@ -17,7 +17,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [selectedProject, setSelectedProject] = useState<Project | OpportunityTracking | null>(null)
   const [currentGoNoGoDecision, setCurrentGoNoGoDecision] = useState<GoNoGoDecision | null>(null)
 
   useEffect(() => {
@@ -64,12 +64,7 @@ function App() {
     "Reports": <ReportsList />,
     "Notifications": <NotificationCenter />,
     "Project Details": <ProjectDetails />,
-    "Go/No Go Decision": selectedProject ? (
-      <GoNoGoForm 
-        project={selectedProject}
-        goNoGoDecision={currentGoNoGoDecision}
-      />
-    ) : <div>No project selected</div>,
+    "Business Development Details": <BusinessDevelopmentDetails />,
     'Forms' : <Forms />,
     'Bid Preparation' : <BidPreparationForm />
   };

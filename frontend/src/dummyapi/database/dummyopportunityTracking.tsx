@@ -41,8 +41,7 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 36,
     "fundingStream": "Government Budget",
     "contractType": "EPC",
-    "workflowStatus": WorkflowStatus.Initial,
-    "historyId": null // Will be linked to history/logging database
+    "workflowStatus": WorkflowStatus.Initial
   },
   "2":{
     "id": 2,
@@ -74,8 +73,7 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 24,
     "fundingStream": "Government Grant",
     "contractType": "Item Rate",
-    "workflowStatus": WorkflowStatus.Initial,
-    "historyId": null
+    "workflowStatus": WorkflowStatus.Initial
   },
   "3":{
     "id": 3,
@@ -107,8 +105,7 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 30,
     "fundingStream": "Multilateral Funding",
     "contractType": "Lump Sum",
-    "workflowStatus": WorkflowStatus.Initial,
-    "historyId": null
+    "workflowStatus": WorkflowStatus.Initial
   },
   "4":{
     "id": 4,
@@ -140,8 +137,7 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 48,
     "fundingStream": "Government Budget",
     "contractType": "EPC",
-    "workflowStatus": WorkflowStatus.Initial,
-    "historyId": null
+    "workflowStatus": WorkflowStatus.Initial
   }
 } as const;
 
@@ -176,8 +172,7 @@ export const opportunityTrackings: OpportunityTracking[] =  Object.values(opport
   durationOfProject: tracking.durationOfProject,
   fundingStream: tracking.fundingStream,
   contractType: tracking.contractType,
-  workflowStatus: tracking.workflowStatus,
-  historyId: tracking.historyId
+  workflowStatus: tracking.workflowStatus
 }));
 
 // Utility functions

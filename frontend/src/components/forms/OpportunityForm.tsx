@@ -68,8 +68,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     durationOfProject: project?.durationOfProject || 0,
     fundingStream: project?.fundingStream || '',
     contractType: project?.contractType || '',
-    workflowStatus: project?.workflowStatus || WorkflowStatus.Initial,
-    historyId: project?.historyId || null
+    workflowStatus: project?.workflowStatus || WorkflowStatus.Initial
   });
 
   useEffect(() => {
@@ -97,8 +96,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         bidManagerId: project.bidManagerId || 0,
         dateOfSubmission: project.dateOfSubmission || new Date().toISOString().split('T')[0],
         likelyStartDate: project.likelyStartDate || new Date().toISOString().split('T')[0],
-        workflowStatus: project.workflowStatus || WorkflowStatus.Initial,
-        historyId: project.historyId || null
+        workflowStatus: project.workflowStatus || WorkflowStatus.Initial
       });
     }
   }, [project]);

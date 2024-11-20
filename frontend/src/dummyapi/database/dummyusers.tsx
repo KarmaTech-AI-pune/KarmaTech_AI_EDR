@@ -8,7 +8,8 @@ export enum UserRole {
   RegionalManager = 'Regional Manager', //RM
   BusinessDevelopmentManager = 'Business Development Manager', //BDM
   BusinessDevelopmentHead = 'Bussines Development Head',
-  SubjectMatterExpert = 'Subject Matter Expert' //SME
+  SubjectMatterExpert = 'Subject Matter Expert', //SME
+  VicePresidentBD = 'Vice President BD' // New role
 }
 
 // Extend the User type to include auth-related fields
@@ -92,6 +93,18 @@ const usersRawData = {
     "password": "password",
     "role": UserRole.RegionalManager  
   },
+  "13" : {
+    "name": "Robert Smith",
+    "username": "VPBD1",
+    "password": "password",
+    "role": UserRole.VicePresidentBD
+  },
+  "14" : {
+    "name": "Alice Johnson",
+    "username": "VPBD2",
+    "password": "password",
+    "role": UserRole.VicePresidentBD
+  }
 } as const;
 
 // Transform into typed array

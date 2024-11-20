@@ -1,5 +1,6 @@
 import { OpportunityTracking } from '../types';
 import { opportunityTrackings } from './database/dummyopportunityTracking';
+import { WorkflowStatus } from './database/dummyopportunityTracking';
 
 // Create a mutable copy of the opportunity trackings for the dummy API
 let mutableOpportunityTrackings: OpportunityTracking[] = [...opportunityTrackings];
@@ -10,17 +11,20 @@ export const opportunityApi = {
       return [...mutableOpportunityTrackings];
     } catch (error) {
       console.error('Error fetching opportunities:', error);
-      throw error;
+      throw new Error('Failed to fetch opportunities');
     }
   },
 
-  // New method to get opportunities by user ID (Bid Manager)
   getByUserId: async (userId: number): Promise<OpportunityTracking[]> => {
     try {
-      return mutableOpportunityTrackings.filter(opp => opp.bidManagerId === userId);
+      const opportunities = mutableOpportunityTrackings.filter(opp => opp.bidManagerId === userId);
+      if (!opportunities.length) {
+        console.warn(`No opportunities found for user ${userId}`);
+      }
+      return opportunities;
     } catch (error) {
       console.error(`Error fetching opportunities for user ${userId}:`, error);
-      throw error;
+      throw new Error(`Failed to fetch opportunities for user ${userId}`);
     }
   },
 
@@ -40,26 +44,30 @@ export const opportunityApi = {
   getByProjectId: async (projectId: number): Promise<OpportunityTracking[]> => {
     try {
       const opportunities = mutableOpportunityTrackings.filter(opp => opp.projectId === projectId);
+      if (!opportunities.length) {
+        console.warn(`No opportunities found for project ${projectId}`);
+      }
       return opportunities.map(opp => ({ ...opp }));
     } catch (error) {
       console.error(`Error fetching opportunities for project ${projectId}:`, error);
-      throw error;
+      throw new Error(`Failed to fetch opportunities for project ${projectId}`);
     }
   },
 
-  // Rest of the existing methods remain the same...
   create: async (opportunityData: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
     try {
-      // Generate a new ID
+      if (!opportunityData.projectId || !opportunityData.bidManagerId) {
+        throw new Error('Project ID and Bid Manager ID are required');
+      }
+
       const newId = Math.max(...mutableOpportunityTrackings.map(opp => opp.id), 0) + 1;
 
-      // Create the new opportunity with required fields
       const newOpportunity: OpportunityTracking = {
         id: newId,
-        projectId: opportunityData.projectId || 0,
+        projectId: opportunityData.projectId,
         stage: opportunityData.stage || 'A',
         strategicRanking: opportunityData.strategicRanking || 'M',
-        bidManagerId: opportunityData.bidManagerId || 0,
+        bidManagerId: opportunityData.bidManagerId,
         operation: opportunityData.operation || '',
         workName: opportunityData.workName || '',
         client: opportunityData.client || '',
@@ -71,6 +79,7 @@ export const opportunityApi = {
         durationOfProject: opportunityData.durationOfProject || 0,
         fundingStream: opportunityData.fundingStream || '',
         contractType: opportunityData.contractType || '',
+        workflowStatus: opportunityData.workflowStatus || WorkflowStatus.Initial,
         // Optional fields
         bidFees: opportunityData.bidFees,
         emd: opportunityData.emd,
@@ -84,7 +93,7 @@ export const opportunityApi = {
         netNJSRevenue: opportunityData.netNJSRevenue,
         followUpComments: opportunityData.followUpComments,
         notes: opportunityData.notes,
-        probableQualifyingCriteria: opportunityData.probableQualifyingCriteria
+        probableQualifyingCriteria: opportunityData.probableQualifyingCriteria,
       };
       
       mutableOpportunityTrackings.push(newOpportunity);
@@ -97,12 +106,20 @@ export const opportunityApi = {
 
   update: async (opportunityData: OpportunityTracking): Promise<OpportunityTracking> => {
     try {
+      if (!opportunityData.id) {
+        throw new Error('Opportunity ID is required for update');
+      }
+
       const index = mutableOpportunityTrackings.findIndex(opp => opp.id === opportunityData.id);
       if (index === -1) {
         throw new Error(`Opportunity with id ${opportunityData.id} not found`);
       }
+
+      // Validate workflow status
+      if (!Object.values(WorkflowStatus).includes(opportunityData.workflowStatus)) {
+        throw new Error('Invalid workflow status');
+      }
       
-      // Create a new array with the updated opportunity
       mutableOpportunityTrackings = [
         ...mutableOpportunityTrackings.slice(0, index),
         { ...opportunityData },
@@ -123,7 +140,6 @@ export const opportunityApi = {
         throw new Error(`Opportunity with id ${id} not found`);
       }
       
-      // Create a new array without the deleted opportunity
       mutableOpportunityTrackings = [
         ...mutableOpportunityTrackings.slice(0, index),
         ...mutableOpportunityTrackings.slice(index + 1)

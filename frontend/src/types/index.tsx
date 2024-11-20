@@ -35,8 +35,8 @@ export type projectManagementAppContextType  = {
     user: User | null;
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
     handleLogout: () => void;
-    selectedProject?: Project | null;
-    setSelectedProject?: React.Dispatch<React.SetStateAction<Project | null>>;
+    selectedProject?: Project | OpportunityTracking | null;
+    setSelectedProject?: React.Dispatch<React.SetStateAction<Project | OpportunityTracking | null>>;
     currentGoNoGoDecision: GoNoGoDecision | null;
     setCurrentGoNoGoDecision: React.Dispatch<React.SetStateAction<GoNoGoDecision | null>>;
 }
@@ -128,7 +128,6 @@ export type OpportunityTracking = {
   fundingStream: string;
   contractType: string;
   workflowStatus: WorkflowStatus;
-  historyId: number | null;
 }
 
 export type OpportunityItemProps = {
@@ -144,6 +143,13 @@ export type OpportunityFormProps = {
   onSubmit: (data: OpportunityFormData) => void;
   onCancel?: () => void;
 };
+
+export type OpportunityHistory = {
+  id: number;
+  opportunityId: number;
+  date: string;
+  description: string;
+}
 
 export enum GoNoGoStatus {
   'Green' = 0,

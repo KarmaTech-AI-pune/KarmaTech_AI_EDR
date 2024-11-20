@@ -71,19 +71,16 @@ export const ProjectDetails: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Project Details
       </Typography>
-      
+      {/*
       <Grid container spacing={3}>
-        {/* Project Info Widget */}
         <Grid item xs={12} md={6}>
           <ProjectInfoWidget project={context.selectedProject} />
         </Grid>
 
-        {/* Opportunity Tracking Widget */}
         <Grid item xs={12} md={6}>
           <OpportunityTrackingWidget project={context.selectedProject} />
         </Grid>
 
-        {/* Go/No-Go Widget */}
         <Grid item xs={12} md={6}>
           <GoNoGoWidget 
             projectId={context.selectedProject.id} 
@@ -91,14 +88,14 @@ export const ProjectDetails: React.FC = () => {
           />
         </Grid>
 
-        {/* Decision Widget */}
         <Grid item xs={12} md={6}>
           <DecisionWidget 
             project={context.selectedProject}
             onStatusUpdate={handleStatusUpdate}
           />
         </Grid>
-      </Grid>
+      </Grid> 
+    */}
     </Container>
   );
 };
