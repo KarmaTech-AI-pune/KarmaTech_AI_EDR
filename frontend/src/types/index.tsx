@@ -99,13 +99,15 @@ export type LoginResponse = {
 
 export type OpportunityTracking = {
   id: number;
-  projectId: number;
+  projectId: number | null;  // Modified to allow null
   stage: string;
   strategicRanking: string;
   bidFees?: number;
   emd?: number;
   formOfEMD?: string;
   bidManagerId: number;
+  reviewManagerId?: number; // New field for Vice President BD
+  approvalManagerId?: number; // New field for Regional Manager
   contactPersonAtClient?: string;
   dateOfSubmission?: string;
   percentageChanceOfProjectHappening?: number;

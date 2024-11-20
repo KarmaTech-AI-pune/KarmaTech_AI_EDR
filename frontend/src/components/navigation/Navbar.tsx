@@ -49,7 +49,7 @@ export const Navbar = () => {
       if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_PROJECTS)) {
         availablePages.push('Project Management');
       }
-      availablePages.push('Forms')
+      //availablePages.push('Forms')
 
       setPages(availablePages);
     };

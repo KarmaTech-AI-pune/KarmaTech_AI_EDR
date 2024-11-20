@@ -13,6 +13,10 @@ export enum PermissionType {
   CREATE_BUSINESS_DEVELOPMENT = 'CREATE_BUSINESS_DEVELOPMENT',
   EDIT_BUSINESS_DEVELOPMENT = 'EDIT_BUSINESS_DEVELOPMENT',
   DELETE_BUSINESS_DEVELOPMENT = 'DELETE_BUSINESS_DEVELOPMENT',
+  REVIEW_BUSINESS_DEVELOPMENT = 'REVIEW_BUSINESS_DEVELOPMENT',
+  APPROVE_BUSINESS_DEVELOPMENT = 'APPROVE_BUSINESS_DEVELOPMENT',
+  SUBMIT_FOR_REVIEW = 'SUBMIT_FOR_REVIEW',
+  SUBMIT_FOR_APPROVAL = 'SUBMIT_FOR_APPROVAL',
 
   // System Permissions
   SYSTEM_ADMIN = 'SYSTEM_ADMIN'
@@ -40,9 +44,13 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
+      PermissionType.REVIEW_BUSINESS_DEVELOPMENT,
+      PermissionType.APPROVE_BUSINESS_DEVELOPMENT,
+      PermissionType.SUBMIT_FOR_REVIEW,
+      PermissionType.SUBMIT_FOR_APPROVAL,
 
       PermissionType.SYSTEM_ADMIN
-    ] // Full access
+    ]
   },
   [UserRole.ProjectManager]: {
     id: 'project_manager',
@@ -77,6 +85,7 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
+      PermissionType.APPROVE_BUSINESS_DEVELOPMENT,
     ]
   },
   [UserRole.BusinessDevelopmentManager]: {
@@ -87,6 +96,7 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
+      PermissionType.SUBMIT_FOR_REVIEW,
     ]
   },
   [UserRole.SubjectMatterExpert]: {
@@ -99,14 +109,16 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
   },
-  [UserRole.BusinessDevelopmentHead]:{
+  [UserRole.BusinessDevelopmentHead]: {
     id: 'business_dev_head',
     name: 'Business Development Head',
-    permissions : [
+    permissions: [
       PermissionType.CREATE_BUSINESS_DEVELOPMENT,
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
+      PermissionType.REVIEW_BUSINESS_DEVELOPMENT,
+      PermissionType.SUBMIT_FOR_APPROVAL,
     ]
   },
   [UserRole.VicePresidentBD]: {
@@ -117,6 +129,8 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
+      PermissionType.REVIEW_BUSINESS_DEVELOPMENT,
+      PermissionType.APPROVE_BUSINESS_DEVELOPMENT,
     ]
   }
 };

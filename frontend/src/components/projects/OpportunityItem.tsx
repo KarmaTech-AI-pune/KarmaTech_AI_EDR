@@ -22,7 +22,8 @@ import {
   CalendarToday,
   Assessment,
   Person,
-  WorkHistory
+  WorkHistory,
+  Send
 } from '@mui/icons-material';
 import { OpportunityItemProps, OpportunityTracking, UserWithRole } from '../../types';
 import { useState, useContext, useEffect } from 'react';
@@ -32,6 +33,7 @@ import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../dummyapi/database/dummyRoles';
 import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { DecideApproval, DecideReview, SendForReview, SendForApproval } from '../dialogbox';
 
 export const OpportunityItem: React.FC<OpportunityItemProps> = ({ 
   opportunity, 
@@ -40,9 +42,13 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
 }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
+  const [canSubmitForReview, setCanSubmitForReview] = useState(false);
+  const [canReviewBD, setCanReviewBD] = useState(false);
+  const [canApproveBD, setCanApproveBD] = useState(false);
   const [formError, setFormError] = useState<string | undefined>();
   const context = useContext(projectManagementAppContext);
 
@@ -55,6 +61,9 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
           setCurrentUser(null);
           setCanEditOpportunity(false);
           setCanDeleteOpportunity(false);
+          setCanSubmitForReview(false);
+          setCanReviewBD(false);
+          setCanApproveBD(false);
           return;
         }
 
@@ -67,11 +76,23 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
           setCanDeleteOpportunity(
             user.roleDetails.permissions.includes(PermissionType.DELETE_BUSINESS_DEVELOPMENT)
           );
+          setCanSubmitForReview(
+            user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
+          );
+          setCanReviewBD(
+            user.roleDetails.permissions.includes(PermissionType.REVIEW_BUSINESS_DEVELOPMENT)
+          );
+          setCanApproveBD(
+            user.roleDetails.permissions.includes(PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
+          );
         }
       } catch (error) {
         console.error('Error checking user permissions:', error);
         setCanEditOpportunity(false);
         setCanDeleteOpportunity(false);
+        setCanSubmitForReview(false);
+        setCanReviewBD(false);
+        setCanApproveBD(false);
       }
     };
 
@@ -114,6 +135,18 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const handleEditClose = () => {
     setEditDialogOpen(false);
     setFormError(undefined);
+  };
+
+  const handleWorkflowClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setWorkflowDialogOpen(true);
+  };
+
+  const handleWorkflowClose = () => {
+    setWorkflowDialogOpen(false);
+    if (onOpportunityUpdated) {
+      onOpportunityUpdated();
+    }
   };
 
   const handleEditSubmit = async (formData: OpportunityTracking) => {
@@ -165,10 +198,65 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     }
   };
 
-  // Safely format number with fallback
-  const formatNumber = (value: number | undefined, currency?: string) => {
-    if (value === undefined || value === null) return 'Not specified';
-    return currency ? `${currency} ${value.toLocaleString()}` : value.toLocaleString();
+  const getWorkflowButtonText = (status: WorkflowStatus) => {
+    switch (status) {
+      case WorkflowStatus.Initial:
+      case WorkflowStatus.ReviewChanges:
+        return 'Send for Review';
+      case WorkflowStatus.SentForReview:
+      case WorkflowStatus.ApprovalChanges:
+        return 'Decide Review';
+      case WorkflowStatus.SentForApproval:
+        return 'Decide Approval';
+      default:
+        return 'Send for Review';
+    }
+  };
+
+  const canShowWorkflowButton = () => {
+    if (opportunity.workflowStatus === WorkflowStatus.Approved) {
+      return false;
+    }
+
+    switch (opportunity.workflowStatus) {
+      case WorkflowStatus.Initial:
+      case WorkflowStatus.ReviewChanges:
+        return canSubmitForReview;
+      case WorkflowStatus.SentForReview:
+      case WorkflowStatus.ApprovalChanges:
+        return canReviewBD;
+      case WorkflowStatus.SentForApproval:
+        return canApproveBD;
+      default:
+        return false;
+    }
+  };
+
+  const getWorkflowDialog = () => {
+    switch (opportunity.workflowStatus) {
+      case WorkflowStatus.Initial:
+      case WorkflowStatus.ReviewChanges:
+        return (
+          <SendForReview 
+            open={workflowDialogOpen} 
+            onClose={handleWorkflowClose}
+            opportunityId={opportunity.id}
+          />
+        );
+      case WorkflowStatus.SentForReview:
+      case WorkflowStatus.ApprovalChanges:
+        return <DecideReview open={workflowDialogOpen} onClose={handleWorkflowClose} />;
+      case WorkflowStatus.SentForApproval:
+        return <DecideApproval open={workflowDialogOpen} onClose={handleWorkflowClose} />;
+      default:
+        return (
+          <SendForReview 
+            open={workflowDialogOpen} 
+            onClose={handleWorkflowClose}
+            opportunityId={opportunity.id}
+          />
+        );
+    }
   };
 
   const getWorkflowStatusColor = (status: WorkflowStatus) => {
@@ -188,6 +276,12 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
       default:
         return 'default';
     }
+  };
+
+  // Safely format number with fallback
+  const formatNumber = (value: number | undefined, currency?: string) => {
+    if (value === undefined || value === null) return 'Not specified';
+    return currency ? `${currency} ${value.toLocaleString()}` : value.toLocaleString();
   };
 
   return (
@@ -245,6 +339,16 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
               </Box>
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
+              {canShowWorkflowButton() && (
+                <Button 
+                  onClick={handleWorkflowClick}
+                  size="small"
+                  color="primary"
+                  startIcon={<Send />}
+                >
+                  {getWorkflowButtonText(opportunity.workflowStatus)}
+                </Button>
+              )}
               {canEditOpportunity && (
                 <Button 
                   onClick={handleEditClick}
@@ -394,6 +498,9 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Workflow Dialog */}
+      {getWorkflowDialog()}
 
       {/* Edit Form */}
       <OpportunityForm 

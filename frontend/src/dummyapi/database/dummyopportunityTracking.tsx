@@ -19,7 +19,9 @@ const opportunityTrackingRawData =  {
     "bidFees": 75000,
     "emd": 150000,
     "formOfEMD": "Bank Guarantee",
-    "bidManagerId": 8, // Changed to BD Manager ID
+    "bidManagerId": 8,
+    "reviewManagerId": undefined, 
+    "approvalManagerId": undefined, 
     "contactPersonAtClient": "Rajesh Kumar",
     "dateOfSubmission": "2023-12-15",
     "percentageChanceOfProjectHappening": 75.5,
@@ -51,7 +53,9 @@ const opportunityTrackingRawData =  {
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManagerId": 9, // Changed to BD Manager ID
+    "bidManagerId": 9,
+    "reviewManagerId": undefined, 
+    "approvalManagerId": undefined, 
     "contactPersonAtClient": "Amit Patel",
     "dateOfSubmission": "2023-12-30",
     "percentageChanceOfProjectHappening": 60.0,
@@ -83,7 +87,9 @@ const opportunityTrackingRawData =  {
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManagerId": 8, // Changed to BD Manager ID
+    "bidManagerId": 8,
+    "reviewManagerId": undefined, 
+    "approvalManagerId": undefined, 
     "contactPersonAtClient": "Amita Patel",
     "dateOfSubmission": "2023-12-30",
     "percentageChanceOfProjectHappening": 60.0,
@@ -115,7 +121,9 @@ const opportunityTrackingRawData =  {
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManagerId": 9, // Changed to BD Manager ID
+    "bidManagerId": 9,
+    "reviewManagerId": undefined, 
+    "approvalManagerId": undefined, 
     "contactPersonAtClient": "Amit Patel",
     "dateOfSubmission": "2023-12-30",
     "percentageChanceOfProjectHappening": 60.0,
@@ -151,6 +159,8 @@ export const opportunityTrackings: OpportunityTracking[] =  Object.values(opport
   emd: tracking.emd,
   formOfEMD: tracking.formOfEMD,
   bidManagerId: tracking.bidManagerId,
+  reviewManagerId: tracking.reviewManagerId,
+  approvalManagerId: tracking.approvalManagerId,
   contactPersonAtClient: tracking.contactPersonAtClient,
   dateOfSubmission: tracking.dateOfSubmission,
   percentageChanceOfProjectHappening: tracking.percentageChanceOfProjectHappening,
@@ -198,4 +208,16 @@ export const getOpportunitiesByBidManager = (bidManagerId: number): OpportunityT
 
 export const getOpportunitiesByWorkflowStatus = (status: WorkflowStatus): OpportunityTracking[] => {
   return opportunityTrackings.filter(opportunity => opportunity.workflowStatus === status);
+};
+
+// Updated utility function to get opportunities by review manager
+export const getOpportunitiesByReviewManager = (reviewManagerId: number): OpportunityTracking[] => {
+  return opportunityTrackings.filter(opportunity => {
+    console.group(opportunity.workName)
+    console.log("oppor_reviewID:",opportunity.reviewManagerId)
+    console.log("input reviewManager", reviewManagerId)
+    console.groupEnd()
+    opportunity.reviewManagerId === reviewManagerId 
+  }
+  );
 };

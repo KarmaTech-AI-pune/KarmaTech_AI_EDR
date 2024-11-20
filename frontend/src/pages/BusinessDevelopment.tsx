@@ -39,10 +39,11 @@ export const BusinessDevelopment: React.FC = () => {
 
       let response: OpportunityTracking[] = [];
       
-      // For BDE roles, use getByUserId
-      if (currentUser.role === UserRole.BusinessDevelopmentManager || 
-          currentUser.role === UserRole.BusinessDevelopmentHead) {
+      // For BDE roles and Business Development Head, use specific getters
+      if (currentUser.role === UserRole.BusinessDevelopmentManager) {
         response = await opportunityApi.getByUserId(currentUser.id);
+      } else if (currentUser.role === UserRole.BusinessDevelopmentHead) {
+        response = await opportunityApi.getByReviewManagerId(currentUser.id);
       } else {
         // For other roles, use getAll
         response = await opportunityApi.getAll();

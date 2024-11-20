@@ -7,7 +7,7 @@ export enum UserRole {
   SeniorProjectManager = 'Senior Project Manager', //SPM
   RegionalManager = 'Regional Manager', //RM
   BusinessDevelopmentManager = 'Business Development Manager', //BDM
-  BusinessDevelopmentHead = 'Bussines Development Head',
+  BusinessDevelopmentHead = 'Business Development Head',
   SubjectMatterExpert = 'Subject Matter Expert', //SME
   VicePresidentBD = 'Vice President BD' // New role
 }
@@ -104,6 +104,18 @@ const usersRawData = {
     "username": "VPBD2",
     "password": "password",
     "role": UserRole.VicePresidentBD
+  },
+  "15" : {
+    "name": "Michael Brown",
+    "username": "BDH1",
+    "password": "password",
+    "role": UserRole.BusinessDevelopmentHead
+  },
+  "16" : {
+    "name": "Susan White",
+    "username": "BDH2",
+    "password": "password",
+    "role": UserRole.BusinessDevelopmentHead
   }
 } as const;
 

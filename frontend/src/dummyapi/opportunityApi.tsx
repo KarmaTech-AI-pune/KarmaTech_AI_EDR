@@ -28,6 +28,19 @@ export const opportunityApi = {
     }
   },
 
+  getByReviewManagerId: async (userId: number): Promise<OpportunityTracking[]> => {
+    try {
+      const opportunities = mutableOpportunityTrackings.filter(opp => opp.reviewManagerId === userId);
+      if (!opportunities.length) {
+        console.warn(`No opportunities found for review manager ${userId}`);
+      }
+      return opportunities;
+    } catch (error) {
+      console.error(`Error fetching opportunities for review manager ${userId}:`, error);
+      throw new Error(`Failed to fetch opportunities for review manager ${userId}`);
+    }
+  },
+
   getById: async (id: number): Promise<OpportunityTracking> => {
     try {
       const opportunity = mutableOpportunityTrackings.find(opp => opp.id === id);
@@ -56,15 +69,15 @@ export const opportunityApi = {
 
   create: async (opportunityData: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
     try {
-      if (!opportunityData.projectId || !opportunityData.bidManagerId) {
-        throw new Error('Project ID and Bid Manager ID are required');
+      if (!opportunityData.bidManagerId) {
+        throw new Error('Bid Manager ID is required');
       }
 
       const newId = Math.max(...mutableOpportunityTrackings.map(opp => opp.id), 0) + 1;
 
       const newOpportunity: OpportunityTracking = {
         id: newId,
-        projectId: opportunityData.projectId,
+        projectId: opportunityData.projectId || null,
         stage: opportunityData.stage || 'A',
         strategicRanking: opportunityData.strategicRanking || 'M',
         bidManagerId: opportunityData.bidManagerId,

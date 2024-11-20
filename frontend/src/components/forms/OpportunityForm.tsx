@@ -21,6 +21,7 @@ import { projectManagementAppContext } from '../../App';
 import { OpportunityTracking, projectManagementAppContextType } from '../../types';
 import { getUsersByRole, UserRole } from '../../dummyapi/database/dummyusers';
 import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { PermissionType, hasPermission } from '../../dummyapi/database/dummyRoles';
 
 interface OpportunityFormProps {
   open: boolean;
@@ -39,6 +40,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
 }) => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [bdManagers, setBdManagers] = useState<{id: number, name: string}[]>([]);
+  const [reviewManagers, setReviewManagers] = useState<{id: number, name: string}[]>([]);
+  const [approvalManagers, setApprovalManagers] = useState<{id: number, name: string}[]>([]);
   const [formData, setFormData] = useState<Partial<OpportunityTracking>>({
     projectId: project?.projectId || 0,
     stage: project?.stage || '',
@@ -47,6 +50,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     emd: project?.emd || 0,
     formOfEMD: project?.formOfEMD || '',
     bidManagerId: project?.bidManagerId || (context.user?.role === UserRole.BusinessDevelopmentManager ? context.user.id : 0),
+    reviewManagerId: project?.reviewManagerId,
+    approvalManagerId: project?.approvalManagerId,
     contactPersonAtClient: project?.contactPersonAtClient || '',
     dateOfSubmission: project?.dateOfSubmission || new Date().toISOString().split('T')[0],
     percentageChanceOfProjectHappening: project?.percentageChanceOfProjectHappening || 0,
@@ -72,11 +77,23 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   });
 
   useEffect(() => {
-    // Fetch BD Managers when component mounts
+    // Fetch managers when component mounts
     const managers = getUsersByRole(UserRole.BusinessDevelopmentManager);
     setBdManagers(managers.map(manager => ({
       id: manager.id,
       name: manager.name
+    })));
+
+    const reviewers = getUsersByRole(UserRole.BusinessDevelopmentHead);
+    setReviewManagers(reviewers.map(reviewer => ({
+      id: reviewer.id,
+      name: reviewer.name
+    })));
+
+    const approvers = [...getUsersByRole(UserRole.RegionalManager), ...getUsersByRole(UserRole.VicePresidentBD)];
+    setApprovalManagers(approvers.map(approver => ({
+      id: approver.id,
+      name: approver.name
     })));
 
     // Set default bid manager to current user if they are a BD manager
@@ -94,6 +111,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       setFormData({
         ...project,
         bidManagerId: project.bidManagerId || 0,
+        reviewManagerId: project.reviewManagerId,
+        approvalManagerId: project.approvalManagerId,
         dateOfSubmission: project.dateOfSubmission || new Date().toISOString().split('T')[0],
         likelyStartDate: project.likelyStartDate || new Date().toISOString().split('T')[0],
         workflowStatus: project.workflowStatus || WorkflowStatus.Initial
@@ -104,18 +123,60 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
     const { name, value } = e.target;
     
-    // Convert bidManagerId to number when it changes
-    if (name === 'bidManagerId') {
+    // Convert IDs to number when they change
+    if (name === 'bidManagerId' || name === 'reviewManagerId' || name === 'approvalManagerId') {
       setFormData((prev) => ({
         ...prev,
-        [name]: Number(value),
+        [name]: value === '' ? undefined : Number(value),
       }));
+    } else if (name === 'workflowStatus') {
+      // Validate workflow status changes based on user role and permissions
+      const currentStatus = formData.workflowStatus;
+      const newStatus = value as WorkflowStatus;
+      
+      if (canChangeWorkflowStatus(currentStatus, newStatus)) {
+        setFormData((prev) => ({
+          ...prev,
+          workflowStatus: newStatus,
+        }));
+      }
     } else {
       setFormData((prev) => ({
         ...prev,
         [name]: value,
       }));
     }
+  };
+
+  const canChangeWorkflowStatus = (currentStatus: WorkflowStatus | undefined, newStatus: WorkflowStatus): boolean => {
+    if (!context.user?.role) return false;
+
+    const userRole = context.user.role;
+
+    // BD Manager can submit for review
+    if (hasPermission(userRole, PermissionType.SUBMIT_FOR_REVIEW) &&
+        currentStatus === WorkflowStatus.Initial &&
+        newStatus === WorkflowStatus.SentForReview) {
+      return true;
+    }
+
+    // BD Head can review and submit for approval
+    if (hasPermission(userRole, PermissionType.REVIEW_BUSINESS_DEVELOPMENT)) {
+      if ((currentStatus === WorkflowStatus.SentForReview && newStatus === WorkflowStatus.ReviewChanges) ||
+          (currentStatus === WorkflowStatus.SentForReview && newStatus === WorkflowStatus.SentForApproval)) {
+        return true;
+      }
+    }
+
+    // Regional Manager or VP BD can approve or request changes
+    if (hasPermission(userRole, PermissionType.APPROVE_BUSINESS_DEVELOPMENT)) {
+      if ((currentStatus === WorkflowStatus.SentForApproval && newStatus === WorkflowStatus.ApprovalChanges) ||
+          (currentStatus === WorkflowStatus.SentForApproval && newStatus === WorkflowStatus.Approved)) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,6 +200,34 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   };
 
   const isEditMode = Boolean(project?.id);
+
+  // Get available workflow status options based on current status and user role
+  const getAvailableWorkflowStatuses = (): WorkflowStatus[] => {
+    if (!context.user?.role || !formData.workflowStatus) return [WorkflowStatus.Initial];
+
+    const userRole = context.user.role;
+    const currentStatus = formData.workflowStatus;
+
+    switch (currentStatus) {
+      case WorkflowStatus.Initial:
+        return hasPermission(userRole, PermissionType.SUBMIT_FOR_REVIEW)
+          ? [WorkflowStatus.Initial, WorkflowStatus.SentForReview]
+          : [WorkflowStatus.Initial];
+
+      case WorkflowStatus.SentForReview:
+        return hasPermission(userRole, PermissionType.REVIEW_BUSINESS_DEVELOPMENT)
+          ? [WorkflowStatus.SentForReview, WorkflowStatus.ReviewChanges, WorkflowStatus.SentForApproval]
+          : [WorkflowStatus.SentForReview];
+
+      case WorkflowStatus.SentForApproval:
+        return hasPermission(userRole, PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
+          ? [WorkflowStatus.SentForApproval, WorkflowStatus.ApprovalChanges, WorkflowStatus.Approved]
+          : [WorkflowStatus.SentForApproval];
+
+      default:
+        return [currentStatus];
+    }
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -236,6 +325,44 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
+                <InputLabel id="review-manager-label">Review Manager</InputLabel>
+                <Select
+                  labelId="review-manager-label"
+                  name="reviewManagerId"
+                  value={String(formData.reviewManagerId || '')}
+                  onChange={handleChange}
+                  label="Review Manager"
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {reviewManagers.map((manager) => (
+                    <MenuItem key={manager.id} value={String(manager.id)}>
+                      {manager.name} (ID: {manager.id})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel id="approval-manager-label">Approval Manager</InputLabel>
+                <Select
+                  labelId="approval-manager-label"
+                  name="approvalManagerId"
+                  value={String(formData.approvalManagerId || '')}
+                  onChange={handleChange}
+                  label="Approval Manager"
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {approvalManagers.map((manager) => (
+                    <MenuItem key={manager.id} value={String(manager.id)}>
+                      {manager.name} (ID: {manager.id})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
                 <InputLabel id="workflow-status-label">Workflow Status</InputLabel>
                 <Select
                   labelId="workflow-status-label"
@@ -245,7 +372,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                   label="Workflow Status"
                   required
                 >
-                  {Object.values(WorkflowStatus).map((status) => (
+                  {getAvailableWorkflowStatuses().map((status) => (
                     <MenuItem key={status} value={status}>
                       {status}
                     </MenuItem>

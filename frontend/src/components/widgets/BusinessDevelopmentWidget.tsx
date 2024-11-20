@@ -1,5 +1,7 @@
 import { OpportunityTracking } from '../../types';
 import { Card, CardContent, Typography, Grid, Chip, Divider, Box } from '@mui/material';
+import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { getUserById } from '../../dummyapi/database/dummyusers';
 
 interface BusinessDevelopmentWidgetProps {
   opportunity: OpportunityTracking;
@@ -14,29 +16,43 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
   const getStatusColor = (status: string | undefined) => {
     if (!status) return 'default';
     switch (status.toLowerCase()) {
-      case 'active':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'completed':
+      case 'bid under preparation':
         return 'info';
+      case 'bid submitted':
+        return 'primary';
+      case 'bid rejected':
+        return 'error';
+      case 'bid accepted':
+        return 'success';
       default:
         return 'default';
     }
   };
 
-  const getWorkflowColor = (workflow: string | undefined) => {
+  const getWorkflowColor = (workflow: WorkflowStatus | undefined) => {
     if (!workflow) return 'default';
-    switch (workflow.toLowerCase()) {
-      case 'in progress':
-        return 'primary';
-      case 'review':
+    switch (workflow) {
+      case WorkflowStatus.Initial:
+        return 'default';
+      case WorkflowStatus.SentForReview:
+        return 'info';
+      case WorkflowStatus.ReviewChanges:
         return 'warning';
-      case 'approved':
+      case WorkflowStatus.SentForApproval:
+        return 'primary';
+      case WorkflowStatus.ApprovalChanges:
+        return 'warning';
+      case WorkflowStatus.Approved:
         return 'success';
       default:
-        return 'secondary';
+        return 'default';
     }
+  };
+
+  const getManagerName = (managerId: number | undefined) => {
+    if (!managerId) return 'Not assigned';
+    const manager = getUserById(managerId);
+    return manager ? manager.name : 'Unknown';
   };
 
   return (
@@ -89,6 +105,23 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
               </Typography>
               <Typography variant="body1" gutterBottom>
                 Strategic Ranking: {opportunity.strategicRanking || 'Not specified'}
+              </Typography>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" color="primary" gutterBottom>
+              Management
+            </Typography>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body1" gutterBottom>
+                Bid Manager: {getManagerName(opportunity.bidManagerId)}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                Review Manager: {getManagerName(opportunity.reviewManagerId)}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                Approval Manager: {getManagerName(opportunity.approvalManagerId)}
               </Typography>
             </Box>
           </Grid>
