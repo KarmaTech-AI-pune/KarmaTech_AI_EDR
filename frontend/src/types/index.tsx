@@ -3,6 +3,7 @@
 
 import { UserRole } from '../dummyapi/database/dummyusers';
 import { PermissionType } from '../dummyapi/database/dummyRoles';
+import { WorkflowStatus } from '../dummyapi/database/dummyopportunityTracking';
 
 export type screensArrayType = {
     [key : string] : JSX.Element
@@ -126,6 +127,8 @@ export type OpportunityTracking = {
   durationOfProject: number;
   fundingStream: string;
   contractType: string;
+  workflowStatus: WorkflowStatus;
+  historyId: number | null;
 }
 
 export type OpportunityItemProps = {

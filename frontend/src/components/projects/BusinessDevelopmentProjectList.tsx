@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Typography, 
   Paper, 
@@ -8,10 +8,12 @@ import {
   Button
 } from '@mui/material';
 import { ProjectItem } from './ProjectItem';
-import { Project, ProjectStatus } from '../../types';
+import { Project, ProjectStatus, OpportunityTracking } from '../../types';
+import { opportunityApi } from '../../dummyapi/opportunityApi';
 
 interface BusinessDevelopmentProjectListProps {
   projects: Project[];
+  userId: number; // Added userId prop
   onCreateOpportunity?: () => void;
   onProjectDeleted?: (projectId: number) => void;
   onProjectUpdated?: () => void;
@@ -19,14 +21,39 @@ interface BusinessDevelopmentProjectListProps {
 
 export const BusinessDevelopmentProjectList: React.FC<BusinessDevelopmentProjectListProps> = ({ 
   projects, 
+  userId,
   onCreateOpportunity,
   onProjectDeleted, 
   onProjectUpdated 
 }) => {
-  // Filter for business development projects (not in active management)
-  const businessDevProjects = projects.filter(project => 
-    ![ProjectStatus['Bid Accepted'], ProjectStatus['Bid Submitted'], ProjectStatus['In Progress']].includes(project.status)
-  );
+  const [userOpportunities, setUserOpportunities] = useState<OpportunityTracking[]>([]);
+
+  useEffect(() => {
+    const fetchUserOpportunities = async () => {
+      try {
+        const opportunities = await opportunityApi.getByUserId(userId);
+        setUserOpportunities(opportunities);
+      } catch (error) {
+        console.error('Error fetching user opportunities:', error);
+      }
+    };
+
+    fetchUserOpportunities();
+  }, [userId]);
+
+  // Filter for business development projects that match user's opportunities
+  const businessDevProjects = projects.filter(project => {
+    const isBusinessDev = ![
+      ProjectStatus['Bid Accepted'], 
+      ProjectStatus['Bid Submitted'], 
+      ProjectStatus['In Progress']
+    ].includes(project.status);
+
+    // Check if project has an opportunity managed by the current user
+    const hasUserOpportunity = userOpportunities.some(opp => opp.projectId === project.id);
+
+    return isBusinessDev && hasUserOpportunity;
+  });
 
   if (businessDevProjects.length === 0) {
     return (
@@ -42,7 +69,7 @@ export const BusinessDevelopmentProjectList: React.FC<BusinessDevelopmentProject
           minHeight="200px"
         >
           <Typography variant="body1" sx={{ mb: 2 }}>
-            No business development projects found
+            No business development projects found 
           </Typography>
           {onCreateOpportunity && (
             <Button 

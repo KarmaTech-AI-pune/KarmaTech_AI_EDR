@@ -1,6 +1,6 @@
 import { screensArrayType, projectManagementAppContextType, User, Project, GoNoGoDecision } from './types'
 import { createContext, useState, useEffect } from 'react'
-import { Home, ProjectDetails, Opportunities, LoginScreen, BusinessDevelopment, ProjectManagement } from './pages'
+import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement } from './pages'
 import { Navbar } from './components/navigation/Navbar'
 import { Dashboard } from './components/Dashboard'
 import { ResourceManagement } from './components/ResourceManagement'
@@ -60,7 +60,6 @@ function App() {
     "Dashboard": <Dashboard />,
     "Business Development": <BusinessDevelopment />,
     "Project Management": <ProjectManagement />,
-    "Opportunities" : <Opportunities />,
     "Resources": <ResourceManagement />,
     "Reports": <ReportsList />,
     "Notifications": <NotificationCenter />,

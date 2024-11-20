@@ -1,110 +1,106 @@
-import { Box, Button, Paper } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
-import { useContext, useState, useEffect } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
+import { Container, Grid, Typography, Box, CircularProgress, Alert } from '@mui/material';
+import { Project, OpportunityTracking } from '../types';
 import { projectManagementAppContext } from '../App';
-import { ProjectStatus, OpportunityTracking } from '../types';
-import { opportunityApi } from '../dummyapi/api';
+import { opportunityApi } from '../dummyapi/opportunityApi';
 import ProjectInfoWidget from '../components/widgets/ProjectInfoWidget';
 import OpportunityTrackingWidget from '../components/widgets/OpportunityTrackingWidget';
-import DecisionWidget from '../components/widgets/DecisionWidget';
 import GoNoGoWidget from '../components/widgets/GoNoGoWidget';
+import DecisionWidget from '../components/widgets/DecisionWidget';
 
-export const ProjectDetails = () => {
+export const ProjectDetails: React.FC = () => {
+  const [opportunity, setOpportunity] = useState<OpportunityTracking | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const context = useContext(projectManagementAppContext);
-  const project = context?.selectedProject;
-  const [opportunityTracking, setOpportunityTracking] = useState<OpportunityTracking | null>(null);
-  const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchOpportunityTracking = async () => {
-      if (project?.id) {
-        try {
-          const data = await opportunityApi.getByProjectId(project.id);
-          setOpportunityTracking(data[0] || null);
-          setApiError(null);
-        } catch (error: any) {
-          console.error('Failed to fetch opportunity tracking data:', error);
-          
-          if (error.response) {
-            setApiError(`API Error: ${error.response.status} - ${error.response.data || 'No additional information'}`);
-          } else if (error.request) {
-            setApiError('No response received from the server');
-          } else {
-            setApiError('Error setting up the request: ' + error.message);
-          }
+    const fetchOpportunityData = async () => {
+      if (!context?.selectedProject?.id) return;
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        const opportunities = await opportunityApi.getByProjectId(context.selectedProject.id);
+        if (opportunities && opportunities.length > 0) {
+          setOpportunity(opportunities[0]);
         }
+      } catch (err) {
+        console.error('Error fetching opportunity data:', err);
+        setError('Failed to load opportunity data');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    if (project?.status === ProjectStatus.Opportunity) {
-      fetchOpportunityTracking();
-    }
-  }, [project]);
+    fetchOpportunityData();
+  }, [context?.selectedProject]);
 
-  const handleBack = () => {
-    let back = 'Projects'
-    if(project?.status === ProjectStatus['Bid Accepted'] || project?.status === ProjectStatus['In Progress'] || project?.status === ProjectStatus['Completed'])
-    {
-      back = "Project Management"
-    }
-    else{
-      back = "Business Development"
-    }
-    if (context?.setScreenState) {
-      context.setScreenState(back);
-    }
-  };
-
-  const handleProjectUpdate = (updatedProject: any) => {
+  const handleStatusUpdate = (updatedProject: Project) => {
     if (context?.setSelectedProject) {
       context.setSelectedProject(updatedProject);
     }
   };
 
-  if (!project) {
+  if (!context?.selectedProject) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Button
-          startIcon={<ArrowBack />}
-          onClick={handleBack}
-        >
-          Back to Projects
-        </Button>
-      </Box>
+      <Container>
+        <Alert severity="warning">No project selected</Alert>
+      </Container>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Alert severity="error">{error}</Alert>
+      </Container>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={handleBack}
-        sx={{ mb: 3 }}
-      >
-        Back to Projects
-      </Button>
-      {project.status === ProjectStatus['Bid Submitted'] && (
-        <Box sx={{ pb: 3}}>
-          <DecisionWidget 
-            project={project} 
-            onStatusUpdate={handleProjectUpdate} 
-          />
-        </Box>
-      )}
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <ProjectInfoWidget project={project} />
-      </Paper>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Project Details
+      </Typography>
+      
+      <Grid container spacing={3}>
+        {/* Project Info Widget */}
+        <Grid item xs={12} md={6}>
+          <ProjectInfoWidget project={context.selectedProject} />
+        </Grid>
 
-      
-        <OpportunityTrackingWidget 
-          project={project}
-        />
-      
+        {/* Opportunity Tracking Widget */}
+        <Grid item xs={12} md={6}>
+          <OpportunityTrackingWidget project={context.selectedProject} />
+        </Grid>
+
+        {/* Go/No-Go Widget */}
+        <Grid item xs={12} md={6}>
           <GoNoGoWidget 
-            projectId={project.id} 
-            project={project}
+            projectId={context.selectedProject.id} 
+            project={context.selectedProject}
           />
-        
-    </Box>
+        </Grid>
+
+        {/* Decision Widget */}
+        <Grid item xs={12} md={6}>
+          <DecisionWidget 
+            project={context.selectedProject}
+            onStatusUpdate={handleStatusUpdate}
+          />
+        </Grid>
+      </Grid>
+    </Container>
   );
 };
+
+export default ProjectDetails;

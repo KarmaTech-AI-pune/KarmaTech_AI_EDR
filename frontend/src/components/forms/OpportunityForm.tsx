@@ -18,8 +18,9 @@ import { DateField } from '@mui/x-date-pickers/DateField';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
-import { OpportunityTracking } from '../../types';
+import { OpportunityTracking, projectManagementAppContextType } from '../../types';
 import { getUsersByRole, UserRole } from '../../dummyapi/database/dummyusers';
+import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
 
 interface OpportunityFormProps {
   open: boolean;
@@ -36,8 +37,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   project,
   error
 }) => {
-  const context = useContext(projectManagementAppContext);
-  const [regionalManagers, setRegionalManagers] = useState<{id: number, name: string}[]>([]);
+  const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
+  const [bdManagers, setBdManagers] = useState<{id: number, name: string}[]>([]);
   const [formData, setFormData] = useState<Partial<OpportunityTracking>>({
     projectId: project?.projectId || 0,
     stage: project?.stage || '',
@@ -45,7 +46,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     bidFees: project?.bidFees || 0,
     emd: project?.emd || 0,
     formOfEMD: project?.formOfEMD || '',
-    bidManagerId: project?.bidManagerId || 0,
+    bidManagerId: project?.bidManagerId || (context.user?.role === UserRole.BusinessDevelopmentManager ? context.user.id : 0),
     contactPersonAtClient: project?.contactPersonAtClient || '',
     dateOfSubmission: project?.dateOfSubmission || new Date().toISOString().split('T')[0],
     percentageChanceOfProjectHappening: project?.percentageChanceOfProjectHappening || 0,
@@ -66,17 +67,28 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     capitalValue: project?.capitalValue || 0,
     durationOfProject: project?.durationOfProject || 0,
     fundingStream: project?.fundingStream || '',
-    contractType: project?.contractType || ''
+    contractType: project?.contractType || '',
+    workflowStatus: project?.workflowStatus || WorkflowStatus.Initial,
+    historyId: project?.historyId || null
   });
 
   useEffect(() => {
-    // Fetch Regional Managers when component mounts
-    const managers = getUsersByRole(UserRole.RegionalManager);
-    setRegionalManagers(managers.map(manager => ({
+    // Fetch BD Managers when component mounts
+    const managers = getUsersByRole(UserRole.BusinessDevelopmentManager);
+    setBdManagers(managers.map(manager => ({
       id: manager.id,
       name: manager.name
     })));
-  }, []);
+
+    // Set default bid manager to current user if they are a BD manager
+    if (!project && context.user?.role === UserRole.BusinessDevelopmentManager) {
+      let id = context.user.id
+      setFormData(prev => ({
+        ...prev,
+        bidManagerId: id
+      }));
+    }
+  }, [context.user, project]);
 
   useEffect(() => {
     if (project) {
@@ -84,17 +96,28 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         ...project,
         bidManagerId: project.bidManagerId || 0,
         dateOfSubmission: project.dateOfSubmission || new Date().toISOString().split('T')[0],
-        likelyStartDate: project.likelyStartDate || new Date().toISOString().split('T')[0]
+        likelyStartDate: project.likelyStartDate || new Date().toISOString().split('T')[0],
+        workflowStatus: project.workflowStatus || WorkflowStatus.Initial,
+        historyId: project.historyId || null
       });
     }
   }, [project]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    // Convert bidManagerId to number when it changes
+    if (name === 'bidManagerId') {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: Number(value),
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -205,9 +228,28 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                   label="Bid Manager"
                   required
                 >
-                  {regionalManagers.map((manager) => (
+                  {bdManagers.map((manager) => (
                     <MenuItem key={manager.id} value={String(manager.id)}>
                       {manager.name} (ID: {manager.id})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel id="workflow-status-label">Workflow Status</InputLabel>
+                <Select
+                  labelId="workflow-status-label"
+                  name="workflowStatus"
+                  value={formData.workflowStatus || WorkflowStatus.Initial}
+                  onChange={handleChange}
+                  label="Workflow Status"
+                  required
+                >
+                  {Object.values(WorkflowStatus).map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
                     </MenuItem>
                   ))}
                 </Select>

@@ -1,6 +1,5 @@
 import { 
   ListItem, 
-  ListItemText, 
   Typography, 
   Dialog, 
   DialogTitle, 
@@ -10,7 +9,8 @@ import {
   Chip,
   Box,
   Button,
-  Divider
+  Divider,
+  Alert
 } from '@mui/material';
 import { 
   Edit, 
@@ -21,15 +21,17 @@ import {
   LocationOn,
   CalendarToday,
   Assessment,
-  Person
+  Person,
+  WorkHistory
 } from '@mui/icons-material';
 import { OpportunityItemProps, OpportunityTracking, UserWithRole } from '../../types';
 import { useState, useContext, useEffect } from 'react';
-import { opportunityApi } from '../../dummyapi/api';
+import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { OpportunityForm } from '../forms/OpportunityForm';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../dummyapi/database/dummyRoles';
+import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
 
 export const OpportunityItem: React.FC<OpportunityItemProps> = ({ 
   opportunity, 
@@ -93,6 +95,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
       }
     } catch (error: any) {
       console.error('Error deleting opportunity:', error);
+      setFormError(error.message || 'Failed to delete opportunity');
     }
   };
 
@@ -167,6 +170,25 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     return currency ? `${currency} ${value.toLocaleString()}` : value.toLocaleString();
   };
 
+  const getWorkflowStatusColor = (status: WorkflowStatus) => {
+    switch (status) {
+      case WorkflowStatus.Initial:
+        return 'default';
+      case WorkflowStatus.SentForReview:
+        return 'info';
+      case WorkflowStatus.ReviewChanges:
+        return 'warning';
+      case WorkflowStatus.SentForApproval:
+        return 'info';
+      case WorkflowStatus.ApprovalChanges:
+        return 'warning';
+      case WorkflowStatus.Approved:
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+
   return (
     <>
       <ListItem 
@@ -207,6 +229,12 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                   color={getStrategicRankingColor(opportunity.strategicRanking)}
                   size="small"
                   icon={<Assessment />}
+                />
+                <Chip 
+                  label={opportunity.workflowStatus}
+                  color={getWorkflowStatusColor(opportunity.workflowStatus)}
+                  size="small"
+                  icon={<WorkHistory />}
                 />
                 <Chip 
                   label={opportunity.status || 'No Status'}
@@ -340,6 +368,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
         </Box>
       </ListItem>
 
+      {/* Delete Dialog */}
       <Dialog 
         open={deleteDialogOpen} 
         onClose={handleDeleteCancel}
@@ -351,6 +380,11 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
           <Typography>
             Are you sure you want to delete opportunity "{opportunity.workName}"?
           </Typography>
+          {formError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {formError}
+            </Alert>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteCancel}>Cancel</Button>
@@ -360,6 +394,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
         </DialogActions>
       </Dialog>
 
+      {/* Edit Form */}
       <OpportunityForm 
         open={editDialogOpen}
         onClose={handleEditClose}

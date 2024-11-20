@@ -1,5 +1,14 @@
 import { OpportunityTracking } from "../../types/index";
 
+export enum WorkflowStatus {
+  Initial = "Initial",
+  SentForReview = "Sent for Review",
+  ReviewChanges = "Review Changes",
+  SentForApproval = "Sent for Approval",
+  ApprovalChanges = "Approval Changes",
+  Approved = "Approved"
+}
+
 // Raw opportunity tracking data
 const opportunityTrackingRawData =  {
   "1":{
@@ -10,7 +19,7 @@ const opportunityTrackingRawData =  {
     "bidFees": 75000,
     "emd": 150000,
     "formOfEMD": "Bank Guarantee",
-    "bidManagerId": 6,
+    "bidManagerId": 8, // Changed to BD Manager ID
     "contactPersonAtClient": "Rajesh Kumar",
     "dateOfSubmission": "2023-12-15",
     "percentageChanceOfProjectHappening": 75.5,
@@ -31,7 +40,9 @@ const opportunityTrackingRawData =  {
     "capitalValue": 500000000,
     "durationOfProject": 36,
     "fundingStream": "Government Budget",
-    "contractType": "EPC"
+    "contractType": "EPC",
+    "workflowStatus": WorkflowStatus.Initial,
+    "historyId": null // Will be linked to history/logging database
   },
   "2":{
     "id": 2,
@@ -41,7 +52,7 @@ const opportunityTrackingRawData =  {
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManagerId": 7,
+    "bidManagerId": 9, // Changed to BD Manager ID
     "contactPersonAtClient": "Amit Patel",
     "dateOfSubmission": "2023-12-30",
     "percentageChanceOfProjectHappening": 60.0,
@@ -62,7 +73,9 @@ const opportunityTrackingRawData =  {
     "capitalValue": 250000000,
     "durationOfProject": 24,
     "fundingStream": "Government Grant",
-    "contractType": "Item Rate"
+    "contractType": "Item Rate",
+    "workflowStatus": WorkflowStatus.Initial,
+    "historyId": null
   },
   "3":{
     "id": 3,
@@ -72,7 +85,7 @@ const opportunityTrackingRawData =  {
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManagerId": 6,
+    "bidManagerId": 8, // Changed to BD Manager ID
     "contactPersonAtClient": "Amita Patel",
     "dateOfSubmission": "2023-12-30",
     "percentageChanceOfProjectHappening": 60.0,
@@ -93,7 +106,9 @@ const opportunityTrackingRawData =  {
     "capitalValue": 400000000,
     "durationOfProject": 30,
     "fundingStream": "Multilateral Funding",
-    "contractType": "Lump Sum"
+    "contractType": "Lump Sum",
+    "workflowStatus": WorkflowStatus.Initial,
+    "historyId": null
   },
   "4":{
     "id": 4,
@@ -103,7 +118,7 @@ const opportunityTrackingRawData =  {
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManagerId": 7,
+    "bidManagerId": 9, // Changed to BD Manager ID
     "contactPersonAtClient": "Amit Patel",
     "dateOfSubmission": "2023-12-30",
     "percentageChanceOfProjectHappening": 60.0,
@@ -124,7 +139,9 @@ const opportunityTrackingRawData =  {
     "capitalValue": 600000000,
     "durationOfProject": 48,
     "fundingStream": "Government Budget",
-    "contractType": "EPC"
+    "contractType": "EPC",
+    "workflowStatus": WorkflowStatus.Initial,
+    "historyId": null
   }
 } as const;
 
@@ -158,7 +175,9 @@ export const opportunityTrackings: OpportunityTracking[] =  Object.values(opport
   capitalValue: tracking.capitalValue,
   durationOfProject: tracking.durationOfProject,
   fundingStream: tracking.fundingStream,
-  contractType: tracking.contractType
+  contractType: tracking.contractType,
+  workflowStatus: tracking.workflowStatus,
+  historyId: tracking.historyId
 }));
 
 // Utility functions
@@ -180,4 +199,8 @@ export const getOpportunitiesByStrategicRanking = (ranking: string): Opportunity
 
 export const getOpportunitiesByBidManager = (bidManagerId: number): OpportunityTracking[] => {
   return opportunityTrackings.filter(opportunity => opportunity.bidManagerId === bidManagerId);
+};
+
+export const getOpportunitiesByWorkflowStatus = (status: WorkflowStatus): OpportunityTracking[] => {
+  return opportunityTrackings.filter(opportunity => opportunity.workflowStatus === status);
 };

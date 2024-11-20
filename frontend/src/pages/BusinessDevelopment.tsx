@@ -33,7 +33,21 @@ export const BusinessDevelopment: React.FC = () => {
 
   const fetchOpportunities = async () => {
     try {
-      const response = await opportunityApi.getAll();
+      if (!currentUser) {
+        return;
+      }
+
+      let response: OpportunityTracking[] = [];
+      
+      // For BDE roles, use getByUserId
+      if (currentUser.role === UserRole.BusinessDevelopmentManager || 
+          currentUser.role === UserRole.BusinessDevelopmentHead) {
+        response = await opportunityApi.getByUserId(currentUser.id);
+      } else {
+        // For other roles, use getAll
+        response = await opportunityApi.getAll();
+      }
+      
       setOpportunities(response);
       setError(undefined);
     } catch (err: any) {
@@ -42,6 +56,7 @@ export const BusinessDevelopment: React.FC = () => {
     }
   };
 
+  // Effect for checking user permissions
   useEffect(() => {
     const checkUserPermissions = async () => {
       try {
@@ -67,8 +82,6 @@ export const BusinessDevelopment: React.FC = () => {
 
           if (!hasOpportunityViewPermission) {
             setError('You do not have permission to view opportunities');
-          } else {
-            await fetchOpportunities();
           }
         }
       } catch (err: any) {
@@ -79,6 +92,13 @@ export const BusinessDevelopment: React.FC = () => {
 
     checkUserPermissions();
   }, []);
+
+  // Separate effect for fetching opportunities
+  useEffect(() => {
+    if (currentUser && canViewOpportunities) {
+      fetchOpportunities();
+    }
+  }, [currentUser, canViewOpportunities]);
 
   const initialOpportunityData: Partial<OpportunityTracking> = {
     client: '',
@@ -159,7 +179,7 @@ export const BusinessDevelopment: React.FC = () => {
       return opportunity.bidManagerId === currentUser.id;
     }
 
-    // For other roles, keep existing search logic
+    // For other roles, apply search filter
     const searchTermLower = searchTerm.toLowerCase();
     const workName = opportunity.workName?.toLowerCase() || '';
     const client = opportunity.client?.toLowerCase() || '';
