@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from 'react';
-import { Container, Typography, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Container, Typography, Box, Button } from '@mui/material';
 import { projectManagementAppContext } from '../App';
 import { BusinessDevelopmentWidget } from '../components/widgets/BusinessDevelopmentWidget';
 import { HistoryWidget } from '../components/widgets/HistoryWidget';
@@ -9,8 +9,7 @@ import SendIcon from '@mui/icons-material/Send';
 import { WorkflowStatus } from '../dummyapi/database/dummyopportunityTracking';
 import { PermissionType } from '../dummyapi/database/dummyRoles';
 import { authApi } from '../dummyapi/authApi';
-import { DecideApproval, DecideReview, SendForReview, SendForApproval } from '../components/dialogbox';
-import { opportunityApi } from '../dummyapi/opportunityApi';
+import { DecideApproval, DecideReview, SendForReview } from '../components/dialogbox';
 
 export const BusinessDevelopmentDetails = () => {
   const context = useContext(projectManagementAppContext);
@@ -24,10 +23,9 @@ export const BusinessDevelopmentDetails = () => {
   useEffect(() => {
     const checkUserPermissions = async () => {
       try {
-        
         const user = await authApi.getCurrentUser();
         
-        if (!user) {
+        if (!user || !user.name) {
           setCurrentUser(null);
           setCanSubmitForReview(false);
           setCanReviewBD(false);
@@ -77,6 +75,15 @@ export const BusinessDevelopmentDetails = () => {
     setWorkflowDialogOpen(false);
   };
 
+  const handleWorkflowComplete = () => {
+    // Refresh the opportunity data
+    if (context?.setSelectedProject) {
+      context.setSelectedProject(null);
+      context.setSelectedProject(opportunity);
+    }
+    handleWorkflowDialogClose();
+  };
+
   const getWorkflowButtonText = (status: WorkflowStatus) => {
     switch (status) {
       case WorkflowStatus.Initial:
@@ -93,7 +100,7 @@ export const BusinessDevelopmentDetails = () => {
   };
 
   const canShowWorkflowButton = () => {
-    if (opportunity.workflowStatus === WorkflowStatus.Approved) {
+    if (!currentUser?.name || opportunity.workflowStatus === WorkflowStatus.Approved) {
       return false;
     }
 
@@ -112,17 +119,30 @@ export const BusinessDevelopmentDetails = () => {
   };
 
   const getWorkflowDialog = () => {
+    // Only render dialog if we have a valid user with a name
+    if (!currentUser?.name || !workflowDialogOpen) {
+      return null;
+    }
+
+    const commonProps = {
+      open: workflowDialogOpen,
+      onClose: handleWorkflowDialogClose,
+      opportunityId: opportunity.id,
+      currentUser: currentUser.name,
+      onSubmit: handleWorkflowComplete
+    };
+
     switch (opportunity.workflowStatus) {
       case WorkflowStatus.Initial:
       case WorkflowStatus.ReviewChanges:
-        return <SendForReview open={workflowDialogOpen} onClose={handleWorkflowDialogClose} />;
+        return <SendForReview {...commonProps} />;
       case WorkflowStatus.SentForReview:
       case WorkflowStatus.ApprovalChanges:
-        return <DecideReview open={workflowDialogOpen} onClose={handleWorkflowDialogClose} />;
+        return <DecideReview {...commonProps} />;
       case WorkflowStatus.SentForApproval:
-        return <DecideApproval open={workflowDialogOpen} onClose={handleWorkflowDialogClose} />;
+        return <DecideApproval {...commonProps} />;
       default:
-        return <SendForReview open={workflowDialogOpen} onClose={handleWorkflowDialogClose} />;
+        return <SendForReview {...commonProps} />;
     }
   };
 

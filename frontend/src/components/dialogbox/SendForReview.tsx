@@ -16,14 +16,23 @@ import { getUsersByRole } from '../../dummyapi/database/dummyusers';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
 import { AuthUser } from '../../dummyapi/database/dummyusers';
+import { HistoryLoggingService } from '../../services/historyLoggingService';
 
 interface SendForReviewProps {
   open: boolean;
   onClose: () => void;
   opportunityId?: number;
+  currentUser: string;
+  onSubmit?: () => void;
 }
 
-const SendForReview: React.FC<SendForReviewProps> = ({ open, onClose, opportunityId }) => {
+const SendForReview: React.FC<SendForReviewProps> = ({ 
+  open, 
+  onClose, 
+  opportunityId,
+  currentUser,
+  onSubmit 
+}) => {
   const [selectedReviewer, setSelectedReviewer] = useState<number | ''>('');
   const [reviewers, setReviewers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +65,11 @@ const SendForReview: React.FC<SendForReviewProps> = ({ open, onClose, opportunit
       return;
     }
 
+    if (!currentUser) {
+      setError('Current user information is missing');
+      return;
+    }
+
     try {
       // Get current opportunity
       const opportunity = await opportunityApi.getById(opportunityId);
@@ -63,24 +77,47 @@ const SendForReview: React.FC<SendForReviewProps> = ({ open, onClose, opportunit
         throw new Error('Opportunity not found');
       }
 
+      // Find selected reviewer details
+      const selectedReviewerDetails = reviewers.find(r => r.id === selectedReviewer);
+      if (!selectedReviewerDetails) {
+        throw new Error('Selected reviewer not found');
+      }
+
       // Update opportunity with new workflow status and reviewer
       const updatedOpportunity = {
         ...opportunity,
         workflowStatus: WorkflowStatus.SentForReview,
         reviewManagerId: selectedReviewer,
-        status: 'Under Review' // Also update the status to reflect the review state
+        status: 'Under Review',
+        submittedBy: currentUser // Add submitter information
       };
 
       await opportunityApi.update(updatedOpportunity);
-      console.log(updatedOpportunity)
+
+      // Log the review request
+      await HistoryLoggingService.logSentForReview(
+        opportunityId,
+        currentUser,
+        selectedReviewerDetails.name
+      );
+
       // Reset and close dialog
       setSelectedReviewer('');
       setError(null);
+      
+      if (onSubmit) {
+        onSubmit();
+      }
       onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to send for review');
     }
   };
+
+  // Don't render the dialog if currentUser is not available
+  if (!currentUser) {
+    return null;
+  }
 
   return (
     <Dialog 

@@ -18,6 +18,7 @@ import { UserWithRole, OpportunityTracking } from '../types';
 import { PermissionType } from '../dummyapi/database/dummyRoles';
 import { opportunityApi } from '../dummyapi/opportunityApi';
 import { UserRole } from '../dummyapi/database/dummyusers';
+import { HistoryLoggingService } from '../services/historyLoggingService';
 
 export const BusinessDevelopment: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
@@ -140,7 +141,18 @@ export const BusinessDevelopment: React.FC = () => {
         lastModifiedAt: new Date().toISOString()
       };
 
-      await opportunityApi.create(submissionData);
+      // Create the opportunity
+      const createdOpportunity = await opportunityApi.create(submissionData);
+
+      // Log the new opportunity creation
+      if (createdOpportunity.id) {
+        await HistoryLoggingService.logNewProject(
+          createdOpportunity.id,
+          createdOpportunity.workName || 'Unnamed Opportunity',
+          currentUser.name
+        );
+      }
+
       await fetchOpportunities();
       setIsCreatingOpportunity(false);
       setFormError(undefined);

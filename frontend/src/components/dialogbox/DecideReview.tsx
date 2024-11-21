@@ -14,11 +14,13 @@ import {
 } from '@mui/material';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { HistoryLoggingService } from '../../services/historyLoggingService';
 
 interface DecideReviewProps {
   open: boolean;
   onClose: () => void;
   opportunityId?: number;
+  currentUser: string;
   onDecisionMade?: () => void;
 }
 
@@ -26,6 +28,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
   open, 
   onClose, 
   opportunityId,
+  currentUser,
   onDecisionMade 
 }) => {
   const [decision, setDecision] = useState('');
@@ -98,6 +101,31 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       };
 
       await opportunityApi.update(updatedOpportunity);
+
+      // Log the review decision
+      if (decision === 'approve' || decision === 'reject') {
+        await HistoryLoggingService.logReviewDecision(
+          opportunityId,
+          decision === 'approve' ? 'approved' : 'rejected',
+          currentUser,
+          comments
+        );
+      } else if (decision === 'revise') {
+        await HistoryLoggingService.logCustomEvent(
+          opportunityId,
+          'Review Changes Requested',
+          currentUser,
+          comments
+        );
+      }
+
+      // Also log status change
+      await HistoryLoggingService.logStatusChange(
+        opportunityId,
+        opportunity.status,
+        newStatus,
+        currentUser
+      );
       
       // Reset form and close dialog
       setDecision('');

@@ -22,6 +22,7 @@ import { OpportunityTracking, projectManagementAppContextType } from '../../type
 import { getUsersByRole, UserRole } from '../../dummyapi/database/dummyusers';
 import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
 import { PermissionType, hasPermission } from '../../dummyapi/database/dummyRoles';
+import { HistoryLoggingService } from '../../services/historyLoggingService';
 
 interface OpportunityFormProps {
   open: boolean;
@@ -130,7 +131,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         [name]: value === '' ? undefined : Number(value),
       }));
     } else if (name === 'workflowStatus') {
-      // Validate workflow status changes based on user role and permissions
+        // Validate workflow status changes based on user role and permissions
       const currentStatus = formData.workflowStatus;
       const newStatus = value as WorkflowStatus;
       

@@ -33,7 +33,7 @@ import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../dummyapi/database/dummyRoles';
 import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
-import { DecideApproval, DecideReview, SendForReview, SendForApproval } from '../dialogbox';
+import { DecideApproval, DecideReview, SendForReview } from '../dialogbox';
 
 export const OpportunityItem: React.FC<OpportunityItemProps> = ({ 
   opportunity, 
@@ -114,9 +114,9 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
       if (onOpportunityDeleted) {
         onOpportunityDeleted(opportunity.id);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting opportunity:', error);
-      setFormError(error.message || 'Failed to delete opportunity');
+      setFormError(error instanceof Error ? error.message : 'Failed to delete opportunity');
     }
   };
 
@@ -166,9 +166,9 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
       if (onOpportunityUpdated) {
         onOpportunityUpdated();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating opportunity:', error);
-      setFormError(error.message || 'Failed to update opportunity');
+      setFormError(error instanceof Error ? error.message : 'Failed to update opportunity');
     }
   };
 
@@ -233,6 +233,8 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   };
 
   const getWorkflowDialog = () => {
+    if (!currentUser?.name) return null;
+
     switch (opportunity.workflowStatus) {
       case WorkflowStatus.Initial:
       case WorkflowStatus.ReviewChanges:
@@ -240,20 +242,40 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
           <SendForReview 
             open={workflowDialogOpen} 
             onClose={handleWorkflowClose}
+            currentUser={context?.user?.name}
             opportunityId={opportunity.id}
+            onSubmit={onOpportunityUpdated}
           />
         );
       case WorkflowStatus.SentForReview:
       case WorkflowStatus.ApprovalChanges:
-        return <DecideReview open={workflowDialogOpen} onClose={handleWorkflowClose} />;
+        return (
+          <DecideReview 
+            open={workflowDialogOpen} 
+            onClose={handleWorkflowClose}
+            opportunityId={opportunity.id}
+            currentUser={currentUser.name}
+            onDecisionMade={onOpportunityUpdated}
+          />
+        );
       case WorkflowStatus.SentForApproval:
-        return <DecideApproval open={workflowDialogOpen} onClose={handleWorkflowClose} />;
+        return (
+          <DecideApproval 
+            open={workflowDialogOpen} 
+            onClose={handleWorkflowClose}
+            opportunityId={opportunity.id}
+            currentUser={currentUser.name}
+            onSubmit={onOpportunityUpdated}
+          />
+        );
       default:
         return (
           <SendForReview 
             open={workflowDialogOpen} 
             onClose={handleWorkflowClose}
             opportunityId={opportunity.id}
+            currentUser={context?.user?.name}
+            onSubmit={onOpportunityUpdated}
           />
         );
     }
