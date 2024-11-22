@@ -23,19 +23,14 @@ import {
   Assessment,
   Person,
   WorkHistory,
-  Send
 } from '@mui/icons-material';
-import { OpportunityItemProps, OpportunityTracking, UserWithRole } from '../../types';
-import { useState, useContext, useEffect } from 'react';
+import { OpportunityItemProps, OpportunityTracking} from '../../types';
+import { useState, useContext} from 'react';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { OpportunityForm } from '../forms/OpportunityForm';
 import { projectManagementAppContext } from '../../App';
-import { authApi } from '../../dummyapi/authApi';
-import { PermissionType } from '../../dummyapi/database/dummyRoles';
 import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
-import { DecideApproval, DecideReview, SendForReview } from '../dialogbox';
 import { OpportunityTrackingWorkflow } from '../common/OpportunityTrackingWorkflow';
-
 export const OpportunityItem: React.FC<OpportunityItemProps> = ({ 
   opportunity, 
   onOpportunityDeleted, 
@@ -43,72 +38,20 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
 }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
-  const [canEditOpportunity, setCanEditOpportunity] = useState(false);
-  const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
-  const [canSubmitForReview, setCanSubmitForReview] = useState(false);
-  const [canReviewBD, setCanReviewBD] = useState(false);
-  const [canApproveBD, setCanApproveBD] = useState(false);
   const [formError, setFormError] = useState<string | undefined>();
   const context = useContext(projectManagementAppContext);
 
-  useEffect(() => {
-    const checkUserPermissions = async () => {
-      try {
-        const user = await authApi.getCurrentUser();
-        
-        if (!user) {
-          setCurrentUser(null);
-          setCanEditOpportunity(false);
-          setCanDeleteOpportunity(false);
-          setCanSubmitForReview(false);
-          setCanReviewBD(false);
-          setCanApproveBD(false);
-          return;
-        }
-
-        setCurrentUser(user);
-
-        if (user.roleDetails) {
-          setCanEditOpportunity(
-            user.roleDetails.permissions.includes(PermissionType.EDIT_BUSINESS_DEVELOPMENT)
-          );
-          setCanDeleteOpportunity(
-            user.roleDetails.permissions.includes(PermissionType.DELETE_BUSINESS_DEVELOPMENT)
-          );
-          setCanSubmitForReview(
-            user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
-          );
-          setCanReviewBD(
-            user.roleDetails.permissions.includes(PermissionType.REVIEW_BUSINESS_DEVELOPMENT)
-          );
-          setCanApproveBD(
-            user.roleDetails.permissions.includes(PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
-          );
-        }
-      } catch (error) {
-        console.error('Error checking user permissions:', error);
-        setCanEditOpportunity(false);
-        setCanDeleteOpportunity(false);
-        setCanSubmitForReview(false);
-        setCanReviewBD(false);
-        setCanApproveBD(false);
-      }
-    };
-
-    checkUserPermissions();
-  }, []);
+  
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (canDeleteOpportunity) {
+    if (context?.canDeleteOpportunity) {
       setDeleteDialogOpen(true);
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (!canDeleteOpportunity) return;
+    if (!context?.canDeleteOpportunity) return;
     try {
       await opportunityApi.delete(opportunity.id);
       setDeleteDialogOpen(false);
@@ -127,7 +70,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (canEditOpportunity) {
+    if (context?.canEditOpportunity) {
       setEditDialogOpen(true);
       setFormError(undefined);
     }
@@ -138,26 +81,16 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     setFormError(undefined);
   };
 
-  const handleWorkflowClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setWorkflowDialogOpen(true);
-  };
-
-  const handleWorkflowClose = () => {
-    setWorkflowDialogOpen(false);
-    if (onOpportunityUpdated) {
-      onOpportunityUpdated();
-    }
-  };
+  
 
   const handleEditSubmit = async (formData: OpportunityTracking) => {
-    if (!canEditOpportunity) return;
+    if (!context?.canEditOpportunity) return;
     try {
       const updatedOpportunity = {
         ...formData,
         id: opportunity.id,
         lastModifiedAt: new Date().toISOString(),
-        lastModifiedBy: currentUser?.name || 'Unknown'
+        lastModifiedBy: context?.currentUser?.name || 'Unknown'
       };
       
       await opportunityApi.update(updatedOpportunity);
@@ -199,88 +132,8 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     }
   };
 
-  const getWorkflowButtonText = (status: WorkflowStatus) => {
-    switch (status) {
-      case WorkflowStatus.Initial:
-      case WorkflowStatus.ReviewChanges:
-        return 'Send for Review';
-      case WorkflowStatus.SentForReview:
-      case WorkflowStatus.ApprovalChanges:
-        return 'Decide Review';
-      case WorkflowStatus.SentForApproval:
-        return 'Decide Approval';
-      default:
-        return 'Send for Review';
-    }
-  };
-
-  const canShowWorkflowButton = () => {
-    if (opportunity.workflowStatus === WorkflowStatus.Approved) {
-      return false;
-    }
-
-    switch (opportunity.workflowStatus) {
-      case WorkflowStatus.Initial:
-      case WorkflowStatus.ReviewChanges:
-        return canSubmitForReview;
-      case WorkflowStatus.SentForReview:
-      case WorkflowStatus.ApprovalChanges:
-        return canReviewBD;
-      case WorkflowStatus.SentForApproval:
-        return canApproveBD;
-      default:
-        return false;
-    }
-  };
-
-  const getWorkflowDialog = () => {
-    if (!currentUser?.name) return null;
-
-    switch (opportunity.workflowStatus) {
-      case WorkflowStatus.Initial:
-      case WorkflowStatus.ReviewChanges:
-        return (
-          <SendForReview 
-            open={workflowDialogOpen} 
-            onClose={handleWorkflowClose}
-            currentUser={context?.user?.name}
-            opportunityId={opportunity.id}
-            onSubmit={onOpportunityUpdated}
-          />
-        );
-      case WorkflowStatus.SentForReview:
-      case WorkflowStatus.ApprovalChanges:
-        return (
-          <DecideReview 
-            open={workflowDialogOpen} 
-            onClose={handleWorkflowClose}
-            opportunityId={opportunity.id}
-            currentUser={currentUser.name}
-            onDecisionMade={onOpportunityUpdated}
-          />
-        );
-      case WorkflowStatus.SentForApproval:
-        return (
-          <DecideApproval 
-            open={workflowDialogOpen} 
-            onClose={handleWorkflowClose}
-            opportunityId={opportunity.id}
-            currentUser={currentUser.name}
-            onSubmit={onOpportunityUpdated}
-          />
-        );
-      default:
-        return (
-          <SendForReview 
-            open={workflowDialogOpen} 
-            onClose={handleWorkflowClose}
-            opportunityId={opportunity.id}
-            currentUser={context?.user?.name}
-            onSubmit={onOpportunityUpdated}
-          />
-        );
-    }
-  };
+  
+  
 
   const getWorkflowStatusColor = (status: WorkflowStatus) => {
     switch (status) {
@@ -363,7 +216,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <OpportunityTrackingWorkflow onOpportunityUpdated={onOpportunityUpdated} opportunity={opportunity} />
-              {canEditOpportunity && (
+              {context?.canEditOpportunity && (
                 <Button 
                   onClick={handleEditClick}
                   size="small"
@@ -372,7 +225,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                   Edit
                 </Button>
               )}
-              {canDeleteOpportunity && (
+              {context?.canDeleteOpportunity && (
                 <Button 
                   onClick={handleDeleteClick}
                   size="small"
@@ -514,7 +367,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
       </Dialog>
 
       {/* Workflow Dialog */}
-      {getWorkflowDialog()}
+      
 
       {/* Edit Form */}
       <OpportunityForm 

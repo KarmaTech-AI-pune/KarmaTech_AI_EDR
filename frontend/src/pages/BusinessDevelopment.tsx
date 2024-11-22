@@ -40,11 +40,15 @@ export const BusinessDevelopment: React.FC = () => {
 
       let response: OpportunityTracking[] = [];
       
-      // For BDE roles and Business Development Head, use specific getters
+      // For BDE roles, Business Development Head, and Regional Manager use specific getters
       if (currentUser.role === UserRole.BusinessDevelopmentManager) {
         response = await opportunityApi.getByUserId(currentUser.id);
       } else if (currentUser.role === UserRole.BusinessDevelopmentHead) {
+        // Get opportunities where user is reviewer
         response = await opportunityApi.getByReviewManagerId(currentUser.id);
+      } else if (currentUser.role === UserRole.RegionalManager) {
+        // Get opportunities where user is approver
+        response = await opportunityApi.getByApprovalManagerId(currentUser.id);
       } else {
         // For other roles, use getAll
         response = await opportunityApi.getAll();
@@ -187,12 +191,6 @@ export const BusinessDevelopment: React.FC = () => {
   };
 
   const filteredOpportunities = opportunities.filter(opportunity => {
-    // If user is a Regional Manager, only show opportunities with their ID as Bid Manager
-    if (currentUser?.role === UserRole.RegionalManager) {
-      return opportunity.bidManagerId === currentUser.id;
-    }
-
-    // For other roles, apply search filter
     const searchTermLower = searchTerm.toLowerCase();
     const workName = opportunity.workName?.toLowerCase() || '';
     const client = opportunity.client?.toLowerCase() || '';

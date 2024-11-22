@@ -41,6 +41,19 @@ export const opportunityApi = {
     }
   },
 
+  getByApprovalManagerId: async (userId: number): Promise<OpportunityTracking[]> => {
+    try {
+      const opportunities = mutableOpportunityTrackings.filter(opp => opp.approvalManagerId === userId);
+      if (!opportunities.length) {
+        console.warn(`No opportunities found for approval manager ${userId}`);
+      }
+      return opportunities;
+    } catch (error) {
+      console.error(`Error fetching opportunities for approval manager ${userId}:`, error);
+      throw new Error(`Failed to fetch opportunities for approval manager ${userId}`);
+    }
+  },
+
   getById: async (id: number): Promise<OpportunityTracking> => {
     try {
       const opportunity = mutableOpportunityTrackings.find(opp => opp.id === id);

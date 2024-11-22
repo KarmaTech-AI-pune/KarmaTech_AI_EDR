@@ -1,4 +1,4 @@
-/*import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog,
   DialogTitle,
@@ -10,8 +10,14 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  SelectChangeEvent
+  SelectChangeEvent,
+  FormHelperText
 } from '@mui/material';
+import { UserRole } from '../../dummyapi/database/dummyusers';
+import { getUsersByRole } from '../../dummyapi/database/dummyusers';
+import { opportunityApi } from '../../dummyapi/opportunityApi';
+import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { AuthUser } from '../../dummyapi/database/dummyusers';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 
 interface SendForApprovalProps {
@@ -29,98 +35,130 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   currentUser,
   onSubmit 
 }) => {
-  const [approver, setApprover] = useState('');
-  const [priority, setPriority] = useState('medium');
-  const [notes, setNotes] = useState('');
+  const [selectedApprover, setSelectedApprover] = useState<string>('');
+  const [approvers, setApprovers] = useState<AuthUser[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get all Regional Managers
+    const regionalManagers = getUsersByRole(UserRole.RegionalManager);
+    setApprovers(regionalManagers);
+  }, []);
 
   const handleApproverChange = (event: SelectChangeEvent) => {
-    setApprover(event.target.value);
+    setSelectedApprover(event.target.value);
+    setError(null);
   };
 
-  const handlePriorityChange = (event: SelectChangeEvent) => {
-    setPriority(event.target.value);
-  };
-
-  const handleNotesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setNotes(event.target.value);
+  const handleCancel = () => {
+    setSelectedApprover('');
+    setError(null);
+    onClose();
   };
 
   const handleSubmit = async () => {
+    if (!selectedApprover) {
+      setError('Please select a Regional Manager');
+      return;
+    }
+
     try {
-      await HistoryLoggingService.logSentOpportunityForApproval(
+      const opportunity = await opportunityApi.getById(opportunityId);
+      if (!opportunity) {
+        throw new Error('Opportunity not found');
+      }
+
+      // Find selected approver details
+      const selectedApproverDetails = approvers.find(a => a.id === Number(selectedApprover));
+      if (!selectedApproverDetails) {
+        throw new Error('Selected approver not found');
+      }
+
+      // Update opportunity with new workflow status and approver
+      const updatedOpportunity = {
+        ...opportunity,
+        workflowStatus: WorkflowStatus.SentForApproval,
+        approvalManagerId: Number(selectedApprover),
+        status: 'Pending Approval'
+      };
+
+      await opportunityApi.update(updatedOpportunity);
+
+      // Log the approval request
+      await HistoryLoggingService.logCustomEvent(
         opportunityId,
+        'Sent for Approval',
         currentUser,
-        approver,
-        notes
+        `Sent to ${selectedApproverDetails.name} for approval`
       );
+
+      // Reset and close dialog
+      setSelectedApprover('');
+      setError(null);
       
       if (onSubmit) {
         onSubmit();
       }
       onClose();
-    } catch (error) {
-      console.error('Failed to send for approval:', error);
-      // Here you might want to show an error message to the user
+    } catch (err: any) {
+      setError(err.message || 'Failed to send for approval');
     }
   };
 
   return (
     <Dialog 
       open={open} 
-      onClose={onClose}
+      onClose={handleCancel}
       maxWidth="sm"
       fullWidth
+      sx={{
+        '& .MuiDialog-paper': {
+          zIndex: 1500,
+        },
+        '& .MuiBackdrop-root': {
+          zIndex: 1400,
+        },
+        '& .MuiSelect-select': {
+          zIndex: 1600,
+        },
+        '& .MuiPopover-root': {
+          zIndex: 1700,
+        },
+      }}
     >
-      <DialogTitle>Send for Approval</DialogTitle>
-      <DialogContent>
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Approver</InputLabel>
-          <Select
-            label="Approver"
-            value={approver}
-            onChange={handleApproverChange}
-          >
-            <MenuItem value="">Select Approver</MenuItem>
-            <MenuItem value="Project Manager">Project Manager</MenuItem>
-            <MenuItem value="Business Development Manager">Business Development Manager</MenuItem>
-            <MenuItem value="Director">Director</MenuItem>
-          </Select>
-        </FormControl>
-
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Priority</InputLabel>
-          <Select
-            label="Priority"
-            value={priority}
-            onChange={handlePriorityChange}
-          >
-            <MenuItem value="low">Low</MenuItem>
-            <MenuItem value="medium">Medium</MenuItem>
-            <MenuItem value="high">High</MenuItem>
-          </Select>
-        </FormControl>
-
-        <TextField
+      <DialogTitle sx={{ zIndex: 1550 }}>Send for Approval</DialogTitle>
+      <DialogContent sx={{ zIndex: 1550 }}>
+        <FormControl 
+          fullWidth 
           margin="normal"
-          label="Additional Notes"
-          multiline
-          rows={4}
-          fullWidth
-          variant="outlined"
-          placeholder="Enter any additional notes"
-          value={notes}
-          onChange={handleNotesChange}
-        />
+          error={!!error}
+          sx={{ zIndex: 1550 }}
+        >
+          <InputLabel sx={{ zIndex: 1560 }}>Regional Manager</InputLabel>
+          <Select
+            value={selectedApprover}
+            onChange={handleApproverChange}
+            label="Regional Manager"
+            sx={{ zIndex: 1550 }}
+          >
+            {approvers.map((approver) => (
+              <MenuItem key={approver.id} value={approver.id.toString()}>
+                {approver.name}
+              </MenuItem>
+            ))}
+          </Select>
+          {error && <FormHelperText sx={{ zIndex: 1560 }}>{error}</FormHelperText>}
+        </FormControl>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="inherit">
+      <DialogActions sx={{ zIndex: 1550 }}>
+        <Button onClick={handleCancel} color="inherit">
           Cancel
         </Button>
         <Button 
+          onClick={handleSubmit} 
           variant="contained" 
           color="primary"
-          onClick={handleSubmit}
-          disabled={!approver} // Disable if no approver is selected
+          disabled={!selectedApprover}
         >
           Send for Approval
         </Button>
@@ -129,4 +167,4 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   );
 };
 
-export default SendForApproval;*/
+export default SendForApproval;

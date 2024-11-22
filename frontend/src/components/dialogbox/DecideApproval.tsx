@@ -25,8 +25,7 @@ interface DecideApprovalProps {
   onSubmit?: () => void;
 }
 
-type DecisionType = 'approve' | 'reject' | 'revise';
-type ApprovalLevelType = 'final' | 'conditional';
+type DecisionType = 'approve' | 'reject';
 
 const DecideApproval: React.FC<DecideApprovalProps> = ({ 
   open, 
@@ -36,41 +35,33 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
   onSubmit 
 }) => {
   const [decision, setDecision] = useState<DecisionType | ''>('');
-  const [approvalLevel, setApprovalLevel] = useState<ApprovalLevelType | ''>('');
   const [comments, setComments] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleDecisionChange = (event: SelectChangeEvent) => {
+    event.stopPropagation();
     setDecision(event.target.value as DecisionType);
     setError(null);
   };
 
-  const handleApprovalLevelChange = (event: SelectChangeEvent) => {
-    setApprovalLevel(event.target.value as ApprovalLevelType);
-    setError(null);
-  };
-
   const handleCommentsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
     setComments(event.target.value);
     setError(null);
   };
 
-  const handleCancel = () => {
+  const handleCancel = (event: React.MouseEvent) => {
+    event.stopPropagation();
     setDecision('');
-    setApprovalLevel('');
     setComments('');
     setError(null);
     onClose();
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: React.MouseEvent) => {
+    event.stopPropagation();
     if (!decision) {
       setError('Please select a decision');
-      return;
-    }
-
-    if (decision === 'approve' && !approvalLevel) {
-      setError('Please select an approval level');
       return;
     }
 
@@ -85,53 +76,33 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
         throw new Error('Opportunity not found');
       }
 
-      let newWorkflowStatus: WorkflowStatus;
-      let newStatus: string;
+      const newWorkflowStatus = decision === 'approve' ? 
+        WorkflowStatus.Approved : 
+        WorkflowStatus.ApprovalChanges;
 
-      switch (decision) {
-        case 'approve':
-          newWorkflowStatus = WorkflowStatus.Approved;
-          newStatus = 'Approved';
-          break;
-        case 'reject':
-          newWorkflowStatus = WorkflowStatus.Initial;
-          newStatus = 'Approval Rejected';
-          break;
-        case 'revise':
-          newWorkflowStatus = WorkflowStatus.ApprovalChanges;
-          newStatus = 'Approval Changes Required';
-          break;
-        default:
-          throw new Error('Invalid decision');
-      }
+      const newStatus = decision === 'approve' ? 
+        'Approved' : 
+        'Approval Rejected';
 
       const updatedOpportunity = {
         ...opportunity,
         workflowStatus: newWorkflowStatus,
         status: newStatus,
         approvalComments: comments,
-        approvalLevel: decision === 'approve' ? approvalLevel : undefined
       };
 
       await opportunityApi.update(updatedOpportunity);
 
+      // Map decision to the correct format for history logging
+      const mappedDecision = decision === 'approve' ? 'approved' : 'rejected';
+
       // Log the approval decision
-      if (decision === 'approve' || decision === 'reject') {
-        const mappedDecision = decision === 'approve' ? 'approved' : 'rejected';
-        await HistoryLoggingService.logApprovalDecision(
-          opportunityId,
-          mappedDecision,
-          currentUser,
-          `${approvalLevel === 'conditional' ? 'Conditional approval' : 'Final approval'}. ${comments}`
-        );
-      } else if (decision === 'revise') {
-        await HistoryLoggingService.logCustomEvent(
-          opportunityId,
-          'Approval Changes Requested',
-          currentUser,
-          comments
-        );
-      }
+      await HistoryLoggingService.logApprovalDecision(
+        opportunityId,
+        mappedDecision,
+        currentUser,
+        comments
+      );
 
       // Log status change
       await HistoryLoggingService.logStatusChange(
@@ -143,7 +114,6 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
 
       // Reset form and close dialog
       setDecision('');
-      setApprovalLevel('');
       setComments('');
       setError(null);
       
@@ -157,51 +127,51 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
     }
   };
 
+  const handleDialogClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+  };
+
   return (
     <Dialog 
       open={open} 
       onClose={handleCancel}
       maxWidth="sm"
       fullWidth
+      onClick={handleDialogClick}
+      sx={{
+        '& .MuiDialog-paper': {
+          zIndex: 9999
+        }
+      }}
+      slotProps={{
+        backdrop: {
+          onClick: (event) => {
+            event.stopPropagation();
+            handleCancel(event as React.MouseEvent);
+          }
+        }
+      }}
     >
-      <DialogTitle>Decide Approval</DialogTitle>
-      <DialogContent>
+      <DialogTitle onClick={handleDialogClick}>Decide Approval</DialogTitle>
+      <DialogContent onClick={handleDialogClick}>
         <FormControl 
           fullWidth 
           margin="normal"
           error={!!error && !decision}
+          onClick={handleDialogClick}
         >
           <InputLabel>Decision</InputLabel>
           <Select
             label="Decision"
             value={decision}
             onChange={handleDecisionChange}
+            onClick={handleDialogClick}
           >
-            <MenuItem value="approve">Approve</MenuItem>
-            <MenuItem value="reject">Reject</MenuItem>
-            <MenuItem value="revise">Request Changes</MenuItem>
+            <MenuItem value="approve" onClick={(e) => e.stopPropagation()}>Approve</MenuItem>
+            <MenuItem value="reject" onClick={(e) => e.stopPropagation()}>Reject</MenuItem>
           </Select>
           {error && !decision && <FormHelperText>Please select a decision</FormHelperText>}
         </FormControl>
-
-        {decision === 'approve' && (
-          <FormControl 
-            fullWidth 
-            margin="normal"
-            error={!!error && !approvalLevel}
-          >
-            <InputLabel>Approval Level</InputLabel>
-            <Select
-              label="Approval Level"
-              value={approvalLevel}
-              onChange={handleApprovalLevelChange}
-            >
-              <MenuItem value="final">Final Approval</MenuItem>
-              <MenuItem value="conditional">Conditional Approval</MenuItem>
-            </Select>
-            {error && !approvalLevel && <FormHelperText>Please select an approval level</FormHelperText>}
-          </FormControl>
-        )}
 
         <TextField
           margin="normal"
@@ -210,22 +180,28 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
           rows={4}
           fullWidth
           variant="outlined"
-          placeholder="Enter your approval decision comments"
+          placeholder={decision === 'reject' ? 
+            "Please provide rejection comments" : 
+            "Enter your approval comments"}
           value={comments}
           onChange={handleCommentsChange}
           error={!!error && !comments.trim()}
           helperText={error && !comments.trim() ? 'Comments are required' : error}
+          onClick={handleDialogClick}
         />
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleCancel} color="inherit">
+      <DialogActions onClick={handleDialogClick}>
+        <Button 
+          onClick={handleCancel} 
+          color="inherit"
+        >
           Cancel
         </Button>
         <Button 
           variant="contained" 
           color="primary"
           onClick={handleSubmit}
-          disabled={!decision || (decision === 'approve' && !approvalLevel) || !comments.trim()}
+          disabled={!decision || !comments.trim()}
         >
           Submit Decision
         </Button>

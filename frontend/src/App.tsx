@@ -1,4 +1,4 @@
-import { screensArrayType, projectManagementAppContextType, User, Project, GoNoGoDecision, OpportunityTracking } from './types'
+import { screensArrayType, projectManagementAppContextType, User, Project, GoNoGoDecision, OpportunityTracking, UserWithRole  } from './types'
 import { createContext, useState, useEffect } from 'react'
 import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails } from './pages'
 import { Navbar } from './components/navigation/Navbar'
@@ -7,7 +7,7 @@ import { ResourceManagement } from './components/ResourceManagement'
 import { ReportsList } from './components/ReportsList'
 import { NotificationCenter } from './components/navigation/NotificationCenter'
 import { authApi } from './dummyapi/api'
-import GoNoGoForm from './components/forms/GoNoGoForm'
+import { PermissionType } from './dummyapi/database/dummyRoles'
 import BidPreparationForm from './components/forms/BidPreparationForm'
 import { Forms } from './pages/Forms'
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
@@ -18,8 +18,65 @@ function App() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [selectedProject, setSelectedProject] = useState<Project | OpportunityTracking | null>(null)
-  const [currentGoNoGoDecision, setCurrentGoNoGoDecision] = useState<GoNoGoDecision | null>(null)
 
+  const [currentGoNoGoDecision, setCurrentGoNoGoDecision] = useState<GoNoGoDecision | null>(null)
+  const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
+  const [canEditOpportunity, setCanEditOpportunity] = useState(false);
+  const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
+  const [canSubmitForReview, setCanSubmitForReview] = useState(false);
+  const [canReviewBD, setCanReviewBD] = useState(false);
+  const [canApproveBD, setCanApproveBD] = useState(false);
+  const [canSubmitForApproval, setCanSubmitForApproval] = useState(false);
+
+  useEffect(() => {
+    const checkUserPermissions = async () => {
+      try {
+        const user = await authApi.getCurrentUser();
+        
+        if (!user) {
+          setCurrentUser(null);
+          setCanEditOpportunity(false);
+          setCanDeleteOpportunity(false);
+          setCanSubmitForReview(false);
+          setCanReviewBD(false);
+          setCanApproveBD(false);
+          return;
+        }
+
+        setCurrentUser(user);
+
+        if (user.roleDetails) {
+          setCanEditOpportunity(
+            user.roleDetails.permissions.includes(PermissionType.EDIT_BUSINESS_DEVELOPMENT)
+          );
+          setCanDeleteOpportunity(
+            user.roleDetails.permissions.includes(PermissionType.DELETE_BUSINESS_DEVELOPMENT)
+          );
+          setCanSubmitForReview(
+            user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
+          );
+          setCanSubmitForApproval(
+            user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL)
+          );
+          setCanReviewBD(
+            user.roleDetails.permissions.includes(PermissionType.REVIEW_BUSINESS_DEVELOPMENT)
+          );
+          setCanApproveBD(
+            user.roleDetails.permissions.includes(PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
+          );
+        }
+      } catch (error) {
+        console.error('Error checking user permissions:', error);
+        setCanEditOpportunity(false);
+        setCanDeleteOpportunity(false);
+        setCanSubmitForReview(false);
+        setCanReviewBD(false);
+        setCanApproveBD(false);
+      }
+    };
+    
+    checkUserPermissions();
+  }, [user]);
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -41,6 +98,7 @@ function App() {
         setIsLoading(false);
       }
     };
+    
 
     checkAuth();
   }, []);
@@ -82,6 +140,8 @@ function App() {
     );
   }
 
+ 
+  
   return (
     <projectManagementAppContext.Provider value={{
       screenState, 
@@ -94,7 +154,18 @@ function App() {
       selectedProject,
       setSelectedProject,
       currentGoNoGoDecision,
-      setCurrentGoNoGoDecision
+      setCurrentGoNoGoDecision,
+      currentUser,setCurrentUser,canEditOpportunity,
+      setCanEditOpportunity,
+      canDeleteOpportunity,
+  setCanDeleteOpportunity,
+  canSubmitForReview,
+  setCanSubmitForReview,
+  canReviewBD,
+  setCanReviewBD,
+  canApproveBD,
+  setCanApproveBD,
+  canSubmitForApproval, setCanSubmitForApproval
     }}>
       {isAuthenticated && <Navbar />}
       {screenArray[screenState]}

@@ -9,7 +9,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormHelperText
+  FormHelperText,
+  Backdrop
 } from '@mui/material';
 import { UserRole } from '../../dummyapi/database/dummyusers';
 import { getUsersByRole } from '../../dummyapi/database/dummyusers';
@@ -22,7 +23,7 @@ interface SendForReviewProps {
   open: boolean;
   onClose: () => void;
   opportunityId?: number;
-  currentUser: string;
+  currentUser: string | undefined;
   onSubmit?: () => void;
 }
 
@@ -125,6 +126,31 @@ const SendForReview: React.FC<SendForReviewProps> = ({
       onClose={handleCancel}
       maxWidth="sm"
       fullWidth
+// Prevent event propagation to underlying elements
+      onClick={(e) => e.stopPropagation()}
+      sx={{
+        '& .MuiDialog-paper': {
+          zIndex: 10000,
+          position: 'relative'
+        },
+        zIndex: 10000
+      }}
+      // Add backdrop to prevent interactions with underlying elements
+      BackdropComponent={Backdrop}
+      BackdropProps={{
+        sx: {
+          backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          zIndex: 9999
+        }
+      }}
+      PaperProps={{
+        style: {
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
+        }
+      }}
     >
       <DialogTitle>Send for Review</DialogTitle>
       <DialogContent>
@@ -132,23 +158,47 @@ const SendForReview: React.FC<SendForReviewProps> = ({
           fullWidth 
           margin="normal" 
           error={!!error}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              zIndex: 10001
+            },
+            '& .MuiSelect-select': {
+              zIndex: 10002
+            }
+          }}
         >
           <InputLabel>Business Development Head</InputLabel>
           <Select
             value={selectedReviewer}
             onChange={handleReviewerChange}
             label="Business Development Head"
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  zIndex: 10003
+                }
+              },
+              sx: {
+                zIndex: 10003
+              }
+            }}
           >
             {reviewers.map((reviewer) => (
-              <MenuItem key={reviewer.id} value={reviewer.id}>
+              <MenuItem 
+                key={reviewer.id} 
+                value={reviewer.id}
+                sx={{
+                  zIndex: 10004
+                }}
+              >
                 {reviewer.name}
               </MenuItem>
             ))}
           </Select>
-          {error && <FormHelperText>{error}</FormHelperText>}
+          {error && <FormHelperText sx={{ zIndex: 1560 }}>{error}</FormHelperText>}
         </FormControl>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ zIndex: 1550 }}>
         <Button onClick={handleCancel} color="inherit">
           Cancel
         </Button>

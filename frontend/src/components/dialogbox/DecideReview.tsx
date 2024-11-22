@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog,
   DialogTitle,
@@ -15,6 +15,7 @@ import {
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
+import { getUsersByRole, UserRole, AuthUser } from '../../dummyapi/database/dummyusers';
 
 interface DecideReviewProps {
   open: boolean;
@@ -33,32 +34,60 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 }) => {
   const [decision, setDecision] = useState('');
   const [comments, setComments] = useState('');
+  const [selectedManager, setSelectedManager] = useState<number | ''>('');
+  const [regionalManagers, setRegionalManagers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Get all Regional Manager users
+    const managers = getUsersByRole(UserRole.RegionalManager);
+    setRegionalManagers(managers);
+  }, []);
+
   const handleDecisionChange = (event: any) => {
+    event.stopPropagation();
     setDecision(event.target.value);
+    setError(null);
+    // Reset fields when decision changes
+    setComments('');
+    setSelectedManager('');
+  };
+
+  const handleManagerChange = (event: any) => {
+    event.stopPropagation();
+    setSelectedManager(event.target.value);
     setError(null);
   };
 
   const handleCommentsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
     setComments(event.target.value);
+    setError(null);
   };
 
-  const handleCancel = () => {
+  const handleCancel = (event: React.MouseEvent) => {
+    event.stopPropagation();
     setDecision('');
     setComments('');
+    setSelectedManager('');
     setError(null);
     onClose();
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: React.MouseEvent) => {
+    event.stopPropagation();
     if (!decision) {
       setError('Please select a decision');
       return;
     }
 
-    if (!comments.trim()) {
-      setError('Please provide comments for your decision');
+    if (decision === 'approve' && !selectedManager) {
+      setError('Please select a Regional Manager');
+      return;
+    }
+
+    if (decision === 'reject' && !comments.trim()) {
+      setError('Please provide comments for rejection');
       return;
     }
 
@@ -76,44 +105,37 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       let newWorkflowStatus: WorkflowStatus;
       let newStatus: string;
 
-      switch (decision) {
-        case 'approve':
-          newWorkflowStatus = WorkflowStatus.SentForApproval;
-          newStatus = 'Pending Approval';
-          break;
-        case 'reject':
-          newWorkflowStatus = WorkflowStatus.Initial;
-          newStatus = 'Review Rejected';
-          break;
-        case 'revise':
-          newWorkflowStatus = WorkflowStatus.ReviewChanges;
-          newStatus = 'Review Changes Required';
-          break;
-        default:
-          throw new Error('Invalid decision');
+      if (decision === 'approve') {
+        newWorkflowStatus = WorkflowStatus.SentForApproval;
+        newStatus = 'Pending Approval';
+      } else {
+        newWorkflowStatus = WorkflowStatus.Initial;
+        newStatus = 'Review Rejected';
       }
 
       const updatedOpportunity = {
         ...opportunity,
         workflowStatus: newWorkflowStatus,
         status: newStatus,
-        reviewComments: comments
+        reviewComments: comments,
+        approvalManagerId: typeof selectedManager === 'number' ? selectedManager : undefined
       };
 
       await opportunityApi.update(updatedOpportunity);
 
       // Log the review decision
-      if (decision === 'approve' || decision === 'reject') {
+      if (decision === 'approve') {
+        const selectedManagerDetails = regionalManagers.find(m => m.id === selectedManager);
         await HistoryLoggingService.logReviewDecision(
           opportunityId,
-          decision === 'approve' ? 'approved' : 'rejected',
+          'approved',
           currentUser,
-          comments
+          `Sent for approval to ${selectedManagerDetails?.name}`
         );
-      } else if (decision === 'revise') {
-        await HistoryLoggingService.logCustomEvent(
+      } else {
+        await HistoryLoggingService.logReviewDecision(
           opportunityId,
-          'Review Changes Requested',
+          'rejected',
           currentUser,
           comments
         );
@@ -130,6 +152,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       // Reset form and close dialog
       setDecision('');
       setComments('');
+      setSelectedManager('');
       setError(null);
       onClose();
       
@@ -142,48 +165,99 @@ const DecideReview: React.FC<DecideReviewProps> = ({
     }
   };
 
+  const handleDialogClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+  };
+
   return (
     <Dialog 
       open={open} 
       onClose={handleCancel}
       maxWidth="sm"
       fullWidth
+      onClick={handleDialogClick}
+      sx={{
+        '& .MuiDialog-paper': {
+          zIndex: 9999
+        }
+      }}
+      slotProps={{
+        backdrop: {
+          onClick: (event) => {
+            event.stopPropagation();
+            handleCancel(event as React.MouseEvent);
+          }
+        }
+      }}
     >
-      <DialogTitle>Decide Review</DialogTitle>
-      <DialogContent>
+      <DialogTitle onClick={handleDialogClick}>Decide Review</DialogTitle>
+      <DialogContent onClick={handleDialogClick}>
         <FormControl 
           fullWidth 
           margin="normal"
           error={!!error}
+          onClick={handleDialogClick}
         >
           <InputLabel>Decision</InputLabel>
           <Select
             value={decision}
             onChange={handleDecisionChange}
             label="Decision"
+            onClick={handleDialogClick}
           >
-            <MenuItem value="approve">Approve and Send for Final Approval</MenuItem>
-            <MenuItem value="reject">Reject</MenuItem>
-            <MenuItem value="revise">Request Revision</MenuItem>
+            <MenuItem value="approve" onClick={(e) => e.stopPropagation()}>Approve</MenuItem>
+            <MenuItem value="reject" onClick={(e) => e.stopPropagation()}>Reject</MenuItem>
           </Select>
           {error && <FormHelperText>{error}</FormHelperText>}
         </FormControl>
 
-        <TextField
-          margin="normal"
-          label="Comments"
-          multiline
-          rows={4}
-          fullWidth
-          variant="outlined"
-          placeholder="Enter your decision comments"
-          value={comments}
-          onChange={handleCommentsChange}
-          error={!!error && !comments.trim()}
-          helperText={error && !comments.trim() ? 'Comments are required' : ''}
-        />
+        {decision === 'approve' && (
+          <FormControl 
+            fullWidth 
+            margin="normal"
+            error={!!error && !selectedManager}
+            onClick={handleDialogClick}
+          >
+            <InputLabel>Regional Manager</InputLabel>
+            <Select
+              value={selectedManager}
+              onChange={handleManagerChange}
+              label="Regional Manager"
+              onClick={handleDialogClick}
+            >
+              {regionalManagers.map((manager) => (
+                <MenuItem 
+                  key={manager.id} 
+                  value={manager.id}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {manager.name}
+                </MenuItem>
+              ))}
+            </Select>
+            {error && !selectedManager && <FormHelperText>{error}</FormHelperText>}
+          </FormControl>
+        )}
+
+        {decision === 'reject' && (
+          <TextField
+            margin="normal"
+            label="Rejection Comments"
+            multiline
+            rows={4}
+            fullWidth
+            variant="outlined"
+            placeholder="Enter your rejection comments"
+            value={comments}
+            onChange={handleCommentsChange}
+            error={!!error && !comments.trim()}
+            helperText={error && !comments.trim() ? 'Comments are required for rejection' : ''}
+            required
+            onClick={handleDialogClick}
+          />
+        )}
       </DialogContent>
-      <DialogActions>
+      <DialogActions onClick={handleDialogClick}>
         <Button onClick={handleCancel} color="inherit">
           Cancel
         </Button>

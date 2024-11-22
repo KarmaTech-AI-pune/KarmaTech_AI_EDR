@@ -39,6 +39,20 @@ export type projectManagementAppContextType  = {
     setSelectedProject?: React.Dispatch<React.SetStateAction<Project | OpportunityTracking | null>>;
     currentGoNoGoDecision: GoNoGoDecision | null;
     setCurrentGoNoGoDecision: React.Dispatch<React.SetStateAction<GoNoGoDecision | null>>;
+    currentUser: UserWithRole | null;
+    setCurrentUser: React.Dispatch<React.SetStateAction<UserWithRole | null>>;
+    canEditOpportunity: boolean;
+    setCanEditOpportunity : React.Dispatch<React.SetStateAction<boolean>>;
+    canDeleteOpportunity: boolean;
+    setCanDeleteOpportunity : React.Dispatch<React.SetStateAction<boolean>>;
+    canSubmitForReview: boolean;
+    setCanSubmitForReview : React.Dispatch<React.SetStateAction<boolean>>;
+    canReviewBD: boolean;
+    setCanReviewBD : React.Dispatch<React.SetStateAction<boolean>>;
+    canApproveBD: boolean;
+    setCanApproveBD: React.Dispatch<React.SetStateAction<boolean>>;
+    canSubmitForApproval: boolean;
+    setCanSubmitForApproval : React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export enum ProjectStatus {
