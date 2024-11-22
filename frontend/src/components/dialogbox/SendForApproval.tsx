@@ -14,7 +14,7 @@ import {
   FormHelperText
 } from '@mui/material';
 import { UserRole } from '../../dummyapi/database/dummyusers';
-import { getUsersByRole } from '../../dummyapi/database/dummyusers';
+import { getUsersByRole, getUserById } from '../../dummyapi/database/dummyusers';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
 import { AuthUser } from '../../dummyapi/database/dummyusers';
@@ -35,23 +35,47 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   currentUser,
   onSubmit 
 }) => {
-  const [selectedApprover, setSelectedApprover] = useState<string>('');
+  const [selectedApprover, setSelectedApprover] = useState<number>(0);
   const [approvers, setApprovers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [manager,setManager] = useState<string | null>(null);
 
   useEffect(() => {
+    const checkManager = async() =>{
+      if(opportunityId){
+        let res =  await opportunityApi.getById(opportunityId)
+        console.log("opportunity",res)
+
+        if(res.approvalManagerId)
+        {
+          let managerUser = await getUserById(res.approvalManagerId)
+          if(managerUser)
+          {
+          setManager(managerUser.name)
+          setSelectedApprover(res.approvalManagerId)
+          }
+          else setError("404: ManagerUser not found")
+        }
+        else{
+          
+        }
+      }
+      else console.log("No ID for opp")
+
+    }
     // Get all Regional Managers
     const regionalManagers = getUsersByRole(UserRole.RegionalManager);
     setApprovers(regionalManagers);
+    checkManager();
   }, []);
 
   const handleApproverChange = (event: SelectChangeEvent) => {
-    setSelectedApprover(event.target.value);
+    setSelectedApprover(Number(event.target.value));
     setError(null);
   };
 
   const handleCancel = () => {
-    setSelectedApprover('');
+    setSelectedApprover(0);
     setError(null);
     onClose();
   };
@@ -69,7 +93,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       }
 
       // Find selected approver details
-      const selectedApproverDetails = approvers.find(a => a.id === Number(selectedApprover));
+      const selectedApproverDetails = approvers.find(a => a.id === selectedApprover);
       if (!selectedApproverDetails) {
         throw new Error('Selected approver not found');
       }
@@ -78,7 +102,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       const updatedOpportunity = {
         ...opportunity,
         workflowStatus: WorkflowStatus.SentForApproval,
-        approvalManagerId: Number(selectedApprover),
+        approvalManagerId: selectedApprover,
         status: 'Pending Approval'
       };
 
@@ -93,7 +117,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       );
 
       // Reset and close dialog
-      setSelectedApprover('');
+      setSelectedApprover(0);
       setError(null);
       
       if (onSubmit) {
@@ -134,19 +158,24 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
           error={!!error}
           sx={{ zIndex: 1550 }}
         >
+           {manager? (<div>
+            Send to {manager} for approval?
+          </div> ) : (
+            <>
           <InputLabel sx={{ zIndex: 1560 }}>Regional Manager</InputLabel>
           <Select
-            value={selectedApprover}
+            value={selectedApprover.toString()}
             onChange={handleApproverChange}
             label="Regional Manager"
             sx={{ zIndex: 1550 }}
           >
             {approvers.map((approver) => (
-              <MenuItem key={approver.id} value={approver.id.toString()}>
+              <MenuItem key={approver.id} value={approver.id}>
                 {approver.name}
               </MenuItem>
             ))}
           </Select>
+          </>)}
           {error && <FormHelperText sx={{ zIndex: 1560 }}>{error}</FormHelperText>}
         </FormControl>
       </DialogContent>
