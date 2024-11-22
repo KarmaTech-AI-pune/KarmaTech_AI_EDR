@@ -13,7 +13,7 @@ import {
   Backdrop
 } from '@mui/material';
 import { UserRole } from '../../dummyapi/database/dummyusers';
-import { getUsersByRole } from '../../dummyapi/database/dummyusers';
+import { getUsersByRole, getUserById } from '../../dummyapi/database/dummyusers';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
 import { AuthUser } from '../../dummyapi/database/dummyusers';
@@ -38,10 +38,36 @@ const SendForReview: React.FC<SendForReviewProps> = ({
   const [reviewers, setReviewers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const [manager,setManager] = useState<string | null>(null)
+
   useEffect(() => {
     // Get all Business Development Head users
+    const checkManager = async() =>{
+      if(opportunityId){
+        let res =  await opportunityApi.getById(opportunityId)
+        console.log("opportunity",res)
+
+        if(res.reviewManagerId)
+        {
+          let managerUser = await getUserById(res.reviewManagerId)
+          if(managerUser)
+          {
+          setManager(managerUser?.name)
+          setSelectedReviewer(res.reviewManagerId)
+          }
+          else setError("404: ManagerUser not found")
+        }
+        else{
+          
+        }
+      }
+      else console.log("No ID for opp")
+
+    }
     const bdHeads = getUsersByRole(UserRole.BusinessDevelopmentHead);
     setReviewers(bdHeads);
+    checkManager()
+    
   }, []);
 
   const handleReviewerChange = (event: any) => {
@@ -167,8 +193,13 @@ const SendForReview: React.FC<SendForReviewProps> = ({
             }
           }}
         >
-          <InputLabel>Business Development Head</InputLabel>
-          <Select
+         
+          {manager? (<div>
+            Send to {manager} for review?
+          </div> ) : (
+            <>
+             <InputLabel>Business Development Head</InputLabel>
+            <Select
             value={selectedReviewer}
             onChange={handleReviewerChange}
             label="Business Development Head"
@@ -195,6 +226,9 @@ const SendForReview: React.FC<SendForReviewProps> = ({
               </MenuItem>
             ))}
           </Select>
+          </>
+          )}
+          
           {error && <FormHelperText sx={{ zIndex: 1560 }}>{error}</FormHelperText>}
         </FormControl>
       </DialogContent>

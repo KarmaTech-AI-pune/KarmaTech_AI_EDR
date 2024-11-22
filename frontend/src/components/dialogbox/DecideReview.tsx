@@ -120,9 +120,9 @@ const DecideReview: React.FC<DecideReviewProps> = ({
         reviewComments: comments,
         approvalManagerId: typeof selectedManager === 'number' ? selectedManager : undefined
       };
-
-      await opportunityApi.update(updatedOpportunity);
-
+      console.log(updatedOpportunity)
+      let res =  await opportunityApi.update(updatedOpportunity);
+      console.log(res)
       // Log the review decision
       if (decision === 'approve') {
         const selectedManagerDetails = regionalManagers.find(m => m.id === selectedManager);
