@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { UserRole } from '../../dummyapi/database/dummyusers';
 import { getUsersByRole, getUserById } from '../../dummyapi/database/dummyusers';
+import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { AuthUser } from '../../dummyapi/database/dummyusers';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
@@ -39,26 +40,58 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   const [manager, setManager] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkManager = async() => {
-      try {
-        const res = await getUserById(selectedApprover);
-        if (res) {
-          setManager(res.name);
-        }
-      } catch (err) {
-        console.error("Error fetching manager:", err);
-        setError("Failed to fetch manager details");
-      }
-    };
+    
+    const checkManager = async() =>{
+      if(opportunityId){
+        let res =  await opportunityApi.getById(opportunityId)
+        console.log("opportunity",res)
 
+        if(res.approvalManagerId)
+        {
+          let managerUser = await getUserById(res.approvalManagerId)
+          if(managerUser)
+          {
+          setManager(managerUser.name)
+          setSelectedApprover(res.approvalManagerId)
+          }
+          else setError("404: ManagerUser not found")
+        }
+      }
+      else console.log("No ID for opp")
+    }
     // Get all Regional Managers
     const regionalManagers = getUsersByRole(UserRole.RegionalManager);
     setApprovers(regionalManagers);
-    
-    if (selectedApprover) {
-      checkManager();
-    }
+    checkManager();
   }, [selectedApprover]);
+
+  /*
+  useEffect(() => {
+    const checkManager = async() =>{
+      if(opportunityId){
+        let res =  await opportunityApi.getById(opportunityId)
+        console.log("opportunity",res)
+
+        if(res.approvalManagerId)
+        {
+          let managerUser = await getUserById(res.approvalManagerId)
+          if(managerUser)
+          {
+          setManager(managerUser.name)
+          setSelectedApprover(res.approvalManagerId)
+          }
+          else setError("404: ManagerUser not found")
+        }
+      }
+      else console.log("No ID for opp")
+    }
+    // Get all Regional Managers
+    const regionalManagers = getUsersByRole(UserRole.RegionalManager);
+    setApprovers(regionalManagers);
+    checkManager();
+  }, []);
+
+  */
 
   const handleApproverChange = (event: SelectChangeEvent) => {
     setSelectedApprover(Number(event.target.value));
