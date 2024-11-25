@@ -35,6 +35,7 @@ import { PermissionType } from '../../dummyapi/database/dummyRoles';
 import { DecideApproval, DecideReview, SendForReview } from '../dialogbox';
 import { OpportunityTrackingWorkflow } from '../common/OpportunityTrackingWorkflow';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
+import { BDChips } from '../common/BDChips';
 
 export const OpportunityItem: React.FC<OpportunityItemProps> = ({ 
   opportunity, 
@@ -336,9 +337,11 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             mb: 2
           }}>
             <Box>
-              <Typography variant="h6" color="primary" gutterBottom>
-                {opportunity.workName || 'Unnamed Opportunity'}
-              </Typography>
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="h6" color="primary">
+                  {opportunity.workName || 'Unnamed Opportunity'}
+                </Typography>
+              </Box>
               <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
                 <Chip 
                   label={`Stage ${opportunity.stage || 'N/A'}`}
@@ -365,27 +368,30 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                 />
               </Box>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <OpportunityTrackingWorkflow onOpportunityUpdated={onOpportunityUpdated} opportunity={opportunity} />
-              {canEditOpportunity && (
-                <Button 
-                  onClick={handleEditClick}
-                  size="small"
-                  startIcon={<Edit />}
-                >
-                  Edit
-                </Button>
-              )}
-              {canDeleteOpportunity && (
-                <Button 
-                  onClick={handleDeleteClick}
-                  size="small"
-                  color="error"
-                  startIcon={<Delete />}
-                >
-                  Delete
-                </Button>
-              )}
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <OpportunityTrackingWorkflow onOpportunityUpdated={onOpportunityUpdated} opportunity={opportunity} />
+                {canEditOpportunity && (
+                  <Button 
+                    onClick={handleEditClick}
+                    size="small"
+                    startIcon={<Edit />}
+                  >
+                    Edit
+                  </Button>
+                )}
+                {canDeleteOpportunity && (
+                  <Button 
+                    onClick={handleDeleteClick}
+                    size="small"
+                    color="error"
+                    startIcon={<Delete />}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </Box>
+              <BDChips opportunityId={opportunity.id} />
             </Box>
           </Box>
 

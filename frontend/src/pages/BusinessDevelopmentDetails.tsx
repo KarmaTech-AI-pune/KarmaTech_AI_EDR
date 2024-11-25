@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useContext,} from 'react';
 import { Container, Typography, Box } from '@mui/material';
 import { projectManagementAppContext } from '../App';
 import { BusinessDevelopmentWidget } from '../components/widgets/BusinessDevelopmentWidget';
@@ -6,6 +6,7 @@ import { HistoryWidget } from '../components/widgets/HistoryWidget';
 import { OpportunityTracking } from '../types';
 import { getHistoriesByOpportunityId } from '../dummyapi/database/dummyOpportunityHistory';
 import { OpportunityTrackingWorkflow } from '../components/common/OpportunityTrackingWorkflow';
+import { BDChips } from '../components/common/BDChips';
 import { opportunityApi } from '../dummyapi/opportunityApi';
 
 export const BusinessDevelopmentDetails = () => {
@@ -38,14 +39,19 @@ export const BusinessDevelopmentDetails = () => {
   return (
     <Container>
       <Box sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4">
-            {opportunity.workName}
-          </Typography>
-          <OpportunityTrackingWorkflow 
-            opportunity={opportunity} 
-            onOpportunityUpdated={handleOpportunityUpdate}
-          />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h4">
+              {opportunity.workName}
+            </Typography>
+            <OpportunityTrackingWorkflow 
+              opportunity={opportunity} 
+              onOpportunityUpdated={handleOpportunityUpdate}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <BDChips opportunityId={opportunity.id} />
+          </Box>
         </Box>
         
         <BusinessDevelopmentWidget opportunity={opportunity} />

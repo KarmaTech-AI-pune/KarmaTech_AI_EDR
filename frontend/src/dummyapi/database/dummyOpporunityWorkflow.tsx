@@ -72,6 +72,14 @@ export const workflowData: WorkflowEntry[] = [
         workflowId: 1, // Maps to "Initial" status
         createdAt: '2024-01-18T10:00:00Z',
         updatedAt: '2024-01-18T10:00:00Z'
+    },
+    {
+        id: 5,
+        opportunityId: 5,
+        formStage: 'goNoGo',
+        workflowId: 1, // Maps to "Initial" status
+        createdAt: '2024-01-19T10:00:00Z',
+        updatedAt: '2024-01-19T10:00:00Z'
     }
 ];
 
