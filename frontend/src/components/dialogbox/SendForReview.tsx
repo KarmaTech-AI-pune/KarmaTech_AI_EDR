@@ -125,25 +125,28 @@ const SendForReview: React.FC<SendForReviewProps> = ({
     return null;
   }
 
+  const stopEventPropagation = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <Dialog 
       open={open} 
       onClose={handleCancel}
       maxWidth="sm"
       fullWidth
-      onClick={(e) => e.stopPropagation()}
+      onClick={stopEventPropagation}
+      onKeyDown={stopEventPropagation}
       sx={{
         '& .MuiDialog-paper': {
-          zIndex: 10000,
           position: 'relative'
         },
-        zIndex: 10000
+        zIndex: 1300 // Standard MUI dialog z-index
       }}
       BackdropComponent={Backdrop}
       BackdropProps={{
         sx: {
-          backgroundColor: 'rgba(0, 0, 0, 0.1)',
-          zIndex: 9999
+          backgroundColor: 'rgba(0, 0, 0, 0.5)'
         }
       }}
       PaperProps={{
@@ -152,25 +155,17 @@ const SendForReview: React.FC<SendForReviewProps> = ({
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)'
-        }
+        },
+        onClick: stopEventPropagation
       }}
     >
       <DialogTitle>Send for Review</DialogTitle>
-      <DialogContent>
+      <DialogContent onClick={stopEventPropagation}>
         <FormControl 
           fullWidth 
           margin="normal" 
           error={!!error}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              zIndex: 10001
-            },
-            '& .MuiSelect-select': {
-              zIndex: 10002
-            }
-          }}
         >
-         
           {manager ? (
             <div>
               Send to {manager} for review?
@@ -182,24 +177,16 @@ const SendForReview: React.FC<SendForReviewProps> = ({
                 value={selectedReviewer}
                 onChange={handleReviewerChange}
                 label="Business Development Head"
+                onClick={stopEventPropagation}
                 MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      zIndex: 10003
-                    }
-                  },
-                  sx: {
-                    zIndex: 10003
-                  }
+                  onClick: stopEventPropagation
                 }}
               >
                 {reviewers.map((reviewer) => (
                   <MenuItem 
                     key={reviewer.id} 
                     value={reviewer.id}
-                    sx={{
-                      zIndex: 10004
-                    }}
+                    onClick={stopEventPropagation}
                   >
                     {reviewer.name}
                   </MenuItem>
@@ -208,10 +195,10 @@ const SendForReview: React.FC<SendForReviewProps> = ({
             </>
           )}
           
-          {error && <FormHelperText sx={{ zIndex: 1560 }}>{error}</FormHelperText>}
+          {error && <FormHelperText>{error}</FormHelperText>}
         </FormControl>
       </DialogContent>
-      <DialogActions sx={{ zIndex: 1550 }}>
+      <DialogActions onClick={stopEventPropagation}>
         <Button onClick={handleCancel} color="inherit">
           Cancel
         </Button>

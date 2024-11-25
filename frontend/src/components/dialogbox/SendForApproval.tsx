@@ -10,7 +10,8 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
-  FormHelperText
+  FormHelperText,
+  Backdrop
 } from '@mui/material';
 import { UserRole } from '../../dummyapi/database/dummyusers';
 import { getUsersByRole, getUserById } from '../../dummyapi/database/dummyusers';
@@ -40,7 +41,6 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   const [manager, setManager] = useState<string | null>(null);
 
   useEffect(() => {
-    
     const checkManager = async() =>{
       if(opportunityId){
         let res =  await opportunityApi.getById(opportunityId)
@@ -64,34 +64,6 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
     setApprovers(regionalManagers);
     checkManager();
   }, [selectedApprover]);
-
-  /*
-  useEffect(() => {
-    const checkManager = async() =>{
-      if(opportunityId){
-        let res =  await opportunityApi.getById(opportunityId)
-        console.log("opportunity",res)
-
-        if(res.approvalManagerId)
-        {
-          let managerUser = await getUserById(res.approvalManagerId)
-          if(managerUser)
-          {
-          setManager(managerUser.name)
-          setSelectedApprover(res.approvalManagerId)
-          }
-          else setError("404: ManagerUser not found")
-        }
-      }
-      else console.log("No ID for opp")
-    }
-    // Get all Regional Managers
-    const regionalManagers = getUsersByRole(UserRole.RegionalManager);
-    setApprovers(regionalManagers);
-    checkManager();
-  }, []);
-
-  */
 
   const handleApproverChange = (event: SelectChangeEvent) => {
     setSelectedApprover(Number(event.target.value));
@@ -144,34 +116,46 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
     }
   };
 
+  const stopEventPropagation = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <Dialog 
       open={open} 
       onClose={handleCancel}
       maxWidth="sm"
       fullWidth
+      onClick={stopEventPropagation}
+      onKeyDown={stopEventPropagation}
       sx={{
         '& .MuiDialog-paper': {
-          zIndex: 1500,
+          position: 'relative'
         },
-        '& .MuiBackdrop-root': {
-          zIndex: 1400,
+        zIndex: 1300 // Standard MUI dialog z-index
+      }}
+      BackdropComponent={Backdrop}
+      BackdropProps={{
+        sx: {
+          backgroundColor: 'rgba(0, 0, 0, 0.5)'
+        }
+      }}
+      PaperProps={{
+        style: {
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
         },
-        '& .MuiSelect-select': {
-          zIndex: 1600,
-        },
-        '& .MuiPopover-root': {
-          zIndex: 1700,
-        },
+        onClick: stopEventPropagation
       }}
     >
-      <DialogTitle sx={{ zIndex: 1550 }}>Send for Approval</DialogTitle>
-      <DialogContent sx={{ zIndex: 1550 }}>
+      <DialogTitle>Send for Approval</DialogTitle>
+      <DialogContent onClick={stopEventPropagation}>
         <FormControl 
           fullWidth 
           margin="normal"
           error={!!error}
-          sx={{ zIndex: 1550 }}
         >
           {manager ? (
             <div>
@@ -179,25 +163,32 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
             </div>
           ) : (
             <>
-              <InputLabel sx={{ zIndex: 1560 }}>Regional Manager</InputLabel>
+              <InputLabel>Regional Manager</InputLabel>
               <Select
                 value={selectedApprover.toString()}
                 onChange={handleApproverChange}
                 label="Regional Manager"
-                sx={{ zIndex: 1550 }}
+                onClick={stopEventPropagation}
+                MenuProps={{
+                  onClick: stopEventPropagation
+                }}
               >
                 {approvers.map((approver) => (
-                  <MenuItem key={approver.id} value={approver.id}>
+                  <MenuItem 
+                    key={approver.id} 
+                    value={approver.id}
+                    onClick={stopEventPropagation}
+                  >
                     {approver.name}
                   </MenuItem>
                 ))}
               </Select>
             </>
           )}
-          {error && <FormHelperText sx={{ zIndex: 1560 }}>{error}</FormHelperText>}
+          {error && <FormHelperText>{error}</FormHelperText>}
         </FormControl>
       </DialogContent>
-      <DialogActions sx={{ zIndex: 1550 }}>
+      <DialogActions onClick={stopEventPropagation}>
         <Button onClick={handleCancel} color="inherit">
           Cancel
         </Button>
