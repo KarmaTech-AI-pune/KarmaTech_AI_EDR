@@ -12,8 +12,7 @@ import {
   MenuItem,
   FormHelperText
 } from '@mui/material';
-import { opportunityApi } from '../../dummyapi/opportunityApi';
-import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 import { getUsersByRole, UserRole, AuthUser } from '../../dummyapi/database/dummyusers';
 
@@ -97,32 +96,16 @@ const DecideReview: React.FC<DecideReviewProps> = ({
     }
 
     try {
-      const opportunity = await opportunityApi.getById(opportunityId);
-      if (!opportunity) {
-        throw new Error('Opportunity not found');
-      }
+      const newStatus = decision === 'approve' ? 'Pending Approval' : 'Review Rejected';
+      const workflowId = decision === 'approve' ? 4 : 3; // 4 for "Sent for Approval", 3 for "Review Changes"
 
-      let newWorkflowStatus: WorkflowStatus;
-      let newStatus: string;
-
-      if (decision === 'approve') {
-        newWorkflowStatus = WorkflowStatus.SentForApproval;
-        newStatus = 'Pending Approval';
-      } else {
-        newWorkflowStatus = WorkflowStatus.Initial;
-        newStatus = 'Review Rejected';
-      }
-
-      const updatedOpportunity = {
-        ...opportunity,
-        workflowStatus: newWorkflowStatus,
+      // Update both workflow and opportunity in one atomic operation
+      await updateWorkflow(opportunityId, workflowId, {
         status: newStatus,
         reviewComments: comments,
         approvalManagerId: typeof selectedManager === 'number' ? selectedManager : undefined
-      };
-      console.log(updatedOpportunity)
-      let res =  await opportunityApi.update(updatedOpportunity);
-      console.log(res)
+      });
+
       // Log the review decision
       if (decision === 'approve') {
         const selectedManagerDetails = regionalManagers.find(m => m.id === selectedManager);
@@ -144,7 +127,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       // Also log status change
       await HistoryLoggingService.logStatusChange(
         opportunityId,
-        opportunity.status,
+        decision === 'approve' ? 'Under Review' : 'Review Rejected',
         newStatus,
         currentUser
       );

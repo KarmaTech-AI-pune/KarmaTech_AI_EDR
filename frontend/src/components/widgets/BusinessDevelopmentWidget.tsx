@@ -1,6 +1,6 @@
 import { OpportunityTracking } from '../../types';
 import { Card, CardContent, Typography, Grid, Chip, Divider, Box } from '@mui/material';
-import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { getUserById } from '../../dummyapi/database/dummyusers';
 
 interface BusinessDevelopmentWidgetProps {
@@ -29,20 +29,20 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
     }
   };
 
-  const getWorkflowColor = (workflow: WorkflowStatus | undefined) => {
-    if (!workflow) return 'default';
-    switch (workflow) {
-      case WorkflowStatus.Initial:
+  const getWorkflowColor = (workflowId: number) => {
+    const status = getWorkflowStatusById(workflowId)?.status;
+    switch (status) {
+      case "Initial":
         return 'default';
-      case WorkflowStatus.SentForReview:
+      case "Sent for Review":
         return 'info';
-      case WorkflowStatus.ReviewChanges:
+      case "Review Changes":
         return 'warning';
-      case WorkflowStatus.SentForApproval:
+      case "Sent for Approval":
         return 'primary';
-      case WorkflowStatus.ApprovalChanges:
+      case "Approval Changes":
         return 'warning';
-      case WorkflowStatus.Approved:
+      case "Approved":
         return 'success';
       default:
         return 'default';
@@ -81,8 +81,8 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
                 sx={{ mr: 1, mb: 1 }}
               />
               <Chip 
-                label={`Workflow: ${opportunity.workflowStatus || 'Not specified'}`}
-                color={getWorkflowColor(opportunity.workflowStatus)}
+                label={`Workflow: ${getWorkflowStatusById(opportunity.workflowId)?.status || 'Not specified'}`}
+                color={getWorkflowColor(opportunity.workflowId)}
                 sx={{ mb: 1 }}
               />
             </Grid>

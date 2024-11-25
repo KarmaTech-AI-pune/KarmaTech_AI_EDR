@@ -14,8 +14,7 @@ import {
 } from '@mui/material';
 import { UserRole } from '../../dummyapi/database/dummyusers';
 import { getUsersByRole, getUserById } from '../../dummyapi/database/dummyusers';
-import { opportunityApi } from '../../dummyapi/opportunityApi';
-import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { AuthUser } from '../../dummyapi/database/dummyusers';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 
@@ -37,36 +36,29 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   const [selectedApprover, setSelectedApprover] = useState<number>(0);
   const [approvers, setApprovers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [manager,setManager] = useState<string | null>(null);
+  const [manager, setManager] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkManager = async() =>{
-      if(opportunityId){
-        let res =  await opportunityApi.getById(opportunityId)
-        console.log("opportunity",res)
-
-        if(res.approvalManagerId)
-        {
-          let managerUser = await getUserById(res.approvalManagerId)
-          if(managerUser)
-          {
-          setManager(managerUser.name)
-          setSelectedApprover(res.approvalManagerId)
-          }
-          else setError("404: ManagerUser not found")
+    const checkManager = async() => {
+      try {
+        const res = await getUserById(selectedApprover);
+        if (res) {
+          setManager(res.name);
         }
-        else{
-          
-        }
+      } catch (err) {
+        console.error("Error fetching manager:", err);
+        setError("Failed to fetch manager details");
       }
-      else console.log("No ID for opp")
+    };
 
-    }
     // Get all Regional Managers
     const regionalManagers = getUsersByRole(UserRole.RegionalManager);
     setApprovers(regionalManagers);
-    checkManager();
-  }, []);
+    
+    if (selectedApprover) {
+      checkManager();
+    }
+  }, [selectedApprover]);
 
   const handleApproverChange = (event: SelectChangeEvent) => {
     setSelectedApprover(Number(event.target.value));
@@ -86,31 +78,22 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
     }
 
     try {
-      const opportunity = await opportunityApi.getById(opportunityId);
-      if (!opportunity) {
-        throw new Error('Opportunity not found');
-      }
-
       // Find selected approver details
       const selectedApproverDetails = approvers.find(a => a.id === selectedApprover);
       if (!selectedApproverDetails) {
         throw new Error('Selected approver not found');
       }
 
-      // Update opportunity with new workflow status and approver
-      const updatedOpportunity = {
-        ...opportunity,
-        workflowStatus: WorkflowStatus.SentForApproval,
+      // Update both workflow and opportunity in one atomic operation
+      await updateWorkflow(opportunityId, 4, { // 4 is the ID for "Sent for Approval" status
         approvalManagerId: selectedApprover,
         status: 'Pending Approval'
-      };
-
-      await opportunityApi.update(updatedOpportunity);
+      });
 
       // Log the approval request
       await HistoryLoggingService.logCustomEvent(
         opportunityId,
-        'Sent for Approval',
+        "Sent for Approval",
         currentUser,
         `Sent to ${selectedApproverDetails.name} for approval`
       );
@@ -157,24 +140,27 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
           error={!!error}
           sx={{ zIndex: 1550 }}
         >
-           {manager? (<div>
-            Send to {manager} for approval?
-          </div> ) : (
+          {manager ? (
+            <div>
+              Send to {manager} for approval?
+            </div>
+          ) : (
             <>
-          <InputLabel sx={{ zIndex: 1560 }}>Regional Manager</InputLabel>
-          <Select
-            value={selectedApprover.toString()}
-            onChange={handleApproverChange}
-            label="Regional Manager"
-            sx={{ zIndex: 1550 }}
-          >
-            {approvers.map((approver) => (
-              <MenuItem key={approver.id} value={approver.id}>
-                {approver.name}
-              </MenuItem>
-            ))}
-          </Select>
-          </>)}
+              <InputLabel sx={{ zIndex: 1560 }}>Regional Manager</InputLabel>
+              <Select
+                value={selectedApprover.toString()}
+                onChange={handleApproverChange}
+                label="Regional Manager"
+                sx={{ zIndex: 1550 }}
+              >
+                {approvers.map((approver) => (
+                  <MenuItem key={approver.id} value={approver.id}>
+                    {approver.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </>
+          )}
           {error && <FormHelperText sx={{ zIndex: 1560 }}>{error}</FormHelperText>}
         </FormControl>
       </DialogContent>

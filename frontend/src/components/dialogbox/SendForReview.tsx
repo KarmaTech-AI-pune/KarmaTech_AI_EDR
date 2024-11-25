@@ -15,7 +15,7 @@ import {
 import { UserRole } from '../../dummyapi/database/dummyusers';
 import { getUsersByRole, getUserById } from '../../dummyapi/database/dummyusers';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
-import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { AuthUser } from '../../dummyapi/database/dummyusers';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 
@@ -37,38 +37,27 @@ const SendForReview: React.FC<SendForReviewProps> = ({
   const [selectedReviewer, setSelectedReviewer] = useState<number | ''>('');
   const [reviewers, setReviewers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  const [manager,setManager] = useState<string | null>(null)
+  const [manager,setManager] = useState<string | null>(null);
 
   useEffect(() => {
     // Get all Business Development Head users
     const checkManager = async() =>{
       if(opportunityId){
-        let res =  await opportunityApi.getById(opportunityId)
-        console.log("opportunity",res)
-
-        if(res.reviewManagerId)
-        {
-          let managerUser = await getUserById(res.reviewManagerId)
-          if(managerUser)
-          {
-          setManager(managerUser?.name)
-          setSelectedReviewer(res.reviewManagerId)
+        let res =  await opportunityApi.getById(opportunityId);
+        if(res.reviewManagerId) {
+          let managerUser = await getUserById(res.reviewManagerId);
+          if(managerUser) {
+            setManager(managerUser?.name);
+            setSelectedReviewer(res.reviewManagerId);
           }
-          else setError("404: ManagerUser not found")
-        }
-        else{
-          
+          else setError("404: ManagerUser not found");
         }
       }
-      else console.log("No ID for opp")
-
-    }
+    };
     const bdHeads = getUsersByRole(UserRole.BusinessDevelopmentHead);
     setReviewers(bdHeads);
-    checkManager()
-    
-  }, []);
+    checkManager();
+  }, [opportunityId]);
 
   const handleReviewerChange = (event: any) => {
     setSelectedReviewer(event.target.value);
@@ -98,28 +87,18 @@ const SendForReview: React.FC<SendForReviewProps> = ({
     }
 
     try {
-      // Get current opportunity
-      const opportunity = await opportunityApi.getById(opportunityId);
-      if (!opportunity) {
-        throw new Error('Opportunity not found');
-      }
-
       // Find selected reviewer details
       const selectedReviewerDetails = reviewers.find(r => r.id === selectedReviewer);
       if (!selectedReviewerDetails) {
         throw new Error('Selected reviewer not found');
       }
 
-      // Update opportunity with new workflow status and reviewer
-      const updatedOpportunity = {
-        ...opportunity,
-        workflowStatus: WorkflowStatus.SentForReview,
+      // Update both workflow and opportunity in one atomic operation
+      await updateWorkflow(opportunityId, 2, { // 2 is the ID for "Sent for Review" status
         reviewManagerId: selectedReviewer,
         status: 'Under Review',
-        submittedBy: currentUser // Add submitter information
-      };
-
-      await opportunityApi.update(updatedOpportunity);
+        submittedBy: currentUser
+      });
 
       // Log the review request
       await HistoryLoggingService.logSentForReview(
@@ -152,7 +131,6 @@ const SendForReview: React.FC<SendForReviewProps> = ({
       onClose={handleCancel}
       maxWidth="sm"
       fullWidth
-// Prevent event propagation to underlying elements
       onClick={(e) => e.stopPropagation()}
       sx={{
         '& .MuiDialog-paper': {
@@ -161,7 +139,6 @@ const SendForReview: React.FC<SendForReviewProps> = ({
         },
         zIndex: 10000
       }}
-      // Add backdrop to prevent interactions with underlying elements
       BackdropComponent={Backdrop}
       BackdropProps={{
         sx: {
@@ -194,39 +171,41 @@ const SendForReview: React.FC<SendForReviewProps> = ({
           }}
         >
          
-          {manager? (<div>
-            Send to {manager} for review?
-          </div> ) : (
+          {manager ? (
+            <div>
+              Send to {manager} for review?
+            </div>
+          ) : (
             <>
-             <InputLabel>Business Development Head</InputLabel>
-            <Select
-            value={selectedReviewer}
-            onChange={handleReviewerChange}
-            label="Business Development Head"
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  zIndex: 10003
-                }
-              },
-              sx: {
-                zIndex: 10003
-              }
-            }}
-          >
-            {reviewers.map((reviewer) => (
-              <MenuItem 
-                key={reviewer.id} 
-                value={reviewer.id}
-                sx={{
-                  zIndex: 10004
+              <InputLabel>Business Development Head</InputLabel>
+              <Select
+                value={selectedReviewer}
+                onChange={handleReviewerChange}
+                label="Business Development Head"
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      zIndex: 10003
+                    }
+                  },
+                  sx: {
+                    zIndex: 10003
+                  }
                 }}
               >
-                {reviewer.name}
-              </MenuItem>
-            ))}
-          </Select>
-          </>
+                {reviewers.map((reviewer) => (
+                  <MenuItem 
+                    key={reviewer.id} 
+                    value={reviewer.id}
+                    sx={{
+                      zIndex: 10004
+                    }}
+                  >
+                    {reviewer.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </>
           )}
           
           {error && <FormHelperText sx={{ zIndex: 1560 }}>{error}</FormHelperText>}

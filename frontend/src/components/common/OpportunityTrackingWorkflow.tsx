@@ -2,7 +2,7 @@ import {Button} from '@mui/material';
 import { Send} from '@mui/icons-material';
 import { DecideApproval, DecideReview, SendForReview, SendForApproval } from '../dialogbox';
 import { useState, useContext} from 'react';
-import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { workflowStatuses, getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { projectManagementAppContext } from '../../App';
 import { OpportunityTracking } from '../../types';
 
@@ -15,8 +15,6 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
   onOpportunityUpdated,
   opportunity
 }) => {
-
-  
   const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
   const context = useContext(projectManagementAppContext);
 
@@ -32,15 +30,17 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
     }
   };
 
-  const getWorkflowButtonText = (status: WorkflowStatus) => {
+  const getWorkflowButtonText = (workflowId: number) => {
+    const status = getWorkflowStatusById(workflowId)?.status;
+    console.log("WorkflowStatus",status)
     switch (status) {
-      case WorkflowStatus.Initial:
-      case WorkflowStatus.ReviewChanges:
+      case "Initial":
+      case "Review Changes":
         return 'Send for Review';
-      case WorkflowStatus.SentForReview:
+      case "Sent for Review":
         return 'Decide Review';
-      case WorkflowStatus.ApprovalChanges:
-      case WorkflowStatus.SentForApproval:
+      case "Approval Changes":
+      case "Sent for Approval":
         if (context?.canApproveBD) {
           return 'Decide Approval';
         } else if (context?.canSubmitForApproval) {
@@ -51,20 +51,24 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
         return 'Send for Review';
     }
   };
+
   const canShowWorkflowButton = () => {
-    if (!context || opportunity.workflowStatus === WorkflowStatus.Approved) {
+    if (!context) return false;
+    
+    const status = getWorkflowStatusById(opportunity.workflowId)?.status;
+    if (!status || status === "Approved") {
       return false;
     }
 
-    switch (opportunity.workflowStatus) {
-      case WorkflowStatus.Initial:
-      case WorkflowStatus.ReviewChanges:
+    switch (status) {
+      case "Initial":
+      case "Review Changes":
         return context.canSubmitForReview;
-      case WorkflowStatus.SentForReview:
+      case "Sent for Review":
         return context.canReviewBD;
-      case WorkflowStatus.ApprovalChanges:
-        return context.canSubmitForApproval; // Changed from canReviewBD to canSubmitForReview
-      case WorkflowStatus.SentForApproval:
+      case "Approval Changes":
+        return context.canSubmitForApproval;
+      case "Sent for Approval":
         return context.canApproveBD;
       default:
         return false;
@@ -74,9 +78,10 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
   const getWorkflowDialog = () => {
     if (!context?.currentUser?.name) return null;
 
-    switch (opportunity.workflowStatus) {
-      case WorkflowStatus.Initial:
-      case WorkflowStatus.ReviewChanges:
+    const status = getWorkflowStatusById(opportunity.workflowId)?.status;
+    switch (status) {
+      case "Initial":
+      case "Review Changes":
         return (
           <SendForReview 
             open={workflowDialogOpen} 
@@ -86,30 +91,31 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
             onSubmit={onOpportunityUpdated}
           />
         );
-        case WorkflowStatus.ApprovalChanges:
-        case WorkflowStatus.SentForApproval:
-            if (context?.canApproveBD) {
-              return (
-                <DecideApproval 
-                  open={workflowDialogOpen} 
-                  onClose={handleWorkflowClose}
-                  opportunityId={opportunity.id}
-                  currentUser={context?.currentUser.name}
-                  onSubmit={onOpportunityUpdated}
-                />
-              );
-            } else if (context?.canSubmitForApproval) {
-              return (
-                <SendForApproval
-                  open={workflowDialogOpen}
-                  onClose={handleWorkflowClose}
-                  opportunityId={opportunity.id}
-                  currentUser={context?.currentUser.name}
-                  onSubmit={onOpportunityUpdated}
-                />
-              );
-            };
-      case WorkflowStatus.SentForReview:
+      case "Approval Changes":
+      case "Sent for Approval":
+        if (context?.canApproveBD) {
+          return (
+            <DecideApproval 
+              open={workflowDialogOpen} 
+              onClose={handleWorkflowClose}
+              opportunityId={opportunity.id}
+              currentUser={context?.currentUser.name}
+              onSubmit={onOpportunityUpdated}
+            />
+          );
+        } else if (context?.canSubmitForApproval) {
+          return (
+            <SendForApproval
+              open={workflowDialogOpen}
+              onClose={handleWorkflowClose}
+              opportunityId={opportunity.id}
+              currentUser={context?.currentUser.name}
+              onSubmit={onOpportunityUpdated}
+            />
+          );
+        }
+        return null;
+      case "Sent for Review":
         return (
           <DecideReview 
             open={workflowDialogOpen} 
@@ -133,7 +139,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
           color="primary"
           startIcon={<Send />}
         >
-          {getWorkflowButtonText(opportunity.workflowStatus)}
+          {getWorkflowButtonText(opportunity.workflowId)}
         </Button>
       )}
       {getWorkflowDialog()}

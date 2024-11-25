@@ -14,8 +14,7 @@ import {
   FormHelperText
 } from '@mui/material';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
-import { opportunityApi } from '../../dummyapi/opportunityApi';
-import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 
 interface DecideApprovalProps {
   open: boolean;
@@ -71,27 +70,14 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
     }
 
     try {
-      const opportunity = await opportunityApi.getById(opportunityId);
-      if (!opportunity) {
-        throw new Error('Opportunity not found');
-      }
+      const newStatus = decision === 'approve' ? 'Approved' : 'Approval Rejected';
+      const workflowId = decision === 'approve' ? 6 : 5; // 6 for Approved, 5 for Approval Changes
 
-      const newWorkflowStatus = decision === 'approve' ? 
-        WorkflowStatus.Approved : 
-        WorkflowStatus.ApprovalChanges;
-
-      const newStatus = decision === 'approve' ? 
-        'Approved' : 
-        'Approval Rejected';
-
-      const updatedOpportunity = {
-        ...opportunity,
-        workflowStatus: newWorkflowStatus,
+      // Update both workflow and opportunity in one atomic operation
+      await updateWorkflow(opportunityId, workflowId, {
         status: newStatus,
-        approvalComments: comments,
-      };
-
-      await opportunityApi.update(updatedOpportunity);
+        approvalComments: comments
+      });
 
       // Map decision to the correct format for history logging
       const mappedDecision = decision === 'approve' ? 'approved' : 'rejected';
@@ -107,7 +93,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       // Log status change
       await HistoryLoggingService.logStatusChange(
         opportunityId,
-        opportunity.status,
+        decision === 'approve' ? 'Pending Approval' : 'Approval Rejected',
         newStatus,
         currentUser
       );

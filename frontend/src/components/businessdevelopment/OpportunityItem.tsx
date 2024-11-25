@@ -29,8 +29,9 @@ import { useState, useContext} from 'react';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { OpportunityForm } from '../forms/OpportunityForm';
 import { projectManagementAppContext } from '../../App';
-import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { OpportunityTrackingWorkflow } from '../common/OpportunityTrackingWorkflow';
+
 export const OpportunityItem: React.FC<OpportunityItemProps> = ({ 
   opportunity, 
   onOpportunityDeleted, 
@@ -40,8 +41,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [formError, setFormError] = useState<string | undefined>();
   const context = useContext(projectManagementAppContext);
-
-  
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -81,8 +80,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     setFormError(undefined);
   };
 
-  
-
   const handleEditSubmit = async (formData: OpportunityTracking) => {
     if (!context?.canEditOpportunity) return;
     try {
@@ -103,6 +100,12 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     } catch (error: unknown) {
       console.error('Error updating opportunity:', error);
       setFormError(error instanceof Error ? error.message : 'Failed to update opportunity');
+    }
+  };
+
+  const handleWorkflowUpdate = () => {
+    if (onOpportunityUpdated) {
+      onOpportunityUpdated();
     }
   };
 
@@ -132,22 +135,20 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     }
   };
 
-  
-  
-
-  const getWorkflowStatusColor = (status: WorkflowStatus) => {
+  const getWorkflowStatusColor = (workflowId: number) => {
+    const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
-      case WorkflowStatus.Initial:
+      case "Initial":
         return 'default';
-      case WorkflowStatus.SentForReview:
+      case "Sent for Review":
         return 'info';
-      case WorkflowStatus.ReviewChanges:
+      case "Review Changes":
         return 'warning';
-      case WorkflowStatus.SentForApproval:
+      case "Sent for Approval":
         return 'info';
-      case WorkflowStatus.ApprovalChanges:
+      case "Approval Changes":
         return 'warning';
-      case WorkflowStatus.Approved:
+      case "Approved":
         return 'success';
       default:
         return 'default';
@@ -202,8 +203,8 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                   icon={<Assessment />}
                 />
                 <Chip 
-                  label={opportunity.workflowStatus}
-                  color={getWorkflowStatusColor(opportunity.workflowStatus)}
+                  label={getWorkflowStatusById(opportunity.workflowId)?.status || 'Unknown'}
+                  color={getWorkflowStatusColor(opportunity.workflowId)}
                   size="small"
                   icon={<WorkHistory />}
                 />
@@ -215,7 +216,10 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
               </Box>
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <OpportunityTrackingWorkflow onOpportunityUpdated={onOpportunityUpdated} opportunity={opportunity} />
+              <OpportunityTrackingWorkflow 
+                onOpportunityUpdated={handleWorkflowUpdate} 
+                opportunity={opportunity} 
+              />
               {context?.canEditOpportunity && (
                 <Button 
                   onClick={handleEditClick}
@@ -365,9 +369,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Workflow Dialog */}
-      
 
       {/* Edit Form */}
       <OpportunityForm 

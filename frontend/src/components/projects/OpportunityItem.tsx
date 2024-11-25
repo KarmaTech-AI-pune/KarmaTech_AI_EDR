@@ -32,9 +32,9 @@ import { OpportunityForm } from '../forms/OpportunityForm';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../dummyapi/database/dummyRoles';
-import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
 import { DecideApproval, DecideReview, SendForReview } from '../dialogbox';
 import { OpportunityTrackingWorkflow } from '../common/OpportunityTrackingWorkflow';
+import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 
 export const OpportunityItem: React.FC<OpportunityItemProps> = ({ 
   opportunity, 
@@ -199,15 +199,16 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     }
   };
 
-  const getWorkflowButtonText = (status: WorkflowStatus) => {
+  const getWorkflowButtonText = (workflowId: number) => {
+    const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
-      case WorkflowStatus.Initial:
-      case WorkflowStatus.ReviewChanges:
+      case "Initial":
+      case "Review Changes":
         return 'Send for Review';
-      case WorkflowStatus.SentForReview:
-      case WorkflowStatus.ApprovalChanges:
+      case "Sent for Review":
+      case "Approval Changes":
         return 'Decide Review';
-      case WorkflowStatus.SentForApproval:
+      case "Sent for Approval":
         return 'Decide Approval';
       default:
         return 'Send for Review';
@@ -215,18 +216,19 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   };
 
   const canShowWorkflowButton = () => {
-    if (opportunity.workflowStatus === WorkflowStatus.Approved) {
+    const status = getWorkflowStatusById(opportunity.workflowId)?.status;
+    if (!status || status === "Approved") {
       return false;
     }
 
-    switch (opportunity.workflowStatus) {
-      case WorkflowStatus.Initial:
-      case WorkflowStatus.ReviewChanges:
+    switch (status) {
+      case "Initial":
+      case "Review Changes":
         return canSubmitForReview;
-      case WorkflowStatus.SentForReview:
-      case WorkflowStatus.ApprovalChanges:
+      case "Sent for Review":
+      case "Approval Changes":
         return canReviewBD;
-      case WorkflowStatus.SentForApproval:
+      case "Sent for Approval":
         return canApproveBD;
       default:
         return false;
@@ -236,9 +238,10 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const getWorkflowDialog = () => {
     if (!currentUser?.name) return null;
 
-    switch (opportunity.workflowStatus) {
-      case WorkflowStatus.Initial:
-      case WorkflowStatus.ReviewChanges:
+    const status = getWorkflowStatusById(opportunity.workflowId)?.status;
+    switch (status) {
+      case "Initial":
+      case "Review Changes":
         return (
           <SendForReview 
             open={workflowDialogOpen} 
@@ -248,8 +251,8 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             onSubmit={onOpportunityUpdated}
           />
         );
-      case WorkflowStatus.SentForReview:
-      case WorkflowStatus.ApprovalChanges:
+      case "Sent for Review":
+      case "Approval Changes":
         return (
           <DecideReview 
             open={workflowDialogOpen} 
@@ -259,7 +262,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             onDecisionMade={onOpportunityUpdated}
           />
         );
-      case WorkflowStatus.SentForApproval:
+      case "Sent for Approval":
         return (
           <DecideApproval 
             open={workflowDialogOpen} 
@@ -282,19 +285,20 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     }
   };
 
-  const getWorkflowStatusColor = (status: WorkflowStatus) => {
+  const getWorkflowStatusColor = (workflowId: number) => {
+    const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
-      case WorkflowStatus.Initial:
+      case "Initial":
         return 'default';
-      case WorkflowStatus.SentForReview:
+      case "Sent for Review":
         return 'info';
-      case WorkflowStatus.ReviewChanges:
+      case "Review Changes":
         return 'warning';
-      case WorkflowStatus.SentForApproval:
+      case "Sent for Approval":
         return 'info';
-      case WorkflowStatus.ApprovalChanges:
+      case "Approval Changes":
         return 'warning';
-      case WorkflowStatus.Approved:
+      case "Approved":
         return 'success';
       default:
         return 'default';
@@ -349,8 +353,8 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                   icon={<Assessment />}
                 />
                 <Chip 
-                  label={opportunity.workflowStatus}
-                  color={getWorkflowStatusColor(opportunity.workflowStatus)}
+                  label={getWorkflowStatusById(opportunity.workflowId)?.status || 'Unknown'}
+                  color={getWorkflowStatusColor(opportunity.workflowId)}
                   size="small"
                   icon={<WorkHistory />}
                 />

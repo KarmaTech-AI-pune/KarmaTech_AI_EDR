@@ -1,6 +1,6 @@
 import { OpportunityTracking } from '../types';
 import { opportunityTrackings } from './database/dummyopportunityTracking';
-import { WorkflowStatus } from './database/dummyopportunityTracking';
+import { workflowStatuses } from './database/dummyOpporunityWorkflow';
 
 // Create a mutable copy of the opportunity trackings for the dummy API
 let mutableOpportunityTrackings: OpportunityTracking[] = [...opportunityTrackings];
@@ -105,7 +105,7 @@ export const opportunityApi = {
         durationOfProject: opportunityData.durationOfProject || 0,
         fundingStream: opportunityData.fundingStream || '',
         contractType: opportunityData.contractType || '',
-        workflowStatus: opportunityData.workflowStatus || WorkflowStatus.Initial,
+        workflowId: opportunityData.workflowId || 1, // Default to Initial (ID: 1)
         // Optional fields
         bidFees: opportunityData.bidFees,
         emd: opportunityData.emd,
@@ -141,9 +141,9 @@ export const opportunityApi = {
         throw new Error(`Opportunity with id ${opportunityData.id} not found`);
       }
 
-      // Validate workflow status
-      if (!Object.values(WorkflowStatus).includes(opportunityData.workflowStatus)) {
-        throw new Error('Invalid workflow status');
+      // Validate workflow ID
+      if (!workflowStatuses.some(status => status.id === opportunityData.workflowId)) {
+        throw new Error('Invalid workflow ID');
       }
       
       mutableOpportunityTrackings = [

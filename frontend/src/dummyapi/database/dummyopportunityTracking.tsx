@@ -43,7 +43,7 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 36,
     "fundingStream": "Government Budget",
     "contractType": "EPC",
-    "workflowStatus": WorkflowStatus.Initial
+    "workflowId": 1
   },
   "2":{
     "id": 2,
@@ -77,7 +77,7 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 24,
     "fundingStream": "Government Grant",
     "contractType": "Item Rate",
-    "workflowStatus": WorkflowStatus.Initial
+    "workflowId": 2
   },
   "3":{
     "id": 3,
@@ -111,7 +111,7 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 30,
     "fundingStream": "Multilateral Funding",
     "contractType": "Lump Sum",
-    "workflowStatus": WorkflowStatus.Initial
+    "workflowId": 3
   },
   "4":{
     "id": 4,
@@ -145,7 +145,7 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 48,
     "fundingStream": "Government Budget",
     "contractType": "EPC",
-    "workflowStatus": WorkflowStatus.Initial
+    "workflowId": 4
   }
 } as const;
 
@@ -182,7 +182,7 @@ export const opportunityTrackings: OpportunityTracking[] =  Object.values(opport
   durationOfProject: tracking.durationOfProject,
   fundingStream: tracking.fundingStream,
   contractType: tracking.contractType,
-  workflowStatus: tracking.workflowStatus
+  workflowId: tracking.workflowId
 }));
 
 // Utility functions
@@ -206,8 +206,8 @@ export const getOpportunitiesByBidManager = (bidManagerId: number): OpportunityT
   return opportunityTrackings.filter(opportunity => opportunity.bidManagerId === bidManagerId);
 };
 
-export const getOpportunitiesByWorkflowStatus = (status: WorkflowStatus): OpportunityTracking[] => {
-  return opportunityTrackings.filter(opportunity => opportunity.workflowStatus === status);
+export const getOpportunitiesByWorkflowId = (workflowId: number): OpportunityTracking[] => {
+  return opportunityTrackings.filter(opportunity => opportunity.workflowId === workflowId);
 };
 
 // Updated utility function to get opportunities by review manager

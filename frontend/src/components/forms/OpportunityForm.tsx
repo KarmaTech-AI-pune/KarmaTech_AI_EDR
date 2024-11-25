@@ -23,7 +23,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
 import { OpportunityTracking, projectManagementAppContextType } from '../../types';
 import { getUsersByRole, UserRole } from '../../dummyapi/database/dummyusers';
-import { WorkflowStatus } from '../../dummyapi/database/dummyopportunityTracking';
+import { workflowStatuses, getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { PermissionType, hasPermission } from '../../dummyapi/database/dummyRoles';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 
@@ -77,7 +77,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     durationOfProject: project?.durationOfProject || 0,
     fundingStream: project?.fundingStream || '',
     contractType: project?.contractType || '',
-    workflowStatus: project?.workflowStatus || WorkflowStatus.Initial
+    workflowId: project?.workflowId || 1 // Default to Initial (ID: 1)
   });
 
   useEffect(() => {
@@ -119,7 +119,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         approvalManagerId: project.approvalManagerId,
         dateOfSubmission: project.dateOfSubmission || new Date().toISOString().split('T')[0],
         likelyStartDate: project.likelyStartDate || new Date().toISOString().split('T')[0],
-        workflowStatus: project.workflowStatus || WorkflowStatus.Initial
+        workflowId: project.workflowId || 1 // Default to Initial (ID: 1)
       });
     }
   }, [project]);
@@ -128,22 +128,11 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     const { name, value } = e.target;
     
     // Convert IDs to number when they change
-    if (name === 'bidManagerId' || name === 'reviewManagerId' || name === 'approvalManagerId') {
+    if (name === 'bidManagerId' || name === 'reviewManagerId' || name === 'approvalManagerId' || name === 'workflowId') {
       setFormData((prev) => ({
         ...prev,
         [name]: value === '' ? undefined : Number(value),
       }));
-    } else if (name === 'workflowStatus') {
-        // Validate workflow status changes based on user role and permissions
-      const currentStatus = formData.workflowStatus;
-      const newStatus = value as WorkflowStatus;
-      
-      if (canChangeWorkflowStatus(currentStatus, newStatus)) {
-        setFormData((prev) => ({
-          ...prev,
-          workflowStatus: newStatus,
-        }));
-      }
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -152,30 +141,34 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     }
   };
 
-  const canChangeWorkflowStatus = (currentStatus: WorkflowStatus | undefined, newStatus: WorkflowStatus): boolean => {
+  const canChangeWorkflowStatus = (currentId: number | undefined, newId: number): boolean => {
     if (!context.user?.role) return false;
 
     const userRole = context.user.role;
+    const currentStatus = getWorkflowStatusById(currentId || 1)?.status;
+    const newStatus = getWorkflowStatusById(newId)?.status;
+
+    if (!currentStatus || !newStatus) return false;
 
     // BD Manager can submit for review
     if (hasPermission(userRole, PermissionType.SUBMIT_FOR_REVIEW) &&
-        currentStatus === WorkflowStatus.Initial &&
-        newStatus === WorkflowStatus.SentForReview) {
+        currentStatus === "Initial" &&
+        newStatus === "Sent for Review") {
       return true;
     }
 
     // BD Head can review and submit for approval
     if (hasPermission(userRole, PermissionType.REVIEW_BUSINESS_DEVELOPMENT)) {
-      if ((currentStatus === WorkflowStatus.SentForReview && newStatus === WorkflowStatus.ReviewChanges) ||
-          (currentStatus === WorkflowStatus.SentForReview && newStatus === WorkflowStatus.SentForApproval)) {
+      if ((currentStatus === "Sent for Review" && newStatus === "Review Changes") ||
+          (currentStatus === "Sent for Review" && newStatus === "Sent for Approval")) {
         return true;
       }
     }
 
     // Regional Manager or VP BD can approve or request changes
     if (hasPermission(userRole, PermissionType.APPROVE_BUSINESS_DEVELOPMENT)) {
-      if ((currentStatus === WorkflowStatus.SentForApproval && newStatus === WorkflowStatus.ApprovalChanges) ||
-          (currentStatus === WorkflowStatus.SentForApproval && newStatus === WorkflowStatus.Approved)) {
+      if ((currentStatus === "Sent for Approval" && newStatus === "Approval Changes") ||
+          (currentStatus === "Sent for Approval" && newStatus === "Approved")) {
         return true;
       }
     }
@@ -206,33 +199,36 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   const isEditMode = Boolean(project?.id);
 
   // Get available workflow status options based on current status and user role
-  const getAvailableWorkflowStatuses = (): WorkflowStatus[] => {
-    if (!context.user?.role || !formData.workflowStatus) return [WorkflowStatus.Initial];
+  const getAvailableWorkflowStatuses = (): number[] => {
+    if (!context.user?.role || !formData.workflowId) return [1]; // Default to Initial (ID: 1)
 
     const userRole = context.user.role;
-    const currentStatus = formData.workflowStatus;
+    const currentStatus = getWorkflowStatusById(formData.workflowId)?.status;
+
+    if (!currentStatus) return [1];
 
     switch (currentStatus) {
-      case WorkflowStatus.Initial:
+      case "Initial":
         return hasPermission(userRole, PermissionType.SUBMIT_FOR_REVIEW)
-          ? [WorkflowStatus.Initial, WorkflowStatus.SentForReview]
-          : [WorkflowStatus.Initial];
+          ? [1, 2] // Initial, Sent for Review
+          : [1];
 
-      case WorkflowStatus.SentForReview:
+      case "Sent for Review":
         return hasPermission(userRole, PermissionType.REVIEW_BUSINESS_DEVELOPMENT)
-          ? [WorkflowStatus.SentForReview, WorkflowStatus.ReviewChanges, WorkflowStatus.SentForApproval]
-          : [WorkflowStatus.SentForReview];
+          ? [2, 3, 4] // Sent for Review, Review Changes, Sent for Approval
+          : [2];
 
-      case WorkflowStatus.SentForApproval:
+      case "Sent for Approval":
         return hasPermission(userRole, PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
-          ? [WorkflowStatus.SentForApproval, WorkflowStatus.ApprovalChanges, WorkflowStatus.Approved]
-          : [WorkflowStatus.SentForApproval];
+          ? [4, 5, 6] // Sent for Approval, Approval Changes, Approved
+          : [4];
 
       default:
-        return [currentStatus];
+        return [formData.workflowId];
     }
   };
 
+  // Rest of the component remains the same until the form fields
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
@@ -357,7 +353,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     </Select>
                   </FormControl>
                 </Grid>
-              </Grid>
+</Grid>
             </Grid>
 
             <Grid item xs={12}>
@@ -450,10 +446,10 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       required
                     >
                       {bdManagers.map((manager) => (
-                        <MenuItem key={manager.id} value={String(manager.id)}>
-                          {manager.name}
-                        </MenuItem>
-                      ))}
+                          <MenuItem key={manager.id} value={String(manager.id)}>
+                            {manager.name}
+                          </MenuItem>
+                        ))}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -493,7 +489,6 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     </Select>
                   </FormControl>
                 </Grid>
-                
               </Grid>
             </Grid>
 

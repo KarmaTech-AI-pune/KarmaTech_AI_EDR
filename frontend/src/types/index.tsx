@@ -3,7 +3,7 @@
 
 import { UserRole } from '../dummyapi/database/dummyusers';
 import { PermissionType } from '../dummyapi/database/dummyRoles';
-import { WorkflowStatus } from '../dummyapi/database/dummyopportunityTracking';
+import { WorkflowStatus } from '../dummyapi/database/dummyOpporunityWorkflow';
 
 export type screensArrayType = {
     [key : string] : JSX.Element
@@ -50,7 +50,7 @@ export type projectManagementAppContextType  = {
     canReviewBD: boolean;
     setCanReviewBD : React.Dispatch<React.SetStateAction<boolean>>;
     canApproveBD: boolean;
-    setCanApproveBD: React.Dispatch<React.SetStateAction<boolean>>;
+    setCanApproveBD : React.Dispatch<React.SetStateAction<boolean>>;
     canSubmitForApproval: boolean;
     setCanSubmitForApproval : React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -143,7 +143,7 @@ export type OpportunityTracking = {
   durationOfProject: number;
   fundingStream: string;
   contractType: string;
-  workflowStatus: WorkflowStatus;
+  workflowId: number; // Changed from workflowStatus to workflowId
 }
 
 export type OpportunityItemProps = {
