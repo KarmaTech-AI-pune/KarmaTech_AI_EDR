@@ -4,237 +4,308 @@ const projectsData = {
   "1":{
     "id": 1,
     "name": "City Water Supply Upgrade",
+    "details" : "City needs water supply upgrade",
     "clientName": "Metropolis Municipality",
-    "clientSector": "Government",
+    "projectMangerId" : 1,
+    "office" : "Mumbai",
+    "projectNo" : "abc-123",
+    "typeOfJob" : "Water Supply",
+    "seniorProjectMangerId" : 1,
     "sector": "Water",
+    "region" : "West",
+    "typeOfClient": "Government",
     "estimatedCost": 5000000,
+    "feeType" : "Lumpsum",
     "startDate": "2023-01-01",
     "endDate": "2024-12-31",
-    "status": 6,
-    "progress": 65,
-    "contractType": "EPC",
     "currency": "INR",
-    "createdAt": "2022-12-01",
-    "createdBy": "System"
+    "regionalManagerID": 6
   },
   "2":{
     "id": 2,
     "name": "Rural Sanitation Initiative",
+    "details": "Comprehensive sanitation upgrade for rural areas",
     "clientName": "State Rural Development Dept",
-    "clientSector": "Government", 
+    "projectMangerId": 2,
+    "office": "Delhi",
+    "projectNo": "san-456",
+    "typeOfJob": "Sanitation Infrastructure",
+    "seniorProjectMangerId": 4,
     "sector": "Sanitation",
+    "region": "North",
+    "typeOfClient": "Government",
     "estimatedCost": 2000000,
+    "feeType": "Itemrate",
     "startDate": "2023-03-15",
     "endDate": "2025-03-14",
-    "status": 0,
-    "progress": 25,
-    "contractType": "Design-Build",
     "currency": "INR",
-    "createdAt": "2023-02-15",
-    "createdBy": "System"
+    "regionalManagerID": 7
   },
   "3":{
     "id": 3,
     "name": "Industrial Park Drainage System",
+    "details": "Development of comprehensive drainage system for industrial park",
     "clientName": "Industrial Development Corp",
-    "clientSector": "Private",
+    "projectMangerId": 3,
+    "office": "Pune",
+    "projectNo": "ind-789",
+    "typeOfJob": "Industrial Infrastructure",
+    "seniorProjectMangerId": 5,
     "sector": "Industrial",
+    "region": "West",
+    "typeOfClient": "Private",
     "estimatedCost": 3500000,
+    "feeType": "Lumpsum",
     "startDate": "2022-07-01",
     "endDate": "2023-12-31",
-    "status": 0,
-    "progress": 100,
-    "contractType": "Turnkey",
     "currency": "INR",
-    "createdAt": "2022-06-01",
-    "createdBy": "System"
+    "regionalManagerID": 6
   },
   "4":{
     "id": 4,
     "name": "Smart City Water Management",
+    "details": "Implementation of smart water management solutions",
     "clientName": "Smart City Development Authority",
-    "clientSector": "Government",
+    "projectMangerId": 2,
+    "office": "Bangalore",
+    "projectNo": "smt-101",
+    "typeOfJob": "Smart Infrastructure",
+    "seniorProjectMangerId": 4,
     "sector": "Smart City",
+    "region": "South",
+    "typeOfClient": "Government",
     "estimatedCost": 7500000,
-    "status": "DecisionPending",
-    "progress": 0,
-    "contractType": "EPC",
+    "feeType": "Itemrate",
+    "startDate": "2023-11-01",
+    "endDate": "2025-10-31",
     "currency": "INR",
-    "createdAt": "2023-11-01",
-    "createdBy": "System"
+    "regionalManagerID": 7
   },
   "5":{
     "id": 5,
     "name": "Coastal Zone Protection",
+    "details": "Coastal infrastructure protection and development",
     "clientName": "Maritime Development Board",
-    "clientSector": "Government",
+    "projectMangerId": 3,
+    "office": "Chennai",
+    "projectNo": "cst-202",
+    "typeOfJob": "Coastal Protection",
+    "seniorProjectMangerId": 5,
     "sector": "Coastal",
+    "region": "South",
+    "typeOfClient": "Government",
     "estimatedCost": 4500000,
+    "feeType": "Lumpsum",
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
-    "status": 2,
-    "progress": 45,
-    "contractType": "Design-Build",
     "currency": "INR",
-    "createdAt": "2023-05-01",
-    "createdBy": "System"
+    "regionalManagerID": 6
   },
   "6":{
-    "id" : 6,
-    "name" : "Urban Flood Management",
-    "clientName" : "City Municipal Corporation",
-    "clientSector" : "Government",
-    "sector" : "Urban Infrastructure",
-    "estimatedCost" : 3200000,
-    "status" : 1,
-    "progress" : 0,
+    "id": 6,
+    "name": "Urban Flood Management",
+    "details": "Urban flood prevention and management system",
+    "clientName": "City Municipal Corporation",
+    "projectMangerId": 2,
+    "office": "Kolkata",
+    "projectNo": "ufl-303",
+    "typeOfJob": "Flood Management",
+    "seniorProjectMangerId": 4,
+    "sector": "Urban Infrastructure",
+    "region": "East",
+    "typeOfClient": "Government",
+    "estimatedCost": 3200000,
+    "feeType": "Itemrate",
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
-    "contractType" : "EPC",
-    "currency" : "INR",
-    "createdAt" : "2023-11-15",
-    "createdBy" : "System"
-},
-"7": {
-    "id" : 7,
-    "name" : "Pune City Water Supply Upgrade",
-    "clientName" : "Municipality",
-    "clientSector" : "Government",
-    "sector" : "Water",
-    "estimatedCost" : 600000,
-    "startDate" :"2023-01-01",
-    "endDate" : "2024-12-31",
-    "status" : 6,
-    "progress" : 65,
-    "contractType" : "EPC",
-    "currency" : "INR",
-    "createdAt" : "2023-01-01",
-    "createdBy" : "System"
-},
-"8" :{
-    "id" : 8,
-    "name" : "Rural Initiative",
-    "clientName" : "Maharashtra Rural Development Dept",
-    "clientSector" : "Government",
-    "sector" : "Sanitation",
-    "estimatedCost" : 2000000,
-    "startDate" : "2023-03-15",
-    "endDate" : "2025-03-14",
-    "status" : 1,
-    "progress" : 25,
-    "contractType" : "Design-Build",
-    "currency" : "INR",
-    "createdAt" :"2023-01-01",
-    "createdBy" : "System"
-},
-"9" :{
-    "id" : 9,
-    "name" : "Industrial Park System",
-    "clientName" : "Industrial Development Corp",
-    "clientSector" : "Private",
-    "sector" : "Industrial",
-    "estimatedCost" : 3500000,
-    "startDate" : "2023-03-15",
-    "endDate" : "2025-03-14",
-    "status" : 3,
-    "progress" : 100,
-    "contractType" : "Turnkey",
-    "currency" : "INR",
-    "createdAt" : "2023-01-01",
-    "createdBy" : "System"
-},
-"10" :{
-    "id" : 10,
-    "name" : "City Water Management 2",
-    "clientName" : "Smart City Development Authority",
-    "clientSector" : "Government",
-    "sector" : "Smart City",
-    "estimatedCost" : 7500000,
-    "status" : 4,
-    "progress" : 0,
-    "contractType" : "EPC",
-    "currency" : "INR",
-    "createdAt" :"2023-01-01",
-    "createdBy" : "System"
-},
-"11" :{
-    "id" : 11,
-    "name" : "Coastal Protection 2",
-    "clientName" : "Maritime Development Board",
-    "clientSector" : "Government",
-    "sector" : "Coastal",
-    "estimatedCost" : 4500000,
+    "currency": "INR",
+    "regionalManagerID": 7
+  },
+  "7": {
+    "id": 7,
+    "name": "Pune City Water Supply Upgrade",
+    "details": "Comprehensive water supply upgrade for Pune city",
+    "clientName": "Municipality",
+    "projectMangerId": 3,
+    "office": "Pune",
+    "projectNo": "pun-404",
+    "typeOfJob": "Water Supply",
+    "seniorProjectMangerId": 5,
+    "sector": "Water",
+    "region": "West",
+    "typeOfClient": "Government",
+    "estimatedCost": 600000,
+    "feeType": "Lumpsum",
+    "startDate": "2023-01-01",
+    "endDate": "2024-12-31",
+    "currency": "INR",
+    "regionalManagerID": 6
+  },
+  "8": {
+    "id": 8,
+    "name": "Rural Initiative",
+    "details": "Rural development and infrastructure improvement",
+    "clientName": "Maharashtra Rural Development Dept",
+    "projectMangerId": 2,
+    "office": "Mumbai",
+    "projectNo": "rur-505",
+    "typeOfJob": "Rural Development",
+    "seniorProjectMangerId": 4,
+    "sector": "Sanitation",
+    "region": "West",
+    "typeOfClient": "Government",
+    "estimatedCost": 2000000,
+    "feeType": "Itemrate",
+    "startDate": "2023-03-15",
+    "endDate": "2025-03-14",
+    "currency": "INR",
+    "regionalManagerID": 7
+  },
+  "9": {
+    "id": 9,
+    "name": "Industrial Park System",
+    "details": "Industrial park infrastructure development",
+    "clientName": "Industrial Development Corp",
+    "projectMangerId": 3,
+    "office": "Hyderabad",
+    "projectNo": "ind-606",
+    "typeOfJob": "Industrial Infrastructure",
+    "seniorProjectMangerId": 5,
+    "sector": "Industrial",
+    "region": "South",
+    "typeOfClient": "Private",
+    "estimatedCost": 3500000,
+    "feeType": "Lumpsum",
+    "startDate": "2023-03-15",
+    "endDate": "2025-03-14",
+    "currency": "INR",
+    "regionalManagerID": 6
+  },
+  "10": {
+    "id": 10,
+    "name": "City Water Management 2",
+    "details": "Smart water management system implementation",
+    "clientName": "Smart City Development Authority",
+    "projectMangerId": 2,
+    "office": "Ahmedabad",
+    "projectNo": "smt-707",
+    "typeOfJob": "Smart Infrastructure",
+    "seniorProjectMangerId": 4,
+    "sector": "Smart City",
+    "region": "West",
+    "typeOfClient": "Government",
+    "estimatedCost": 7500000,
+    "feeType": "Itemrate",
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
-    "status" : 5,
-    "progress" : 45,
-    "contractType" : "Design-Build",
-    "currency" : "INR",
-    "createdAt" : "2023-05-01",
-    "createdBy" : "System"
-},
-"12" :{
-    "id" : 12,
-    "name" : "Urban Management",
-    "clientName" : "City Municipal Corporation",
-    "clientSector" : "Government",
-    "sector" : "Urban Infrastructure",
-    "estimatedCost" : 3200000,
-    "status" : 6,
-    "progress" : 0,
-    "contractType" : "EPC",
-    "currency" : "INR",
-    "createdAt" : "2023-05-01",
-    "createdBy" : "System"
-},
-"13" :{
-    "id" : 13,
-    "name" : "Urban Management 23",
-    "clientName" : "City Municipal Corporation",
-    "clientSector" : "Government",
-    "sector" : "Urban Infrastructure",
-    "estimatedCost" : 3900000,
-    "status" : 7,
-    "progress" : 0,
-    "contractType" : "EPC",
-    "currency" : "INR",
-    "createdAt" : "2023-11-15",
-    "createdBy" : "System"
-},
-"14" :{
-    "id" : 14,
-    "name" : "Mega Industrial Park",
-    "clientName" : "State Industrial Development Corp",
-    "clientSector" : "Government",
-    "sector" : "Industrial",
-    "estimatedCost" : 12500000,
-    "status" : 1,
-    "progress" : 0,
-    "contractType" : "EPC",
-    "currency" : "INR",
-    "createdAt" : "2023-12-01",
-    "createdBy" : "System"
-},
-"15" :{
-    "id" : 15,
-    "name" : "Expressway Stormwater Drainage",
-    "clientName" : "National Highway Authority",
-    "clientSector" : "Government",
-    "sector" : "Transportation",
-    "estimatedCost" : 7800000,
-    "status" : 1,
-    "progress" : 0,
-    "contractType" : "Design-Build",
-    "currency" : "INR",
-    "createdAt" : "2023-12-05",
-    "createdBy" : "System"
-}
+    "currency": "INR",
+    "regionalManagerID": 6
+  },
+  "11": {
+    "id": 11,
+    "name": "Coastal Protection 2",
+    "details": "Coastal area protection and development",
+    "clientName": "Maritime Development Board",
+    "projectMangerId": 3,
+    "office": "Vizag",
+    "projectNo": "cst-808",
+    "typeOfJob": "Coastal Protection",
+    "seniorProjectMangerId": 5,
+    "sector": "Coastal",
+    "region": "East",
+    "typeOfClient": "Government",
+    "estimatedCost": 4500000,
+    "feeType": "Lumpsum",
+    "startDate": "2023-06-01",
+    "endDate": "2025-05-31",
+    "currency": "INR",
+    "regionalManagerID": 7
+  },
+  "12": {
+    "id": 12,
+    "name": "Urban Management",
+    "details": "Urban infrastructure management and development",
+    "clientName": "City Municipal Corporation",
+    "projectMangerId": 2,
+    "office": "Lucknow",
+    "projectNo": "urb-909",
+    "typeOfJob": "Urban Development",
+    "seniorProjectMangerId": 4,
+    "sector": "Urban Infrastructure",
+    "region": "North",
+    "typeOfClient": "Government",
+    "estimatedCost": 3200000,
+    "feeType": "Itemrate",
+    "startDate": "2023-06-01",
+    "endDate": "2025-05-31",
+    "currency": "INR",
+    "regionalManagerID": 7
+  },
+  "13": {
+    "id": 13,
+    "name": "Urban Management 23",
+    "details": "Comprehensive urban management system",
+    "clientName": "City Municipal Corporation",
+    "projectMangerId": 3,
+    "office": "Bhopal",
+    "projectNo": "urb-1010",
+    "typeOfJob": "Urban Development",
+    "seniorProjectMangerId": 5,
+    "sector": "Urban Infrastructure",
+    "region": "Central",
+    "typeOfClient": "Government",
+    "estimatedCost": 3900000,
+    "feeType": "Lumpsum",
+    "startDate": "2023-11-15",
+    "endDate": "2025-11-14",
+    "currency": "INR",
+    "regionalManagerID": 6
+  },
+  "14": {
+    "id": 14,
+    "name": "Mega Industrial Park",
+    "details": "Large-scale industrial park development",
+    "clientName": "State Industrial Development Corp",
+    "projectMangerId": 2,
+    "office": "Nagpur",
+    "projectNo": "ind-1111",
+    "typeOfJob": "Industrial Infrastructure",
+    "seniorProjectMangerId": 4,
+    "sector": "Industrial",
+    "region": "Central",
+    "typeOfClient": "Government",
+    "estimatedCost": 12500000,
+    "feeType": "Itemrate",
+    "startDate": "2023-12-01",
+    "endDate": "2026-11-30",
+    "currency": "INR",
+    "regionalManagerID": 7
+  },
+  "15": {
+    "id": 15,
+    "name": "Expressway Stormwater Drainage",
+    "details": "Stormwater drainage system for expressway",
+    "clientName": "National Highway Authority",
+    "projectMangerId": 3,
+    "office": "Gurgaon",
+    "projectNo": "exp-1212",
+    "typeOfJob": "Transportation Infrastructure",
+    "seniorProjectMangerId": 5,
+    "sector": "Transportation",
+    "region": "North",
+    "typeOfClient": "Government",
+    "estimatedCost": 7800000,
+    "feeType": "Lumpsum",
+    "startDate": "2023-12-05",
+    "endDate": "2025-12-04",
+    "currency": "INR",
+    "regionalManagerID": 12
+  }
 } as const;
 
 // Transform the JSON object into an array of Project type
 export const projects: Project[] = Object.values(projectsData).map(project => ({
-  ...project,
-  status: project.status as ProjectStatus,
+  ...project
 }));
 
 // Utility function to get a single project by ID
@@ -242,36 +313,12 @@ export const getProjectById = (id: number): Project | undefined => {
   return projects.find(project => project.id === id);
 };
 
-// Utility function to filter projects by status
-export const getProjectsByStatus = (status: ProjectStatus): Project[] => {
-  return projects.filter(project => project.status === status);
-};
-
 // Utility function to filter projects by sector
 export const getProjectsBySector = (sector: string): Project[] => {
   return projects.filter(project => project.sector === sector);
 };
 
-// Utility function to get projects in progress (status = 6)
-export const getProjectsInProgress = (): Project[] => {
-  return getProjectsByStatus(ProjectStatus["In Progress"]);
-};
-
-// Utility function to get completed projects (status = 7)
-export const getCompletedProjects = (): Project[] => {
-  return getProjectsByStatus(ProjectStatus.Completed);
-};
-
-// Utility function to get projects awaiting decision (status = 1)
-export const getProjectsAwaitingDecision = (): Project[] => {
-  return getProjectsByStatus(ProjectStatus["Decision Pending"]);
-};
-
-// Utility function to calculate total project value by status
-export const calculateTotalProjectValue = (status?: ProjectStatus): number => {
-  const projectsToSum = status !== undefined 
-    ? getProjectsByStatus(status) 
-    : projects;
-  
-  return projectsToSum.reduce((sum, project) => sum + project.estimatedCost, 0);
+// Utility function to calculate total project value
+export const calculateTotalProjectValue = (): number => {
+  return projects.reduce((sum, project) => sum + project.estimatedCost, 0);
 };

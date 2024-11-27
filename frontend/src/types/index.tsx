@@ -3,7 +3,6 @@
 
 import { UserRole } from '../dummyapi/database/dummyusers';
 import { PermissionType } from '../dummyapi/database/dummyRoles';
-import { WorkflowStatus } from '../dummyapi/database/dummyOpporunityWorkflow';
 
 export type screensArrayType = {
     [key : string] : JSX.Element
@@ -69,20 +68,24 @@ export enum ProjectStatus {
 export type Project = {
   id: number;
   name: string;
+  details: string;
   clientName: string;
-  clientSector: string;
+  projectMangerId: number;
+  office: string;
+  projectNo: string;
+  typeOfJob: string;
+  seniorProjectMangerId: number;
   sector: string;
+  region: string;
+  typeOfClient: string;
   estimatedCost: number;
+  feeType: string;
   startDate?: string;
   endDate?: string;
-  status: ProjectStatus;
-  progress: number;
-  contractType: string;
   currency: string;
-  createdAt: string;
-  createdBy: string;
   budget?: number;
   priority?: string;
+  regionalManagerID: number; // Added this line
 }
 
 export type ProjectFormData = Omit<Project, 'id'>;

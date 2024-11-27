@@ -46,7 +46,7 @@ export const Navbar = () => {
       }
 
       // Check for Project Management permissions
-      if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_PROJECTS)) {
+      if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_PROJECT)) {
         availablePages.push('Project Management');
       }
       //availablePages.push('Forms')

@@ -1,96 +1,92 @@
-import React from 'react';
+import React, { useState, useContext } from 'react';
 import { 
   Typography, 
-  Paper, 
   List,
   Box,
-  Divider,
-  Button
 } from '@mui/material';
 import { ProjectItem } from './ProjectItem';
 import { Project, ProjectStatus } from '../../types';
+import { ProjectInitializationDialog } from '../dialogbox/ProjectInitializationDialog';
+import { projectManagementAppContext } from '../../App';
 
-interface ProjectManagementProjectListProps {
+export interface ProjectManagementProjectListProps {
   projects: Project[];
-  onCreateProject?: () => void;
+  emptyMessage?: string;
   onProjectDeleted?: (projectId: number) => void;
   onProjectUpdated?: () => void;
+  filterStatuses?: ProjectStatus[];
 }
 
 export const ProjectManagementProjectList: React.FC<ProjectManagementProjectListProps> = ({ 
   projects, 
-  onCreateProject,
-  onProjectDeleted, 
-  onProjectUpdated 
+  emptyMessage = 'No active projects found',
+  onProjectDeleted,
+  onProjectUpdated,
+  filterStatuses
 }) => {
-  // Filter for active management projects
-  const activeProjects = projects.filter(project => 
-    [ProjectStatus['Bid Accepted'], ProjectStatus['Bid Submitted'], ProjectStatus['In Progress']].includes(project.status)
-  );
+  const [isInitializeDialogOpen, setIsInitializeDialogOpen] = useState(false);
+  const context = useContext(projectManagementAppContext);
+  const currentUser = context?.currentUser;
 
-  if (activeProjects.length === 0) {
-    return (
-      <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
-        <Typography variant="h4" gutterBottom sx={{ color: '#004a7f' }}>
-          Active Projects
-        </Typography>
-        <Box 
-          display="flex" 
-          flexDirection="column"
-          justifyContent="center" 
-          alignItems="center" 
-          minHeight="200px"
-        >
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            No active projects found
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            {onCreateProject && (
-              <Button 
-                variant="contained" 
-                color="primary" 
-                onClick={onCreateProject}
-              >
-                Create New Project
-              </Button>
-            )}
-          </Box>
-        </Box>
-      </Paper>
-    );
-  }
+  const handleInitializeProject = () => {
+    setIsInitializeDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsInitializeDialogOpen(false);
+  };
 
   return (
-    <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h4" sx={{ color: '#004a7f' }}>
-          Active Projects
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          {onCreateProject && (
-            <Button 
-              variant="contained" 
-              color="primary" 
-              onClick={onCreateProject}
-            >
-              Create New Project
-            </Button>
-          )}
-        </Box>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column',
+      width: '100%',
+      height: '100%',
+      overflow: 'visible'
+    }}>
+      <Box sx={{ 
+        flexGrow: 1,
+        width: '100%',
+        overflow: 'visible'
+      }}>
+        {projects.length === 0 ? (
+          <Box 
+            display="flex" 
+            flexDirection="column"
+            justifyContent="center" 
+            alignItems="center" 
+            minHeight="200px"
+            width="100%"
+          >
+            <Typography variant="body1">
+              {emptyMessage}
+            </Typography>
+          </Box>
+        ) : (
+          <List sx={{ 
+            width: '100%',
+            '& > *:not(:last-child)': {
+              mb: 1
+            }
+          }}>
+            {projects.map(project => (
+              <ProjectItem 
+                key={project.id} 
+                project={project} 
+                onProjectDeleted={onProjectDeleted}
+                onProjectUpdated={onProjectUpdated}
+              />
+            ))}
+          </List>
+        )}
       </Box>
-      
-      <Divider sx={{ my: 2 }} />
- 
-      <List>
-        {activeProjects.map(project => (
-          <ProjectItem 
-            key={project.id} 
-            project={project} 
-            onProjectDeleted={onProjectDeleted}
-            onProjectUpdated={onProjectUpdated}
-          />
-        ))}
-      </List>
-    </Paper>
+
+      <ProjectInitializationDialog 
+        open={isInitializeDialogOpen} 
+        onClose={handleCloseDialog} 
+      />
+    </Box>
   );
 };
+
+export default ProjectManagementProjectList;

@@ -1,8 +1,8 @@
-import { Project, ProjectStatus } from '../types';
+import { Project } from '../types';
 import { 
   projects,
   getProjectById as findProjectById,
-  getProjectsByStatus,
+  getProjectsBySector,
   calculateTotalProjectValue
 } from './database/dummyProjects';
 
@@ -43,10 +43,8 @@ export const projectApi = {
         startDate: project.startDate || undefined,
         endDate: project.endDate || undefined,
         estimatedCost: Number(project.estimatedCost),
-        progress: Number(project.progress),
-        status: project.status || ProjectStatus['Opportunity'],
-        createdAt: new Date().toISOString(),
-        createdBy: 'System'
+        projectMangerId: Number(project.projectMangerId),
+        seniorProjectMangerId: Number(project.seniorProjectMangerId)
       };
 
       projects.push(formattedProject);
@@ -76,8 +74,8 @@ export const projectApi = {
         startDate: project.startDate ? new Date(project.startDate).toISOString() : undefined,
         endDate: project.endDate ? new Date(project.endDate).toISOString() : undefined,
         estimatedCost: Number(project.estimatedCost),
-        progress: Number(project.progress),
-        status: project.status as ProjectStatus
+        projectMangerId: Number(project.projectMangerId),
+        seniorProjectMangerId: Number(project.seniorProjectMangerId)
       };
 
       projects[index] = formattedProject;

@@ -4,11 +4,8 @@ import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManageme
 import { Navbar } from './components/navigation/Navbar'
 import { Dashboard } from './components/Dashboard'
 import { ResourceManagement } from './components/ResourceManagement'
-import { ReportsList } from './components/ReportsList'
-import { NotificationCenter } from './components/navigation/NotificationCenter'
 import { authApi } from './dummyapi/api'
 import { PermissionType } from './dummyapi/database/dummyRoles'
-import BidPreparationForm from './components/forms/BidPreparationForm'
 import { Forms } from './pages/Forms'
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
@@ -119,12 +116,9 @@ function App() {
     "Business Development": <BusinessDevelopment />,
     "Project Management": <ProjectManagement />,
     "Resources": <ResourceManagement />,
-    "Reports": <ReportsList />,
-    "Notifications": <NotificationCenter />,
     "Project Details": <ProjectDetails />,
     "Business Development Details": <BusinessDevelopmentDetails />,
     'Forms' : <Forms />,
-    'Bid Preparation' : <BidPreparationForm />
   };
 
   if (isLoading) {

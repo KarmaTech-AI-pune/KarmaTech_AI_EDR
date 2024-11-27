@@ -2,49 +2,48 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
-  Grid, 
-  Alert,
   TextField,
   Button,
   Divider,
-  IconButton
+  IconButton,
+  Alert,
+  Snackbar
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { GeneralProjectList } from '../components/projects/ProjectList';
-import { ProjectFilter } from '../components/projects/ProjectFilter';
-import { ProjectForm } from '../components/forms/ProjectForm';
+import { ProjectManagementProjectList } from '../components/projects/ProjectManagementProjectList';
+import {ProjectInitializationDialog}  from '../components/dialogbox/ProjectInitializationDialog';
 import { Pagination } from '../components/Pagination';
 import { authApi } from '../dummyapi/authApi';
-import { UserWithRole, Project, ProjectStatus, ProjectFormData } from '../types';
-import { PermissionType } from '../dummyapi/database/dummyRoles';
 import { projectApi } from '../dummyapi/projectApi';
+import { Project, UserWithRole } from '../types';
+import { PermissionType } from '../dummyapi/database/dummyRoles';
 
 export const ProjectManagement: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canViewProjects, setCanViewProjects] = useState(false);
   const [canCreateProject, setCanCreateProject] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>();
+  const [formError, setFormError] = useState<string | undefined>();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ProjectStatus | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [projectsPerPage] = useState(5);
-
-  const projectManagementStatuses: ProjectStatus[] = [
-    ProjectStatus['In Progress'],
-    ProjectStatus.Completed,
-    ProjectStatus.Cancelled
-  ];
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const fetchProjects = async () => {
     try {
-      const allProjects = await projectApi.getAll();
-      setProjects(allProjects);
-    } catch (err) {
+      if (!currentUser) {
+        return;
+      }
+
+      const response = await projectApi.getAll();
+      setProjects(response);
+      setError(undefined);
+    } catch (err: any) {
       console.error('Error fetching projects:', err);
-      setError('Failed to fetch projects');
+      setError(err.message || 'Failed to fetch projects');
     }
   };
 
@@ -62,7 +61,7 @@ export const ProjectManagement: React.FC = () => {
 
         if (user.roleDetails) {
           const hasProjectViewPermission = user.roleDetails.permissions.includes(
-            PermissionType.VIEW_PROJECTS
+            PermissionType.VIEW_PROJECT
           );
           const hasProjectCreatePermission = user.roleDetails.permissions.includes(
             PermissionType.CREATE_PROJECT
@@ -73,12 +72,10 @@ export const ProjectManagement: React.FC = () => {
 
           if (!hasProjectViewPermission) {
             setError('You do not have permission to view projects');
-          } else {
-            await fetchProjects();
           }
         }
-      } catch (err) {
-        setError('Error checking user permissions');
+      } catch (err: any) {
+        setError(err.message || 'Error checking user permissions');
         console.error(err);
       }
     };
@@ -86,28 +83,22 @@ export const ProjectManagement: React.FC = () => {
     checkUserPermissions();
   }, []);
 
+  useEffect(() => {
+    if (currentUser && canViewProjects) {
+      fetchProjects();
+    }
+  }, [currentUser, canViewProjects]);
+
   const handleCreateProject = () => {
     if (canCreateProject) {
       setIsCreatingProject(true);
-    } else {
-      alert('You do not have permission to create projects');
+      setFormError(undefined);
     }
   };
 
-  const handleSubmitProject = async (projectData: ProjectFormData) => {
-    try {
-      const newProjectData = {
-        ...projectData,
-        status: ProjectStatus['In Progress']
-      };
-
-      await projectApi.create(newProjectData);
-      await fetchProjects();
-      setIsCreatingProject(false);
-    } catch (err) {
-      console.error('Error creating project:', err);
-      setError('Failed to create project');
-    }
+  const handleProjectCreated = async () => {
+    await fetchProjects();
+    setSuccessMessage('Project created successfully');
   };
 
   const handleProjectUpdated = async () => {
@@ -118,14 +109,16 @@ export const ProjectManagement: React.FC = () => {
     try {
       await projectApi.delete(projectId);
       await fetchProjects();
-    } catch (err) {
+      setSuccessMessage('Project deleted successfully');
+    } catch (err: any) {
       console.error('Error deleting project:', err);
-      setError('Failed to delete project');
+      setError(err.message || 'Failed to delete project');
     }
   };
 
   const handleCancelProject = () => {
     setIsCreatingProject(false);
+    setFormError(undefined);
   };
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,25 +126,36 @@ export const ProjectManagement: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleStatusFilter = (status: ProjectStatus | '') => {
-    setStatusFilter(status);
-    setCurrentPage(1);
-  };
+  // First apply role-based filtering
+  const roleFilteredProjects = projects.filter((project: Project) => {
+    if (!currentUser) return false;
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = 
-      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === '' || project.status === statusFilter;
-    const matchesProjectManagementStatuses = projectManagementStatuses.includes(project.status);
-
-    return matchesSearch && matchesStatus && matchesProjectManagementStatuses;
+    switch (currentUser.role) {
+      case 'Regional Manager':
+        return project.regionalManagerID === currentUser.id;
+      case 'Senior Project Manager':
+        return project.seniorProjectMangerId === currentUser.id;
+      case 'Project Manager':
+        return project.projectMangerId === currentUser.id;
+      default:
+        return true;
+    }
   });
 
+  // Then apply search filtering
+  const searchFilteredProjects = roleFilteredProjects.filter((project: Project) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    const name = project.name?.toLowerCase() || '';
+    const description = project.details?.toLowerCase() || '';
+    
+    return name.includes(searchTermLower) ||
+           description.includes(searchTermLower);
+  });
+
+  // Finally apply pagination
   const indexOfLastProject = currentPage * projectsPerPage;
   const indexOfFirstProject = indexOfLastProject - projectsPerPage;
-  const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
+  const currentProjects = searchFilteredProjects.slice(indexOfFirstProject, indexOfLastProject);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -189,7 +193,7 @@ export const ProjectManagement: React.FC = () => {
           Project Management
         </Typography>
         
-        {canCreateProject && !isCreatingProject && (
+        {canCreateProject && (
           <Button 
             variant="contained" 
             color="primary"
@@ -206,14 +210,11 @@ export const ProjectManagement: React.FC = () => {
         )}
       </Box>
 
-      {isCreatingProject && (
-        <Box sx={{ mb: 3 }}>
-          <ProjectForm 
-            onSubmit={handleSubmitProject}
-            onCancel={handleCancelProject}
-          />
-        </Box>
-      )}
+      <ProjectInitializationDialog
+        open={isCreatingProject}
+        onClose={handleCancelProject}
+        onProjectCreated={handleProjectCreated}
+      />
 
       <Divider sx={{ mb: 3 }} />
 
@@ -223,41 +224,32 @@ export const ProjectManagement: React.FC = () => {
         alignItems: 'center', 
         mb: 3 
       }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <ProjectFilter 
-            onFilterChange={handleStatusFilter}
-            currentFilter={statusFilter}
-            statuses={projectManagementStatuses}
-          />
-          
-          <TextField
-            variant="outlined"
-            size="small"
-            placeholder="Search projects"
-            value={searchTerm}
-            onChange={handleSearch}
-            InputProps={{
-              endAdornment: (
-                <IconButton size="small">
-                  <SearchIcon />
-                </IconButton>
-              ),
-              sx: { 
-                borderRadius: 2,
-                backgroundColor: 'background.paper'
-              }
-            }}
-            sx={{ 
-              width: 250,
-            }}
-          />
-        </Box>
+        <TextField
+          variant="outlined"
+          size="small"
+          placeholder="Search projects"
+          value={searchTerm}
+          onChange={handleSearch}
+          InputProps={{
+            endAdornment: (
+              <IconButton size="small">
+                <SearchIcon />
+              </IconButton>
+            ),
+            sx: { 
+              borderRadius: 2,
+              backgroundColor: 'background.paper'
+            }
+          }}
+          sx={{ 
+            width: 250,
+          }}
+        />
       </Box>
 
-      <GeneralProjectList 
+      <ProjectManagementProjectList
         projects={currentProjects}
-        emptyMessage="No project management projects found"
-        filterStatuses={projectManagementStatuses}
+        emptyMessage="No projects found"
         onProjectDeleted={handleProjectDeleted}
         onProjectUpdated={handleProjectUpdated}
       />
@@ -269,11 +261,18 @@ export const ProjectManagement: React.FC = () => {
       }}>
         <Pagination
           projectsPerPage={projectsPerPage}
-          totalProjects={filteredProjects.length}
+          totalProjects={searchFilteredProjects.length}
           paginate={paginate}
           currentPage={currentPage}
         />
       </Box>
+
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMessage(null)}
+        message={successMessage}
+      />
     </Box>
   );
 };

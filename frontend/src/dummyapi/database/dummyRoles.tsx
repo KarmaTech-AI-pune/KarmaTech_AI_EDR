@@ -3,11 +3,15 @@ import { UserRole } from './dummyusers';
 // Comprehensive Permission Enum
 export enum PermissionType {
   // Project Permissions
-  VIEW_PROJECTS = 'VIEW_PROJECTS',
+  VIEW_PROJECT = 'VIEW_PROJECT',
   CREATE_PROJECT = 'CREATE_PROJECT',
   EDIT_PROJECT = 'EDIT_PROJECT',
   DELETE_PROJECT = 'DELETE_PROJECT',
-  
+  REVIEW_PROJECT = 'REVIEW_PROJECT',
+  APPROVE_PROJECT = 'APPROVE_PROJECT',
+  SUBMIT_PROJECT_FOR_REVIEW = 'SUBMIT_PROJECT_FOR_REVIEW',
+  SUBMIT_PROJECT_FOR_APPROVAL = 'SUBMIT_PROJECT_FOR_APPROVAL',
+
   // Business Development Permissions
   VIEW_BUSINESS_DEVELOPMENT = 'VIEW_BUSINESS_DEVELOPMENT',
   CREATE_BUSINESS_DEVELOPMENT = 'CREATE_BUSINESS_DEVELOPMENT',
@@ -35,10 +39,14 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
     id: 'admin',
     name: 'Administrator',
     permissions: [
-      PermissionType.VIEW_PROJECTS,
+      PermissionType.VIEW_PROJECT,
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
       PermissionType.DELETE_PROJECT,
+      PermissionType.REVIEW_PROJECT,
+      PermissionType.APPROVE_PROJECT,
+      PermissionType.SUBMIT_PROJECT_FOR_REVIEW,
+      PermissionType.SUBMIT_PROJECT_FOR_APPROVAL,
 
       PermissionType.CREATE_BUSINESS_DEVELOPMENT,
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
@@ -56,30 +64,34 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
     id: 'project_manager',
     name: 'Project Manager',
     permissions: [
-      PermissionType.VIEW_PROJECTS,
+      PermissionType.VIEW_PROJECT,
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
       PermissionType.DELETE_PROJECT,
+      PermissionType.SUBMIT_PROJECT_FOR_REVIEW,
     ]
   },
   [UserRole.SeniorProjectManager]: {
     id: 'senior_project_manager',
     name: 'Senior Project Manager',
     permissions: [
-      PermissionType.VIEW_PROJECTS,
+      PermissionType.VIEW_PROJECT,
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
       PermissionType.DELETE_PROJECT,
+      PermissionType.REVIEW_PROJECT,
+      PermissionType.SUBMIT_FOR_APPROVAL,
     ]
   },
   [UserRole.RegionalManager]: {
     id: 'regional_manager',
     name: 'Regional Manager',
     permissions: [
-      PermissionType.VIEW_PROJECTS,
+      PermissionType.VIEW_PROJECT,
       PermissionType.CREATE_PROJECT,
       PermissionType.EDIT_PROJECT,
       PermissionType.DELETE_PROJECT,
+      PermissionType.APPROVE_PROJECT,
 
       PermissionType.CREATE_BUSINESS_DEVELOPMENT,
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,

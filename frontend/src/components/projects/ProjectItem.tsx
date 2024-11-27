@@ -1,10 +1,10 @@
-import { ListItem, ListItemText, LinearProgress, Typography, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { ListItem,Typography, Dialog, DialogTitle, DialogContent, DialogActions, Box, Grid } from '@mui/material';
 import { Button } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { ProjectItemProps, ProjectFormData, ProjectStatus, UserWithRole } from '../../types';
+import { ProjectItemProps, ProjectFormData, UserWithRole } from '../../types';
 import { useState, useContext, useEffect } from 'react';
 import { projectApi } from '../../dummyapi/api';
-import { ProjectForm } from '../forms/ProjectForm';
+import { ProjectInitForm } from '../forms/ProjectInitForm';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../dummyapi/database/dummyRoles';
@@ -104,46 +104,77 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
     <>
       <ListItem 
         sx={{ 
-          bgcolor: '#e0e0e0', 
-          mb: 1, 
+          bgcolor: 'background.paper',
+          border: '1px solid',
+          borderColor: 'divider',
           borderRadius: 1,
+          p: 2,
+          transition: 'all 0.2s ease-in-out',
           cursor: 'pointer',
           '&:hover': {
-            bgcolor: '#d0d0d0'
+            bgcolor: 'action.hover',
+            transform: 'translateX(4px)'
           }
         }}
         onClick={handleProjectClick}
       >
-        <ListItemText 
-          primary={project.name}
-          secondary={
-            <>
-              <Typography component="span" variant="body2">
-                Client: {project.clientName}
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" sx={{ color: 'primary.main', mb: 1 }}>
+            {project.name}
+          </Typography>
+          
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Client:</strong> {project.clientName} ({project.typeOfClient})
               </Typography>
-              <br />
-              <Typography component="span" variant="body2">
-                Status: {ProjectStatus[project.status]}
+              <Typography variant="body2" color="text.secondary">
+                <strong>Office:</strong> {project.office} ({project.region})
               </Typography>
-              {project.estimatedCost > 0 && (
-                <>
-                  <br />
-                  <Typography component="span" variant="body2">
-                    Estimated Cost: {project.currency} {project.estimatedCost.toLocaleString()}
-                  </Typography>
-                </>
-              )}
-    
-              <LinearProgress variant="determinate" value={project.progress} />   
-            </>
-          }
-        />  
-        {canEditProject && (
-          <Button onClick={handleEditClick}><Edit/></Button>
-        )}
-        {canDeleteProject && (
-          <Button sx={{color: 'red'}} onClick={handleDeleteClick}><Delete /></Button>
-        )}
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Type:</strong> {project.typeOfJob} | <strong>Sector:</strong> {project.sector}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Cost:</strong> {project.currency} {project.estimatedCost.toLocaleString()} ({project.feeType})
+              </Typography>
+            </Grid>
+          </Grid>
+        </Box>
+        
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 1,
+          ml: 2
+        }}>
+          {canEditProject && (
+            <Button 
+              size="small"
+              onClick={handleEditClick}
+              sx={{ 
+                minWidth: 'auto',
+                p: 1,
+                color: 'primary.main'
+              }}
+            >
+              <Edit />
+            </Button>
+          )}
+          {canDeleteProject && (
+            <Button 
+              size="small"
+              onClick={handleDeleteClick}
+              sx={{ 
+                minWidth: 'auto',
+                p: 1,
+                color: 'error.main'
+              }}
+            >
+              <Delete />
+            </Button>
+          )}
+        </Box>
       </ListItem>
 
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
@@ -164,7 +195,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
         fullWidth
       >
         <DialogContent>
-          <ProjectForm 
+          <ProjectInitForm 
             project={project}
             onSubmit={handleEditSubmit}
             onCancel={handleEditClose}
