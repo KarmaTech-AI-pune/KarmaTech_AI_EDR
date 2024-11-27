@@ -39,7 +39,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
 
   const projectManagers = users.filter(user => user.role === UserRole.ProjectManager);
   const seniorProjectManagers = users.filter(user => user.role === UserRole.SeniorProjectManager);
-  const regionalManagers = users.filter(user => user.role === UserRole.RegionalManager);
+  const regionalManagers = users.filter(user => 
+    user.role === UserRole.RegionalManager || user.role === UserRole.RegionalDirector
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -157,7 +159,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
             <TextField
               fullWidth
               select
-              label="Regional Manager"
+              label="Regional Manager/Director"
               name="regionalManagerID"
               value={formData.regionalManagerID}
               onChange={handleChange}
@@ -165,7 +167,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
             >
               {regionalManagers.map((rm) => (
                 <MenuItem key={rm.id} value={rm.id}>
-                  {rm.name}
+                  {rm.name} ({rm.role})
                 </MenuItem>
               ))}
             </TextField>

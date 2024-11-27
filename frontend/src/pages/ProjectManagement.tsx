@@ -205,7 +205,7 @@ export const ProjectManagement: React.FC = () => {
               px: 3
             }}
           >
-            New Project
+            Initialize Project
           </Button>
         )}
       </Box>
