@@ -180,7 +180,41 @@ const opportunityTrackingRawData =  {
     "fundingStream": "Government Budget",
     "contractType": "EPC",
     "workflowId": 5
-  }
+  },
+  "6":{
+    "id": 6,
+    "projectId": 2,
+    "stage": "B",
+    "strategicRanking": "H",
+    "bidFees": 75000,
+    "emd": 150000,
+    "formOfEMD": "Bank Guarantee",
+    "bidManagerId": 8,
+    "reviewManagerId": undefined, 
+    "approvalManagerId": undefined, 
+    "contactPersonAtClient": "Rajesh Kumar",
+    "dateOfSubmission": "2023-12-15",
+    "percentageChanceOfProjectHappening": 75.5,
+    "percentageChanceOfNJSSuccess": 65.0,
+    "likelyCompetition": "L&T, HCC, Gammon",
+    "grossRevenue": 7500000,
+    "netNJSRevenue": 6000000,
+    "followUpComments": "Client very interested in smart solutions",
+    "notes": "Need to focus on IoT integration",
+    "probableQualifyingCriteria": "Similar project experience, Local presence",
+    "operation": "Mumbai",
+    "workName": "Super Smart City Project",
+    "client": "Mumbai Municipal Corporation", 
+    "clientSector": "Government",
+    "likelyStartDate": "2024-03-01",
+    "status": "Bid Submitted",
+    "currency": "INR",
+    "capitalValue": 500000000,
+    "durationOfProject": 36,
+    "fundingStream": "Government Budget",
+    "contractType": "EPC",
+    "workflowId": 1
+  },
 } as const;
 
 // Transform into typed array

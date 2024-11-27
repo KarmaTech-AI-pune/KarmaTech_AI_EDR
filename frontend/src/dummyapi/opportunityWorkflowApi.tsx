@@ -1,6 +1,7 @@
 import { workflowData } from './database/dummyOpporunityWorkflow';
 import type { WorkflowEntry } from './database/dummyOpporunityWorkflow';
 import { opportunityApi } from './opportunityApi';
+import { getOpportunityById } from './database/dummyopportunityTracking';
 
 // Mutable array to store workflow data
 let mutableWorkflowData: WorkflowEntry[] = [...workflowData];
@@ -113,4 +114,22 @@ export const bulkUpdateWorkflows = async (updates: Partial<WorkflowEntry>[]) => 
         }
     });
     return mutableWorkflowData;
+};
+
+// Get opportunities with bidAccepted stage
+export const getBidAcceptedOpportunities = async () => {
+    const bidAcceptedWorkflows = mutableWorkflowData.filter(w => w.formStage === 'bidAccepted');
+    return Promise.all(
+        bidAcceptedWorkflows.map(async (workflow) => {
+            const opportunity = getOpportunityById(workflow.opportunityId);
+            if (opportunity) {
+                return {
+                    id: workflow.opportunityId,
+                    workName: opportunity.workName,
+                    client: opportunity.client
+                };
+            }
+            return null;
+        })
+    ).then(opportunities => opportunities.filter(Boolean));
 };

@@ -80,7 +80,15 @@ export const workflowData: WorkflowEntry[] = [
         workflowId: 1, // Maps to "Initial" status
         createdAt: '2024-01-19T10:00:00Z',
         updatedAt: '2024-01-19T10:00:00Z'
-    }
+    },
+    {
+        id: 6,
+        opportunityId: 6,
+        formStage: 'bidAccepted',
+        workflowId: 6,
+        createdAt: '2024-01-16T10:00:00Z',
+        updatedAt: '2024-01-16T10:00:00Z'
+    },
 ];
 
 // Utility functions
