@@ -94,7 +94,6 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               onChange={handleChange}
               multiline
               rows={3}
-              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -115,7 +114,6 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               name="typeOfClient"
               value={formData.typeOfClient}
               onChange={handleChange}
-              required
             >
               <MenuItem value="Government">Government</MenuItem>
               <MenuItem value="Private">Private</MenuItem>
@@ -179,7 +177,6 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               name="office"
               value={formData.office}
               onChange={handleChange}
-              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -190,7 +187,6 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               name="region"
               value={formData.region}
               onChange={handleChange}
-              required
             >
               <MenuItem value="North">North</MenuItem>
               <MenuItem value="South">South</MenuItem>
@@ -206,7 +202,6 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               name="typeOfJob"
               value={formData.typeOfJob}
               onChange={handleChange}
-              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -216,7 +211,6 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               name="sector"
               value={formData.sector}
               onChange={handleChange}
-              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -227,7 +221,6 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               name="feeType"
               value={formData.feeType}
               onChange={handleChange}
-              required
             >
               <MenuItem value="Lumpsum">Lumpsum</MenuItem>
               <MenuItem value="Itemrate">Item Rate</MenuItem>

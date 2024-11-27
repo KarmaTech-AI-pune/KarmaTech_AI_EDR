@@ -38,6 +38,7 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
   const [error, setError] = useState<string | null>(null);
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<string>('');
   const [opportunities, setOpportunities] = useState<Array<{id: number, workName: string, client: string}>>([]);
+  const [importedProjectData, setImportedProjectData] = useState<ProjectFormData | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -68,6 +69,7 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
     setSelectedOpportunityId('');
+    setImportedProjectData(null);
   };
 
   const handleClose = () => {
@@ -75,11 +77,46 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
     setCurrentTab(0);
     setError(null);
     setSelectedOpportunityId('');
+    setImportedProjectData(null);
     onClose();
   };
 
   const handleOpportunitySelect = (event: any) => {
     setSelectedOpportunityId(event.target.value);
+    setImportedProjectData(null);
+  };
+
+  const handleImportProject = () => {
+    const opportunity = getOpportunityById(Number(selectedOpportunityId));
+    if (!opportunity) {
+      setError('Failed to load opportunity data');
+      return;
+    }
+
+    // Map opportunity fields to project fields
+    const projectData: ProjectFormData = {
+      name: opportunity.workName,
+      details: opportunity.notes || '',
+      clientName: opportunity.client,
+      projectMangerId: 0, // Default value, needs to be selected
+      office: opportunity.operation,
+      projectNo: '', // Needs to be entered manually
+      typeOfJob: opportunity.clientSector, // Using clientSector as type of job
+      seniorProjectMangerId: 0, // Default value, needs to be selected
+      sector: opportunity.clientSector,
+      region: '', // Needs to be selected
+      typeOfClient: opportunity.clientSector,
+      estimatedCost: opportunity.capitalValue,
+      feeType: opportunity.contractType === 'Lump Sum' ? 'Lumpsum' : opportunity.contractType,
+      startDate: opportunity.likelyStartDate,
+      endDate: '', // Can be calculated based on durationOfProject if needed
+      currency: opportunity.currency,
+      budget: opportunity.capitalValue, // Using capitalValue as initial budget
+      priority: '', // Needs to be selected
+      regionalManagerID: opportunity.approvalManagerId || 0
+    };
+
+    setImportedProjectData(projectData);
   };
 
   const handleProjectSubmit = async (formData: ProjectFormData) => {
@@ -127,24 +164,48 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
 
               <Box sx={{ p: 3 }}>
                 {currentTab === 0 && (
-                  <FormControl fullWidth sx={{ mt: 2 }}>
-                    <InputLabel id="opportunity-select-label">Select Project</InputLabel>
-                    <Select
-                      labelId="opportunity-select-label"
-                      value={selectedOpportunityId}
-                      onChange={handleOpportunitySelect}
-                      label="Select Project"
-                    >
-                      <MenuItem value="">
-                        <em>None</em>
-                      </MenuItem>
-                      {opportunities.map((opportunity) => (
-                        <MenuItem key={opportunity.id} value={opportunity.id}>
-                          {opportunity.workName} - {opportunity.client}
+                  <>
+                    <FormControl fullWidth sx={{ mt: 2 }}>
+                      <InputLabel id="opportunity-select-label">Select Project</InputLabel>
+                      <Select
+                        labelId="opportunity-select-label"
+                        value={selectedOpportunityId}
+                        onChange={handleOpportunitySelect}
+                        label="Select Project"
+                      >
+                        <MenuItem value="">
+                          <em>None</em>
                         </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                        {opportunities.map((opportunity) => (
+                          <MenuItem key={opportunity.id} value={opportunity.id}>
+                            {opportunity.workName} - {opportunity.client}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    {selectedOpportunityId && !importedProjectData && (
+                      <Box sx={{ mt: 2 }}>
+                        <Button 
+                          variant="contained" 
+                          color="primary"
+                          onClick={handleImportProject}
+                        >
+                          Import Project
+                        </Button>
+                      </Box>
+                    )}
+
+                    {importedProjectData && (
+                      <Box sx={{ mt: 2 }}>
+                        <ProjectInitForm 
+                          onSubmit={handleProjectSubmit}
+                          onCancel={handleClose}
+                          project={importedProjectData}
+                        />
+                      </Box>
+                    )}
+                  </>
                 )}
 
                 {currentTab === 1 && (
@@ -152,18 +213,6 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
                     onSubmit={handleProjectSubmit}
                     onCancel={handleClose}
                   />
-                )}
-
-                {currentTab === 0 && selectedOpportunityId && (
-                  <Box sx={{ mt: 2 }}>
-                    <Button 
-                      variant="contained" 
-                      color="primary"
-                      onClick={() => {}}
-                    >
-                      Import Project
-                    </Button>
-                  </Box>
                 )}
               </Box>
             </>

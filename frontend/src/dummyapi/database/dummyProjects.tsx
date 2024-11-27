@@ -4,11 +4,11 @@ const projectsData = {
   "1":{
     "id": 1,
     "name": "City Water Supply Upgrade",
-    "details" : "City needs water supply upgrade",
+    "details" : "City needs water supply upgrade", //
     "clientName": "Metropolis Municipality",
-    "projectMangerId" : 1,
-    "office" : "Mumbai",
-    "projectNo" : "abc-123",
+    "projectMangerId" : 1, //
+    "office" : "Mumbai",// 
+    "projectNo" : "abc-123", //
     "typeOfJob" : "Water Supply",
     "seniorProjectMangerId" : 1,
     "sector": "Water",
