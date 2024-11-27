@@ -7,15 +7,12 @@ import {
   CircularProgress,
   Alert,
   Drawer,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Paper,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
   ListItemButton,
+  Paper,
   Collapse
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -30,9 +27,24 @@ import HomeIcon from '@mui/icons-material/Home';
 import ArticleIcon from '@mui/icons-material/Article';
 import FolderIcon from '@mui/icons-material/Folder';
 import TimelineIcon from '@mui/icons-material/Timeline';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { Project, OpportunityTracking } from '../types';
 import { projectManagementAppContext } from '../App';
 import { opportunityApi } from '../dummyapi/opportunityApi';
+
+// Import all forms from index
+import {
+  WorkBreakdownStructureForm,
+  JobStartForm,
+  InputRegisterForm,
+  CorrespondenceForm,
+  CheckReviewForm,
+  ChangeControlForm,
+  ProgressReviewForm,
+  ProjectClosureForm,
+  FormsOverview
+} from '../components/forms';
 
 const DRAWER_WIDTH = 280;
 const NAVBAR_HEIGHT = '64px';
@@ -42,27 +54,28 @@ export const ProjectDetails: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState('overview');
-  const [expandedMenu, setExpandedMenu] = useState<string | false>('overview');
-  const [expandedForm, setExpandedForm] = useState<string | false>(false);
+  const [selectedForm, setSelectedForm] = useState<string | null>(null);
+  const [formsOpen, setFormsOpen] = useState(false);
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
     setIsLoading(false);
   }, []);
 
-  const handleMenuChange = (panel: string) => (
-    event: React.SyntheticEvent,
-    isExpanded: boolean
-  ) => {
-    setExpandedMenu(isExpanded ? panel : false);
-    setSelectedSection(panel);
+  const handleSectionClick = (section: string) => {
+    setSelectedSection(section);
+    if (section === 'forms') {
+      setFormsOpen(!formsOpen);
+      setSelectedForm(null);
+    } else {
+      setFormsOpen(false);
+      setSelectedForm(null);
+    }
   };
 
-  const handleFormAccordionChange = (panel: string) => (
-    event: React.SyntheticEvent,
-    isExpanded: boolean
-  ) => {
-    setExpandedForm(isExpanded ? panel : false);
+  const handleFormClick = (formId: string) => {
+    setSelectedForm(formId);
+    setSelectedSection('forms');
   };
 
   const getProjectTitle = (project: Project | OpportunityTracking | null) => {
@@ -77,41 +90,49 @@ export const ProjectDetails: React.FC = () => {
       id: 'wbs',
       title: 'PMD2. Work Breakdown Structure',
       icon: <TaskIcon />,
+      component: <WorkBreakdownStructureForm />
     },
     {
       id: 'jobStart',
       title: 'PMD1. Job Start Form',
       icon: <AssignmentIcon />,
+      component: <JobStartForm />
     },
     {
       id: 'inputRegister',
       title: 'PMD3. Input Register',
       icon: <DescriptionIcon />,
+      component: <InputRegisterForm />
     },
     {
       id: 'correspondence',
       title: 'PMD4. Correspondence Inward-Outward',
       icon: <EmailIcon />,
+      component: <CorrespondenceForm />
     },
     {
       id: 'review',
       title: 'PMD5. Check and Review Form',
       icon: <CheckCircleIcon />,
+      component: <CheckReviewForm />
     },
     {
       id: 'changeControl',
       title: 'PMD6. Change Control Register',
       icon: <ChangeCircleIcon />,
+      component: <ChangeControlForm />
     },
     {
       id: 'progressReview',
       title: 'PMD7. Monthly Progress Review',
       icon: <AssessmentIcon />,
+      component: <ProgressReviewForm />
     },
     {
       id: 'closure',
       title: 'PMD8. Project Closure',
       icon: <TaskIcon />,
+      component: <ProjectClosureForm />
     },
   ];
 
@@ -164,6 +185,14 @@ export const ProjectDetails: React.FC = () => {
   }
 
   const renderContent = () => {
+    if (selectedSection === 'forms') {
+      if (selectedForm) {
+        const form = formSections.find(f => f.id === selectedForm);
+        return form?.component;
+      }
+      return <FormsOverview />;
+    }
+
     switch (selectedSection) {
       case 'overview':
         return (
@@ -171,39 +200,6 @@ export const ProjectDetails: React.FC = () => {
             <Typography variant="h6" gutterBottom>Project Overview</Typography>
             {/* Add project overview content */}
           </Paper>
-        );
-      case 'forms':
-        return (
-          <Box sx={{ width: '100%' }}>
-            {formSections.map((section) => (
-              <Accordion
-                key={section.id}
-                expanded={expandedForm === section.id}
-                onChange={handleFormAccordionChange(section.id)}
-              >
-                <AccordionSummary 
-                  expandIcon={<ExpandMoreIcon />}
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    },
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {section.icon}
-                    <Typography>{section.title}</Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box sx={{ p: 2 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      Form content for {section.title} will be implemented here
-                    </Typography>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-            ))}
-          </Box>
         );
       case 'documents':
         return (
@@ -255,56 +251,57 @@ export const ProjectDetails: React.FC = () => {
       >
         <List sx={{ width: '100%', p: 2 }}>
           {menuSections.map((section) => (
-            <Accordion
-              key={section.id}
-              expanded={expandedMenu === section.id}
-              onChange={handleMenuChange(section.id)}
-              sx={{
-                '&:before': { display: 'none' },
-                boxShadow: 'none',
-                bgcolor: 'transparent',
-              }}
-            >
-              <AccordionSummary
-                expandIcon={section.subItems ? <ExpandMoreIcon /> : null}
-                sx={{
-                  minHeight: 48,
-                  '&:hover': {
-                    bgcolor: 'action.hover',
-                  },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {section.icon}
-                  <Typography>{section.title}</Typography>
-                </Box>
-              </AccordionSummary>
+            <Box key={section.id}>
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={() => handleSectionClick(section.id)}
+                  sx={{
+                    bgcolor: selectedSection === section.id ? 'action.selected' : 'transparent',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    {section.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={section.title} />
+                  {section.subItems && (
+                    formsOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
+                  )}
+                </ListItemButton>
+              </ListItem>
               {section.subItems && (
-                <AccordionDetails sx={{ p: 0 }}>
-                  <List disablePadding>
-                    {section.subItems.map((subItem) => (
-                      <ListItem key={subItem.id} disablePadding>
-                        <ListItemButton
-                          onClick={() => setExpandedForm(subItem.id)}
-                          sx={{ pl: 4 }}
-                        >
-                          <ListItemIcon sx={{ minWidth: 36 }}>
-                            {subItem.icon}
-                          </ListItemIcon>
-                          <ListItemText 
-                            primary={subItem.title}
-                            primaryTypographyProps={{
-                              variant: 'body2',
-                              sx: { fontWeight: expandedForm === subItem.id ? 600 : 400 }
-                            }}
-                          />
-                        </ListItemButton>
-                      </ListItem>
+                <Collapse in={formsOpen} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {section.subItems.map((item) => (
+                      <ListItemButton
+                        key={item.id}
+                        sx={{
+                          pl: 4,
+                          bgcolor: selectedForm === item.id ? 'action.selected' : 'transparent',
+                          '&:hover': {
+                            bgcolor: 'action.hover',
+                          },
+                        }}
+                        onClick={() => handleFormClick(item.id)}
+                      >
+                        <ListItemIcon>
+                          {item.icon}
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={item.title}
+                          primaryTypographyProps={{
+                            variant: 'body2',
+                            sx: { fontWeight: selectedForm === item.id ? 600 : 400 }
+                          }}
+                        />
+                      </ListItemButton>
                     ))}
                   </List>
-                </AccordionDetails>
+                </Collapse>
               )}
-            </Accordion>
+            </Box>
           ))}
         </List>
       </Drawer>
