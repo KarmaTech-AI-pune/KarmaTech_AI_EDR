@@ -97,7 +97,8 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-      PermissionType.APPROVE_BUSINESS_DEVELOPMENT,
+      PermissionType.REVIEW_BUSINESS_DEVELOPMENT,
+      PermissionType.SUBMIT_FOR_APPROVAL,
     ]
   },
   [UserRole.BusinessDevelopmentManager]: {
@@ -108,7 +109,7 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-      PermissionType.SUBMIT_FOR_REVIEW,
+      PermissionType.SUBMIT_FOR_REVIEW
     ]
   },
   [UserRole.SubjectMatterExpert]: {
@@ -121,30 +122,23 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
   },
-  [UserRole.BusinessDevelopmentHead]: {
-    id: 'business_dev_head',
-    name: 'Business Development Head',
+  [UserRole.RegionalDirector]: {
+    id: 'regional_director',
+    name: 'Regional Director',
     permissions: [
+      PermissionType.VIEW_PROJECT,
+      PermissionType.CREATE_PROJECT,
+      PermissionType.EDIT_PROJECT,
+      PermissionType.DELETE_PROJECT,
+      PermissionType.APPROVE_PROJECT,
+
       PermissionType.CREATE_BUSINESS_DEVELOPMENT,
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-      PermissionType.REVIEW_BUSINESS_DEVELOPMENT,
-      PermissionType.SUBMIT_FOR_APPROVAL,
+      PermissionType.APPROVE_BUSINESS_DEVELOPMENT
     ]
   },
-  [UserRole.VicePresidentBD]: {
-    id: 'vice_president_bd',
-    name: 'Vice President BD',
-    permissions: [
-      PermissionType.CREATE_BUSINESS_DEVELOPMENT,
-      PermissionType.EDIT_BUSINESS_DEVELOPMENT,
-      PermissionType.DELETE_BUSINESS_DEVELOPMENT,
-      PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-      PermissionType.REVIEW_BUSINESS_DEVELOPMENT,
-      PermissionType.APPROVE_BUSINESS_DEVELOPMENT,
-    ]
-  }
 };
 
 // Utility function to check if a user has a specific permission

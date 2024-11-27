@@ -40,7 +40,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
   const [manager,setManager] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get all Business Development Head users
+    // Get all Regional Manager users
     const checkManager = async() =>{
       if(opportunityId){
         let res =  await opportunityApi.getById(opportunityId);
@@ -54,8 +54,8 @@ const SendForReview: React.FC<SendForReviewProps> = ({
         }
       }
     };
-    const bdHeads = getUsersByRole(UserRole.BusinessDevelopmentHead);
-    setReviewers(bdHeads);
+    const regionalManagers = getUsersByRole(UserRole.RegionalManager);
+    setReviewers(regionalManagers);
     checkManager();
   }, [opportunityId]);
 
@@ -72,7 +72,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
 
   const handleSubmit = async () => {
     if (!selectedReviewer) {
-      setError('Please select a Business Development Head');
+      setError('Please select a Regional Manager');
       return;
     }
 
@@ -159,7 +159,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
         onClick: stopEventPropagation
       }}
     >
-      <DialogTitle>Send for Review</DialogTitle>
+      <DialogTitle>Regional Manager</DialogTitle>
       <DialogContent onClick={stopEventPropagation}>
         <FormControl 
           fullWidth 
@@ -172,11 +172,11 @@ const SendForReview: React.FC<SendForReviewProps> = ({
             </div>
           ) : (
             <>
-              <InputLabel>Business Development Head</InputLabel>
+              <InputLabel>Regional Manager</InputLabel>
               <Select
                 value={selectedReviewer}
                 onChange={handleReviewerChange}
-                label="Business Development Head"
+                label="Regional Manager"
                 onClick={stopEventPropagation}
                 MenuProps={{
                   onClick: stopEventPropagation

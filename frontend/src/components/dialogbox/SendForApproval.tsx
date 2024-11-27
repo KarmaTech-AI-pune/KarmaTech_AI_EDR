@@ -38,31 +38,31 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   const [selectedApprover, setSelectedApprover] = useState<number>(0);
   const [approvers, setApprovers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [manager, setManager] = useState<string | null>(null);
+  const [director, setDirector] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkManager = async() =>{
+    const checkDirector = async() =>{
       if(opportunityId){
         let res =  await opportunityApi.getById(opportunityId)
         console.log("opportunity",res)
 
         if(res.approvalManagerId)
         {
-          let managerUser = await getUserById(res.approvalManagerId)
-          if(managerUser)
+          let directorUser = await getUserById(res.approvalManagerId)
+          if(directorUser)
           {
-          setManager(managerUser.name)
+          setDirector(directorUser.name)
           setSelectedApprover(res.approvalManagerId)
           }
-          else setError("404: ManagerUser not found")
+          else setError("404: DirectorUser not found")
         }
       }
       else console.log("No ID for opp")
     }
-    // Get all Regional Managers
-    const regionalManagers = getUsersByRole(UserRole.RegionalManager);
-    setApprovers(regionalManagers);
-    checkManager();
+    // Get all Regional Directors
+    const regionalDirectors = getUsersByRole(UserRole.RegionalDirector);
+    setApprovers(regionalDirectors);
+    checkDirector();
   }, [selectedApprover]);
 
   const handleApproverChange = (event: SelectChangeEvent) => {
@@ -78,7 +78,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
 
   const handleSubmit = async () => {
     if (!selectedApprover) {
-      setError('Please select a Regional Manager');
+      setError('Please select a Regional Director');
       return;
     }
 
@@ -157,17 +157,17 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
           margin="normal"
           error={!!error}
         >
-          {manager ? (
+          {director ? (
             <div>
-              Send to {manager} for approval?
+              Send to {director} for approval?
             </div>
           ) : (
             <>
-              <InputLabel>Regional Manager</InputLabel>
+              <InputLabel>Regional Director</InputLabel>
               <Select
                 value={selectedApprover.toString()}
                 onChange={handleApproverChange}
-                label="Regional Manager"
+                label="Regional Director"
                 onClick={stopEventPropagation}
                 MenuProps={{
                   onClick: stopEventPropagation

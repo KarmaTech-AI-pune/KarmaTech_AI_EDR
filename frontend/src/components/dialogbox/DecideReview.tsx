@@ -34,13 +34,13 @@ const DecideReview: React.FC<DecideReviewProps> = ({
   const [decision, setDecision] = useState('');
   const [comments, setComments] = useState('');
   const [selectedManager, setSelectedManager] = useState<number | ''>('');
-  const [regionalManagers, setRegionalManagers] = useState<AuthUser[]>([]);
+  const [regionalDirectors, setRegionalDirectors] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get all Regional Manager users
-    const managers = getUsersByRole(UserRole.RegionalManager);
-    setRegionalManagers(managers);
+    // Get all Regional Director users
+    const directors = getUsersByRole(UserRole.RegionalDirector);
+    setRegionalDirectors(directors);
   }, []);
 
   const handleDecisionChange = (event: any) => {
@@ -81,7 +81,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
     }
 
     if (decision === 'approve' && !selectedManager) {
-      setError('Please select a Regional Manager');
+      setError('Please select a Regional Director');
       return;
     }
 
@@ -108,12 +108,12 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 
       // Log the review decision
       if (decision === 'approve') {
-        const selectedManagerDetails = regionalManagers.find(m => m.id === selectedManager);
+        const selectedDirectorDetails = regionalDirectors.find(m => m.id === selectedManager);
         await HistoryLoggingService.logReviewDecision(
           opportunityId,
           'approved',
           currentUser,
-          `Sent for approval to ${selectedManagerDetails?.name}`
+          `Sent for approval to ${selectedDirectorDetails?.name}`
         );
       } else {
         await HistoryLoggingService.logReviewDecision(
@@ -201,20 +201,20 @@ const DecideReview: React.FC<DecideReviewProps> = ({
             error={!!error && !selectedManager}
             onClick={handleDialogClick}
           >
-            <InputLabel>Regional Manager</InputLabel>
+            <InputLabel>Regional Director</InputLabel>
             <Select
               value={selectedManager}
               onChange={handleManagerChange}
-              label="Regional Manager"
+              label="Regional Director"
               onClick={handleDialogClick}
             >
-              {regionalManagers.map((manager) => (
+              {regionalDirectors.map((director) => (
                 <MenuItem 
-                  key={manager.id} 
-                  value={manager.id}
+                  key={director.id} 
+                  value={director.id}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {manager.name}
+                  {director.name}
                 </MenuItem>
               ))}
             </Select>

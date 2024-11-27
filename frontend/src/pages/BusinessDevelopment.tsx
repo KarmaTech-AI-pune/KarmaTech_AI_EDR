@@ -40,13 +40,14 @@ export const BusinessDevelopment: React.FC = () => {
 
       let response: OpportunityTracking[] = [];
       
-      // For BDE roles, Business Development Head, and Regional Manager use specific getters
+      // For BDE roles, Business Development Head, Regional Manager, and Regional Director use specific getters
       if (currentUser.role === UserRole.BusinessDevelopmentManager) {
         response = await opportunityApi.getByUserId(currentUser.id);
-      } else if (currentUser.role === UserRole.BusinessDevelopmentHead) {
+      } else if (currentUser.role === UserRole.RegionalManager) {
         // Get opportunities where user is reviewer
         response = await opportunityApi.getByReviewManagerId(currentUser.id);
-      } else if (currentUser.role === UserRole.RegionalManager) {
+      }  
+      else if (currentUser.role === UserRole.RegionalDirector) {
         // Get opportunities where user is approver
         response = await opportunityApi.getByApprovalManagerId(currentUser.id);
       } else {
