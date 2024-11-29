@@ -1,5 +1,5 @@
 import { OpportunityHistory } from "../types";
-import { opportunityHistories, getOpportunityHistoryById, getHistoriesByOpportunityId } from "./database/dummyOpportunityHistory";
+import { opportunityHistories, getHistoriesByOpportunityId } from "./database/dummyOpportunityHistory";
 
 // Get all history entries
 export const getAllOpportunityHistories = async (): Promise<OpportunityHistory[]> => {

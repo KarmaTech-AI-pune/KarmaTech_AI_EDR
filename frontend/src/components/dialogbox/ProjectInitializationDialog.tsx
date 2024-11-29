@@ -17,7 +17,7 @@ import {
   InputLabel
 } from '@mui/material';
 import ProjectInitForm from '../forms/ProjectInitForm';
-import { ProjectFormType, ProjectFormData } from '../../types';
+import {  ProjectFormData } from '../../types';
 import { projectApi } from '../../dummyapi/projectApi';
 import { workflowData } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { getOpportunityById } from '../../dummyapi/database/dummyopportunityTracking';
@@ -67,6 +67,7 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    console.log(event)
     setCurrentTab(newValue);
     setSelectedOpportunityId('');
     setImportedProjectData(null);

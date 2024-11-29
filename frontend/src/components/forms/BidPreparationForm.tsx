@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  Accordion, 
-  AccordionSummary, 
-  AccordionDetails, 
   Typography, 
   TextField, 
   Button, 
@@ -21,7 +18,6 @@ import {
   IconButton
 } from '@mui/material';
 import { 
-  ExpandMore as ExpandMoreIcon, 
   Add as AddIcon, 
   Delete as DeleteIcon 
 } from '@mui/icons-material';

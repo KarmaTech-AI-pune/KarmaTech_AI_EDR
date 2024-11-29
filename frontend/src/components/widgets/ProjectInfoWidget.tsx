@@ -1,3 +1,4 @@
+/*
 import { Box, Typography, Grid, Chip, LinearProgress } from '@mui/material';
 import { Project, ProjectStatus } from '../../types';
 
@@ -88,3 +89,4 @@ const ProjectInfoWidget: React.FC<ProjectInfoWidgetProps> = ({ project }) => {
 };
 
 export default ProjectInfoWidget;
+*/

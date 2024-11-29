@@ -5,7 +5,7 @@ export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
       const response = await axiosInstance.post('user/login', credentials);
-      const { success, user, token } = response.data;
+      const { success, token } = response.data;
       
       if (success && token) {
         localStorage.setItem('token', token);

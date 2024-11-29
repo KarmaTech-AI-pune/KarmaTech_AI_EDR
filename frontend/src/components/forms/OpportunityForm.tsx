@@ -15,7 +15,6 @@ import {
   Alert,
   Typography,
   Divider,
-  Box
 } from '@mui/material';
 import { DateField } from '@mui/x-date-pickers/DateField';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -23,9 +22,6 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
 import { OpportunityTracking, projectManagementAppContextType } from '../../types';
 import { getUsersByRole, UserRole } from '../../dummyapi/database/dummyusers';
-import { workflowStatuses, getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
-import { PermissionType, hasPermission } from '../../dummyapi/database/dummyRoles';
-import { HistoryLoggingService } from '../../services/historyLoggingService';
 
 interface OpportunityFormProps {
   open: boolean;
@@ -88,13 +84,13 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       name: manager.name
     })));
 
-    const reviewers = getUsersByRole(UserRole.BusinessDevelopmentHead);
+    const reviewers = getUsersByRole(UserRole.RegionalManager);
     setReviewManagers(reviewers.map(reviewer => ({
       id: reviewer.id,
       name: reviewer.name
     })));
 
-    const approvers = [...getUsersByRole(UserRole.RegionalManager), ...getUsersByRole(UserRole.VicePresidentBD)];
+    const approvers = [...getUsersByRole(UserRole.RegionalManager), ...getUsersByRole(UserRole.RegionalDirector)];
     setApprovalManagers(approvers.map(approver => ({
       id: approver.id,
       name: approver.name
@@ -140,7 +136,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       }));
     }
   };
-
+/*
   const canChangeWorkflowStatus = (currentId: number | undefined, newId: number): boolean => {
     if (!context.user?.role) return false;
 
@@ -175,7 +171,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
 
     return false;
   };
-
+*/
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -196,9 +192,10 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     onSubmit(formData as OpportunityTracking);
   };
 
-  const isEditMode = Boolean(project?.id);
+  //const isEditMode = Boolean(project?.id);
 
   // Get available workflow status options based on current status and user role
+  /*
   const getAvailableWorkflowStatuses = (): number[] => {
     if (!context.user?.role || !formData.workflowId) return [1]; // Default to Initial (ID: 1)
 
@@ -226,7 +223,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       default:
         return [formData.workflowId];
     }
-  };
+  };*/
 
   // Rest of the component remains the same until the form fields
   return (

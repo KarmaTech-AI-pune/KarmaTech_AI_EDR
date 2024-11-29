@@ -26,11 +26,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { projectManagementAppContext } from '../../App';
 import {
-  WBSTasksAPI,
   ResourceRolesAPI,
   EmployeesAPI,
-  ResourceAllocationsAPI,
-  ODCCostsAPI
 } from '../../dummyapi/database/dummyDatabaseApi';
 
 // Styled components
@@ -44,12 +41,12 @@ const NumberInput = styled('input')({
     borderColor: '#1976d2'
   }
 });
-
+/*
 const TotalHoursInput = styled(NumberInput)({
   backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
   fontWeight: 'bold',
   color: '#1976d2'
-});
+});*/
 
 const StyledSelect = styled(Select)({
   width: '100%',
@@ -262,6 +259,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
   const addNewMonth = () => {
     const lastMonth = months[months.length - 1];
     const [monthName, yearStr] = lastMonth.split(' ');
+    console.log(monthName)
     const lastDate = new Date(2000 + parseInt(yearStr), months.length - 1);
     lastDate.setMonth(lastDate.getMonth() + 1);
     const newMonth = `${lastDate.toLocaleString('default', { month: 'long' })} ${lastDate.getFullYear().toString().slice(2)}`;

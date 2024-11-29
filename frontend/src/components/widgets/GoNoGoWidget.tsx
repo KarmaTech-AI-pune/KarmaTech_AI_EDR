@@ -16,7 +16,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { goNoGoApi } from '../../dummyapi/api';
-import { Project, GoNoGoDecision, GoNoGoStatus, ProjectStatus } from '../../types';
+import { Project, GoNoGoDecision, GoNoGoStatus} from '../../types';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../dummyapi/database/dummyRoles';
@@ -157,19 +157,7 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
   // (rendering logic, etc.)
 
   // If project is in opportunity phase, only show the button
-  if (project.status === ProjectStatus.Opportunity) {
-    return canEditBusinessDevelopment ? (
-      <Button
-        variant="contained"
-        onClick={navigateToForm}
-        color="primary"
-        fullWidth
-        sx={{ mb: 2 }}
-      >
-        {goNoGoDecision ? 'View/Edit Go/No Go Decision' : 'Make Go/No Go Decision'}
-      </Button>
-    ) : null;
-  }
+  
 
   if (loading) {
     return <Box sx={{ p: 3 }}>Loading Go/No-Go decision data...</Box>;

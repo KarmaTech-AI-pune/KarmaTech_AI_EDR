@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
-import { Project, GoNoGoDecision, GoNoGoStatus, projectManagementAppContextType } from '../../types';
+import { Project, GoNoGoStatus, projectManagementAppContextType } from '../../types';
 import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
 
@@ -127,7 +127,7 @@ const scoreRanges = [
   { value: 0, label: '0 - Not Rated', range: 'low' }
 ];
 
-const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ project, onSubmit }) => {
+const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ project }) => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const initialGoNoGoDecision = context.currentGoNoGoDecision;
   const [isEditing, setIsEditing] = useState(false);
@@ -323,7 +323,6 @@ const handleSubmit = async () => {
   
       const invalidScores = scoringFields.filter(field => {
         const score = criteria[field].score;
-        const comments = criteria[field].comments;
         
         // Check score is between 0-10
         if (score < 0 || score > 10) {

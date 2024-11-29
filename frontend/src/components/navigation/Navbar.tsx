@@ -16,7 +16,6 @@ import { useContext } from 'react';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
 import { authApi } from '../../dummyapi/authApi';
-import { rolesApi } from '../../dummyapi/rolesApi';
 import { PermissionType } from '../../dummyapi/database/dummyRoles';
 
 export const Navbar = () => {

@@ -9,18 +9,17 @@ interface DecisionWidgetProps {
   onStatusUpdate?: (updatedProject: Project) => void;
 }
 
-const DecisionWidget: React.FC<DecisionWidgetProps> = ({ project, onStatusUpdate }) => {
+const DecisionWidget: React.FC<DecisionWidgetProps> = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Only render for projects with Decision Pending status
-  if (project.status !== ProjectStatus['Bid Submitted']) {
-    return null;
-  }
+  
 
   const handleStatusUpdate = async (newStatus: ProjectStatus) => {
     setIsLoading(true);
     setError(null);
+    console.log(newStatus)
     /*
     try {
       const updatedProject = await updateProjectStatus(project.id, newStatus);

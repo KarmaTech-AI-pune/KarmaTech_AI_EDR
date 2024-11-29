@@ -2,7 +2,7 @@ import {Button} from '@mui/material';
 import { Send} from '@mui/icons-material';
 import { DecideApproval, DecideReview, SendForReview, SendForApproval } from '../dialogbox';
 import { useState, useContext} from 'react';
-import { workflowStatuses, getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
+import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { projectManagementAppContext } from '../../App';
 import { OpportunityTracking } from '../../types';
 

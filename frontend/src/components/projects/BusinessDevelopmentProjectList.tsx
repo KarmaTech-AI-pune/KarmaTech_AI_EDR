@@ -1,3 +1,4 @@
+/*
 import React, { useEffect, useState } from 'react';
 import { 
   Typography, 
@@ -117,3 +118,4 @@ export const BusinessDevelopmentProjectList: React.FC<BusinessDevelopmentProject
     </Paper>
   );
 };
+*/

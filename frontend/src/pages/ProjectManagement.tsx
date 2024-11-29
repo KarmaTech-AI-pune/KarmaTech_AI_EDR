@@ -32,6 +32,7 @@ export const ProjectManagement: React.FC = () => {
   const [projectsPerPage] = useState(5);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  console.log(formError)
   const fetchProjects = async () => {
     try {
       if (!currentUser) {

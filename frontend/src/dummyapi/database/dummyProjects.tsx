@@ -1,4 +1,4 @@
-import { Project, ProjectStatus } from "../../types/index"
+import { Project} from "../../types/index"
 
 const projectsData = {
   "1":{

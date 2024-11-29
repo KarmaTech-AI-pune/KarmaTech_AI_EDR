@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState} from 'react';
 import { 
   Typography, 
   List,
@@ -7,7 +7,6 @@ import {
 import { ProjectItem } from './ProjectItem';
 import { Project, ProjectStatus } from '../../types';
 import { ProjectInitializationDialog } from '../dialogbox/ProjectInitializationDialog';
-import { projectManagementAppContext } from '../../App';
 
 export interface ProjectManagementProjectListProps {
   projects: Project[];
@@ -22,16 +21,10 @@ export const ProjectManagementProjectList: React.FC<ProjectManagementProjectList
   emptyMessage = 'No active projects found',
   onProjectDeleted,
   onProjectUpdated,
-  filterStatuses
+  
 }) => {
   const [isInitializeDialogOpen, setIsInitializeDialogOpen] = useState(false);
-  const context = useContext(projectManagementAppContext);
-  const currentUser = context?.currentUser;
-
-  const handleInitializeProject = () => {
-    setIsInitializeDialogOpen(true);
-  };
-
+ 
   const handleCloseDialog = () => {
     setIsInitializeDialogOpen(false);
   };

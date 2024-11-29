@@ -2,8 +2,6 @@ import { Project } from '../types';
 import { 
   projects,
   getProjectById as findProjectById,
-  getProjectsBySector,
-  calculateTotalProjectValue
 } from './database/dummyProjects';
 
 const validateRequiredFields = (project: Omit<Project, 'id'>) => {

@@ -13,7 +13,7 @@ export const Dashboard = () => {
   useEffect(() => {
     const checkUserPermissions = async () => {
       const currentUser = await authApi.getCurrentUser();
-      if (currentUser?.roleDetails.permissions.includes(PermissionType.VIEW_PROJECTS)) {
+      if (currentUser?.roleDetails.permissions.includes(PermissionType.VIEW_PROJECT)) {
         setProjectList(<ProjectManagement />);
       } else {
         setProjectList(<BusinessDevelopment />);

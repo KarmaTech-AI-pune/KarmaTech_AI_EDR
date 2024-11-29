@@ -1,12 +1,8 @@
-import { Credentials, LoginResponse, User, UserWithRole, Role } from '../types';
+import { Credentials, LoginResponse, UserWithRole, Role } from '../types';
 import { 
-    users, 
     validateUser, 
-    getUserByUsername,
-    AuthUser 
 } from './database/dummyusers';
 import { rolesApi } from './rolesApi';
-import { UserRole } from './database/dummyusers';
 
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {

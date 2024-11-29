@@ -23,7 +23,6 @@ import {
   Assessment,
   Person,
   WorkHistory,
-  Send
 } from '@mui/icons-material';
 import { OpportunityItemProps, OpportunityTracking, UserWithRole } from '../../types';
 import { useState, useContext, useEffect } from 'react';
@@ -55,6 +54,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
+    console.log(canApproveBD,canSubmitForReview,canReviewBD)
     const checkUserPermissions = async () => {
       try {
         const user = await authApi.getCurrentUser();
@@ -139,11 +139,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     setFormError(undefined);
   };
 
-  const handleWorkflowClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setWorkflowDialogOpen(true);
-  };
-
   const handleWorkflowClose = () => {
     setWorkflowDialogOpen(false);
     if (onOpportunityUpdated) {
@@ -200,41 +195,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     }
   };
 
-  const getWorkflowButtonText = (workflowId: number) => {
-    const status = getWorkflowStatusById(workflowId)?.status;
-    switch (status) {
-      case "Initial":
-      case "Review Changes":
-        return 'Send for Review';
-      case "Sent for Review":
-      case "Approval Changes":
-        return 'Decide Review';
-      case "Sent for Approval":
-        return 'Decide Approval';
-      default:
-        return 'Send for Review';
-    }
-  };
-
-  const canShowWorkflowButton = () => {
-    const status = getWorkflowStatusById(opportunity.workflowId)?.status;
-    if (!status || status === "Approved") {
-      return false;
-    }
-
-    switch (status) {
-      case "Initial":
-      case "Review Changes":
-        return canSubmitForReview;
-      case "Sent for Review":
-      case "Approval Changes":
-        return canReviewBD;
-      case "Sent for Approval":
-        return canApproveBD;
-      default:
-        return false;
-    }
-  };
 
   const getWorkflowDialog = () => {
     if (!currentUser?.name) return null;

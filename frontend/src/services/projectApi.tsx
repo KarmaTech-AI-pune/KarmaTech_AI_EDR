@@ -28,8 +28,7 @@ export const projectApi = {
         ...project,
         startDate: undefined,
         endDate: undefined,
-        estimatedCost: Number(project.estimatedCost),
-        progress: Number(project.progress)
+        estimatedCost: Number(project.estimatedCost)
       };
 
       console.log('Creating project with formatted data:', formattedProject);
@@ -59,8 +58,7 @@ export const projectApi = {
         ...project,
         startDate: project.startDate ? new Date(project.startDate).toISOString() : undefined,
         endDate: project.endDate ? new Date(project.endDate).toISOString() : undefined,
-        estimatedCost: Number(project.estimatedCost),
-        progress: Number(project.progress)
+        estimatedCost: Number(project.estimatedCost)
       };
 
       await axiosInstance.put(`project/${id}`, formattedProject);
