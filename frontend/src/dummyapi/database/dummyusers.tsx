@@ -27,79 +27,79 @@ const usersRawData = {
     "role": UserRole.Admin
   },
   "2" : {
-    "name": "John Doe",
+    "name": "Manasi Bapat",
     "username": "PM1",
     "password": "password",
     "role": UserRole.ProjectManager
   },
   "3" : {
-    "name": "Jane Smith",
+    "name": "Salaiddin Ahemad",
     "username": "PM2",
     "password": "password",
     "role": UserRole.ProjectManager
   },
   "4" : {
-    "name": "Mike Johnson",
+    "name": "Vidyadhar Vengurlekar",
     "username": "SPM1", 
     "password": "password",
     "role": UserRole.SeniorProjectManager
   },
   "5" : {
-    "name": "Emily Davis",
+    "name": "Mandar Pimputkar",
     "username": "SPM2",
     "password": "password", 
     "role": UserRole.SeniorProjectManager
   },
   "6" : {
-    "name": "David Wilson",
+    "name": "Vidyadhar Sontakke",
     "username": "RM1",
     "password": "password",
     "role": UserRole.RegionalManager
   },
   "7" : {
-    "name": "Sarah Thompson",
+    "name": "Sanjay Ghuleria",
     "username": "RM2",
     "password": "password",
     "role": UserRole.RegionalManager  
   },
   "8" : {
-    "name": "Chris Lee",
+    "name": "Pravin Bhawsar",
     "username": "BDM1",
     "password": "password",
     "role": UserRole.BusinessDevelopmentManager
   },
   "9" : {
-    "name": "Lisa Chen",
+    "name": "Rohit Dembi",
     "username": "BDM2",
     "password": "password",
     "role": UserRole.BusinessDevelopmentManager
   },
   "10" : {
-    "name": "Mark Taylor",
+    "name": "Nijam Ahemad",
     "username": "SME1",
     "password": "password",
     "role": UserRole.SubjectMatterExpert
   },
   "11" : {
-    "name": "Jennifer Harris",  
+    "name": "Mnjunath Gowda",  
     "username": "SME2",
     "password": "password",
     "role": UserRole.SubjectMatterExpert
   },
   "12" : {
-    "name": "Barry Thompson",
+    "name": "Pradipto Sarkar",
     "username": "RM3",
     "password": "password",
     "role": UserRole.RegionalManager  
   },
   "15" : {
-    "name": "Michael Brown",
+    "name": "Yogeshwar Gokhale",
     "username": "RD1",
     "password": "password",
     "role": UserRole.RegionalDirector
   },
   "16" : {
-    "name": "Susan White",
+    "name": "Vidyadhar Sontakke",
     "username": "RD2",
     "password": "password",
     "role": UserRole.RegionalDirector
