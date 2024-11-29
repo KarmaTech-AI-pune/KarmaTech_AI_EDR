@@ -33,7 +33,7 @@ import {
   ODCCostsAPI
 } from '../../dummyapi/database/dummyDatabaseApi';
 
-// Styled components remain unchanged...
+// Styled components
 const NumberInput = styled('input')({
   width: '100%',
   padding: '8px',
@@ -43,6 +43,12 @@ const NumberInput = styled('input')({
     outline: 'none',
     borderColor: '#1976d2'
   }
+});
+
+const TotalHoursInput = styled(NumberInput)({
+  backgroundColor: 'rgba(25, 118, 210, 0.08) !important',
+  fontWeight: 'bold',
+  color: '#1976d2'
 });
 
 const StyledSelect = styled(Select)({
@@ -59,6 +65,11 @@ const HeaderCell = styled(TableCell)(({ theme }) => ({
   padding: '16px 8px',
   borderBottom: `2px solid ${theme.palette.divider}`
 }));
+
+const TotalHeaderCell = styled(HeaderCell)({
+  backgroundColor: 'rgba(25, 118, 210, 0.08)',
+  color: '#1976d2'
+});
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -136,7 +147,6 @@ interface DeleteDialog {
 }
 
 const WorkBreakdownStructureForm: React.FC = () => {
-  // Previous state declarations and useEffect remain unchanged...
   const context = useContext(projectManagementAppContext);
   const [rows, setRows] = useState<WBSRow[]>([]);
   const [months, setMonths] = useState<string[]>([]);
@@ -213,6 +223,16 @@ const WorkBreakdownStructureForm: React.FC = () => {
 
     return totals;
   };
+
+  // Add new function to calculate overall totals
+  const calculateOverallTotals = () => {
+    const level3Rows = rows.filter(row => row.level === 3);
+    return {
+      totalHours: level3Rows.reduce((sum, row) => sum + row.totalHours, 0),
+      totalCost: level3Rows.reduce((sum, row) => sum + row.totalCost, 0)
+    };
+  };
+
   // Helper functions remain unchanged...
   const getProjectStartDate = () => {
     if (!context?.selectedProject) return null;
@@ -236,7 +256,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
         </Alert>
       </Paper>
     );
-      }
+  }
 
   // Event handlers remain unchanged...
   const addNewMonth = () => {
@@ -831,7 +851,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
                   <HeaderCell key={month} sx={{ minWidth: 100 }}>{month}</HeaderCell>
                 ))}
                 <HeaderCell sx={{ minWidth: 100 }}>ODCs</HeaderCell>
-                <HeaderCell sx={{ minWidth: 100 }}>Total Hours</HeaderCell>
+                <TotalHeaderCell sx={{ minWidth: 100 }}>Total Monthly Hours</TotalHeaderCell>
                 <HeaderCell sx={{ minWidth: 100 }}>Total Cost</HeaderCell>
               </TableRow>
             </TableHead>
@@ -843,6 +863,28 @@ const WorkBreakdownStructureForm: React.FC = () => {
       </Paper>
 
       <Paper sx={{ p: 2, mt: 2 }}>
+        <Box sx={{ mb: 2 }}>
+          <TableContainer>
+            <Table size="small" sx={{ maxWidth: 400, ml: 'auto' }}>
+              <TableHead>
+                <TableRow>
+                  <HeaderCell>Total Hours</HeaderCell>
+                  <HeaderCell>Total Cost</HeaderCell>
+                </TableRow>
+</TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>
+                    {calculateOverallTotals().totalHours}
+                  </TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>
+                    {context?.selectedProject?.currency} {calculateOverallTotals().totalCost.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button
             variant="contained"
