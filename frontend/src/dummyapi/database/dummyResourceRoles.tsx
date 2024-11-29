@@ -9,31 +9,52 @@ export const resourceRoles = [
     },
     {
         id: 2,
-        name: "Senior Developer",
-        description: "Lead technical implementation and architecture",
+        name: "Senior Engineer",
+        description: "Lead technical design and engineering",
+        minRate: 120,
+        maxRate: 180
+    },
+    {
+        id: 3,
+        name: "Civil Engineer",
+        description: "Structural and civil engineering design",
         minRate: 100,
         maxRate: 150
     },
     {
-        id: 3,
-        name: "Developer",
-        description: "Implements technical solutions",
-        minRate: 75,
-        maxRate: 100
+        id: 4,
+        name: "Environmental Engineer",
+        description: "Environmental assessment and planning",
+        minRate: 90,
+        maxRate: 140
     },
     {
-        id: 4,
-        name: "Business Analyst",
-        description: "Requirements analysis and documentation",
+        id: 5,
+        name: "Mechanical Engineer",
+        description: "Mechanical systems design",
+        minRate: 100,
+        maxRate: 150
+    },
+    {
+        id: 6,
+        name: "Electrical Engineer",
+        description: "Electrical systems and ICA design",
+        minRate: 100,
+        maxRate: 150
+    },
+    {
+        id: 7,
+        name: "Surveyor",
+        description: "Topographical and site surveys",
         minRate: 80,
         maxRate: 120
     },
     {
-        id: 5,
-        name: "QA Engineer",
-        description: "Quality assurance and testing",
-        minRate: 70,
-        maxRate: 100
+        id: 8,
+        name: "Cost Estimator",
+        description: "Project costing and estimation",
+        minRate: 90,
+        maxRate: 130
     }
 ];
 
@@ -47,47 +68,77 @@ export const employees = [
         standardRate: 175,
         costToCompany: 200000,
         isConsultant: false,
-        skills: ["Project Management", "Agile", "Risk Management"]
+        skills: ["Project Management", "Engineering Management", "Risk Management"]
     },
     {
         id: 2,
         roleId: 2,
         name: "Michael Chen",
         email: "michael.c@company.com",
-        standardRate: 125,
-        costToCompany: 150000,
+        standardRate: 150,
+        costToCompany: 180000,
         isConsultant: false,
-        skills: ["Full Stack", "Architecture", "Cloud"]
+        skills: ["Process Design", "Technical Leadership", "Engineering"]
     },
     {
         id: 3,
         roleId: 3,
         name: "Emily Rodriguez",
         email: "emily.r@company.com",
-        standardRate: 85,
-        costToCompany: 100000,
+        standardRate: 125,
+        costToCompany: 150000,
         isConsultant: false,
-        skills: ["Frontend", "React", "TypeScript"]
+        skills: ["Structural Design", "Civil Engineering", "AutoCAD"]
     },
     {
         id: 4,
         roleId: 4,
         name: "David Kim",
         email: "david.k@company.com",
-        standardRate: 100,
-        costToCompany: 120000,
+        standardRate: 115,
+        costToCompany: 140000,
         isConsultant: false,
-        skills: ["Requirements Analysis", "Documentation", "Stakeholder Management"]
+        skills: ["Environmental Assessment", "Impact Analysis", "Sustainability"]
     },
     {
         id: 5,
         roleId: 5,
         name: "Lisa Patel",
         email: "lisa.p@company.com",
-        standardRate: 85,
-        costToCompany: 95000,
+        standardRate: 125,
+        costToCompany: 150000,
         isConsultant: false,
-        skills: ["Test Automation", "Performance Testing", "Quality Assurance"]
+        skills: ["Mechanical Design", "HVAC", "Piping Systems"]
+    },
+    {
+        id: 6,
+        roleId: 6,
+        name: "James Wilson",
+        email: "james.w@company.com",
+        standardRate: 125,
+        costToCompany: 150000,
+        isConsultant: false,
+        skills: ["Electrical Systems", "ICA Design", "Power Distribution"]
+    },
+    {
+        id: 7,
+        roleId: 7,
+        name: "Robert Taylor",
+        email: "robert.t@company.com",
+        standardRate: 100,
+        costToCompany: 120000,
+        isConsultant: false,
+        skills: ["Topographical Survey", "GIS", "Site Investigation"]
+    },
+    {
+        id: 8,
+        roleId: 8,
+        name: "Maria Garcia",
+        email: "maria.g@company.com",
+        standardRate: 110,
+        costToCompany: 130000,
+        isConsultant: false,
+        skills: ["Cost Estimation", "Quantity Surveying", "Project Economics"]
     }
 ];
 
@@ -105,32 +156,56 @@ export const projectResources = [
         id: 2,
         projectId: 1,
         employeeId: 2,
-        projectRate: 125,
+        projectRate: 150,
         startDate: new Date("2024-01-16"),
-        endDate: new Date("2024-03-15")
+        endDate: new Date("2024-06-15")
     },
     {
         id: 3,
         projectId: 1,
         employeeId: 3,
-        projectRate: 85,
-        startDate: new Date("2024-01-16"),
-        endDate: new Date("2024-02-15")
+        projectRate: 125,
+        startDate: new Date("2024-02-01"),
+        endDate: new Date("2024-05-31")
     },
     {
         id: 4,
         projectId: 1,
         employeeId: 4,
-        projectRate: 100,
+        projectRate: 115,
         startDate: new Date("2024-01-01"),
-        endDate: new Date("2024-01-15")
+        endDate: new Date("2024-03-31")
     },
     {
         id: 5,
         projectId: 1,
         employeeId: 5,
-        projectRate: 85,
-        startDate: new Date("2024-02-16"),
+        projectRate: 125,
+        startDate: new Date("2024-03-01"),
+        endDate: new Date("2024-06-30")
+    },
+    {
+        id: 6,
+        projectId: 1,
+        employeeId: 6,
+        projectRate: 125,
+        startDate: new Date("2024-03-15"),
+        endDate: new Date("2024-07-15")
+    },
+    {
+        id: 7,
+        projectId: 1,
+        employeeId: 7,
+        projectRate: 100,
+        startDate: new Date("2024-01-15"),
         endDate: new Date("2024-03-15")
+    },
+    {
+        id: 8,
+        projectId: 1,
+        employeeId: 8,
+        projectRate: 110,
+        startDate: new Date("2024-02-01"),
+        endDate: new Date("2024-04-30")
     }
 ];
