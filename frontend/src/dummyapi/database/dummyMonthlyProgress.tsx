@@ -10,7 +10,23 @@ export const monthlyProgress = [
         plannedCost: 100000,
         actualCost: 96000,
         comments: "Project kickoff successful, ahead on deliverables",
-        reportDate: new Date("2024-01-31")
+        reportDate: new Date("2024-01-31"),
+        ganttProgress: {
+            planned: [
+                { task: "Topographical Survey", completion: 100 },
+                { task: "Soil Investigation", completion: 100 },
+                { task: "Social Impact Assessment", completion: 80 }
+            ],
+            actual: [
+                { task: "Topographical Survey", completion: 100 },
+                { task: "Soil Investigation", completion: 100 },
+                { task: "Social Impact Assessment", completion: 75 }
+            ]
+        },
+        pieChartData: {
+            planned: { completed: 30, inProgress: 20, notStarted: 50 },
+            actual: { completed: 32, inProgress: 18, notStarted: 50 }
+        }
     },
     {
         id: 2,
@@ -21,20 +37,24 @@ export const monthlyProgress = [
         actualProgress: 58,
         plannedCost: 150000,
         actualCost: 140000,
-        comments: "Frontend development on track, backend starting",
-        reportDate: new Date("2024-02-29")
-    },
-    {
-        id: 3,
-        projectId: 1,
-        year: 2024,
-        month: 3,
-        plannedProgress: 90,
-        actualProgress: 85,
-        plannedCost: 200000,
-        actualCost: 180000,
-        comments: "Integration testing in progress",
-        reportDate: new Date("2024-03-15")
+        comments: "Process and mechanical design phases initiated",
+        reportDate: new Date("2024-02-29"),
+        ganttProgress: {
+            planned: [
+                { task: "Process Design", completion: 100 },
+                { task: "Mechanical Design", completion: 90 },
+                { task: "Structural Design", completion: 50 }
+            ],
+            actual: [
+                { task: "Process Design", completion: 100 },
+                { task: "Mechanical Design", completion: 85 },
+                { task: "Structural Design", completion: 45 }
+            ]
+        },
+        pieChartData: {
+            planned: { completed: 60, inProgress: 25, notStarted: 15 },
+            actual: { completed: 58, inProgress: 27, notStarted: 15 }
+        }
     }
 ];
 
@@ -59,26 +79,6 @@ export const resourceUtilization = [
         plannedHours: 80,
         actualHours: 85,
         utilizationPercentage: 106
-    },
-    {
-        id: 3,
-        employeeId: 3,
-        projectId: 1,
-        year: 2024,
-        month: 2,
-        plannedHours: 160,
-        actualHours: 150,
-        utilizationPercentage: 94
-    },
-    {
-        id: 4,
-        employeeId: 4,
-        projectId: 1,
-        year: 2024,
-        month: 2,
-        plannedHours: 120,
-        actualHours: 125,
-        utilizationPercentage: 104
     }
 ];
 
@@ -101,24 +101,6 @@ export const resourceCapacity = [
         totalCapacity: 160,
         allocated: 85,
         available: 75
-    },
-    {
-        id: 3,
-        employeeId: 3,
-        year: 2024,
-        month: 2,
-        totalCapacity: 160,
-        allocated: 150,
-        available: 10
-    },
-    {
-        id: 4,
-        employeeId: 4,
-        year: 2024,
-        month: 2,
-        totalCapacity: 160,
-        allocated: 125,
-        available: 35
     }
 ];
 
@@ -132,6 +114,20 @@ export const projectFinancials = [
         variance: 34000,
         earnedValue: 425000,
         costPerformanceIndex: 1.02,
-        schedulePerformanceIndex: 0.98
+        schedulePerformanceIndex: 0.98,
+        monthlyBreakdown: [
+            {
+                month: "Jan 2024",
+                planned: 100000,
+                actual: 96000,
+                earned: 98000
+            },
+            {
+                month: "Feb 2024",
+                planned: 150000,
+                actual: 140000,
+                earned: 145000
+            }
+        ]
     }
 ];

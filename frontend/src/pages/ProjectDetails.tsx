@@ -13,7 +13,9 @@ import {
   ListItemText,
   ListItemButton,
   Paper,
-  Collapse
+  Collapse,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -29,6 +31,8 @@ import FolderIcon from '@mui/icons-material/Folder';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Project, OpportunityTracking } from '../types';
 import { projectManagementAppContext } from '../App';
 import { opportunityApi } from '../dummyapi/opportunityApi';
@@ -47,6 +51,7 @@ import {
 } from '../components/forms';
 
 const DRAWER_WIDTH = 280;
+const COLLAPSED_DRAWER_WIDTH = 65;
 const NAVBAR_HEIGHT = '64px';
 
 export const ProjectDetails: React.FC = () => {
@@ -56,6 +61,7 @@ export const ProjectDetails: React.FC = () => {
   const [selectedSection, setSelectedSection] = useState('overview');
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
   const [formsOpen, setFormsOpen] = useState(false);
+  const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
@@ -76,6 +82,13 @@ export const ProjectDetails: React.FC = () => {
   const handleFormClick = (formId: string) => {
     setSelectedForm(formId);
     setSelectedSection('forms');
+  };
+
+  const toggleDrawer = () => {
+    setIsDrawerExpanded(!isDrawerExpanded);
+    if (!isDrawerExpanded) {
+      setFormsOpen(false);
+    }
   };
 
   const getProjectTitle = (project: Project | OpportunityTracking | null) => {
@@ -230,25 +243,33 @@ export const ProjectDetails: React.FC = () => {
         display: 'flex',
         minHeight: `calc(100vh - ${NAVBAR_HEIGHT})`,
         pt: `${NAVBAR_HEIGHT}`,
-        bgcolor: 'background.default'
+        bgcolor: 'background.default',
+        overflow: 'hidden'
       }}
     >
       <Drawer
         variant="permanent"
         sx={{
-          width: DRAWER_WIDTH,
+          width: isDrawerExpanded ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: DRAWER_WIDTH,
+            width: isDrawerExpanded ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH,
             boxSizing: 'border-box',
             top: NAVBAR_HEIGHT,
             height: `calc(100% - ${NAVBAR_HEIGHT})`,
             bgcolor: 'background.paper',
             borderRight: '1px solid',
-            borderColor: 'divider'
+            borderColor: 'divider',
+            overflowX: 'hidden',
+            transition: 'width 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms'
           },
         }}
       >
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
+          <IconButton onClick={toggleDrawer}>
+            {isDrawerExpanded ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+          </IconButton>
+        </Box>
         <List sx={{ width: '100%', p: 2 }}>
           {menuSections.map((section) => (
             <Box key={section.id}>
@@ -260,18 +281,33 @@ export const ProjectDetails: React.FC = () => {
                     '&:hover': {
                       bgcolor: 'action.hover',
                     },
+                    minHeight: 48,
+                    justifyContent: isDrawerExpanded ? 'initial' : 'center',
+                    px: 2.5,
                   }}
                 >
-                  <ListItemIcon>
-                    {section.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={section.title} />
-                  {section.subItems && (
-                    formsOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
+                  <Tooltip title={!isDrawerExpanded ? section.title : ''} placement="right">
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: isDrawerExpanded ? 3 : 'auto',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {section.icon}
+                    </ListItemIcon>
+                  </Tooltip>
+                  {isDrawerExpanded && (
+                    <>
+                      <ListItemText primary={section.title} />
+                      {section.subItems && (
+                        formsOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
+                      )}
+                    </>
                   )}
                 </ListItemButton>
               </ListItem>
-              {section.subItems && (
+              {isDrawerExpanded && section.subItems && (
                 <Collapse in={formsOpen} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {section.subItems.map((item) => (
@@ -310,15 +346,18 @@ export const ProjectDetails: React.FC = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
-          bgcolor: 'background.default',
+          height: `calc(100vh - ${NAVBAR_HEIGHT})`,
+          overflow: 'hidden',
+          width: { sm: `calc(100% - ${isDrawerExpanded ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH}px)` },
+          transition: 'width 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms, margin 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
         }}
       >
-        <Typography variant="h4" gutterBottom>
-          {getProjectTitle(context.selectedProject)}
-        </Typography>
-        {renderContent()}
+        <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
+          <Typography variant="h4" gutterBottom>
+            {getProjectTitle(context.selectedProject)}
+          </Typography>
+          {renderContent()}
+        </Box>
       </Box>
     </Box>
   );
