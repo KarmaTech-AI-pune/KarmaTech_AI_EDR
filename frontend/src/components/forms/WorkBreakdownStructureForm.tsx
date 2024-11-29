@@ -175,7 +175,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
           const initialMonths = [];
           for (let i = 0; i < 5; i++) {
             initialMonths.push(
-              `${date.toLocaleString('default', { month: 'short' })}${date.getFullYear().toString().slice(2)}`
+              `${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear().toString().slice(2)}`
             );
             date.setMonth(date.getMonth() + 1);
           }
@@ -261,10 +261,10 @@ const WorkBreakdownStructureForm: React.FC = () => {
   // Event handlers remain unchanged...
   const addNewMonth = () => {
     const lastMonth = months[months.length - 1];
-    const [, yearStr] = lastMonth.match(/[A-Za-z]+(\d{2})/) || [];
+    const [monthName, yearStr] = lastMonth.split(' ');
     const lastDate = new Date(2000 + parseInt(yearStr), months.length - 1);
     lastDate.setMonth(lastDate.getMonth() + 1);
-    const newMonth = `${lastDate.toLocaleString('default', { month: 'short' })}${lastDate.getFullYear().toString().slice(2)}`;
+    const newMonth = `${lastDate.toLocaleString('default', { month: 'long' })} ${lastDate.getFullYear().toString().slice(2)}`;
     setMonths([...months, newMonth]);
   };
 
@@ -347,11 +347,24 @@ const WorkBreakdownStructureForm: React.FC = () => {
     const row = rows.find(r => r.id === rowId);
     if (!row || !row.role) return;
 
-    const role = roles.find(r => r.id === parseInt(row.role));
-    if (!role) return;
+    // Allow empty string and any numeric value
+    if (value === '') {
+      setRows(rows.map(r => {
+        if (r.id === rowId) {
+          return {
+            ...r,
+            costRate: 0,
+            totalCost: r.odc
+          };
+        }
+        return r;
+      }));
+      return;
+    }
 
-    let newRate = value === '' ? 0 : parseFloat(value);
-    newRate = Math.max(role.minRate, Math.min(newRate, role.maxRate));
+    // Convert to number and validate it's a number
+    const newRate = parseFloat(value);
+    if (isNaN(newRate)) return;
 
     setRows(rows.map(r => {
       if (r.id === rowId) {
@@ -365,7 +378,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
     }));
   };
 
-  const handleHoursChange = (rowId: number, month: string, value: string) => {
+const handleHoursChange = (rowId: number, month: string, value: string) => {
     const hours = value === '' ? 0 : Math.min(Math.max(parseInt(value) || 0, 0), 160);
     
     setRows(rows.map(row => {
@@ -642,7 +655,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
           {row.level === 3 ? (
             <NumberInput
               type="number"
-              value={row.costRate}
+              value={row.costRate || ''}
               onChange={(e) => handleCostRateChange(row.id, e.target.value)}
               disabled={editMode || !row.role}
               title={rateTooltip}
