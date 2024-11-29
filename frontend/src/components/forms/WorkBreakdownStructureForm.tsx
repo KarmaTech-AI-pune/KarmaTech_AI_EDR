@@ -33,7 +33,7 @@ import {
   ODCCostsAPI
 } from '../../dummyapi/database/dummyDatabaseApi';
 
-// Styled components
+// Styled components remain unchanged...
 const NumberInput = styled('input')({
   width: '100%',
   padding: '8px',
@@ -77,7 +77,7 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
   }
 }));
 
-// Level options
+// Level options and other constants remain unchanged...
 const level1Options = [
   { value: 'inception_report', label: 'Inception Report' },
   { value: 'feasibility_report', label: 'Feasibility Report' },
@@ -111,6 +111,7 @@ const level3OptionsByParent = {
   ]
 };
 
+// Interfaces remain unchanged...
 interface WBSRow {
   id: number;
   level: 1 | 2 | 3;
@@ -135,6 +136,7 @@ interface DeleteDialog {
 }
 
 const WorkBreakdownStructureForm: React.FC = () => {
+  // State declarations and useEffect remain unchanged...
   const context = useContext(projectManagementAppContext);
   const [rows, setRows] = useState<WBSRow[]>([]);
   const [months, setMonths] = useState<string[]>([]);
@@ -176,6 +178,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
     loadInitialData();
   }, []);
 
+  // Helper functions remain unchanged...
   const getProjectStartDate = () => {
     if (!context?.selectedProject) return null;
     if ('startDate' in context.selectedProject) {
@@ -200,6 +203,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
     );
   }
 
+  // Event handlers remain unchanged...
   const addNewMonth = () => {
     const lastMonth = months[months.length - 1];
     const [, yearStr] = lastMonth.match(/[A-Za-z]+(\d{2})/) || [];
@@ -378,16 +382,6 @@ const WorkBreakdownStructureForm: React.FC = () => {
                 actualHours: 0,
                 rate: row.costRate
               });
-/*
-              await ResourceAllocationsAPI.createAllocation({
-                wbsTaskId: row.id,
-                employeeId: parseInt(row.name),
-                year: parseInt('20' + month.slice(-2)),
-                month: months.indexOf(month) + 1,
-                plannedHours: hours,
-                actualHours: 0,
-                rate: row.costRate
-              }); */
             }
           });
         }
@@ -401,15 +395,6 @@ const WorkBreakdownStructureForm: React.FC = () => {
             category: 'Other',
             comments: ''
           });
-/*
-          await ODCCostsAPI.createCost({
-            wbsTaskId: row.id,
-            description: `ODC for ${row.title}`,
-            amount: row.odc,
-            date: new Date(),
-            category: 'Other',
-            comments: ''
-          }); */
         }
       }));
 
@@ -556,95 +541,123 @@ const WorkBreakdownStructureForm: React.FC = () => {
           </Box>
         </TableCell>
         <TableCell>
-          <StyledSelect
-            value={row.role}
-            onChange={(e) => handleRoleChange(row.id, e.target.value as string)}
-            size="small"
-            sx={{ bgcolor: 'background.paper' }}
-            disabled={editMode}
-          >
-            <MenuItem value="">Select Role</MenuItem>
-            {roles.map(role => (
-              <MenuItem key={role.id} value={role.id}>
-                {role.name}
-              </MenuItem>
-            ))}
-          </StyledSelect>
+          {row.level === 3 ? (
+            <StyledSelect
+              value={row.role}
+              onChange={(e) => handleRoleChange(row.id, e.target.value as string)}
+              size="small"
+              sx={{ bgcolor: 'background.paper' }}
+              disabled={editMode}
+            >
+              <MenuItem value="">Select Role</MenuItem>
+              {roles.map(role => (
+                <MenuItem key={role.id} value={role.id}>
+                  {role.name}
+                </MenuItem>
+              ))}
+            </StyledSelect>
+          ) : (
+            <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+          )}
         </TableCell>
         <TableCell>
-          <StyledSelect
-            value={row.name}
-            onChange={(e) => handleEmployeeChange(row.id, e.target.value as string)}
-            size="small"
-            disabled={!row.role || editMode}
-            sx={{ bgcolor: 'background.paper' }}
-          >
-            <MenuItem value="">Select Name</MenuItem>
-            {employeesForRole.map(employee => (
-              <MenuItem key={employee.id} value={employee.id}>
-                {employee.name}
-              </MenuItem>
-            ))}
-          </StyledSelect>
+          {row.level === 3 ? (
+            <StyledSelect
+              value={row.name}
+              onChange={(e) => handleEmployeeChange(row.id, e.target.value as string)}
+              size="small"
+              disabled={!row.role || editMode}
+              sx={{ bgcolor: 'background.paper' }}
+            >
+              <MenuItem value="">Select Name</MenuItem>
+              {employeesForRole.map(employee => (
+                <MenuItem key={employee.id} value={employee.id}>
+                  {employee.name}
+                </MenuItem>
+              ))}
+            </StyledSelect>
+          ) : (
+            <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+          )}
         </TableCell>
         <TableCell>
-          <NumberInput
-            type="number"
-            value={row.costRate}
-            onChange={(e) => handleCostRateChange(row.id, e.target.value)}
-            disabled={editMode || !row.role}
-            title={rateTooltip}
-            style={{
-              backgroundColor: editMode ? 'rgba(0, 0, 0, 0.04)' : 'white'
-            }}
-          />
+          {row.level === 3 ? (
+            <NumberInput
+              type="number"
+              value={row.costRate}
+              onChange={(e) => handleCostRateChange(row.id, e.target.value)}
+              disabled={editMode || !row.role}
+              title={rateTooltip}
+              style={{
+                backgroundColor: editMode ? 'rgba(0, 0, 0, 0.04)' : 'white'
+              }}
+            />
+          ) : (
+            <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+          )}
         </TableCell>
         {months.map(month => (
           <TableCell key={month}>
+            {row.level === 3 ? (
+              <NumberInput
+                type="number"
+                value={row.monthlyHours[month] || ''}
+                onChange={(e) => handleHoursChange(row.id, month, e.target.value)}
+                min="0"
+                max="160"
+                style={{
+                  backgroundColor: 'white'
+                }}
+                disabled={editMode}
+              />
+            ) : (
+              <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+            )}
+          </TableCell>
+        ))}
+        <TableCell>
+          {row.level === 3 ? (
             <NumberInput
               type="number"
-              value={row.monthlyHours[month] || ''}
-              onChange={(e) => handleHoursChange(row.id, month, e.target.value)}
+              value={row.odc || ''}
+              onChange={(e) => handleODCChange(row.id, e.target.value)}
               min="0"
-              max="160"
               style={{
                 backgroundColor: 'white'
               }}
               disabled={editMode}
             />
-          </TableCell>
-        ))}
-        <TableCell>
-          <NumberInput
-            type="number"
-            value={row.odc || ''}
-            onChange={(e) => handleODCChange(row.id, e.target.value)}
-            min="0"
-            style={{
-              backgroundColor: 'white'
-            }}
-            disabled={editMode}
-          />
+          ) : (
+            <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+          )}
         </TableCell>
         <TableCell>
-          <NumberInput
-            type="number"
-            value={row.totalHours}
-            readOnly
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
-            }}
-          />
+          {row.level === 3 ? (
+            <NumberInput
+              type="number"
+              value={row.totalHours}
+              readOnly
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }}
+            />
+          ) : (
+            <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+          )}
         </TableCell>
         <TableCell>
-          <NumberInput
-            type="number"
-            value={row.totalCost}
-            readOnly
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
-            }}
-          />
+          {row.level === 3 ? (
+            <NumberInput
+              type="number"
+              value={row.totalCost}
+              readOnly
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }}
+            />
+          ) : (
+            <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+          )}
         </TableCell>
       </TableRow>
     );
