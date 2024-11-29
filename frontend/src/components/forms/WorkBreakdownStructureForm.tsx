@@ -14,12 +14,12 @@ import {
   Typography,
   IconButton,
   Alert,
-  styled,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  DialogContentText
+  DialogContentText,
+  styled
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,32 +31,57 @@ import {
   ResourceAllocationsAPI,
   ODCCostsAPI
 } from '../../dummyapi/database/dummyDatabaseApi';
-import { Project } from '../../types';
 
+// Styled components
 const NumberInput = styled('input')({
   width: '100%',
-  padding: '4px 8px',
-  border: '1px solid #ccc',
+  padding: '8px',
+  border: '1px solid rgba(0, 0, 0, 0.23)',
   borderRadius: '4px',
   '&:focus': {
     outline: 'none',
-    border: '2px solid #1976d2',
-  },
-  '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
-    '-webkit-appearance': 'none',
-    margin: 0,
-  },
+    borderColor: '#1976d2'
+  }
 });
+
+const StyledSelect = styled(Select)({
+  width: '100%',
+  '& .MuiSelect-select': {
+    padding: '8px 14px'
+  }
+});
+
+const HeaderCell = styled(TableCell)(({ theme }) => ({
+  textAlign: 'center',
+  fontWeight: 'bold',
+  backgroundColor: theme.palette.background.paper,
+  padding: '16px 8px',
+  borderBottom: `2px solid ${theme.palette.divider}`
+}));
+
+const StyledHeaderBox = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  position: 'relative',
+  padding: theme.spacing(2),
+  '& .MuiTypography-root': {
+    position: 'absolute',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    fontWeight: 'bold'
+  },
+  '& .MuiButton-root': {
+    marginLeft: 'auto'
+  }
+}));
 
 interface WBSRow {
   id: number;
-  number: string;
   level: 1 | 2 | 3;
-  parentId: number | null;
   level1: string;
   level2: string;
   level3: string;
-  title: string;
   role: string;
   name: string;
   costRate: number;
@@ -64,333 +89,149 @@ interface WBSRow {
   odc: number;
   totalHours: number;
   totalCost: number;
+  title: string;
+  parentId?: number;
 }
 
-interface DeleteDialogState {
+interface DeleteDialog {
   open: boolean;
-  rowId: number | null;
+  rowId?: number;
   childCount: number;
 }
-
-// Define all possible task options for each level
-const level1Options = [
-  { value: "1", label: "Inception Report" },
-  { value: "2", label: "Feasibility Report" },
-  { value: "3", label: "Draft Detailed Project Report" },
-  { value: "4", label: "Detailed Project Report" },
-  { value: "5", label: "Tendering Documents" },
-  { value: "6", label: "Construction Supervision" }
-];
-
-const level2Options = [
-  { value: "surveys", label: "Surveys" },
-  { value: "design", label: "Design" },
-  { value: "cost_estimation", label: "Cost Estimation" }
-];
-
-const level3Options = [
-  // Survey options
-  { value: "topographical", label: "Topographical Survey", group: "surveys" },
-  { value: "soil", label: "Soil Investigation", group: "surveys" },
-  { value: "social", label: "Social Impact Assessment", group: "surveys" },
-  { value: "environmental", label: "Environmental Assessment", group: "surveys" },
-  { value: "flow", label: "Flow Measurement", group: "surveys" },
-  { value: "water", label: "Water Quality Measurement", group: "surveys" },
-  // Design options
-  { value: "process", label: "Process Design", group: "design" },
-  { value: "mechanical", label: "Mechanical Design", group: "design" },
-  { value: "structural", label: "Structural Design", group: "design" },
-  { value: "electrical", label: "Electrical Design", group: "design" },
-  { value: "ica", label: "ICA Design", group: "design" }
-];
-
-const getMonthName = (monthIndex: number): string => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return months[monthIndex];
-};
-
-const generateMonthLabel = (date: Date): string => {
-  const month = getMonthName(date.getMonth());
-  const year = date.getFullYear().toString().slice(-2);
-  return `${month}-${year}`;
-};
-
-const getNextMonth = (date: Date): Date => {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 1);
-};
-
-const generateInitialMonths = (startDate: Date, count: number = 5): string[] => {
-  const months: string[] = [];
-  let currentDate = new Date(startDate);
-  
-  for (let i = 0; i < count; i++) {
-    months.push(generateMonthLabel(currentDate));
-    currentDate = getNextMonth(currentDate);
-  }
-  
-  return months;
-};
 
 const WorkBreakdownStructureForm: React.FC = () => {
   const context = useContext(projectManagementAppContext);
   const [rows, setRows] = useState<WBSRow[]>([]);
+  const [months, setMonths] = useState<string[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
-  const [error, setError] = useState('');
-  const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>({
+  const [error, setError] = useState<string>('');
+  const [deleteDialog, setDeleteDialog] = useState<DeleteDialog>({
     open: false,
-    rowId: null,
     childCount: 0
   });
-  
-  const selectedProject = context?.selectedProject as Project | null;
-  const isProject = selectedProject && 'projectNo' in selectedProject;
-  const projectStartDate = isProject && selectedProject.startDate ? new Date(selectedProject.startDate) : null;
-  
-  const [months, setMonths] = useState<string[]>(() => {
-    if (!projectStartDate) {
-      setError('Project start date is not set');
-      return [];
-    }
-    return generateInitialMonths(projectStartDate);
-  });
-  
-  const [lastMonthDate, setLastMonthDate] = useState<Date>(() => {
-    if (!projectStartDate) return new Date();
-    const lastDate = new Date(projectStartDate);
-    lastDate.setMonth(projectStartDate.getMonth() + 4);
-    return lastDate;
-  });
+
+  const level1Options = [
+    { value: 'planning', label: 'Planning' },
+    { value: 'design', label: 'Design' },
+    { value: 'development', label: 'Development' }
+  ];
+
+  const level2Options = [
+    { value: 'requirements', label: 'Requirements' },
+    { value: 'architecture', label: 'Architecture' },
+    { value: 'implementation', label: 'Implementation' }
+  ];
+
+  const level3Options = [
+    { value: 'frontend', label: 'Frontend' },
+    { value: 'backend', label: 'Backend' },
+    { value: 'testing', label: 'Testing' }
+  ];
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadInitialData = async () => {
       try {
-        const allRoles = ResourceRolesAPI.getAllRoles();
+        const allRoles = await ResourceRolesAPI.getAllRoles();
         setRoles(allRoles);
+
+        const startDate = getProjectStartDate();
+        if (startDate) {
+          const date = new Date(startDate);
+          const initialMonths = [];
+          for (let i = 0; i < 5; i++) {
+            initialMonths.push(
+              `${date.toLocaleString('default', { month: 'short' })}${date.getFullYear().toString().slice(2)}`
+            );
+            date.setMonth(date.getMonth() + 1);
+          }
+          setMonths(initialMonths);
+        }
       } catch (err) {
         setError('Failed to load roles');
       }
     };
-    loadData();
+    loadInitialData();
   }, []);
 
-  useEffect(() => {
-    if (!projectStartDate) {
-      setError('Project start date is not set');
-      return;
+  const getProjectStartDate = () => {
+    if (!context?.selectedProject) return null;
+    if ('startDate' in context.selectedProject) {
+      return context.selectedProject.startDate;
     }
-    
-    setMonths(generateInitialMonths(projectStartDate));
-    
-    const lastDate = new Date(projectStartDate);
-    lastDate.setMonth(projectStartDate.getMonth() + 4);
-    setLastMonthDate(lastDate);
-  }, [projectStartDate]);
-
-  const renumberRows = (currentRows: WBSRow[]): WBSRow[] => {
-    const newRows = [...currentRows];
-    
-    // First, renumber level 1 rows
-    const level1Rows = newRows.filter(row => row.level === 1);
-    level1Rows.forEach((row, index) => {
-      const newNumber = `${index + 1}`;
-      row.number = newNumber;
-      
-      // Renumber level 2 children
-      const level2Children = newRows.filter(r => r.level === 2 && r.parentId === row.id);
-      level2Children.forEach((child, childIndex) => {
-        const newChildNumber = `${newNumber}.${childIndex + 1}`;
-        child.number = newChildNumber;
-        
-        // Renumber level 3 children
-        const level3Children = newRows.filter(r => r.level === 3 && r.parentId === child.id);
-        level3Children.forEach((grandChild, grandChildIndex) => {
-          grandChild.number = `${newChildNumber}.${grandChildIndex + 1}`;
-        });
-      });
-    });
-    
-    return newRows;
+    if ('likelyStartDate' in context.selectedProject) {
+      return context.selectedProject.likelyStartDate;
+    }
+    return null;
   };
 
-  const sortRows = (rows: WBSRow[]): WBSRow[] => {
-    const result: WBSRow[] = [];
-    const addedIds = new Set<number>();
+  const projectStartDate = getProjectStartDate();
+  const isProject = context?.selectedProject && 'startDate' in context.selectedProject;
 
-    const addRowWithChildren = (row: WBSRow) => {
-      if (addedIds.has(row.id)) return;
-      
-      result.push(row);
-      addedIds.add(row.id);
+  if (!isProject || !projectStartDate) {
+    return (
+      <Paper sx={{ p: 3, m: 2 }}>
+        <Alert severity="error">
+          Project start date is not set. Please set a start date for the project before creating a WBS.
+        </Alert>
+      </Paper>
+    );
+  }
 
-      // Find and add immediate children
-      rows
-        .filter(r => r.parentId === row.id)
-        .sort((a, b) => a.number.localeCompare(b.number))
-        .forEach(child => addRowWithChildren(child));
-    };
-
-    // Add level 1 rows and their children
-    rows
-      .filter(r => r.level === 1)
-      .sort((a, b) => a.number.localeCompare(b.number))
-      .forEach(row => addRowWithChildren(row));
-
-    return result;
+  const addNewMonth = () => {
+    const lastMonth = months[months.length - 1];
+    const [, yearStr] = lastMonth.match(/[A-Za-z]+(\d{2})/) || [];
+    const lastDate = new Date(2000 + parseInt(yearStr), months.length - 1);
+    lastDate.setMonth(lastDate.getMonth() + 1);
+    const newMonth = `${lastDate.toLocaleString('default', { month: 'short' })}${lastDate.getFullYear().toString().slice(2)}`;
+    setMonths([...months, newMonth]);
   };
 
-  const getNextNumber = (level: 1 | 2 | 3, parentId: number | null = null): string => {
-    if (level === 1) {
-      const level1Rows = rows.filter(r => r.level === 1);
-      return `${level1Rows.length + 1}`;
-    }
-
-    if (level === 2 && parentId) {
-      const parentRow = rows.find(r => r.id === parentId);
-      if (!parentRow) return '1';
-      const level2Siblings = rows.filter(r => r.level === 2 && r.parentId === parentId);
-      return `${parentRow.number}.${level2Siblings.length + 1}`;
-    }
-
-    if (level === 3 && parentId) {
-      const parentRow = rows.find(r => r.id === parentId);
-      if (!parentRow) return '1';
-      const level3Siblings = rows.filter(r => r.level === 3 && r.parentId === parentId);
-      return `${parentRow.number}.${level3Siblings.length + 1}`;
-    }
-
-    return '1';
-  };
-
-  const findLastChildIndex = (parentId: number, currentRows: WBSRow[]): number => {
-    let lastIndex = currentRows.findIndex(r => r.id === parentId);
-    
-    // Find all descendants recursively
-    const isDescendant = (row: WBSRow): boolean => {
-      if (row.parentId === parentId) return true;
-      if (row.parentId === null) return false;
-      const parent = currentRows.find(r => r.id === row.parentId);
-      return parent ? isDescendant(parent) : false;
-    };
-
-    // Find the last descendant's index
-    for (let i = lastIndex + 1; i < currentRows.length; i++) {
-      if (isDescendant(currentRows[i])) {
-        lastIndex = i;
-      } else {
-        break;
-      }
-    }
-
-    return lastIndex;
-  };
-
-  const addNewRow = (level: 1 | 2 | 3, parentId: number | null = null) => {
+  const addNewRow = (level: 1 | 2 | 3, parentId?: number) => {
     const newRow: WBSRow = {
-      id: Math.max(0, ...rows.map(r => r.id)) + 1,
-      number: getNextNumber(level, parentId),
+      id: Date.now(),
       level,
-      parentId,
       level1: '',
       level2: '',
       level3: '',
-      title: '',
       role: '',
       name: '',
       costRate: 0,
-      monthlyHours: months.reduce((acc, month) => ({ ...acc, [month]: 0 }), {}),
+      monthlyHours: {},
       odc: 0,
       totalHours: 0,
-      totalCost: 0
+      totalCost: 0,
+      title: '',
+      parentId
     };
+    setRows([...rows, newRow]);
+  };
 
-    setRows(prevRows => {
-      const newRows = [...prevRows];
-      if (parentId === null) {
-        return sortRows([...newRows, newRow]);
-      } else {
-        const lastChildIndex = findLastChildIndex(parentId, newRows);
-        newRows.splice(lastChildIndex + 1, 0, newRow);
-        return sortRows(newRows);
-      }
+  const handleDeleteClick = (rowId: number) => {
+    const childCount = rows.filter(r => 
+      (r.level === 2 && rows.find(p => p.id === rowId)?.level === 1) ||
+      (r.level === 3 && rows.find(p => p.id === rowId)?.level === 2)
+    ).length;
+    
+    setDeleteDialog({
+      open: true,
+      rowId,
+      childCount
     });
-  };
-
-  const addNewMonth = () => {
-    const nextDate = getNextMonth(lastMonthDate);
-    const nextMonthLabel = generateMonthLabel(nextDate);
-    
-    setLastMonthDate(nextDate);
-    setMonths(prevMonths => [...prevMonths, nextMonthLabel]);
-    
-    setRows(prevRows => prevRows.map(row => ({
-      ...row,
-      monthlyHours: {
-        ...row.monthlyHours,
-        [nextMonthLabel]: 0
-      }
-    })));
-  };
-
-  const countChildren = (parentId: number): number => {
-    let count = 0;
-    const findChildren = (id: number) => {
-      rows.forEach(row => {
-        if (row.parentId === id) {
-          count++;
-          findChildren(row.id);
-        }
-      });
-    };
-    findChildren(parentId);
-    return count;
-  };
-
-  const handleDeleteClick = (id: number) => {
-    const row = rows.find(r => r.id === id);
-    if (row && (row.level === 1 || row.level === 2)) {
-      const childCount = countChildren(id);
-      setDeleteDialog({
-        open: true,
-        rowId: id,
-        childCount
-      });
-    } else {
-      performDelete(id);
-    }
-  };
-
-  const handleDeleteConfirm = () => {
-    if (deleteDialog.rowId !== null) {
-      performDelete(deleteDialog.rowId);
-    }
-    setDeleteDialog({ open: false, rowId: null, childCount: 0 });
   };
 
   const handleDeleteCancel = () => {
-    setDeleteDialog({ open: false, rowId: null, childCount: 0 });
+    setDeleteDialog({
+      open: false,
+      childCount: 0
+    });
   };
 
-  const performDelete = (id: number) => {
-    const rowsToDelete = new Set<number>();
-    const findChildren = (parentId: number) => {
-      rows.forEach(row => {
-        if (row.parentId === parentId) {
-          rowsToDelete.add(row.id);
-          findChildren(row.id);
-        }
-      });
-    };
-
-    rowsToDelete.add(id);
-    findChildren(id);
-
-    setRows(prevRows => {
-      const remainingRows = prevRows.filter(row => !rowsToDelete.has(row.id));
-      const renumberedRows = renumberRows(remainingRows);
-      return sortRows(renumberedRows);
-    });
+  const handleDeleteConfirm = () => {
+    if (deleteDialog.rowId) {
+      setRows(rows.filter(row => row.id !== deleteDialog.rowId));
+    }
+    handleDeleteCancel();
   };
 
   const handleRoleChange = (rowId: number, roleId: string) => {
@@ -458,6 +299,19 @@ const WorkBreakdownStructureForm: React.FC = () => {
     }));
   };
 
+  const handleLevelChange = (rowId: number, value: string, level: 1 | 2 | 3) => {
+    setRows(rows.map(row => {
+      if (row.id === rowId) {
+        const updates: Partial<WBSRow> = {};
+        if (level === 1) updates.level1 = value;
+        if (level === 2) updates.level2 = value;
+        if (level === 3) updates.level3 = value;
+        return { ...row, ...updates };
+      }
+      return row;
+    }));
+  };
+
   const handleSubmit = async () => {
     try {
       await Promise.all(rows.map(async row => {
@@ -496,15 +350,232 @@ const WorkBreakdownStructureForm: React.FC = () => {
     }
   };
 
-  if (!isProject || !projectStartDate) {
+  const renderAddButton = (level: 1 | 2 | 3, parentId?: number, indentLevel: number = 0) => (
+    <TableRow
+      sx={{
+        height: '28px',
+        '& > td': {
+          bgcolor: 'transparent',
+          borderBottom: '1px solid rgba(224, 224, 224, 1)',
+          py: 0
+        }
+      }}
+    >
+      <TableCell 
+        colSpan={9 + months.length}
+        sx={{
+          p: 0,
+        }}
+      >
+        <Button
+          fullWidth
+          size="small"
+          sx={{
+            ml: `${indentLevel * 3}rem`,
+            height: '28px',
+            textTransform: 'none',
+            color: 'text.secondary',
+            '&:hover': {
+              bgcolor: 'rgba(0, 0, 0, 0.04)'
+            }
+          }}
+          onClick={() => addNewRow(level, parentId)}
+        >
+          <AddIcon fontSize="small" sx={{ mr: 1 }} />
+          Add Level {level}
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+
+  const renderRow = (row: WBSRow) => {
+    const getLevelOptions = () => {
+      if (row.level === 1) return level1Options;
+      if (row.level === 2) return level2Options;
+      return level3Options;
+    };
+
+    const getLevelValue = () => {
+      if (row.level === 1) return row.level1;
+      if (row.level === 2) return row.level2;
+      return row.level3;
+    };
+
     return (
-      <Paper sx={{ p: 3, m: 2 }}>
-        <Alert severity="error">
-          Project start date is not set. Please set a start date for the project before creating a WBS.
-        </Alert>
-      </Paper>
+      <TableRow 
+        key={row.id}
+        sx={{ 
+          '& > td': {
+            borderBottom: '1px solid rgba(224, 224, 224, 1)',
+            bgcolor: row.level === 1 ? 'rgba(0, 0, 0, 0.06)' : 
+                    row.level === 2 ? 'rgba(0, 0, 0, 0.03)' : 
+                    'transparent',
+            pl: '8px !important',
+          }
+        }}
+      >
+        <TableCell sx={{ width: '48px', p: '4px !important' }}>
+          <IconButton 
+            size="small" 
+            onClick={() => handleDeleteClick(row.id)}
+            sx={{
+              p: 0.5,
+              '&:hover': {
+                color: 'error.main'
+              }
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </TableCell>
+        <TableCell>
+          <Box sx={{ 
+            display: 'flex',
+            alignItems: 'center',
+            width: row.level === 1 ? '60%' : row.level === 2 ? '80%' : '75%', // Reduced level 3 from 90% to 75%
+            pl: `${(row.level - 1) * 3}rem`,
+            position: 'relative',
+            '&::before': row.level > 1 ? {
+              content: '""',
+              position: 'absolute',
+              left: `${(row.level - 1) * 3 - 1}rem`,
+              top: '50%',
+              width: '0.75rem',
+              height: '1px',
+              bgcolor: 'rgba(0, 0, 0, 0.23)'
+            } : {}
+          }}>
+            <StyledSelect
+              value={getLevelValue()}
+              onChange={(e) => handleLevelChange(row.id, e.target.value as string, row.level)}
+              size="small"
+              sx={{ bgcolor: 'background.paper' }}
+            >
+              <MenuItem value="">Select</MenuItem>
+              {getLevelOptions().map(option => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </StyledSelect>
+          </Box>
+        </TableCell>
+        <TableCell>
+          <StyledSelect
+            value={row.role}
+            onChange={(e) => handleRoleChange(row.id, e.target.value as string)}
+            size="small"
+            sx={{ bgcolor: 'background.paper' }}
+          >
+            <MenuItem value="">Select Role</MenuItem>
+            {roles.map(role => (
+              <MenuItem key={role.id} value={role.id}>
+                {role.name}
+              </MenuItem>
+            ))}
+          </StyledSelect>
+        </TableCell>
+        <TableCell>
+          <StyledSelect
+            value={row.name}
+            onChange={(e) => handleEmployeeChange(row.id, e.target.value as string)}
+            size="small"
+            disabled={!row.role}
+            sx={{ bgcolor: 'background.paper' }}
+          >
+            <MenuItem value="">Select Name</MenuItem>
+            {employees.map(employee => (
+              <MenuItem key={employee.id} value={employee.id}>
+                {employee.name}
+              </MenuItem>
+            ))}
+          </StyledSelect>
+        </TableCell>
+        <TableCell>
+          <NumberInput
+            type="number"
+            value={row.costRate}
+            readOnly
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+            }}
+          />
+        </TableCell>
+        {months.map(month => (
+          <TableCell key={month}>
+            <NumberInput
+              type="number"
+              value={row.monthlyHours[month] || ''}
+              onChange={(e) => handleHoursChange(row.id, month, e.target.value)}
+              min="0"
+              max="160"
+              style={{
+                backgroundColor: 'white'
+              }}
+            />
+          </TableCell>
+        ))}
+        <TableCell>
+          <NumberInput
+            type="number"
+            value={row.odc || ''}
+            onChange={(e) => handleODCChange(row.id, e.target.value)}
+            min="0"
+            style={{
+              backgroundColor: 'white'
+            }}
+          />
+        </TableCell>
+        <TableCell>
+          <NumberInput
+            type="number"
+            value={row.totalHours}
+            readOnly
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+            }}
+          />
+        </TableCell>
+        <TableCell>
+          <NumberInput
+            type="number"
+            value={row.totalCost}
+            readOnly
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+            }}
+          />
+        </TableCell>
+      </TableRow>
     );
-  }
+  };
+
+  const renderRowsAndButtons = () => {
+    const level1Rows = rows.filter(row => row.level === 1);
+    const result: JSX.Element[] = [];
+
+    level1Rows.forEach(level1Row => {
+      result.push(renderRow(level1Row));
+
+      const level2Rows = rows.filter(row => row.level === 2 && row.parentId === level1Row.id);
+      level2Rows.forEach(level2Row => {
+        result.push(renderRow(level2Row));
+
+        const level3Rows = rows.filter(row => row.level === 3 && row.parentId === level2Row.id);
+        level3Rows.forEach(level3Row => {
+          result.push(renderRow(level3Row));
+        });
+
+        result.push(renderAddButton(3, level2Row.id, 2));
+      });
+
+      result.push(renderAddButton(2, level1Row.id, 1));
+    });
+
+    result.push(renderAddButton(1));
+
+    return result;
+  };
 
   return (
     <Box sx={{ 
@@ -516,30 +587,22 @@ const WorkBreakdownStructureForm: React.FC = () => {
         borderRadius: 1
       }
     }}>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6">Work Breakdown Structure</Typography>
-          <Box>
-            <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={addNewMonth}
-              sx={{ mr: 1 }}
-            >
-              Add Month
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => addNewRow(1)}
-            >
-              Add Level 1
-            </Button>
-          </Box>
-        </Box>
+      <Paper sx={{ mb: 2 }}>
+        <StyledHeaderBox>
+          <Typography variant="h6">
+            Work Breakdown Structure
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={addNewMonth}
+          >
+            Add Month
+          </Button>
+        </StyledHeaderBox>
 
         {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Alert severity="error" sx={{ mt: 2, mx: 2, mb: 2 }}>
             {error}
           </Alert>
         )}
@@ -559,267 +622,23 @@ const WorkBreakdownStructureForm: React.FC = () => {
           <Table stickyHeader size="small" sx={{ minWidth: 1200 }}>
             <TableHead>
               <TableRow>
-                <TableCell 
-                  sx={{ 
-                    minWidth: 150, 
-                    position: 'sticky', 
-                    left: 0, 
-                    zIndex: 3,
-                    bgcolor: 'background.paper',
-                    borderRight: '1px solid rgba(224, 224, 224, 1)'
-                  }}
-                >
+                <HeaderCell sx={{ width: '48px', p: '4px !important' }}>
                   Actions
-                </TableCell>
-                <TableCell sx={{ minWidth: 80 }}>Number</TableCell>
-                <TableCell sx={{ minWidth: 150 }}>Level 1</TableCell>
-                <TableCell sx={{ minWidth: 150 }}>Level 2</TableCell>
-                <TableCell sx={{ minWidth: 150 }}>Level 3</TableCell>
-                <TableCell sx={{ minWidth: 150 }}>Role</TableCell>
-                <TableCell sx={{ minWidth: 150 }}>Name</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>Cost Rate</TableCell>
+                </HeaderCell>
+                <HeaderCell sx={{ minWidth: '400px' }}>Task Level</HeaderCell>
+                <HeaderCell sx={{ minWidth: '200px' }}>Role</HeaderCell>
+                <HeaderCell sx={{ minWidth: '200px' }}>Name</HeaderCell>
+                <HeaderCell sx={{ minWidth: 100 }}>Cost Rate</HeaderCell>
                 {months.map(month => (
-                  <TableCell key={month} sx={{ minWidth: 100 }}>{month}</TableCell>
+                  <HeaderCell key={month} sx={{ minWidth: 100 }}>{month}</HeaderCell>
                 ))}
-                <TableCell sx={{ minWidth: 100 }}>ODCs</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>Total Hours</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>Total Cost</TableCell>
+                <HeaderCell sx={{ minWidth: 100 }}>ODCs</HeaderCell>
+                <HeaderCell sx={{ minWidth: 100 }}>Total Hours</HeaderCell>
+                <HeaderCell sx={{ minWidth: 100 }}>Total Cost</HeaderCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows.map((row) => (
-                <TableRow 
-                  key={row.id}
-                  sx={{ 
-                    '& > td': {
-                      borderBottom: '1px solid rgba(224, 224, 224, 1)',
-                      bgcolor: row.level === 1 ? 'rgba(0, 0, 0, 0.06)' : 
-                              row.level === 2 ? 'rgba(0, 0, 0, 0.03)' : 
-                              'transparent',
-                      pl: '8px !important',
-                    },
-                    '& > td:first-of-type': {
-                      position: 'sticky',
-                      left: 0,
-                      zIndex: 2,
-                      bgcolor: row.level === 1 ? 'rgba(0, 0, 0, 0.06)' : 
-                              row.level === 2 ? 'rgba(0, 0, 0, 0.03)' : 
-                              'background.paper',
-                      borderRight: '1px solid rgba(224, 224, 224, 1)'
-                    }
-                  }}
-                >
-                  <TableCell>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      gap: 1,
-                      alignItems: 'center',
-                      ml: row.level > 1 ? `${(row.level - 1) * 2}rem` : 0,
-                      position: 'relative',
-                      '&::before': row.level > 1 ? {
-                        content: '""',
-                        position: 'absolute',
-                        left: '-1rem',
-                        top: '50%',
-                        width: '1rem',
-                        height: '2px',
-                        bgcolor: 'rgba(0, 0, 0, 0.1)'
-                      } : {}
-                    }}>
-                      <IconButton 
-                        size="small" 
-                        onClick={() => handleDeleteClick(row.id)}
-                        sx={{
-                          bgcolor: 'background.paper',
-                          boxShadow: 1,
-                          '&:hover': {
-                            bgcolor: 'error.light',
-                            color: 'white'
-                          }
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                      {row.level < 3 && (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<AddIcon />}
-                          onClick={() => addNewRow(row.level + 1 as 2 | 3, row.id)}
-                          sx={{
-                            minWidth: 'auto',
-                            px: 1,
-                            py: 0.5,
-                            fontSize: '0.75rem',
-                            lineHeight: 1,
-                            bgcolor: 'background.paper',
-                            boxShadow: 1
-                          }}
-                        >
-                          Add Level {row.level + 1}
-                        </Button>
-                      )}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        fontWeight: row.level === 1 ? 600 : 
-                                  row.level === 2 ? 500 : 
-                                  400
-                      }}
-                    >
-                      {row.number}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={row.level1}
-                      onChange={(e) => setRows(rows.map(r => 
-                        r.id === row.id ? { ...r, level1: e.target.value } : r
-                      ))}
-                      size="small"
-                      fullWidth
-                      disabled={row.level !== 1}
-                      sx={{ bgcolor: 'background.paper' }}
-                    >
-                      <MenuItem value="">Select</MenuItem>
-                      {level1Options.map(option => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={row.level2}
-                      onChange={(e) => setRows(rows.map(r => 
-                        r.id === row.id ? { ...r, level2: e.target.value } : r
-                      ))}
-                      size="small"
-                      fullWidth
-                      disabled={row.level !== 2}
-                      sx={{ bgcolor: 'background.paper' }}
-                    >
-                      <MenuItem value="">Select</MenuItem>
-                      {level2Options.map(option => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={row.level3}
-                      onChange={(e) => setRows(rows.map(r => 
-                        r.id === row.id ? { ...r, level3: e.target.value } : r
-                      ))}
-                      size="small"
-                      fullWidth
-                      disabled={row.level !== 3}
-                      sx={{ bgcolor: 'background.paper' }}
-                    >
-                      <MenuItem value="">Select</MenuItem>
-                      {level3Options.map(option => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={row.role}
-                      onChange={(e) => handleRoleChange(row.id, e.target.value)}
-                      size="small"
-                      fullWidth
-                      sx={{ bgcolor: 'background.paper' }}
-                    >
-                      <MenuItem value="">Select Role</MenuItem>
-                      {roles.map(role => (
-                        <MenuItem key={role.id} value={role.id}>
-                          {role.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={row.name}
-                      onChange={(e) => handleEmployeeChange(row.id, e.target.value)}
-                      size="small"
-                      fullWidth
-                      disabled={!row.role}
-                      sx={{ bgcolor: 'background.paper' }}
-                    >
-                      <MenuItem value="">Select Name</MenuItem>
-                      {employees.map(employee => (
-                        <MenuItem key={employee.id} value={employee.id}>
-                          {employee.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <NumberInput
-                      type="number"
-                      value={row.costRate}
-                      readOnly
-                      style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                      }}
-                    />
-                  </TableCell>
-                  {months.map(month => (
-                    <TableCell key={month}>
-                      <NumberInput
-                        type="number"
-                        value={row.monthlyHours[month] || ''}
-                        onChange={(e) => handleHoursChange(row.id, month, e.target.value)}
-                        min="0"
-                        max="160"
-                        style={{
-                          backgroundColor: 'white'
-                        }}
-                      />
-                    </TableCell>
-                  ))}
-                  <TableCell>
-                    <NumberInput
-                      type="number"
-                      value={row.odc || ''}
-                      onChange={(e) => handleODCChange(row.id, e.target.value)}
-                      min="0"
-                      style={{
-                        backgroundColor: 'white'
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <NumberInput
-                      type="number"
-                      value={row.totalHours}
-                      readOnly
-                      style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <NumberInput
-                      type="number"
-                      value={row.totalCost}
-                      readOnly
-                      style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {renderRowsAndButtons()}
             </TableBody>
           </Table>
         </TableContainer>
@@ -858,7 +677,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">
             Delete
           </Button>
-          </DialogActions>
+        </DialogActions>
       </Dialog>
     </Box>
   );
