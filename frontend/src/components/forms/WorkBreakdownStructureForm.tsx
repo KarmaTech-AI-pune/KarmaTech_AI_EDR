@@ -136,7 +136,7 @@ interface DeleteDialog {
 }
 
 const WorkBreakdownStructureForm: React.FC = () => {
-  // State declarations and useEffect remain unchanged...
+  // Previous state declarations and useEffect remain unchanged...
   const context = useContext(projectManagementAppContext);
   const [rows, setRows] = useState<WBSRow[]>([]);
   const [months, setMonths] = useState<string[]>([]);
@@ -178,6 +178,41 @@ const WorkBreakdownStructureForm: React.FC = () => {
     loadInitialData();
   }, []);
 
+  const calculateChildTotals = (parentRow: WBSRow) => {
+    let childRows: WBSRow[] = [];
+    if (parentRow.level === 1) {
+      // Get all level 2 rows that are children of this level 1 row
+      const level2Children = rows.filter(r => r.level === 2 && r.parentId === parentRow.id);
+      // Get all level 3 rows that are children of those level 2 rows
+      level2Children.forEach(l2 => {
+        childRows = childRows.concat(rows.filter(r => r.level === 3 && r.parentId === l2.id));
+      });
+    } else if (parentRow.level === 2) {
+      // Get all level 3 rows that are children of this level 2 row
+      childRows = rows.filter(r => r.level === 3 && r.parentId === parentRow.id);
+    }
+
+    const totals = {
+      monthlyHours: {} as { [key: string]: number },
+      totalHours: 0,
+      odc: 0,
+      totalCost: 0
+    };
+
+    childRows.forEach(child => {
+      // Sum up monthly hours
+      months.forEach(month => {
+        totals.monthlyHours[month] = (totals.monthlyHours[month] || 0) + (child.monthlyHours[month] || 0);
+      });
+      
+      // Sum up other totals
+      totals.totalHours += child.totalHours;
+      totals.odc += child.odc;
+      totals.totalCost += child.totalCost;
+    });
+
+    return totals;
+  };
   // Helper functions remain unchanged...
   const getProjectStartDate = () => {
     if (!context?.selectedProject) return null;
@@ -201,7 +236,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
         </Alert>
       </Paper>
     );
-  }
+      }
 
   // Event handlers remain unchanged...
   const addNewMonth = () => {
@@ -478,6 +513,9 @@ const WorkBreakdownStructureForm: React.FC = () => {
     const rateTooltip = selectedRole ? `Min: ${selectedRole.minRate}, Max: ${selectedRole.maxRate}` : '';
     const employeesForRole = row.role ? getEmployeesForRole(row.role) : [];
 
+    // Calculate totals for parent rows
+    const childTotals = row.level < 3 ? calculateChildTotals(row) : null;
+
     return (
       <TableRow 
         key={row.id}
@@ -610,8 +648,17 @@ const WorkBreakdownStructureForm: React.FC = () => {
                 }}
                 disabled={editMode}
               />
+            ) : childTotals ? (
+              <NumberInput
+                type="number"
+                value={childTotals.monthlyHours[month] || ''}
+                readOnly
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                }}
+              />
             ) : (
-              <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+              <Box sx={{ height: '37px' }} />
             )}
           </TableCell>
         ))}
@@ -627,8 +674,17 @@ const WorkBreakdownStructureForm: React.FC = () => {
               }}
               disabled={editMode}
             />
+          ) : childTotals ? (
+            <NumberInput
+              type="number"
+              value={childTotals.odc || ''}
+              readOnly
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }}
+            />
           ) : (
-            <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+            <Box sx={{ height: '37px' }} />
           )}
         </TableCell>
         <TableCell>
@@ -641,8 +697,17 @@ const WorkBreakdownStructureForm: React.FC = () => {
                 backgroundColor: 'rgba(0, 0, 0, 0.04)'
               }}
             />
+          ) : childTotals ? (
+            <NumberInput
+              type="number"
+              value={childTotals.totalHours || ''}
+              readOnly
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }}
+            />
           ) : (
-            <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+            <Box sx={{ height: '37px' }} />
           )}
         </TableCell>
         <TableCell>
@@ -655,8 +720,17 @@ const WorkBreakdownStructureForm: React.FC = () => {
                 backgroundColor: 'rgba(0, 0, 0, 0.04)'
               }}
             />
+          ) : childTotals ? (
+            <NumberInput
+              type="number"
+              value={childTotals.totalCost || ''}
+              readOnly
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }}
+            />
           ) : (
-            <Box sx={{ height: '37px' }} /> // Placeholder for spacing
+            <Box sx={{ height: '37px' }} />
           )}
         </TableCell>
       </TableRow>
