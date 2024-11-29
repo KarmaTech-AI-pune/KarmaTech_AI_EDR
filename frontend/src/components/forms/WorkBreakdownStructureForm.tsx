@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { projectManagementAppContext } from '../../App';
 import {
   WBSTasksAPI,
@@ -106,6 +107,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
   const [roles, setRoles] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [error, setError] = useState<string>('');
+  const [editMode, setEditMode] = useState<boolean>(false);
   const [deleteDialog, setDeleteDialog] = useState<DeleteDialog>({
     open: false,
     childCount: 0
@@ -350,43 +352,48 @@ const WorkBreakdownStructureForm: React.FC = () => {
     }
   };
 
-  const renderAddButton = (level: 1 | 2 | 3, parentId?: number, indentLevel: number = 0) => (
-    <TableRow
-      sx={{
-        height: '28px',
-        '& > td': {
-          bgcolor: 'transparent',
-          borderBottom: '1px solid rgba(224, 224, 224, 1)',
-          py: 0
-        }
-      }}
-    >
-      <TableCell 
-        colSpan={9 + months.length}
+  const renderAddButton = (level: 1 | 2 | 3, parentId?: number, indentLevel: number = 0): JSX.Element => {
+    if (editMode) {
+      return <></>;
+    }
+    return (
+      <TableRow
         sx={{
-          p: 0,
+          height: '28px',
+          '& > td': {
+            bgcolor: 'transparent',
+            borderBottom: '1px solid rgba(224, 224, 224, 1)',
+            py: 0
+          }
         }}
       >
-        <Button
-          fullWidth
-          size="small"
+        <TableCell 
+          colSpan={9 + months.length}
           sx={{
-            ml: `${indentLevel * 3}rem`,
-            height: '28px',
-            textTransform: 'none',
-            color: 'text.secondary',
-            '&:hover': {
-              bgcolor: 'rgba(0, 0, 0, 0.04)'
-            }
+            p: 0,
           }}
-          onClick={() => addNewRow(level, parentId)}
         >
-          <AddIcon fontSize="small" sx={{ mr: 1 }} />
-          Add Level {level}
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
+          <Button
+            fullWidth
+            size="small"
+            sx={{
+              ml: `${indentLevel * 3}rem`,
+              height: '28px',
+              textTransform: 'none',
+              color: 'text.secondary',
+              '&:hover': {
+                bgcolor: 'rgba(0, 0, 0, 0.04)'
+              }
+            }}
+            onClick={() => addNewRow(level, parentId)}
+          >
+            <AddIcon fontSize="small" sx={{ mr: 1 }} />
+            Add Level {level}
+          </Button>
+        </TableCell>
+      </TableRow>
+    );
+  };
 
   const renderRow = (row: WBSRow) => {
     const getLevelOptions = () => {
@@ -415,24 +422,26 @@ const WorkBreakdownStructureForm: React.FC = () => {
         }}
       >
         <TableCell sx={{ width: '48px', p: '4px !important' }}>
-          <IconButton 
-            size="small" 
-            onClick={() => handleDeleteClick(row.id)}
-            sx={{
-              p: 0.5,
-              '&:hover': {
-                color: 'error.main'
-              }
-            }}
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          {!editMode && (
+            <IconButton 
+              size="small" 
+              onClick={() => handleDeleteClick(row.id)}
+              sx={{
+                p: 0.5,
+                '&:hover': {
+                  color: 'error.main'
+                }
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          )}
         </TableCell>
         <TableCell>
           <Box sx={{ 
             display: 'flex',
             alignItems: 'center',
-            width: row.level === 1 ? '60%' : row.level === 2 ? '80%' : '75%', // Reduced level 3 from 90% to 75%
+            width: row.level === 1 ? '60%' : row.level === 2 ? '80%' : '75%',
             pl: `${(row.level - 1) * 3}rem`,
             position: 'relative',
             '&::before': row.level > 1 ? {
@@ -450,6 +459,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
               onChange={(e) => handleLevelChange(row.id, e.target.value as string, row.level)}
               size="small"
               sx={{ bgcolor: 'background.paper' }}
+              disabled={editMode}
             >
               <MenuItem value="">Select</MenuItem>
               {getLevelOptions().map(option => (
@@ -466,6 +476,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
             onChange={(e) => handleRoleChange(row.id, e.target.value as string)}
             size="small"
             sx={{ bgcolor: 'background.paper' }}
+            disabled={editMode}
           >
             <MenuItem value="">Select Role</MenuItem>
             {roles.map(role => (
@@ -480,7 +491,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
             value={row.name}
             onChange={(e) => handleEmployeeChange(row.id, e.target.value as string)}
             size="small"
-            disabled={!row.role}
+            disabled={!row.role || editMode}
             sx={{ bgcolor: 'background.paper' }}
           >
             <MenuItem value="">Select Name</MenuItem>
@@ -512,6 +523,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
               style={{
                 backgroundColor: 'white'
               }}
+              disabled={editMode}
             />
           </TableCell>
         ))}
@@ -524,6 +536,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
             style={{
               backgroundColor: 'white'
             }}
+            disabled={editMode}
           />
         </TableCell>
         <TableCell>
@@ -566,13 +579,13 @@ const WorkBreakdownStructureForm: React.FC = () => {
           result.push(renderRow(level3Row));
         });
 
-        result.push(renderAddButton(3, level2Row.id, 2));
+        if(!editMode)result.push(renderAddButton(3, level2Row.id, 2));
       });
 
-      result.push(renderAddButton(2, level1Row.id, 1));
+      if(!editMode)result.push(renderAddButton(2, level1Row.id, 1));
     });
 
-    result.push(renderAddButton(1));
+    if(!editMode)result.push(renderAddButton(1));
 
     return result;
   };
@@ -592,13 +605,24 @@ const WorkBreakdownStructureForm: React.FC = () => {
           <Typography variant="h6">
             Work Breakdown Structure
           </Typography>
-          <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={addNewMonth}
-          >
-            Add Month
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={() => setEditMode(!editMode)}
+            >
+              {editMode ? 'Exit Edit Mode' : 'Edit Mode'}
+            </Button>
+            {!editMode && (
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={addNewMonth}
+              >
+                Add Month
+              </Button>
+            )}
+          </Box>
         </StyledHeaderBox>
 
         {error && (
