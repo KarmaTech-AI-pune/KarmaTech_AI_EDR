@@ -1,7 +1,6 @@
-// File: backend/src/NJSAPI/Controllers/ProjectController.cs
-// Purpose: Controller for handling project-related requests
 using Microsoft.AspNetCore.Mvc;
 using NJS.Application.Services;
+using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 
@@ -12,9 +11,9 @@ namespace NJSAPI.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectRepository _projectRepository;
-        private readonly ProjectManagementService _projectManagementService;
+        private readonly IProjectManagementService _projectManagementService;
 
-        public ProjectsController(IProjectRepository projectRepository, ProjectManagementService projectManagementService)
+        public ProjectsController(IProjectRepository projectRepository, IProjectManagementService projectManagementService)
         {
             _projectRepository = projectRepository;
             _projectManagementService = projectManagementService;
@@ -40,16 +39,14 @@ namespace NJSAPI.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Project projectData)
-        {
-            Console.WriteLine(projectData);
+        {           
             if (projectData == null)
             {
                 return BadRequest();
             }
 
             try
-            {
-                // Parse dates if they're provided
+            {               
                 if (!string.IsNullOrEmpty(projectData.StartDate?.ToString()))
                 {
                     DateTime.TryParse(projectData.StartDate.ToString(), out DateTime startDate);
@@ -88,7 +85,6 @@ namespace NJSAPI.Controllers
                     return NotFound();
                 }
 
-                // Parse dates if they're provided
                 if (!string.IsNullOrEmpty(project.StartDate?.ToString()))
                 {
                     DateTime.TryParse(project.StartDate.ToString(), out DateTime startDate);

@@ -1,9 +1,10 @@
-//File: backend/src/NJSAPI/Program.cs
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
+using Microsoft.AspNetCore.Authorization;
+
 internal class Program
 {
     private static async Task Main(string[] args)
@@ -31,25 +32,49 @@ internal class Program
                     .AllowAnyMethod());
         });
 
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-                };
-            });
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                ValidAudience = builder.Configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            };
+        });
 
-        builder.Services.AddAuthorization();
+        // Configure Authorization Policies
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("RequireAdminRole", policy =>
+                policy.RequireRole("Admin"));
+                
+            options.AddPolicy("RequireManagerRole", policy =>
+                policy.RequireRole("Manager"));
+                
+            options.AddPolicy("RequireUserRole", policy =>
+                policy.RequireRole("User"));
+
+            options.AddPolicy("RequireAdminOrManager", policy =>
+                policy.RequireRole("Admin", "Manager"));
+
+            // Default policy requiring authentication
+            options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+        });
+
         var app = builder.Build();
-      
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

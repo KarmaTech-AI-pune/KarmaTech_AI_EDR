@@ -11,6 +11,8 @@ namespace NJS.Domain.Database
         }
 
         public DbSet<Project> Projects { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
         public DbSet<FeasibilityStudy> FeasibilityStudies { get; set; }
         public DbSet<GoNoGoDecision> GoNoGoDecisions { get; set; }
         public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; }
@@ -27,6 +29,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<FeasibilityStudy>().Property(f => f.FinancialInformation).HasPrecision(18, 2);
             modelBuilder.Entity<Project>().Property(f => f.EstimatedCost).HasPrecision(18, 2);
             modelBuilder.Entity<WBSTask>().Property(f => f.Budget).HasPrecision(18, 2);
+            modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
             
             // Configure OpportunityTracking decimal precisions
             modelBuilder.Entity<OpportunityTracking>()

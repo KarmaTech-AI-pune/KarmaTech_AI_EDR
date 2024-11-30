@@ -1,59 +1,54 @@
-//File: backend/src/NJS.Application/Services/AuthService.cs
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace NJS.Application.Services
-{
-    public class AuthService
+namespace NJS.Application.Services{
+  
+    public class AuthService: IAuthService
     {
         private readonly IConfiguration _configuration;
-        
-        // Hardcoded demo user - in real applications, this should come from a secure database
-        private static readonly User DemoUser = new User
-        {
-            Id = Guid.NewGuid().ToString(), 
-            UserName = "admin",
-            // This is the hashed version of "password" using BCrypt
-            //PasswordHash = "$2a$11$k7R1o/K7E1XR3CXfNcXYMe/hEJwNx3kHfKT8QrW4Sy.CRqkU3H9Nu",
-            PasswordHash ="password",           
-            Email = "admin@example.com",
-            Avatar = null,
-            CreatedAt = DateTime.UtcNow,
-            LastLogin = null
-        };
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<Role> _roleManager;
 
-        public AuthService(IConfiguration configuration)
+        public AuthService(
+            IConfiguration configuration,
+            UserManager<User> userManager,
+            RoleManager<Role> roleManager)
         {
             _configuration = configuration;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
-        public (bool success, User user, string token) ValidateUser(string username, string password)
+        public async Task<(bool success, User user, string token)> ValidateUserAsync(string username, string password)
         {
             try
             {
-                // Check if username matches
-                if (username != DemoUser.UserName)
+                var user = await _userManager.FindByNameAsync(username);
+                if (user == null)
                 {
                     return (false, null, null);
                 }
 
-                // Verify password using BCrypt
-                if (password != DemoUser.PasswordHash)
+                var isValidPassword = await _userManager.CheckPasswordAsync(user, password);
+                if (!isValidPassword)
                 {
                     return (false, null, null);
                 }
 
                 // Generate JWT token
-                var token = GenerateJwtToken(DemoUser);
+                var token = await GenerateJwtTokenAsync(user);
 
                 // Update last login time
-                DemoUser.LastLogin = DateTime.UtcNow;
+                user.LastLogin = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
 
-                return (true, DemoUser, token);
+                return (true, user, token);
             }
             catch (Exception)
             {
@@ -61,18 +56,27 @@ namespace NJS.Application.Services
             }
         }
 
-        private string GenerateJwtToken(User user)
+        private async Task<string> GenerateJwtTokenAsync(User user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            // Get user roles
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("name", user.UserName)
+                new Claim(ClaimTypes.Name, user.UserName)
             };
+
+            // Add role claims
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -112,6 +116,31 @@ namespace NJS.Application.Services
             {
                 return false;
             }
+        }
+
+        public async Task<bool> CreateRoleAsync(string roleName)
+        {
+            if (!await _roleManager.RoleExistsAsync(roleName))
+            {
+                var result = await _roleManager.CreateAsync(new Role { Name = roleName });
+                return result.Succeeded;
+            }
+            return true;
+        }
+
+        public async Task<bool> AssignRoleToUserAsync(User user, string roleName)
+        {
+            if (!await _roleManager.RoleExistsAsync(roleName))
+            {
+                await CreateRoleAsync(roleName);
+            }
+
+            if (!await _userManager.IsInRoleAsync(user, roleName))
+            {
+                var result = await _userManager.AddToRoleAsync(user, roleName);
+                return result.Succeeded;
+            }
+            return true;
         }
     }
 }
