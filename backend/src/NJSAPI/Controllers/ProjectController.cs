@@ -1,4 +1,6 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using NJS.Application.CQRS.Projects.Commands;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
@@ -12,11 +14,13 @@ namespace NJSAPI.Controllers
     {
         private readonly IProjectRepository _projectRepository;
         private readonly IProjectManagementService _projectManagementService;
-
-        public ProjectsController(IProjectRepository projectRepository, IProjectManagementService projectManagementService)
+        private readonly IMediator _mediator;
+        public ProjectsController(IProjectRepository projectRepository, IProjectManagementService projectManagementService, IMediator mediator)
         {
+
             _projectRepository = projectRepository;
             _projectManagementService = projectManagementService;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -62,6 +66,26 @@ namespace NJSAPI.Controllers
                 await _projectRepository.Add(projectData).ConfigureAwait(false);
 
                 return CreatedAtAction(nameof(GetById), new { id = projectData.Id }, projectData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("CreateProject")]
+        public async Task<IActionResult> CreateProject([FromBody] CreateProjectCommand command)
+        {
+            //TODO: need to update same as above post method
+            if (command == null)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var projectId = await _mediator.Send(command);
+                return CreatedAtAction(nameof(GetById), new { id = projectId }, command);
             }
             catch (Exception ex)
             {
