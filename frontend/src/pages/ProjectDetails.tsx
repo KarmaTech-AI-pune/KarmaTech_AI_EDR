@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import {
   Container,
+  Grid,
   Typography,
   Box,
   CircularProgress,
@@ -16,6 +17,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import EmailIcon from '@mui/icons-material/Email';
@@ -33,6 +35,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Project, OpportunityTracking } from '../types';
 import { projectManagementAppContext } from '../App';
+import { opportunityApi } from '../dummyapi/opportunityApi';
 
 // Import all forms from index
 import {
@@ -52,6 +55,7 @@ const COLLAPSED_DRAWER_WIDTH = 65;
 const NAVBAR_HEIGHT = '64px';
 
 export const ProjectDetails: React.FC = () => {
+  const [opportunity, setOpportunity] = useState<OpportunityTracking | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState('overview');
@@ -62,7 +66,6 @@ export const ProjectDetails: React.FC = () => {
 
   useEffect(() => {
     setIsLoading(false);
-    setError("")
   }, []);
 
   const handleSectionClick = (section: string) => {
@@ -200,7 +203,7 @@ export const ProjectDetails: React.FC = () => {
         const form = formSections.find(f => f.id === selectedForm);
         return form?.component;
       }
-      return <FormsOverview />;
+      return <FormsOverview onFormSelect={handleFormClick} />;
     }
 
     switch (selectedSection) {
