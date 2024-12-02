@@ -37,15 +37,15 @@ interface WBSOption {
 interface Employee {
   id: number;
   name: string;
-  standardRate: number;
-  roleId: number;
+  standard_rate: number;
+  role_id: number;
 }
 
 interface Role {
   id: number;
   name: string;
-  minRate: number;
-  maxRate: number;
+  min_rate: number;
+  description: string;
 }
 
 interface WBSRowData {
@@ -103,8 +103,8 @@ const WBSRow: React.FC<WBSRowProps> = ({
   onODCChange,
 }) => {
   const selectedRole = roles.find(r => r.id === parseInt(row.role));
-  const rateTooltip = selectedRole ? `Min: ${selectedRole.minRate}, Max: ${selectedRole.maxRate}` : '';
-  const employeesForRole = row.role ? employees.filter(emp => emp.roleId === parseInt(row.role)) : [];
+  const rateTooltip = selectedRole ? `Min Rate: ${selectedRole.min_rate}` : '';
+  const employeesForRole = row.role ? employees.filter(emp => emp.role_id === parseInt(row.role)) : [];
 
   return (
     <TableRow 

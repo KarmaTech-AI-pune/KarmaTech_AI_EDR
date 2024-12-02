@@ -1,144 +1,147 @@
+// Role type definition
+export type resourceRole = {
+    id: number;
+    name: string;
+    min_rate: number;
+    description: string;
+};
+
+// Employee type definition
+export type Employee = {
+    id: number;
+    name: string;
+    email: string;
+    role_id: number;
+    standard_rate: number;
+    is_consultant: boolean;
+    is_active: boolean;
+};
+
 // Resource Roles table
-export const resourceRoles = [
+export const resourceRoles: resourceRole[] = [
     {
         id: 1,
         name: "Project Manager",
         description: "Oversees project planning and execution",
-        minRate: 150,
-        maxRate: 200
+        min_rate: 150
     },
     {
         id: 2,
         name: "Senior Engineer",
         description: "Lead technical design and engineering",
-        minRate: 120,
-        maxRate: 180
+        min_rate: 120
     },
     {
         id: 3,
         name: "Civil Engineer",
         description: "Structural and civil engineering design",
-        minRate: 100,
-        maxRate: 150
+        min_rate: 100
     },
     {
         id: 4,
         name: "Environmental Engineer",
         description: "Environmental assessment and planning",
-        minRate: 90,
-        maxRate: 140
+        min_rate: 90
     },
     {
         id: 5,
         name: "Mechanical Engineer",
         description: "Mechanical systems design",
-        minRate: 100,
-        maxRate: 150
+        min_rate: 100
     },
     {
         id: 6,
         name: "Electrical Engineer",
         description: "Electrical systems and ICA design",
-        minRate: 100,
-        maxRate: 150
+        min_rate: 100
     },
     {
         id: 7,
         name: "Surveyor",
         description: "Topographical and site surveys",
-        minRate: 80,
-        maxRate: 120
+        min_rate: 80
     },
     {
         id: 8,
         name: "Cost Estimator",
         description: "Project costing and estimation",
-        minRate: 90,
-        maxRate: 130
+        min_rate: 90
     }
 ];
 
 // Employees table with foreign key to Resource Roles
-export const employees = [
+export const employees: Employee[] = [
     {
         id: 1,
-        roleId: 1,
         name: "Sarah Johnson",
         email: "sarah.j@company.com",
-        standardRate: 175,
-        costToCompany: 200000,
-        isConsultant: false,
-        skills: ["Project Management", "Engineering Management", "Risk Management"]
+        role_id: 1,
+        standard_rate: 175,
+        is_consultant: false,
+        is_active: true
     },
     {
         id: 2,
-        roleId: 2,
         name: "Michael Chen",
         email: "michael.c@company.com",
-        standardRate: 150,
-        costToCompany: 180000,
-        isConsultant: false,
-        skills: ["Process Design", "Technical Leadership", "Engineering"]
+        role_id: 2,
+        standard_rate: 150,
+        is_consultant: false,
+        is_active: true
     },
     {
         id: 3,
-        roleId: 3,
         name: "Emily Rodriguez",
         email: "emily.r@company.com",
-        standardRate: 125,
-        costToCompany: 150000,
-        isConsultant: false,
-        skills: ["Structural Design", "Civil Engineering", "AutoCAD"]
+        role_id: 3,
+        standard_rate: 125,
+        is_consultant: false,
+        is_active: true
     },
     {
         id: 4,
-        roleId: 4,
         name: "David Kim",
         email: "david.k@company.com",
-        standardRate: 115,
-        costToCompany: 140000,
-        isConsultant: false,
-        skills: ["Environmental Assessment", "Impact Analysis", "Sustainability"]
+        role_id: 4,
+        standard_rate: 115,
+        is_consultant: false,
+        is_active: true
     },
     {
         id: 5,
-        roleId: 5,
         name: "Lisa Patel",
         email: "lisa.p@company.com",
-        standardRate: 125,
-        costToCompany: 150000,
-        isConsultant: false,
-        skills: ["Mechanical Design", "HVAC", "Piping Systems"]
+        role_id: 5,
+        standard_rate: 125,
+        is_consultant: false,
+        is_active: true
     },
     {
         id: 6,
-        roleId: 6,
         name: "James Wilson",
         email: "james.w@company.com",
-        standardRate: 125,
-        costToCompany: 150000,
-        isConsultant: false,
-        skills: ["Electrical Systems", "ICA Design", "Power Distribution"]
+        role_id: 6,
+        standard_rate: 125,
+        is_consultant: false,
+        is_active: true
     },
     {
         id: 7,
-        roleId: 7,
         name: "Robert Taylor",
         email: "robert.t@company.com",
-        standardRate: 100,
-        costToCompany: 120000,
-        isConsultant: false,
-        skills: ["Topographical Survey", "GIS", "Site Investigation"]
+        role_id: 7,
+        standard_rate: 100,
+        is_consultant: false,
+        is_active: true
     },
     {
         id: 8,
-        roleId: 8,
         name: "Maria Garcia",
         email: "maria.g@company.com",
-        standardRate: 110,
-        costToCompany: 130000,
-        isConsultant: false,
-        skills: ["Cost Estimation", "Quantity Surveying", "Project Economics"]
+        role_id: 8,
+        standard_rate: 110,
+        is_consultant: false,
+        is_active: true
     }
 ];
 
