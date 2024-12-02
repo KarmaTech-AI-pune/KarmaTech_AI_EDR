@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Box, Paper, Alert } from '@mui/material';
+import { Box, Paper, Alert, Container } from '@mui/material';
 import { projectManagementAppContext } from '../../App';
 import { WBSApi, WBSOptionsAPI } from '../../dummyapi/wbsApi';
 import { MonthlyHour } from '../../dummyapi/database/dummyWBSTasks';
@@ -399,64 +399,80 @@ const WorkBreakdownStructureForm: React.FC = () => {
   };
 
   return (
-    <Box sx={{ 
-      width: '100%', 
-      overflow: 'hidden',
-      '& .MuiPaper-root': {
-        boxShadow: 'none',
-        border: '1px solid rgba(224, 224, 224, 1)',
-        borderRadius: 1
-      }
-    }}>
-      <Paper sx={{ mb: 2 }}>
-        <WBSHeader
-          editMode={editMode}
-          error={error}
-          onEditModeToggle={() => setEditMode(!editMode)}
-          onAddMonth={addNewMonth}
-        />
-      </Paper>
+    <Container 
+      maxWidth="xl" 
+      sx={{ 
+        py: 2,
+        '& .MuiPaper-root': {
+          boxShadow: 'none',
+          border: '1px solid rgba(224, 224, 224, 1)',
+          borderRadius: 1,
+          mb: 2
+        }
+      }}
+    >
+      <Box sx={{ 
+        width: '100%', 
+        maxHeight: 'calc(100vh - 200px)', // Adjust height to prevent full page overflow
+        overflowY: 'auto', // Enable vertical scrolling
+        overflowX: 'hidden', // Prevent horizontal scrolling
+        pr: 1 // Add slight right padding for scrollbar
+      }}>
+        <Paper sx={{ mb: 2 }}>
+          <WBSHeader
+            editMode={editMode}
+            error={error}
+            onEditModeToggle={() => setEditMode(!editMode)}
+            onAddMonth={addNewMonth}
+          />
+        </Paper>
 
-      <Paper>
-        <WBSTable
-          rows={rows}
-          months={months}
-          roles={roles}
-          employees={allEmployees}
-          editMode={editMode}
-          levelOptions={{
-            level1: level1Options,
-            level2: level2Options,
-            level3: level3OptionsMap
-          }}
-          onAddRow={addNewRow}
-          onDeleteRow={handleDeleteClick}
-          onLevelChange={handleLevelChange}
-          onRoleChange={handleRoleChange}
-          onEmployeeChange={handleEmployeeChange}
-          onCostRateChange={handleCostRateChange}
-          onHoursChange={handleHoursChange}
-          onODCChange={handleODCChange}
-        />
-      </Paper>
+        <Paper sx={{ 
+          mb: 2,
+          '& > div': {
+            overflowX: 'auto' // Horizontal scroll for table if needed
+          }
+        }}>
+          <WBSTable
+            rows={rows}
+            months={months}
+            roles={roles}
+            employees={allEmployees}
+            editMode={editMode}
+            levelOptions={{
+              level1: level1Options,
+              level2: level2Options,
+              level3: level3OptionsMap
+            }}
+            onAddRow={addNewRow}
+            onDeleteRow={handleDeleteClick}
+            onLevelChange={handleLevelChange}
+            onRoleChange={handleRoleChange}
+            onEmployeeChange={handleEmployeeChange}
+            onCostRateChange={handleCostRateChange}
+            onHoursChange={handleHoursChange}
+            onODCChange={handleODCChange}
+          />
+        </Paper>
 
-      <Paper sx={{ p: 2, mt: 2 }}>
-        <WBSSummary
-          totalHours={calculateOverallTotals().totalHours}
-          totalCost={calculateOverallTotals().totalCost}
-          currency={context?.selectedProject?.currency || ''}
-          disabled={rows.length === 0}
-          onSave={handleSubmit}
-        />
-      </Paper>
+        <Paper sx={{ p: 2 }}>
+          <WBSSummary
+            totalHours={calculateOverallTotals().totalHours}
+            totalCost={calculateOverallTotals().totalCost}
+            currency={context?.selectedProject?.currency || ''}
+            disabled={rows.length === 0}
+            onSave={handleSubmit}
+          />
+        </Paper>
 
-      <DeleteWBSDialog
-        open={deleteDialog.open}
-        childCount={deleteDialog.childCount}
-        onCancel={handleDeleteCancel}
-        onConfirm={handleDeleteConfirm}
-      />
-    </Box>
+        <DeleteWBSDialog
+          open={deleteDialog.open}
+          childCount={deleteDialog.childCount}
+          onCancel={handleDeleteCancel}
+          onConfirm={handleDeleteConfirm}
+        />
+      </Box>
+    </Container>
   );
 };
 
