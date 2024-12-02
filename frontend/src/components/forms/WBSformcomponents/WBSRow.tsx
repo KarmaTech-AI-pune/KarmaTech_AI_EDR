@@ -61,7 +61,9 @@ interface WBSRowData {
   odc: number;
   totalHours: number;
   totalCost: number;
+  title: string;
   parentId?: number;
+  serverTaskId?: number; // Add serverTaskId field
 }
 
 interface WBSRowProps {
@@ -209,7 +211,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
               min="0"
               max="160"
               style={{
-                backgroundColor: 'white'
+                backgroundColor: editMode ? 'rgba(0, 0, 0, 0.04)' : 'white'
               }}
               disabled={editMode}
             />
@@ -235,7 +237,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             onChange={(e) => onODCChange(row.id, e.target.value)}
             min="0"
             style={{
-              backgroundColor: 'white'
+              backgroundColor: editMode ? 'rgba(0, 0, 0, 0.04)' : 'white'
             }}
             disabled={editMode}
           />

@@ -1,22 +1,66 @@
 import { wbsTasks as initialWbsTasks, resourceAllocations as initialResourceAllocations, monthlyHours as initialMonthlyHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options, WBSTask, WBSTaskResourceAllocation, MonthlyHour } from './database/dummyWBSTasks';
-import { resourceRoles as initialResourceRoles, employees as initialEmployees, projectResources as initialProjectResources } from './database/dummyResourceRoles';
+import { resourceRoles as initialResourceRoles, employees as initialEmployees, projectResources as initialProjectResources, resourceRole as ResourceRole, Employee } from './database/dummyResourceRoles';
 
-// Mutable arrays to track changes
-let wbsTasks = [...initialWbsTasks];
-let resourceAllocations = [...initialResourceAllocations];
-let monthlyHours = [...initialMonthlyHours];
-let resourceRoles = [...initialResourceRoles];
-let employees = [...initialEmployees];
-let projectResources = [...initialProjectResources];
+// Project Resource type definition
+interface ProjectResource {
+    id: number;
+    projectId: number;
+    employeeId: number;
+    projectRate: number;
+    startDate: Date;
+    endDate: Date;
+}
+
+// Helper function to load data from localStorage or use initial data
+const loadFromLocalStorage = <T,>(key: string, initialData: T[]): T[] => {
+    const storedData = localStorage.getItem(key);
+    return storedData ? JSON.parse(storedData) : [...initialData];
+};
+
+// Mutable arrays to track changes with localStorage persistence
+let wbsTasks = loadFromLocalStorage<WBSTask>('wbsTasks', initialWbsTasks);
+let resourceAllocations = loadFromLocalStorage<WBSTaskResourceAllocation>('resourceAllocations', initialResourceAllocations);
+let monthlyHours = loadFromLocalStorage<MonthlyHour>('monthlyHours', initialMonthlyHours);
+let resourceRoles = loadFromLocalStorage<ResourceRole>('resourceRoles', initialResourceRoles);
+let employees = loadFromLocalStorage<Employee>('employees', initialEmployees);
+let projectResources = loadFromLocalStorage<ProjectResource>('projectResources', initialProjectResources);
+
+// Helper function to save data to localStorage
+const saveToLocalStorage = <T,>(key: string, data: T[]) => {
+    localStorage.setItem(key, JSON.stringify(data));
+};
 
 // Helper function to generate new IDs
-const getNewId = (array: any[]) => {
+const getNewId = (array: { id: number }[]): number => {
     return array.length > 0 ? Math.max(...array.map(item => item.id)) + 1 : 1;
+};
+
+// Helper function to clean up old allocations and hours
+const cleanupOldData = (projectId: number, currentTaskIds: Set<number>) => {
+    // Get all allocations for tasks that no longer exist
+    const allocationsToRemove = resourceAllocations.filter(
+        allocation => !currentTaskIds.has(allocation.wbs_task_id)
+    );
+
+    // Remove monthly hours for these allocations
+    const allocationIdsToRemove = new Set(allocationsToRemove.map(a => a.id));
+    monthlyHours = monthlyHours.filter(
+        hour => !allocationIdsToRemove.has(hour.resource_allocation_id)
+    );
+
+    // Remove the allocations themselves
+    resourceAllocations = resourceAllocations.filter(
+        allocation => !allocationIdsToRemove.has(allocation.id)
+    );
+
+    // Save updated data
+    saveToLocalStorage('monthlyHours', monthlyHours);
+    saveToLocalStorage('resourceAllocations', resourceAllocations);
 };
 
 export const WBSApi = {
     // Resource and Employee Management
-    getAllRoles: async () => {
+    getAllRoles: async (): Promise<ResourceRole[]> => {
         try {
             return resourceRoles;
         } catch (error) {
@@ -25,7 +69,7 @@ export const WBSApi = {
         }
     },
 
-    getRoleById: async (id: number) => {
+    getRoleById: async (id: number): Promise<ResourceRole | undefined> => {
         try {
             return resourceRoles.find(role => role.id === id);
         } catch (error) {
@@ -34,7 +78,7 @@ export const WBSApi = {
         }
     },
 
-    getAllEmployees: async () => {
+    getAllEmployees: async (): Promise<Employee[]> => {
         try {
             return employees;
         } catch (error) {
@@ -43,7 +87,7 @@ export const WBSApi = {
         }
     },
 
-    getEmployeeById: async (id: number) => {
+    getEmployeeById: async (id: number): Promise<Employee | undefined> => {
         try {
             return employees.find(emp => emp.id === id);
         } catch (error) {
@@ -52,7 +96,7 @@ export const WBSApi = {
         }
     },
 
-    getProjectResources: async (projectId: number) => {
+    getProjectResources: async (projectId: number): Promise<ProjectResource[]> => {
         try {
             return projectResources.filter(resource => resource.projectId === projectId);
         } catch (error) {
@@ -62,7 +106,7 @@ export const WBSApi = {
     },
 
     // Get entire WBS structure for a project including hierarchy, resources, and monthly hours
-    getProjectWBS: async (projectId: number) => {
+    getProjectWBS: async (projectId: number): Promise<WBSTask[]> => {
         try {
             // Get all tasks for the project
             const tasks = wbsTasks.filter(task => task.project_id === projectId);
@@ -107,7 +151,7 @@ export const WBSApi = {
     },
 
     // Save multiple WBS tasks at once (create and update)
-    saveWBSTasks: async (projectId: number, tasks: WBSTask[]) => {
+    saveWBSTasks: async (projectId: number, tasks: WBSTask[]): Promise<{ created: number[], updated: number[] }> => {
         try {
             const createdTaskIds: number[] = [];
             const updatedTaskIds: number[] = [];
@@ -122,7 +166,7 @@ export const WBSApi = {
                     }
                 } else {
                     // Create new task
-                    const newTask = {
+                    const newTask: WBSTask = {
                         ...task,
                         id: getNewId(wbsTasks),
                         project_id: projectId,
@@ -133,6 +177,13 @@ export const WBSApi = {
                     createdTaskIds.push(newTask.id);
                 }
             });
+
+            // Clean up old data for tasks that no longer exist
+            const currentTaskIds = new Set([...createdTaskIds, ...updatedTaskIds]);
+            cleanupOldData(projectId, currentTaskIds);
+
+            // Save updated tasks to localStorage
+            saveToLocalStorage('wbsTasks', wbsTasks);
 
             return {
                 created: createdTaskIds,
@@ -145,7 +196,7 @@ export const WBSApi = {
     },
 
     // Delete a WBS task and its children
-    deleteWBSTask: async (projectId: number, taskId: number) => {
+    deleteWBSTask: async (projectId: number, taskId: number): Promise<number[]> => {
         try {
             // Get all child tasks recursively
             const getAllChildTaskIds = (parentId: number): number[] => {
@@ -169,11 +220,16 @@ export const WBSApi = {
 
             // Delete all resource allocations for these tasks
             resourceAllocations = resourceAllocations.filter(
-                allocation => !taskIdsToDelete.includes(allocation.wbs_task_id)
+                allocation => !allocationIdsToDelete.includes(allocation.id)
             );
 
             // Delete the tasks
             wbsTasks = wbsTasks.filter(task => !taskIdsToDelete.includes(task.id));
+
+            // Save updated data to localStorage
+            saveToLocalStorage('wbsTasks', wbsTasks);
+            saveToLocalStorage('resourceAllocations', resourceAllocations);
+            saveToLocalStorage('monthlyHours', monthlyHours);
 
             return taskIdsToDelete;
         } catch (error) {
@@ -183,7 +239,7 @@ export const WBSApi = {
     },
 
     // Get resource allocations with optional month/year filtering
-    getResourceAllocations: async (projectId: number, month?: number, year?: number) => {
+    getResourceAllocations: async (projectId: number, month?: number, year?: number): Promise<WBSTaskResourceAllocation[]> => {
         try {
             // Get project tasks
             const projectTasks = wbsTasks.filter(task => task.project_id === projectId);
@@ -233,56 +289,48 @@ export const WBSApi = {
     updateMonthlyHours: async (projectId: number, taskId: number, data: {
         resource_allocation_id: number,
         monthly_hours: MonthlyHour[]
-    }) => {
+    }): Promise<{
+        monthly_hours: MonthlyHour[],
+        total_hours: number,
+        total_cost: number
+    }> => {
         try {
             const { resource_allocation_id, monthly_hours: newHours } = data;
 
-            // Verify the task belongs to the project
-            const task = wbsTasks.find(t => t.id === taskId && t.project_id === projectId);
+            // Verify the task exists and belongs to the project
+            const task = wbsTasks.find(t => t.id === taskId);
             if (!task) {
+                throw new Error('Task not found');
+            }
+            if (task.project_id !== projectId) {
                 throw new Error('Task not found in project');
             }
 
-            // Verify the resource allocation belongs to the task
-            const allocation = resourceAllocations.find(
-                a => a.id === resource_allocation_id && a.wbs_task_id === taskId
-            );
+            // Verify the resource allocation exists and belongs to the task
+            const allocation = resourceAllocations.find(a => a.id === resource_allocation_id);
             if (!allocation) {
+                throw new Error('Resource allocation not found');
+            }
+            if (allocation.wbs_task_id !== taskId) {
                 throw new Error('Resource allocation not found for task');
             }
 
-            // Update or create monthly hours
-            newHours.forEach(hourData => {
-                const index = monthlyHours.findIndex(h => 
-                    h.resource_allocation_id === resource_allocation_id &&
-                    h.year === hourData.year &&
-                    h.month === hourData.month
-                );
+            // Remove all existing hours for this allocation
+            monthlyHours = monthlyHours.filter(h => h.resource_allocation_id !== resource_allocation_id);
 
-                if (index !== -1) {
-                    // Update existing hours
-                    monthlyHours[index] = {
-                        ...monthlyHours[index],
-                        ...hourData,
-                        updated_at: new Date()
-                    };
-                } else {
-                    // Create new hours
-                    monthlyHours.push({
-                        ...hourData,
-                        id: getNewId(monthlyHours),
-                        resource_allocation_id,
-                        created_at: new Date(),
-                        updated_at: new Date()
-                    });
-                }
-            });
+            // Add the new hours
+            const updatedHours = newHours.map(hourData => ({
+                ...hourData,
+                id: getNewId(monthlyHours),
+                resource_allocation_id,
+                created_at: new Date(),
+                updated_at: new Date()
+            }));
+
+            monthlyHours.push(...updatedHours);
 
             // Calculate new totals
-            const allocationHours = monthlyHours.filter(
-                h => h.resource_allocation_id === resource_allocation_id
-            );
-            const totalHours = allocationHours.reduce(
+            const totalHours = updatedHours.reduce(
                 (sum, h) => sum + h.planned_hours, 0
             );
             const totalCost = totalHours * allocation.cost_rate;
@@ -300,8 +348,12 @@ export const WBSApi = {
                 };
             }
 
+            // Save updated data to localStorage
+            saveToLocalStorage('monthlyHours', monthlyHours);
+            saveToLocalStorage('resourceAllocations', resourceAllocations);
+
             return {
-                monthly_hours: allocationHours,
+                monthly_hours: updatedHours,
                 total_hours: totalHours,
                 total_cost: totalCost
             };
@@ -324,13 +376,17 @@ export const WBSApi = {
     // Create a new WBS task
     createWBSTask: async (taskData: Partial<WBSTask>): Promise<WBSTask> => {
         try {
-            const newTask = {
+            const newTask: WBSTask = {
                 id: getNewId(wbsTasks),
                 ...taskData,
                 created_at: new Date(),
                 updated_at: new Date()
             } as WBSTask;
             wbsTasks.push(newTask);
+            
+            // Save to localStorage
+            saveToLocalStorage('wbsTasks', wbsTasks);
+            
             return newTask;
         } catch (error) {
             console.error('Error creating WBS task:', error);
@@ -343,13 +399,17 @@ export const WBSApi = {
         try {
             const index = wbsTasks.findIndex(task => task.id === taskId);
             if (index !== -1) {
-                const updatedTask = {
+                const updatedTask: WBSTask = {
                     ...wbsTasks[index],
                     ...taskData,
                     id: taskId,
                     updated_at: new Date()
                 };
                 wbsTasks[index] = updatedTask;
+                
+                // Save to localStorage
+                saveToLocalStorage('wbsTasks', wbsTasks);
+                
                 return updatedTask;
             }
             throw new Error('Task not found');
@@ -358,6 +418,68 @@ export const WBSApi = {
             throw error;
         }
     },
+
+    // Create a new resource allocation
+    createResourceAllocation: async (allocationData: Partial<WBSTaskResourceAllocation>): Promise<WBSTaskResourceAllocation> => {
+        try {
+            const newAllocation: WBSTaskResourceAllocation = {
+                id: getNewId(resourceAllocations),
+                ...allocationData,
+                created_at: new Date(),
+                updated_at: new Date()
+            } as WBSTaskResourceAllocation;
+            
+            resourceAllocations.push(newAllocation);
+            saveToLocalStorage('resourceAllocations', resourceAllocations);
+            
+            return newAllocation;
+        } catch (error) {
+            console.error('Error creating resource allocation:', error);
+            throw error;
+        }
+    },
+
+    // Update an existing resource allocation
+    updateResourceAllocation: async (allocationId: number, data: Partial<WBSTaskResourceAllocation>): Promise<WBSTaskResourceAllocation> => {
+        try {
+            const index = resourceAllocations.findIndex(a => a.id === allocationId);
+            if (index === -1) {
+                throw new Error('Resource allocation not found');
+            }
+
+            const updatedAllocation: WBSTaskResourceAllocation = {
+                ...resourceAllocations[index],
+                ...data,
+                updated_at: new Date()
+            };
+
+            resourceAllocations[index] = updatedAllocation;
+            saveToLocalStorage('resourceAllocations', resourceAllocations);
+
+            return updatedAllocation;
+        } catch (error) {
+            console.error('Error updating resource allocation:', error);
+            throw error;
+        }
+    },
+
+    // Add method to reset localStorage if needed
+    resetLocalStorage: () => {
+        localStorage.removeItem('wbsTasks');
+        localStorage.removeItem('resourceAllocations');
+        localStorage.removeItem('monthlyHours');
+        localStorage.removeItem('resourceRoles');
+        localStorage.removeItem('employees');
+        localStorage.removeItem('projectResources');
+
+        // Reset in-memory arrays
+        wbsTasks = [...initialWbsTasks];
+        resourceAllocations = [...initialResourceAllocations];
+        monthlyHours = [...initialMonthlyHours];
+        resourceRoles = [...initialResourceRoles];
+        employees = [...initialEmployees];
+        projectResources = [...initialProjectResources];
+    }
 };
 
 export const WBSOptionsAPI = {

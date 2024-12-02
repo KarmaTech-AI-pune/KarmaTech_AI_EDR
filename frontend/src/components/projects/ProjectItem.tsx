@@ -17,7 +17,6 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
   const [canDeleteProject, setCanDeleteProject] = useState(false);
   const context = useContext(projectManagementAppContext);
 
-  console.log(currentUser)
   useEffect(() => {
     const checkUserPermissions = async () => {
       const user = await authApi.getCurrentUser();

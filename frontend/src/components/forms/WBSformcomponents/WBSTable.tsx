@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import WBSRow from './WBSRow';
+import { resourceRole as ResourceRole, Employee } from '../../../dummyapi/database/dummyResourceRoles';
 
 const HeaderCell = styled(TableCell)(({ theme }) => ({
   textAlign: 'center',
@@ -43,14 +44,16 @@ interface WBSRowData {
   odc: number;
   totalHours: number;
   totalCost: number;
+  title: string;
   parentId?: number;
+  serverTaskId?: number;
 }
 
 interface WBSTableProps {
   rows: WBSRowData[];
   months: string[];
-  roles: any[];
-  employees: any[];
+  roles: ResourceRole[];
+  employees: Employee[];
   editMode: boolean;
   levelOptions: {
     level1: WBSOption[];

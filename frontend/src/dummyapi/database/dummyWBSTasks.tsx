@@ -11,6 +11,7 @@ export interface WBSTask {
     odc: number;
     created_at: Date;
     updated_at: Date;
+    resource_allocations?: WBSTaskResourceAllocation[];
 }
 
 // WBS Task Resource Allocation Type Definition
@@ -24,6 +25,8 @@ export interface WBSTaskResourceAllocation {
     total_cost: number;
     created_at: Date;
     updated_at: Date;
+    monthly_hours?: MonthlyHour[];
+    employee?: any;
 }
 
 export interface MonthlyHour {
