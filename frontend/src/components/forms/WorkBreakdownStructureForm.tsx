@@ -394,12 +394,28 @@ const WorkBreakdownStructureForm: React.FC = () => {
 
       // Create task ID mapping
       const taskIdMap = new Map<number, number>();
+      
+      // Map existing task IDs
+      rows.forEach(row => {
+        if (row.serverTaskId) {
+          taskIdMap.set(row.id, row.serverTaskId);
+        }
+      });
+      
+      // Map newly created parent task IDs
       parentSaveResult.created.forEach((serverId, index) => {
         const clientId = parentTasks[index]?.id || 0;
-        taskIdMap.set(clientId, serverId);
+        if (clientId) {
+          taskIdMap.set(clientId, serverId);
+        }
       });
+      
+      // Map updated parent task IDs
       parentSaveResult.updated.forEach(id => {
-        taskIdMap.set(id, id);
+        const row = rows.find(r => r.serverTaskId === id);
+        if (row) {
+          taskIdMap.set(row.id, id);
+        }
       });
 
       // Save level 3 tasks
@@ -421,49 +437,28 @@ const WorkBreakdownStructureForm: React.FC = () => {
       const level3SaveResult = await WBSApi.saveWBSTasks(projectId, level3Tasks);
       console.log('Level 3 Tasks Save Result:', level3SaveResult);
 
-      // Update task ID mapping
+      // Update task ID mapping with level 3 tasks
       level3SaveResult.created.forEach((serverId, index) => {
         const clientId = level3Tasks[index]?.id || 0;
-        taskIdMap.set(clientId, serverId);
-      });
-      level3SaveResult.updated.forEach(id => {
-        taskIdMap.set(id, id);
-      });
-
-      // Delete old resource allocations and monthly hours for tasks that no longer exist
-      const currentTaskIds = new Set([...parentSaveResult.created, ...parentSaveResult.updated, 
-                                    ...level3SaveResult.created, ...level3SaveResult.updated]);
-      
-      // Get all existing allocations for this project's tasks
-      const existingAllocations = await WBSApi.getResourceAllocations(projectId);
-      
-      // Delete allocations for tasks that no longer exist
-      for (const allocation of existingAllocations) {
-        if (!currentTaskIds.has(allocation.wbs_task_id)) {
-          // Delete monthly hours first
-          if (allocation.monthly_hours) {
-            await WBSApi.updateMonthlyHours(projectId, allocation.wbs_task_id, {
-              resource_allocation_id: allocation.id,
-              monthly_hours: []
-            });
-          }
-          // Then delete the allocation itself by updating it with empty data
-          await WBSApi.updateResourceAllocation(allocation.id, {
-            employee_id: 0,
-            role_id: 0,
-            cost_rate: 0,
-            total_hours: 0,
-            total_cost: 0
-          });
+        if (clientId) {
+          taskIdMap.set(clientId, serverId);
         }
-      }
+      });
+      
+      level3SaveResult.updated.forEach(id => {
+        const row = rows.find(r => r.serverTaskId === id);
+        if (row) {
+          taskIdMap.set(row.id, id);
+        }
+      });
 
       // Process resource allocations and monthly hours for current tasks
       for (const row of rows) {
         if (!row?.monthlyHours || !row.name || row.level !== 3) continue;
 
         try {
-          const taskId = row.serverTaskId || taskIdMap.get(row.id);
+          // Get the correct server task ID from the mapping
+          const taskId = taskIdMap.get(row.id) || row.serverTaskId;
           if (!taskId) {
             console.error(`No server task ID found for row ${row.id}`);
             continue;
@@ -480,14 +475,13 @@ const WorkBreakdownStructureForm: React.FC = () => {
           };
 
           // Check if there's an existing allocation for this task
-          const existingAllocation = existingAllocations.find(a => a.wbs_task_id === taskId);
-          let allocation;
-
-          if (existingAllocation) {
-            allocation = await WBSApi.updateResourceAllocation(existingAllocation.id, allocationData);
-          } else {
-            allocation = await WBSApi.createResourceAllocation(allocationData);
-          }
+          const existingAllocation = await WBSApi.getResourceAllocations(projectId);
+          const allocation = existingAllocation.find(a => a.wbs_task_id === taskId)
+            ? await WBSApi.updateResourceAllocation(
+                existingAllocation.find(a => a.wbs_task_id === taskId)!.id,
+                allocationData
+              )
+            : await WBSApi.createResourceAllocation(allocationData);
 
           // Prepare monthly hours
           const monthlyHoursData: MonthlyHour[] = [];
