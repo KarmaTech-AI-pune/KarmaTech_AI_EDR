@@ -11,24 +11,13 @@ interface ProjectResource {
     endDate: Date;
 }
 
-// Helper function to load data from localStorage or use initial data
-const loadFromLocalStorage = <T,>(key: string, initialData: T[]): T[] => {
-    const storedData = localStorage.getItem(key);
-    return storedData ? JSON.parse(storedData) : [...initialData];
-};
-
-// Mutable arrays to track changes with localStorage persistence
-let wbsTasks = loadFromLocalStorage<WBSTask>('wbsTasks', initialWbsTasks);
-let resourceAllocations = loadFromLocalStorage<WBSTaskResourceAllocation>('resourceAllocations', initialResourceAllocations);
-let monthlyHours = loadFromLocalStorage<MonthlyHour>('monthlyHours', initialMonthlyHours);
-let resourceRoles = loadFromLocalStorage<ResourceRole>('resourceRoles', initialResourceRoles);
-let employees = loadFromLocalStorage<Employee>('employees', initialEmployees);
-let projectResources = loadFromLocalStorage<ProjectResource>('projectResources', initialProjectResources);
-
-// Helper function to save data to localStorage
-const saveToLocalStorage = <T,>(key: string, data: T[]) => {
-    localStorage.setItem(key, JSON.stringify(data));
-};
+// Mutable arrays to track changes
+let wbsTasks = [...initialWbsTasks];
+let resourceAllocations = [...initialResourceAllocations];
+let monthlyHours = [...initialMonthlyHours];
+let resourceRoles = [...initialResourceRoles];
+let employees = [...initialEmployees];
+let projectResources = [...initialProjectResources];
 
 // Helper function to generate new IDs
 const getNewId = (array: { id: number }[]): number => {
@@ -52,10 +41,6 @@ const cleanupOldData = (projectId: number, currentTaskIds: Set<number>) => {
     resourceAllocations = resourceAllocations.filter(
         allocation => !allocationIdsToRemove.has(allocation.id)
     );
-
-    // Save updated data
-    saveToLocalStorage('monthlyHours', monthlyHours);
-    saveToLocalStorage('resourceAllocations', resourceAllocations);
 };
 
 export const WBSApi = {
@@ -182,9 +167,6 @@ export const WBSApi = {
             const currentTaskIds = new Set([...createdTaskIds, ...updatedTaskIds]);
             cleanupOldData(projectId, currentTaskIds);
 
-            // Save updated tasks to localStorage
-            saveToLocalStorage('wbsTasks', wbsTasks);
-
             return {
                 created: createdTaskIds,
                 updated: updatedTaskIds
@@ -225,11 +207,6 @@ export const WBSApi = {
 
             // Delete the tasks
             wbsTasks = wbsTasks.filter(task => !taskIdsToDelete.includes(task.id));
-
-            // Save updated data to localStorage
-            saveToLocalStorage('wbsTasks', wbsTasks);
-            saveToLocalStorage('resourceAllocations', resourceAllocations);
-            saveToLocalStorage('monthlyHours', monthlyHours);
 
             return taskIdsToDelete;
         } catch (error) {
@@ -348,10 +325,6 @@ export const WBSApi = {
                 };
             }
 
-            // Save updated data to localStorage
-            saveToLocalStorage('monthlyHours', monthlyHours);
-            saveToLocalStorage('resourceAllocations', resourceAllocations);
-
             return {
                 monthly_hours: updatedHours,
                 total_hours: totalHours,
@@ -383,10 +356,6 @@ export const WBSApi = {
                 updated_at: new Date()
             } as WBSTask;
             wbsTasks.push(newTask);
-            
-            // Save to localStorage
-            saveToLocalStorage('wbsTasks', wbsTasks);
-            
             return newTask;
         } catch (error) {
             console.error('Error creating WBS task:', error);
@@ -406,10 +375,6 @@ export const WBSApi = {
                     updated_at: new Date()
                 };
                 wbsTasks[index] = updatedTask;
-                
-                // Save to localStorage
-                saveToLocalStorage('wbsTasks', wbsTasks);
-                
                 return updatedTask;
             }
             throw new Error('Task not found');
@@ -430,8 +395,6 @@ export const WBSApi = {
             } as WBSTaskResourceAllocation;
             
             resourceAllocations.push(newAllocation);
-            saveToLocalStorage('resourceAllocations', resourceAllocations);
-            
             return newAllocation;
         } catch (error) {
             console.error('Error creating resource allocation:', error);
@@ -454,8 +417,6 @@ export const WBSApi = {
             };
 
             resourceAllocations[index] = updatedAllocation;
-            saveToLocalStorage('resourceAllocations', resourceAllocations);
-
             return updatedAllocation;
         } catch (error) {
             console.error('Error updating resource allocation:', error);
@@ -463,16 +424,8 @@ export const WBSApi = {
         }
     },
 
-    // Add method to reset localStorage if needed
-    resetLocalStorage: () => {
-        localStorage.removeItem('wbsTasks');
-        localStorage.removeItem('resourceAllocations');
-        localStorage.removeItem('monthlyHours');
-        localStorage.removeItem('resourceRoles');
-        localStorage.removeItem('employees');
-        localStorage.removeItem('projectResources');
-
-        // Reset in-memory arrays
+    // Reset data to initial state
+    resetData: () => {
         wbsTasks = [...initialWbsTasks];
         resourceAllocations = [...initialResourceAllocations];
         monthlyHours = [...initialMonthlyHours];
