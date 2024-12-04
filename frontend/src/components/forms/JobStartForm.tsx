@@ -165,7 +165,7 @@ const JobStartForm: React.FC = () => {
             </TableRow>
             {employeeAllocations
               .filter(emp => !emp.is_consultant)
-              .map((emp, index) => (
+              .map((emp) => (
                 <React.Fragment key={emp.id}>
                   <TableRow>
                     <TableCell></TableCell>
@@ -208,7 +208,7 @@ const JobStartForm: React.FC = () => {
             </TableRow>
             {employeeAllocations
               .filter(emp => emp.is_consultant)
-              .map((emp, index) => (
+              .map((emp) => (
                 <React.Fragment key={emp.id}>
                   <TableRow>
                     <TableCell></TableCell>
