@@ -142,6 +142,24 @@ export const employees: Employee[] = [
         standard_rate: 110,
         is_consultant: false,
         is_active: true
+    },
+    {
+        id: 9,
+        name: "Consultant A",
+        email: "consultnt.a@company.com",
+        role_id: 7,
+        standard_rate: 100,
+        is_consultant: true,
+        is_active: true
+    },
+    {
+        id: 10,
+        name: "Consultant B",
+        email: "maria.b@company.com",
+        role_id: 8,
+        standard_rate: 110,
+        is_consultant: true,
+        is_active: true
     }
 ];
 

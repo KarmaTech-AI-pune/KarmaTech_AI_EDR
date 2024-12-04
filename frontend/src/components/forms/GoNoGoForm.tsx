@@ -395,14 +395,11 @@ const handleSubmit = async () => {
       lastModifiedBy: context?.user?.name?.substring(0, 100) || ''
     };
 
-    console.log('Go/No-Go Decision Payload:', updatedFields);
 
     if (isEditing && decisionId) {
       await goNoGoApi.update(decisionId, updatedFields);
-      console.log('Go/No-Go decision updated successfully');
     } else {
       await goNoGoApi.create(project.id, updatedFields);
-      console.log('Go/No-Go decision created successfully');
     }
 
     // Navigation or state update

@@ -43,7 +43,7 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
     <>
       <StyledHeaderBox>
         <Typography variant="h6">
-          Work Breakdown Structure
+          PMD2. Work Breakdown Structure
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
