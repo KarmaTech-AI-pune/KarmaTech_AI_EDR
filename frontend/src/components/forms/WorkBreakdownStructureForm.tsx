@@ -14,6 +14,12 @@ interface DeleteDialog {
   childCount: number;
 }
 
+interface MonthlyHours {
+  [year: string]: {
+    [month: string]: number;
+  };
+}
+
 // Helper function to generate new IDs
 const getNewId = (array: any[]) => {
   return array.length > 0 ? Math.max(...array.map(item => item.id)) + 1 : 1;
@@ -46,7 +52,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
         role: task.role?.toString() || null,
         name: task.name?.toString() || null,
         costRate: task.costRate || 0,
-        monthlyHours: task.monthlyHours || {},
+        monthlyHours: (task.monthlyHours || {}) as MonthlyHours,
         odc: task.odc || 0,
         totalHours: task.totalHours || 0,
         totalCost: task.totalCost || 0,
@@ -54,7 +60,33 @@ const WorkBreakdownStructureForm: React.FC = () => {
       }));
 
       setRows(transformedRows);
-      console.log("fetched rows:", transformedRows);
+      
+      // Calculate the number of months from the data
+      const allMonths = new Set<string>();
+      transformedRows.forEach(row => {
+        const monthlyHours = row.monthlyHours as MonthlyHours;
+        Object.entries(monthlyHours).forEach(([year, monthData]) => {
+          Object.keys(monthData).forEach(month => {
+            allMonths.add(`${month} ${year.slice(2)}`);
+          });
+        });
+      });
+
+      if (allMonths.size > 0) {
+        // Sort months chronologically
+        const sortedMonths = Array.from(allMonths).sort((a, b) => {
+          const [monthA, yearA] = a.split(' ');
+          const [monthB, yearB] = b.split(' ');
+          const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+          ];
+          const yearDiff = parseInt(yearA) - parseInt(yearB);
+          if (yearDiff !== 0) return yearDiff;
+          return monthNames.indexOf(monthA) - monthNames.indexOf(monthB);
+        });
+        setMonths(sortedMonths);
+      }
     } catch (err) {
       console.error('Error loading WBS data:', err);
       setError('Failed to load WBS data');
@@ -83,9 +115,9 @@ const WorkBreakdownStructureForm: React.FC = () => {
         setRoles(allRoles);
         setAllEmployees(employees);
 
-        // Set up initial months
+        // Set up initial months only if no data is loaded yet
         const startDate = getProjectStartDate();
-        if (startDate) {
+        if (startDate && months.length === 0) {
           const date = new Date(startDate);
           const initialMonths = [];
           for (let i = 0; i < 5; i++) {
@@ -96,6 +128,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
           }
           setMonths(initialMonths);
         }
+
         // Load existing WBS data if project is selected
         if (context?.selectedProject?.id) {
           await loadWBSData(context.selectedProject.id);
@@ -134,8 +167,18 @@ const WorkBreakdownStructureForm: React.FC = () => {
   const addNewMonth = () => {
     const lastMonth = months[months.length - 1];
     const [monthName, yearStr] = lastMonth.split(' ');
-    const lastDate = new Date(2000 + parseInt(yearStr), months.length - 1);
+    
+    // Get the month index (0-11) for the last month
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const monthIndex = monthNames.indexOf(monthName);
+    
+    // Create date from the last month and year
+    const lastDate = new Date(2000 + parseInt(yearStr), monthIndex);
     lastDate.setMonth(lastDate.getMonth() + 1);
+    
     const newMonth = `${lastDate.toLocaleString('default', { month: 'long' })} ${lastDate.getFullYear().toString().slice(2)}`;
     setMonths([...months, newMonth]);
   };
