@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Box, Paper, Alert, Container } from '@mui/material';
 import { projectManagementAppContext } from '../../App';
-import { WBSApi, WBSOptionsAPI } from '../../dummyapi/wbsApi';
-import { MonthlyHour, WBSTask, WBSTaskResourceAllocation } from '../../dummyapi/database/dummyWBSTasks';
-import { Employee } from '../../dummyapi/database/dummyResourceRoles';
+import { WBSStructureAPI, ResourceAPI, MonthlyHoursAPI, WBSTaskAPI, WBSOptionsAPI } from '../../dummyapi/wbsApi';
 import DeleteWBSDialog from '../dialogbox/DeleteWBSDialog';
 import WBSHeader from './WBSformcomponents/WBSHeader';
 import WBSTable from './WBSformcomponents/WBSTable';
@@ -62,37 +60,9 @@ const WorkBreakdownStructureForm: React.FC = () => {
 
   const loadWBSData = async (projectId: number) => {
     try {
-      const wbsData = await WBSApi.getProjectWBS(projectId);
-      if (wbsData) {
-        const transformedRows: WBSRow[] = wbsData.map(task => {
-          const resourceAllocation = task.resource_allocations?.[0] || null;
-          const monthlyHoursData = resourceAllocation?.monthly_hours?.reduce((acc: any, hour: any) => {
-            const monthName = new Date(hour.year, hour.month - 1).toLocaleString('default', { month: 'long' });
-            const monthKey = `${monthName} ${hour.year.toString().slice(2)}`;
-            acc[monthKey] = hour.planned_hours;
-            return acc;
-          }, {}) || {};
-
-          return {
-            id: task.id,
-            level: task.level as 1 | 2 | 3,
-            level1: task.level1_type || '',
-            level2: task.level2_type || '',
-            level3: task.level3_type || '',
-            role: resourceAllocation?.role_id?.toString() || '',
-            name: resourceAllocation?.employee_id?.toString() || '',
-            costRate: resourceAllocation?.cost_rate || 0,
-            monthlyHours: monthlyHoursData,
-            odc: task.odc || 0,
-            totalHours: resourceAllocation?.total_hours || 0,
-            totalCost: (resourceAllocation?.total_cost || 0) + (task.odc || 0),
-            title: task.title,
-            parentId: task.parent_id || undefined,
-            serverTaskId: task.id // Store the server task ID
-          };
-        });
-        setRows(transformedRows);
-      }
+      const wbsData = await WBSStructureAPI.getProjectWBS(projectId);
+      console.log("fetched rows,",wbsData)
+      
     } catch (err) {
       console.error('Error loading WBS data:', err);
       setError('Failed to load WBS data');
@@ -115,8 +85,8 @@ const WorkBreakdownStructureForm: React.FC = () => {
 
         // Load roles and employees
         const [allRoles, employees] = await Promise.all([
-          WBSApi.getAllRoles(),
-          WBSApi.getAllEmployees()
+          ResourceAPI.getAllRoles(),
+          ResourceAPI.getAllEmployees()
         ]);
         setRoles(allRoles);
         setAllEmployees(employees);
@@ -134,7 +104,6 @@ const WorkBreakdownStructureForm: React.FC = () => {
           }
           setMonths(initialMonths);
         }
-
         // Load existing WBS data if project is selected
         if (context?.selectedProject?.id) {
           await loadWBSData(context.selectedProject.id);
@@ -224,7 +193,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
       try {
         const rowToDelete = rows.find(r => r.id === deleteDialog.rowId);
         if (rowToDelete?.serverTaskId) {
-          await WBSApi.deleteWBSTask(context.selectedProject.id, rowToDelete.serverTaskId);
+          await WBSTaskAPI.deleteWBSTask(context.selectedProject.id, rowToDelete.serverTaskId);
         }
         setRows(rows.filter(row => row.id !== deleteDialog.rowId));
       } catch (err) {
@@ -250,7 +219,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
 
   const handleEmployeeChange = async (rowId: number, employeeId: string) => {
     try {
-      const employee = await WBSApi.getEmployeeById(parseInt(employeeId));
+      const employee = await ResourceAPI.getEmployeeById(parseInt(employeeId));
       if (employee) {
         setRows(rows.map(row => {
           if (row.id === rowId) {
@@ -367,29 +336,31 @@ const WorkBreakdownStructureForm: React.FC = () => {
       const projectId = context.selectedProject.id;
 
       // Get existing WBS data
-      const existingWBS = await WBSApi.getProjectWBS(projectId);
-      console.log('Existing WBS:', existingWBS);
+      const existingWBS = await WBSStructureAPI.getProjectWBS(projectId);
+      const existingResAloc = await ResourceAPI.getResourceAllocations(projectId);
+      const existingMonthlyHours = await MonthlyHoursAPI.getMonthlyHoursByProjectId(projectId);
 
+      console.log('Existing WBS:', existingWBS);
+      console.log('Existing Res Alloc:',existingResAloc)
+      console.log('Existing Monthly Hours',existingMonthlyHours)
+      console.log('rows',rows)
+      /*
       // Create maps for existing data
       const existingTaskMap = new Map(existingWBS.map(task => [task.id, task]));
 
       // First, save all level 1 and 2 tasks
       const parentTasks = rows.filter(row => row.level < 3).map(row => ({
-        id: row.serverTaskId || undefined,
+        id: row.serverTaskId,
         project_id: projectId,
         parent_id: row.parentId || null,
         level: row.level,
-        level1_type: row.level1 || '',
-        level2_type: row.level2 || '',
-        level3_type: row.level3 || '',
         title: row.title || '',
-        odc: row.odc || 0,
-        created_at: row.serverTaskId ? existingTaskMap.get(row.serverTaskId)?.created_at || new Date() : new Date(),
+        created_at: new Date(),
         updated_at: new Date()
-      } as WBSTask));
+      }));
 
       // Save parent tasks
-      const parentSaveResult = await WBSApi.saveWBSTasks(projectId, parentTasks);
+      const parentSaveResult = await WBSStructureAPI.saveWBSTasks(projectId, parentTasks);
       console.log('Parent Tasks Save Result:', parentSaveResult);
 
       // Create task ID mapping
@@ -409,55 +380,28 @@ const WorkBreakdownStructureForm: React.FC = () => {
           taskIdMap.set(clientId, serverId);
         }
       });
-      
-      // Map updated parent task IDs
-      parentSaveResult.updated.forEach(id => {
-        const row = rows.find(r => r.serverTaskId === id);
-        if (row) {
-          taskIdMap.set(row.id, id);
-        }
-      });
 
       // Save level 3 tasks
       const level3Tasks = rows.filter(row => row.level === 3).map(row => ({
-        id: row.serverTaskId || undefined,
+        id: row.serverTaskId,
         project_id: projectId,
         parent_id: row.parentId ? (taskIdMap.get(row.parentId) || row.parentId) : null,
         level: row.level,
-        level1_type: row.level1 || '',
-        level2_type: row.level2 || '',
-        level3_type: row.level3 || '',
         title: row.title || '',
-        odc: row.odc || 0,
-        created_at: row.serverTaskId ? existingTaskMap.get(row.serverTaskId)?.created_at || new Date() : new Date(),
-        updated_at: new Date()
-      } as WBSTask));
+        created_at: new Date(),
+        updated_at: new Date(),
+        resource_allocation: row.role ? 1 : undefined
+      }));
 
       // Save level 3 tasks
-      const level3SaveResult = await WBSApi.saveWBSTasks(projectId, level3Tasks);
+      const level3SaveResult = await WBSStructureAPI.saveWBSTasks(projectId, level3Tasks);
       console.log('Level 3 Tasks Save Result:', level3SaveResult);
 
-      // Update task ID mapping with level 3 tasks
-      level3SaveResult.created.forEach((serverId, index) => {
-        const clientId = level3Tasks[index]?.id || 0;
-        if (clientId) {
-          taskIdMap.set(clientId, serverId);
-        }
-      });
-      
-      level3SaveResult.updated.forEach(id => {
-        const row = rows.find(r => r.serverTaskId === id);
-        if (row) {
-          taskIdMap.set(row.id, id);
-        }
-      });
-
-      // Process resource allocations and monthly hours for current tasks
+      // Process resource allocations for level 3 tasks
       for (const row of rows) {
-        if (!row?.monthlyHours || !row.name || row.level !== 3) continue;
+        if (!row.role || row.level !== 3) continue;
 
         try {
-          // Get the correct server task ID from the mapping
           const taskId = taskIdMap.get(row.id) || row.serverTaskId;
           if (!taskId) {
             console.error(`No server task ID found for row ${row.id}`);
@@ -467,65 +411,49 @@ const WorkBreakdownStructureForm: React.FC = () => {
           // Create or update resource allocation
           const allocationData = {
             wbs_task_id: taskId,
+            role_id: parseInt(row.role),
             employee_id: parseInt(row.name),
-            role_id: row.role ? parseInt(row.role) : 0,
             cost_rate: row.costRate,
+            odc: row.odc,
             total_hours: row.totalHours,
-            total_cost: row.totalCost
+            total_cost: row.totalCost,
+            created_at: new Date(),
+            updated_at: new Date()
           };
 
-          // Check if there's an existing allocation for this task
-          const existingAllocation = await WBSApi.getResourceAllocations(projectId);
-          const allocation = existingAllocation.find(a => a.wbs_task_id === taskId)
-            ? await WBSApi.updateResourceAllocation(
-                existingAllocation.find(a => a.wbs_task_id === taskId)!.id,
-                allocationData
-              )
-            : await WBSApi.createResourceAllocation(allocationData);
+          const allocation = await ResourceAPI.createResourceAllocation(allocationData);
 
-          // Prepare monthly hours
-          const monthlyHoursData: MonthlyHour[] = [];
-          const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                            'July', 'August', 'September', 'October', 'November', 'December'];
+          // Process monthly hours
+          const monthlyHoursData = Object.entries(row.monthlyHours).map(([month, hours]) => {
+            const [monthName, yearStr] = month.split(' ');
+            const monthIndex = new Date(Date.parse(`${monthName} 1, 2000`)).getMonth() + 1;
+            return {
+              task_id: taskId,
+              year: parseInt(yearStr) + 2000,
+              month: monthIndex,
+              planned_hours: hours,
+              created_at: new Date(),
+              updated_at: new Date()
+            };
+          });
 
-          for (const [month, hours] of Object.entries(row.monthlyHours)) {
-            if (hours != null && hours > 0) {
-              const [monthName, yearStr] = month.split(' ');
-              const monthNumber = monthNames.findIndex(m => m === monthName) + 1;
-              if (monthNumber > 0) {
-                monthlyHoursData.push({
-                  id: 0,
-                  resource_allocation_id: allocation.id,
-                  year: 2000 + parseInt(yearStr),
-                  month: monthNumber,
-                  planned_hours: hours,
-                  actual_hours: 0,
-                  created_at: new Date(),
-                  updated_at: new Date()
-                });
-              }
-            }
-          }
-
-          // Update monthly hours
-          await WBSApi.updateMonthlyHours(projectId, taskId, {
-            resource_allocation_id: allocation.id,
+          await MonthlyHoursAPI.updateMonthlyHours(projectId, taskId, {
             monthly_hours: monthlyHoursData
           });
         } catch (error) {
           console.error(`Error processing row ${row.id}:`, error);
         }
       }
-
+      
       // Reload the WBS data
       await loadWBSData(projectId);
       setLastUpdateTime(Date.now());
       alert('WBS data saved successfully!');
-      setError('');
+      setError(''); */
     } catch (err) {
       console.error('Complete Submit Error:', err);
       setError('Failed to save WBS data');
-    }
+    } 
   };
 
   const calculateOverallTotals = () => {
