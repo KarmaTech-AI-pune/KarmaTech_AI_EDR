@@ -15,7 +15,6 @@ export interface WBSRowData {
   totalHours: number;
   totalCost: number;
   parentId?: number | null;
-  serverTaskId?: number;
 }
 
 export interface WBSChildTotals {

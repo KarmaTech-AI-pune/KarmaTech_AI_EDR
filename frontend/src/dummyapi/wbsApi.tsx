@@ -1,5 +1,6 @@
 import { wbsTasks as initialWbsTasks, resourceAllocations as initialResourceAllocations, monthlyHours as initialMonthlyHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options, WBSTask, WBSTaskResourceAllocation, MonthlyHour } from './database/dummyWBSTasks';
 import { resourceRoles as initialResourceRoles, employees as initialEmployees, projectResources as initialProjectResources, resourceRole as ResourceRole, Employee } from './database/dummyResourceRoles';
+import { WBSRowData } from '../types/wbs';
 
 // Project Resource type definition
 interface ProjectResource {
@@ -13,9 +14,16 @@ interface ProjectResource {
 
 // Extended WBS Task type for API responses
 interface ExtendedWBSTask extends Omit<WBSTask, 'resource_allocation'> {
-    resource_allocation?: WBSTaskResourceAllocation & {
+    resource_allocation_id?: number;
+    resource_allocation?: {
         employee?: Employee;
         monthly_hours?: MonthlyHour[];
+    } & WBSTaskResourceAllocation;
+}
+
+interface MonthlyHoursMap {
+    [year: string]: {
+        [month: string]: number;
     };
 }
 
@@ -26,11 +34,6 @@ let monthlyHours = [...initialMonthlyHours];
 let resourceRoles = [...initialResourceRoles];
 let employees = [...initialEmployees];
 let projectResources = [...initialProjectResources];
-
-// Helper function to generate new IDs
-const getNewId = (array: { id: number }[]): number => {
-    return array.length > 0 ? Math.max(...array.map(item => item.id)) + 1 : 1;
-};
 
 // Helper function to clean up old allocations and hours
 const cleanupOldData = (projectId: number, currentTaskIds: Set<number>) => {
@@ -55,11 +58,15 @@ export const WBSTaskAPI = {
 
     createWBSTask: async (taskData: Partial<WBSTask>): Promise<WBSTask> => {
         try {
+            if (!taskData.project_id || taskData.level === undefined) {
+                throw new Error('Missing required fields');
+            }
+            
             const newTask: WBSTask = {
-                id: getNewId(wbsTasks),
-                project_id: taskData.project_id!,
+                id: taskData.id!,
+                project_id: taskData.project_id,
                 parent_id: taskData.parent_id || null,
-                level: taskData.level!,
+                level: taskData.level,
                 title: taskData.title || '',
                 created_at: new Date(),
                 updated_at: new Date(),
@@ -121,7 +128,7 @@ export const WBSTaskAPI = {
 
 // Overall WBS Structure Management
 export const WBSStructureAPI = {
-    getProjectWBS: async (projectId: number): Promise<any[]> => {
+    getProjectWBS: async (projectId: number): Promise<WBSRowData[]> => {
         try {
             const tasks = wbsTasks.filter(task => task.project_id === projectId);
             
@@ -135,7 +142,7 @@ export const WBSStructureAPI = {
                 );
 
                 // Transform monthly hours into nested object structure
-                const monthlyHoursObj: any = {};
+                const monthlyHoursObj: MonthlyHoursMap = {};
                 taskHours.forEach(hour => {
                     if (!monthlyHoursObj[hour.year]) {
                         monthlyHoursObj[hour.year] = {};
@@ -145,10 +152,10 @@ export const WBSStructureAPI = {
 
                 return {
                     id: task.id,
-                    level: task.level,
+                    level: task.level as 1 | 2 | 3,
                     title: task.title,
-                    role: allocation?.role_id || null,
-                    name: allocation?.employee_id || null,
+                    role: allocation?.role_id?.toString() || null,
+                    name: allocation?.employee_id?.toString() || null,
                     costRate: allocation?.cost_rate || 0,
                     monthlyHours: monthlyHoursObj,
                     odc: allocation?.odc || 0,
@@ -163,47 +170,108 @@ export const WBSStructureAPI = {
         }
     },
 
-    saveWBSTasks: async (projectId: number, tasks: Partial<WBSTask>[]): Promise<{ created: number[], updated: number[] }> => {
+    setProjectWBS: async (projectId: number, wbsData: WBSRowData[]): Promise<void> => {
         try {
-            const createdTaskIds: number[] = [];
-            const updatedTaskIds: number[] = [];
+            const existingTasks = wbsTasks.filter(task => task.project_id === projectId);
+            const existingTaskIds = new Set(existingTasks.map(task => task.id));
+            const processedTaskIds = new Set<number>();
+            console.log("setPRojectWBS",wbsData)
+            for (const rowData of wbsData) {
+                let task: WBSTask;
 
-            tasks.forEach(task => {
-                if (task.id) {
-                    const index = wbsTasks.findIndex(t => t.id === task.id);
-                    if (index !== -1) {
-                        wbsTasks[index] = {
-                            ...wbsTasks[index],
-                            ...task,
-                            updated_at: new Date()
-                        };
-                        updatedTaskIds.push(task.id);
+                // Calculate total hours from monthly hours
+                const totalHours = Object.values(rowData.monthlyHours).reduce((sum, yearData) => {
+                    return sum + Object.values(yearData).reduce((yearSum, hours) => yearSum + hours, 0);
+                }, 0);
+
+                // Calculate total cost
+                const totalCost = totalHours * rowData.costRate + rowData.odc;
+
+                if (existingTaskIds.has(rowData.id)) {
+                    // Update existing task
+                    task = await WBSTaskAPI.updateWBSTask(rowData.id, {
+                        level: rowData.level,
+                        title: rowData.title,
+                        parent_id: rowData.parentId || null,
+                        project_id: projectId
+                    });
+
+                    // Update or create resource allocation
+                    const existingAllocation = resourceAllocations.find(
+                        a => a.wbs_task_id === rowData.id
+                    );
+
+                    if (existingAllocation) {
+                        await ResourceAPI.updateResourceAllocation(existingAllocation.id, {
+                            role_id: rowData.role ? parseInt(rowData.role) : null,
+                            employee_id: rowData.name ? parseInt(rowData.name) : null,
+                            cost_rate: rowData.costRate,
+                            odc: rowData.odc,
+                            total_hours: totalHours,
+                            total_cost: totalCost
+                        });
+                    } else if (rowData.role || rowData.name) {
+                        await ResourceAPI.createResourceAllocation({
+                            wbs_task_id: task.id,
+                            role_id: rowData.role ? parseInt(rowData.role) : null,
+                            employee_id: rowData.name ? parseInt(rowData.name) : null,
+                            cost_rate: rowData.costRate,
+                            odc: rowData.odc,
+                            total_hours: totalHours,
+                            total_cost: totalCost
+                        });
                     }
                 } else {
-                    const newTask: WBSTask = {
-                        id: getNewId(wbsTasks),
+                    // Create new task
+                    task = await WBSTaskAPI.createWBSTask({
+                        id: rowData.id,
                         project_id: projectId,
-                        parent_id: task.parent_id || null,
-                        level: task.level!,
-                        title: task.title || '',
-                        created_at: new Date(),
-                        updated_at: new Date(),
-                        resource_allocation: task.resource_allocation
-                    };
-                    wbsTasks.push(newTask);
-                    createdTaskIds.push(newTask.id);
+                        level: rowData.level,
+                        title: rowData.title,
+                        parent_id: rowData.parentId || null
+                    });
+
+                    // Create resource allocation if needed
+                    if (rowData.role || rowData.name) {
+                        await ResourceAPI.createResourceAllocation({
+                            wbs_task_id: task.id,
+                            role_id: rowData.role ? parseInt(rowData.role) : null,
+                            employee_id: rowData.name ? parseInt(rowData.name) : null,
+                            cost_rate: rowData.costRate,
+                            odc: rowData.odc,
+                            total_hours: totalHours,
+                            total_cost: totalCost
+                        });
+                    }
                 }
-            });
 
-            const currentTaskIds = new Set([...createdTaskIds, ...updatedTaskIds]);
-            cleanupOldData(projectId, currentTaskIds);
+                // Update monthly hours
+                const monthlyHoursData: Partial<MonthlyHour>[] = [];
+                Object.entries(rowData.monthlyHours).forEach(([year, months]) => {
+                    Object.entries(months).forEach(([month, hours]) => {
+                        monthlyHoursData.push({
+                            task_id: task.id,
+                            year,
+                            month,
+                            planned_hours: hours
+                        });
+                    });
+                });
 
-            return {
-                created: createdTaskIds,
-                updated: updatedTaskIds
-            };
+                await MonthlyHoursAPI.updateMonthlyHours(projectId, task.id, {
+                    monthly_hours: monthlyHoursData
+                });
+
+                processedTaskIds.add(task.id);
+            }
+
+            // Clean up any tasks that weren't included in the update
+            const tasksToDelete = Array.from(existingTaskIds).filter(id => !processedTaskIds.has(id));
+            for (const taskId of tasksToDelete) {
+                await WBSTaskAPI.deleteWBSTask(projectId, taskId);
+            }
         } catch (error) {
-            console.error('Error saving WBS tasks:', error);
+            console.error('Error setting project WBS:', error);
             throw error;
         }
     }
@@ -299,12 +367,16 @@ export const ResourceAPI = {
 
     createResourceAllocation: async (allocationData: Partial<WBSTaskResourceAllocation>): Promise<WBSTaskResourceAllocation> => {
         try {
+            if (!allocationData.wbs_task_id || allocationData.cost_rate === undefined) {
+                throw new Error('Missing required fields');
+            }
+
             const newAllocation: WBSTaskResourceAllocation = {
-                id: getNewId(resourceAllocations),
-                wbs_task_id: allocationData.wbs_task_id!,
-                role_id: allocationData.role_id!,
-                employee_id: allocationData.employee_id!,
-                cost_rate: allocationData.cost_rate!,
+                id: allocationData.id!,
+                wbs_task_id: allocationData.wbs_task_id,
+                role_id: allocationData.role_id ?? null,
+                employee_id: allocationData.employee_id ?? null,
+                cost_rate: allocationData.cost_rate,
                 odc: allocationData.odc || 0,
                 total_hours: allocationData.total_hours,
                 total_cost: allocationData.total_cost,
@@ -375,16 +447,21 @@ export const MonthlyHoursAPI = {
 
             monthlyHours = monthlyHours.filter(h => h.task_id !== taskId);
 
-            const updatedHours = newHours.map(hourData => ({
-                id: getNewId(monthlyHours),
-                task_id: taskId,
-                year: hourData.year!,
-                month: hourData.month!,
-                planned_hours: hourData.planned_hours!,
-                actual_hours: hourData.actual_hours,
-                created_at: new Date(),
-                updated_at: new Date()
-            }));
+            const updatedHours = newHours.map(hourData => {
+                if (!hourData.year || !hourData.month || hourData.planned_hours === undefined) {
+                    throw new Error('Missing required fields for monthly hours');
+                }
+                return {
+                    id: hourData.id!,
+                    task_id: taskId,
+                    year: hourData.year,
+                    month: hourData.month,
+                    planned_hours: hourData.planned_hours,
+                    actual_hours: hourData.actual_hours,
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+            });
 
             monthlyHours.push(...updatedHours);
 

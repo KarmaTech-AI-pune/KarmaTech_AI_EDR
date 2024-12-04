@@ -14,8 +14,8 @@ export interface WBSTask {
 export interface WBSTaskResourceAllocation {
     id: number;
     wbs_task_id: number;
-    role_id: number; 
-    employee_id: number;
+    role_id: number | null; 
+    employee_id: number | null;
     cost_rate: number;
     odc: number;
     total_hours?: number;
@@ -118,7 +118,7 @@ export const resourceAllocations: WBSTaskResourceAllocation[] = [
     cost_rate: 100,
     "odc": 300,
     "total_hours": 12,
-    "total_cost": 2100,
+    "total_cost": 1500,
     "created_at": new Date(2024,12,1),
     "updated_at": new Date(2024,12,1),
   },

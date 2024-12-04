@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -64,6 +64,10 @@ const WBSTable: React.FC<WBSTableProps> = ({
   onHoursChange,
   onODCChange,
 }) => {
+  useEffect (() => {
+    console.log("Display Rows",rows)
+  }, [rows])
+  
   const calculateChildTotals = (parentRow: WBSRowData) => {
     let childRows: WBSRowData[] = [];
     if (parentRow.level === 1) {
@@ -159,6 +163,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
     const result: JSX.Element[] = [];
 
     level1Rows.forEach(level1Row => {
+      // Always render the row
       result.push(
         <WBSRow
           key={level1Row.id}
@@ -181,6 +186,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
       const level2Rows = rows.filter(row => row.level === 2 && row.parentId === level1Row.id);
       level2Rows.forEach(level2Row => {
+        // Always render level 2 rows
         result.push(
           <WBSRow
             key={level2Row.id}
@@ -203,6 +209,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
         const level3Rows = rows.filter(row => row.level === 3 && row.parentId === level2Row.id);
         level3Rows.forEach(level3Row => {
+          // Always render level 3 rows
           result.push(
             <WBSRow
               key={level3Row.id}
@@ -224,16 +231,19 @@ const WBSTable: React.FC<WBSTableProps> = ({
           );
         });
 
+        // Only render add button for level 3 if not in edit mode
         if (!editMode) {
           result.push(renderAddButton(3, level2Row.id, 2));
         }
       });
 
+      // Only render add button for level 2 if not in edit mode
       if (!editMode) {
         result.push(renderAddButton(2, level1Row.id, 1));
       }
     });
 
+    // Only render add button for level 1 if not in edit mode
     if (!editMode) {
       result.push(renderAddButton(1));
     }
