@@ -12,7 +12,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import WBSRow from './WBSRow';
 import { resourceRole as ResourceRole, Employee } from '../../../dummyapi/database/dummyResourceRoles';
-
+import { WBSRowData, WBSOption } from '../../../types/wbs';
 const HeaderCell = styled(TableCell)(({ theme }) => ({
   textAlign: 'center',
   fontWeight: 'bold',
@@ -26,28 +26,6 @@ const TotalHeaderCell = styled(HeaderCell)({
   color: '#1976d2'
 });
 
-interface WBSOption {
-  value: string;
-  label: string;
-}
-
-interface WBSRowData {
-  id: number;
-  level: 1 | 2 | 3;
-  level1: string;
-  level2: string;
-  level3: string;
-  role: string;
-  name: string;
-  costRate: number;
-  monthlyHours: { [key: string]: number };
-  odc: number;
-  totalHours: number;
-  totalCost: number;
-  title: string;
-  parentId?: number;
-  serverTaskId?: number;
-}
 
 interface WBSTableProps {
   rows: WBSRowData[];
@@ -98,7 +76,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
     }
 
     const totals = {
-      monthlyHours: {} as { [key: string]: number },
+      monthlyHours: {} as { [key: string]: { [key: string]: number } },
       totalHours: 0,
       odc: 0,
       totalCost: 0
@@ -106,7 +84,14 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
     childRows.forEach(child => {
       months.forEach(month => {
-        totals.monthlyHours[month] = (totals.monthlyHours[month] || 0) + (child.monthlyHours[month] || 0);
+        const [monthName, yearStr] = month.split(' ');
+        const year = `20${yearStr}`;
+        const monthlyHours = child.monthlyHours[year]?.[monthName] || 0;
+        
+        if (!totals.monthlyHours[year]) {
+          totals.monthlyHours[year] = {};
+        }
+        totals.monthlyHours[year][monthName] = (totals.monthlyHours[year][monthName] || 0) + monthlyHours;
       });
       
       totals.totalHours += child.totalHours;
@@ -162,8 +147,8 @@ const WBSTable: React.FC<WBSTableProps> = ({
     if (row.level === 2) return levelOptions.level2;
     if (row.level === 3) {
       const parentRow = rows.find(r => r.id === row.parentId);
-      if (parentRow && parentRow.level2) {
-        return levelOptions.level3[parentRow.level2] || [];
+      if (parentRow) {
+        return levelOptions.level3[parentRow.title] || [];
       }
     }
     return [];

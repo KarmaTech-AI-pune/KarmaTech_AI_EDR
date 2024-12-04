@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
+import { WBSOption, WBSRowData, WBSChildTotals } from '../../../types/wbs';
 
 const NumberInput = styled('input')({
   width: '100%',
@@ -29,11 +30,6 @@ const StyledSelect = styled(Select)({
   }
 });
 
-interface WBSOption {
-  value: string;
-  label: string;
-}
-
 interface Employee {
   id: number;
   name: string;
@@ -48,24 +44,6 @@ interface Role {
   description: string;
 }
 
-interface WBSRowData {
-  id: number;
-  level: 1 | 2 | 3;
-  level1: string;
-  level2: string;
-  level3: string;
-  role: string;
-  name: string;
-  costRate: number;
-  monthlyHours: { [key: string]: number };
-  odc: number;
-  totalHours: number;
-  totalCost: number;
-  title: string;
-  parentId?: number;
-  serverTaskId?: number; // Add serverTaskId field
-}
-
 interface WBSRowProps {
   row: WBSRowData;
   months: string[];
@@ -73,12 +51,7 @@ interface WBSRowProps {
   employees: Employee[];
   editMode: boolean;
   levelOptions: WBSOption[];
-  childTotals: {
-    monthlyHours: { [key: string]: number };
-    totalHours: number;
-    odc: number;
-    totalCost: number;
-  } | null;
+  childTotals: WBSChildTotals | null;
   onDelete: (id: number) => void;
   onLevelChange: (id: number, value: string) => void;
   onRoleChange: (id: number, roleId: string) => void;
@@ -104,9 +77,23 @@ const WBSRow: React.FC<WBSRowProps> = ({
   onHoursChange,
   onODCChange,
 }) => {
-  const selectedRole = roles.find(r => r.id === parseInt(row.role));
+  const roleId = row.role ? parseInt(row.role) : null;
+  const selectedRole = roleId !== null ? roles.find(r => r.id === roleId) : undefined;
   const rateTooltip = selectedRole ? `Min Rate: ${selectedRole.min_rate}` : '';
-  const employeesForRole = row.role ? employees.filter(emp => emp.role_id === parseInt(row.role)) : [];
+  const employeesForRole = roleId !== null ? employees.filter(emp => emp.role_id === roleId) : [];
+
+  const getMonthlyHours = (month: string): string => {
+    const [monthName, yearStr] = month.split(' ');
+    const year = `20${yearStr}`;
+    return (row.monthlyHours[year]?.[monthName] || '').toString();
+  };
+
+  const getChildTotalHours = (month: string): string => {
+    if (!childTotals) return '';
+    const [monthName, yearStr] = month.split(' ');
+    const year = `20${yearStr}`;
+    return (childTotals.monthlyHours[year]?.[monthName] || '').toString();
+  };
 
   return (
     <TableRow 
@@ -139,7 +126,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
       <TableCell>
         <LevelSelect
           level={row.level}
-          value={row.level === 1 ? row.level1 : row.level === 2 ? row.level2 : row.level3}
+          value={row.title}
           options={levelOptions}
           disabled={editMode}
           onChange={(value) => onLevelChange(row.id, value)}
@@ -148,7 +135,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
       <TableCell>
         {row.level === 3 ? (
           <StyledSelect
-            value={row.role}
+            value={row.role || ''}
             onChange={(e) => onRoleChange(row.id, e.target.value as string)}
             size="small"
             sx={{ bgcolor: 'background.paper' }}
@@ -168,7 +155,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
       <TableCell>
         {row.level === 3 ? (
           <StyledSelect
-            value={row.name}
+            value={row.name || ''}
             onChange={(e) => onEmployeeChange(row.id, e.target.value as string)}
             size="small"
             disabled={!row.role || editMode}
@@ -206,7 +193,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
           {row.level === 3 ? (
             <NumberInput
               type="number"
-              value={row.monthlyHours[month] || ''}
+              value={getMonthlyHours(month)}
               onChange={(e) => onHoursChange(row.id, month, e.target.value)}
               min="0"
               max="160"
@@ -218,7 +205,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
           ) : childTotals ? (
             <NumberInput
               type="number"
-              value={childTotals.monthlyHours[month] || ''}
+              value={getChildTotalHours(month)}
               readOnly
               style={{
                 backgroundColor: 'rgba(0, 0, 0, 0.04)'

@@ -270,8 +270,11 @@ export const ResourceAPI = {
             );
 
             if (month !== undefined && year !== undefined) {
+                const monthStr = new Date(2000, month - 1, 1).toLocaleString('en-US', { month: 'long' });
+                const yearStr = year.toString();
+                
                 filteredHours = filteredHours.filter(
-                    hour => hour.month === month && year === year
+                    hour => hour.month === monthStr && hour.year === yearStr
                 );
                 const activeTaskIds = new Set(filteredHours.map(h => h.task_id));
                 filteredAllocations = filteredAllocations.filter(

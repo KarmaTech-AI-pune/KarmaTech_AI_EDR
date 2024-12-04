@@ -6,24 +6,8 @@ import DeleteWBSDialog from '../dialogbox/DeleteWBSDialog';
 import WBSHeader from './WBSformcomponents/WBSHeader';
 import WBSTable from './WBSformcomponents/WBSTable';
 import WBSSummary from './WBSformcomponents/WBSSummary';
+import { WBSOption, WBSRowData} from '../../types/wbs';
 
-interface WBSRow {
-  id: number;
-  level: 1 | 2 | 3;
-  level1: string;
-  level2: string;
-  level3: string;
-  role: string;
-  name: string;
-  costRate: number;
-  monthlyHours: { [key: string]: number };
-  odc: number;
-  totalHours: number;
-  totalCost: number;
-  title: string;
-  parentId?: number;
-  serverTaskId?: number;
-}
 
 interface DeleteDialog {
   open: boolean;
@@ -31,10 +15,6 @@ interface DeleteDialog {
   childCount: number;
 }
 
-interface WBSOption {
-  value: string;
-  label: string;
-}
 
 // Helper function to generate new IDs
 const getNewId = (array: any[]) => {
@@ -43,7 +23,7 @@ const getNewId = (array: any[]) => {
 
 const WorkBreakdownStructureForm: React.FC = () => {
   const context = useContext(projectManagementAppContext);
-  const [rows, setRows] = useState<WBSRow[]>([]);
+  const [rows, setRows] = useState<WBSRowData[]>([]);
   const [months, setMonths] = useState<string[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [allEmployees, setAllEmployees] = useState<any[]>([]);
@@ -61,8 +41,22 @@ const WorkBreakdownStructureForm: React.FC = () => {
   const loadWBSData = async (projectId: number) => {
     try {
       const wbsData = await WBSStructureAPI.getProjectWBS(projectId);
-      console.log("fetched rows,",wbsData)
-      
+      const transformedRows = wbsData.map((task: any) => ({
+        id: task.id,
+        level: task.level,
+        title: task.title,
+        role: task.role?.toString() || null,
+        name: task.name?.toString() || null,
+        costRate: task.costRate || 0,
+        monthlyHours: task.monthlyHours || {},
+        odc: task.odc || 0,
+        totalHours: task.totalHours || 0,
+        totalCost: task.totalCost || 0,
+        parentId: task.parentId,
+        serverTaskId: task.id
+      }));
+      setRows(transformedRows);
+      console.log("fetched rows:", transformedRows);
     } catch (err) {
       console.error('Error loading WBS data:', err);
       setError('Failed to load WBS data');
@@ -149,21 +143,18 @@ const WorkBreakdownStructureForm: React.FC = () => {
   };
 
   const addNewRow = (level: 1 | 2 | 3, parentId?: number) => {
-    const newRow: WBSRow = {
+    const newRow: WBSRowData = {
       id: Date.now(),
       level,
-      level1: '',
-      level2: '',
-      level3: '',
-      role: '',
-      name: '',
+      title: '',
+      role: null,
+      name: null,
       costRate: 0,
       monthlyHours: {},
       odc: 0,
       totalHours: 0,
       totalCost: 0,
-      title: '',
-      parentId
+      parentId: parentId || null
     };
     setRows([...rows, newRow]);
   };
@@ -209,7 +200,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
         return {
           ...row,
           role: roleId,
-          name: '',
+          name: null,
           costRate: 0
         };
       }
@@ -275,8 +266,18 @@ const WorkBreakdownStructureForm: React.FC = () => {
     
     setRows(rows.map(row => {
       if (row.id === rowId) {
-        const newMonthlyHours = { ...row.monthlyHours, [month]: hours };
-        const totalHours = Object.values(newMonthlyHours).reduce((sum, h) => sum + h, 0);
+        const [monthName, yearStr] = month.split(' ');
+        const year = `20${yearStr}`;
+        const newMonthlyHours = { 
+          ...row.monthlyHours,
+          [year]: {
+            ...(row.monthlyHours[year] || {}),
+            [monthName]: hours
+          }
+        };
+        const totalHours = Object.values(newMonthlyHours)
+          .flatMap(yearHours => Object.values(yearHours))
+          .reduce((sum, h) => sum + h, 0);
         return {
           ...row,
           monthlyHours: newMonthlyHours,
@@ -304,23 +305,9 @@ const WorkBreakdownStructureForm: React.FC = () => {
   };
 
   const handleLevelChange = (rowId: number, value: string) => {
-    const row = rows.find(r => r.id === rowId);
-    if (!row) return;
-
     setRows(rows.map(r => {
       if (r.id === rowId) {
-        const updates: Partial<WBSRow> = {};
-        if (row.level === 1) {
-          updates.level1 = value;
-          updates.level2 = '';
-          updates.level3 = '';
-        } else if (row.level === 2) {
-          updates.level2 = value;
-          updates.level3 = '';
-        } else if (row.level === 3) {
-          updates.level3 = value;
-        }
-        return { ...r, ...updates };
+        return { ...r, title: value };
       }
       return r;
     }));
@@ -341,9 +328,9 @@ const WorkBreakdownStructureForm: React.FC = () => {
       const existingMonthlyHours = await MonthlyHoursAPI.getMonthlyHoursByProjectId(projectId);
 
       console.log('Existing WBS:', existingWBS);
-      console.log('Existing Res Alloc:',existingResAloc)
-      console.log('Existing Monthly Hours',existingMonthlyHours)
-      console.log('rows',rows)
+      console.log('Existing Res Alloc:', existingResAloc);
+      console.log('Existing Monthly Hours', existingMonthlyHours);
+      console.log('rows', rows);
       /*
       // Create maps for existing data
       const existingTaskMap = new Map(existingWBS.map(task => [task.id, task]));
@@ -412,7 +399,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
           const allocationData = {
             wbs_task_id: taskId,
             role_id: parseInt(row.role),
-            employee_id: parseInt(row.name),
+            employee_id: parseInt(row.name || '0'),
             cost_rate: row.costRate,
             odc: row.odc,
             total_hours: row.totalHours,
@@ -424,18 +411,16 @@ const WorkBreakdownStructureForm: React.FC = () => {
           const allocation = await ResourceAPI.createResourceAllocation(allocationData);
 
           // Process monthly hours
-          const monthlyHoursData = Object.entries(row.monthlyHours).map(([month, hours]) => {
-            const [monthName, yearStr] = month.split(' ');
-            const monthIndex = new Date(Date.parse(`${monthName} 1, 2000`)).getMonth() + 1;
-            return {
+          const monthlyHoursData = Object.entries(row.monthlyHours).flatMap(([year, months]) =>
+            Object.entries(months).map(([month, hours]) => ({
               task_id: taskId,
-              year: parseInt(yearStr) + 2000,
-              month: monthIndex,
+              year: parseInt(year),
+              month: new Date(Date.parse(`${month} 1, 2000`)).getMonth() + 1,
               planned_hours: hours,
               created_at: new Date(),
               updated_at: new Date()
-            };
-          });
+            }))
+          );
 
           await MonthlyHoursAPI.updateMonthlyHours(projectId, taskId, {
             monthly_hours: monthlyHoursData
