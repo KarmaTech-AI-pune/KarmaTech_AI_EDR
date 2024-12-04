@@ -109,6 +109,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
   const renderAddButton = (level: 1 | 2 | 3, parentId?: number, indentLevel: number = 0): JSX.Element => {
     return (
       <TableRow
+        key={`add-button-level-${level}${parentId ? `-parent-${parentId}` : ''}`}
         sx={{
           height: '28px',
           '& > td': {
