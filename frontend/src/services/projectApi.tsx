@@ -30,8 +30,6 @@ export const projectApi = {
         endDate: undefined,
         estimatedCost: Number(project.estimatedCost)
       };
-
-      console.log('Creating project with formatted data:', formattedProject);
       
       const response = await axiosInstance.post('project', formattedProject);
       return response.data;

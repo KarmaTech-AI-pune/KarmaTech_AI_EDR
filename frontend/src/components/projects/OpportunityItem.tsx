@@ -47,14 +47,10 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
-  const [canSubmitForReview, setCanSubmitForReview] = useState(false);
-  const [canReviewBD, setCanReviewBD] = useState(false);
-  const [canApproveBD, setCanApproveBD] = useState(false);
   const [formError, setFormError] = useState<string | undefined>();
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
-    console.log(canApproveBD,canSubmitForReview,canReviewBD)
     const checkUserPermissions = async () => {
       try {
         const user = await authApi.getCurrentUser();
@@ -63,9 +59,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
           setCurrentUser(null);
           setCanEditOpportunity(false);
           setCanDeleteOpportunity(false);
-          setCanSubmitForReview(false);
-          setCanReviewBD(false);
-          setCanApproveBD(false);
           return;
         }
 
@@ -78,23 +71,11 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
           setCanDeleteOpportunity(
             user.roleDetails.permissions.includes(PermissionType.DELETE_BUSINESS_DEVELOPMENT)
           );
-          setCanSubmitForReview(
-            user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
-          );
-          setCanReviewBD(
-            user.roleDetails.permissions.includes(PermissionType.REVIEW_BUSINESS_DEVELOPMENT)
-          );
-          setCanApproveBD(
-            user.roleDetails.permissions.includes(PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
-          );
         }
       } catch (error) {
         console.error('Error checking user permissions:', error);
         setCanEditOpportunity(false);
         setCanDeleteOpportunity(false);
-        setCanSubmitForReview(false);
-        setCanReviewBD(false);
-        setCanApproveBD(false);
       }
     };
 

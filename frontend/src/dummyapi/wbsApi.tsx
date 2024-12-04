@@ -12,14 +12,6 @@ interface ProjectResource {
     endDate: Date;
 }
 
-// Extended WBS Task type for API responses
-interface ExtendedWBSTask extends Omit<WBSTask, 'resource_allocation'> {
-    resource_allocation_id?: number;
-    resource_allocation?: {
-        employee?: Employee;
-        monthly_hours?: MonthlyHour[];
-    } & WBSTaskResourceAllocation;
-}
 
 interface MonthlyHoursMap {
     [year: string]: {
@@ -35,15 +27,6 @@ let resourceRoles = [...initialResourceRoles];
 let employees = [...initialEmployees];
 let projectResources = [...initialProjectResources];
 
-// Helper function to clean up old allocations and hours
-const cleanupOldData = (projectId: number, currentTaskIds: Set<number>) => {
-    monthlyHours = monthlyHours.filter(
-        hour => !currentTaskIds.has(hour.task_id)
-    );
-    resourceAllocations = resourceAllocations.filter(
-        allocation => !currentTaskIds.has(allocation.wbs_task_id)
-    );
-};
 
 // Individual WBS Task Management
 export const WBSTaskAPI = {
@@ -100,7 +83,7 @@ export const WBSTaskAPI = {
         }
     },
 
-    deleteWBSTask: async (projectId: number, taskId: number): Promise<number[]> => {
+    deleteWBSTask: async (taskId: number): Promise<number[]> => {
         try {
             const getAllChildTaskIds = (parentId: number): number[] => {
                 const childTasks = wbsTasks.filter(task => task.parent_id === parentId);
@@ -175,7 +158,6 @@ export const WBSStructureAPI = {
             const existingTasks = wbsTasks.filter(task => task.project_id === projectId);
             const existingTaskIds = new Set(existingTasks.map(task => task.id));
             const processedTaskIds = new Set<number>();
-            console.log("setPRojectWBS",wbsData)
             for (const rowData of wbsData) {
                 let task: WBSTask;
 
@@ -268,7 +250,7 @@ export const WBSStructureAPI = {
             // Clean up any tasks that weren't included in the update
             const tasksToDelete = Array.from(existingTaskIds).filter(id => !processedTaskIds.has(id));
             for (const taskId of tasksToDelete) {
-                await WBSTaskAPI.deleteWBSTask(projectId, taskId);
+                await WBSTaskAPI.deleteWBSTask(taskId);
             }
         } catch (error) {
             console.error('Error setting project WBS:', error);

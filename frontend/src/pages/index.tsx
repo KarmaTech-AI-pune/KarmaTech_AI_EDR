@@ -3,5 +3,4 @@ export { ProjectDetails } from './ProjectDetails';
 export { LoginScreen } from './LoginScreen';
 export { BusinessDevelopment } from './BusinessDevelopment';
 export { ProjectManagement } from './ProjectManagement';
-export { Forms } from './Forms';
 export { BusinessDevelopmentDetails } from './BusinessDevelopmentDetails';

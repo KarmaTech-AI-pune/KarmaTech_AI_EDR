@@ -24,7 +24,6 @@ export const ProjectManagement: React.FC = () => {
   const [canViewProjects, setCanViewProjects] = useState(false);
   const [canCreateProject, setCanCreateProject] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const [formError, setFormError] = useState<string | undefined>();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,7 +91,6 @@ export const ProjectManagement: React.FC = () => {
   const handleCreateProject = () => {
     if (canCreateProject) {
       setIsCreatingProject(true);
-      setFormError(undefined);
     }
   };
 
@@ -118,7 +116,6 @@ export const ProjectManagement: React.FC = () => {
 
   const handleCancelProject = () => {
     setIsCreatingProject(false);
-    setFormError(undefined);
   };
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -282,8 +282,6 @@ export const getOpportunitiesByWorkflowId = (workflowId: number): OpportunityTra
 export const getOpportunitiesByReviewManager = (reviewManagerId: number): OpportunityTracking[] => {
   return opportunityTrackings.filter(opportunity => {
     console.group(opportunity.workName)
-    console.log("oppor_reviewID:",opportunity.reviewManagerId)
-    console.log("input reviewManager", reviewManagerId)
     console.groupEnd()
     opportunity.reviewManagerId === reviewManagerId 
   }

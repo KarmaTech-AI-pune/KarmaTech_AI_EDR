@@ -44,7 +44,6 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
     const checkDirector = async() =>{
       if(opportunityId){
         let res =  await opportunityApi.getById(opportunityId)
-        console.log("opportunity",res)
 
         if(res.approvalManagerId)
         {
@@ -57,7 +56,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
           else setError("404: DirectorUser not found")
         }
       }
-      else console.log("No ID for opp")
+      else console.error("No ID set for opp")
     }
     // Get all Regional Directors
     const regionalDirectors = getUsersByRole(UserRole.RegionalDirector);

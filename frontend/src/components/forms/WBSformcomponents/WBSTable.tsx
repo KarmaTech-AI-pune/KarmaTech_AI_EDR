@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Table,
   TableBody,
@@ -64,9 +64,6 @@ const WBSTable: React.FC<WBSTableProps> = ({
   onHoursChange,
   onODCChange,
 }) => {
-  useEffect (() => {
-    console.log("Display Rows",rows)
-  }, [rows])
   
   const calculateChildTotals = (parentRow: WBSRowData) => {
     let childRows: WBSRowData[] = [];

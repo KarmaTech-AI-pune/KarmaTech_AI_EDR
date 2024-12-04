@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Box, Paper, Alert, Container } from '@mui/material';
 import { projectManagementAppContext } from '../../App';
-import { WBSStructureAPI, ResourceAPI, MonthlyHoursAPI, WBSTaskAPI, WBSOptionsAPI } from '../../dummyapi/wbsApi';
+import { WBSStructureAPI, ResourceAPI, WBSOptionsAPI } from '../../dummyapi/wbsApi';
 import DeleteWBSDialog from '../dialogbox/DeleteWBSDialog';
 import WBSHeader from './WBSformcomponents/WBSHeader';
 import WBSTable from './WBSformcomponents/WBSTable';
@@ -21,9 +21,7 @@ interface MonthlyHours {
 }
 
 // Helper function to generate new IDs
-const getNewId = (array: any[]) => {
-  return array.length > 0 ? Math.max(...array.map(item => item.id)) + 1 : 1;
-};
+
 
 const WorkBreakdownStructureForm: React.FC = () => {
   const context = useContext(projectManagementAppContext);

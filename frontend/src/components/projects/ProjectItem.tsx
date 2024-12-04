@@ -1,7 +1,7 @@
 import { ListItem,Typography, Dialog, DialogTitle, DialogContent, DialogActions, Box, Grid } from '@mui/material';
 import { Button } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { ProjectItemProps, ProjectFormData, UserWithRole } from '../../types';
+import { ProjectItemProps, ProjectFormData } from '../../types';
 import { useState, useContext, useEffect } from 'react';
 import { projectApi } from '../../dummyapi/api';
 import { ProjectInitForm } from '../forms/ProjectInitForm';
@@ -12,7 +12,6 @@ import { PermissionType } from '../../dummyapi/database/dummyRoles';
 export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDeleted, onProjectUpdated }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canEditProject, setCanEditProject] = useState(false);
   const [canDeleteProject, setCanDeleteProject] = useState(false);
   const context = useContext(projectManagementAppContext);
@@ -22,13 +21,11 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
       const user = await authApi.getCurrentUser();
       
       if (!user) {
-        setCurrentUser(null);
         setCanEditProject(false);
         setCanDeleteProject(false);
         return;
       }
 
-      setCurrentUser(user);
 
       // Check if user has specific project permissions
       if (user.roleDetails) {

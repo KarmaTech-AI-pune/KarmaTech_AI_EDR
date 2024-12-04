@@ -28,19 +28,15 @@ export const LoginScreen: React.FC = () => {
         };
 
         try {
-            console.log('Attempting login...'); // Debug log
             const result = await authApi.login(credentials);
-            console.log('Login response:', result); // Debug log
             
             if (result.success && result.token && result.user) {
                 // Wait for token to be set
                 localStorage.setItem('token', result.token);
-                console.log('Token set in localStorage'); // Debug log
                 
                 // Verify token is set before proceeding
                 const storedToken = localStorage.getItem('token');
                 if (storedToken) {
-                    console.log('Token verified in localStorage'); // Debug log
                     setUser(result.user);
                     setIsAuthenticated(true);
                     setScreenState('Home');
