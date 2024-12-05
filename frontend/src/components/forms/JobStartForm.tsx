@@ -1,5 +1,22 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, TextField } from '@mui/material';
+import { 
+  Box, 
+  Typography, 
+  Paper, 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow, 
+  CircularProgress, 
+  TextField, 
+  Container,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
@@ -91,7 +108,17 @@ const JobStartForm: React.FC = () => {
     units: '',
     remarks: ''
   });
+  const [expanded, setExpanded] = useState<string[]>(['time', 'expenses']);
 
+  const handleAccordionChange = (panel: string) => {
+    setExpanded(prev => {
+      if (prev.includes(panel)) {
+        return prev.filter(p => p !== panel);
+      } else {
+        return [...prev, panel];
+      }
+    });
+  };
   const [expenses, setExpenses] = useState<ExpensesType>({
     '2a': { number: '10000', remarks: '' },
     '2b': { number: '10000', remarks: '' },
@@ -323,405 +350,641 @@ const JobStartForm: React.FC = () => {
     );
   }
 
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': { 
+      borderRadius: 1,
+      backgroundColor: '#fff',
+      '&:hover fieldset': {
+        borderColor: '#1976d2',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#1976d2',
+      }
+    }
+  };
+
+  const tableHeaderStyle = {
+    '& .MuiTableCell-head': {
+      fontWeight: 600,
+      backgroundColor: '#f5f5f5',
+      borderBottom: '2px solid #e0e0e0'
+    }
+  };
+
+  const tableCellStyle = {
+    borderBottom: '1px solid #e0e0e0',
+    padding: '12px 16px'
+  };
+
+  const accordionStyle = {
+    '& .MuiAccordionSummary-root': {
+      backgroundColor: '#f8f9fa',
+      borderLeft: '3px solid #1976d2',
+      minHeight: '48px',
+      '&.Mui-expanded': {
+        borderBottom: '1px solid #e0e0e0'
+      }
+    },
+    '& .MuiAccordionSummary-content': {
+      margin: '12px 0',
+      '&.Mui-expanded': {
+        margin: '12px 0'
+      }
+    },
+    '& .MuiAccordionDetails-root': {
+      padding: 0,
+      backgroundColor: '#fff'
+    }
+  };
+
+  const sectionStyle = {
+    border: '1px solid #e0e0e0',
+    borderRadius: '4px',
+    overflow: 'hidden',
+    '& .MuiAccordion-root': {
+      borderRadius: '4px 4px 0 0 !important',
+      borderBottom: 'none'
+    },
+    '& .MuiTableContainer-root': {
+      borderRadius: '0 0 4px 4px',
+      borderTop: 'none'
+    }
+  };
+
+  const summaryRowStyle = {
+    bgcolor: '#f8f9fa',
+    '& .MuiTableCell-root': {
+      fontWeight: 'bold'
+    }
+  };
+
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        PMD1. Job Start Form
-      </Typography>
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Box sx={{ 
+        width: '100%', 
+        maxHeight: 'calc(100vh - 200px)',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        pr: 1,
+        pb: 4
+      }}>
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: 3,
+            border: '1px solid #e0e0e0',
+            borderRadius: 1
+          }}
+        >
+          <Typography 
+            variant="h5" 
+            gutterBottom 
+            sx={{ 
+              color: '#1976d2', 
+              fontWeight: 500,
+              mb: 3
+            }}
+          >
+            PMD1. Job Start Form
+          </Typography>
 
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Sr. No.</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell align="right">Rate (Rs)</TableCell>
-              <TableCell align="right">Units</TableCell>
-              <TableCell align="right">Budgeted Cost (Rs.)</TableCell>
-              <TableCell>Remarks</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {/* Time Section */}
-            <TableRow>
-              <TableCell sx={{ fontWeight: 'bold'}}>1.0</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>TIME</TableCell>
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>1a</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Employee Personnel</TableCell>
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-              <TableCell align="right">{calculateTotalCost(employeeAllocations, false)}</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-            {employeeAllocations
-              .filter(emp => !emp.is_consultant)
-              .map((emp) => (
-                <React.Fragment key={emp.id}>
-                  <TableRow>
-                    <TableCell></TableCell>
-                    <TableCell>{emp.name}</TableCell>
-                    <TableCell align="right">
-                      {emp.allocations.length === 1 ? emp.allocations[0].rate : ''}
-                    </TableCell>
-                    <TableCell align="right">
-                      {emp.allocations.length === 1 ? emp.allocations[0].hours : emp.totalHours}
-                    </TableCell>
-                    <TableCell align="right">{emp.totalCost}</TableCell>
-                    <TableCell>
-                      <TextField
-                        size="small"
-                        fullWidth
-                        value={emp.remarks}
-                        onChange={(e) => handleRemarksChange(emp.id, e.target.value)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  {emp.allocations.length > 1 && emp.allocations.map((alloc) => (
-                    <TableRow key={`${emp.id}-${alloc.taskId}`}>
+          {/* Time Section */}
+          <Box sx={{ ...sectionStyle, mb: 3 }}>
+            <Accordion 
+              expanded={expanded.includes('time')}
+              onChange={() => handleAccordionChange('time')}
+              elevation={0}
+              sx={accordionStyle}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography sx={{ fontWeight: 'bold' }}>1.0 TIME</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={tableHeaderStyle}>
+                        <TableCell sx={tableCellStyle}>Sr. No.</TableCell>
+                        <TableCell sx={tableCellStyle}>Description</TableCell>
+                        <TableCell align="right" sx={tableCellStyle}>Rate (Rs)</TableCell>
+                        <TableCell align="right" sx={tableCellStyle}>Units</TableCell>
+                        <TableCell align="right" sx={tableCellStyle}>Budgeted Cost (Rs.)</TableCell>
+                        <TableCell sx={tableCellStyle}>Remarks</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {/* Employee Personnel Section */}
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold', pl: 3 }}>1a</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Employee Personnel</TableCell>
                       <TableCell></TableCell>
-                      <TableCell sx={{ pl: 4 }}>{formatTitle(alloc.title)}</TableCell>
-                      <TableCell align="right">{alloc.rate}</TableCell>
-                      <TableCell align="right">{alloc.hours}</TableCell>
-                      <TableCell align="right">{alloc.cost}</TableCell>
+                      <TableCell></TableCell>
+                      <TableCell align="right">{calculateTotalCost(employeeAllocations, false)}</TableCell>
                       <TableCell></TableCell>
                     </TableRow>
-                  ))}
-                </React.Fragment>
-              ))}
 
-            {/* Contract Employee Section (without label) */}
-            <TableRow>
-              <TableCell></TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Contract Employee</TableCell>
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-              <TableCell align="right">{calculateTotalCost(employeeAllocations, true)}</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-            {employeeAllocations
-              .filter(emp => emp.is_consultant)
-              .map((emp) => (
-                <React.Fragment key={emp.id}>
-                  <TableRow>
-                    <TableCell></TableCell>
-                    <TableCell>{emp.name}</TableCell>
-                    <TableCell align="right">
-                      {emp.allocations.length === 1 ? emp.allocations[0].rate : ''}
-                    </TableCell>
-                    <TableCell align="right">
-                      {emp.allocations.length === 1 ? emp.allocations[0].hours : emp.totalHours}
-                    </TableCell>
-                    <TableCell align="right">{emp.totalCost}</TableCell>
-                    <TableCell>
-                      <TextField
-                        size="small"
-                        fullWidth
-                        value={emp.remarks}
-                        onChange={(e) => handleRemarksChange(emp.id, e.target.value)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  {emp.allocations.length > 1 && emp.allocations.map((alloc) => (
-                    <TableRow key={`${emp.id}-${alloc.taskId}`}>
+                    {/* Employee Allocations */}
+                    {employeeAllocations
+                      .filter(emp => !emp.is_consultant)
+                      .map((emp) => (
+                        <React.Fragment key={emp.id}>
+                          <TableRow>
+                            <TableCell></TableCell>
+                            <TableCell sx={{ pl: 4 }}>{emp.name}</TableCell>
+                            <TableCell align="right">
+                              {emp.allocations.length === 1 ? emp.allocations[0].rate : ''}
+                            </TableCell>
+                            <TableCell align="right">
+                              {emp.allocations.length === 1 ? emp.allocations[0].hours : emp.totalHours}
+                            </TableCell>
+                            <TableCell align="right">{emp.totalCost}</TableCell>
+                            <TableCell>
+                              <TextField
+                                size="small"
+                                fullWidth
+                                value={emp.remarks}
+                                onChange={(e) => handleRemarksChange(emp.id, e.target.value)}
+                                sx={textFieldStyle}
+                              />
+                            </TableCell>
+                          </TableRow>
+                          {emp.allocations.length > 1 && emp.allocations.map((alloc) => (
+                            <TableRow key={`${emp.id}-${alloc.taskId}`}>
+                              <TableCell></TableCell>
+                              <TableCell sx={{ pl: 4 }}>{formatTitle(alloc.title)}</TableCell>
+                              <TableCell align="right">{alloc.rate}</TableCell>
+                              <TableCell align="right">{alloc.hours}</TableCell>
+                              <TableCell align="right">{alloc.cost}</TableCell>
+                              <TableCell></TableCell>
+                            </TableRow>
+                          ))}
+                        </React.Fragment>
+                      ))}
+
+                    {/* Contract Employee Section */}
+                    <TableRow>
                       <TableCell></TableCell>
-                      <TableCell sx={{ pl: 4 }}>{formatTitle(alloc.title)}</TableCell>
-                      <TableCell align="right">{alloc.rate}</TableCell>
-                      <TableCell align="right">{alloc.hours}</TableCell>
-                      <TableCell align="right">{alloc.cost}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', pl: 3 }}>Contract Employee</TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell align="right">{calculateTotalCost(employeeAllocations, true)}</TableCell>
                       <TableCell></TableCell>
                     </TableRow>
-                  ))}
-                </React.Fragment>
-              ))}
 
-            {/* Time Contingencies Row */}
-            <TableRow>
-              <TableCell>1b</TableCell>
-              <TableCell>Time Contingencies</TableCell>
-              <TableCell>
-                <TextField
-                  size="small"
-                  type="number"
-                  value={timeContingency.rate}
-                  onChange={(e) => handleTimeContingencyChange('rate', e.target.value)}
-                  placeholder="Rate"
-                />
-              </TableCell>
-              <TableCell>
-                <TextField
-                  size="small"
-                  type="number"
-                  value={timeContingency.units}
-                  onChange={(e) => handleTimeContingencyChange('units', e.target.value)}
-                  placeholder="Units"
-                />
-              </TableCell>
-              <TableCell align="right">{calculateTimeContingencyCost()}</TableCell>
-              <TableCell>
-                <TextField
-                  size="small"
-                  fullWidth
-                  value={timeContingency.remarks}
-                  onChange={(e) => handleTimeContingencyChange('remarks', e.target.value)}
-                  placeholder="Remarks"
-                />
-              </TableCell>
-            </TableRow>
+                    {/* Contract Employee Allocations */}
+                    {employeeAllocations
+                      .filter(emp => emp.is_consultant)
+                      .map((emp) => (
+                        <React.Fragment key={emp.id}>
+                          <TableRow>
+                            <TableCell></TableCell>
+                            <TableCell sx={{ pl: 4 }}>{emp.name}</TableCell>
+                            <TableCell align="right">
+                              {emp.allocations.length === 1 ? emp.allocations[0].rate : ''}
+                            </TableCell>
+                            <TableCell align="right">
+                              {emp.allocations.length === 1 ? emp.allocations[0].hours : emp.totalHours}
+                            </TableCell>
+                            <TableCell align="right">{emp.totalCost}</TableCell>
+                            <TableCell>
+                              <TextField
+                                size="small"
+                                fullWidth
+                                value={emp.remarks}
+                                onChange={(e) => handleRemarksChange(emp.id, e.target.value)}
+                                sx={textFieldStyle}
+                              />
+                            </TableCell>
+                          </TableRow>
+                          {emp.allocations.length > 1 && emp.allocations.map((alloc) => (
+                            <TableRow key={`${emp.id}-${alloc.taskId}`}>
+                              <TableCell></TableCell>
+                              <TableCell sx={{ pl: 4 }}>{formatTitle(alloc.title)}</TableCell>
+                              <TableCell align="right">{alloc.rate}</TableCell>
+                              <TableCell align="right">{alloc.hours}</TableCell>
+                              <TableCell align="right">{alloc.cost}</TableCell>
+                              <TableCell></TableCell>
+                            </TableRow>
+                          ))}
+                        </React.Fragment>
+                      ))}
 
-            {/* Total Time Cost Row */}
-            <TableRow>
-              <TableCell colSpan={4} sx={{ fontWeight: 'bold' }}>TOTAL TIME COST</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 'bold' }}>{calculateTotalTimeCost()}</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
+                    {/* Time Contingencies Row */}
+                    <TableRow>
+                      <TableCell sx={{ pl: 3 }}>1b</TableCell>
+                      <TableCell>Time Contingencies</TableCell>
+                      <TableCell>
+                        <TextField
+                          size="small"
+                          type="number"
+                          value={timeContingency.rate}
+                          onChange={(e) => handleTimeContingencyChange('rate', e.target.value)}
+                          placeholder="Rate"
+                          sx={textFieldStyle}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          size="small"
+                          type="number"
+                          value={timeContingency.units}
+                          onChange={(e) => handleTimeContingencyChange('units', e.target.value)}
+                          placeholder="Units"
+                          sx={textFieldStyle}
+                        />
+                      </TableCell>
+                      <TableCell align="right">{calculateTimeContingencyCost()}</TableCell>
+                      <TableCell>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          value={timeContingency.remarks}
+                          onChange={(e) => handleTimeContingencyChange('remarks', e.target.value)}
+                          placeholder="Remarks"
+                          sx={textFieldStyle}
+                        />
+                      </TableCell>
+                    </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </AccordionDetails>
+            </Accordion>
+            <TableContainer>
+              <Table>
+                <TableBody>
+                  <TableRow sx={summaryRowStyle}>
+                    <TableCell colSpan={4} sx={tableCellStyle}>TOTAL TIME COST</TableCell>
+                    <TableCell align="right" sx={tableCellStyle}>{calculateTotalTimeCost()}</TableCell>
+                    <TableCell sx={tableCellStyle}></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
 
-            {/* Estimated Expenses Section */}
-            <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>2.0</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }} colSpan={5}>ESTIMATED EXPENSES</TableCell>
-            </TableRow>
+          {/* Expenses Section */}
+          <Box sx={{ ...sectionStyle, mb: 3 }}>
+            <Accordion 
+              expanded={expanded.includes('expenses')}
+              onChange={() => handleAccordionChange('expenses')}
+              elevation={0}
+              sx={accordionStyle}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography sx={{ fontWeight: 'bold' }}>2.0 ESTIMATED EXPENSES</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={tableHeaderStyle}>
+                        <TableCell sx={tableCellStyle}>Sr. No.</TableCell>
+                        <TableCell sx={tableCellStyle}>Description</TableCell>
+                        <TableCell align="right" sx={tableCellStyle}>Rate (Rs)</TableCell>
+                        <TableCell align="right" sx={tableCellStyle}>Units</TableCell>
+                        <TableCell align="right" sx={tableCellStyle}>Budgeted Cost (Rs.)</TableCell>
+                        <TableCell sx={tableCellStyle}>Remarks</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {/* Regular Expenses */}
+                    {(['2a', '2b', '3', '4', '5'] as (keyof ExpensesType)[]).map((id) => (
+                      <TableRow key={id}>
+                        <TableCell sx={{ pl: 3 }}>{id}</TableCell>
+                        <TableCell>
+                          {id === '2a' && 'Travel'}
+                          {id === '2b' && 'Subsistence'}
+                          {id === '3' && 'Local conveyance'}
+                          {id === '4' && 'Communications'}
+                          {id === '5' && 'Stationery and printing'}
+                        </TableCell>
+                        <TableCell align="right">
+                          <TextField
+                            size="small"
+                            type="number"
+                            value={expenses[id].number}
+                            onChange={(e) => handleExpenseChange(id, 'number', e.target.value)}
+                            sx={textFieldStyle}
+                          />
+                        </TableCell>
+                        <TableCell></TableCell>
+                        <TableCell align="right">{expenses[id].number}</TableCell>
+                        <TableCell>
+                          <TextField
+                            size="small"
+                            fullWidth
+                            value={expenses[id].remarks}
+                            onChange={(e) => handleExpenseChange(id, 'remarks', e.target.value)}
+                            sx={textFieldStyle}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
 
-            {/* Regular Expenses (2a through 5) */}
-            {(['2a', '2b', '3', '4', '5'] as (keyof ExpensesType)[]).map((id) => (
-              <TableRow key={id}>
-                <TableCell>{id}</TableCell>
-                <TableCell>
-                  {id === '2a' && 'Travel'}
-                  {id === '2b' && 'Subsistence'}
-                  {id === '3' && 'Local conveyance'}
-                  {id === '4' && 'Communications'}
-                  {id === '5' && 'Stationery and printing'}
-                </TableCell>
-                <TableCell align="right">
-                  <TextField
-                    size="small"
-                    type="number"
-                    value={expenses[id].number}
-                    onChange={(e) => handleExpenseChange(id, 'number', e.target.value)}
-                  />
-                </TableCell>
-                <TableCell></TableCell>
-                <TableCell align="right">{expenses[id].number}</TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    value={expenses[id].remarks}
-                    onChange={(e) => handleExpenseChange(id, 'remarks', e.target.value)}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+                    {/* Outside Agency Section */}
+                    <TableRow>
+                      <TableCell sx={{ pl: 3 }}>6a</TableCell>
+                      <TableCell colSpan={5}>Outside Agency</TableCell>
+                    </TableRow>
 
-            {/* Outside Agency Section */}
-            <TableRow>
-              <TableCell>6a</TableCell>
-              <TableCell colSpan={5}>Outside Agency</TableCell>
-            </TableRow>
-            {(Object.entries(outsideAgency) as [keyof OutsideAgencyType, OutsideAgencyEntry][]).map(([id, entry]) => (
-              <TableRow key={id}>
-                <TableCell></TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    value={entry.description}
-                    onChange={(e) => handleOutsideAgencyChange(id, 'description', e.target.value)}
-                    placeholder="Enter description"
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    type="number"
-                    value={entry.rate}
-                    onChange={(e) => handleOutsideAgencyChange(id, 'rate', e.target.value)}
-                    placeholder="Rate"
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    type="number"
-                    value={entry.units}
-                    onChange={(e) => handleOutsideAgencyChange(id, 'units', e.target.value)}
-                    placeholder="Units"
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  {calculateOutsideAgencyCost(entry)}
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    value={entry.remarks}
-                    onChange={(e) => handleOutsideAgencyChange(id, 'remarks', e.target.value)}
-                    placeholder="Remarks"
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+                    {(Object.entries(outsideAgency) as [keyof OutsideAgencyType, OutsideAgencyEntry][]).map(([id, entry]) => (
+                      <TableRow key={id}>
+                        <TableCell></TableCell>
+                        <TableCell>
+                          <TextField
+                            size="small"
+                            fullWidth
+                            value={entry.description}
+                            onChange={(e) => handleOutsideAgencyChange(id, 'description', e.target.value)}
+                            placeholder="Enter description"
+                            sx={textFieldStyle}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            size="small"
+                            type="number"
+                            value={entry.rate}
+                            onChange={(e) => handleOutsideAgencyChange(id, 'rate', e.target.value)}
+                            placeholder="Rate"
+                            sx={textFieldStyle}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            size="small"
+                            type="number"
+                            value={entry.units}
+                            onChange={(e) => handleOutsideAgencyChange(id, 'units', e.target.value)}
+                            placeholder="Units"
+                            sx={textFieldStyle}
+                          />
+                        </TableCell>
+                        <TableCell align="right">
+                          {calculateOutsideAgencyCost(entry)}
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            size="small"
+                            fullWidth
+                            value={entry.remarks}
+                            onChange={(e) => handleOutsideAgencyChange(id, 'remarks', e.target.value)}
+                            placeholder="Remarks"
+                            sx={textFieldStyle}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
 
-            {/* Survey Works Section */}
-            <TableRow>
-              <TableCell>6b</TableCell>
-              <TableCell>Survey works</TableCell>
-              <TableCell align="right">
-                <TextField
-                  size="small"
-                  type="number"
-                  value={surveyWorks.number}
-                  onChange={(e) => handleSurveyWorksChange('number', e.target.value)}
-                />
-              </TableCell>
-              <TableCell></TableCell>
-              <TableCell align="right">{surveyWorks.number}</TableCell>
-              <TableCell>
-                <TextField
-                  size="small"
-                  fullWidth
-                  value={surveyWorks.remarks}
-                  onChange={(e) => handleSurveyWorksChange('remarks', e.target.value)}
-                />
-              </TableCell>
-            </TableRow>
+                    {/* Survey Works Section */}
+                    <TableRow>
+                      <TableCell sx={{ pl: 3 }}>6b</TableCell>
+                      <TableCell>Survey works</TableCell>
+                      <TableCell align="right">
+                        <TextField
+                          size="small"
+                          type="number"
+                          value={surveyWorks.number}
+                          onChange={(e) => handleSurveyWorksChange('number', e.target.value)}
+                          sx={textFieldStyle}
+                        />
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell align="right">{surveyWorks.number}</TableCell>
+                      <TableCell>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          value={surveyWorks.remarks}
+                          onChange={(e) => handleSurveyWorksChange('remarks', e.target.value)}
+                          sx={textFieldStyle}
+                        />
+                      </TableCell>
+                    </TableRow>
 
-            {/* Project Specific Items */}
-            {(Object.entries(projectSpecific) as [keyof ProjectSpecificType, ProjectSpecificEntry][]).map(([id, entry]) => (
-              <TableRow key={id}>
-                <TableCell>{id}</TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    value={entry.name}
-                    onChange={(e) => handleProjectSpecificChange(id, 'name', e.target.value)}
-                    placeholder="Project specific item name"
-                  />
-                </TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell align="right">
-                  <TextField
-                    size="small"
-                    type="number"
-                    value={entry.number}
-                    onChange={(e) => handleProjectSpecificChange(id, 'number', e.target.value)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    value={entry.remarks}
-                    onChange={(e) => handleProjectSpecificChange(id, 'remarks', e.target.value)}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+                    {/* Project Specific Items */}
+                    {(Object.entries(projectSpecific) as [keyof ProjectSpecificType, ProjectSpecificEntry][]).map(([id, entry]) => (
+                      <TableRow key={id}>
+                        <TableCell sx={{ pl: 3 }}>{id}</TableCell>
+                        <TableCell>
+                          <TextField
+                            size="small"
+                            fullWidth
+                            value={entry.name}
+                            onChange={(e) => handleProjectSpecificChange(id, 'name', e.target.value)}
+                            placeholder="Project specific item name"
+                            sx={textFieldStyle}
+                          />
+                        </TableCell>
+                        <TableCell></TableCell>
+                        <TableCell></TableCell>
+                        <TableCell align="right">
+                          <TextField
+                            size="small"
+                            type="number"
+                            value={entry.number}
+                            onChange={(e) => handleProjectSpecificChange(id, 'number', e.target.value)}
+                            sx={textFieldStyle}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            size="small"
+                            fullWidth
+                            value={entry.remarks}
+                            onChange={(e) => handleProjectSpecificChange(id, 'remarks', e.target.value)}
+                            sx={textFieldStyle}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
 
-            {/* Expense Contingencies */}
-            <TableRow>
-              <TableCell>7</TableCell>
-              <TableCell>Expense Contingencies</TableCell>
-              <TableCell align="right">
-                <TextField
-                  size="small"
-                  type="number"
-                  value={expenses['7'].number}
-                  onChange={(e) => handleExpenseChange('7', 'number', e.target.value)}
-                />
-              </TableCell>
-              <TableCell></TableCell>
-              <TableCell align="right">{expenses['7'].number}</TableCell>
-              <TableCell>
-                <TextField
-                  size="small"
-                  fullWidth
-                  value={expenses['7'].remarks}
-                  onChange={(e) => handleExpenseChange('7', 'remarks', e.target.value)}
-                />
-              </TableCell>
-            </TableRow>
+                    {/* Expense Contingencies */}
+                    <TableRow>
+                      <TableCell sx={{ pl: 3 }}>7</TableCell>
+                      <TableCell>Expense Contingencies</TableCell>
+                      <TableCell align="right">
+                        <TextField
+                          size="small"
+                          type="number"
+                          value={expenses['7'].number}
+                          onChange={(e) => handleExpenseChange('7', 'number', e.target.value)}
+                          sx={textFieldStyle}
+                        />
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell align="right">{expenses['7'].number}</TableCell>
+                      <TableCell>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          value={expenses['7'].remarks}
+                          onChange={(e) => handleExpenseChange('7', 'remarks', e.target.value)}
+                          sx={textFieldStyle}
+                        />
+                      </TableCell>
+                    </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </AccordionDetails>
+            </Accordion>
+            <TableContainer>
+              <Table>
+                <TableBody>
+                  <TableRow sx={summaryRowStyle}>
+                    <TableCell colSpan={4} sx={tableCellStyle}>TOTAL EXPENSES (ODC)</TableCell>
+                    <TableCell align="right" sx={tableCellStyle}>{calculateExpensesTotal()}</TableCell>
+                    <TableCell sx={tableCellStyle}></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
 
-            {/* Total Expenses Row */}
-            <TableRow>
-              <TableCell colSpan={4} sx={{ fontWeight: 'bold' }}>TOTAL EXPENSES (ODC)</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 'bold' }}>{calculateExpensesTotal()}</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
+          <Box sx={{ ...sectionStyle, mb: 3 }}>
+          <TableContainer>
+              <Table>
+                <TableBody>
+                  <TableRow sx={{
+                    ...summaryRowStyle,
+                    '& .MuiTableCell-root': {
+                      borderBottom: 'none',
+                      fontSize: '1.1em'
+                    }
+                  }}>
+                    <TableCell colSpan={4} sx={tableCellStyle}>GRAND TOTAL</TableCell>
+                    <TableCell align="right" sx={tableCellStyle}>{calculateGrandTotal()}</TableCell>
+                    <TableCell sx={tableCellStyle}></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
 
-            {/* Grand Total Row */}
-            <TableRow>
-              <TableCell colSpan={4} sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>GRAND TOTAL</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>{calculateGrandTotal()}</TableCell>
-              <TableCell sx={{ bgcolor: '#f5f5f5' }}></TableCell>
-            </TableRow>
+          {/* Summary Section */}
+          <Box sx={{ 
+            ...sectionStyle,
+            '& .MuiTableRow-root:not(:last-child)': {
+              '& .MuiTableCell-root': {
+                borderBottom: '1px solid #e0e0e0'
+              }
+            }
+          }}>
+            <TableContainer>
+              <Table>
+                <TableBody>
+                  {/* Profit Row */}
+                  <TableRow sx={{
+                    bgcolor: '#e3f2fd',
+                    '& .MuiTableCell-root': {
+                      py: 2,
+                      fontSize: '1.1em',
+                      fontWeight: 'bold'
+                    }
+                  }}>
+                    <TableCell colSpan={4} sx={tableCellStyle}>Profit</TableCell>
+                    <TableCell 
+                      align="right" 
+                      sx={{
+                        ...tableCellStyle,
+                        color: calculateProfit() >= 0 ? '#2e7d32' : '#d32f2f',
+                        fontSize: '1.2em'
+                      }}
+                    >
+                      {calculateProfit()}
+                    </TableCell>
+                    <TableCell sx={tableCellStyle}></TableCell>
+                  </TableRow>
 
-            {/* Profit Row - Styled to stand out */}
-            <TableRow>
-              <TableCell colSpan={4} sx={{ 
-                fontWeight: 'bold', 
-                bgcolor: '#e3f2fd',  // Light blue background
-                fontSize: '1.1em'    // Slightly larger text
-              }}>Profit</TableCell>
-              <TableCell align="right" sx={{ 
-                fontWeight: 'bold',
-                bgcolor: '#e3f2fd',
-                fontSize: '1.1em',
-                color: calculateProfit() >= 0 ? 'green' : 'red' // Color based on profit/loss
-              }}>{calculateProfit()}</TableCell>
-              <TableCell sx={{ bgcolor: '#e3f2fd' }}></TableCell>
-            </TableRow>
+                  {/* Project Fees Section */}
+                  <TableRow sx={{ bgcolor: '#fafafa' }}>
+                    <TableCell colSpan={4} sx={{ ...tableCellStyle, fontWeight: 'bold' }}>PROJECT FEES</TableCell>
+                    <TableCell align="right" sx={tableCellStyle}>
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={projectFees}
+                        onChange={(e) => handleProjectFeesChange(e.target.value)}
+                        sx={{
+                          ...textFieldStyle,
+                          '& .MuiOutlinedInput-root': {
+                            backgroundColor: '#fff'
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell sx={tableCellStyle}></TableCell>
+                  </TableRow>
 
-            {/* Project Fees Row */}
-            <TableRow>
-              <TableCell colSpan={4} sx={{ fontWeight: 'bold' }}>PROJECT FEES</TableCell>
-              <TableCell align="right">
-                <TextField
-                  size="small"
-                  type="number"
-                  value={projectFees}
-                  onChange={(e) => handleProjectFeesChange(e.target.value)}
-                />
-              </TableCell>
-              <TableCell></TableCell>
-            </TableRow>
+                  {/* Service Tax Row */}
+                  <TableRow sx={{ bgcolor: '#fafafa' }}>
+                    <TableCell 
+                      colSpan={4} 
+                      sx={{ 
+                        ...tableCellStyle, 
+                        fontWeight: 'bold',
+                        '& .MuiBox-root': {
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1
+                        }
+                      }}
+                    >
+                      <Box>
+                        Service Tax (GST)
+                        <Box component="span" sx={{ mx: 1 }}>@</Box>
+                        <TextField
+                          size="small"
+                          type="number"
+                          value={serviceTax.percentage}
+                          onChange={(e) => handleServiceTaxChange(e.target.value)}
+                          sx={{
+                            width: '80px',
+                            ...textFieldStyle,
+                            '& .MuiOutlinedInput-root': {
+                              backgroundColor: '#fff',
+                              height: '36px'
+                            }
+                          }}
+                        />
+                        <Box component="span" sx={{ ml: 1 }}>%</Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell 
+                      align="right" 
+                      sx={{ 
+                        ...tableCellStyle, 
+                        fontWeight: 'bold',
+                        color: '#1976d2'
+                      }}
+                    >
+                      {calculateServiceTax()}
+                    </TableCell>
+                    <TableCell sx={tableCellStyle}></TableCell>
+                  </TableRow>
 
-            {/* Service Tax Row */}
-            <TableRow>
-              <TableCell colSpan={4} sx={{ fontWeight: 'bold' }}>
-                Service Tax (GST) @ 
-                <TextField
-                  size="small"
-                  type="number"
-                  value={serviceTax.percentage}
-                  onChange={(e) => handleServiceTaxChange(e.target.value)}
-                  sx={{ width: '60px', mx: 1 }}
-                />
-                %
-              </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 'bold' }}>{calculateServiceTax()}</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-
-            {/* Total Project Fees Row */}
-            <TableRow>
-              <TableCell colSpan={4} sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>TOTAL PROJECT FEES</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>{calculateTotalProjectFees()}</TableCell>
-              <TableCell sx={{ bgcolor: '#f5f5f5' }}></TableCell>
-            </TableRow>
-</TableBody>
-        </Table>
-      </TableContainer>
-    </Paper>
+                  {/* Total Project Fees Row */}
+                  <TableRow sx={{
+                    bgcolor: '#f5f5f5',
+                    '& .MuiTableCell-root': {
+                      borderBottom: 'none',
+                      fontWeight: 'bold',
+                      fontSize: '1.1em'
+                    }
+                  }}>
+                    <TableCell colSpan={4} sx={tableCellStyle}>TOTAL PROJECT FEES</TableCell>
+                    <TableCell align="right" sx={tableCellStyle}>{calculateTotalProjectFees()}</TableCell>
+                    <TableCell sx={tableCellStyle}></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Paper>
+      </Box>
+    </Container>
   );
 };
 
