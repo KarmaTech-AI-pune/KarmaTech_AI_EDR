@@ -24,6 +24,46 @@ interface EmployeeAllocation {
   remarks: string;
 }
 
+interface ExpenseEntry {
+  number: string;
+  remarks: string;
+}
+
+interface OutsideAgencyEntry {
+  rate: string;
+  units: string;
+  number: string;
+  remarks: string;
+}
+
+interface ProjectSpecificEntry {
+  name: string;
+  number: string;
+  remarks: string;
+}
+
+type ExpensesType = {
+  '2a': ExpenseEntry;
+  '2b': ExpenseEntry;
+  '3': ExpenseEntry;
+  '4': ExpenseEntry;
+  '5': ExpenseEntry;
+  '6b': ExpenseEntry;
+  '7': ExpenseEntry;
+}
+
+type OutsideAgencyType = {
+  'a': OutsideAgencyEntry;
+  'b': OutsideAgencyEntry;
+  'c': OutsideAgencyEntry;
+}
+
+type ProjectSpecificType = {
+  '6c': ProjectSpecificEntry;
+  '6d': ProjectSpecificEntry;
+  '6e': ProjectSpecificEntry;
+}
+
 const formatTitle = (title: string): string => {
   return title
     .split('_')
@@ -36,6 +76,29 @@ const JobStartForm: React.FC = () => {
   const [employeeAllocations, setEmployeeAllocations] = useState<EmployeeAllocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // New state for expenses section
+  const [expenses, setExpenses] = useState<ExpensesType>({
+    '2a': { number: '10000', remarks: '' },
+    '2b': { number: '10000', remarks: '' },
+    '3': { number: '', remarks: '' },
+    '4': { number: '10000', remarks: '' },
+    '5': { number: '10000', remarks: '' },
+    '6b': { number: '', remarks: '' },
+    '7': { number: '100000', remarks: '' },
+  });
+
+  const [outsideAgency, setOutsideAgency] = useState<OutsideAgencyType>({
+    'a': { rate: '', units: '', number: '', remarks: '' },
+    'b': { rate: '', units: '', number: '', remarks: '' },
+    'c': { rate: '', units: '', number: '', remarks: '' },
+  });
+
+  const [projectSpecific, setProjectSpecific] = useState<ProjectSpecificType>({
+    '6c': { name: '', number: '', remarks: '' },
+    '6d': { name: '', number: '', remarks: '' },
+    '6e': { name: '', number: '', remarks: '' },
+  });
 
   useEffect(() => {
     const fetchAllocations = async () => {
@@ -113,6 +176,44 @@ const JobStartForm: React.FC = () => {
     );
   };
 
+  const handleExpenseChange = (id: keyof ExpensesType, field: keyof ExpenseEntry, value: string) => {
+    setExpenses(prev => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value }
+    }));
+  };
+
+  const handleOutsideAgencyChange = (id: keyof OutsideAgencyType, field: keyof OutsideAgencyEntry, value: string) => {
+    setOutsideAgency(prev => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value }
+    }));
+  };
+
+  const handleProjectSpecificChange = (id: keyof ProjectSpecificType, field: keyof ProjectSpecificEntry, value: string) => {
+    setProjectSpecific(prev => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value }
+    }));
+  };
+
+  const calculateExpensesTotal = () => {
+    let total = 0;
+    // Add up all expense entries
+    Object.values(expenses).forEach(entry => {
+      total += Number(entry.number) || 0;
+    });
+    // Add up outside agency entries
+    Object.values(outsideAgency).forEach(entry => {
+      total += Number(entry.number) || 0;
+    });
+    // Add up project specific entries
+    Object.values(projectSpecific).forEach(entry => {
+      total += Number(entry.number) || 0;
+    });
+    return total;
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -134,7 +235,9 @@ const JobStartForm: React.FC = () => {
       <Typography variant="h5" gutterBottom>
         PMD1. Job Start Form
       </Typography>
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
+
+      {/* Time Section */}
+      <TableContainer component={Paper} sx={{ mt: 2, mb: 4 }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -241,6 +344,146 @@ const JobStartForm: React.FC = () => {
                   ))}
                 </React.Fragment>
               ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Estimated Expenses Section */}
+      <TableContainer component={Paper} sx={{ mt: 4 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Sr. No.</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell align="right">Rate (Rs)</TableCell>
+              <TableCell align="right">Units</TableCell>
+              <TableCell align="right">Amount (Rs.)</TableCell>
+              <TableCell>Remarks</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell colSpan={6} sx={{ fontWeight: 'bold' }}>2.0 ESTIMATED EXPENSES</TableCell>
+            </TableRow>
+
+            {/* Regular Expenses */}
+            {(Object.entries(expenses) as [keyof ExpensesType, ExpenseEntry][]).map(([id, entry]) => (
+              <TableRow key={id}>
+                <TableCell>{id}</TableCell>
+                <TableCell>
+                  {id === '2a' && 'Travel'}
+                  {id === '2b' && 'Subsistence'}
+                  {id === '3' && 'Local conveyance'}
+                  {id === '4' && 'Communications'}
+                  {id === '5' && 'Stationery and printing'}
+                  {id === '6b' && 'Survey works'}
+                  {id === '7' && 'Expense Contingencies'}
+                </TableCell>
+                <TableCell align="right">
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={entry.number}
+                    onChange={(e) => handleExpenseChange(id, 'number', e.target.value)}
+                  />
+                </TableCell>
+                <TableCell></TableCell>
+                <TableCell align="right">{entry.number}</TableCell>
+                <TableCell>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    value={entry.remarks}
+                    onChange={(e) => handleExpenseChange(id, 'remarks', e.target.value)}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+
+            {/* Outside Agency Section */}
+            <TableRow>
+              <TableCell>6a</TableCell>
+              <TableCell colSpan={5}>Outside Agency</TableCell>
+            </TableRow>
+            {(Object.entries(outsideAgency) as [keyof OutsideAgencyType, OutsideAgencyEntry][]).map(([id, entry]) => (
+              <TableRow key={id}>
+                <TableCell></TableCell>
+                <TableCell>{id.toUpperCase()}</TableCell>
+                <TableCell>
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={entry.rate}
+                    onChange={(e) => handleOutsideAgencyChange(id, 'rate', e.target.value)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={entry.units}
+                    onChange={(e) => handleOutsideAgencyChange(id, 'units', e.target.value)}
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={entry.number}
+                    onChange={(e) => handleOutsideAgencyChange(id, 'number', e.target.value)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    value={entry.remarks}
+                    onChange={(e) => handleOutsideAgencyChange(id, 'remarks', e.target.value)}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+
+            {/* Project Specific Items */}
+            {(Object.entries(projectSpecific) as [keyof ProjectSpecificType, ProjectSpecificEntry][]).map(([id, entry]) => (
+              <TableRow key={id}>
+                <TableCell>{id}</TableCell>
+                <TableCell>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    value={entry.name}
+                    onChange={(e) => handleProjectSpecificChange(id, 'name', e.target.value)}
+                    placeholder="Project specific item name"
+                  />
+                </TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
+                <TableCell align="right">
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={entry.number}
+                    onChange={(e) => handleProjectSpecificChange(id, 'number', e.target.value)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    value={entry.remarks}
+                    onChange={(e) => handleProjectSpecificChange(id, 'remarks', e.target.value)}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+
+            {/* Total Row */}
+            <TableRow>
+              <TableCell colSpan={4} sx={{ fontWeight: 'bold' }}>TOTAL EXPENSES (ODC)</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 'bold' }}>{calculateExpensesTotal()}</TableCell>
+              <TableCell></TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </TableContainer>
