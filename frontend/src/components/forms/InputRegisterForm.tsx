@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Box,
   Typography,
@@ -23,6 +23,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import InputRegisterDialog from './InputRegisterformcomponents/InputRegisterDialog';
 import { deleteInputRegister, getInputRegisterByProject } from '../../dummyapi/inputRegisterApi';
+import { projectManagementAppContext } from '../../App';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -51,25 +52,36 @@ interface InputRegisterRow {
   remarks: string;
 }
 
-interface InputRegisterFormProps {
-  projectId: number;
-}
-
-const InputRegisterForm: React.FC<InputRegisterFormProps> = ({ projectId }) => {
+const InputRegisterForm: React.FC = () => {
   const theme = useTheme();
+  const context = useContext(projectManagementAppContext);
   const [rows, setRows] = useState<InputRegisterRow[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<InputRegisterRow | undefined>(undefined);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
+    if (!context?.selectedProject?.id) {
+      setError('No project selected');
+      return;
+    }
+
     try {
-      const data = getInputRegisterByProject(projectId);
+      const data = getInputRegisterByProject(context.selectedProject.id);
       setRows(data);
+      setError('');
     } catch (err) {
       setError('Failed to load input register data');
     }
-  }, [projectId]);
+  }, [context?.selectedProject?.id]);
+
+  if (!context?.selectedProject?.id) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="warning">Please select a project to view the input register.</Alert>
+      </Container>
+    );
+  }
 
   const handleOpenDialog = (row?: InputRegisterRow) => {
     setSelectedRow(row);
@@ -299,7 +311,7 @@ const InputRegisterForm: React.FC<InputRegisterFormProps> = ({ projectId }) => {
         onClose={handleCloseDialog}
         onSave={handleSave}
         initialData={selectedRow}
-        projectId={projectId}
+        projectId={context.selectedProject.id}
       />
     </Container>
   );

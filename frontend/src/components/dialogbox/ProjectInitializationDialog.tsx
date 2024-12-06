@@ -65,9 +65,8 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
     setIsAcceptanceChecked(event.target.checked);
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setCurrentTab(newValue);
-    console.log(event)
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setCurrentTab(newValue); 
     setSelectedOpportunityId('');
     setImportedProjectData(null);
   };

@@ -11,7 +11,6 @@ import {
   Grid,
   Box,
   Typography,
-  Divider,
   IconButton,
   styled,
 } from '@mui/material';

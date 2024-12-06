@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
+const StyledTableCell = styled(TableCell)(({ }) => ({
   fontWeight: 'bold',
   backgroundColor: '#1976d2',
   color: 'white',
@@ -26,7 +26,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   whiteSpace: 'nowrap',
 }));
 
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
+const StyledTableRow = styled(TableRow)(({ }) => ({
   '&:nth-of-type(odd)': {
     backgroundColor: '#f5f5f5',
   },
@@ -85,7 +85,7 @@ const WideTextField = styled(TextField)({
   },
 });
 
-const AddButton = styled(Button)(({ theme }) => ({
+const AddButton = styled(Button)(({  }) => ({
   marginTop: '20px',
   padding: '10px 30px',
   backgroundColor: '#2196f3',
@@ -179,7 +179,7 @@ const CorrespondenceForm: React.FC = () => {
     }
   ]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
