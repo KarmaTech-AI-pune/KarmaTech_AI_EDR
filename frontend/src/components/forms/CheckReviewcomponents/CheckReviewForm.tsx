@@ -21,14 +21,14 @@ import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { CheckReviewDialog } from './CheckReviewDialog';
-import { ICheckReviewRow } from '../../dummyapi/database/dummyCheckReview';
+import { CheckReviewDialog } from '../CheckReviewDialog';
+import { ICheckReviewRow } from '../../../dummyapi/database/dummyCheckReview';
 import { 
   createCheckReview, 
   getCheckReviewsByProject, 
   deleteCheckReview,
   updateCheckReview 
-} from '../../dummyapi/checkReviewApi';
+} from '../../../dummyapi/checkReviewApi';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
