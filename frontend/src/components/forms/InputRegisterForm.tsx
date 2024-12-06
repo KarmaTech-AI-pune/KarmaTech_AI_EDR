@@ -1,30 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Button,
-  TextField,
   IconButton,
-  Checkbox,
   useTheme,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Grid,
+  Chip,
+  Container,
+  Alert,
+  styled,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import InputRegisterDialog from './InputRegisterformcomponents/InputRegisterDialog';
+import { deleteInputRegister, getInputRegisterByProject } from '../../dummyapi/inputRegisterApi';
+
+const StyledHeaderBox = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: theme.spacing(3),
+  '& .MuiButton-root': {
+    marginLeft: 'auto'
+  }
+}));
 
 interface InputRegisterRow {
   id: number;
+  projectId: number;
   dataReceived: string;
   receiptDate: string;
   receivedFrom: string;
   filesFormat: string;
-  noOfFiles: string;
+  noOfFiles: number;
   fitForPurpose: boolean;
   check: boolean;
   checkedBy: string;
@@ -34,291 +51,257 @@ interface InputRegisterRow {
   remarks: string;
 }
 
-const emptyRow = (): InputRegisterRow => ({
-  id: Date.now(),
-  dataReceived: '',
-  receiptDate: '',
-  receivedFrom: '',
-  filesFormat: '',
-  noOfFiles: '',
-  fitForPurpose: false,
-  check: false,
-  checkedBy: '',
-  checkedDate: '',
-  custodian: '',
-  storagePath: '',
-  remarks: '',
-});
+interface InputRegisterFormProps {
+  projectId: number;
+}
 
-const InputRegisterForm: React.FC = () => {
+const InputRegisterForm: React.FC<InputRegisterFormProps> = ({ projectId }) => {
   const theme = useTheme();
-  const [rows, setRows] = useState<InputRegisterRow[]>([emptyRow()]);
+  const [rows, setRows] = useState<InputRegisterRow[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<InputRegisterRow | undefined>(undefined);
+  const [error, setError] = useState<string>('');
 
-  const addRow = () => {
-    setRows([...rows, emptyRow()]);
+  useEffect(() => {
+    try {
+      const data = getInputRegisterByProject(projectId);
+      setRows(data);
+    } catch (err) {
+      setError('Failed to load input register data');
+    }
+  }, [projectId]);
+
+  const handleOpenDialog = (row?: InputRegisterRow) => {
+    setSelectedRow(row);
+    setDialogOpen(true);
   };
 
-  const removeRow = (id: number) => {
-    setRows(rows.filter(row => row.id !== id));
+  const handleCloseDialog = () => {
+    setSelectedRow(undefined);
+    setDialogOpen(false);
   };
 
-  const updateRow = (id: number, field: keyof InputRegisterRow, value: any) => {
-    setRows(rows.map(row => 
-      row.id === id ? { ...row, [field]: value } : row
-    ));
+  const handleSave = (data: InputRegisterRow) => {
+    try {
+      if (selectedRow) {
+        setRows(rows.map(row => row.id === selectedRow.id ? data : row));
+      } else {
+        setRows([...rows, data]);
+      }
+      setError('');
+    } catch (err) {
+      setError('Failed to save changes');
+    }
   };
 
-  const commonTextFieldStyles = {
-    '& .MuiInputBase-input': { 
-      py: 1.5,
-      px: 2,
-      backgroundColor: 'background.paper',
-    },
-    '& .MuiOutlinedInput-root': {
-      '&:hover fieldset': {
-        borderColor: theme.palette.primary.main,
-      },
-    },
+  const handleDelete = (id: number) => {
+    try {
+      if (deleteInputRegister(id)) {
+        setRows(rows.filter(row => row.id !== id));
+        setError('');
+      }
+    } catch (err) {
+      setError('Failed to delete entry');
+    }
   };
+
+  const StatusChip = ({ label, status }: { label: string; status: boolean }) => (
+    <Chip
+      icon={status ? <CheckCircleIcon /> : <CancelIcon />}
+      label={label}
+      size="small"
+      color={status ? "success" : "default"}
+      sx={{
+        fontSize: '0.75rem',
+        '& .MuiChip-icon': {
+          fontSize: '1rem',
+        },
+      }}
+    />
+  );
 
   return (
-    <Paper 
-      elevation={2}
-      sx={{ 
-        p: 4,
-        backgroundColor: '#f8f9fa',
-        borderRadius: 2
-      }}
-    >
-      {/* Header with title and Add Row button */}
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3
-        }}
-      >
-        <Typography 
-          variant="h5" 
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Box sx={{ 
+        width: '100%', 
+        maxHeight: 'calc(100vh - 200px)',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        pr: 1,
+        pb: 4
+      }}>
+        <Paper 
+          elevation={0}
           sx={{ 
-            color: theme.palette.primary.main,
-            fontWeight: 600
+            border: '1px solid #e0e0e0',
+            borderRadius: 1,
+            backgroundColor: '#fff'
           }}
         >
-          PMD3. Input Register
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={addRow}
-          sx={{ 
-            py: 1.5, 
-            px: 4,
-            boxShadow: 2,
-            '&:hover': {
-              boxShadow: 4,
-            },
-          }}
-        >
-          Add Row
-        </Button>
-      </Box>
+          <StyledHeaderBox>
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                color: '#1976d2',
+                fontWeight: 500,
+                mb: 0
+              }}
+            >
+              PMD3. Input Register
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog()}
+            >
+              Add Entry
+            </Button>
+          </StyledHeaderBox>
+
+          {error && (
+            <Box sx={{ mx: 3, mb: 3 }}>
+              <Alert severity="error">
+                {error}
+              </Alert>
+            </Box>
+          )}
       
-      {/* Table Container */}
-      <TableContainer 
-        sx={{ 
-          backgroundColor: 'white',
-          borderRadius: 1,
-          boxShadow: 1,
-          overflowX: 'auto'
-        }}
-      >
-        <Table size="medium" sx={{ minWidth: 2000 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell 
-                sx={{ 
-                  minWidth: 80,
-                  backgroundColor: theme.palette.primary.main,
-                  color: 'white',
-                  fontWeight: 600
-                }}
-              >
-                Sr. No.
-              </TableCell>
-              {[
-                { label: 'Data Received', width: 200 },
-                { label: 'Receipt date', width: 150 },
-                { label: 'Received From', width: 200 },
-                { label: 'Files format', width: 150 },
-                { label: 'No. of files', width: 120 },
-                { label: 'Fit for purpose', width: 150 },
-                { label: 'Check', width: 120 },
-                { label: 'Checked By', width: 150 },
-                { label: 'Checked Date', width: 150 },
-                { label: 'Custodian', width: 150 },
-                { label: 'Storage path', width: 200 },
-                { label: 'Remarks', width: 200 },
-                { label: 'Actions', width: 80 }
-              ].map((header) => (
-                <TableCell 
-                  key={header.label}
-                  sx={{ 
-                    minWidth: header.width,
-                    backgroundColor: theme.palette.primary.main,
-                    color: 'white',
-                    fontWeight: 600
-                  }}
-                >
-                  {header.label}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
+          <Box>
             {rows.map((row, index) => (
-              <TableRow 
+              <Accordion 
                 key={row.id}
                 sx={{
-                  '&:nth-of-type(odd)': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                  '&:before': { display: 'none' },
+                  borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                  '&:last-child': {
+                    borderBottom: 'none'
                   },
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  '&.Mui-expanded': {
+                    margin: 0,
                   },
+                  backgroundColor: '#fff',
                 }}
               >
-                <TableCell sx={{ fontWeight: 500 }}>{index + 1}</TableCell>
-                <TableCell>
-                  <TextField
-                    value={row.dataReceived}
-                    onChange={(e) => updateRow(row.id, 'dataReceived', e.target.value)}
-                    fullWidth
-                    sx={commonTextFieldStyles}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    type="date"
-                    value={row.receiptDate}
-                    onChange={(e) => updateRow(row.id, 'receiptDate', e.target.value)}
-                    fullWidth
-                    sx={commonTextFieldStyles}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={row.receivedFrom}
-                    onChange={(e) => updateRow(row.id, 'receivedFrom', e.target.value)}
-                    fullWidth
-                    sx={commonTextFieldStyles}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={row.filesFormat}
-                    onChange={(e) => updateRow(row.id, 'filesFormat', e.target.value)}
-                    fullWidth
-                    sx={commonTextFieldStyles}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    type="number"
-                    value={row.noOfFiles}
-                    onChange={(e) => updateRow(row.id, 'noOfFiles', e.target.value)}
-                    fullWidth
-                    sx={commonTextFieldStyles}
-                  />
-                </TableCell>
-                <TableCell align="center">
-                  <Checkbox
-                    checked={row.fitForPurpose}
-                    onChange={(e) => updateRow(row.id, 'fitForPurpose', e.target.checked)}
-                    sx={{ 
-                      '& .MuiSvgIcon-root': { fontSize: 28 },
-                      color: theme.palette.primary.main,
-                      '&.Mui-checked': {
-                        color: theme.palette.primary.main,
-                      },
-                    }}
-                  />
-                </TableCell>
-                <TableCell align="center">
-                  <Checkbox
-                    checked={row.check}
-                    onChange={(e) => updateRow(row.id, 'check', e.target.checked)}
-                    sx={{ 
-                      '& .MuiSvgIcon-root': { fontSize: 28 },
-                      color: theme.palette.primary.main,
-                      '&.Mui-checked': {
-                        color: theme.palette.primary.main,
-                      },
-                    }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={row.checkedBy}
-                    onChange={(e) => updateRow(row.id, 'checkedBy', e.target.value)}
-                    fullWidth
-                    sx={commonTextFieldStyles}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    type="date"
-                    value={row.checkedDate}
-                    onChange={(e) => updateRow(row.id, 'checkedDate', e.target.value)}
-                    fullWidth
-                    sx={commonTextFieldStyles}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={row.custodian}
-                    onChange={(e) => updateRow(row.id, 'custodian', e.target.value)}
-                    fullWidth
-                    sx={commonTextFieldStyles}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={row.storagePath}
-                    onChange={(e) => updateRow(row.id, 'storagePath', e.target.value)}
-                    fullWidth
-                    sx={commonTextFieldStyles}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={row.remarks}
-                    onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
-                    fullWidth
-                    sx={commonTextFieldStyles}
-                  />
-                </TableCell>
-                <TableCell>
-                  <IconButton 
-                    onClick={() => removeRow(row.id)}
-                    color="error"
-                    sx={{ 
-                      p: 1.5,
-                      '&:hover': {
-                        backgroundColor: 'rgba(211, 47, 47, 0.04)',
-                      },
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                    '& .MuiAccordionSummary-content': {
+                      margin: '12px 0',
+                    },
+                  }}
+                >
+                  <Grid container alignItems="center" spacing={2}>
+                    <Grid item xs={1}>
+                      <Typography color="primary" fontWeight="bold">
+                        #{index + 1}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Typography fontWeight="medium">{row.dataReceived}</Typography>
+                    </Grid>
+                    <Grid item xs={2}>
+                      <Typography color="text.secondary">{row.receiptDate}</Typography>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Typography>{row.receivedFrom}</Typography>
+                    </Grid>
+                    <Grid item xs={2}>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <StatusChip label="Fit for Purpose" status={row.fitForPurpose} />
+                        <StatusChip label="Checked" status={row.check} />
+                      </Box>
+                    </Grid>
+                    <Grid item xs={1}>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDialog(row);
+                          }}
+                          size="small"
+                          sx={{ color: theme.palette.primary.main }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(row.id);
+                          }}
+                          size="small"
+                          color="error"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </AccordionSummary>
+                <AccordionDetails sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography color="text.secondary" variant="caption" display="block" gutterBottom>
+                          Files Information
+                        </Typography>
+                        <Typography variant="body2" paragraph>
+                          Format: {row.filesFormat}
+                        </Typography>
+                        <Typography variant="body2" paragraph>
+                          Number of Files: {row.noOfFiles}
+                        </Typography>
+                        <Typography variant="body2" paragraph>
+                          Storage Path: {row.storagePath}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography color="text.secondary" variant="caption" display="block" gutterBottom>
+                          Check Information
+                        </Typography>
+                        <Typography variant="body2" paragraph>
+                          Checked By: {row.checkedBy}
+                        </Typography>
+                        <Typography variant="body2" paragraph>
+                          Checked Date: {row.checkedDate}
+                        </Typography>
+                        <Typography variant="body2" paragraph>
+                          Custodian: {row.custodian}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    {row.remarks && (
+                      <Grid item xs={12}>
+                        <Box>
+                          <Typography color="text.secondary" variant="caption" display="block" gutterBottom>
+                            Remarks
+                          </Typography>
+                          <Typography variant="body2">
+                            {row.remarks}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )}
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Paper>
+          </Box>
+        </Paper>
+      </Box>
+
+      <InputRegisterDialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        onSave={handleSave}
+        initialData={selectedRow}
+        projectId={projectId}
+      />
+    </Container>
   );
 };
 

@@ -13,14 +13,7 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  position: 'relative',
-  padding: theme.spacing(2),
-  '& .MuiTypography-root': {
-    position: 'absolute',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    fontWeight: 'bold'
-  },
+  padding: theme.spacing(3),
   '& .MuiButton-root': {
     marginLeft: 'auto'
   }
@@ -42,7 +35,14 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
   return (
     <>
       <StyledHeaderBox>
-        <Typography variant="h6">
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            color: '#1976d2',
+            fontWeight: 500,
+            mb: 0
+          }}
+        >
           PMD2. Work Breakdown Structure
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
