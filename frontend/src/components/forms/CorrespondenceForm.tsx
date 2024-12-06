@@ -1,99 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Tab,
   Tabs,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Button,
-  TextField,
   Typography,
-  styled
+  styled,
+  Container,
+  Button,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Grid,
 } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AddIcon from '@mui/icons-material/Add';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CorrespondenceDialog from './CorrespondenceDialog';
+import {
+  createInwardRow,
+  createOutwardRow,
+  getInwardRows,
+  getOutwardRows
+} from '../../dummyapi/correspondenceApi';
 
-const StyledTableCell = styled(TableCell)(({ }) => ({
-  fontWeight: 'bold',
-  backgroundColor: '#1976d2',
-  color: 'white',
-  fontSize: 15,
-  padding: '16px 20px',
-  whiteSpace: 'nowrap',
+const StyledHeaderBox = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: theme.spacing(3),
+  paddingBottom: theme.spacing(0),
+  '& .MuiButton-root': {
+    marginLeft: 'auto'
+  }
 }));
 
-const StyledTableRow = styled(TableRow)(({ }) => ({
-  '&:nth-of-type(odd)': {
-    backgroundColor: '#f5f5f5',
-  },
-  '&:hover': {
-    backgroundColor: '#e3f2fd',
-  },
-  '& td': {
-    padding: '16px 8px',
-  },
-  '&:last-child td, &:last-child th': {
-    border: 0,
-  },
-}));
-
-const StyledTextField = styled(TextField)({
-  '& .MuiOutlinedInput-root': {
-    height: '45px',
-    '& fieldset': {
-      borderColor: '#e0e0e0',
-      borderWidth: '1.5px',
-    },
-    '&:hover fieldset': {
-      borderColor: '#1976d2',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: '#1976d2',
+const StyledTabs = styled(Tabs)(({ theme }) => ({
+  minHeight: '40px',
+  '& .MuiTab-root': {
+    minHeight: '40px',
+    padding: '0 16px',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    textTransform: 'none',
+    color: theme.palette.text.secondary,
+    '&.Mui-selected': {
+      color: theme.palette.primary.main,
     },
   },
-  '& input': {
-    padding: '12px 16px',
-    fontSize: '15px',
+  '& .MuiTabs-indicator': {
+    height: '2px',
   },
-  '& input[type="date"]': {
-    padding: '8px 16px',
-  },
-});
-
-const WideTextField = styled(TextField)({
-  '& .MuiOutlinedInput-root': {
-    height: '45px',
-    width: '300px',
-    '& fieldset': {
-      borderColor: '#e0e0e0',
-      borderWidth: '1.5px',
-    },
-    '&:hover fieldset': {
-      borderColor: '#1976d2',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: '#1976d2',
-    },
-  },
-  '& input': {
-    padding: '12px 16px',
-    fontSize: '15px',
-  },
-});
-
-const AddButton = styled(Button)(({  }) => ({
-  marginTop: '20px',
-  padding: '10px 30px',
-  backgroundColor: '#2196f3',
-  fontSize: '16px',
-  '&:hover': {
-    backgroundColor: '#1976d2',
-  },
-  boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .3)',
 }));
 
 interface TabPanelProps {
@@ -113,389 +69,306 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`correspondence-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box>{children}</Box>}
     </div>
   );
 }
 
-interface InwardRow {
-  srNo: number;
-  incomingLetterNo: string;
-  letterDate: string;
-  njsInwardNo: string;
-  receiptDate: string;
-  from: string;
-  subject: string;
-  attachmentDetails: string;
-  actionTaken: string;
-  storagePath: string;
-  remarks: string;
-  repliedDate: string;
-}
-
-interface OutwardRow {
-  srNo: number;
-  letterNo: string;
-  letterDate: string;
-  to: string;
-  subject: string;
-  attachmentDetails: string;
-  actionTaken: string;
-  storagePath: string;
-  remarks: string;
-  acknowledgement: string;
-}
-
 const CorrespondenceForm: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
-  const [inwardRows, setInwardRows] = useState<InwardRow[]>([
-    {
-      srNo: 1,
-      incomingLetterNo: '',
-      letterDate: '',
-      njsInwardNo: '',
-      receiptDate: '',
-      from: '',
-      subject: '',
-      attachmentDetails: '',
-      actionTaken: '',
-      storagePath: '',
-      remarks: '',
-      repliedDate: ''
-    }
-  ]);
-  const [outwardRows, setOutwardRows] = useState<OutwardRow[]>([
-    {
-      srNo: 1,
-      letterNo: '',
-      letterDate: '',
-      to: '',
-      subject: '',
-      attachmentDetails: '',
-      actionTaken: '',
-      storagePath: '',
-      remarks: '',
-      acknowledgement: ''
-    }
-  ]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [inwardRows, setInwardRows] = useState<any[]>([]);
+  const [outwardRows, setOutwardRows] = useState<any[]>([]);
+
+  useEffect(() => {
+    const projectId = "dummy-project-id";
+    setInwardRows(getInwardRows(projectId));
+    setOutwardRows(getOutwardRows(projectId));
+  }, []);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  const handleAddInwardRow = () => {
-    const newRow: InwardRow = {
-      srNo: inwardRows.length + 1,
-      incomingLetterNo: '',
-      letterDate: '',
-      njsInwardNo: '',
-      receiptDate: '',
-      from: '',
-      subject: '',
-      attachmentDetails: '',
-      actionTaken: '',
-      storagePath: '',
-      remarks: '',
-      repliedDate: ''
-    };
-    setInwardRows([...inwardRows, newRow]);
+  const handleAddClick = () => {
+    setDialogOpen(true);
   };
 
-  const handleAddOutwardRow = () => {
-    const newRow: OutwardRow = {
-      srNo: outwardRows.length + 1,
-      letterNo: '',
-      letterDate: '',
-      to: '',
-      subject: '',
-      attachmentDetails: '',
-      actionTaken: '',
-      storagePath: '',
-      remarks: '',
-      acknowledgement: ''
-    };
-    setOutwardRows([...outwardRows, newRow]);
+  const handleDialogClose = () => {
+    setDialogOpen(false);
   };
 
-  const handleInwardChange = (index: number, field: keyof InwardRow, value: string) => {
-    const newRows = [...inwardRows];
-    newRows[index] = { ...newRows[index], [field]: value };
-    setInwardRows(newRows);
+  const handleSave = (data: any) => {
+    const projectId = "dummy-project-id";
+    const newData = { ...data, projectId };
+
+    if (tabValue === 0) {
+      const newRow = createInwardRow(newData);
+      setInwardRows([...inwardRows, newRow]);
+    } else {
+      const newRow = createOutwardRow(newData);
+      setOutwardRows([...outwardRows, newRow]);
+    }
   };
 
-  const handleOutwardChange = (index: number, field: keyof OutwardRow, value: string) => {
-    const newRows = [...outwardRows];
-    newRows[index] = { ...newRows[index], [field]: value };
-    setOutwardRows(newRows);
-  };
-
-  return (
-    <Paper sx={{ p: 4, backgroundColor: '#fff' }} elevation={3}>
-      <Typography variant="h5" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mb: 3, fontSize: '24px' }}>
-        PMD4. Correspondence Inward-Outward
-      </Typography>
-      
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
+  const renderInwardAccordions = () => {
+    return inwardRows.map((row, index) => (
+      <Accordion 
+        key={row.id}
+        sx={{
+          '&:before': { display: 'none' },
+          borderBottom: '1px solid rgba(224, 224, 224, 1)',
+          '&:last-child': {
+            borderBottom: 'none'
+          },
+          '&.Mui-expanded': {
+            margin: 0,
+          },
+          backgroundColor: '#fff',
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
           sx={{
-            '& .MuiTab-root': {
-              fontSize: '16px',
-              fontWeight: 'bold',
-              textTransform: 'none',
-              minHeight: '50px',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)',
             },
-            '& .Mui-selected': {
-              color: '#1976d2',
+            '& .MuiAccordionSummary-content': {
+              margin: '12px 0',
             },
           }}
         >
-          <Tab label="Inward" />
-          <Tab label="Outward" />
-        </Tabs>
+          <Grid container alignItems="center" spacing={2}>
+            <Grid item xs={1}>
+              <Typography color="primary" fontWeight="bold">
+                #{index + 1}
+              </Typography>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography fontWeight="medium">{row.incomingLetterNo}</Typography>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography color="text.secondary">{row.letterDate}</Typography>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography>{row.from}</Typography>
+            </Grid>
+            <Grid item xs={5}>
+              <Typography noWrap>{row.subject}</Typography>
+            </Grid>
+          </Grid>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 2 }}>
+                <Typography color="text.secondary" variant="caption" display="block" gutterBottom>
+                  Letter Information
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  NJS Inward No: {row.njsInwardNo}
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  Receipt Date: {row.receiptDate}
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  Attachment Details: {row.attachmentDetails}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 2 }}>
+                <Typography color="text.secondary" variant="caption" display="block" gutterBottom>
+                  Action Information
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  Action Taken: {row.actionTaken}
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  Storage Path: {row.storagePath}
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  Replied Date: {row.repliedDate}
+                </Typography>
+              </Box>
+            </Grid>
+            {row.remarks && (
+              <Grid item xs={12}>
+                <Box>
+                  <Typography color="text.secondary" variant="caption" display="block" gutterBottom>
+                    Remarks
+                  </Typography>
+                  <Typography variant="body2">
+                    {row.remarks}
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
+          </Grid>
+        </AccordionDetails>
+      </Accordion>
+    ));
+  };
+
+  const renderOutwardAccordions = () => {
+    return outwardRows.map((row, index) => (
+      <Accordion 
+        key={row.id}
+        sx={{
+          '&:before': { display: 'none' },
+          borderBottom: '1px solid rgba(224, 224, 224, 1)',
+          '&:last-child': {
+            borderBottom: 'none'
+          },
+          '&.Mui-expanded': {
+            margin: 0,
+          },
+          backgroundColor: '#fff',
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            },
+            '& .MuiAccordionSummary-content': {
+              margin: '12px 0',
+            },
+          }}
+        >
+          <Grid container alignItems="center" spacing={2}>
+            <Grid item xs={1}>
+              <Typography color="primary" fontWeight="bold">
+                #{index + 1}
+              </Typography>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography fontWeight="medium">{row.letterNo}</Typography>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography color="text.secondary">{row.letterDate}</Typography>
+            </Grid>
+            <Grid item xs={2}>
+              <Typography>{row.to}</Typography>
+            </Grid>
+            <Grid item xs={5}>
+              <Typography noWrap>{row.subject}</Typography>
+            </Grid>
+          </Grid>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 2 }}>
+                <Typography color="text.secondary" variant="caption" display="block" gutterBottom>
+                  Letter Information
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  Attachment Details: {row.attachmentDetails}
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  Storage Path: {row.storagePath}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ mb: 2 }}>
+                <Typography color="text.secondary" variant="caption" display="block" gutterBottom>
+                  Action Information
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  Action Taken: {row.actionTaken}
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  Acknowledgement: {row.acknowledgement}
+                </Typography>
+              </Box>
+            </Grid>
+            {row.remarks && (
+              <Grid item xs={12}>
+                <Box>
+                  <Typography color="text.secondary" variant="caption" display="block" gutterBottom>
+                    Remarks
+                  </Typography>
+                  <Typography variant="body2">
+                    {row.remarks}
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
+          </Grid>
+        </AccordionDetails>
+      </Accordion>
+    ));
+  };
+
+  return (
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Box sx={{ 
+        width: '100%', 
+        maxHeight: 'calc(100vh - 200px)',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        pr: 1,
+        pb: 4
+      }}>
+        <Paper 
+          elevation={0}
+          sx={{ 
+            border: '1px solid #e0e0e0',
+            borderRadius: 1,
+            backgroundColor: '#fff'
+          }}
+        >
+          <StyledHeaderBox>
+            <Box>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  color: '#1976d2',
+                  fontWeight: 500,
+                  mb: 2
+                }}
+              >
+                PMD4. Correspondence Inward-Outward
+              </Typography>
+              <StyledTabs 
+                value={tabValue} 
+                onChange={handleTabChange}
+              >
+                <Tab label="Inward" />
+                <Tab label="Outward" />
+              </StyledTabs>
+            </Box>
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              onClick={handleAddClick}
+            >
+              Add Entry
+            </Button>
+          </StyledHeaderBox>
+
+          <Box sx={{ mt: 2 }}>
+            <TabPanel value={tabValue} index={0}>
+              {renderInwardAccordions()}
+            </TabPanel>
+
+            <TabPanel value={tabValue} index={1}>
+              {renderOutwardAccordions()}
+            </TabPanel>
+          </Box>
+
+          <CorrespondenceDialog
+            open={dialogOpen}
+            onClose={handleDialogClose}
+            onSave={handleSave}
+            type={tabValue === 0 ? 'inward' : 'outward'}
+          />
+        </Paper>
       </Box>
-
-      <TabPanel value={tabValue} index={0}>
-        <TableContainer component={Paper} elevation={2}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <StyledTableCell>Sr. No.</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: '150px' }}>Incoming Letter No.</StyledTableCell>
-                <StyledTableCell>Letter Date</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: '150px' }}>NJS Inward No</StyledTableCell>
-                <StyledTableCell>Receipt date</StyledTableCell>
-                <StyledTableCell>From</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: '250px' }}>Subject</StyledTableCell>
-                <StyledTableCell>Attachment Details</StyledTableCell>
-                <StyledTableCell>Action taken</StyledTableCell>
-                <StyledTableCell>Storage path</StyledTableCell>
-                <StyledTableCell>Remarks</StyledTableCell>
-                <StyledTableCell>Replied date</StyledTableCell>
-              </TableRow>
-</TableHead>
-            <TableBody>
-              {inwardRows.map((row, index) => (
-                <StyledTableRow key={row.srNo}>
-                  <TableCell sx={{ fontSize: '15px' }}>{row.srNo}</TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      value={row.incomingLetterNo}
-                      onChange={(e) => handleInwardChange(index, 'incomingLetterNo', e.target.value)}
-                      placeholder="Enter letter no."
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      type="date"
-                      value={row.letterDate}
-                      onChange={(e) => handleInwardChange(index, 'letterDate', e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      value={row.njsInwardNo}
-                      onChange={(e) => handleInwardChange(index, 'njsInwardNo', e.target.value)}
-                      placeholder="Enter NJS no."
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      type="date"
-                      value={row.receiptDate}
-                      onChange={(e) => handleInwardChange(index, 'receiptDate', e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <WideTextField
-                      fullWidth
-                      value={row.from}
-                      onChange={(e) => handleInwardChange(index, 'from', e.target.value)}
-                      placeholder="From"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <WideTextField
-                      fullWidth
-                      value={row.subject}
-                      onChange={(e) => handleInwardChange(index, 'subject', e.target.value)}
-                      placeholder="Enter subject"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      value={row.attachmentDetails}
-                      onChange={(e) => handleInwardChange(index, 'attachmentDetails', e.target.value)}
-                      placeholder="Attachment details"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      value={row.actionTaken}
-                      onChange={(e) => handleInwardChange(index, 'actionTaken', e.target.value)}
-                      placeholder="Action taken"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <WideTextField
-                      fullWidth
-                      value={row.storagePath}
-                      onChange={(e) => handleInwardChange(index, 'storagePath', e.target.value)}
-                      placeholder="Storage path"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <WideTextField
-                      fullWidth
-                      value={row.remarks}
-                      onChange={(e) => handleInwardChange(index, 'remarks', e.target.value)}
-                      placeholder="Enter remarks"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      type="date"
-                      value={row.repliedDate}
-                      onChange={(e) => handleInwardChange(index, 'repliedDate', e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </TableCell>
-                </StyledTableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-          <AddButton
-            variant="contained"
-            onClick={handleAddInwardRow}
-            startIcon={<AddCircleOutlineIcon />}
-          >
-            Add Row
-          </AddButton>
-        </Box>
-      </TabPanel>
-
-      <TabPanel value={tabValue} index={1}>
-        <TableContainer component={Paper} elevation={2}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <StyledTableCell>Sr. No.</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: '150px' }}>Letter No.</StyledTableCell>
-                <StyledTableCell>Letter Date</StyledTableCell>
-                <StyledTableCell>To</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: '250px' }}>Subject</StyledTableCell>
-                <StyledTableCell>Attachment Details</StyledTableCell>
-                <StyledTableCell>Action taken</StyledTableCell>
-                <StyledTableCell>Storage path</StyledTableCell>
-                <StyledTableCell>Remarks</StyledTableCell>
-                <StyledTableCell>Acknowledgement</StyledTableCell>
-              </TableRow>
-</TableHead>
-            <TableBody>
-              {outwardRows.map((row, index) => (
-                <StyledTableRow key={row.srNo}>
-                  <TableCell sx={{ fontSize: '15px' }}>{row.srNo}</TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      value={row.letterNo}
-                      onChange={(e) => handleOutwardChange(index, 'letterNo', e.target.value)}
-                      placeholder="Enter letter no."
-                    />
-                  </TableCell>
-<TableCell>
-                    <StyledTextField
-                      fullWidth
-                      type="date"
-                      value={row.letterDate}
-                      onChange={(e) => handleOutwardChange(index, 'letterDate', e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <WideTextField
-                      fullWidth
-                      value={row.to}
-                      onChange={(e) => handleOutwardChange(index, 'to', e.target.value)}
-                      placeholder="To"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      value={row.subject}
-                      onChange={(e) => handleOutwardChange(index, 'subject', e.target.value)}
-                      placeholder="Enter subject"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      value={row.attachmentDetails}
-                      onChange={(e) => handleOutwardChange(index, 'attachmentDetails', e.target.value)}
-                      placeholder="Attachment details"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      value={row.actionTaken}
-                      onChange={(e) => handleOutwardChange(index, 'actionTaken', e.target.value)}
-                      placeholder="Action taken"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <WideTextField
-                      fullWidth
-                      value={row.storagePath}
-                      onChange={(e) => handleOutwardChange(index, 'storagePath', e.target.value)}
-                      placeholder="Storage path"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <WideTextField
-                      fullWidth
-                      value={row.remarks}
-                      onChange={(e) => handleOutwardChange(index, 'remarks', e.target.value)}
-                      placeholder="Enter remarks"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <StyledTextField
-                      fullWidth
-                      value={row.acknowledgement}
-                      onChange={(e) => handleOutwardChange(index, 'acknowledgement', e.target.value)}
-                      placeholder="Enter acknowledgement"
-                    />
-                  </TableCell>
-                </StyledTableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-          <AddButton
-            variant="contained"
-            onClick={handleAddOutwardRow}
-            startIcon={<AddCircleOutlineIcon />}
-          >
-            Add Row
-          </AddButton>
-        </Box>
-      </TabPanel>
-    </Paper>
+    </Container>
   );
 };
 
