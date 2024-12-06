@@ -15,7 +15,7 @@ import {
   styled
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { ICheckReviewRow } from '../../dummyapi/database/dummyCheckReview';
+import { ICheckReviewRow } from '../../../dummyapi/database/dummyCheckReview';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {

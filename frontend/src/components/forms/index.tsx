@@ -2,7 +2,7 @@ export { default as WorkBreakdownStructureForm } from './WorkBreakdownStructureF
 export { default as JobStartForm } from './JobStartForm';
 export { default as InputRegisterForm } from './InputRegisterForm';
 export { default as CorrespondenceForm } from './CorrespondenceForm';
-export { default as CheckReviewForm } from './CheckReviewcomponents/CheckReviewForm';
+export { default as CheckReviewForm } from './CheckReviewForm';
 export { default as ChangeControlForm } from './ChangeControlForm';
 export { default as ProgressReviewForm } from './ProgressReviewForm';
 export { default as ProjectClosureForm } from './ProjectClosureForm';

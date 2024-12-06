@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CorrespondenceDialog from './CorrespondenceDialog';
+import CorrespondenceDialog from './Correspondancecomponents/CorrespondenceDialog';
 import {
   createInwardRow,
   createOutwardRow,

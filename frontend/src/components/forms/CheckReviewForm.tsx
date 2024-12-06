@@ -5,7 +5,6 @@ import {
   Box,
   Typography,
   IconButton,
-  Checkbox,
   Container,
   Alert,
   styled,
@@ -17,18 +16,16 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { CheckReviewDialog } from '../CheckReviewDialog';
-import { ICheckReviewRow } from '../../../dummyapi/database/dummyCheckReview';
+import { CheckReviewDialog } from './CheckReviewcomponents/CheckReviewDialog';
+import { ICheckReviewRow } from '../../dummyapi/database/dummyCheckReview';
 import { 
   createCheckReview, 
   getCheckReviewsByProject, 
   deleteCheckReview,
-  updateCheckReview 
-} from '../../../dummyapi/checkReviewApi';
+} from '../../dummyapi/checkReviewApi';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -43,7 +40,6 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
 const CheckReviewForm: React.FC = () => {
   const [rows, setRows] = useState<ICheckReviewRow[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<ICheckReviewRow | undefined>(undefined);
   const [error, setError] = useState<string>('');
   
   // TODO: Replace with actual project ID from context/props
@@ -165,7 +161,7 @@ const CheckReviewForm: React.FC = () => {
           )}
 
           <Box>
-            {rows.map((row, index) => (
+            {rows.map((row) => (
               <Accordion 
                 key={row.activityNo}
                 sx={{
