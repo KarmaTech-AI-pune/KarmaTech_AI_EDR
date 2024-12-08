@@ -1,14 +1,33 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
     public class Role : IdentityRole
     {
+        [Required]
+        [MaxLength(500)]
         public string Description { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? MinRate { get; set; }
+
+        public bool? IsResourceRole { get; set; } = false;
+
+        // Navigation property for Role Permissions
+        public virtual ICollection<RolePermission> RolePermissions { get; set; }
+
+        public Role() : base()
+        {
+            RolePermissions = new HashSet<RolePermission>();
+        }
+
+        public Role(string roleName) : base(roleName)
+        {
+            RolePermissions = new HashSet<RolePermission>();
+        }
     }
 }

@@ -55,11 +55,29 @@ namespace NJS.Domain.Entities
         [StringLength(3)]
         public string? Currency { get; set; }
 
-        // Navigation property
+        // Project Manager relationship
+        [ForeignKey("ProjectManager")]
+        public string? ProjectManagerId { get; set; }
+        public virtual User ProjectManager { get; set; }
+
+        // Regional Manager relationship
+        [ForeignKey("RegionalManager")]
+        public string? RegionalManagerId { get; set; }
+        public virtual User RegionalManager { get; set; }
+
+        // Senior Project Manager relationship
+        [ForeignKey("SeniorProjectManager")]
+        public string? SeniorProjectManagerId { get; set; }
+        public virtual User SeniorProjectManager { get; set; }
+
+        // Navigation property for OpportunityTracking
         public virtual ICollection<OpportunityTracking>? OpportunityTrackings { get; set; }
 
         // Navigation property for GoNoGoDecision
         public virtual GoNoGoDecision? GoNoGoDecision { get; set; }
+
+        // Navigation property for ProjectResources
+        public virtual ICollection<ProjectResource> ProjectResources { get; set; }
 
         // Audit Fields
         [Required]
@@ -73,6 +91,12 @@ namespace NJS.Domain.Entities
 
         [StringLength(100)]
         public string? LastModifiedBy { get; set; }
+
+        public Project()
+        {
+            OpportunityTrackings = new List<OpportunityTracking>();
+            ProjectResources = new List<ProjectResource>();
+        }
     }
 
     public enum ProjectStatus

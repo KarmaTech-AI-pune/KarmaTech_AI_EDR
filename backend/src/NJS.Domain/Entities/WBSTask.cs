@@ -1,25 +1,50 @@
-﻿//File: backend/src/NJS.Domain/Entities/WBSTask.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
     public class WBSTask
     {
+        [Key]
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public decimal Budget { get; set; }
-        public List<string> Resources { get; set; }
 
+        [Required]
+        public string Title { get; set; }
+
+        public string Description { get; set; }
+
+        [Required]
+        public WBSTaskLevel Level { get; set; }
+
+        public int? ParentId { get; set; }
+
+        [ForeignKey("ParentId")]
+        public WBSTask Parent { get; set; }
+
+        public ICollection<WBSTask> Children { get; set; }
+
+        // Project relationship
+        public int WorkBreakdownStructureId { get; set; }
         public WorkBreakdownStructure WorkBreakdownStructure { get; set; }
+
+        // Resource allocation
+        public int? ResourceAllocation { get; set; }
 
         // Many-to-many relationship with User
         public ICollection<UserWBSTask> UserWBSTasks { get; set; }
+
+        // Timestamps
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+
+        public WBSTask()
+        {
+            Children = new List<WBSTask>();
+            UserWBSTasks = new List<UserWBSTask>();
+            CreatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
+        }
     }
 }
