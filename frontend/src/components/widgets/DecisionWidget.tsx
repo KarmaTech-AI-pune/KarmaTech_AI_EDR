@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Typography, Paper, Grid, Button, Alert } from '@mui/material';
 import { CheckCircle, Cancel } from '@mui/icons-material';
-import { Project, ProjectStatus } from '../../types';
+import { Project} from '../../types';
 //import { updateProjectStatus } from '../../services/api';
 
 interface DecisionWidgetProps {
@@ -16,19 +16,9 @@ const DecisionWidget: React.FC<DecisionWidgetProps> = () => {
   // Only render for projects with Decision Pending status
   
 
-  const handleStatusUpdate = async (newStatus: ProjectStatus) => {
+  const handleStatusUpdate = async () => {
     setIsLoading(true);
     setError(null);
-    console.log(newStatus)
-    /*
-    try {
-      const updatedProject = await updateProjectStatus(project.id, newStatus);
-      onStatusUpdate?.(updatedProject);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }*/
   };
 
   return (
@@ -57,7 +47,7 @@ const DecisionWidget: React.FC<DecisionWidgetProps> = () => {
             variant="contained"
             color="success"
             startIcon={<CheckCircle />}
-            onClick={() => handleStatusUpdate(ProjectStatus['Bid Accepted'])}
+            onClick={() => handleStatusUpdate()}
             disabled={isLoading}
             sx={{ 
               textTransform: 'none', 
@@ -73,7 +63,7 @@ const DecisionWidget: React.FC<DecisionWidgetProps> = () => {
             variant="contained"
             color="error"
             startIcon={<Cancel />}
-            onClick={() => handleStatusUpdate(ProjectStatus['Bid Rejected'])}
+            onClick={() => handleStatusUpdate()}
             disabled={isLoading}
             sx={{ 
               textTransform: 'none', 

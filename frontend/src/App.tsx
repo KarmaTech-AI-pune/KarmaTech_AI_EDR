@@ -6,7 +6,6 @@ import { Dashboard } from './components/Dashboard'
 import { ResourceManagement } from './components/ResourceManagement'
 import { authApi } from './dummyapi/api'
 import { PermissionType } from './dummyapi/database/dummyRoles'
-import { Forms } from './pages/Forms'
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
 function App() {
@@ -118,7 +117,6 @@ function App() {
     "Resources": <ResourceManagement />,
     "Project Details": <ProjectDetails />,
     "Business Development Details": <BusinessDevelopmentDetails />,
-    'Forms' : <Forms />,
   };
 
   if (isLoading) {

@@ -62,7 +62,7 @@ export const ProjectDetails: React.FC = () => {
 
   useEffect(() => {
     setIsLoading(false);
-    setError("")
+    setError(null)
   }, []);
 
   const handleSectionClick = (section: string) => {
@@ -200,7 +200,7 @@ export const ProjectDetails: React.FC = () => {
         const form = formSections.find(f => f.id === selectedForm);
         return form?.component;
       }
-      return <FormsOverview />;
+      return <FormsOverview onFormSelect={handleFormClick} />;
     }
 
     switch (selectedSection) {

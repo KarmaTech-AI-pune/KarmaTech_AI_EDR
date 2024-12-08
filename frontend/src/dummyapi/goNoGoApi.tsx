@@ -39,7 +39,6 @@ export const goNoGoApi = {
 
   create: async (projectId: number, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
     try {
-      console.log(`Creating GoNoGo Decision for Project ${projectId}:`, JSON.stringify(data));
       const newDecision = {
         ...data,
         projectId,
@@ -61,7 +60,6 @@ export const goNoGoApi = {
 
   update: async (id: number, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
     try {
-      console.log(`Updating GoNoGo Decision ${id}:`, JSON.stringify(data));
       const index = goNoGoDecisions.findIndex(d => d.projectId === id);
       if (index === -1) {
         throw new Error(`Go/No-Go decision for project ${id} not found`);

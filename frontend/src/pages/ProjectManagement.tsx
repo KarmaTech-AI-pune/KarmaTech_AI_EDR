@@ -24,7 +24,6 @@ export const ProjectManagement: React.FC = () => {
   const [canViewProjects, setCanViewProjects] = useState(false);
   const [canCreateProject, setCanCreateProject] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const [formError, setFormError] = useState<string | undefined>();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,7 +31,6 @@ export const ProjectManagement: React.FC = () => {
   const [projectsPerPage] = useState(5);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  console.log(formError)
   const fetchProjects = async () => {
     try {
       if (!currentUser) {
@@ -93,7 +91,6 @@ export const ProjectManagement: React.FC = () => {
   const handleCreateProject = () => {
     if (canCreateProject) {
       setIsCreatingProject(true);
-      setFormError(undefined);
     }
   };
 
@@ -119,7 +116,6 @@ export const ProjectManagement: React.FC = () => {
 
   const handleCancelProject = () => {
     setIsCreatingProject(false);
-    setFormError(undefined);
   };
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,118 +158,121 @@ export const ProjectManagement: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: 3, mt: '64px' }}>
         <Alert severity="error">{error}</Alert>
       </Box>
     );
   }
 
   return (
-    <Box
-      sx={{ 
-        p: 2,
-        bgcolor: '#ffffff',
-        borderRadius: '8px',
-        border: '1px solid #e0e0e0',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-      }}
-    >
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 3 
-      }}>
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            fontWeight: 500,
-            color: '#1a237e'
-          }}
-        >
-          Project Management
-        </Typography>
-        
-        {canCreateProject && (
-          <Button 
-            variant="contained" 
-            color="primary"
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={handleCreateProject}
+    <Box sx={{ mt: '64px' }}>  {/* Added top margin to account for fixed navbar */}
+      <Box
+        sx={{ 
+          p: 2,
+          bgcolor: '#ffffff',
+          borderRadius: '8px',
+          border: '1px solid #e0e0e0',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+          m: 2
+        }}
+      >
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 3 
+        }}>
+          <Typography 
+            variant="h6" 
             sx={{ 
-              textTransform: 'none',
-              borderRadius: 2,
-              px: 3
+              fontWeight: 500,
+              color: '#1a237e'
             }}
           >
-            Initialize Project
-          </Button>
-        )}
-      </Box>
+            Project Management
+          </Typography>
+          
+          {canCreateProject && (
+            <Button 
+              variant="contained" 
+              color="primary"
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={handleCreateProject}
+              sx={{ 
+                textTransform: 'none',
+                borderRadius: 2,
+                px: 3
+              }}
+            >
+              Initialize Project
+            </Button>
+          )}
+        </Box>
 
-      <ProjectInitializationDialog
-        open={isCreatingProject}
-        onClose={handleCancelProject}
-        onProjectCreated={handleProjectCreated}
-      />
+        <ProjectInitializationDialog
+          open={isCreatingProject}
+          onClose={handleCancelProject}
+          onProjectCreated={handleProjectCreated}
+        />
 
-      <Divider sx={{ mb: 3 }} />
+        <Divider sx={{ mb: 3 }} />
 
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 3 
-      }}>
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder="Search projects"
-          value={searchTerm}
-          onChange={handleSearch}
-          InputProps={{
-            endAdornment: (
-              <IconButton size="small">
-                <SearchIcon />
-              </IconButton>
-            ),
-            sx: { 
-              borderRadius: 2,
-              backgroundColor: 'background.paper'
-            }
-          }}
-          sx={{ 
-            width: 250,
-          }}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 3 
+        }}>
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder="Search projects"
+            value={searchTerm}
+            onChange={handleSearch}
+            InputProps={{
+              endAdornment: (
+                <IconButton size="small">
+                  <SearchIcon />
+                </IconButton>
+              ),
+              sx: { 
+                borderRadius: 2,
+                backgroundColor: 'background.paper'
+              }
+            }}
+            sx={{ 
+              width: 250,
+            }}
+          />
+        </Box>
+
+        <ProjectManagementProjectList
+          projects={currentProjects}
+          emptyMessage="No projects found"
+          onProjectDeleted={handleProjectDeleted}
+          onProjectUpdated={handleProjectUpdated}
+        />
+
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          mt: 3 
+        }}>
+          <Pagination
+            projectsPerPage={projectsPerPage}
+            totalProjects={searchFilteredProjects.length}
+            paginate={paginate}
+            currentPage={currentPage}
+          />
+        </Box>
+
+        <Snackbar
+          open={!!successMessage}
+          autoHideDuration={6000}
+          onClose={() => setSuccessMessage(null)}
+          message={successMessage}
         />
       </Box>
-
-      <ProjectManagementProjectList
-        projects={currentProjects}
-        emptyMessage="No projects found"
-        onProjectDeleted={handleProjectDeleted}
-        onProjectUpdated={handleProjectUpdated}
-      />
-
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        mt: 3 
-      }}>
-        <Pagination
-          projectsPerPage={projectsPerPage}
-          totalProjects={searchFilteredProjects.length}
-          paginate={paginate}
-          currentPage={currentPage}
-        />
-      </Box>
-
-      <Snackbar
-        open={!!successMessage}
-        autoHideDuration={6000}
-        onClose={() => setSuccessMessage(null)}
-        message={successMessage}
-      />
     </Box>
   );
 };

@@ -38,7 +38,6 @@ export const Navbar = () => {
 
       // Determine pages based on user's permissions
       const availablePages = [];
-      console.log(currentUser.roleDetails.permissions)
       // Check for Business Development permissions
       if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_BUSINESS_DEVELOPMENT)) {
         availablePages.push('Business Development');

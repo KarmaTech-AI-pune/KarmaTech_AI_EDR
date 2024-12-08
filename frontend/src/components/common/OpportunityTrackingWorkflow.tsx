@@ -32,7 +32,6 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
 
   const getWorkflowButtonText = (workflowId: number) => {
     const status = getWorkflowStatusById(workflowId)?.status;
-    console.log("WorkflowStatus",status)
     switch (status) {
       case "Initial":
       case "Review Changes":

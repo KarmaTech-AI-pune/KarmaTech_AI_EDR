@@ -37,7 +37,6 @@ export const goNoGoApi = {
 
   create: async (projectId: number, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
     try {
-      console.log(`Creating GoNoGo Decision for Project ${projectId}:`, JSON.stringify(data));
       const response = await axiosInstance.post(`GoNoGoDecision`, data);
       return response.data;
     } catch (error: any) {
@@ -53,7 +52,6 @@ export const goNoGoApi = {
 
   update: async (id: number, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
     try {
-      console.log(`Updating GoNoGo Decision ${id}:`, JSON.stringify(data));
       const response = await axiosInstance.put(`GoNoGoDecision/${id}`, data);
       return response.data;
     } catch (error: any) {
