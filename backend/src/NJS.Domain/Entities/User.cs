@@ -1,12 +1,13 @@
-﻿//File: backend/src/NJS.Domain/Entities/User.cs
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
+using System.Diagnostics.CodeAnalysis;
 
 namespace NJS.Domain.Entities
 {
     public class User: IdentityUser
-    {        
-      
-        public string Avatar { get; set; }
+    {
+
+        
+        public string? Avatar { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLogin { get; set; }
 

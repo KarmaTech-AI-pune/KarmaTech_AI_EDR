@@ -1,9 +1,10 @@
+using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 
 namespace NJS.Application.Services
 {
-    public class ProjectManagementService
+    public class ProjectManagementService: IProjectManagementService
     {
         private readonly IProjectRepository _projectRepository;
         private readonly IFeasibilityStudyRepository _feasibilityStudyRepository;

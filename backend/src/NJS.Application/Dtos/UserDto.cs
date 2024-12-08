@@ -1,9 +1,5 @@
-﻿//File: backend/src/NJS.Application/Dtos/UserDto.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NJS.Application.Dtos
 {
@@ -13,5 +9,12 @@ namespace NJS.Application.Dtos
         public string Name { get; set; }
         public string Email { get; set; }
         public string Avatar { get; set; }
+        public List<string> Roles { get; set; } = new List<string>();
+    }
+
+    public class AssignRoleModel
+    {
+        public string UserId { get; set; }
+        public string Role { get; set; }
     }
 }

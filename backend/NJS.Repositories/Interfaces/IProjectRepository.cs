@@ -1,7 +1,4 @@
-﻿//File:backend/src/NJS.Application/Interfaces/IProjectRepository.cs
-
-//File:backend/src/NJS.Application/Interfaces/IProjectRepository.cs
-using NJS.Domain.Entities;
+﻿using NJS.Domain.Entities;
 
 namespace NJS.Repositories.Interfaces
 {
