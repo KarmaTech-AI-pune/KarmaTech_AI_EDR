@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Box,
   Tab,
@@ -22,6 +22,7 @@ import {
   getInwardRows,
   getOutwardRows
 } from '../../dummyapi/correspondenceApi';
+import { projectManagementAppContext } from '../../App';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -75,16 +76,19 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const CorrespondenceForm: React.FC = () => {
+  const context = useContext(projectManagementAppContext);
   const [tabValue, setTabValue] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [inwardRows, setInwardRows] = useState<any[]>([]);
   const [outwardRows, setOutwardRows] = useState<any[]>([]);
 
   useEffect(() => {
-    const projectId = "dummy-project-id";
-    setInwardRows(getInwardRows(projectId));
-    setOutwardRows(getOutwardRows(projectId));
-  }, []);
+    if (context?.selectedProject?.id) {
+      const projectIdString = context.selectedProject.id.toString();
+      setInwardRows(getInwardRows(projectIdString));
+      setOutwardRows(getOutwardRows(projectIdString));
+    }
+  }, [context?.selectedProject?.id]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -99,8 +103,9 @@ const CorrespondenceForm: React.FC = () => {
   };
 
   const handleSave = (data: any) => {
-    const projectId = "dummy-project-id";
-    const newData = { ...data, projectId };
+    if (!context?.selectedProject?.id) return;
+
+    const newData = { ...data, projectId: context.selectedProject.id.toString() };
 
     if (tabValue === 0) {
       const newRow = createInwardRow(newData);
@@ -302,6 +307,10 @@ const CorrespondenceForm: React.FC = () => {
       </Accordion>
     ));
   };
+
+  if (!context?.selectedProject?.id) {
+    return null;
+  }
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>

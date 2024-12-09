@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Box,
   Typography,
@@ -10,93 +10,80 @@ import {
   TableHead,
   TableRow,
   Button,
-  TextField,
   IconButton
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-
-interface ChangeControlRow {
-  id: number;
-  srNo: number;
-  dateLogged: string;
-  originator: string;
-  description: string;
-  projectImpact: {
-    cost: string;
-    time: string;
-    resources: string;
-    quality: string;
-  };
-  changeOrderStatus: string;
-  clientApprovalStatus: string;
-  claimSituation: string;
-}
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import { ChangeControl } from '../../dummyapi/database/dummyChangeControl';
+import { ChangeControlDialog } from './ChangeControlcomponents/ChangeControlDialog';
+import { 
+  getChangeControlsByProjectId, 
+  createChangeControl, 
+  updateChangeControl, 
+  deleteChangeControl 
+} from '../../dummyapi/changeControlApi';
+import { projectManagementAppContext } from '../../App';
 
 const ChangeControlForm: React.FC = () => {
-  const [rows, setRows] = useState<ChangeControlRow[]>([
-    {
-      id: 1,
-      srNo: 1,
-      dateLogged: '',
-      originator: '',
-      description: '',
-      projectImpact: {
-        cost: '',
-        time: '',
-        resources: '',
-        quality: ''
-      },
-      changeOrderStatus: '',
-      clientApprovalStatus: '',
-      claimSituation: ''
+  const context = useContext(projectManagementAppContext);
+  const [rows, setRows] = useState<ChangeControl[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (context?.selectedProject?.id) {
+      // Load initial data filtered by projectId from context
+      const data = getChangeControlsByProjectId(context.selectedProject.id);
+      setRows(data);
     }
-  ]);
+  }, [context?.selectedProject?.id]);
 
-  const handleAddRow = () => {
-    const newRow: ChangeControlRow = {
-      id: rows.length + 1,
-      srNo: rows.length + 1,
-      dateLogged: '',
-      originator: '',
-      description: '',
-      projectImpact: {
-        cost: '',
-        time: '',
-        resources: '',
-        quality: ''
-      },
-      changeOrderStatus: '',
-      clientApprovalStatus: '',
-      claimSituation: ''
-    };
-    setRows([...rows, newRow]);
+  const handleOpenDialog = () => {
+    setEditingId(null);
+    setDialogOpen(true);
   };
 
-  const handleInputChange = (
-    rowId: number,
-    field: string,
-    value: string,
-    impactField?: string
-  ) => {
-    setRows(rows.map(row => {
-      if (row.id === rowId) {
-        if (impactField) {
-          return {
-            ...row,
-            projectImpact: {
-              ...row.projectImpact,
-              [impactField]: value
-            }
-          };
-        }
-        return {
-          ...row,
-          [field]: value
-        };
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setEditingId(null);
+  };
+
+  const handleSave = (data: Omit<ChangeControl, 'id' | 'projectId'>) => {
+    if (!context?.selectedProject?.id) return;
+
+    if (editingId !== null) {
+      // Update existing row
+      const updated = updateChangeControl(editingId, { ...data, projectId: context.selectedProject.id });
+      if (updated) {
+        setRows(rows.map(row => row.id === editingId ? updated : row));
       }
-      return row;
-    }));
+    } else {
+      // Create new row
+      const created = createChangeControl({ ...data, projectId: context.selectedProject.id });
+      setRows([...rows, created]);
+    }
   };
+
+  const handleEdit = (id: number) => {
+    setEditingId(id);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    const success = deleteChangeControl(id);
+    if (success) {
+      setRows(rows.filter(row => row.id !== id));
+    }
+  };
+
+  const getNextSrNo = () => {
+    return rows.length > 0 ? Math.max(...rows.map(row => row.srNo)) + 1 : 1;
+  };
+
+  if (!context?.selectedProject?.id) {
+    return null;
+  }
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -107,9 +94,9 @@ const ChangeControlForm: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={handleAddRow}
+          onClick={handleOpenDialog}
         >
-          Add Row
+          Add Change Control
         </Button>
       </Box>
       
@@ -125,6 +112,7 @@ const ChangeControlForm: React.FC = () => {
               <TableCell>Change Order Status</TableCell>
               <TableCell>Client Approval Status</TableCell>
               <TableCell>Claim Situation?</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
             <TableRow>
               <TableCell />
@@ -138,99 +126,51 @@ const ChangeControlForm: React.FC = () => {
               <TableCell />
               <TableCell />
               <TableCell />
+              <TableCell />
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row) => (
               <TableRow key={row.id}>
                 <TableCell>{row.srNo}</TableCell>
+                <TableCell>{row.dateLogged}</TableCell>
+                <TableCell>{row.originator}</TableCell>
+                <TableCell>{row.description}</TableCell>
+                <TableCell>{row.costImpact}</TableCell>
+                <TableCell>{row.timeImpact}</TableCell>
+                <TableCell>{row.resourcesImpact}</TableCell>
+                <TableCell>{row.qualityImpact}</TableCell>
+                <TableCell>{row.changeOrderStatus}</TableCell>
+                <TableCell>{row.clientApprovalStatus}</TableCell>
+                <TableCell>{row.claimSituation}</TableCell>
                 <TableCell>
-                  <TextField
-                    type="date"
-                    size="small"
-                    value={row.dateLogged}
-                    onChange={(e) => handleInputChange(row.id, 'dateLogged', e.target.value)}
-                    fullWidth
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    value={row.originator}
-                    onChange={(e) => handleInputChange(row.id, 'originator', e.target.value)}
-                    fullWidth
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    value={row.description}
-                    onChange={(e) => handleInputChange(row.id, 'description', e.target.value)}
-                    fullWidth
-                    multiline
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    value={row.projectImpact.cost}
-                    onChange={(e) => handleInputChange(row.id, 'projectImpact', e.target.value, 'cost')}
-                    fullWidth
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    value={row.projectImpact.time}
-                    onChange={(e) => handleInputChange(row.id, 'projectImpact', e.target.value, 'time')}
-                    fullWidth
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    value={row.projectImpact.resources}
-                    onChange={(e) => handleInputChange(row.id, 'projectImpact', e.target.value, 'resources')}
-                    fullWidth
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    value={row.projectImpact.quality}
-                    onChange={(e) => handleInputChange(row.id, 'projectImpact', e.target.value, 'quality')}
-                    fullWidth
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    value={row.changeOrderStatus}
-                    onChange={(e) => handleInputChange(row.id, 'changeOrderStatus', e.target.value)}
-                    fullWidth
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    value={row.clientApprovalStatus}
-                    onChange={(e) => handleInputChange(row.id, 'clientApprovalStatus', e.target.value)}
-                    fullWidth
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    value={row.claimSituation}
-                    onChange={(e) => handleInputChange(row.id, 'claimSituation', e.target.value)}
-                    fullWidth
-                  />
+                  <IconButton 
+                    size="small" 
+                    onClick={() => handleEdit(row.id)}
+                    sx={{ mr: 1 }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton 
+                    size="small" 
+                    onClick={() => handleDelete(row.id)}
+                    color="error"
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <ChangeControlDialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        onSave={handleSave}
+        nextSrNo={getNextSrNo()}
+      />
     </Paper>
   );
 };

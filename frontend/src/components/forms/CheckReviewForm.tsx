@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Paper,
   Button,
@@ -26,6 +26,7 @@ import {
   getCheckReviewsByProject, 
   deleteCheckReview,
 } from '../../dummyapi/checkReviewApi';
+import { projectManagementAppContext } from '../../App';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -38,20 +39,22 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
 }));
 
 const CheckReviewForm: React.FC = () => {
+  const context = useContext(projectManagementAppContext);
   const [rows, setRows] = useState<ICheckReviewRow[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string>('');
-  
-  // TODO: Replace with actual project ID from context/props
-  const projectId = "project1";
 
   useEffect(() => {
-    loadReviews();
-  }, []);
+    if (context?.selectedProject?.id) {
+      loadReviews();
+    }
+  }, [context?.selectedProject?.id]);
 
   const loadReviews = () => {
+    if (!context?.selectedProject?.id) return;
+    
     try {
-      const reviews = getCheckReviewsByProject(projectId);
+      const reviews = getCheckReviewsByProject(context.selectedProject.id.toString());
       setRows(reviews);
       setError('');
     } catch (err) {
@@ -66,10 +69,12 @@ const CheckReviewForm: React.FC = () => {
   };
 
   const handleAddReview = (reviewData: Omit<ICheckReviewRow, 'projectId' | 'activityNo'>) => {
+    if (!context?.selectedProject?.id) return;
+
     try {
       const newReview: ICheckReviewRow = {
         ...reviewData,
-        projectId,
+        projectId: context.selectedProject.id.toString(),
         activityNo: getNextActivityNo()
       };
       createCheckReview(newReview);
@@ -81,8 +86,10 @@ const CheckReviewForm: React.FC = () => {
   };
 
   const handleDeleteReview = (activityNo: string) => {
+    if (!context?.selectedProject?.id) return;
+
     try {
-      deleteCheckReview(projectId, activityNo);
+      deleteCheckReview(context.selectedProject.id.toString(), activityNo);
       loadReviews();
       setError('');
     } catch (err) {
@@ -113,6 +120,10 @@ const CheckReviewForm: React.FC = () => {
       }}
     />
   );
+
+  if (!context?.selectedProject?.id) {
+    return null;
+  }
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
