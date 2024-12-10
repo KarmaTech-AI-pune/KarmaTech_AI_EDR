@@ -1,4 +1,5 @@
-import { screensArrayType, projectManagementAppContextType, User, Project, GoNoGoDecision, OpportunityTracking, UserWithRole  } from './types'
+import { screensArrayType, projectManagementAppContextType, User, UserWithRole  } from './types'
+import { Project, GoNoGoDecision, OpportunityTracking,} from "./models"
 import { createContext, useState, useEffect } from 'react'
 import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails } from './pages'
 import { Navbar } from './components/navigation/Navbar'

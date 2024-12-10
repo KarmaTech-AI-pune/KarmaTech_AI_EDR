@@ -13,7 +13,7 @@ import {
   styled
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { ChangeControl } from '../../../dummyapi/database/dummyChangeControl';
+import { ChangeControl } from "../../../models";
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {

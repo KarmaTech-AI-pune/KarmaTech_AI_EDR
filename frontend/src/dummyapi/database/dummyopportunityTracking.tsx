@@ -1,4 +1,4 @@
-import { OpportunityTracking } from "../../types/index";
+import { OpportunityTracking } from "../../models"
 
 export enum WorkflowStatus {
   Initial = "Initial",

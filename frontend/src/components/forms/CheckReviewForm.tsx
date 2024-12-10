@@ -20,7 +20,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { CheckReviewDialog } from './CheckReviewcomponents/CheckReviewDialog';
-import { ICheckReviewRow } from '../../dummyapi/database/dummyCheckReview';
+import { CheckReviewRow } from "../../models";
 import { 
   createCheckReview, 
   getCheckReviewsByProject, 
@@ -40,7 +40,7 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
 
 const CheckReviewForm: React.FC = () => {
   const context = useContext(projectManagementAppContext);
-  const [rows, setRows] = useState<ICheckReviewRow[]>([]);
+  const [rows, setRows] = useState<CheckReviewRow[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string>('');
 
@@ -68,11 +68,11 @@ const CheckReviewForm: React.FC = () => {
     return (maxNo + 1).toString();
   };
 
-  const handleAddReview = (reviewData: Omit<ICheckReviewRow, 'projectId' | 'activityNo'>) => {
+  const handleAddReview = (reviewData: Omit<CheckReviewRow, 'projectId' | 'activityNo'>) => {
     if (!context?.selectedProject?.id) return;
 
     try {
-      const newReview: ICheckReviewRow = {
+      const newReview: CheckReviewRow = {
         ...reviewData,
         projectId: context.selectedProject.id.toString(),
         activityNo: getNextActivityNo()

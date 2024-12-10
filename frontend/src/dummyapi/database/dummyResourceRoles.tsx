@@ -1,21 +1,7 @@
-// Role type definition
-export type resourceRole = {
-    id: number;
-    name: string;
-    min_rate: number;
-    description: string;
-};
+import { resourceRole, Employee } from "../../models";
 
 // Employee type definition
-export type Employee = {
-    id: number;
-    name: string;
-    email: string;
-    role_id: number;
-    standard_rate: number;
-    is_consultant: boolean;
-    is_active: boolean;
-};
+
 
 // Resource Roles table
 export const resourceRoles: resourceRole[] = [

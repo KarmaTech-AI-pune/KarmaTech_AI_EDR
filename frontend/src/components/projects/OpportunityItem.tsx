@@ -24,7 +24,8 @@ import {
   Person,
   WorkHistory,
 } from '@mui/icons-material';
-import { OpportunityItemProps, OpportunityTracking, UserWithRole } from '../../types';
+import { OpportunityItemProps, UserWithRole } from '../../types';
+import { OpportunityTracking } from '../../models';
 import { useState, useContext, useEffect } from 'react';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { OpportunityForm } from '../forms/OpportunityForm';

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Typography, Paper, Grid, Button, Alert } from '@mui/material';
 import { CheckCircle, Cancel } from '@mui/icons-material';
-import { Project} from '../../types';
+import { Project} from '../../models';
 //import { updateProjectStatus } from '../../services/api';
 
 interface DecisionWidgetProps {

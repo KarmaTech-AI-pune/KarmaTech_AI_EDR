@@ -1,4 +1,4 @@
-import { Project} from "../../types/index"
+import { Project} from "../../models"
 
 const projectsData = {
   "1":{

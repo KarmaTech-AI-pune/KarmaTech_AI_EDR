@@ -20,7 +20,8 @@ import { DateField } from '@mui/x-date-pickers/DateField';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
-import { OpportunityTracking, projectManagementAppContextType } from '../../types';
+import {projectManagementAppContextType } from '../../types';
+import { OpportunityTracking} from "../../models";
 import { getUsersByRole, UserRole } from '../../dummyapi/database/dummyusers';
 
 interface OpportunityFormProps {

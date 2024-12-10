@@ -23,8 +23,6 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { 
-  IProjectClosureRow, 
-  IProjectClosureComment,
   projectClosureLabels 
 } from '../../dummyapi/database/dummyProjectClosure';
 import { 
@@ -33,7 +31,7 @@ import {
   getProjectClosureById
 } from '../../dummyapi/projectClosureApi';
 import { projectManagementAppContext } from '../../App';
-import { Project } from '../../types';
+import { ProjectClosureRow, ProjectClosureComment,Project } from "../../models";
 
 interface ProjectClosureFormProps {
   onSubmit?: () => void;
@@ -60,7 +58,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     });
   };
 
-  const [formData, setFormData] = useState<IProjectClosureRow>({
+  const [formData, setFormData] = useState<ProjectClosureRow>({
     projectId: '',
     // Initialize all fields with empty strings
     clientFeedback: '',
@@ -143,7 +141,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     constructionOther: ''
   });
 
-  const [comments, setComments] = useState<IProjectClosureComment[]>([]);
+  const [comments, setComments] = useState<ProjectClosureComment[]>([]);
 
   useEffect(() => {
     if (selectedProject) {
@@ -161,7 +159,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     }
   }, [selectedProject]);
 
-  const handleInputChange = (field: keyof IProjectClosureRow) => (
+  const handleInputChange = (field: keyof ProjectClosureRow) => (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setFormData(prev => ({
@@ -210,8 +208,8 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     <TextField
       fullWidth
       label={projectClosureLabels[field]}
-      value={formData[field as keyof IProjectClosureRow] || ''}
-      onChange={handleInputChange(field as keyof IProjectClosureRow)}
+      value={formData[field as keyof ProjectClosureRow] || ''}
+      onChange={handleInputChange(field as keyof ProjectClosureRow)}
       margin="normal"
       multiline={multiline}
       rows={multiline ? 3 : 1}
@@ -236,7 +234,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     textField: string,
     label: string
   ) => {
-    const isChecked = formData[valueField as keyof IProjectClosureRow] as boolean;
+    const isChecked = formData[valueField as keyof ProjectClosureRow] as boolean;
     
     return (
       <Box 
@@ -288,8 +286,8 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
           multiline
           rows={3}
           placeholder="Add details here..."
-          value={formData[textField as keyof IProjectClosureRow]}
-          onChange={handleInputChange(textField as keyof IProjectClosureRow)}
+          value={formData[textField as keyof ProjectClosureRow]}
+          onChange={handleInputChange(textField as keyof ProjectClosureRow)}
           variant="outlined"
           sx={{
             '& .MuiOutlinedInput-root': { 

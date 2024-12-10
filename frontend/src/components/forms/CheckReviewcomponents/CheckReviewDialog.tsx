@@ -15,7 +15,7 @@ import {
   styled
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { ICheckReviewRow } from '../../../dummyapi/database/dummyCheckReview';
+import { CheckReviewRow } from "../../../models";
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
@@ -40,12 +40,12 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
 interface CheckReviewDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: Omit<ICheckReviewRow, 'projectId' | 'activityNo'>) => void;
+  onSave: (data: Omit<CheckReviewRow, 'projectId' | 'activityNo'>) => void;
   nextActivityNo: string;
 }
 
 export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: CheckReviewDialogProps) => {
-  const [formData, setFormData] = useState<Omit<ICheckReviewRow, 'projectId' | 'activityNo'>>({
+  const [formData, setFormData] = useState<Omit<CheckReviewRow, 'projectId' | 'activityNo'>>({
     activityName: '',
     objective: '',
     references: '',
@@ -57,7 +57,7 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
     actionTaken: ''
   });
 
-  const handleChange = (field: keyof Omit<ICheckReviewRow, 'projectId' | 'activityNo'>) => 
+  const handleChange = (field: keyof Omit<CheckReviewRow, 'projectId' | 'activityNo'>) => 
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setFormData({
         ...formData,

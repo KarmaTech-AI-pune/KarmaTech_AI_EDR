@@ -1,4 +1,4 @@
-import { OpportunityTracking } from '../types';
+import { OpportunityTracking } from '../models';
 import { axiosInstance } from './axiosConfig';
 
 export const opportunityApi = {

@@ -1,4 +1,4 @@
-import { OpportunityHistory } from "../../types/index";
+import { OpportunityHistory } from "../../models";
 
 // Raw history data
 const historyRawData = {

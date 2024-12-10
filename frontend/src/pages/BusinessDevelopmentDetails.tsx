@@ -3,7 +3,7 @@ import { Container, Typography, Box } from '@mui/material';
 import { projectManagementAppContext } from '../App';
 import { BusinessDevelopmentWidget } from '../components/widgets/BusinessDevelopmentWidget';
 import { HistoryWidget } from '../components/widgets/HistoryWidget';
-import { OpportunityTracking } from '../types';
+import { OpportunityTracking } from '../models';
 import { getHistoriesByOpportunityId } from '../dummyapi/database/dummyOpportunityHistory';
 import { OpportunityTrackingWorkflow } from '../components/common/OpportunityTrackingWorkflow';
 import { BDChips } from '../components/common/BDChips';

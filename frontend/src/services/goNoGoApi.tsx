@@ -1,4 +1,4 @@
-import { GoNoGoDecision } from '../types';
+import { GoNoGoDecision } from '../models';
 import { axiosInstance } from './axiosConfig';
 
 export const goNoGoApi = {

@@ -1,5 +1,5 @@
 import { workflowData } from './database/dummyOpporunityWorkflow';
-import type { WorkflowEntry } from './database/dummyOpporunityWorkflow';
+import type { WorkflowEntry } from '../models';
 import { opportunityApi } from './opportunityApi';
 import { getOpportunityById } from './database/dummyopportunityTracking';
 

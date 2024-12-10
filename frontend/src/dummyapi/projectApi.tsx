@@ -1,4 +1,4 @@
-import { Project } from '../types';
+import { Project } from '../models';
 import { 
   projects,
   getProjectById as findProjectById,

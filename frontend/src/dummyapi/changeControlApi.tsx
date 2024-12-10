@@ -1,4 +1,4 @@
-import { ChangeControl } from './database/dummyChangeControl';
+import { ChangeControl } from '../models';
 import { dummyChangeControl } from './database/dummyChangeControl';
 
 // Mutable array to store change control data

@@ -1,6 +1,6 @@
-import { InwardRow, OutwardRow, dummyInwardRows, dummyOutwardRows } from './database/dummyCorrespondence';
+import {dummyInwardRows, dummyOutwardRows } from './database/dummyCorrespondence';
 import { v4 as uuidv4 } from 'uuid';
-
+import { InwardRow, OutwardRow,} from '../models';
 // Inward Correspondence CRUD operations
 export const createInwardRow = (data: Omit<InwardRow, 'id'>): InwardRow => {
     const newRow: InwardRow = {

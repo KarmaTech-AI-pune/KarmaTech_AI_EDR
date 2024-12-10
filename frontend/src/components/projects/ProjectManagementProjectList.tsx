@@ -5,7 +5,8 @@ import {
   Box,
 } from '@mui/material';
 import { ProjectItem } from './ProjectItem';
-import { Project, ProjectStatus } from '../../types';
+import { ProjectStatus } from '../../types';
+import { Project} from '../../models';
 import { ProjectInitializationDialog } from '../dialogbox/ProjectInitializationDialog';
 
 export interface ProjectManagementProjectListProps {

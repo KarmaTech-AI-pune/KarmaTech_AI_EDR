@@ -1,4 +1,4 @@
-import { GoNoGoDecision } from '../types';
+import { GoNoGoDecision } from '../models';
 import { goNoGoDecisions, getGoNoGoByProjectId } from './database/dummygoNoGo';
 
 export const goNoGoApi = {

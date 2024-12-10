@@ -4,7 +4,7 @@ import { DecideApproval, DecideReview, SendForReview, SendForApproval } from '..
 import { useState, useContext} from 'react';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { projectManagementAppContext } from '../../App';
-import { OpportunityTracking } from '../../types';
+import { OpportunityTracking } from "../../models";
 
 type OTWProps = {
   onOpportunityUpdated?: (() => void) | undefined;

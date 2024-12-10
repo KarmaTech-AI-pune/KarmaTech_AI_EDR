@@ -1,35 +1,4 @@
-export interface InwardRow {
-    id: string;
-    projectId: string;
-    srNo: number;
-    incomingLetterNo: string;
-    letterDate: string;
-    njsInwardNo: string;
-    receiptDate: string;
-    from: string;
-    subject: string;
-    attachmentDetails: string;
-    actionTaken: string;
-    storagePath: string;
-    remarks: string;
-    repliedDate: string;
-}
-
-export interface OutwardRow {
-    id: string;
-    projectId: string;
-    srNo: number;
-    letterNo: string;
-    letterDate: string;
-    to: string;
-    subject: string;
-    attachmentDetails: string;
-    actionTaken: string;
-    storagePath: string;
-    remarks: string;
-    acknowledgement: string;
-}
-
+import { InwardRow, OutwardRow } from "../../models";
 export const dummyInwardRows: InwardRow[] = [
     {
         id: "IN001",

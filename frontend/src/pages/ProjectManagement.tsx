@@ -16,7 +16,8 @@ import {ProjectInitializationDialog}  from '../components/dialogbox/ProjectIniti
 import { Pagination } from '../components/Pagination';
 import { authApi } from '../dummyapi/authApi';
 import { projectApi } from '../dummyapi/projectApi';
-import { Project, UserWithRole } from '../types';
+import { UserWithRole } from '../types';
+import { Project} from '../models';
 import { PermissionType } from '../dummyapi/database/dummyRoles';
 
 export const ProjectManagement: React.FC = () => {

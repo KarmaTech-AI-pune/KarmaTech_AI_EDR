@@ -1,4 +1,4 @@
-import { OpportunityTracking } from '../types';
+import { OpportunityTracking } from '../models';
 import { opportunityTrackings } from './database/dummyopportunityTracking';
 import { workflowStatuses } from './database/dummyOpporunityWorkflow';
 

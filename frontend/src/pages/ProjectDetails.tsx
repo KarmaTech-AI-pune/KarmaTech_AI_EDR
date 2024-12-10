@@ -31,7 +31,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Project, OpportunityTracking } from '../types';
+import { Project, OpportunityTracking } from '../models';
 import { projectManagementAppContext } from '../App';
 
 // Import all forms from index

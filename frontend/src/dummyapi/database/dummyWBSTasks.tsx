@@ -1,40 +1,9 @@
 // WBS Task Type Definition
-export interface WBSTask {
-    id: number;
-    project_id: number; //links to ID in dummyProjects
-    parent_id: number | null; //links to a WBSTask parent
-    level: number;
-    title: string;
-    created_at: Date;
-    updated_at: Date;
-    resource_allocation?: number;
-}
+import { WBSTask, WBSTaskResourceAllocation, MonthlyHour } from "../../models";
 
 // WBS Task Resource Allocation Type Definition
-export interface WBSTaskResourceAllocation {
-    id: number;
-    wbs_task_id: number;
-    role_id: number | null; 
-    employee_id: number | null;
-    cost_rate: number;
-    odc: number;
-    total_hours?: number;
-    total_cost?: number;
-    created_at: Date;
-    updated_at: Date;
-    employee?: any;
-}
 
-export interface MonthlyHour {
-  id: number;
-  task_id: number;
-  year: string;
-  month: string;
-  planned_hours: number;
-  actual_hours?: number;
-  created_at: Date;
-  updated_at: Date;
-}
+
 
 // Empty WBS Tasks array with the new schema
 export const wbsTasks: WBSTask[] = [{

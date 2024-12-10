@@ -1,4 +1,4 @@
-import { Project } from '../types';
+import { Project } from '../models';
 import { axiosInstance } from './axiosConfig';
 
 export const projectApi = {

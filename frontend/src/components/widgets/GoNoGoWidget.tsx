@@ -16,7 +16,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { goNoGoApi } from '../../dummyapi/api';
-import { Project, GoNoGoDecision, GoNoGoStatus} from '../../types';
+import { Project, GoNoGoDecision, GoNoGoStatus} from '../../models';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../dummyapi/database/dummyRoles';

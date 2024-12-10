@@ -1,4 +1,4 @@
-import { OpportunityHistory } from "../types";
+import { OpportunityHistory } from '../models';
 import { opportunityHistories, getHistoriesByOpportunityId } from "./database/dummyOpportunityHistory";
 
 // Get all history entries

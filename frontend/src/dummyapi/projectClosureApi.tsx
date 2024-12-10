@@ -1,4 +1,5 @@
-import { dummyProjectClosures, dummyProjectClosureComments, IProjectClosureRow, IProjectClosureComment } from './database/dummyProjectClosure';
+import { dummyProjectClosures, dummyProjectClosureComments,} from './database/dummyProjectClosure';
+import { ProjectClosureRow, ProjectClosureComment } from "../models";
 import { v4 as uuidv4 } from 'uuid';
 
 // Mutable arrays to store project closure data
@@ -6,8 +7,8 @@ let projectClosures = [...dummyProjectClosures];
 let projectClosureComments = [...dummyProjectClosureComments];
 
 // Type for project closure with its comments
-interface ProjectClosureWithComments extends IProjectClosureRow {
-    comments: IProjectClosureComment[];
+interface ProjectClosureWithComments extends ProjectClosureRow {
+    comments: ProjectClosureComment[];
 }
 
 // Project Closure Operations
@@ -28,7 +29,7 @@ export const getProjectClosureById = (projectId: string): ProjectClosureWithComm
     };
 };
 
-export const createProjectClosure = (closure: IProjectClosureRow, comments: Omit<IProjectClosureComment, 'id'>[] = []) => {
+export const createProjectClosure = (closure: ProjectClosureRow, comments: Omit<ProjectClosureComment, 'id'>[] = []) => {
     if (projectClosures.some(pc => pc.projectId === closure.projectId)) {
         throw new Error('Project closure already exists for this project');
     }
@@ -49,8 +50,8 @@ export const createProjectClosure = (closure: IProjectClosureRow, comments: Omit
 
 export const updateProjectClosure = (
     projectId: string, 
-    updates: Partial<IProjectClosureRow>,
-    newComments: IProjectClosureComment[]
+    updates: Partial<ProjectClosureRow>,
+    newComments: ProjectClosureComment[]
 ) => {
     const index = projectClosures.findIndex(closure => closure.projectId === projectId);
     if (index === -1) {

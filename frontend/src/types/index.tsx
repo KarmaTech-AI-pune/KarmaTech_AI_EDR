@@ -1,6 +1,6 @@
 // File: frontend/src/types/index.ts
 // Purpose: typescript types
-
+import { Project, OpportunityTracking, GoNoGoDecision } from '../models';
 import { UserRole } from '../dummyapi/database/dummyusers';
 import { PermissionType } from '../dummyapi/database/dummyRoles';
 
@@ -65,28 +65,7 @@ export enum ProjectStatus {
   'Completed' = 7
 }
 
-export type Project = {
-  id: number;
-  name: string;
-  details?: string;
-  clientName: string;
-  projectMangerId: number;
-  office?: string;
-  projectNo: string;
-  typeOfJob?: string;
-  seniorProjectMangerId: number;
-  sector?: string;
-  region?: string;
-  typeOfClient?: string;
-  estimatedCost: number;
-  feeType?: string;
-  startDate?: string;
-  endDate?: string;
-  currency: string;
-  budget?: number;
-  priority?: string;
-  regionalManagerID: number;
-}
+
 
 export type ProjectFormData = Omit<Project, 'id'>;
 
@@ -114,40 +93,6 @@ export type LoginResponse = {
   user?: UserWithRole;
 }
 
-export type OpportunityTracking = {
-  id: number;
-  projectId: number | null;  // Modified to allow null
-  stage: string;
-  strategicRanking: string;
-  bidFees?: number;
-  emd?: number;
-  formOfEMD?: string;
-  bidManagerId: number;
-  reviewManagerId?: number; // New field for Vice President BD
-  approvalManagerId?: number; // New field for Regional Manager
-  contactPersonAtClient?: string;
-  dateOfSubmission?: string;
-  percentageChanceOfProjectHappening?: number;
-  percentageChanceOfNJSSuccess?: number;
-  likelyCompetition?: string;
-  grossRevenue?: number;
-  netNJSRevenue?: number;
-  followUpComments?: string;
-  notes?: string;
-  probableQualifyingCriteria?: string;
-  operation: string;
-  workName: string;
-  client: string;
-  clientSector: string;
-  likelyStartDate: string;
-  status: string;
-  currency: string;
-  capitalValue: number;
-  durationOfProject: number;
-  fundingStream: string;
-  contractType: string;
-  workflowId: number; // Changed from workflowStatus to workflowId
-}
 
 export type OpportunityItemProps = {
   opportunity: OpportunityTracking;
@@ -162,76 +107,6 @@ export type OpportunityFormProps = {
   onSubmit: (data: OpportunityFormData) => void;
   onCancel?: () => void;
 };
-
-export type OpportunityHistory = {
-  id: number;
-  opportunityId: number;
-  date: string;
-  description: string;
-}
-
-export enum GoNoGoStatus {
-  'Green' = 0,
-  'Amber' = 1,
-  'Red' = 2
-}
-
-export interface GoNoGoDecision {
-  projectId: number;
-  bidType: string;
-  sector: string;
-  tenderFee: number;
-  emdAmount: number;
-  // Removed submissionMode
-
-  // Rest of the interface remains the same
-  marketingPlanScore: number;
-  marketingPlanComments: string;
-  clientRelationshipScore: number;
-  clientRelationshipComments: string;
-  projectKnowledgeScore: number;
-  projectKnowledgeComments: string;
-  technicalEligibilityScore: number;
-  technicalEligibilityComments: string;
-  financialEligibilityScore: number;
-  financialEligibilityComments: string;
-  staffAvailabilityScore: number;
-  staffAvailabilityComments: string;
-  competitionAssessmentScore: number;
-  competitionAssessmentComments: string;
-  competitivePositionScore: number;
-  competitivePositionComments: string;
-  futureWorkPotentialScore: number;
-  futureWorkPotentialComments: string;
-  profitabilityScore: number;
-  profitabilityComments: string;
-  resourceAvailabilityScore: number;
-  resourceAvailabilityComments: string;
-  bidScheduleScore: number;
-  bidScheduleComments: string;
-
-  // Total Score and Decision
-  totalScore: number;
-  status: GoNoGoStatus;
-  decisionComments: string;
-
-  // Approval Information
-  completedDate: string;
-  completedBy: string;
-  reviewedDate?: string;
-  reviewedBy?: string;
-  approvedDate?: string;
-  approvedBy?: string;
-
-  // Action Plan
-  actionPlan?: string;
-
-  // Audit Fields
-  createdAt: string;
-  createdBy: string;
-  lastModifiedAt?: string;
-  lastModifiedBy?: string;
-}
 
 // Optional: Create a type for creating a new Go/No-Go decision
 export type CreateGoNoGoDecisionDto = Omit<GoNoGoDecision, 'id'> & { id?: number };

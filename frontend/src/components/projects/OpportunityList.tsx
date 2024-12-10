@@ -1,6 +1,6 @@
 import React from 'react';
 import { OpportunityItem } from './OpportunityItem';
-import { OpportunityTracking } from '../../types';
+import { OpportunityTracking } from '../../models';
 
 interface OpportunityListProps {
   opportunities: OpportunityTracking[];

@@ -20,7 +20,8 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
-import { Project, GoNoGoStatus, projectManagementAppContextType } from '../../types';
+import {projectManagementAppContextType } from '../../types';
+import { Project, GoNoGoStatus} from "../../models";
 import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
 

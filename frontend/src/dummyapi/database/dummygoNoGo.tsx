@@ -1,4 +1,4 @@
-import { GoNoGoDecision, GoNoGoStatus } from "../../types/index";
+import { GoNoGoDecision, GoNoGoStatus } from "../../models"
 // Raw Go/No-Go data
 const goNoGoRawData ={
   "1": {

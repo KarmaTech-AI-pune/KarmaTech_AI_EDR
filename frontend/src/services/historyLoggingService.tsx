@@ -1,5 +1,5 @@
 import { addOpportunityHistory } from '../dummyapi/dummyOpportunityHistoryApi';
-import { OpportunityHistory } from '../types';
+import { OpportunityHistory } from '../models';
 
 export class HistoryLoggingService {
     private static formatDate(): string {

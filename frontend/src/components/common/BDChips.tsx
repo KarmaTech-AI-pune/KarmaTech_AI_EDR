@@ -1,7 +1,7 @@
 import { Box, Chip } from '@mui/material';
 import { CheckCircle, PendingOutlined } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
-import { WorkflowEntry } from '../../dummyapi/database/dummyOpporunityWorkflow';
+import { WorkflowEntry } from "../../models";
 import { getWorkflowByOpportunityId } from '../../dummyapi/opportunityWorkflowApi';
 
 type BDChipsProps = {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Drawer, Button, List, ListItem, ListItemText, Typography, Box } from '@mui/material';
 import HistoryIcon from '@mui/icons-material/History';
-import { OpportunityHistory } from '../../types';
+import { OpportunityHistory } from '../../models';
 
 interface HistoryWidgetProps {
   histories: OpportunityHistory[];

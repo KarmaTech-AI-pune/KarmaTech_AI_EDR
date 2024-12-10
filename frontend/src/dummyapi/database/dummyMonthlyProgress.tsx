@@ -1,4 +1,4 @@
-// Monthly Progress table with foreign key to projects
+/*
 export const monthlyProgress = [
     {
         id: 1,
@@ -131,3 +131,4 @@ export const projectFinancials = [
         ]
     }
 ];
+*/

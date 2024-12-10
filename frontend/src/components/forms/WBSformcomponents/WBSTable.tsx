@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import WBSRow from './WBSRow';
-import { resourceRole as ResourceRole, Employee } from '../../../dummyapi/database/dummyResourceRoles';
+import { resourceRole as ResourceRole, Employee } from  "../../../models";
 import { WBSRowData, WBSOption } from '../../../types/wbs';
 const HeaderCell = styled(TableCell)(({ theme }) => ({
   textAlign: 'center',

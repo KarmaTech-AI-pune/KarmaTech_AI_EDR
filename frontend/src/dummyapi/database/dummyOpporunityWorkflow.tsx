@@ -1,7 +1,4 @@
-export interface WorkflowStatus {
-    id: number;
-    status: string;
-}
+import { WorkflowEntry,WorkflowStatus } from "../../models";
 
 export const workflowStatuses: WorkflowStatus[] = [
     {
@@ -29,15 +26,6 @@ export const workflowStatuses: WorkflowStatus[] = [
         status: "Approved"
     }
 ];
-
-export interface WorkflowEntry {
-    id: number;
-    opportunityId: number;
-    formStage: 'opportunityTracking' | 'goNoGo' | 'bidPreparation' | 'bidSubmitted' | 'bidAccepted' | 'bidRejected';
-    workflowId: number; // Changed from workflowStatus to workflowId
-    createdAt: string;
-    updatedAt: string;
-}
 
 // Initial dummy data
 export const workflowData: WorkflowEntry[] = [

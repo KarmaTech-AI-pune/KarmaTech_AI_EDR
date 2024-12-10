@@ -1,5 +1,5 @@
-import { InputRegisterRow, dummyInputRegister } from './database/dummyInputRegister';
-
+import { dummyInputRegister } from './database/dummyInputRegister';
+import { InputRegisterRow} from '../models';
 // Mutable array to store input register entries
 let inputRegisterData = [...dummyInputRegister];
 

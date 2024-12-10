@@ -17,7 +17,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { ChangeControl } from '../../dummyapi/database/dummyChangeControl';
+import { ChangeControl } from  "../../models";
 import { ChangeControlDialog } from './ChangeControlcomponents/ChangeControlDialog';
 import { 
   getChangeControlsByProjectId, 
