@@ -1,30 +1,11 @@
 ﻿using MediatR;
-using NJS.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NJS.Application.Dtos;
 
 namespace NJS.Application.CQRS.Projects.Commands
 {
-    public class UpdateProjectCommand : IRequest<bool>
+    public record UpdateProjectCommand : IRequest<Unit>
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string ClientName { get; set; }
-        public string ClientSector { get; set; }
-        public string Sector { get; set; }
-        public decimal EstimatedCost { get; set; }
-        public decimal? CapitalValue { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public ProjectStatus Status { get; set; }
-        public int Progress { get; set; }
-        public int? DurationInMonths { get; set; }
-        public string FundingStream { get; set; }
-        public string ContractType { get; set; }
-        public string Currency { get; set; }
-        public string LastModifiedBy { get; set; }
+        public int Id { get; init; }
+        public ProjectDto ProjectDto { get; init; }
     }
 }
