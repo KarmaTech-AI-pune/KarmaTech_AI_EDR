@@ -13,11 +13,10 @@ import {
   FormHelperText,
   Backdrop
 } from '@mui/material';
-import { UserRole } from '../../dummyapi/database/dummyusers';
 import { getUsersByRole, getUserById } from '../../dummyapi/database/dummyusers';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
-import { AuthUser } from '../../dummyapi/database/dummyusers';
+import { UserRole, AuthUser} from '../../models'
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 
 interface SendForApprovalProps {

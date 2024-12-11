@@ -1,5 +1,5 @@
-import { UserRole } from './database/dummyusers';
-import { ROLES, PermissionType, RoleDefinition, hasPermission, getRolePermissions, getRoleDefinition } from './database/dummyRoles';
+import { UserRole , PermissionType, RoleDefinition} from '../models';
+import { ROLES, hasPermission, getRolePermissions, getRoleDefinition } from './database/dummyRoles';
 
 export const rolesApi = {
   getAllRoles: (): RoleDefinition[] => {

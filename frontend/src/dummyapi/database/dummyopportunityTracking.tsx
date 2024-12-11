@@ -1,5 +1,5 @@
 import { OpportunityTracking } from "../../models"
-
+/*
 export enum WorkflowStatus {
   Initial = "Initial",
   SentForReview = "Sent for Review",
@@ -8,7 +8,7 @@ export enum WorkflowStatus {
   ApprovalChanges = "Approval Changes",
   Approved = "Approved"
 }
-
+*/
 // Raw opportunity tracking data
 const opportunityTrackingRawData =  {
   "1":{

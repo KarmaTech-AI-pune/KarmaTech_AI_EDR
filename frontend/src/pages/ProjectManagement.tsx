@@ -18,7 +18,7 @@ import { authApi } from '../dummyapi/authApi';
 import { projectApi } from '../dummyapi/projectApi';
 import { UserWithRole } from '../types';
 import { Project} from '../models';
-import { PermissionType } from '../dummyapi/database/dummyRoles';
+import { PermissionType } from '../models';
 
 export const ProjectManagement: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);

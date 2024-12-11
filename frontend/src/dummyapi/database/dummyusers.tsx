@@ -1,24 +1,5 @@
-import { User } from '../../types';
-
-// Expanded Role enum to include more specific roles
-export enum UserRole {
-  Admin = 'Admin', //Admin
-  ProjectManager = 'Project Manager', //PM
-  SeniorProjectManager = 'Senior Project Manager', //SPM
-  RegionalManager = 'Regional Manager', //RM
-  BusinessDevelopmentManager = 'Business Development Manager', //BDM
-  RegionalDirector = 'Regional Director',
-  SubjectMatterExpert = 'Subject Matter Expert',
-}
-
-// Extend the User type to include auth-related fields
-export interface AuthUser extends User {
-  username: string;
-  password: string; // Note: In a real app, passwords should be hashed
-  role: UserRole;
-}
-
-// Raw users data
+import { AuthUser } from "../../models";
+import { UserRole } from "../../models";
 const usersRawData = {
   "1" : {
     "name": "Admin User",

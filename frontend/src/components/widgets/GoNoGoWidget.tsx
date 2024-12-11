@@ -19,7 +19,7 @@ import { goNoGoApi } from '../../dummyapi/api';
 import { Project, GoNoGoDecision, GoNoGoStatus} from '../../models';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
-import { PermissionType } from '../../dummyapi/database/dummyRoles';
+import { PermissionType } from '../../models';
 
 interface GoNoGoWidgetProps {
   projectId: number;

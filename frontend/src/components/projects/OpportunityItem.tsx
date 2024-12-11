@@ -31,7 +31,7 @@ import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { OpportunityForm } from '../forms/OpportunityForm';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
-import { PermissionType } from '../../dummyapi/database/dummyRoles';
+import { PermissionType } from '../../models';
 import { DecideApproval, DecideReview, SendForReview } from '../dialogbox';
 import { OpportunityTrackingWorkflow } from '../common/OpportunityTrackingWorkflow';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';

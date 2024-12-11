@@ -5,7 +5,7 @@ import { ReportsList } from './ReportsList';
 import { NotificationCenter } from './navigation/NotificationCenter';
 import { authApi } from '../dummyapi/authApi';
 import { useEffect, useState } from 'react';
-import { PermissionType } from '../dummyapi/database/dummyRoles';
+import { PermissionType } from '../models';
 
 export const Dashboard = () => {
   const [projectList, setProjectList] = useState<null | JSX.Element>(null);

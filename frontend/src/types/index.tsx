@@ -1,20 +1,14 @@
 // File: frontend/src/types/index.ts
 // Purpose: typescript types
 import { Project, OpportunityTracking, GoNoGoDecision } from '../models';
-import { UserRole } from '../dummyapi/database/dummyusers';
-import { PermissionType } from '../dummyapi/database/dummyRoles';
+import { User } from '../models';
+import { PermissionType } from '../models'
 
 export type screensArrayType = {
     [key : string] : JSX.Element
 }
 
-export type User = {
-  id: number;
-  name: string;
-  email: string;
-  avatar?: string;
-  role: UserRole;
-}
+
 
 export type Role = {
   id: string;
@@ -111,8 +105,4 @@ export type OpportunityFormProps = {
 // Optional: Create a type for creating a new Go/No-Go decision
 export type CreateGoNoGoDecisionDto = Omit<GoNoGoDecision, 'id'> & { id?: number };
 
-// Export types and enums related to roles
-export type { 
-  UserRole, 
-  PermissionType 
-};
+

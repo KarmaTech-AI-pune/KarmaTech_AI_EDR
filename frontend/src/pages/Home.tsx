@@ -7,7 +7,6 @@ export const Home = () => {
   return (
     <div>
       <Dashboard />
-      {/* TODO: Add more components to home page */}
     </div>
   );
 };

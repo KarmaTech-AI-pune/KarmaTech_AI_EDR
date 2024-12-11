@@ -1,4 +1,5 @@
-import { Credentials, LoginResponse, User } from '../types';
+import { Credentials, LoginResponse } from '../types';
+import { User } from '../models';
 import { axiosInstance } from './axiosConfig';
 
 export const authApi = {

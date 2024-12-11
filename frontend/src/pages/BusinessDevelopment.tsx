@@ -16,9 +16,9 @@ import { Pagination } from '../components/Pagination';
 import { authApi } from '../dummyapi/authApi';
 import { UserWithRole} from '../types';
 import { OpportunityTracking } from  '../models';
-import { PermissionType } from '../dummyapi/database/dummyRoles';
+import { PermissionType } from '../models';
 import { opportunityApi } from '../dummyapi/opportunityApi';
-import { UserRole } from '../dummyapi/database/dummyusers';
+import { UserRole } from '../models';
 import { HistoryLoggingService } from '../services/historyLoggingService';
 
 export const BusinessDevelopment: React.FC = () => {

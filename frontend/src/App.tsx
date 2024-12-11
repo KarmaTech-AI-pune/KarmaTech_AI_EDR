@@ -1,4 +1,5 @@
-import { screensArrayType, projectManagementAppContextType, User, UserWithRole  } from './types'
+import { screensArrayType, projectManagementAppContextType, UserWithRole  } from './types'
+import { User} from './models'
 import { Project, GoNoGoDecision, OpportunityTracking,} from "./models"
 import { createContext, useState, useEffect } from 'react'
 import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails } from './pages'
@@ -6,7 +7,7 @@ import { Navbar } from './components/navigation/Navbar'
 import { Dashboard } from './components/Dashboard'
 import { ResourceManagement } from './components/ResourceManagement'
 import { authApi } from './dummyapi/api'
-import { PermissionType } from './dummyapi/database/dummyRoles'
+import { PermissionType } from './models'
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
 function App() {
