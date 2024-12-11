@@ -8,8 +8,8 @@ import {
   Paper
 } from '@mui/material';
 import { ProjectFormType, ProjectFormData } from '../../types';
-import { users, UserRole } from '../../dummyapi/database/dummyusers';
-
+import { users, } from '../../dummyapi/database/dummyusers';
+import { UserRole} from '../../models'
 export const ProjectInitForm: React.FC<ProjectFormType> = ({
   project,
   onSubmit,

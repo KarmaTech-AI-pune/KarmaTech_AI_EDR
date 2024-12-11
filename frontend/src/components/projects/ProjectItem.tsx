@@ -7,7 +7,7 @@ import { projectApi } from '../../dummyapi/api';
 import { ProjectInitForm } from '../forms/ProjectInitForm';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
-import { PermissionType } from '../../dummyapi/database/dummyRoles';
+import { PermissionType } from '../../models';
 
 export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDeleted, onProjectUpdated }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

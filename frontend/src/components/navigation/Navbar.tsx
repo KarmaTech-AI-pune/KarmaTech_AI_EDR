@@ -16,7 +16,7 @@ import { useContext } from 'react';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
 import { authApi } from '../../dummyapi/authApi';
-import { PermissionType } from '../../dummyapi/database/dummyRoles';
+import { PermissionType } from '../../models';
 
 export const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
