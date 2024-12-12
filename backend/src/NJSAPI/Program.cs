@@ -19,16 +19,13 @@ internal class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
        
-
         // Add CORS services
         builder.Services.AddCors(options =>
         {
+            var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
             options.AddPolicy("AllowSpecificOrigin",
                 builder => builder
-                    .WithOrigins(
-                        "http://localhost:5173", // Development port
-                        "http://localhost:5245"  // Production port
-                    )
+                    .WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod());
         });
