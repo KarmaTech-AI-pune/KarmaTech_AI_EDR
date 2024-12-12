@@ -21,6 +21,8 @@ import { opportunityApi } from '../dummyapi/opportunityApi';
 import { UserRole } from '../models';
 import { HistoryLoggingService } from '../services/historyLoggingService';
 
+const NAVBAR_HEIGHT = '64px';
+
 export const BusinessDevelopment: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canViewOpportunities, setCanViewOpportunities] = useState(false);
@@ -41,18 +43,14 @@ export const BusinessDevelopment: React.FC = () => {
 
       let response: OpportunityTracking[] = [];
       
-      // For BDE roles, Business Development Head, Regional Manager, and Regional Director use specific getters
       if (currentUser.role === UserRole.BusinessDevelopmentManager) {
         response = await opportunityApi.getByUserId(currentUser.id);
       } else if (currentUser.role === UserRole.RegionalManager) {
-        // Get opportunities where user is reviewer
         response = await opportunityApi.getByReviewManagerId(currentUser.id);
       }  
       else if (currentUser.role === UserRole.RegionalDirector) {
-        // Get opportunities where user is approver
         response = await opportunityApi.getByApprovalManagerId(currentUser.id);
       } else {
-        // For other roles, use getAll
         response = await opportunityApi.getAll();
       }
       
@@ -64,7 +62,6 @@ export const BusinessDevelopment: React.FC = () => {
     }
   };
 
-  // Effect for checking user permissions
   useEffect(() => {
     const checkUserPermissions = async () => {
       try {
@@ -101,7 +98,6 @@ export const BusinessDevelopment: React.FC = () => {
     checkUserPermissions();
   }, []);
 
-  // Separate effect for fetching opportunities
   useEffect(() => {
     if (currentUser && canViewOpportunities) {
       fetchOpportunities();
@@ -147,10 +143,8 @@ export const BusinessDevelopment: React.FC = () => {
         lastModifiedAt: new Date().toISOString()
       };
 
-      // Create the opportunity
       const createdOpportunity = await opportunityApi.create(submissionData);
 
-      // Log the new opportunity creation
       if (createdOpportunity.id) {
         await HistoryLoggingService.logNewProject(
           createdOpportunity.id,
@@ -209,7 +203,7 @@ export const BusinessDevelopment: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ pt: `${NAVBAR_HEIGHT}`, p: 3 }}>
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -218,103 +212,112 @@ export const BusinessDevelopment: React.FC = () => {
   return (
     <Box
       sx={{ 
-        p: 2,
-        bgcolor: '#ffffff',
-        borderRadius: '8px',
-        border: '1px solid #e0e0e0',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+        minHeight: `calc(100vh - ${NAVBAR_HEIGHT})`,
+        pt: `${NAVBAR_HEIGHT}`,
+        bgcolor: 'background.default',
+        overflow: 'hidden'
       }}
     >
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 3 
-      }}>
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            fontWeight: 500,
-            color: '#1a237e'
-          }}
-        >
-          Business Development
-        </Typography>
-        
-        {canCreateOpportunity && (
-          <Button 
-            variant="contained" 
-            color="primary"
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={handleCreateOpportunity}
+      <Box
+        sx={{ 
+          p: 3,
+          bgcolor: '#ffffff',
+          borderRadius: '8px',
+          border: '1px solid #e0e0e0',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+        }}
+      >
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 3 
+        }}>
+          <Typography 
+            variant="h6" 
             sx={{ 
-              textTransform: 'none',
-              borderRadius: 2,
-              px: 3
+              fontWeight: 500,
+              color: '#1a237e'
             }}
           >
-            New Opportunity
-          </Button>
-        )}
-      </Box>
+            Business Development
+          </Typography>
+          
+          {canCreateOpportunity && (
+            <Button 
+              variant="contained" 
+              color="primary"
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={handleCreateOpportunity}
+              sx={{ 
+                textTransform: 'none',
+                borderRadius: 2,
+                px: 3
+              }}
+            >
+              New Opportunity
+            </Button>
+          )}
+        </Box>
 
-      <OpportunityForm
-        open={isCreatingOpportunity}
-        onSubmit={handleSubmitOpportunity}
-        onClose={handleCancelOpportunity}
-        project={initialOpportunityData}
-        error={formError}
-      />
-
-      <Divider sx={{ mb: 3 }} />
-
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 3 
-      }}>
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder="Search opportunities"
-          value={searchTerm}
-          onChange={handleSearch}
-          InputProps={{
-            endAdornment: (
-              <IconButton size="small">
-                <SearchIcon />
-              </IconButton>
-            ),
-            sx: { 
-              borderRadius: 2,
-              backgroundColor: 'background.paper'
-            }
-          }}
-          sx={{ 
-            width: 250,
-          }}
+        <OpportunityForm
+          open={isCreatingOpportunity}
+          onSubmit={handleSubmitOpportunity}
+          onClose={handleCancelOpportunity}
+          project={initialOpportunityData}
+          error={formError}
         />
-      </Box>
 
-      <OpportunityList
-        opportunities={currentOpportunities}
-        emptyMessage="No business development opportunities found"
-        onOpportunityDeleted={handleOpportunityDeleted}
-        onOpportunityUpdated={handleOpportunityUpdated}
-      />
+        <Divider sx={{ mb: 3 }} />
 
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        mt: 3 
-      }}>
-        <Pagination
-          projectsPerPage={opportunitiesPerPage}
-          totalProjects={filteredOpportunities.length}
-          paginate={paginate}
-          currentPage={currentPage}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 3 
+        }}>
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder="Search opportunities"
+            value={searchTerm}
+            onChange={handleSearch}
+            InputProps={{
+              endAdornment: (
+                <IconButton size="small">
+                  <SearchIcon />
+                </IconButton>
+              ),
+              sx: { 
+                borderRadius: 2,
+                backgroundColor: 'background.paper'
+              }
+            }}
+            sx={{ 
+              width: 250,
+            }}
+          />
+        </Box>
+
+        <OpportunityList
+          opportunities={currentOpportunities}
+          emptyMessage="No business development opportunities found"
+          onOpportunityDeleted={handleOpportunityDeleted}
+          onOpportunityUpdated={handleOpportunityUpdated}
         />
+
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          mt: 3 
+        }}>
+          <Pagination
+            projectsPerPage={opportunitiesPerPage}
+            totalProjects={filteredOpportunities.length}
+            paginate={paginate}
+            currentPage={currentPage}
+          />
+        </Box>
       </Box>
     </Box>
   );

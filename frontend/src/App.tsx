@@ -8,6 +8,8 @@ import { Dashboard } from './components/Dashboard'
 import { ResourceManagement } from './components/ResourceManagement'
 import { authApi } from './dummyapi/api'
 import { PermissionType } from './models'
+import GoNoGoForm from './components/forms/GoNoGoForm'
+import BidPreparationForm from './components/forms/BidPreparationForm'
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
 function App() {
@@ -119,6 +121,8 @@ function App() {
     "Resources": <ResourceManagement />,
     "Project Details": <ProjectDetails />,
     "Business Development Details": <BusinessDevelopmentDetails />,
+    "Bid Preparation Form" : <BidPreparationForm/>,
+    "GoNoGo Form" : <GoNoGoForm />
   };
 
   if (isLoading) {

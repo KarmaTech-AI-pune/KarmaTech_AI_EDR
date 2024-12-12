@@ -9,7 +9,8 @@ import {
   Container,
   Button,
   MenuItem,
-  Avatar
+  Avatar,
+  Stack
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useContext } from 'react';
@@ -47,7 +48,6 @@ export const Navbar = () => {
       if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_PROJECT)) {
         availablePages.push('Project Management');
       }
-      //availablePages.push('Forms')
 
       setPages(availablePages);
     };
@@ -91,26 +91,56 @@ export const Navbar = () => {
     handleCloseUserMenu();
   };
 
+  const LogoComponent = () => (
+    <Stack 
+      alignItems="center" 
+      spacing={0}
+      onClick={handleLogoClick}
+      style={{ cursor: 'pointer' }}
+    >
+      <Typography
+        variant="h5"
+        component="div"
+        sx={{
+          fontWeight: 'bold',
+          letterSpacing: '.2rem',
+          color: 'white',
+          lineHeight: 1.2
+        }}
+      >
+        NJSEI
+      </Typography>
+      <Typography
+        variant="subtitle1"
+        component="div"
+        sx={{
+          letterSpacing: '.1rem',
+          color: 'white',
+          lineHeight: 1
+        }}
+      >
+        ISO 9000
+      </Typography>
+    </Stack>
+  );
+
   return (
     <AppBar 
       position="fixed" 
       sx={{ 
-        zIndex: (theme) => theme.zIndex.drawer + 1
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
+        boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .3)'
       }}
     >
       <Container maxWidth="xl">
-        <Toolbar disableGutters>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
-            onClick={handleLogoClick}
-            style={{ cursor: 'pointer' }}
-          >
-            NJSEI PM
-          </Typography>
+        <Toolbar disableGutters sx={{ minHeight: '70px' }}>
+          {/* Desktop Logo */}
+          <Box sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}>
+            <LogoComponent />
+          </Box>
 
+          {/* Mobile Menu */}
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             <IconButton
               size="large"
@@ -147,30 +177,47 @@ export const Navbar = () => {
               ))}
             </Menu>
           </Box>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}
-            onClick={handleLogoClick}
-            style={{ cursor: 'pointer' }}
-          >
-            NJSEI PM
-          </Typography>
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+
+          {/* Mobile Logo */}
+          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }, justifyContent: 'center' }}>
+            <LogoComponent />
+          </Box>
+
+          {/* Desktop Navigation */}
+          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
             {pages.map((page) => (
               <Button
                 key={page}
                 onClick={() => handleNavClick(page)}
-                sx={{ my: 2, color: 'white', display: 'block' }}
+                sx={{ 
+                  my: 2, 
+                  color: 'white', 
+                  display: 'block',
+                  mx: 1,
+                  px: 2,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  }
+                }}
               >
                 {page}
               </Button>
             ))}
           </Box>
+
+          {/* User Menu */}
           <Box sx={{ flexGrow: 0 }}>
             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-              <Avatar alt={user?.name || 'User'} src={user?.avatar}>
+              <Avatar 
+                alt={user?.name || 'User'} 
+                src={user?.avatar}
+                sx={{ 
+                  width: 40, 
+                  height: 40,
+                  bgcolor: 'primary.light',
+                  border: '2px solid white'
+                }}
+              >
                 {user?.name?.[0] || 'U'}
               </Avatar>
             </IconButton>

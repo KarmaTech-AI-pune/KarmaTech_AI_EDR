@@ -21,12 +21,11 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
 import {projectManagementAppContextType } from '../../types';
-import { Project, GoNoGoStatus} from "../../models";
+import { GoNoGoStatus} from "../../models";
 import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
 
 interface GoNoGoFormProps {
-  project: Project;
   goNoGoDecision?: any;
   onSubmit?: (decision: any) => void;
 }
@@ -128,7 +127,7 @@ const scoreRanges = [
   { value: 0, label: '0 - Not Rated', range: 'low' }
 ];
 
-const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ project }) => {
+const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const initialGoNoGoDecision = context.currentGoNoGoDecision;
   const [isEditing, setIsEditing] = useState(false);
@@ -287,6 +286,11 @@ const handleHeaderChange = (field: keyof HeaderInfo, value: string) => {
 
 const handleSubmit = async () => {
   try {
+    if (!context.selectedProject?.id) {
+      console.error('No project ID found in context');
+      return;
+    }
+
     // Validate required header fields
     if (!headerInfo.typeOfBid || headerInfo.typeOfBid.length > 50) {
       console.error('Invalid Bid Type');
@@ -386,7 +390,7 @@ const handleSubmit = async () => {
       actionPlan: '', // Truncate if needed
 
       // Audit fields
-      projectId: project.id,
+      projectId: context.selectedProject?.id,
       id: decisionId,
       completedDate: new Date().toISOString(),
       completedBy: context?.user?.name?.substring(0, 100) || '',
@@ -400,7 +404,7 @@ const handleSubmit = async () => {
     if (isEditing && decisionId) {
       await goNoGoApi.update(decisionId, updatedFields);
     } else {
-      await goNoGoApi.create(project.id, updatedFields);
+      await goNoGoApi.create(context.selectedProject?.id, updatedFields);
     }
 
     // Navigation or state update
@@ -426,7 +430,7 @@ return (
           Go/No Go Decision Form
         </Typography>
         <Typography variant="h6" color="text.secondary">
-          Project: {project.name}
+          Project ID: {context.selectedProject?.id}
         </Typography>
       </Box>
 

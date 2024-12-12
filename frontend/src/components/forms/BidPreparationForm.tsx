@@ -15,11 +15,15 @@ import {
   FormControl,
   Card,
   CardContent,
-  IconButton
+  IconButton,
+  Fade,
 } from '@mui/material';
 import { 
   Add as AddIcon, 
-  Delete as DeleteIcon 
+  Delete as DeleteIcon,
+  Description as DocumentIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon
 } from '@mui/icons-material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
@@ -107,22 +111,23 @@ const theme = createTheme({
     }
   },
   components: {
-    MuiAccordion: {
+    MuiCard: {
       styleOverrides: {
         root: {
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          borderRadius: '8px',
-          marginBottom: '16px',
-          '&:before': {
-            display: 'none',
-          }
+          transition: 'all 0.3s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+          },
         }
       }
     },
     MuiTextField: {
       styleOverrides: {
         root: {
-          borderRadius: '8px',
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '8px',
+          }
         }
       }
     },
@@ -132,6 +137,13 @@ const theme = createTheme({
           borderRadius: '8px',
           textTransform: 'none',
           padding: '12px 24px',
+        }
+      }
+    },
+    MuiCheckbox: {
+      styleOverrides: {
+        root: {
+          padding: '12px',
         }
       }
     }
@@ -247,9 +259,17 @@ const BidPreparationForm: React.FC = () => {
             </Typography>
 
             {/* Header Section */}
-            <Card sx={{ mb: 4, borderRadius: 2 }}>
+            <Card sx={{ 
+              mb: 4, 
+              borderRadius: 2,
+              boxShadow: '0 4px 8px rgba(0,0,0,0.05)'
+            }}>
               <CardContent>
-                <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                <Typography variant="h6" sx={{ 
+                  mb: 2, 
+                  color: 'primary.main',
+                  fontWeight: 600
+                }}>
                   Header Information
                 </Typography>
                 <Grid container spacing={3}>
@@ -271,138 +291,195 @@ const BidPreparationForm: React.FC = () => {
             </Card>
 
             {/* Document Entries Section */}
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: 2, 
-                color: 'primary.main',
-                display: 'flex', 
-                alignItems: 'center' 
-              }}
-            >
-              Document Entries
-              <IconButton 
-                color="primary" 
-                onClick={handleAddDocumentEntry}
-                sx={{ ml: 2 }}
+            <Box sx={{ mb: 3 }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  mb: 2, 
+                  color: 'primary.main',
+                  display: 'flex', 
+                  alignItems: 'center',
+                  fontWeight: 600
+                }}
               >
-                <AddIcon />
-              </IconButton>
-            </Typography>
+                <DocumentIcon sx={{ mr: 1 }} />
+                Document Entries
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddDocumentEntry}
+                  sx={{ ml: 2 }}
+                >
+                  Add Document
+                </Button>
+              </Typography>
+            </Box>
 
             {documentEntries.map((entry, index) => (
-              <Card key={index} sx={{ mb: 3, borderRadius: 2 }}>
-                <CardContent>
-                  <Grid container spacing={3} alignItems="center">
-                    <Grid item xs={12} sm={5}>
-                      <FormControl fullWidth variant="outlined">
-                        <InputLabel>Category</InputLabel>
-                        <Select
-                          value={entry.category}
-                          onChange={(e) => {
-                            const selectedCategory = DOCUMENT_CATEGORIES.find(
-                              cat => cat.name === e.target.value
-                            );
-                            updateDocumentEntry(index, { 
-                              category: e.target.value as string,
-                              subcategory: selectedCategory && selectedCategory.subcategories.length ? '' : undefined
-                            });
+              <Fade in={true} key={index}>
+                <Card sx={{ 
+                  mb: 3, 
+                  borderRadius: 2,
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.05)',
+                  border: '1px solid rgba(0,0,0,0.08)'
+                }}>
+                  <CardContent>
+                    <Grid container spacing={3}>
+                      {/* Top row with delete button */}
+                      <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mb: -2 }}>
+                        <IconButton 
+                          color="error" 
+                          onClick={() => removeDocumentEntry(index)}
+                          sx={{
+                            '&:hover': {
+                              backgroundColor: 'rgba(211, 47, 47, 0.04)'
+                            }
                           }}
-                          label="Category"
                         >
-                          {DOCUMENT_CATEGORIES.map((category) => (
-                            <MenuItem key={category.name} value={category.name}>
-                              {category.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-
-                    {DOCUMENT_CATEGORIES.find(cat => cat.name === entry.category)?.subcategories.length && (
-                      <Grid item xs={12} sm={5}>
-                        <FormControl fullWidth variant="outlined">
-                          <InputLabel>Subcategory</InputLabel>
-                          <Select
-                            value={entry.subcategory || ''}
-                            onChange={(e) => updateDocumentEntry(index, { subcategory: e.target.value as string })}
-                            label="Subcategory"
-                          >
-                            {DOCUMENT_CATEGORIES.find(cat => cat.name === entry.category)?.subcategories.map((subcategory: string) => (
-                              <MenuItem key={subcategory} value={subcategory}>
-                                {subcategory}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
+                          <DeleteIcon />
+                        </IconButton>
                       </Grid>
-                    )}
 
-                    <Grid item xs={6} sm={1}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={entry.isRequired}
-                            onChange={(e) => updateDocumentEntry(index, { isRequired: e.target.checked })}
-                            color="primary"
-                          />
-                        }
-                        label="Required"
-                      />
-                    </Grid>
+                      {/* First row: Category and Date */}
+                      <Grid item xs={12}>
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} md={8}>
+                            <FormControl fullWidth variant="outlined">
+                              <InputLabel>Category</InputLabel>
+                              <Select
+                                value={entry.category}
+                                onChange={(e) => {
+                                  const selectedCategory = DOCUMENT_CATEGORIES.find(
+                                    cat => cat.name === e.target.value
+                                  );
+                                  updateDocumentEntry(index, { 
+                                    category: e.target.value as string,
+                                    subcategory: selectedCategory && selectedCategory.subcategories.length ? '' : undefined
+                                  });
+                                }}
+                                label="Category"
+                              >
+                                {DOCUMENT_CATEGORIES.map((category) => (
+                                  <MenuItem key={category.name} value={category.name}>
+                                    {category.name}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Grid>
 
-                    <Grid item xs={6} sm={1}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={entry.isEnclosed}
-                            onChange={(e) => updateDocumentEntry(index, { isEnclosed: e.target.checked })}
-                            color="primary"
-                          />
-                        }
-                        label="Enclosed"
-                      />
-                    </Grid>
+                          <Grid item xs={12} md={4}>
+                            <TextField
+                              fullWidth
+                              variant="outlined"
+                              label="Date"
+                              type="date"
+                              InputLabelProps={{ shrink: true }}
+                              value={entry.date || ''}
+                              onChange={(e) => updateDocumentEntry(index, { date: e.target.value })}
+                            />
+                          </Grid>
+                        </Grid>
+                      </Grid>
 
-                    <Grid item xs={12} sm={5}>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        label="Date"
-                        type="date"
-                        InputLabelProps={{ shrink: true }}
-                        value={entry.date || ''}
-                        onChange={(e) => updateDocumentEntry(index, { date: e.target.value })}
-                      />
-                    </Grid>
+                      {/* Second row: Subcategory (if applicable) */}
+                      {DOCUMENT_CATEGORIES.find(cat => cat.name === entry.category)?.subcategories.length && (
+                        <Grid item xs={12}>
+                          <FormControl fullWidth variant="outlined">
+                            <InputLabel>Subcategory</InputLabel>
+                            <Select
+                              value={entry.subcategory || ''}
+                              onChange={(e) => updateDocumentEntry(index, { subcategory: e.target.value as string })}
+                              label="Subcategory"
+                            >
+                              {DOCUMENT_CATEGORIES.find(cat => cat.name === entry.category)?.subcategories.map((subcategory: string) => (
+                                <MenuItem key={subcategory} value={subcategory}>
+                                  {subcategory}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                      )}
 
-                    <Grid item xs={12} sm={5}>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        label="Remarks"
-                        value={entry.remarks || ''}
-                        onChange={(e) => updateDocumentEntry(index, { remarks: e.target.value })}
-                      />
-                    </Grid>
+                      {/* Third row: Remarks and Checkboxes */}
+                      <Grid item xs={12}>
+                        <Grid container spacing={2} alignItems="center">
+                          <Grid item xs={12} md={7}>
+                            <TextField
+                              fullWidth
+                              variant="outlined"
+                              label="Remarks"
+                              value={entry.remarks || ''}
+                              onChange={(e) => updateDocumentEntry(index, { remarks: e.target.value })}
+                            />
+                          </Grid>
 
-                    <Grid item xs={2}>
-                      <IconButton 
-                        color="error" 
-                        onClick={() => removeDocumentEntry(index)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                          <Grid item xs={12} md={5}>
+                            <Box sx={{ 
+                              display: 'flex', 
+                              justifyContent: 'center',
+                              gap: 6,
+                              width: '100%'
+                            }}>
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    checked={entry.isRequired}
+                                    onChange={(e) => updateDocumentEntry(index, { isRequired: e.target.checked })}
+                                    color="primary"
+                                    icon={<CancelIcon />}
+                                    checkedIcon={<CheckCircleIcon />}
+                                  />
+                                }
+                                label="Required"
+                                sx={{
+                                  '& .MuiFormControlLabel-label': {
+                                    fontSize: '0.875rem',
+                                    color: 'text.secondary'
+                                  }
+                                }}
+                              />
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    checked={entry.isEnclosed}
+                                    onChange={(e) => updateDocumentEntry(index, { isEnclosed: e.target.checked })}
+                                    color="success"
+                                    icon={<CancelIcon />}
+                                    checkedIcon={<CheckCircleIcon />}
+                                  />
+                                }
+                                label="Enclosed"
+                                sx={{
+                                  '& .MuiFormControlLabel-label': {
+                                    fontSize: '0.875rem',
+                                    color: 'text.secondary'
+                                  }
+                                }}
+                              />
+                            </Box>
+                          </Grid>
+                        </Grid>
+                      </Grid>
                     </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Fade>
             ))}
 
-            {/* Footer (Signature) Section */}
-            <Card sx={{ mb: 4, borderRadius: 2 }}>
+            {/* Footer Section */}
+            <Card sx={{ 
+              mb: 4, 
+              borderRadius: 2,
+              boxShadow: '0 4px 8px rgba(0,0,0,0.05)'
+            }}>
               <CardContent>
-                <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                <Typography variant="h6" sx={{ 
+                  mb: 2, 
+                  color: 'primary.main',
+                  fontWeight: 600
+                }}>
                   Signature (Footer)
                 </Typography>
                 <Grid container spacing={3}>
@@ -429,6 +506,14 @@ const BidPreparationForm: React.FC = () => {
                 variant="contained" 
                 color="primary" 
                 size="large"
+                sx={{
+                  minWidth: '200px',
+                  fontWeight: 600,
+                  '&:hover': {
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                  }
+                }}
               >
                 Submit Bid Preparation Form
               </Button>

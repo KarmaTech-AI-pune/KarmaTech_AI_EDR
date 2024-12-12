@@ -3,101 +3,107 @@ import { ResourceManagement } from './ResourceManagement';
 import { BusinessDevelopment, ProjectManagement } from '../pages';
 import { ReportsList } from './ReportsList';
 import { NotificationCenter } from './navigation/NotificationCenter';
-import { authApi } from '../dummyapi/authApi';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { PermissionType } from '../models';
+import { projectManagementAppContext } from '../App';
+
+const NAVBAR_HEIGHT = '64px';
 
 export const Dashboard = () => {
   const [projectList, setProjectList] = useState<null | JSX.Element>(null);
+  const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
-    const checkUserPermissions = async () => {
-      const currentUser = await authApi.getCurrentUser();
-      if (currentUser?.roleDetails.permissions.includes(PermissionType.VIEW_PROJECT)) {
-        setProjectList(<ProjectManagement />);
-      } else {
-        setProjectList(<BusinessDevelopment />);
-      }
-    };
-
-    checkUserPermissions();
-  }, []);
+    if (context?.currentUser?.roleDetails.permissions.includes(PermissionType.VIEW_PROJECT)) {
+      setProjectList(<ProjectManagement />);
+    } else {
+      setProjectList(<BusinessDevelopment />);
+    }
+  }, [context?.currentUser]);
 
   return (
     <Box
       sx={{
-        width: '100%',
-        p: { xs: 2, sm: 3 },
-        bgcolor: '#f5f5f5',
-        minHeight: '100vh',
-        overflowX: 'hidden'
+        minHeight: `calc(100vh - ${NAVBAR_HEIGHT})`,
+        pt: `${NAVBAR_HEIGHT}`,
+        bgcolor: 'background.default',
+        overflow: 'hidden'
       }}
     >
-      <Typography 
-        variant="h4" 
-        sx={{ 
-          mb: 3,
-          fontSize: { xs: '1.5rem', sm: '2rem' },
-          fontWeight: 500,
-          color: '#1a237e'
-        }}
-      >
-        Dashboard
-      </Typography>
-      
       <Box
         sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
-          gap: 3,
-          '& > *': {
-            minWidth: 0,
-            width: '100%'
-          }
+          p: { xs: 2, sm: 3 },
+          width: '100%',
+          bgcolor: '#f5f5f5',
+          overflowX: 'hidden'
         }}
       >
-        {/* Left Column - Projects Only */}
-        <Box
-          sx={{
-            width: '100%',
-            overflow: 'hidden'
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            mb: 3,
+            fontSize: { xs: '1.5rem', sm: '2rem' },
+            fontWeight: 500,
+            color: '#1a237e'
           }}
         >
-          {projectList && projectList}
-        </Box>
-
-        {/* Right Column - Other Components */}
+          Welcome, {context?.currentUser?.name || 'User'}!
+        </Typography>
+        
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
             gap: 3,
-            width: '100%'
+            '& > *': {
+              minWidth: 0,
+              width: '100%'
+            }
           }}
         >
+          {/* Left Column - Projects Only */}
           <Box
             sx={{
               width: '100%',
               overflow: 'hidden'
             }}
           >
-            <ResourceManagement />
+            {projectList && projectList}
           </Box>
+
+          {/* Right Column - Other Components */}
           <Box
             sx={{
-              width: '100%',
-              overflow: 'hidden'
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 3,
+              width: '100%'
             }}
           >
-            <ReportsList />
-          </Box>
-          <Box
-            sx={{
-              width: '100%',
-              overflow: 'hidden'
-            }}
-          >
-            <NotificationCenter />
+            <Box
+              sx={{
+                width: '100%',
+                overflow: 'hidden'
+              }}
+            >
+              <ResourceManagement />
+            </Box>
+            <Box
+              sx={{
+                width: '100%',
+                overflow: 'hidden'
+              }}
+            >
+              <ReportsList />
+            </Box>
+            <Box
+              sx={{
+                width: '100%',
+                overflow: 'hidden'
+              }}
+            >
+              <NotificationCenter />
+            </Box>
           </Box>
         </Box>
       </Box>
