@@ -27,7 +27,7 @@ namespace NJS.Domain.Database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
+           
             // Configure Identity tables
             modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
             {
@@ -69,7 +69,7 @@ namespace NJS.Domain.Database
                 .Property(o => o.BidFees)
                 .HasPrecision(18, 2);
             modelBuilder.Entity<OpportunityTracking>()
-                .Property(o => o.EMD)
+                .Property(o => o.Emd)
                 .HasPrecision(18, 2);
             modelBuilder.Entity<OpportunityTracking>()
                 .Property(o => o.PercentageChanceOfProjectHappening)

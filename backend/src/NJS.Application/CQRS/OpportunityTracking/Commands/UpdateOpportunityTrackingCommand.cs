@@ -1,8 +1,10 @@
 using System;
+using MediatR;
+using NJS.Application.Dtos;
 
-namespace NJS.Application.Dtos
+namespace NJS.Application.CQRS.OpportunityTracking.Commands
 {
-    public class OpportunityTrackingDto
+    public class UpdateOpportunityTrackingCommand : IRequest<OpportunityTrackingDto>
     {
         public int Id { get; set; }
         public int? ProjectId { get; set; }

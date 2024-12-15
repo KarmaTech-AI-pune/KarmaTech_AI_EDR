@@ -1,10 +1,11 @@
 using System;
+using MediatR;
+using NJS.Application.Dtos;
 
-namespace NJS.Application.Dtos
+namespace NJS.Application.CQRS.OpportunityTracking.Commands
 {
-    public class OpportunityTrackingDto
+    public class CreateOpportunityTrackingCommand : IRequest<OpportunityTrackingDto>
     {
-        public int Id { get; set; }
         public int? ProjectId { get; set; }
         public string Stage { get; set; }
         public string StrategicRanking { get; set; }

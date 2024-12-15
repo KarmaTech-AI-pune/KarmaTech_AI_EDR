@@ -36,7 +36,7 @@ namespace NJSAPI.Controllers
                     Stage = ot.Stage,
                     StrategicRanking = ot.StrategicRanking,
                     BidFees = ot.BidFees,
-                    EMD = ot.EMD,
+                    EMD = ot.Emd,
                     FormOfEMD = ot.FormOfEMD,
                     BidManager = ot.BidManager,
                     ContactPersonAtClient = ot.ContactPersonAtClient,
@@ -44,19 +44,17 @@ namespace NJSAPI.Controllers
                     PercentageChanceOfProjectHappening = ot.PercentageChanceOfProjectHappening,
                     PercentageChanceOfNJSSuccess = ot.PercentageChanceOfNJSSuccess,
                     LikelyCompetition = ot.LikelyCompetition,
-                    DateOfResult = ot.DateOfResult,
+                   // DateOfResult = ot.DateOfSubmission,
                     GrossRevenue = ot.GrossRevenue,
                     NetNJSRevenue = ot.NetNJSRevenue,
                     FollowUpComments = ot.FollowUpComments,
                     Notes = ot.Notes,
                     ProbableQualifyingCriteria = ot.ProbableQualifyingCriteria,
-                    Month = ot.Month,
-                    Year = ot.Year,
-                    TrackedBy = ot.TrackedBy,
+                    
+                    
                     CreatedAt = ot.CreatedAt,
-                    CreatedBy = ot.CreatedBy,
-                    LastModifiedAt = ot.LastModifiedAt,
-                    LastModifiedBy = ot.LastModifiedBy
+                    CreatedBy = ot.CreatedBy
+                    
                 }).ToList();
 
                 return Ok(opportunityTrackingDtos);
@@ -88,7 +86,7 @@ namespace NJSAPI.Controllers
                     Stage = opportunityTracking.Stage,
                     StrategicRanking = opportunityTracking.StrategicRanking,
                     BidFees = opportunityTracking.BidFees,
-                    EMD = opportunityTracking.EMD,
+                    EMD = opportunityTracking.Emd,
                     FormOfEMD = opportunityTracking.FormOfEMD,
                     BidManager = opportunityTracking.BidManager,
                     ContactPersonAtClient = opportunityTracking.ContactPersonAtClient,
@@ -96,19 +94,17 @@ namespace NJSAPI.Controllers
                     PercentageChanceOfProjectHappening = opportunityTracking.PercentageChanceOfProjectHappening,
                     PercentageChanceOfNJSSuccess = opportunityTracking.PercentageChanceOfNJSSuccess,
                     LikelyCompetition = opportunityTracking.LikelyCompetition,
-                    DateOfResult = opportunityTracking.DateOfResult,
+                   //ateOfResult = opportunityTracking.DateOfResult,
                     GrossRevenue = opportunityTracking.GrossRevenue,
                     NetNJSRevenue = opportunityTracking.NetNJSRevenue,
                     FollowUpComments = opportunityTracking.FollowUpComments,
                     Notes = opportunityTracking.Notes,
                     ProbableQualifyingCriteria = opportunityTracking.ProbableQualifyingCriteria,
-                    Month = opportunityTracking.Month,
-                    Year = opportunityTracking.Year,
-                    TrackedBy = opportunityTracking.TrackedBy,
+                  
+                   
                     CreatedAt = opportunityTracking.CreatedAt,
-                    CreatedBy = opportunityTracking.CreatedBy,
-                    LastModifiedAt = opportunityTracking.LastModifiedAt,
-                    LastModifiedBy = opportunityTracking.LastModifiedBy
+                    CreatedBy = opportunityTracking.CreatedBy
+                    
                 };
 
                 return Ok(dto);
@@ -140,7 +136,7 @@ namespace NJSAPI.Controllers
                     Stage = ot.Stage,
                     StrategicRanking = ot.StrategicRanking,
                     BidFees = ot.BidFees,
-                    EMD = ot.EMD,
+                    EMD = ot.Emd,
                     FormOfEMD = ot.FormOfEMD,
                     BidManager = ot.BidManager,
                     ContactPersonAtClient = ot.ContactPersonAtClient,
@@ -148,19 +144,17 @@ namespace NJSAPI.Controllers
                     PercentageChanceOfProjectHappening = ot.PercentageChanceOfProjectHappening,
                     PercentageChanceOfNJSSuccess = ot.PercentageChanceOfNJSSuccess,
                     LikelyCompetition = ot.LikelyCompetition,
-                    DateOfResult = ot.DateOfResult,
+                   
                     GrossRevenue = ot.GrossRevenue,
                     NetNJSRevenue = ot.NetNJSRevenue,
                     FollowUpComments = ot.FollowUpComments,
                     Notes = ot.Notes,
                     ProbableQualifyingCriteria = ot.ProbableQualifyingCriteria,
-                    Month = ot.Month,
-                    Year = ot.Year,
-                    TrackedBy = ot.TrackedBy,
+                   
+                    
                     CreatedAt = ot.CreatedAt,
                     CreatedBy = ot.CreatedBy,
-                    LastModifiedAt = ot.LastModifiedAt,
-                    LastModifiedBy = ot.LastModifiedBy
+                   
                 }).ToList();
 
                 return Ok(dtos);

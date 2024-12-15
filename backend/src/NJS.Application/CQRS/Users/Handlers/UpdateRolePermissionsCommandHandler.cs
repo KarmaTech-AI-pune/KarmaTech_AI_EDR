@@ -1,0 +1,60 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using NJS.Application.CQRS.Users.Commands;
+using NJS.Domain.Database;
+using NJS.Domain.Entities;
+
+namespace NJS.Application.CQRS.Users.Handlers
+{
+    public class UpdateRolePermissionsCommandHandler : IRequestHandler<UpdateRolePermissionsCommand, bool>
+    {
+        private readonly ProjectManagementContext _context;
+
+        public UpdateRolePermissionsCommandHandler(ProjectManagementContext context)
+        {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+        }
+
+        public async Task<bool> Handle(UpdateRolePermissionsCommand request, CancellationToken cancellationToken)
+        {
+           // using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                // Get the role with its current permissions
+                var role = await _context.Set<Role>()
+                    .Include(r => r.RolePermissions)
+                    .FirstOrDefaultAsync(r => r.Id == request.RoleId, cancellationToken);
+
+                if (role == null)
+                {
+                    throw new InvalidOperationException($"Role with ID {request.RoleId} not found.");
+                }
+
+                // Remove existing role permissions
+                _context.Set<RolePermission>().RemoveRange(role.RolePermissions);
+
+                // Add new role permissions
+                var newRolePermissions = request.PermissionIds.Select(permissionId => new RolePermission
+                {
+                    RoleId = role.Id,
+                    PermissionId = permissionId
+                });
+
+                await _context.Set<RolePermission>().AddRangeAsync(newRolePermissions, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+                //await transaction.CommitAsync(cancellationToken);
+
+                return true;
+            }
+            catch (Exception)
+            {
+               // await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        }
+    }
+}
