@@ -10,7 +10,6 @@ import {
   Button,
   MenuItem,
   Avatar,
-  Stack
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useContext } from 'react';
