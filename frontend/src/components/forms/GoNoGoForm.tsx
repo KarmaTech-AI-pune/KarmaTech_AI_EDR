@@ -280,11 +280,6 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
     return GoNoGoStatus.Red;
   };
 
-  const getScoreDescription = (criteriaKey: string, score: number) => {
-    const range = scoreRanges.find(r => r.value === score)?.range;
-    return range ? scoringDescriptions[criteriaKey][range] : '';
-  };
-
   const showName = (key:string) => {
     return key[0].toUpperCase() + key.replace(/([A-Z])/g, ' $1').trim().slice(1)
   };
