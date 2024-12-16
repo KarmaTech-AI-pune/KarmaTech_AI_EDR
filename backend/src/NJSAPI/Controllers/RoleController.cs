@@ -12,7 +12,7 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-   
+
     public class RoleController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -47,7 +47,7 @@ namespace NJSAPI.Controllers
 
         [HttpPut]
         [Route("{roleId}/permissions")]
-       
+
         public async Task<IActionResult> UpdateRolePermissions(string roleId, [FromBody] List<int> permissionIds)
         {
             try
@@ -75,6 +75,32 @@ namespace NJSAPI.Controllers
             catch (InvalidOperationException ex)
             {
                 return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get role details by role name
+        /// </summary>
+        /// <param name="roleName"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        [HttpGet]
+        [Route("GetRoleByName/{roleName}")]
+        public async Task<ActionResult<RoleDto>> GetRoleByName(string roleName)
+        {
+            if (string.IsNullOrEmpty(roleName))
+            {
+                throw new ArgumentException($"'{nameof(roleName)}' cannot be null or empty.", nameof(roleName));
+            }
+
+            try
+            {
+                var role = await _mediator.Send(new GetRoleByNameQuery(roleName.ToLowerInvariant()));
+                return Ok(role);
             }
             catch (Exception ex)
             {

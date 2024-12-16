@@ -141,8 +141,8 @@ namespace NJSAPI.Controllers
             return Ok(roles);
         }
 
-        [HttpGet("permissions")]
-       
+
+        [HttpGet("permissions")]       
         public async Task<IActionResult> GetPermissions()
         {
             var query = new GetAllPermissionsQuery();
