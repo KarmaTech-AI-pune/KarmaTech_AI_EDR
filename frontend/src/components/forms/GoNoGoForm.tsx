@@ -1,3 +1,4 @@
+{/* Previous imports and interfaces remain unchanged */}
 import React, { useState, useEffect, useContext } from 'react';
 import {
   Accordion,
@@ -16,7 +17,9 @@ import {
   Collapse,
   Card,
   CardContent,
-  FormHelperText
+  List,
+  ListItem,
+  ListItemText
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
@@ -25,6 +28,7 @@ import { GoNoGoStatus} from "../../models";
 import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
 
+// [Previous interfaces and constants remain unchanged]
 interface GoNoGoFormProps {
   goNoGoDecision?: any;
   onSubmit?: (decision: any) => void;
@@ -128,21 +132,22 @@ const scoreRanges = [
 ];
 
 const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
+  {/* Previous state declarations and handlers remain unchanged */}
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const initialGoNoGoDecision = context.currentGoNoGoDecision;
   const [isEditing, setIsEditing] = useState(false);
   const [decisionId, setDecisionId] = useState<number | null>(null);
 
-const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
-  typeOfBid: '',
-  sector: '',
-  bdHead: '',
-  office: '',
-  regionalBDHead: '',
-  region: '',
-  typeOfClient: '',
-  tenderFee: '',
-  emd: '',
+  const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
+    typeOfBid: '',
+    sector: '',
+    bdHead: '',
+    office: '',
+    regionalBDHead: '',
+    region: '',
+    typeOfClient: '',
+    tenderFee: '',
+    emd: '',
   });
 
   const [criteria, setCriteria] = useState<{ [key: string]: ScoringCriteria }>({
@@ -160,19 +165,19 @@ const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
     bidTimeAndCosts: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false }
   });
 
-useEffect(() => {
-  if (initialGoNoGoDecision) {
-    setIsEditing(true);
-    setDecisionId(initialGoNoGoDecision.projectId);
-    setHeaderInfo(prev => ({
-      ...prev,
-      typeOfBid: initialGoNoGoDecision.bidType || '',
-      sector: initialGoNoGoDecision.sector || '',
-      tenderFee: initialGoNoGoDecision.tenderFee?.toString() || '',
-      emd: initialGoNoGoDecision.emdAmount?.toString() || ''
-    }));
-    
-    setCriteria(prev => ({
+  useEffect(() => {
+    if (initialGoNoGoDecision) {
+      setIsEditing(true);
+      setDecisionId(initialGoNoGoDecision.projectId);
+      setHeaderInfo(prev => ({
+        ...prev,
+        typeOfBid: initialGoNoGoDecision.bidType || '',
+        sector: initialGoNoGoDecision.sector || '',
+        tenderFee: initialGoNoGoDecision.tenderFee?.toString() || '',
+        emd: initialGoNoGoDecision.emdAmount?.toString() || ''
+      }));
+      
+      setCriteria(prev => ({
         ...prev,
         marketingPlan: {
           ...prev.marketingPlan,
@@ -239,10 +244,10 @@ useEffect(() => {
       if (context?.setCurrentGoNoGoDecision) {
         context.setCurrentGoNoGoDecision(null);
       }
-  }
-}, [initialGoNoGoDecision, context]);
+    }
+  }, [initialGoNoGoDecision, context]);
 
-const handleHeaderChange = (field: keyof HeaderInfo, value: string) => {
+  const handleHeaderChange = (field: keyof HeaderInfo, value: string) => {
     setHeaderInfo(prev => ({ ...prev, [field]: value }));
   };
 
@@ -263,9 +268,9 @@ const handleHeaderChange = (field: keyof HeaderInfo, value: string) => {
 
   const getDecisionStatus = () => {
     const totalScore = calculateTotalScore();
-    if (totalScore >= 84) return { text: 'GO [Green]', color: '#4caf50' };
-    if (totalScore >= 50) return { text: 'GO [Amber]', color: '#ff9800' };
-    return { text: 'NO GO [Red]', color: '#f44336' };
+    if (totalScore >= 84) return { text: 'GO', color: '#4caf50' };
+    if (totalScore >= 50) return { text: 'GO', color: '#ff9800' };
+    return { text: 'NO GO', color: '#f44336' };
   };
 
   const getTotalScoreStatus = (): GoNoGoStatus => {
@@ -284,155 +289,168 @@ const handleHeaderChange = (field: keyof HeaderInfo, value: string) => {
     return key[0].toUpperCase() + key.replace(/([A-Z])/g, ' $1').trim().slice(1)
   };
 
-const handleSubmit = async () => {
-  try {
-    if (!context.selectedProject?.id) {
-      console.error('No project ID found in context');
-      return;
+  const getDescriptionColor = (range: string) => {
+    switch (range) {
+      case 'high':
+        return '#4caf50';
+      case 'medium':
+        return '#ff9800';
+      case 'low':
+        return '#f44336';
+      default:
+        return 'inherit';
     }
+  };
 
-    // Validate required header fields
-    if (!headerInfo.typeOfBid || headerInfo.typeOfBid.length > 50) {
-      console.error('Invalid Bid Type');
-      return;
-    }
+  const renderScoringDescriptions = (criteriaKey: string, currentScore: number) => {
+    return (
+      <List dense>
+        {Object.entries(scoringDescriptions[criteriaKey]).map(([range, description]) => {
+          const isSelected = scoreRanges.find(s => s.value === currentScore)?.range === range;
+          return (
+            <ListItem key={range} sx={{
+              backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+              color: isSelected ? getDescriptionColor(range) : 'inherit',
+              fontWeight: isSelected ? 'bold' : 'normal'
+            }}>
+              <ListItemText
+                primary={description}
+                primaryTypographyProps={{
+                  style: {
+                    color: isSelected ? getDescriptionColor(range) : 'inherit',
+                    fontWeight: isSelected ? 'bold' : 'normal'
+                  }
+                }}
+              />
+            </ListItem>
+          );
+        })}
+      </List>
+    );
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (!context.selectedProject?.id) {
+        console.error('No project ID found in context');
+        return;
+      }
   
-    if (!headerInfo.sector || headerInfo.sector.length > 50) {
-      console.error('Invalid Sector');
-      return;
-    }
-  
-    // Removed submission mode validation
-  
-    // Validate numeric fields
-    const tenderFee = Number(headerInfo.tenderFee);
-    const emdAmount = Number(headerInfo.emd);
-  
-    if (isNaN(tenderFee) || tenderFee < 0) {
-      console.error('Invalid Tender Fee');
-      return;
-    }
-  
-    if (isNaN(emdAmount) || emdAmount < 0) {
-      console.error('Invalid EMD Amount');
-      return;
-    }
-  
-    // Validate scoring criteria
+      // Validate required header fields
+      if (!headerInfo.typeOfBid || headerInfo.typeOfBid.length > 50) {
+        console.error('Invalid Bid Type');
+        return;
+      }
+    
+      if (!headerInfo.sector || headerInfo.sector.length > 50) {
+        console.error('Invalid Sector');
+        return;
+      }
+    
+      // Validate numeric fields
+      const tenderFee = Number(headerInfo.tenderFee);
+      const emdAmount = Number(headerInfo.emd);
+    
+      if (isNaN(tenderFee) || tenderFee < 0) {
+        console.error('Invalid Tender Fee');
+        return;
+      }
+    
+      if (isNaN(emdAmount) || emdAmount < 0) {
+        console.error('Invalid EMD Amount');
+        return;
+      }
+    
+      // Validate scoring criteria
       const scoringFields = [
         'marketingPlan', 'clientRelationship', 'projectKnowledge', 
         'technicalEligibility', 'financialEligibility', 'keyStaffAvailability', 
         'projectCompetition', 'competitionPosition', 'futureWorkPotential', 
         'projectProfitability', 'projectSchedule', 'bidTimeAndCosts'
       ];
-  
+    
       const invalidScores = scoringFields.filter(field => {
         const score = criteria[field].score;
-        
-        // Check score is between 0-10
-        if (score < 0 || score > 10) {
-          console.error(`Invalid score for ${field}`);
-          return true;
-        }
-  
-        /*
-        if (!comments || comments.length > 1000) {
-          console.error(`Invalid comments for ${field}`);
-          return true;
-        }*/
-  
-        return false;
+        return score < 0 || score > 10;
       });
-  
+    
       if (invalidScores.length > 0) {
         return;
       }
-  
-      // Prepare payload with validation
-  
-    const updatedFields = {
-      bidType: headerInfo.typeOfBid,
-      sector: headerInfo.sector,
-      tenderFee: tenderFee,
-      emdAmount: emdAmount,
-      
-      
-      // Scoring fields
-      marketingPlanScore: criteria.marketingPlan.score,
-      marketingPlanComments: criteria.marketingPlan.comments,
-      clientRelationshipScore: criteria.clientRelationship.score,
-      clientRelationshipComments: criteria.clientRelationship.comments,
-      projectKnowledgeScore: criteria.projectKnowledge.score,
-      projectKnowledgeComments: criteria.projectKnowledge.comments,
-      technicalEligibilityScore: criteria.technicalEligibility.score,
-      technicalEligibilityComments: criteria.technicalEligibility.comments,
-      financialEligibilityScore: criteria.financialEligibility.score,
-      financialEligibilityComments: criteria.financialEligibility.comments,
-      staffAvailabilityScore: criteria.keyStaffAvailability.score,
-      staffAvailabilityComments: criteria.keyStaffAvailability.comments,
-      competitionAssessmentScore: criteria.projectCompetition.score,
-      competitionAssessmentComments: criteria.projectCompetition.comments,
-      competitivePositionScore: criteria.competitionPosition.score,
-      competitivePositionComments: criteria.competitionPosition.comments,
-      futureWorkPotentialScore: criteria.futureWorkPotential.score,
-      futureWorkPotentialComments: criteria.futureWorkPotential.comments,
-      profitabilityScore: criteria.projectProfitability.score,
-      profitabilityComments: criteria.projectProfitability.comments,
-      resourceAvailabilityScore: criteria.bidTimeAndCosts.score,
-      resourceAvailabilityComments: criteria.bidTimeAndCosts.comments,
-      bidScheduleScore: criteria.projectSchedule.score,
-      bidScheduleComments: criteria.projectSchedule.comments,
-
-      // Calculation and status
-      totalScore: calculateTotalScore(),
-      status: getTotalScoreStatus(),
-      decisionComments: '', // Truncate if needed
-      actionPlan: '', // Truncate if needed
-
-      // Audit fields
-      projectId: context.selectedProject?.id,
-      id: decisionId,
-      completedDate: new Date().toISOString(),
-      completedBy: context?.user?.name?.substring(0, 100) || '',
-      createdAt: new Date().toISOString(),
-      createdBy: context?.user?.name?.substring(0, 100) || '',
-      lastModifiedAt: new Date().toISOString(),
-      lastModifiedBy: context?.user?.name?.substring(0, 100) || ''
-    };
-
-
-    if (isEditing && decisionId) {
-      await goNoGoApi.update(decisionId, updatedFields);
-    } else {
-      await goNoGoApi.create(context.selectedProject?.id, updatedFields);
-    }
-
-    // Navigation or state update
-    if (context?.setScreenState) {
-      context.setScreenState("Project Details");
-    }
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : 'An unknown error occurred while saving the decision';
     
-    console.error('Error saving go/no-go decision:', {
-      message: errorMessage,
-      error: error
-    });
-  }
-};
+      const updatedFields = {
+        bidType: headerInfo.typeOfBid,
+        sector: headerInfo.sector,
+        tenderFee: tenderFee,
+        emdAmount: emdAmount,
+        
+        marketingPlanScore: criteria.marketingPlan.score,
+        marketingPlanComments: criteria.marketingPlan.comments,
+        clientRelationshipScore: criteria.clientRelationship.score,
+        clientRelationshipComments: criteria.clientRelationship.comments,
+        projectKnowledgeScore: criteria.projectKnowledge.score,
+        projectKnowledgeComments: criteria.projectKnowledge.comments,
+        technicalEligibilityScore: criteria.technicalEligibility.score,
+        technicalEligibilityComments: criteria.technicalEligibility.comments,
+        financialEligibilityScore: criteria.financialEligibility.score,
+        financialEligibilityComments: criteria.financialEligibility.comments,
+        staffAvailabilityScore: criteria.keyStaffAvailability.score,
+        staffAvailabilityComments: criteria.keyStaffAvailability.comments,
+        competitionAssessmentScore: criteria.projectCompetition.score,
+        competitionAssessmentComments: criteria.projectCompetition.comments,
+        competitivePositionScore: criteria.competitionPosition.score,
+        competitivePositionComments: criteria.competitionPosition.comments,
+        futureWorkPotentialScore: criteria.futureWorkPotential.score,
+        futureWorkPotentialComments: criteria.futureWorkPotential.comments,
+        profitabilityScore: criteria.projectProfitability.score,
+        profitabilityComments: criteria.projectProfitability.comments,
+        resourceAvailabilityScore: criteria.bidTimeAndCosts.score,
+        resourceAvailabilityComments: criteria.bidTimeAndCosts.comments,
+        bidScheduleScore: criteria.projectSchedule.score,
+        bidScheduleComments: criteria.projectSchedule.comments,
+  
+        totalScore: calculateTotalScore(),
+        status: getTotalScoreStatus(),
+        decisionComments: '',
+        actionPlan: '',
+  
+        projectId: context.selectedProject?.id,
+        id: decisionId,
+        completedDate: new Date().toISOString(),
+        completedBy: context?.user?.name?.substring(0, 100) || '',
+        createdAt: new Date().toISOString(),
+        createdBy: context?.user?.name?.substring(0, 100) || '',
+        lastModifiedAt: new Date().toISOString(),
+        lastModifiedBy: context?.user?.name?.substring(0, 100) || ''
+      };
+  
+      if (isEditing && decisionId) {
+        await goNoGoApi.update(decisionId, updatedFields);
+      } else {
+        await goNoGoApi.create(context.selectedProject?.id, updatedFields);
+      }
+  
+      if (context?.setScreenState) {
+        context.setScreenState("Project Details");
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'An unknown error occurred while saving the decision';
+      
+      console.error('Error saving go/no-go decision:', {
+        message: errorMessage,
+        error: error
+      });
+    }
+  };
 
-return (
-    <Box sx={{ p: 3, maxWidth: 1200, margin: 'auto' }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Go/No Go Decision Form
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          Project ID: {context.selectedProject?.id}
-        </Typography>
-      </Box>
+  return (
+    <Box sx={{ p: 3, pt: 8, maxWidth: 1200, margin: 'auto' }}>
+      {/* Title section matching WBS form style */}
+      <Paper sx={{ p: 2, mb: 3, border: '1px solid rgba(224, 224, 224, 1)', boxShadow: 'none' }}>
+        <Typography variant="h5">Go/No Go Decision Form</Typography>
+      </Paper>
 
       <Accordion defaultExpanded>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -488,7 +506,7 @@ return (
         {Object.entries(criteria).map(([key, value]) => (
           <Card key={key} sx={{ mb: 2 }}>
             <CardContent>
-              <Grid container spacing={2} alignItems="center">
+              <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle1">
                     {showName(key)}
@@ -508,10 +526,10 @@ return (
                         </MenuItem>
                       ))}
                     </Select>
-                    <FormHelperText>
-                      {getScoreDescription(key, value.score)}
-                    </FormHelperText>
                   </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  {renderScoringDescriptions(key, value.score)}
                 </Grid>
                 <Grid item xs={12}>
                   <Button
