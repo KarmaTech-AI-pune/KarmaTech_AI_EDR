@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, ReactNode } from 'react';
 import {
   Container,
   Typography,
@@ -14,7 +14,11 @@ import {
   Paper,
   Collapse,
   IconButton,
-  Tooltip
+  Tooltip,
+  Grid,
+  Card,
+  CardContent,
+  Chip
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -31,8 +35,13 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import BusinessIcon from '@mui/icons-material/Business';
+import PersonIcon from '@mui/icons-material/Person';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { Project, OpportunityTracking } from '../models';
 import { projectManagementAppContext } from '../App';
+import { getUserById } from '../dummyapi/database/dummyusers';
 
 // Import all forms from index
 import {
@@ -50,6 +59,37 @@ import {
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
 const NAVBAR_HEIGHT = '64px';
+
+interface InfoCardProps {
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+}
+
+const InfoCard: React.FC<InfoCardProps> = ({ title, icon, children }) => (
+  <Card sx={{ height: '100%' }}>
+    <CardContent>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ mr: 1, color: 'primary.main' }}>{icon}</Box>
+        <Typography variant="h6" component="div">
+          {title}
+        </Typography>
+      </Box>
+      {children}
+    </CardContent>
+  </Card>
+);
+
+const InfoItem: React.FC<{ label: string; value: string | number | undefined }> = ({ label, value }) => (
+  <Box sx={{ mb: 1 }}>
+    <Typography variant="caption" color="text.secondary" display="block">
+      {label}
+    </Typography>
+    <Typography variant="body1">
+      {value || 'Not specified'}
+    </Typography>
+  </Box>
+);
 
 export const ProjectDetails: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -93,6 +133,11 @@ export const ProjectDetails: React.FC = () => {
     if ('name' in project) return project.name;
     if ('workName' in project) return project.workName;
     return 'Project Details';
+  };
+
+  const getManagerName = (managerId: number) => {
+    const user = getUserById(managerId);
+    return user ? user.name : 'Not assigned';
   };
 
   const formSections = [
@@ -194,6 +239,19 @@ export const ProjectDetails: React.FC = () => {
     );
   }
 
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Not specified';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   const renderContent = () => {
     if (selectedSection === 'forms') {
       if (selectedForm) {
@@ -205,11 +263,88 @@ export const ProjectDetails: React.FC = () => {
 
     switch (selectedSection) {
       case 'overview':
+        const project = context.selectedProject as Project;
         return (
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Project Overview</Typography>
-            {/* Add project overview content */}
-          </Paper>
+          <Box sx={{ p: 2 }}>
+            <Grid container spacing={3}>
+              {/* Basic Project Info */}
+              <Grid item xs={12} md={6}>
+                <InfoCard title="Project Information" icon={<HomeIcon />}>
+                  <InfoItem label="Project Number" value={project.projectNo} />
+                  <InfoItem label="Type of Job" value={project.typeOfJob} />
+                  <InfoItem label="Sector" value={project.sector} />
+                  <InfoItem label="Priority" value={project.priority} />
+                  {project.details && (
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Project Details
+                      </Typography>
+                      <Typography variant="body2">{project.details}</Typography>
+                    </Box>
+                  )}
+                </InfoCard>
+              </Grid>
+
+              {/* Client Info */}
+              <Grid item xs={12} md={6}>
+                <InfoCard title="Client Information" icon={<BusinessIcon />}>
+                  <InfoItem label="Client Name" value={project.clientName} />
+                  <InfoItem label="Type of Client" value={project.typeOfClient} />
+                  <InfoItem label="Region" value={project.region} />
+                  <InfoItem label="Office" value={project.office} />
+                </InfoCard>
+              </Grid>
+
+              {/* Management Info */}
+              <Grid item xs={12} md={4}>
+                <InfoCard title="Management" icon={<PersonIcon />}>
+                  <InfoItem 
+                    label="Project Manager" 
+                    value={getManagerName(project.projectMangerId)} 
+                  />
+                  <InfoItem 
+                    label="Senior Project Manager" 
+                    value={getManagerName(project.seniorProjectMangerId)} 
+                  />
+                  <InfoItem 
+                    label="Regional Manager" 
+                    value={getManagerName(project.regionalManagerID)} 
+                  />
+                </InfoCard>
+              </Grid>
+
+              {/* Financial Info */}
+              <Grid item xs={12} md={4}>
+                <InfoCard title="Financial Details" icon={<AttachMoneyIcon />}>
+                  <InfoItem 
+                    label="Estimated Cost" 
+                    value={formatCurrency(project.estimatedCost, project.currency)} 
+                  />
+                  {project.budget && (
+                    <InfoItem 
+                      label="Budget" 
+                      value={formatCurrency(project.budget, project.currency)} 
+                    />
+                  )}
+                  <InfoItem label="Fee Type" value={project.feeType} />
+                  <Chip 
+                    label={project.currency}
+                    size="small"
+                    color="primary"
+                    sx={{ mt: 1 }}
+                  />
+                </InfoCard>
+              </Grid>
+
+              {/* Timeline Info */}
+              <Grid item xs={12} md={4}>
+                <InfoCard title="Timeline" icon={<CalendarTodayIcon />}>
+                  <InfoItem label="Start Date" value={formatDate(project.startDate)} />
+                  <InfoItem label="End Date" value={formatDate(project.endDate)} />
+                </InfoCard>
+              </Grid>
+            </Grid>
+          </Box>
         );
       case 'documents':
         return (

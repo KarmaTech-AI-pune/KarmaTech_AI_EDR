@@ -26,6 +26,7 @@ import {
   deleteChangeControl 
 } from '../../dummyapi/changeControlApi';
 import { projectManagementAppContext } from '../../App';
+import { FormWrapper } from './FormWrapper';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -113,10 +114,16 @@ const ChangeControlForm: React.FC = () => {
   };
 
   if (!context?.selectedProject?.id) {
-    return null;
+    return (
+      <FormWrapper>
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Alert severity="warning">Please select a project to view the change control register.</Alert>
+        </Container>
+      </FormWrapper>
+    );
   }
 
-  return (
+  const formContent = (
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{ 
         width: '100%', 
@@ -288,6 +295,12 @@ const ChangeControlForm: React.FC = () => {
         nextSrNo={getNextSrNo()}
       />
     </Container>
+  );
+
+  return (
+    <FormWrapper>
+      {formContent}
+    </FormWrapper>
   );
 };
 

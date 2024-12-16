@@ -24,6 +24,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import InputRegisterDialog from './InputRegisterformcomponents/InputRegisterDialog';
 import { deleteInputRegister, getInputRegisterByProject } from '../../dummyapi/inputRegisterApi';
 import { projectManagementAppContext } from '../../App';
+import { FormWrapper } from './FormWrapper';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -77,9 +78,11 @@ const InputRegisterForm: React.FC = () => {
 
   if (!context?.selectedProject?.id) {
     return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Alert severity="warning">Please select a project to view the input register.</Alert>
-      </Container>
+      <FormWrapper>
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Alert severity="warning">Please select a project to view the input register.</Alert>
+        </Container>
+      </FormWrapper>
     );
   }
 
@@ -132,7 +135,7 @@ const InputRegisterForm: React.FC = () => {
     />
   );
 
-  return (
+  const formContent = (
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{ 
         width: '100%', 
@@ -314,6 +317,12 @@ const InputRegisterForm: React.FC = () => {
         projectId={context.selectedProject.id}
       />
     </Container>
+  );
+
+  return (
+    <FormWrapper>
+      {formContent}
+    </FormWrapper>
   );
 };
 

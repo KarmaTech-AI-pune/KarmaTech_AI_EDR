@@ -12,7 +12,8 @@ import {
     Container
 } from '@mui/material';
 import { MonthlyReviewModel,initialFormState } from '../../models/monthlyReviewModel';
-import { ActionsTab, BudgetAndScheduleTab, ChangeOrdersTab, ContractAndCostsTab, FinancialDetailsTab, ManpowerPlanningTab } from './MonthlyProgresscomponents'
+import { ActionsTab, BudgetAndScheduleTab, ChangeOrdersTab, ContractAndCostsTab, FinancialDetailsTab, ManpowerPlanningTab } from './MonthlyProgresscomponents';
+import { FormWrapper } from './FormWrapper';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -123,7 +124,7 @@ export const MonthlyProgressForm: React.FC = () => {
         }
     };
 
-    return (
+    const formContent = (
         <Container maxWidth="xl" sx={{ py: 3 }}>
             <Box sx={{ 
                 width: '100%', 
@@ -297,5 +298,11 @@ export const MonthlyProgressForm: React.FC = () => {
                 </Snackbar>
             </Box>
         </Container>
+    );
+
+    return (
+        <FormWrapper>
+            {formContent}
+        </FormWrapper>
     );
 };

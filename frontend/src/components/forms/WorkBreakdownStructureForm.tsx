@@ -7,6 +7,7 @@ import WBSHeader from './WBSformcomponents/WBSHeader';
 import WBSTable from './WBSformcomponents/WBSTable';
 import WBSSummary from './WBSformcomponents/WBSSummary';
 import { WBSOption, WBSRowData} from '../../types/wbs';
+import { FormWrapper } from './FormWrapper';
 
 interface DeleteDialog {
   open: boolean;
@@ -19,9 +20,6 @@ interface MonthlyHours {
     [month: string]: number;
   };
 }
-
-// Helper function to generate new IDs
-
 
 const WorkBreakdownStructureForm: React.FC = () => {
   const context = useContext(projectManagementAppContext);
@@ -154,12 +152,14 @@ const WorkBreakdownStructureForm: React.FC = () => {
 
   if (!isProject || !projectStartDate) {
     return (
-      <Paper sx={{ p: 3, m: 2 }}>
-        <Alert severity="error">
-          Project start date is not set. Please set a start date for the project before creating a WBS.
-        </Alert>
-      </Paper>
-    );
+      <FormWrapper>
+        <Paper sx={{ p: 3, m: 2 }}>
+          <Alert severity="error">
+            Project start date is not set. Please set a start date for the project before creating a WBS.
+          </Alert>
+        </Paper>
+      </FormWrapper>
+      );
   }
 
   const addNewMonth = () => {
@@ -377,8 +377,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
       totalCost: level3Rows.reduce((sum, row) => sum + row.totalCost, 0)
     };
   };
-
-  return (
+  const formContent = (
     <Container 
       maxWidth="xl" 
       sx={{ 
@@ -453,6 +452,12 @@ const WorkBreakdownStructureForm: React.FC = () => {
         />
       </Box>
     </Container>
+  );
+
+  return (
+    <FormWrapper>
+      {formContent}
+    </FormWrapper>
   );
 };
 

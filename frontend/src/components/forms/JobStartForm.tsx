@@ -22,6 +22,7 @@ import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
 import { WBSTaskResourceAllocation } from "../../models";;
 import { WBSRowData } from '../../types/wbs';
+import { FormWrapper } from './FormWrapper';
 
 interface TaskAllocation {
   taskId: number;
@@ -336,18 +337,22 @@ const JobStartForm: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-        <CircularProgress />
-      </Box>
+      <FormWrapper>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+          <CircularProgress />
+        </Box>
+      </FormWrapper>
     );
   }
 
   if (error) {
     return (
-      <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
-        <Typography color="error">{error}</Typography>
-      </Paper>
-    );
+      <FormWrapper>
+        <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
+          <Typography color="error">{error}</Typography>
+        </Paper>
+        </FormWrapper>
+      );
   }
 
   const textFieldStyle = {
@@ -418,7 +423,23 @@ const JobStartForm: React.FC = () => {
     }
   };
 
+  if (loading) {
   return (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
+        <Typography color="error">{error}</Typography>
+      </Paper>
+    );
+  }
+
+  const formContent = (
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{ 
         width: '100%', 
@@ -986,6 +1007,12 @@ const JobStartForm: React.FC = () => {
       </Box>
     </Container>
   );
+
+  return (
+    <FormWrapper>
+        {formContent}
+    </FormWrapper>
+);
 };
 
 export default JobStartForm;
