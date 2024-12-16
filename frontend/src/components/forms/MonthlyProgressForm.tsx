@@ -90,6 +90,9 @@ export const MonthlyProgressForm: React.FC = () => {
         currentMonthActions: [...initialFormState.currentMonthActions]
     });
 
+    const date = new Date();
+    const currentMonthYear = `${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}`;
+
     const handleInputChange = (path: string, value: any) => {
         setFormData(prevData => {
             const newData = { ...prevData };
@@ -147,7 +150,7 @@ export const MonthlyProgressForm: React.FC = () => {
                             mb: 3
                         }}
                     >
-                        PMD2. Monthly Progress Review
+                        PMD7. Monthly Progress Review - {currentMonthYear}
                     </Typography>
 
                     <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
