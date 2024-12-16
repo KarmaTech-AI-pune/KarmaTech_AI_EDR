@@ -42,7 +42,7 @@ import {
   CorrespondenceForm,
   CheckReviewForm,
   ChangeControlForm,
-  ProgressReviewForm,
+  MonthlyProgressForm,
   ProjectClosureForm,
   FormsOverview
 } from '../components/forms';
@@ -136,7 +136,7 @@ export const ProjectDetails: React.FC = () => {
       id: 'progressReview',
       title: 'PMD7. Monthly Progress Review',
       icon: <AssessmentIcon />,
-      component: <ProgressReviewForm />
+      component: <MonthlyProgressForm />
     },
     {
       id: 'closure',
