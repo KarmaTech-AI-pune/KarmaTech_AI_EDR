@@ -92,36 +92,21 @@ export const Navbar = () => {
   };
 
   const LogoComponent = () => (
-    <Stack 
-      alignItems="center" 
-      spacing={0}
+    <Box 
       onClick={handleLogoClick}
       style={{ cursor: 'pointer' }}
+      sx={{ height: '50px', display: 'flex', alignItems: 'center' }}
     >
-      <Typography
-        variant="h5"
-        component="div"
-        sx={{
-          fontWeight: 'bold',
-          letterSpacing: '.2rem',
-          color: 'white',
-          lineHeight: 1.2
+      <img 
+        src="/logo-final.png" 
+        alt="NJSEI ISO 9000" 
+        style={{
+          height: '100%',
+          width: 'auto',
+          objectFit: 'contain'
         }}
-      >
-        NJSEI
-      </Typography>
-      <Typography
-        variant="subtitle1"
-        component="div"
-        sx={{
-          letterSpacing: '.1rem',
-          color: 'white',
-          lineHeight: 1
-        }}
-      >
-        ISO 9000
-      </Typography>
-    </Stack>
+      />
+    </Box>
   );
 
   return (
