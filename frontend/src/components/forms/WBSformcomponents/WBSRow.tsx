@@ -100,8 +100,8 @@ const WBSRow: React.FC<WBSRowProps> = ({
       sx={{ 
         '& > td': {
           borderBottom: '1px solid rgba(224, 224, 224, 1)',
-          bgcolor: row.level === 1 ? 'rgba(0, 0, 0, 0.06)' : 
-                  row.level === 2 ? 'rgba(0, 0, 0, 0.03)' : 
+          bgcolor: row.level === 1 ? 'rgba(25, 118, 210, 0.08)' : 
+                  row.level === 2 ? 'rgba(76, 175, 80, 0.08)' : 
                   'transparent',
           pl: '8px !important',
         }
