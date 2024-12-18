@@ -113,19 +113,32 @@ const WBSTable: React.FC<WBSTableProps> = ({
     return totals;
   };
 
-  const renderAddButton = (level: 1 | 2 | 3, parentId?: number, indentLevel: number = 0): JSX.Element => {
+  const getLevelColor = (level: number) => {
+    switch (level) {
+      case 1:
+        return 'rgba(25, 118, 210, 0.08)'; // Light blue
+      case 2:
+        return 'rgba(76, 175, 80, 0.08)'; // Light green
+      case 3:
+        return 'rgba(0, 0, 0, 0)'; // Light purple for level 3 (instead of transparent)
+      default:
+        return 'transparent';
+    }
+  };
+
+  const renderAddButton = (level: 1 | 2 | 3, parentId?: number): JSX.Element => {
     return (
       <AddButtonRow
         key={`add-button-level-${level}${parentId ? `-parent-${parentId}` : ''}`}
       >
         <TableCell 
-          colSpan={9 + months.length}
+          colSpan={editMode ? 8 + months.length : 9 + months.length}
+          sx={{ bgcolor: getLevelColor(level) }}
         >
           <Button
             fullWidth
             size="small"
             sx={{
-              ml: `${indentLevel * 3}rem`,
               height: '32px',
               textTransform: 'none',
               color: 'text.secondary',
@@ -155,6 +168,35 @@ const WBSTable: React.FC<WBSTableProps> = ({
     return [];
   };
 
+  const getSequenceNumber = (row: WBSRowData): string => {
+    if (row.level === 1) {
+      const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
+      return level1Index.toString();
+    } else if (row.level === 2) {
+      const parentRow = rows.find(r => r.id === row.parentId);
+      if (parentRow) {
+        const parentIndex = rows.filter(r => r.level === 1).findIndex(r => r.id === parentRow.id) + 1;
+        const level2Index = rows.filter(r => r.level === 2 && r.parentId === parentRow.id)
+          .findIndex(r => r.id === row.id) + 1;
+        return `${parentIndex}.${level2Index}`;
+      }
+    } else if (row.level === 3) {
+      const level2Parent = rows.find(r => r.id === row.parentId);
+      if (level2Parent) {
+        const level1Parent = rows.find(r => r.id === level2Parent.parentId);
+        if (level1Parent) {
+          const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === level1Parent.id) + 1;
+          const level2Index = rows.filter(r => r.level === 2 && r.parentId === level1Parent.id)
+            .findIndex(r => r.id === level2Parent.id) + 1;
+          const level3Index = rows.filter(r => r.level === 3 && r.parentId === level2Parent.id)
+            .findIndex(r => r.id === row.id) + 1;
+          return `${level1Index}.${level2Index}.${level3Index}`;
+        }
+      }
+    }
+    return '';
+  };
+
   const renderRowsAndButtons = () => {
     const level1Rows = rows.filter(row => row.level === 1);
     const result: JSX.Element[] = [];
@@ -170,6 +212,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
           editMode={editMode}
           levelOptions={getLevelOptions(level1Row)}
           childTotals={calculateChildTotals(level1Row)}
+          sequenceNumber={getSequenceNumber(level1Row)}
           onDelete={onDeleteRow}
           onLevelChange={onLevelChange}
           onRoleChange={onRoleChange}
@@ -192,6 +235,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             editMode={editMode}
             levelOptions={getLevelOptions(level2Row)}
             childTotals={calculateChildTotals(level2Row)}
+            sequenceNumber={getSequenceNumber(level2Row)}
             onDelete={onDeleteRow}
             onLevelChange={onLevelChange}
             onRoleChange={onRoleChange}
@@ -214,6 +258,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
               editMode={editMode}
               levelOptions={getLevelOptions(level3Row)}
               childTotals={null}
+              sequenceNumber={getSequenceNumber(level3Row)}
               onDelete={onDeleteRow}
               onLevelChange={onLevelChange}
               onRoleChange={onRoleChange}
@@ -226,12 +271,12 @@ const WBSTable: React.FC<WBSTableProps> = ({
         });
 
         if (!editMode) {
-          result.push(renderAddButton(3, level2Row.id, 2));
+          result.push(renderAddButton(3, level2Row.id));
         }
       });
 
       if (!editMode) {
-        result.push(renderAddButton(2, level1Row.id, 1));
+        result.push(renderAddButton(2, level1Row.id));
       }
     });
 
@@ -254,12 +299,14 @@ const WBSTable: React.FC<WBSTableProps> = ({
       <Table stickyHeader size="small" sx={{ minWidth: 1200 }}>
         <TableHead>
           <TableRow>
-            <HeaderCell sx={{ width: '48px' }}>
-              Manage
-            </HeaderCell>
-            <HeaderCell sx={{ minWidth: '400px' }}>Work Package Description</HeaderCell>
-            <HeaderCell sx={{ minWidth: '200px' }}>Resource Role</HeaderCell>
-            <HeaderCell sx={{ minWidth: '200px' }}>Resource Name</HeaderCell>
+            {!editMode && (
+              <HeaderCell sx={{ width: '48px' }}>
+                
+              </HeaderCell>
+            )}
+            <HeaderCell sx={{ minWidth: '300px' }}>Work Description</HeaderCell>
+            <HeaderCell sx={{ minWidth: '150px' }}>Resource Role</HeaderCell>
+            <HeaderCell sx={{ minWidth: '150px' }}>Resource Name</HeaderCell>
             <HeaderCell sx={{ minWidth: 100 }}>Rate</HeaderCell>
             {months.map(month => (
               <HeaderCell key={month} sx={{ minWidth: 100 }}>{month}</HeaderCell>

@@ -6,7 +6,8 @@ import {
   Box,
   Select,
   MenuItem,
-  styled
+  styled,
+  Typography
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
@@ -55,6 +56,7 @@ interface WBSRowProps {
   editMode: boolean;
   levelOptions: WBSOption[];
   childTotals: WBSChildTotals | null;
+  sequenceNumber: string;
   onDelete: (id: number) => void;
   onLevelChange: (id: number, value: string) => void;
   onRoleChange: (id: number, roleId: string) => void;
@@ -72,6 +74,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
   editMode,
   levelOptions,
   childTotals,
+  sequenceNumber,
   onDelete,
   onLevelChange,
   onRoleChange,
@@ -111,8 +114,8 @@ const WBSRow: React.FC<WBSRowProps> = ({
         }
       }}
     >
-      <TableCell sx={{ width: '48px' }}>
-        {!editMode && (
+      {!editMode && (
+        <TableCell sx={{ width: '48px' }}>
           <IconButton 
             size="small" 
             onClick={() => onDelete(row.id)}
@@ -125,10 +128,25 @@ const WBSRow: React.FC<WBSRowProps> = ({
           >
             <DeleteIcon fontSize="small" />
           </IconButton>
-        )}
-      </TableCell>
+        </TableCell>
+      )}
       <TableCell>
-        <Box sx={{ height: '40px' }}>
+        <Box sx={{ 
+          height: '40px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <Typography
+            variant="body2"
+            sx={{
+              minWidth: '50px',
+              color: 'text.primary',
+              fontWeight: 'bold',
+            }}
+          >
+            {sequenceNumber}
+          </Typography>
           <LevelSelect
             level={row.level}
             value={row.title}
