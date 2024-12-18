@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 using NJS.Domain.Entities;
 
 namespace NJS.Domain.Database
@@ -84,6 +86,20 @@ namespace NJS.Domain.Database
                 .Property(o => o.NetNJSRevenue)
                 .HasPrecision(18, 2);
          
+        }
+    }
+
+    public class ProjectManagementContextFactory : IDesignTimeDbContextFactory<ProjectManagementContext>
+    {
+        public ProjectManagementContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
+            //Need to add string for everyone
+            var connectionString = "Server=localhost,1433;Database=NJSAPIProjectManagement12;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true";
+            
+            optionsBuilder.UseSqlServer(connectionString);
+
+            return new ProjectManagementContext(optionsBuilder.Options);
         }
     }
 }
