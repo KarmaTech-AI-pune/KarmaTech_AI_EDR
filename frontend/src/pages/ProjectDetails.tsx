@@ -375,8 +375,7 @@ export const ProjectDetails: React.FC = () => {
         display: 'flex',
         minHeight: `calc(100vh - ${NAVBAR_HEIGHT})`,
         pt: `${NAVBAR_HEIGHT}`,
-        bgcolor: 'background.default',
-        overflow: 'hidden'
+        bgcolor: 'background.default'
       }}
     >
       <Drawer
@@ -478,13 +477,11 @@ export const ProjectDetails: React.FC = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          height: `calc(100vh - ${NAVBAR_HEIGHT})`,
-          overflow: 'hidden',
           width: { sm: `calc(100% - ${isDrawerExpanded ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH}px)` },
           transition: 'width 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms, margin 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
         }}
       >
-        <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
+        <Box sx={{ p: 3 }}>
           <Typography variant="h4" gutterBottom>
             {getProjectTitle(context.selectedProject)}
           </Typography>

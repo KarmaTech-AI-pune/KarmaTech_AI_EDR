@@ -1,23 +1,18 @@
 import React from 'react';
 import {
   Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Button,
+  Divider,
+  Typography,
   styled
 } from '@mui/material';
 
-const HeaderCell = styled(TableCell)(({ theme }) => ({
-  textAlign: 'center',
-  fontWeight: 'bold',
-  backgroundColor: theme.palette.background.paper,
-  padding: '16px 8px',
-  borderBottom: `2px solid ${theme.palette.divider}`
-}));
+const SummaryText = styled(Typography)({
+  fontWeight: 500,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '8px'
+});
 
 interface WBSSummaryProps {
   totalHours: number;
@@ -35,39 +30,29 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
   onSave
 }) => {
   return (
-    <>
-      <Box sx={{ mb: 2 }}>
-        <TableContainer>
-          <Table size="small" sx={{ maxWidth: 400, ml: 'auto' }}>
-            <TableHead>
-              <TableRow>
-                <HeaderCell>Total Hours</HeaderCell>
-                <HeaderCell>Total Cost</HeaderCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                <TableCell align="center" sx={{ fontWeight: 'bold' }}>
-                  {totalHours}
-                </TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold' }}>
-                  {currency} {totalCost.toLocaleString()}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Button
-          variant="contained"
-          onClick={onSave}
-          disabled={disabled}
-        >
-          Save WBS Data
-        </Button>
-      </Box>
-    </>
+    <Box sx={{ 
+      display: 'flex', 
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: 3,
+      p: 1
+    }}>
+      <SummaryText>
+        Total Hours: {totalHours}
+      </SummaryText>
+      <Divider orientation="vertical" flexItem />
+      <SummaryText>
+        Total Cost: {currency} {totalCost.toLocaleString()}
+      </SummaryText>
+      <Button
+        variant="contained"
+        onClick={onSave}
+        disabled={disabled}
+        size="small"
+      >
+        Save
+      </Button>
+    </Box>
   );
 };
 

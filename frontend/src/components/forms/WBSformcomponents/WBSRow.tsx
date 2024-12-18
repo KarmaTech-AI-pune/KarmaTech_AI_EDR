@@ -14,9 +14,11 @@ import { WBSOption, WBSRowData, WBSChildTotals } from '../../../types/wbs';
 
 const NumberInput = styled('input')({
   width: '100%',
-  padding: '8px',
+  padding: '8px 12px',
   border: '1px solid rgba(0, 0, 0, 0.23)',
   borderRadius: '4px',
+  height: '40px',
+  boxSizing: 'border-box',
   '&:focus': {
     outline: 'none',
     borderColor: '#1976d2'
@@ -25,8 +27,9 @@ const NumberInput = styled('input')({
 
 const StyledSelect = styled(Select)({
   width: '100%',
+  height: '40px',
   '& .MuiSelect-select': {
-    padding: '8px 14px'
+    padding: '8px 12px'
   }
 });
 
@@ -98,16 +101,17 @@ const WBSRow: React.FC<WBSRowProps> = ({
   return (
     <TableRow 
       sx={{ 
+        height: '56px',
         '& > td': {
           borderBottom: '1px solid rgba(224, 224, 224, 1)',
           bgcolor: row.level === 1 ? 'rgba(25, 118, 210, 0.08)' : 
                   row.level === 2 ? 'rgba(76, 175, 80, 0.08)' : 
                   'transparent',
-          pl: '8px !important',
+          p: '12px'
         }
       }}
     >
-      <TableCell sx={{ width: '48px', p: '4px !important' }}>
+      <TableCell sx={{ width: '48px' }}>
         {!editMode && (
           <IconButton 
             size="small" 
@@ -124,13 +128,15 @@ const WBSRow: React.FC<WBSRowProps> = ({
         )}
       </TableCell>
       <TableCell>
-        <LevelSelect
-          level={row.level}
-          value={row.title}
-          options={levelOptions}
-          disabled={editMode}
-          onChange={(value) => onLevelChange(row.id, value)}
-        />
+        <Box sx={{ height: '40px' }}>
+          <LevelSelect
+            level={row.level}
+            value={row.title}
+            options={levelOptions}
+            disabled={editMode}
+            onChange={(value) => onLevelChange(row.id, value)}
+          />
+        </Box>
       </TableCell>
       <TableCell>
         {row.level === 3 ? (
@@ -149,7 +155,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             ))}
           </StyledSelect>
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
       <TableCell>
@@ -169,7 +175,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             ))}
           </StyledSelect>
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
       <TableCell>
@@ -185,7 +191,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             }}
           />
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
       {months.map(month => (
@@ -212,7 +218,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
               }}
             />
           ) : (
-            <Box sx={{ height: '37px' }} />
+            <Box sx={{ height: '40px' }} />
           )}
         </TableCell>
       ))}
@@ -238,7 +244,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             }}
           />
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
       <TableCell>
@@ -261,7 +267,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             }}
           />
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
       <TableCell>
@@ -284,7 +290,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             }}
           />
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
     </TableRow>

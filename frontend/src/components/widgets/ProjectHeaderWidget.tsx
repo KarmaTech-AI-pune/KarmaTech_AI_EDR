@@ -37,7 +37,7 @@ export const ProjectHeaderWidget: React.FC<ProjectHeaderWidgetProps> = ({ projec
         <Paper 
             elevation={0}
             sx={{ 
-                mb: 3,
+                mb: 1, // Reduced from mb: 3
                 border: '1px solid #e0e0e0',
                 borderRadius: 1,
                 backgroundColor: '#fff'
@@ -51,7 +51,7 @@ export const ProjectHeaderWidget: React.FC<ProjectHeaderWidgetProps> = ({ projec
                     backgroundColor: '#f8f9fa',
                     borderLeft: '3px solid #1976d2',
                     cursor: 'pointer',
-                    minHeight: '48px',
+                    minHeight: '40px', // Reduced from 48px
                     '&:hover': {
                         backgroundColor: 'rgba(0, 0, 0, 0.04)'
                     }
@@ -64,7 +64,7 @@ export const ProjectHeaderWidget: React.FC<ProjectHeaderWidgetProps> = ({ projec
                         alignItems: 'center', 
                         justifyContent: 'space-between',
                         width: '100%',
-                        p: '12px 16px'
+                        p: '8px 12px' // Reduced from 12px 16px
                     }}>
                         <Typography sx={{ fontWeight: 'bold' }}>PROJECT DETAILS</Typography>
                         <IconButton size="small">
@@ -76,9 +76,9 @@ export const ProjectHeaderWidget: React.FC<ProjectHeaderWidgetProps> = ({ projec
                         display: 'flex', 
                         alignItems: 'center', 
                         width: '100%',
-                        p: '12px 16px'
+                        p: '8px 12px' // Reduced from 12px 16px
                     }}>
-                        <Grid container spacing={3} alignItems="center">
+                        <Grid container spacing={2} alignItems="center">
                             <Grid item xs={3}>
                                 <Typography sx={{ color: '#2c3e50' }}>{project.clientName}</Typography>
                             </Grid>
@@ -104,8 +104,8 @@ export const ProjectHeaderWidget: React.FC<ProjectHeaderWidgetProps> = ({ projec
             </Box>
             
             <Collapse in={expanded}>
-                <Box sx={{ p: 3 }}>
-                    <Grid container spacing={3}>
+                <Box sx={{ p: 2 }}> {/* Reduced from p: 3 */}
+                    <Grid container spacing={2}> {/* Reduced from spacing: 3 */}
                         <Grid item xs={12} md={6}>
                             <Grid container spacing={2}>
                                 <Grid item xs={6}>

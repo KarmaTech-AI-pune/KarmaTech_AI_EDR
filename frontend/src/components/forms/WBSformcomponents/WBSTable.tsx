@@ -13,19 +13,29 @@ import AddIcon from '@mui/icons-material/Add';
 import WBSRow from './WBSRow';
 import { resourceRole as ResourceRole, Employee } from  "../../../models";
 import { WBSRowData, WBSOption } from '../../../types/wbs';
+
 const HeaderCell = styled(TableCell)(({ theme }) => ({
   textAlign: 'center',
   fontWeight: 'bold',
   backgroundColor: theme.palette.background.paper,
-  padding: '16px 8px',
-  borderBottom: `2px solid ${theme.palette.divider}`
+  padding: '12px',
+  borderBottom: `2px solid ${theme.palette.divider}`,
+  height: '48px'
 }));
 
-const TotalHeaderCell = styled(HeaderCell)({
-  backgroundColor: 'rgba(25, 118, 210, 0.08)',
-  color: '#1976d2'
-});
+const SummaryHeaderCell = styled(HeaderCell)(({ theme }) => ({
+  backgroundColor: theme.palette.grey[100],
+  color: theme.palette.text.primary,
+  borderLeft: `1px solid ${theme.palette.divider}`
+}));
 
+const AddButtonRow = styled(TableRow)({
+  height: '32px !important',
+  '& > td': {
+    padding: '0 !important',
+    borderBottom: '1px solid rgba(224, 224, 224, 0.5) !important'
+  }
+});
 
 interface WBSTableProps {
   rows: WBSRowData[];
@@ -105,29 +115,18 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
   const renderAddButton = (level: 1 | 2 | 3, parentId?: number, indentLevel: number = 0): JSX.Element => {
     return (
-      <TableRow
+      <AddButtonRow
         key={`add-button-level-${level}${parentId ? `-parent-${parentId}` : ''}`}
-        sx={{
-          height: '28px',
-          '& > td': {
-            bgcolor: 'transparent',
-            borderBottom: '1px solid rgba(224, 224, 224, 1)',
-            py: 0
-          }
-        }}
       >
         <TableCell 
           colSpan={9 + months.length}
-          sx={{
-            p: 0,
-          }}
         >
           <Button
             fullWidth
             size="small"
             sx={{
               ml: `${indentLevel * 3}rem`,
-              height: '28px',
+              height: '32px',
               textTransform: 'none',
               color: 'text.secondary',
               '&:hover': {
@@ -140,7 +139,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             Add Level {level}
           </Button>
         </TableCell>
-      </TableRow>
+      </AddButtonRow>
     );
   };
 
@@ -161,7 +160,6 @@ const WBSTable: React.FC<WBSTableProps> = ({
     const result: JSX.Element[] = [];
 
     level1Rows.forEach(level1Row => {
-      // Always render the row
       result.push(
         <WBSRow
           key={level1Row.id}
@@ -184,7 +182,6 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
       const level2Rows = rows.filter(row => row.level === 2 && row.parentId === level1Row.id);
       level2Rows.forEach(level2Row => {
-        // Always render level 2 rows
         result.push(
           <WBSRow
             key={level2Row.id}
@@ -207,7 +204,6 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
         const level3Rows = rows.filter(row => row.level === 3 && row.parentId === level2Row.id);
         level3Rows.forEach(level3Row => {
-          // Always render level 3 rows
           result.push(
             <WBSRow
               key={level3Row.id}
@@ -229,19 +225,16 @@ const WBSTable: React.FC<WBSTableProps> = ({
           );
         });
 
-        // Only render add button for level 3 if not in edit mode
         if (!editMode) {
           result.push(renderAddButton(3, level2Row.id, 2));
         }
       });
 
-      // Only render add button for level 2 if not in edit mode
       if (!editMode) {
         result.push(renderAddButton(2, level1Row.id, 1));
       }
     });
 
-    // Only render add button for level 1 if not in edit mode
     if (!editMode) {
       result.push(renderAddButton(1));
     }
@@ -251,31 +244,29 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
   return (
     <TableContainer sx={{ 
-      maxHeight: 'calc(100vh - 300px)',
       overflowX: 'auto',
-      overflowY: 'auto',
       '& .MuiTableCell-root': {
-        px: 1,
-        py: 0.75,
+        px: 1.5,
+        py: 1,
         fontSize: '0.875rem'
       }
     }}>
       <Table stickyHeader size="small" sx={{ minWidth: 1200 }}>
         <TableHead>
           <TableRow>
-            <HeaderCell sx={{ width: '48px', p: '4px !important' }}>
-              Actions
+            <HeaderCell sx={{ width: '48px' }}>
+              Manage
             </HeaderCell>
-            <HeaderCell sx={{ minWidth: '400px' }}>Task Level</HeaderCell>
-            <HeaderCell sx={{ minWidth: '200px' }}>Role</HeaderCell>
-            <HeaderCell sx={{ minWidth: '200px' }}>Name</HeaderCell>
-            <HeaderCell sx={{ minWidth: 100 }}>Cost Rate</HeaderCell>
+            <HeaderCell sx={{ minWidth: '400px' }}>Work Package Description</HeaderCell>
+            <HeaderCell sx={{ minWidth: '200px' }}>Resource Role</HeaderCell>
+            <HeaderCell sx={{ minWidth: '200px' }}>Resource Name</HeaderCell>
+            <HeaderCell sx={{ minWidth: 100 }}>Rate</HeaderCell>
             {months.map(month => (
               <HeaderCell key={month} sx={{ minWidth: 100 }}>{month}</HeaderCell>
             ))}
-            <HeaderCell sx={{ minWidth: 100 }}>ODCs</HeaderCell>
-            <TotalHeaderCell sx={{ minWidth: 100 }}>Total Monthly Hours</TotalHeaderCell>
-            <HeaderCell sx={{ minWidth: 100 }}>Total Cost</HeaderCell>
+            <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODCs</SummaryHeaderCell>
+            <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Hours</SummaryHeaderCell>
+            <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Cost</SummaryHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>
