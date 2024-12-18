@@ -38,7 +38,6 @@ const StickyCell = styled(TableCell)(({ theme }) => ({
   position: 'sticky',
   left: 0,
   zIndex: 2,
-  backgroundColor: 'inherit',
   '&::after': {
     content: '""',
     position: 'absolute',
@@ -121,21 +120,23 @@ const WBSRow: React.FC<WBSRowProps> = ({
 
   const WorkDescriptionCell = stickyColumn ? StickyCell : TableCell;
 
+  const backgroundColor = row.level === 1 ? '#E3F2FD' : // Solid light blue
+                         row.level === 2 ? '#E8F5E9' : // Solid light green
+                         '#FFFFFF'; // Solid white
+
   return (
     <TableRow 
       sx={{ 
         height: '56px',
         '& > td': {
           borderBottom: '1px solid rgba(224, 224, 224, 1)',
-          bgcolor: row.level === 1 ? 'rgba(25, 118, 210, 0.08)' : 
-                  row.level === 2 ? 'rgba(76, 175, 80, 0.08)' : 
-                  'transparent',
+          bgcolor: backgroundColor,
           p: '12px'
         }
       }}
     >
       {!editMode && (
-        <TableCell sx={{ width: '48px' }}>
+        <TableCell sx={{ width: '48px', bgcolor: backgroundColor }}>
           <IconButton 
             size="small" 
             onClick={() => onDelete(row.id)}
@@ -150,7 +151,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
           </IconButton>
         </TableCell>
       )}
-      <WorkDescriptionCell>
+      <WorkDescriptionCell sx={{ bgcolor: backgroundColor }}>
         <Box sx={{ 
           height: '40px',
           display: 'flex',
@@ -225,7 +226,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             disabled={editMode || !row.role}
             title={rateTooltip}
             style={{
-              backgroundColor: editMode ? 'rgba(0, 0, 0, 0.04)' : 'white'
+              backgroundColor: editMode ? '#f5f5f5' : 'white'
             }}
           />
         ) : (
@@ -242,7 +243,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
               min="0"
               max="160"
               style={{
-                backgroundColor: editMode ? 'rgba(0, 0, 0, 0.04)' : 'white'
+                backgroundColor: editMode ? '#f5f5f5' : 'white'
               }}
               disabled={editMode}
             />
@@ -252,7 +253,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
               value={getChildTotalHours(month)}
               readOnly
               style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                backgroundColor: '#f5f5f5'
               }}
             />
           ) : (
@@ -268,7 +269,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             onChange={(e) => onODCChange(row.id, e.target.value)}
             min="0"
             style={{
-              backgroundColor: editMode ? 'rgba(0, 0, 0, 0.04)' : 'white'
+              backgroundColor: editMode ? '#f5f5f5' : 'white'
             }}
             disabled={editMode}
           />
@@ -278,7 +279,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             value={childTotals.odc || ''}
             readOnly
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              backgroundColor: '#f5f5f5'
             }}
           />
         ) : (
@@ -292,7 +293,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             value={row.totalHours}
             readOnly
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              backgroundColor: '#f5f5f5'
             }}
           />
         ) : childTotals ? (
@@ -301,7 +302,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             value={childTotals.totalHours || ''}
             readOnly
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              backgroundColor: '#f5f5f5'
             }}
           />
         ) : (
@@ -315,7 +316,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             value={row.totalCost}
             readOnly
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              backgroundColor: '#f5f5f5'
             }}
           />
         ) : childTotals ? (
@@ -324,7 +325,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             value={childTotals.totalCost || ''}
             readOnly
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              backgroundColor: '#f5f5f5'
             }}
           />
         ) : (

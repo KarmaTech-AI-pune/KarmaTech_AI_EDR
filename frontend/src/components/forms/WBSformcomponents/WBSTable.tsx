@@ -17,7 +17,7 @@ import { WBSRowData, WBSOption } from '../../../types/wbs';
 const HeaderCell = styled(TableCell)(({ theme }) => ({
   textAlign: 'center',
   fontWeight: 'bold',
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: '#FFFFFF',
   padding: '12px',
   borderBottom: `2px solid ${theme.palette.divider}`,
   height: '48px'
@@ -27,7 +27,7 @@ const StickyHeaderCell = styled(HeaderCell)(({ theme }) => ({
   position: 'sticky',
   left: 0,
   zIndex: 3,
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: '#FFFFFF',
   '&::after': {
     content: '""',
     position: 'absolute',
@@ -40,7 +40,7 @@ const StickyHeaderCell = styled(HeaderCell)(({ theme }) => ({
 }));
 
 const SummaryHeaderCell = styled(HeaderCell)(({ theme }) => ({
-  backgroundColor: theme.palette.grey[100],
+  backgroundColor: '#F5F5F5',
   color: theme.palette.text.primary,
   borderLeft: `1px solid ${theme.palette.divider}`
 }));
@@ -49,7 +49,7 @@ const AddButtonRow = styled(TableRow)({
   height: '32px !important',
   '& > td': {
     padding: '0 !important',
-    borderBottom: '1px solid rgba(224, 224, 224, 0.5) !important'
+    borderBottom: '1px solid rgba(224, 224, 224, 1) !important'
   }
 });
 
@@ -132,13 +132,13 @@ const WBSTable: React.FC<WBSTableProps> = ({
   const getLevelColor = (level: number) => {
     switch (level) {
       case 1:
-        return 'rgba(25, 118, 210, 0.08)'; // Light blue
+        return '#E3F2FD'; // Solid light blue
       case 2:
-        return 'rgba(76, 175, 80, 0.08)'; // Light green
+        return '#E8F5E9'; // Solid light green
       case 3:
-        return 'rgba(0, 0, 0, 0)'; // Light purple for level 3 (instead of transparent)
+        return '#FFFFFF'; // Solid white
       default:
-        return 'transparent';
+        return '#FFFFFF';
     }
   };
 
@@ -159,7 +159,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
               textTransform: 'none',
               color: 'text.secondary',
               '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.04)'
+                bgcolor: '#F5F5F5'
               }
             }}
             onClick={() => onAddRow(level, parentId)}
@@ -319,11 +319,11 @@ const WBSTable: React.FC<WBSTableProps> = ({
         <TableHead>
           <TableRow>
             {!editMode && (
-              <HeaderCell sx={{ width: '48px' }}>
+              <HeaderCell sx={{ width: '48px', backgroundColor: '#FFFFFF' }}>
                 
               </HeaderCell>
             )}
-            <StickyHeaderCell sx={{ minWidth: '300px' }}>Work Description</StickyHeaderCell>
+            <StickyHeaderCell sx={{ minWidth: '300px', backgroundColor: '#FFFFFF' }}>Work Description</StickyHeaderCell>
             <HeaderCell sx={{ minWidth: '150px' }}>Resource Role</HeaderCell>
             <HeaderCell sx={{ minWidth: '150px' }}>Resource Name</HeaderCell>
             <HeaderCell sx={{ minWidth: 100 }}>Rate</HeaderCell>
