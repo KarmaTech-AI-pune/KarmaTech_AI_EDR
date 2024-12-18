@@ -27,7 +27,7 @@ interface LevelSelectProps {
 }
 
 const LevelSelect: React.FC<LevelSelectProps> = ({
-  level,
+  
   value,
   options,
   disabled,

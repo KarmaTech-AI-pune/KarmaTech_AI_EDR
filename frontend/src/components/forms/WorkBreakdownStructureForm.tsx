@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Box, Paper, Alert, Container } from '@mui/material';
+import { Paper, Alert, Container } from '@mui/material';
 import { projectManagementAppContext } from '../../App';
 import { WBSStructureAPI, ResourceAPI, WBSOptionsAPI } from '../../dummyapi/wbsApi';
 import DeleteWBSDialog from '../dialogbox/DeleteWBSDialog';

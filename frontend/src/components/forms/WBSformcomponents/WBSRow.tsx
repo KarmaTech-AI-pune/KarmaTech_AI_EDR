@@ -34,6 +34,22 @@ const StyledSelect = styled(Select)({
   }
 });
 
+const StickyCell = styled(TableCell)(({ theme }) => ({
+  position: 'sticky',
+  left: 0,
+  zIndex: 2,
+  backgroundColor: 'inherit',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: theme.palette.divider,
+  }
+}));
+
 interface Employee {
   id: number;
   name: string;
@@ -57,6 +73,7 @@ interface WBSRowProps {
   levelOptions: WBSOption[];
   childTotals: WBSChildTotals | null;
   sequenceNumber: string;
+  stickyColumn?: boolean;
   onDelete: (id: number) => void;
   onLevelChange: (id: number, value: string) => void;
   onRoleChange: (id: number, roleId: string) => void;
@@ -75,6 +92,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
   levelOptions,
   childTotals,
   sequenceNumber,
+  stickyColumn,
   onDelete,
   onLevelChange,
   onRoleChange,
@@ -100,6 +118,8 @@ const WBSRow: React.FC<WBSRowProps> = ({
     const year = `20${yearStr}`;
     return (childTotals.monthlyHours[year]?.[monthName] || '').toString();
   };
+
+  const WorkDescriptionCell = stickyColumn ? StickyCell : TableCell;
 
   return (
     <TableRow 
@@ -130,7 +150,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
           </IconButton>
         </TableCell>
       )}
-      <TableCell>
+      <WorkDescriptionCell>
         <Box sx={{ 
           height: '40px',
           display: 'flex',
@@ -155,7 +175,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             onChange={(value) => onLevelChange(row.id, value)}
           />
         </Box>
-      </TableCell>
+      </WorkDescriptionCell>
       <TableCell>
         {row.level === 3 ? (
           <StyledSelect

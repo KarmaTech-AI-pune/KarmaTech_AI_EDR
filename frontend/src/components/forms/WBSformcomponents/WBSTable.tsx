@@ -23,6 +23,22 @@ const HeaderCell = styled(TableCell)(({ theme }) => ({
   height: '48px'
 }));
 
+const StickyHeaderCell = styled(HeaderCell)(({ theme }) => ({
+  position: 'sticky',
+  left: 0,
+  zIndex: 3,
+  backgroundColor: theme.palette.background.paper,
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: theme.palette.divider,
+  }
+}));
+
 const SummaryHeaderCell = styled(HeaderCell)(({ theme }) => ({
   backgroundColor: theme.palette.grey[100],
   color: theme.palette.text.primary,
@@ -220,6 +236,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
           onCostRateChange={onCostRateChange}
           onHoursChange={onHoursChange}
           onODCChange={onODCChange}
+          stickyColumn={true}
         />
       );
 
@@ -243,6 +260,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             onCostRateChange={onCostRateChange}
             onHoursChange={onHoursChange}
             onODCChange={onODCChange}
+            stickyColumn={true}
           />
         );
 
@@ -266,6 +284,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
               onCostRateChange={onCostRateChange}
               onHoursChange={onHoursChange}
               onODCChange={onODCChange}
+              stickyColumn={true}
             />
           );
         });
@@ -304,7 +323,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
                 
               </HeaderCell>
             )}
-            <HeaderCell sx={{ minWidth: '300px' }}>Work Description</HeaderCell>
+            <StickyHeaderCell sx={{ minWidth: '300px' }}>Work Description</StickyHeaderCell>
             <HeaderCell sx={{ minWidth: '150px' }}>Resource Role</HeaderCell>
             <HeaderCell sx={{ minWidth: '150px' }}>Resource Name</HeaderCell>
             <HeaderCell sx={{ minWidth: 100 }}>Rate</HeaderCell>
