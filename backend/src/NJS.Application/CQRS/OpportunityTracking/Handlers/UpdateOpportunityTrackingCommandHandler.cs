@@ -31,7 +31,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             }
 
             // Update entity properties
-            existingEntity.ProjectId = request.ProjectId;
+          
             existingEntity.Stage = request.Stage;
             existingEntity.StrategicRanking = request.StrategicRanking;
             existingEntity.BidFees = request.BidFees;
@@ -60,8 +60,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             existingEntity.CapitalValue = request.CapitalValue;
             existingEntity.DurationOfProject = request.DurationOfProject;
             existingEntity.FundingStream = request.FundingStream;
-            existingEntity.ContractType = request.ContractType;
-            existingEntity.WorkflowId = request.WorkflowId;
+            existingEntity.ContractType = request.ContractType;           
             existingEntity.UpdatedAt = DateTime.UtcNow;
 
             // Update in database
@@ -70,8 +69,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             // Map to DTO
             return new OpportunityTrackingDto
             {
-                Id = existingEntity.Id,
-                ProjectId = existingEntity.ProjectId,
+                Id = existingEntity.Id,                
                 Stage = existingEntity.Stage,
                 StrategicRanking = existingEntity.StrategicRanking,
                 BidFees = existingEntity.BidFees,
@@ -100,8 +98,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 CapitalValue = existingEntity.CapitalValue,
                 DurationOfProject = existingEntity.DurationOfProject,
                 FundingStream = existingEntity.FundingStream,
-                ContractType = existingEntity.ContractType,
-                WorkflowId = existingEntity.WorkflowId
+                ContractType = existingEntity.ContractType                
             };
         }
     }

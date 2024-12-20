@@ -4,14 +4,13 @@ namespace NJS.Application.Dtos
 {
     public class OpportunityTrackingDto
     {
-        public int Id { get; set; }
-        public int? ProjectId { get; set; }
+        public int Id { get; set; }      
         public string Stage { get; set; }
         public string StrategicRanking { get; set; }
         public decimal? BidFees { get; set; }
         public decimal? Emd { get; set; }
         public string? FormOfEMD { get; set; }
-        public string BidManagerId { get; set; }
+        public string? BidManagerId { get; set; }
         public string? ReviewManagerId { get; set; }
         public string? ApprovalManagerId { get; set; }
         public string? ContactPersonAtClient { get; set; }
@@ -35,6 +34,6 @@ namespace NJS.Application.Dtos
         public int DurationOfProject { get; set; }
         public string FundingStream { get; set; }
         public string ContractType { get; set; }
-        public int WorkflowId { get; set; }
+        public int? WorkflowId { get; set; }
     }
 }

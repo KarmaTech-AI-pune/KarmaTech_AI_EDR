@@ -68,14 +68,9 @@ namespace NJS.Domain.Entities
         // Senior Project Manager relationship
         [ForeignKey("SeniorProjectManager")]
         public string? SeniorProjectManagerId { get; set; }
-        public virtual User SeniorProjectManager { get; set; }
+        public virtual User SeniorProjectManager { get; set; }   
 
-        // Navigation property for OpportunityTracking
-        public virtual ICollection<OpportunityTracking>? OpportunityTrackings { get; set; }
-
-        // Navigation property for GoNoGoDecision
-        public virtual GoNoGoDecision? GoNoGoDecision { get; set; }
-
+      
         // Navigation property for ProjectResources
         public virtual ICollection<ProjectResource> ProjectResources { get; set; }
 
@@ -94,7 +89,7 @@ namespace NJS.Domain.Entities
 
         public Project()
         {
-            OpportunityTrackings = new List<OpportunityTracking>();
+           
             ProjectResources = new List<ProjectResource>();
         }
     }

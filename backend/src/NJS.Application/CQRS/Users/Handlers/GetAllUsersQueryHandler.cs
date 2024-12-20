@@ -71,7 +71,7 @@ namespace NJS.Application.CQRS.Users.Handlers
 
                 userDtos.Add(new UserDto
                 {
-                    Id = user.Id,
+                    Id = user.Id.ToString(),
                     UserName = user.UserName,
                     Email = user.Email,
                     StandardRate = user.StandardRate ?? 0m,

@@ -1,10 +1,6 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using MediatR;
 using NJS.Application.CQRS.OpportunityTracking.Commands;
 using NJS.Application.Dtos;
-using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 
 namespace NJS.Application.CQRS.OpportunityTracking.Handlers
@@ -27,7 +23,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             // Map command to entity
             var entity = new Domain.Entities.OpportunityTracking
             {
-                ProjectId = request.ProjectId,
+               
                 Stage = request.Stage,
                 StrategicRanking = request.StrategicRanking,
                 BidFees = request.BidFees,
@@ -57,7 +53,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 DurationOfProject = request.DurationOfProject,
                 FundingStream = request.FundingStream,
                 ContractType = request.ContractType,
-                WorkflowId = request.WorkflowId,
+               
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -68,8 +64,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             // Map entity to DTO
             return new OpportunityTrackingDto
             {
-                Id = result.Id,
-                ProjectId = result.ProjectId,
+                Id = result.Id,                
                 Stage = result.Stage,
                 StrategicRanking = result.StrategicRanking,
                 BidFees = result.BidFees,
@@ -98,8 +93,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 CapitalValue = result.CapitalValue,
                 DurationOfProject = result.DurationOfProject,
                 FundingStream = result.FundingStream,
-                ContractType = result.ContractType,
-                WorkflowId = result.WorkflowId
+                ContractType = result.ContractType               
             };
         }
     }

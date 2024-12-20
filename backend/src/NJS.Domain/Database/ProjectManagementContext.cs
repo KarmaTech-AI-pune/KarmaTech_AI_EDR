@@ -84,22 +84,8 @@ namespace NJS.Domain.Database
                 .HasPrecision(18, 2);
             modelBuilder.Entity<OpportunityTracking>()
                 .Property(o => o.NetNJSRevenue)
-                .HasPrecision(18, 2);
-         
+                .HasPrecision(18, 2);         
         }
     }
-
-    public class ProjectManagementContextFactory : IDesignTimeDbContextFactory<ProjectManagementContext>
-    {
-        public ProjectManagementContext CreateDbContext(string[] args)
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
-            //Need to add string for everyone
-            var connectionString = "Server=localhost,1433;Database=NJSAPIProjectManagement12;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true";
-            
-            optionsBuilder.UseSqlServer(connectionString);
-
-            return new ProjectManagementContext(optionsBuilder.Options);
-        }
-    }
+   
 }

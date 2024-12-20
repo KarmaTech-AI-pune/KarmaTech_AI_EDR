@@ -9,7 +9,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Queries
         public string? Status { get; set; }
         public string? Stage { get; set; }
         public string? BidManagerId { get; set; }
-        public string? ClientSector { get; set; }
+        public string? ClientSector { get; set; }      
         
         // Pagination
         public int PageNumber { get; set; } = 1;
@@ -31,7 +31,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Queries
             int pageNumber = 1,
             int pageSize = 10,
             string? sortBy = null,
-            bool isAscending = true)
+            bool isAscending = true )
         {
             Status = status;
             Stage = stage;
@@ -40,7 +40,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Queries
             PageNumber = pageNumber;
             PageSize = pageSize;
             SortBy = sortBy;
-            IsAscending = isAscending;
+            IsAscending = isAscending;          
         }
     }
 }

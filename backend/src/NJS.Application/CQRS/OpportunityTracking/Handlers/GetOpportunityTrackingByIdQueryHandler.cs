@@ -30,8 +30,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 
             return new OpportunityTrackingDto
             {
-                Id = entity.Id,
-                ProjectId = entity.ProjectId,
+                Id = entity.Id,              
                 Stage = entity.Stage,
                 StrategicRanking = entity.StrategicRanking,
                 BidFees = entity.BidFees,
@@ -60,8 +59,8 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 CapitalValue = entity.CapitalValue,
                 DurationOfProject = entity.DurationOfProject,
                 FundingStream = entity.FundingStream,
-                ContractType = entity.ContractType,
-                WorkflowId = entity.WorkflowId
+                ContractType = entity.ContractType
+              
             };
         }
     }

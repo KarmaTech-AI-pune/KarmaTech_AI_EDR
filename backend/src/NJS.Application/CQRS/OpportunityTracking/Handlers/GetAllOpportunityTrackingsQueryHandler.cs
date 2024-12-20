@@ -26,8 +26,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
         {
             var entities = await _repository.GetAllAsync();
             var filteredEntities = entities.AsEnumerable();
-
-            // Apply filters
+           
             if (!string.IsNullOrEmpty(request.Status))
             {
                 filteredEntities = filteredEntities.Where(x => x.Status == request.Status);
@@ -38,7 +37,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 filteredEntities = filteredEntities.Where(x => x.Stage == request.Stage);
             }
 
-            if (!string.IsNullOrEmpty(request.BidManagerId))
+            if (request.BidManagerId is not null)
             {
                 filteredEntities = filteredEntities.Where(x => x.BidManagerId == request.BidManagerId);
             }
@@ -63,7 +62,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             return filteredEntities.Select(entity => new OpportunityTrackingDto
             {
                 Id = entity.Id,
-                ProjectId = entity.ProjectId,
+             
                 Stage = entity.Stage,
                 StrategicRanking = entity.StrategicRanking,
                 BidFees = entity.BidFees,
@@ -92,8 +91,8 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 CapitalValue = entity.CapitalValue,
                 DurationOfProject = entity.DurationOfProject,
                 FundingStream = entity.FundingStream,
-                ContractType = entity.ContractType,
-                WorkflowId = entity.WorkflowId
+                ContractType = entity.ContractType
+               
             });
         }
 

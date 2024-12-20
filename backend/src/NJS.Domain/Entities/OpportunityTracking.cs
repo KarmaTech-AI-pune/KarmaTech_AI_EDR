@@ -7,9 +7,7 @@ namespace NJS.Domain.Entities
     public class OpportunityTracking
     {
         [Key]
-        public int Id { get; set; }
-
-        public int? ProjectId { get; set; }
+        public int Id { get; set; }     
         
         [Required]
         public string Stage { get; set; }
@@ -25,7 +23,7 @@ namespace NJS.Domain.Entities
         
         public string? FormOfEMD { get; set; }
         
-        public string BidManagerId { get; set; }
+        public string? BidManagerId { get; set; }
         
         public string? ReviewManagerId { get; set; }
         
@@ -84,13 +82,9 @@ namespace NJS.Domain.Entities
         public string FundingStream { get; set; }
         
         [Required]
-        public string ContractType { get; set; }
-        
-        public int WorkflowId { get; set; }
-
-        // Navigation properties
-        [ForeignKey("ProjectId")]
-        public Project Project { get; set; }
+        public string ContractType { get; set; }       
+      
+      
 
         [ForeignKey("BidManagerId")]
         public User BidManager { get; set; }
@@ -100,9 +94,6 @@ namespace NJS.Domain.Entities
 
         [ForeignKey("ApprovalManagerId")]
         public User ApprovalManager { get; set; }
-
-        [ForeignKey("WorkflowId")]
-        public WorkflowEntry Workflow { get; set; }
 
         // Audit fields
         public DateTime CreatedAt { get; set; }
