@@ -1,0 +1,19 @@
+using System.Collections.Generic;
+
+namespace NJS.Application.Dtos
+{
+    public class PermissionDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public ICollection<RolePermissionDto> Roles { get; set; } = new List<RolePermissionDto>();
+    }
+
+    public class RolePermissionDto
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+    }
+}

@@ -100,6 +100,7 @@ export const users: AuthUser[] = Object.entries(usersRawData).map(([id, user]) =
 }));
 
 // Utility functions
+/*
 export const getUserByUsername = (username: string): AuthUser | undefined => {
   return users.find(user => user.username === username);
 };
@@ -119,7 +120,7 @@ export const validateUser = (username: string, password: string): AuthUser | nul
     return user;
   }
   return null;
-};
+};*/
 
 // User management utilities
 export const isAdmin = (user: AuthUser): boolean => {

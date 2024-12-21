@@ -13,7 +13,7 @@ import {
   Backdrop
 } from '@mui/material';
 import { UserRole, AuthUser} from '../../models'
-import { getUsersByRole, getUserById } from '../../dummyapi/database/dummyusers';
+import { getUsersByRole, getUserById } from '../../dummyapi/usersApi';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { HistoryLoggingService } from '../../services/historyLoggingService';

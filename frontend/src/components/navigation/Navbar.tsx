@@ -10,8 +10,11 @@ import {
   Button,
   MenuItem,
   Avatar,
+  Stack,
+  Tooltip
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useContext } from 'react';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
@@ -25,6 +28,7 @@ export const Navbar = () => {
 
   // Pages based on permissions
   const [pages, setPages] = useState<string[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkUserPermissions = async () => {
@@ -33,6 +37,7 @@ export const Navbar = () => {
       // If no user is logged in, clear pages
       if (!currentUser || !currentUser.roleDetails) {
         setPages([]);
+        setIsAdmin(false);
         return;
       }
 
@@ -47,6 +52,9 @@ export const Navbar = () => {
       if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_PROJECT)) {
         availablePages.push('Project Management');
       }
+
+      // Check for System Admin permissions
+      setIsAdmin(currentUser.roleDetails.permissions.includes(PermissionType.SYSTEM_ADMIN));
 
       setPages(availablePages);
     };
@@ -77,6 +85,10 @@ export const Navbar = () => {
 
   const handleLogoClick = () => {
     setScreenState('Dashboard');
+  };
+
+  const handleAdminClick = () => {
+    setScreenState('Admin Panel');
   };
 
   const handleLogout = async () => {
@@ -188,6 +200,17 @@ export const Navbar = () => {
               </Button>
             ))}
           </Box>
+
+          {/* Admin Icon */}
+          {isAdmin && (
+            <Box sx={{ mr: 2 }}>
+              <Tooltip title="Admin Panel">
+                <IconButton onClick={handleAdminClick} sx={{ color: 'white' }}>
+                  <AdminPanelSettingsIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
 
           {/* User Menu */}
           <Box sx={{ flexGrow: 0 }}>

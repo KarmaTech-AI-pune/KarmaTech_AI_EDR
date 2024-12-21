@@ -83,6 +83,15 @@ namespace NJS.Domain.Extensions
                     }},
                     new { Name = "Consultant", Description = "Consultant role", MinRate = 90.00m, IsResourceRole = true, Permissions = new[] {
                         "VIEW_PROJECT", "EDIT_PROJECT"
+                    }},
+                     new { Name = "RegionalManager", Description = "Regional Manager is Bid form reviewer role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
+                        "SUBMIT_FOR_REVIEW,SUBMIT_FOR_APPROVAL"
+                    }},
+                      new { Name = "BusinessDevelopmentManager", Description = "Bid manager role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
+                        "SUBMIT_FOR_REVIEW"
+                    }},
+                       new { Name = "RegionalDirector", Description = "Approval Manager for BD form", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
+                        "APPROVE_BUSINESS_DEVELOPMENT"
                     }}
                 };
 
@@ -145,6 +154,16 @@ namespace NJS.Domain.Extensions
                         {
                             await userManager.AddToRoleAsync(adminUser, roleData.Name);
                         }
+                    }
+                }
+                else
+                {
+                    foreach (var roleData in roles)
+                    {
+                        var result = await userManager.IsInRoleAsync(adminUser, roleData.Name);
+                        if (result)
+                            continue;
+                        await userManager.AddToRoleAsync(adminUser, roleData.Name);
                     }
                 }
 

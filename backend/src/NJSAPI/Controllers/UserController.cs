@@ -1,31 +1,34 @@
-using System.Security.Claims;
+using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using NJS.Application.Services;
+using Microsoft.AspNetCore.Mvc;
+using NJS.Application.CQRS.Users.Commands;
+using NJS.Application.CQRS.Users.Queries;
 using NJS.Application.Dtos;
-using NJS.Domain.Entities;
 using NJS.Application.Services.IContract;
+using NJS.Domain.Entities;
 
 namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+   
     public class UserController : ControllerBase
     {
+        private readonly IMediator _mediator;
         private readonly IAuthService _authService;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<UserController> _logger;
-
         public UserController(
             IAuthService authService,
-            UserManager<User> userManager,
+            UserManager<User> userManager, IMediator mediator,
             ILogger<UserController> logger)
         {
             _authService = authService;
             _userManager = userManager;
             _logger = logger;
+            _mediator = mediator;
         }
 
         [HttpPost("login")]
@@ -43,18 +46,19 @@ namespace NJSAPI.Controllers
                 if (success)
                 {
                     var roles = await _userManager.GetRolesAsync(user);
-                    
+
                     var userDto = new UserDto
                     {
                         Id = user.Id,
-                        Name = user.UserName,
+                        UserName = user.UserName,
                         Email = user.Email,
                         Avatar = user.Avatar,
                         Roles = roles.ToList()
                     };
 
-                    return Ok(new { 
-                        success = true, 
+                    return Ok(new
+                    {
+                        success = true,
                         message = "Login successful",
                         token = token,
                         user = userDto
@@ -69,116 +73,81 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, new { success = false, message = "An error occurred during login" });
             }
         }
-
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpGet("me")]
-        public async Task<IActionResult> GetCurrentUser()
+        [HttpGet]     
+        public async Task<IActionResult> GetAll([FromQuery] GetAllUsersQuery query)
         {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized(new { success = false, message = "Invalid token" });
-                }
-
-                var user = await _userManager.FindByIdAsync(userId);
-                if (user == null)
-                {
-                    return NotFound(new { success = false, message = "User not found" });
-                }
-
-                var roles = await _userManager.GetRolesAsync(user);
-                var userDto = new UserDto
-                {
-                    Id = user.Id,
-                    Name = user.UserName,
-                    Email = user.Email,
-                    Avatar = user.Avatar,
-                    Roles = roles.ToList()
-                };
-
-                return Ok(new { success = true, user = userDto });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while fetching user data");
-                return StatusCode(500, new { success = false, message = "An error occurred while fetching user data" });
-            }
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
 
-        [Authorize(Policy = "RequireAdminRole")]
-        [HttpPost("assign-role")]
-        public async Task<IActionResult> AssignRole([FromBody] AssignRoleModel model)
+        [HttpGet("{id}")]
+      //  [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetById(string id)
         {
-            try
-            {
-                var user = await _userManager.FindByIdAsync(model.UserId);
-                if (user == null)
-                {
-                    return NotFound(new { success = false, message = "User not found" });
-                }
+            var query = new GetUserByIdQuery(id);
+            var result = await _mediator.Send(query);
+            
+            if (result == null)
+                return NotFound();
 
-                var result = await _authService.AssignRoleToUserAsync(user, model.Role);
-                if (result)
-                {
-                    return Ok(new { success = true, message = $"Role {model.Role} assigned successfully" });
-                }
-
-                return BadRequest(new { success = false, message = "Failed to assign role" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while assigning role");
-                return StatusCode(500, new { success = false, message = "An error occurred while assigning role" });
-            }
+            return Ok(result);
         }
 
-        [Authorize(Policy = "RequireAdminRole")]
-        [HttpGet("users")]
-        public async Task<IActionResult> GetUsers()
+        [HttpPost("Create")]
+        //[Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create([FromBody] CreateUserCommand command)
         {
-            try
-            {
-                var users = _userManager.Users.ToList();
-                var userDtos = new List<UserDto>();
+            command.Password = "Admin@123";
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                foreach (var user in users)
-                {
-                    var roles = await _userManager.GetRolesAsync(user);
-                    userDtos.Add(new UserDto
-                    {
-                        Id = user.Id,
-                        Name = user.UserName,
-                        Email = user.Email,
-                        Avatar = user.Avatar,
-                        Roles = roles.ToList()
-                    });
-                }
-
-                return Ok(new { success = true, users = userDtos });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while fetching users");
-                return StatusCode(500, new { success = false, message = "An error occurred while fetching users" });
-            }
+            var result = await _mediator.Send(command);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
-        [Authorize]
-        [HttpPost("logout")]
-        public IActionResult Logout()
+        [HttpPut("{id}")]
+      //  [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Update(string id, [FromBody] UpdateUserCommand command)
         {
-            return Ok(new { success = true, message = "Logged out successfully" });
+            if (id != command.Id)
+                return BadRequest("ID mismatch");
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
 
-        [Authorize]
-        [HttpGet("verify")]
-        public IActionResult VerifyToken()
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(string id)
         {
-            return Ok(new { valid = true });
+            var command = new DeleteUserCommand(id);
+            var result = await _mediator.Send(command);
+            
+            if (!result)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpGet("roles")]
+       
+        public async Task<IActionResult> GetRoles()
+        {
+            var query = new GetAllRolesQuery();
+            var roles = await _mediator.Send(query);
+            return Ok(roles);
+        }
+
+
+        [HttpGet("permissions")]       
+        public async Task<IActionResult> GetPermissions()
+        {
+            var query = new GetAllPermissionsQuery();
+            var permissions = await _mediator.Send(query);
+            return Ok(permissions);
         }
     }
-
-  
 }

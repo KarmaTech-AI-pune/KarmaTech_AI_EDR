@@ -63,7 +63,7 @@ namespace NJS.Application.Services{
 
             // Get user roles
             var roles = await _userManager.GetRolesAsync(user);
-
+           
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),

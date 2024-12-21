@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 using NJS.Domain.Entities;
 
 namespace NJS.Domain.Database
@@ -27,7 +29,7 @@ namespace NJS.Domain.Database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
+           
             // Configure Identity tables
             modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
             {
@@ -69,7 +71,7 @@ namespace NJS.Domain.Database
                 .Property(o => o.BidFees)
                 .HasPrecision(18, 2);
             modelBuilder.Entity<OpportunityTracking>()
-                .Property(o => o.EMD)
+                .Property(o => o.Emd)
                 .HasPrecision(18, 2);
             modelBuilder.Entity<OpportunityTracking>()
                 .Property(o => o.PercentageChanceOfProjectHappening)
@@ -82,8 +84,8 @@ namespace NJS.Domain.Database
                 .HasPrecision(18, 2);
             modelBuilder.Entity<OpportunityTracking>()
                 .Property(o => o.NetNJSRevenue)
-                .HasPrecision(18, 2);
-         
+                .HasPrecision(18, 2);         
         }
     }
+   
 }
