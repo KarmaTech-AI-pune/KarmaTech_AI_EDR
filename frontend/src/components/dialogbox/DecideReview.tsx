@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
-import { getUsersByRole } from '../../dummyapi/database/dummyusers';
+import { getUsersByRole } from '../../dummyapi/usersApi';
 import { UserRole, AuthUser} from '../../models'
 
 interface DecideReviewProps {

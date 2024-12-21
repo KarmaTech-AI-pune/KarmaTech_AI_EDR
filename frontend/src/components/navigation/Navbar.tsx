@@ -49,6 +49,11 @@ export const Navbar = () => {
         availablePages.push('Project Management');
       }
 
+      // Check for System Admin permissions
+      if (currentUser.roleDetails.permissions.includes(PermissionType.SYSTEM_ADMIN)) {
+        availablePages.push('Users');
+      }
+
       setPages(availablePages);
     };
 

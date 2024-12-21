@@ -2,7 +2,7 @@ import { screensArrayType, projectManagementAppContextType, UserWithRole  } from
 import { User} from './models'
 import { Project, GoNoGoDecision, OpportunityTracking,} from "./models"
 import { createContext, useState, useEffect } from 'react'
-import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails } from './pages'
+import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails, Users } from './pages'
 import { Navbar } from './components/navigation/Navbar'
 import { Dashboard } from './components/Dashboard'
 import { ResourceManagement } from './components/ResourceManagement'
@@ -122,7 +122,8 @@ function App() {
     "Project Details": <ProjectDetails />,
     "Business Development Details": <BusinessDevelopmentDetails />,
     "Bid Preparation Form" : <BidPreparationForm/>,
-    "GoNoGo Form" : <GoNoGoForm />
+    "GoNoGo Form" : <GoNoGoForm />,
+    "Users": <Users />
   };
 
   if (isLoading) {
@@ -156,14 +157,14 @@ function App() {
       currentUser,setCurrentUser,canEditOpportunity,
       setCanEditOpportunity,
       canDeleteOpportunity,
-  setCanDeleteOpportunity,
-  canSubmitForReview,
-  setCanSubmitForReview,
-  canReviewBD,
-  setCanReviewBD,
-  canApproveBD,
-  setCanApproveBD,
-  canSubmitForApproval, setCanSubmitForApproval
+      setCanDeleteOpportunity,
+      canSubmitForReview,
+      setCanSubmitForReview,
+      canReviewBD,
+      setCanReviewBD,
+      canApproveBD,
+      setCanApproveBD,
+      canSubmitForApproval, setCanSubmitForApproval
     }}>
       {isAuthenticated && <Navbar />}
       {screenArray[screenState]}

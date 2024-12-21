@@ -13,7 +13,7 @@ import {
   FormHelperText,
   Backdrop
 } from '@mui/material';
-import { getUsersByRole, getUserById } from '../../dummyapi/database/dummyusers';
+import { getUsersByRole, getUserById } from '../../dummyapi/usersApi';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { UserRole, AuthUser} from '../../models'

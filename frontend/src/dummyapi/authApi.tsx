@@ -1,7 +1,7 @@
 import { Credentials, LoginResponse, UserWithRole, Role } from '../types';
 import { 
     validateUser, 
-} from './database/dummyusers';
+} from './usersApi';
 import { rolesApi } from './rolesApi';
 
 export const authApi = {

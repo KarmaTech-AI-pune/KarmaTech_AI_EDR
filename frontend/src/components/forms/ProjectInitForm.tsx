@@ -8,8 +8,9 @@ import {
   Paper
 } from '@mui/material';
 import { ProjectFormType, ProjectFormData } from '../../types';
-import { users, } from '../../dummyapi/database/dummyusers';
-import { UserRole} from '../../models'
+import { getUsersByRole } from '../../dummyapi/usersApi';
+import { UserRole } from '../../models'
+
 export const ProjectInitForm: React.FC<ProjectFormType> = ({
   project,
   onSubmit,
@@ -37,11 +38,12 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     regionalManagerID: project?.regionalManagerID || 0
   });
 
-  const projectManagers = users.filter(user => user.role === UserRole.ProjectManager);
-  const seniorProjectManagers = users.filter(user => user.role === UserRole.SeniorProjectManager);
-  const regionalManagers = users.filter(user => 
-    user.role === UserRole.RegionalManager || user.role === UserRole.RegionalDirector
-  );
+  const projectManagers = getUsersByRole(UserRole.ProjectManager);
+  const seniorProjectManagers = getUsersByRole(UserRole.SeniorProjectManager);
+  const regionalManagers = [
+    ...getUsersByRole(UserRole.RegionalManager),
+    ...getUsersByRole(UserRole.RegionalDirector)
+  ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
