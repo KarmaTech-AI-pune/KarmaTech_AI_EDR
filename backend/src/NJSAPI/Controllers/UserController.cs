@@ -133,12 +133,19 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("roles")]
-       
         public async Task<IActionResult> GetRoles()
         {
             var query = new GetAllRolesQuery();
             var roles = await _mediator.Send(query);
             return Ok(roles);
+        }
+
+        [HttpGet("by-role/{roleName}")]
+        public async Task<IActionResult> GetUsersByRole(string roleName)
+        {
+            var query = new GetUsersByRoleNameQuery(roleName);
+            var users = await _mediator.Send(query);
+            return Ok(users);
         }
 
 
