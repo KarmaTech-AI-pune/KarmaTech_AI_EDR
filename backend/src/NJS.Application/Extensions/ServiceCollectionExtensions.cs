@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿﻿using Microsoft.Extensions.DependencyInjection;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
 using NJS.Repositories.Interfaces;
@@ -22,6 +22,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IWorkBreakdownStructureRepository, WorkBreakdownStructureRepository>();
             services.AddScoped<IGoNoGoDecisionRepository, GoNoGoDecisionRepository>();
             services.AddScoped<IOpportunityTrackingRepository, OpportunityTrackingRepository>();
+            services.AddScoped<IPermissionRepository, PermissionRepository>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
