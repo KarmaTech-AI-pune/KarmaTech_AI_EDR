@@ -6,7 +6,8 @@ import {
   Box,
   Select,
   MenuItem,
-  styled
+  styled,
+  Typography
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
@@ -14,9 +15,11 @@ import { WBSOption, WBSRowData, WBSChildTotals } from '../../../types/wbs';
 
 const NumberInput = styled('input')({
   width: '100%',
-  padding: '8px',
+  padding: '8px 12px',
   border: '1px solid rgba(0, 0, 0, 0.23)',
   borderRadius: '4px',
+  height: '40px',
+  boxSizing: 'border-box',
   '&:focus': {
     outline: 'none',
     borderColor: '#1976d2'
@@ -25,10 +28,26 @@ const NumberInput = styled('input')({
 
 const StyledSelect = styled(Select)({
   width: '100%',
+  height: '40px',
   '& .MuiSelect-select': {
-    padding: '8px 14px'
+    padding: '8px 12px'
   }
 });
+
+const StickyCell = styled(TableCell)(({ theme }) => ({
+  position: 'sticky',
+  left: 0,
+  zIndex: 2,
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: theme.palette.divider,
+  }
+}));
 
 interface Employee {
   id: number;
@@ -52,6 +71,8 @@ interface WBSRowProps {
   editMode: boolean;
   levelOptions: WBSOption[];
   childTotals: WBSChildTotals | null;
+  sequenceNumber: string;
+  stickyColumn?: boolean;
   onDelete: (id: number) => void;
   onLevelChange: (id: number, value: string) => void;
   onRoleChange: (id: number, roleId: string) => void;
@@ -69,6 +90,8 @@ const WBSRow: React.FC<WBSRowProps> = ({
   editMode,
   levelOptions,
   childTotals,
+  sequenceNumber,
+  stickyColumn,
   onDelete,
   onLevelChange,
   onRoleChange,
@@ -95,20 +118,25 @@ const WBSRow: React.FC<WBSRowProps> = ({
     return (childTotals.monthlyHours[year]?.[monthName] || '').toString();
   };
 
+  const WorkDescriptionCell = stickyColumn ? StickyCell : TableCell;
+
+  const backgroundColor = row.level === 1 ? '#E3F2FD' : // Solid light blue
+                         row.level === 2 ? '#E8F5E9' : // Solid light green
+                         '#FFFFFF'; // Solid white
+
   return (
     <TableRow 
       sx={{ 
+        height: '56px',
         '& > td': {
           borderBottom: '1px solid rgba(224, 224, 224, 1)',
-          bgcolor: row.level === 1 ? 'rgba(0, 0, 0, 0.06)' : 
-                  row.level === 2 ? 'rgba(0, 0, 0, 0.03)' : 
-                  'transparent',
-          pl: '8px !important',
+          bgcolor: backgroundColor,
+          p: '12px'
         }
       }}
     >
-      <TableCell sx={{ width: '48px', p: '4px !important' }}>
-        {!editMode && (
+      {!editMode && (
+        <TableCell sx={{ width: '48px', bgcolor: backgroundColor }}>
           <IconButton 
             size="small" 
             onClick={() => onDelete(row.id)}
@@ -121,17 +149,34 @@ const WBSRow: React.FC<WBSRowProps> = ({
           >
             <DeleteIcon fontSize="small" />
           </IconButton>
-        )}
-      </TableCell>
-      <TableCell>
-        <LevelSelect
-          level={row.level}
-          value={row.title}
-          options={levelOptions}
-          disabled={editMode}
-          onChange={(value) => onLevelChange(row.id, value)}
-        />
-      </TableCell>
+        </TableCell>
+      )}
+      <WorkDescriptionCell sx={{ bgcolor: backgroundColor }}>
+        <Box sx={{ 
+          height: '40px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <Typography
+            variant="body2"
+            sx={{
+              minWidth: '50px',
+              color: 'text.primary',
+              fontWeight: 'bold',
+            }}
+          >
+            {sequenceNumber}
+          </Typography>
+          <LevelSelect
+            level={row.level}
+            value={row.title}
+            options={levelOptions}
+            disabled={editMode}
+            onChange={(value) => onLevelChange(row.id, value)}
+          />
+        </Box>
+      </WorkDescriptionCell>
       <TableCell>
         {row.level === 3 ? (
           <StyledSelect
@@ -149,7 +194,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             ))}
           </StyledSelect>
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
       <TableCell>
@@ -169,7 +214,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             ))}
           </StyledSelect>
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
       <TableCell>
@@ -181,11 +226,11 @@ const WBSRow: React.FC<WBSRowProps> = ({
             disabled={editMode || !row.role}
             title={rateTooltip}
             style={{
-              backgroundColor: editMode ? 'rgba(0, 0, 0, 0.04)' : 'white'
+              backgroundColor: editMode ? '#f5f5f5' : 'white'
             }}
           />
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
       {months.map(month => (
@@ -198,7 +243,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
               min="0"
               max="160"
               style={{
-                backgroundColor: editMode ? 'rgba(0, 0, 0, 0.04)' : 'white'
+                backgroundColor: editMode ? '#f5f5f5' : 'white'
               }}
               disabled={editMode}
             />
@@ -208,11 +253,11 @@ const WBSRow: React.FC<WBSRowProps> = ({
               value={getChildTotalHours(month)}
               readOnly
               style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                backgroundColor: '#f5f5f5'
               }}
             />
           ) : (
-            <Box sx={{ height: '37px' }} />
+            <Box sx={{ height: '40px' }} />
           )}
         </TableCell>
       ))}
@@ -224,7 +269,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             onChange={(e) => onODCChange(row.id, e.target.value)}
             min="0"
             style={{
-              backgroundColor: editMode ? 'rgba(0, 0, 0, 0.04)' : 'white'
+              backgroundColor: editMode ? '#f5f5f5' : 'white'
             }}
             disabled={editMode}
           />
@@ -234,11 +279,11 @@ const WBSRow: React.FC<WBSRowProps> = ({
             value={childTotals.odc || ''}
             readOnly
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              backgroundColor: '#f5f5f5'
             }}
           />
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
       <TableCell>
@@ -248,7 +293,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             value={row.totalHours}
             readOnly
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              backgroundColor: '#f5f5f5'
             }}
           />
         ) : childTotals ? (
@@ -257,11 +302,11 @@ const WBSRow: React.FC<WBSRowProps> = ({
             value={childTotals.totalHours || ''}
             readOnly
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              backgroundColor: '#f5f5f5'
             }}
           />
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
       <TableCell>
@@ -271,7 +316,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             value={row.totalCost}
             readOnly
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              backgroundColor: '#f5f5f5'
             }}
           />
         ) : childTotals ? (
@@ -280,11 +325,11 @@ const WBSRow: React.FC<WBSRowProps> = ({
             value={childTotals.totalCost || ''}
             readOnly
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              backgroundColor: '#f5f5f5'
             }}
           />
         ) : (
-          <Box sx={{ height: '37px' }} />
+          <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
     </TableRow>

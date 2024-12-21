@@ -27,6 +27,7 @@ import {
   deleteCheckReview,
 } from '../../dummyapi/checkReviewApi';
 import { projectManagementAppContext } from '../../App';
+import { FormWrapper } from './FormWrapper';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -122,10 +123,16 @@ const CheckReviewForm: React.FC = () => {
   );
 
   if (!context?.selectedProject?.id) {
-    return null;
+    return (
+      <FormWrapper>
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Alert severity="warning">Please select a project to view the check and review form.</Alert>
+        </Container>
+      </FormWrapper>
+    );
   }
 
-  return (
+  const formContent = (
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{ 
         width: '100%', 
@@ -280,6 +287,12 @@ const CheckReviewForm: React.FC = () => {
         nextActivityNo={getNextActivityNo()}
       />
     </Container>
+  );
+
+  return (
+    <FormWrapper>
+      {formContent}
+    </FormWrapper>
   );
 };
 

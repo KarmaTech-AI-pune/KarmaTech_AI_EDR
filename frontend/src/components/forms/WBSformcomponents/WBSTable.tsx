@@ -13,19 +13,45 @@ import AddIcon from '@mui/icons-material/Add';
 import WBSRow from './WBSRow';
 import { resourceRole as ResourceRole, Employee } from  "../../../models";
 import { WBSRowData, WBSOption } from '../../../types/wbs';
+
 const HeaderCell = styled(TableCell)(({ theme }) => ({
   textAlign: 'center',
   fontWeight: 'bold',
-  backgroundColor: theme.palette.background.paper,
-  padding: '16px 8px',
-  borderBottom: `2px solid ${theme.palette.divider}`
+  backgroundColor: '#FFFFFF',
+  padding: '12px',
+  borderBottom: `2px solid ${theme.palette.divider}`,
+  height: '48px'
 }));
 
-const TotalHeaderCell = styled(HeaderCell)({
-  backgroundColor: 'rgba(25, 118, 210, 0.08)',
-  color: '#1976d2'
-});
+const StickyHeaderCell = styled(HeaderCell)(({ theme }) => ({
+  position: 'sticky',
+  left: 0,
+  zIndex: 3,
+  backgroundColor: '#FFFFFF',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: theme.palette.divider,
+  }
+}));
 
+const SummaryHeaderCell = styled(HeaderCell)(({ theme }) => ({
+  backgroundColor: '#F5F5F5',
+  color: theme.palette.text.primary,
+  borderLeft: `1px solid ${theme.palette.divider}`
+}));
+
+const AddButtonRow = styled(TableRow)({
+  height: '32px !important',
+  '& > td': {
+    padding: '0 !important',
+    borderBottom: '1px solid rgba(224, 224, 224, 1) !important'
+  }
+});
 
 interface WBSTableProps {
   rows: WBSRowData[];
@@ -103,35 +129,37 @@ const WBSTable: React.FC<WBSTableProps> = ({
     return totals;
   };
 
-  const renderAddButton = (level: 1 | 2 | 3, parentId?: number, indentLevel: number = 0): JSX.Element => {
+  const getLevelColor = (level: number) => {
+    switch (level) {
+      case 1:
+        return '#E3F2FD'; // Solid light blue
+      case 2:
+        return '#E8F5E9'; // Solid light green
+      case 3:
+        return '#FFFFFF'; // Solid white
+      default:
+        return '#FFFFFF';
+    }
+  };
+
+  const renderAddButton = (level: 1 | 2 | 3, parentId?: number): JSX.Element => {
     return (
-      <TableRow
+      <AddButtonRow
         key={`add-button-level-${level}${parentId ? `-parent-${parentId}` : ''}`}
-        sx={{
-          height: '28px',
-          '& > td': {
-            bgcolor: 'transparent',
-            borderBottom: '1px solid rgba(224, 224, 224, 1)',
-            py: 0
-          }
-        }}
       >
         <TableCell 
-          colSpan={9 + months.length}
-          sx={{
-            p: 0,
-          }}
+          colSpan={editMode ? 8 + months.length : 9 + months.length}
+          sx={{ bgcolor: getLevelColor(level) }}
         >
           <Button
             fullWidth
             size="small"
             sx={{
-              ml: `${indentLevel * 3}rem`,
-              height: '28px',
+              height: '32px',
               textTransform: 'none',
               color: 'text.secondary',
               '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.04)'
+                bgcolor: '#F5F5F5'
               }
             }}
             onClick={() => onAddRow(level, parentId)}
@@ -140,7 +168,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             Add Level {level}
           </Button>
         </TableCell>
-      </TableRow>
+      </AddButtonRow>
     );
   };
 
@@ -156,12 +184,40 @@ const WBSTable: React.FC<WBSTableProps> = ({
     return [];
   };
 
+  const getSequenceNumber = (row: WBSRowData): string => {
+    if (row.level === 1) {
+      const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
+      return level1Index.toString();
+    } else if (row.level === 2) {
+      const parentRow = rows.find(r => r.id === row.parentId);
+      if (parentRow) {
+        const parentIndex = rows.filter(r => r.level === 1).findIndex(r => r.id === parentRow.id) + 1;
+        const level2Index = rows.filter(r => r.level === 2 && r.parentId === parentRow.id)
+          .findIndex(r => r.id === row.id) + 1;
+        return `${parentIndex}.${level2Index}`;
+      }
+    } else if (row.level === 3) {
+      const level2Parent = rows.find(r => r.id === row.parentId);
+      if (level2Parent) {
+        const level1Parent = rows.find(r => r.id === level2Parent.parentId);
+        if (level1Parent) {
+          const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === level1Parent.id) + 1;
+          const level2Index = rows.filter(r => r.level === 2 && r.parentId === level1Parent.id)
+            .findIndex(r => r.id === level2Parent.id) + 1;
+          const level3Index = rows.filter(r => r.level === 3 && r.parentId === level2Parent.id)
+            .findIndex(r => r.id === row.id) + 1;
+          return `${level1Index}.${level2Index}.${level3Index}`;
+        }
+      }
+    }
+    return '';
+  };
+
   const renderRowsAndButtons = () => {
     const level1Rows = rows.filter(row => row.level === 1);
     const result: JSX.Element[] = [];
 
     level1Rows.forEach(level1Row => {
-      // Always render the row
       result.push(
         <WBSRow
           key={level1Row.id}
@@ -172,6 +228,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
           editMode={editMode}
           levelOptions={getLevelOptions(level1Row)}
           childTotals={calculateChildTotals(level1Row)}
+          sequenceNumber={getSequenceNumber(level1Row)}
           onDelete={onDeleteRow}
           onLevelChange={onLevelChange}
           onRoleChange={onRoleChange}
@@ -179,12 +236,12 @@ const WBSTable: React.FC<WBSTableProps> = ({
           onCostRateChange={onCostRateChange}
           onHoursChange={onHoursChange}
           onODCChange={onODCChange}
+          stickyColumn={true}
         />
       );
 
       const level2Rows = rows.filter(row => row.level === 2 && row.parentId === level1Row.id);
       level2Rows.forEach(level2Row => {
-        // Always render level 2 rows
         result.push(
           <WBSRow
             key={level2Row.id}
@@ -195,6 +252,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             editMode={editMode}
             levelOptions={getLevelOptions(level2Row)}
             childTotals={calculateChildTotals(level2Row)}
+            sequenceNumber={getSequenceNumber(level2Row)}
             onDelete={onDeleteRow}
             onLevelChange={onLevelChange}
             onRoleChange={onRoleChange}
@@ -202,12 +260,12 @@ const WBSTable: React.FC<WBSTableProps> = ({
             onCostRateChange={onCostRateChange}
             onHoursChange={onHoursChange}
             onODCChange={onODCChange}
+            stickyColumn={true}
           />
         );
 
         const level3Rows = rows.filter(row => row.level === 3 && row.parentId === level2Row.id);
         level3Rows.forEach(level3Row => {
-          // Always render level 3 rows
           result.push(
             <WBSRow
               key={level3Row.id}
@@ -218,6 +276,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
               editMode={editMode}
               levelOptions={getLevelOptions(level3Row)}
               childTotals={null}
+              sequenceNumber={getSequenceNumber(level3Row)}
               onDelete={onDeleteRow}
               onLevelChange={onLevelChange}
               onRoleChange={onRoleChange}
@@ -225,23 +284,21 @@ const WBSTable: React.FC<WBSTableProps> = ({
               onCostRateChange={onCostRateChange}
               onHoursChange={onHoursChange}
               onODCChange={onODCChange}
+              stickyColumn={true}
             />
           );
         });
 
-        // Only render add button for level 3 if not in edit mode
         if (!editMode) {
-          result.push(renderAddButton(3, level2Row.id, 2));
+          result.push(renderAddButton(3, level2Row.id));
         }
       });
 
-      // Only render add button for level 2 if not in edit mode
       if (!editMode) {
-        result.push(renderAddButton(2, level1Row.id, 1));
+        result.push(renderAddButton(2, level1Row.id));
       }
     });
 
-    // Only render add button for level 1 if not in edit mode
     if (!editMode) {
       result.push(renderAddButton(1));
     }
@@ -251,31 +308,31 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
   return (
     <TableContainer sx={{ 
-      maxHeight: 'calc(100vh - 300px)',
       overflowX: 'auto',
-      overflowY: 'auto',
       '& .MuiTableCell-root': {
-        px: 1,
-        py: 0.75,
+        px: 1.5,
+        py: 1,
         fontSize: '0.875rem'
       }
     }}>
       <Table stickyHeader size="small" sx={{ minWidth: 1200 }}>
         <TableHead>
           <TableRow>
-            <HeaderCell sx={{ width: '48px', p: '4px !important' }}>
-              Actions
-            </HeaderCell>
-            <HeaderCell sx={{ minWidth: '400px' }}>Task Level</HeaderCell>
-            <HeaderCell sx={{ minWidth: '200px' }}>Role</HeaderCell>
-            <HeaderCell sx={{ minWidth: '200px' }}>Name</HeaderCell>
-            <HeaderCell sx={{ minWidth: 100 }}>Cost Rate</HeaderCell>
+            {!editMode && (
+              <HeaderCell sx={{ width: '48px', backgroundColor: '#FFFFFF' }}>
+                
+              </HeaderCell>
+            )}
+            <StickyHeaderCell sx={{ minWidth: '300px', backgroundColor: '#FFFFFF' }}>Work Description</StickyHeaderCell>
+            <HeaderCell sx={{ minWidth: '150px' }}>Resource Role</HeaderCell>
+            <HeaderCell sx={{ minWidth: '150px' }}>Resource Name</HeaderCell>
+            <HeaderCell sx={{ minWidth: 100 }}>Rate</HeaderCell>
             {months.map(month => (
               <HeaderCell key={month} sx={{ minWidth: 100 }}>{month}</HeaderCell>
             ))}
-            <HeaderCell sx={{ minWidth: 100 }}>ODCs</HeaderCell>
-            <TotalHeaderCell sx={{ minWidth: 100 }}>Total Monthly Hours</TotalHeaderCell>
-            <HeaderCell sx={{ minWidth: 100 }}>Total Cost</HeaderCell>
+            <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODCs</SummaryHeaderCell>
+            <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Hours</SummaryHeaderCell>
+            <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Cost</SummaryHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>

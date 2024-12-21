@@ -22,7 +22,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
 import {projectManagementAppContextType } from '../../types';
 import { OpportunityTracking} from "../../models";
-import { getUsersByRole, } from '../../dummyapi/database/dummyusers';
+import { getUsersByRole, } from '../../dummyapi/usersApi';
 import { UserRole,} from '../../models'
 
 interface OpportunityFormProps {

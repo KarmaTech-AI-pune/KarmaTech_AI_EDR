@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Box, Paper, Alert, Container } from '@mui/material';
+import { Paper, Alert, Container } from '@mui/material';
 import { projectManagementAppContext } from '../../App';
 import { WBSStructureAPI, ResourceAPI, WBSOptionsAPI } from '../../dummyapi/wbsApi';
 import DeleteWBSDialog from '../dialogbox/DeleteWBSDialog';
@@ -7,6 +7,7 @@ import WBSHeader from './WBSformcomponents/WBSHeader';
 import WBSTable from './WBSformcomponents/WBSTable';
 import WBSSummary from './WBSformcomponents/WBSSummary';
 import { WBSOption, WBSRowData} from '../../types/wbs';
+import { FormWrapper } from './FormWrapper';
 
 interface DeleteDialog {
   open: boolean;
@@ -19,9 +20,6 @@ interface MonthlyHours {
     [month: string]: number;
   };
 }
-
-// Helper function to generate new IDs
-
 
 const WorkBreakdownStructureForm: React.FC = () => {
   const context = useContext(projectManagementAppContext);
@@ -154,12 +152,14 @@ const WorkBreakdownStructureForm: React.FC = () => {
 
   if (!isProject || !projectStartDate) {
     return (
-      <Paper sx={{ p: 3, m: 2 }}>
-        <Alert severity="error">
-          Project start date is not set. Please set a start date for the project before creating a WBS.
-        </Alert>
-      </Paper>
-    );
+      <FormWrapper>
+        <Paper sx={{ p: 3, m: 2 }}>
+          <Alert severity="error">
+            Project start date is not set. Please set a start date for the project before creating a WBS.
+          </Alert>
+        </Paper>
+      </FormWrapper>
+      );
   }
 
   const addNewMonth = () => {
@@ -377,82 +377,87 @@ const WorkBreakdownStructureForm: React.FC = () => {
       totalCost: level3Rows.reduce((sum, row) => sum + row.totalCost, 0)
     };
   };
-
-  return (
+  const formContent = (
     <Container 
-      maxWidth="xl" 
+      maxWidth={false}
+      disableGutters
       sx={{ 
-        py: 2,
+        px: 0.5, // Minimal horizontal padding
         '& .MuiPaper-root': {
           boxShadow: 'none',
           border: '1px solid rgba(224, 224, 224, 1)',
           borderRadius: 1,
-          mb: 2
+          mb: 0.5 // Minimal margin between papers
         }
       }}
     >
-      <Box sx={{ 
-        width: '100%', 
-        maxHeight: 'calc(100vh - 200px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        pr: 1
-      }}>
-        <Paper sx={{ mb: 2 }}>
-          <WBSHeader
-            editMode={editMode}
-            error={error}
-            onEditModeToggle={() => setEditMode(!editMode)}
-            onAddMonth={addNewMonth}
-          />
-        </Paper>
-
-        <Paper sx={{ 
-          mb: 2,
-          '& > div': {
-            overflowX: 'auto'
-          }
-        }}>
-          <WBSTable
-            rows={rows}
-            months={months}
-            roles={roles}
-            employees={allEmployees}
-            editMode={editMode}
-            levelOptions={{
-              level1: level1Options,
-              level2: level2Options,
-              level3: level3OptionsMap
-            }}
-            onAddRow={addNewRow}
-            onDeleteRow={handleDeleteClick}
-            onLevelChange={handleLevelChange}
-            onRoleChange={handleRoleChange}
-            onEmployeeChange={handleEmployeeChange}
-            onCostRateChange={handleCostRateChange}
-            onHoursChange={handleHoursChange}
-            onODCChange={handleODCChange}
-          />
-        </Paper>
-
-        <Paper sx={{ p: 2 }}>
-          <WBSSummary
-            totalHours={calculateOverallTotals().totalHours}
-            totalCost={calculateOverallTotals().totalCost}
-            currency={context?.selectedProject?.currency || ''}
-            disabled={rows.length === 0}
-            onSave={handleSubmit}
-          />
-        </Paper>
-
-        <DeleteWBSDialog
-          open={deleteDialog.open}
-          childCount={deleteDialog.childCount}
-          onCancel={handleDeleteCancel}
-          onConfirm={handleDeleteConfirm}
+      <Paper>
+        <WBSHeader
+          editMode={editMode}
+          error={error}
+          onEditModeToggle={() => setEditMode(!editMode)}
+          onAddMonth={addNewMonth}
         />
-      </Box>
+      </Paper>
+
+      <Paper>
+        <WBSTable
+          rows={rows}
+          months={months}
+          roles={roles}
+          employees={allEmployees}
+          editMode={editMode}
+          levelOptions={{
+            level1: level1Options,
+            level2: level2Options,
+            level3: level3OptionsMap
+          }}
+          onAddRow={addNewRow}
+          onDeleteRow={handleDeleteClick}
+          onLevelChange={handleLevelChange}
+          onRoleChange={handleRoleChange}
+          onEmployeeChange={handleEmployeeChange}
+          onCostRateChange={handleCostRateChange}
+          onHoursChange={handleHoursChange}
+          onODCChange={handleODCChange}
+        />
+      </Paper>
+
+      <Paper>
+        <WBSSummary
+          totalHours={calculateOverallTotals().totalHours}
+          totalCost={calculateOverallTotals().totalCost}
+          currency={context?.selectedProject?.currency || ''}
+          disabled={rows.length === 0}
+          onSave={handleSubmit}
+        />
+      </Paper>
+
+      <DeleteWBSDialog
+        open={deleteDialog.open}
+        childCount={deleteDialog.childCount}
+        onCancel={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+      />
     </Container>
+  );
+
+  if (!isProject || !projectStartDate) {
+    return (
+      <FormWrapper>
+        <Paper sx={{ p: 3, m: 2 }}>
+          <Alert severity="error">
+            Project start date is not set. Please set a start date for the project before creating a WBS.
+          </Alert>
+        </Paper>
+      </FormWrapper>
+    );
+  }
+
+  return (
+    <FormWrapper>
+      {formContent}
+    </FormWrapper>
   );
 };
 

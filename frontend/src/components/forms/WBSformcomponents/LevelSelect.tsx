@@ -27,7 +27,7 @@ interface LevelSelectProps {
 }
 
 const LevelSelect: React.FC<LevelSelectProps> = ({
-  level,
+  
   value,
   options,
   disabled,
@@ -37,18 +37,8 @@ const LevelSelect: React.FC<LevelSelectProps> = ({
     <Box sx={{ 
       display: 'flex',
       alignItems: 'center',
-      width: level === 1 ? '60%' : level === 2 ? '80%' : '75%',
-      pl: `${(level - 1) * 3}rem`,
-      position: 'relative',
-      '&::before': level > 1 ? {
-        content: '""',
-        position: 'absolute',
-        left: `${(level - 1) * 3 - 1}rem`,
-        top: '50%',
-        width: '0.75rem',
-        height: '1px',
-        bgcolor: 'rgba(0, 0, 0, 0.23)'
-      } : {}
+      width: '100%',
+      position: 'relative'
     }}>
       <StyledSelect
         value={value}

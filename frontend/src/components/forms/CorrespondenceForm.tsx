@@ -12,6 +12,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Grid,
+  Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -23,6 +24,7 @@ import {
   getOutwardRows
 } from '../../dummyapi/correspondenceApi';
 import { projectManagementAppContext } from '../../App';
+import { FormWrapper } from './FormWrapper';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -309,10 +311,16 @@ const CorrespondenceForm: React.FC = () => {
   };
 
   if (!context?.selectedProject?.id) {
-    return null;
+    return (
+      <FormWrapper>
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Alert severity="warning">Please select a project to view the correspondence register.</Alert>
+        </Container>
+      </FormWrapper>
+    );
   }
 
-  return (
+  const formContent = (
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{ 
         width: '100%', 
@@ -378,6 +386,12 @@ const CorrespondenceForm: React.FC = () => {
         </Paper>
       </Box>
     </Container>
+  );
+
+  return (
+    <FormWrapper>
+      {formContent}
+    </FormWrapper>
   );
 };
 

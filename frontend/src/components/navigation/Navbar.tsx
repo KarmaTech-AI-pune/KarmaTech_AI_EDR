@@ -10,9 +10,11 @@ import {
   Button,
   MenuItem,
   Avatar,
-  Stack
+  Stack,
+  Tooltip
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useContext } from 'react';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
@@ -26,6 +28,7 @@ export const Navbar = () => {
 
   // Pages based on permissions
   const [pages, setPages] = useState<string[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkUserPermissions = async () => {
@@ -34,6 +37,7 @@ export const Navbar = () => {
       // If no user is logged in, clear pages
       if (!currentUser || !currentUser.roleDetails) {
         setPages([]);
+        setIsAdmin(false);
         return;
       }
 
@@ -48,6 +52,9 @@ export const Navbar = () => {
       if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_PROJECT)) {
         availablePages.push('Project Management');
       }
+
+      // Check for System Admin permissions
+      setIsAdmin(currentUser.roleDetails.permissions.includes(PermissionType.SYSTEM_ADMIN));
 
       setPages(availablePages);
     };
@@ -80,6 +87,10 @@ export const Navbar = () => {
     setScreenState('Dashboard');
   };
 
+  const handleAdminClick = () => {
+    setScreenState('Admin Panel');
+  };
+
   const handleLogout = async () => {
     try {
       await authApi.logout();
@@ -92,36 +103,21 @@ export const Navbar = () => {
   };
 
   const LogoComponent = () => (
-    <Stack 
-      alignItems="center" 
-      spacing={0}
+    <Box 
       onClick={handleLogoClick}
       style={{ cursor: 'pointer' }}
+      sx={{ height: '50px', display: 'flex', alignItems: 'center' }}
     >
-      <Typography
-        variant="h5"
-        component="div"
-        sx={{
-          fontWeight: 'bold',
-          letterSpacing: '.2rem',
-          color: 'white',
-          lineHeight: 1.2
+      <img 
+        src="/logo-final.png" 
+        alt="NJSEI ISO 9000" 
+        style={{
+          height: '100%',
+          width: 'auto',
+          objectFit: 'contain'
         }}
-      >
-        NJSEI
-      </Typography>
-      <Typography
-        variant="subtitle1"
-        component="div"
-        sx={{
-          letterSpacing: '.1rem',
-          color: 'white',
-          lineHeight: 1
-        }}
-      >
-        ISO 9000
-      </Typography>
-    </Stack>
+      />
+    </Box>
   );
 
   return (
@@ -204,6 +200,17 @@ export const Navbar = () => {
               </Button>
             ))}
           </Box>
+
+          {/* Admin Icon */}
+          {isAdmin && (
+            <Box sx={{ mr: 2 }}>
+              <Tooltip title="Admin Panel">
+                <IconButton onClick={handleAdminClick} sx={{ color: 'white' }}>
+                  <AdminPanelSettingsIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
 
           {/* User Menu */}
           <Box sx={{ flexGrow: 0 }}>

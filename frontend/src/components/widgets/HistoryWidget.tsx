@@ -84,7 +84,9 @@ export const HistoryWidget = ({ histories, title = "History" }: HistoryWidgetPro
                       {new Date(history.date).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
-                        day: 'numeric'
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
                       })}
                     </Typography>
                   }

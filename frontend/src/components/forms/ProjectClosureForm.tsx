@@ -1,4 +1,3 @@
-{/* Previous imports remain the same */}
 import React, { useState, useEffect, useContext } from 'react';
 import {
   Box,
@@ -31,7 +30,8 @@ import {
   getProjectClosureById
 } from '../../dummyapi/projectClosureApi';
 import { projectManagementAppContext } from '../../App';
-import { ProjectClosureRow, ProjectClosureComment,Project } from "../../models";
+import { ProjectClosureRow, ProjectClosureComment, Project } from "../../models";
+import { FormWrapper } from './FormWrapper';
 
 interface ProjectClosureFormProps {
   onSubmit?: () => void;
@@ -329,13 +329,15 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
   if (!selectedProject) {
     return (
-      <Alert severity="warning">
-        Please select a project to proceed with the closure form.
-      </Alert>
+      <FormWrapper>
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Alert severity="warning">Please select a project to proceed with the closure form.</Alert>
+        </Container>
+      </FormWrapper>
     );
   }
 
-  return (
+  const formContent = (
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{ 
         width: '100%', 
@@ -778,6 +780,12 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
         </DialogActions>
       </Dialog>
     </Container>
+  );
+
+  return (
+    <FormWrapper>
+      {formContent}
+    </FormWrapper>
   );
 };
 
