@@ -2,7 +2,7 @@ import { screensArrayType, projectManagementAppContextType, UserWithRole  } from
 import { User} from './models'
 import { Project, GoNoGoDecision, OpportunityTracking,} from "./models"
 import { createContext, useState, useEffect } from 'react'
-import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails, Users } from './pages'
+import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails, AdminPanel } from './pages'
 import { Navbar } from './components/navigation/Navbar'
 import { Dashboard } from './components/Dashboard'
 import { ResourceManagement } from './components/ResourceManagement'
@@ -77,6 +77,7 @@ function App() {
     
     checkUserPermissions();
   }, [user]);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -123,7 +124,7 @@ function App() {
     "Business Development Details": <BusinessDevelopmentDetails />,
     "Bid Preparation Form" : <BidPreparationForm/>,
     "GoNoGo Form" : <GoNoGoForm />,
-    "Users": <Users />
+    "Admin Panel": <AdminPanel />,
   };
 
   if (isLoading) {
@@ -139,8 +140,6 @@ function App() {
     );
   }
 
- 
-  
   return (
     <projectManagementAppContext.Provider value={{
       screenState, 
@@ -154,7 +153,9 @@ function App() {
       setSelectedProject,
       currentGoNoGoDecision,
       setCurrentGoNoGoDecision,
-      currentUser,setCurrentUser,canEditOpportunity,
+      currentUser,
+      setCurrentUser,
+      canEditOpportunity,
       setCanEditOpportunity,
       canDeleteOpportunity,
       setCanDeleteOpportunity,
@@ -164,7 +165,8 @@ function App() {
       setCanReviewBD,
       canApproveBD,
       setCanApproveBD,
-      canSubmitForApproval, setCanSubmitForApproval
+      canSubmitForApproval,
+      setCanSubmitForApproval
     }}>
       {isAuthenticated && <Navbar />}
       {screenArray[screenState]}

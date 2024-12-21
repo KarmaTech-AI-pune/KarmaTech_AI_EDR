@@ -5,3 +5,5 @@ export { BusinessDevelopment } from './BusinessDevelopment';
 export { ProjectManagement } from './ProjectManagement';
 export { BusinessDevelopmentDetails } from './BusinessDevelopmentDetails';
 export { default as Users } from './Users';
+export { default as Roles } from './Roles';
+export { default as AdminPanel } from './AdminPanel';

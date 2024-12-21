@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container,
   Typography,
   Paper,
   Table,
@@ -16,11 +15,11 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { AuthUser, UserRole } from '../models';
-import * as usersApi from '../dummyapi/usersApi';
-import UserDialog from '../components/dialogbox/adminpage/UserDialog';
+import { AuthUser, UserRole } from '../../models';
+import * as usersApi from '../../dummyapi/usersApi';
+import UserDialog from '../dialogbox/adminpage/UserDialog';
 
-const Users = () => {
+const UsersManagement = () => {
   const [users, setUsers] = useState<AuthUser[]>([]);
   const [standardRates, setStandardRates] = useState<Record<number, number>>({});
   const [consultantStatus, setConsultantStatus] = useState<Record<number, boolean>>({});
@@ -44,7 +43,6 @@ const Users = () => {
     const fetchedUsers = usersApi.getAllUsers();
     setUsers(fetchedUsers);
     
-    // Initialize UI state for new users
     const newRates: Record<number, number> = {};
     const newStatus: Record<number, boolean> = {};
     fetchedUsers.forEach(user => {
@@ -82,7 +80,7 @@ const Users = () => {
     setEditingUser(user);
     setFormData({
       ...user,
-      password: '', // Don't populate password for security
+      password: '',
       standardRate: standardRates[user.id]?.toString() || '0',
       isConsultant: consultantStatus[user.id] || false,
     });
@@ -94,7 +92,6 @@ const Users = () => {
       const success = usersApi.deleteUser(id);
       if (success) {
         loadUsers();
-        // Clean up UI state
         const newRates = { ...standardRates };
         const newStatus = { ...consultantStatus };
         delete newRates[id];
@@ -108,12 +105,10 @@ const Users = () => {
   const handleSubmit = () => {
     try {
       if (editingUser) {
-        // Update existing user
         const updatedUser = usersApi.updateUser(editingUser.id, {
           ...formData,
-          password: formData.password || editingUser.password, // Keep old password if not changed
+          password: formData.password || editingUser.password,
         });
-        // Update UI state
         setStandardRates(prev => ({
           ...prev,
           [updatedUser.id]: Number(formData.standardRate),
@@ -123,7 +118,6 @@ const Users = () => {
           [updatedUser.id]: formData.isConsultant,
         }));
       } else {
-        // Create new user
         if (!formData.username || !formData.password || !formData.email || !formData.name) {
           alert('Please fill in all required fields');
           return;
@@ -135,7 +129,6 @@ const Users = () => {
           password: formData.password,
           role: formData.role,
         });
-        // Set UI state for new user
         setStandardRates(prev => ({
           ...prev,
           [newUser.id]: Number(formData.standardRate),
@@ -168,15 +161,15 @@ const Users = () => {
   };
 
   return (
-    <Container sx={{ mt: 10, mb: 4 }}>
+    <Box sx={{ mb: 4 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Users Management</Typography>
+        <Typography variant="h5">Users Management</Typography>
         <Button variant="contained" color="primary" onClick={handleOpen}>
           Add User
         </Button>
       </Box>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ mb: 4 }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -219,8 +212,8 @@ const Users = () => {
         handleInputChange={handleInputChange}
         handleRoleChange={handleRoleChange}
       />
-    </Container>
+    </Box>
   );
 };
 
-export default Users;
+export default UsersManagement;
