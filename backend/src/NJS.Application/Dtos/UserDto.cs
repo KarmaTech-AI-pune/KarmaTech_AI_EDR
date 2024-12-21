@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 
 namespace NJS.Application.Dtos
@@ -12,6 +12,7 @@ namespace NJS.Application.Dtos
         public bool IsConsultant { get; set; }
         public string Avatar { get; set; }
         public List<string> Roles { get; set; } = new List<string>();
+        public List<string> Permissions { get; set; } = new List<string>();
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -13,7 +12,7 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-   
+
     public class UserController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -45,7 +44,6 @@ namespace NJSAPI.Controllers
 
                 if (success)
                 {
-                    var roles = await _userManager.GetRolesAsync(user);
 
                     var userDto = new UserDto
                     {
@@ -53,7 +51,7 @@ namespace NJSAPI.Controllers
                         UserName = user.UserName,
                         Email = user.Email,
                         Avatar = user.Avatar,
-                        Roles = roles.ToList()
+
                     };
 
                     return Ok(new
@@ -73,7 +71,7 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, new { success = false, message = "An error occurred during login" });
             }
         }
-        [HttpGet]     
+        [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] GetAllUsersQuery query)
         {
             var result = await _mediator.Send(query);
@@ -81,12 +79,12 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("{id}")]
-      //  [Authorize(Roles = "Admin")]
+        //  [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetById(string id)
         {
             var query = new GetUserByIdQuery(id);
             var result = await _mediator.Send(query);
-            
+
             if (result == null)
                 return NotFound();
 
@@ -106,7 +104,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPut("{id}")]
-      //  [Authorize(Roles = "Admin")]
+        //  [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(string id, [FromBody] UpdateUserCommand command)
         {
             if (id != command.Id)
@@ -125,7 +123,7 @@ namespace NJSAPI.Controllers
         {
             var command = new DeleteUserCommand(id);
             var result = await _mediator.Send(command);
-            
+
             if (!result)
                 return NotFound();
 
@@ -149,7 +147,7 @@ namespace NJSAPI.Controllers
         }
 
 
-        [HttpGet("permissions")]       
+        [HttpGet("permissions")]
         public async Task<IActionResult> GetPermissions()
         {
             var query = new GetAllPermissionsQuery();

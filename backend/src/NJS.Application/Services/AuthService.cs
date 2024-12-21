@@ -1,28 +1,36 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
+using NJS.Repositories.Interfaces;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.AccessControl;
 using System.Security.Claims;
 using System.Text;
 
-namespace NJS.Application.Services{
-  
-    public class AuthService: IAuthService
+namespace NJS.Application.Services
+{
+
+    public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
+        private readonly IPermissionRepository _permissionRepository;
 
         public AuthService(
             IConfiguration configuration,
             UserManager<User> userManager,
-            RoleManager<Role> roleManager)
+            RoleManager<Role> roleManager,
+            IPermissionRepository permissionRepository)
         {
             _configuration = configuration;
             _userManager = userManager;
             _roleManager = roleManager;
+            _permissionRepository = permissionRepository;
         }
 
         public async Task<(bool success, User user, string token)> ValidateUserAsync(string username, string password)
@@ -63,7 +71,7 @@ namespace NJS.Application.Services{
 
             // Get user roles
             var roles = await _userManager.GetRolesAsync(user);
-           
+
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -72,10 +80,21 @@ namespace NJS.Application.Services{
                 new Claim(ClaimTypes.Name, user.UserName)
             };
 
+            List<string> permissions = [];
             // Add role claims
             foreach (var role in roles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, role));
+                var roleDetils = await _roleManager.FindByNameAsync(role).ConfigureAwait(false);
+                var rolePermissions = await _permissionRepository.GetPermissionsByRoleId(roleDetils.Id).ConfigureAwait(false);
+                // claims.Add(new Claim(ClaimTypes.Role, role));
+                if (rolePermissions != null && rolePermissions.Any())
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                    var permissionsString = string.Join(",", rolePermissions.Select(p => p.Name));
+                    claims.Add(new Claim("Permissions", permissionsString));
+                }
+
+
             }
 
             var token = new JwtSecurityToken(
