@@ -16,7 +16,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { AuthUser, UserRole } from '../../models';
-import * as usersApi from '../../dummyapi/usersApi';
+import * as usersApi from '../../services/userApi';
 import UserDialog from '../dialogbox/adminpage/UserDialog';
 
 const UsersManagement = () => {
@@ -30,7 +30,7 @@ const UsersManagement = () => {
     name: '',
     email: '',
     password: '',
-    role: UserRole.Admin,
+    role: [],
     standardRate: '0',
     isConsultant: false,
   });
@@ -39,22 +39,28 @@ const UsersManagement = () => {
     loadUsers();
   }, []);
 
-  const loadUsers = () => {
-    const fetchedUsers = usersApi.getAllUsers();
-    setUsers(fetchedUsers);
-    
-    const newRates: Record<number, number> = {};
-    const newStatus: Record<number, boolean> = {};
-    fetchedUsers.forEach(user => {
-      if (!(user.id in standardRates)) {
-        newRates[user.id] = 0;
-      }
-      if (!(user.id in consultantStatus)) {
-        newStatus[user.id] = false;
-      }
-    });
-    setStandardRates(prev => ({ ...prev, ...newRates }));
-    setConsultantStatus(prev => ({ ...prev, ...newStatus }));
+  const loadUsers = async () => {
+    try {
+      const fetchedUsers = await usersApi.getAllUsers();
+      console.log(fetchedUsers);
+      setUsers(fetchedUsers);
+
+      const newRates: Record<number, number> = {};
+      const newStatus: Record<number, boolean> = {};
+      fetchedUsers.forEach(user => {
+        if (!(user.id in standardRates)) {
+          newRates[user.id] = 0;
+        }
+        if (!(user.id in consultantStatus)) {
+          newStatus[user.id] = false;
+        }
+      });
+      setStandardRates(prev => ({ ...prev, ...newRates }));
+      setConsultantStatus(prev => ({ ...prev, ...newStatus }));
+    } catch (error) {
+      console.error('Error loading users:', error);
+      // You might want to show an error message to the user here
+    }
   };
 
   const handleOpen = () => {
@@ -65,7 +71,7 @@ const UsersManagement = () => {
       name: '',
       email: '',
       password: '',
-      role: UserRole.Admin,
+      roles: [UserRole.Admin],
       standardRate: '0',
       isConsultant: false,
     });
@@ -89,23 +95,26 @@ const UsersManagement = () => {
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      const success = usersApi.deleteUser(id);
-      if (success) {
-        loadUsers();
+      try {
+        await usersApi.deleteUser(id);
+        await loadUsers();
         const newRates = { ...standardRates };
         const newStatus = { ...consultantStatus };
         delete newRates[id];
         delete newStatus[id];
         setStandardRates(newRates);
         setConsultantStatus(newStatus);
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Failed to delete user');
       }
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     try {
       if (editingUser) {
-        const updatedUser = usersApi.updateUser(editingUser.id, {
+        const updatedUser = await usersApi.updateUser(editingUser.id, {
           ...formData,
           password: formData.password || editingUser.password,
         });
@@ -122,12 +131,12 @@ const UsersManagement = () => {
           alert('Please fill in all required fields');
           return;
         }
-        const newUser = usersApi.createUser({
-          username: formData.username,
+        const newUser = await usersApi.createUser({
+          userName: formData.username,
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          role: formData.role,
+          roles: formData.role,
         });
         setStandardRates(prev => ({
           ...prev,
@@ -138,7 +147,7 @@ const UsersManagement = () => {
           [newUser.id]: formData.isConsultant,
         }));
       }
-      loadUsers();
+      await loadUsers();
       handleClose();
     } catch (error) {
       alert(error instanceof Error ? error.message : 'An error occurred');
@@ -183,12 +192,22 @@ const UsersManagement = () => {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.userName}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
+
                 <TableCell>
-                  <Chip label={user.role} color="primary" variant="outlined" />
+                  {user.roles.map((role) => (
+                    <Chip
+                      key={role.name}
+                      label={role.name}
+                      color="primary"
+                      variant="outlined"
+                      style={{ marginRight: '5px' }}
+                    />
+                  ))}
                 </TableCell>
+
                 <TableCell>
                   <IconButton onClick={() => handleEdit(user)} color="primary">
                     <EditIcon />

@@ -11,7 +11,7 @@ namespace NJS.Application.Dtos
         public decimal StandardRate { get; set; }
         public bool IsConsultant { get; set; }
         public string Avatar { get; set; }
-        public List<string> Roles { get; set; } = new List<string>();
+        public List<RoleDto> Roles { get; set; } = new List<RoleDto>();
         public List<string> Permissions { get; set; } = new List<string>();
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

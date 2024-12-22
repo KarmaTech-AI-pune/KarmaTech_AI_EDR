@@ -1,17 +1,20 @@
-import { UserRole } from "./userRoleModel";
-
 export type User = {
     id: number;
+    userName: string;
     name: string;
     email: string;
     avatar?: string;
-    role: UserRole;
+    roles: [];
   }
 
   export interface AuthUser extends User {
-    username: string;
+    userName: string;
     password: string; // Note: In a real app, passwords should be hashed
-    role: UserRole;
+    roles: [];
+  }
+  export interface Role{
+    id:string,
+    name:string;
   }
 
   /*

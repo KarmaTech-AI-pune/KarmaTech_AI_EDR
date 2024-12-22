@@ -16,16 +16,16 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { AuthUser, UserRole } from '../models';
+import { AuthUser, User, UserRole } from '../models';
 import * as usersApi from '../dummyapi/usersApi';
 import UserDialog from '../components/dialogbox/adminpage/UserDialog';
 
 const Users = () => {
-  const [users, setUsers] = useState<AuthUser[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [standardRates, setStandardRates] = useState<Record<number, number>>({});
   const [consultantStatus, setConsultantStatus] = useState<Record<number, boolean>>({});
   const [open, setOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     username: '',
     name: '',
@@ -42,6 +42,7 @@ const Users = () => {
 
   const loadUsers = () => {
     const fetchedUsers = usersApi.getAllUsers();
+    console.log(fetchedUsers);
     setUsers(fetchedUsers);
     
     // Initialize UI state for new users
@@ -78,7 +79,7 @@ const Users = () => {
     setEditingUser(null);
   };
 
-  const handleEdit = (user: AuthUser) => {
+  const handleEdit = (user: User) => {
     setEditingUser(user);
     setFormData({
       ...user,
@@ -111,7 +112,7 @@ const Users = () => {
         // Update existing user
         const updatedUser = usersApi.updateUser(editingUser.id, {
           ...formData,
-          password: formData.password || editingUser.password, // Keep old password if not changed
+          password: formData.password, // Keep old password if not changed
         });
         // Update UI state
         setStandardRates(prev => ({
@@ -129,11 +130,11 @@ const Users = () => {
           return;
         }
         const newUser = usersApi.createUser({
-          username: formData.username,
+          userName: formData.username,
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          role: formData.role,
+          roles: formData.role,
         });
         // Set UI state for new user
         setStandardRates(prev => ({
@@ -180,7 +181,7 @@ const Users = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Username</TableCell>
+              <TableCell>User Name</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Roles</TableCell>
@@ -189,12 +190,13 @@ const Users = () => {
           </TableHead>
           <TableBody>
             {users.map((user) => (
+             
               <TableRow key={user.id}>
-                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.userName}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  <Chip label={user.role} color="primary" variant="outlined" />
+                  <Chip label={user.roles} color="primary" variant="outlined" />
                 </TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleEdit(user)} color="primary">

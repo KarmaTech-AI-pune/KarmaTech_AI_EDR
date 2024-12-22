@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.Users.Commands;
 using NJS.Application.Dtos;
 using NJS.Domain.Entities;
@@ -56,6 +57,25 @@ namespace NJS.Application.CQRS.Users.Handlers
 
             // Map to DTO
             var userRoles = await _userManager.GetRolesAsync(user);
+
+            var roleDto = new List<RoleDto>();
+
+            foreach (var item in userRoles)
+            {
+                var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Name.Equals(item, StringComparison.OrdinalIgnoreCase)).ConfigureAwait(false);
+                if (role is null)
+                {
+                    continue;
+                }
+                roleDto.Add(new RoleDto
+                {
+                    Id = role.Id,
+                    Name = role.Name
+
+                });
+
+            }
+
             return new UserDto
             {
                 Id = user.Id.ToString(),
@@ -64,7 +84,7 @@ namespace NJS.Application.CQRS.Users.Handlers
                 StandardRate = user.StandardRate ?? 0m,
                 IsConsultant = user.IsConsultant,
                 Avatar = user.Avatar,
-                Roles = userRoles.ToList(),
+                Roles = roleDto,
                 CreatedAt = user.CreatedAt
             };
         }

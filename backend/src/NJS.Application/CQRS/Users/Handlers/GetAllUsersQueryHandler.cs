@@ -32,8 +32,8 @@ namespace NJS.Application.CQRS.Users.Handlers
             // Apply filters
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
-                query = query.Where(u => 
-                    u.UserName.Contains(request.SearchTerm) || 
+                query = query.Where(u =>
+                    u.UserName.Contains(request.SearchTerm) ||
                     u.Email.Contains(request.SearchTerm));
             }
 
@@ -61,8 +61,23 @@ namespace NJS.Application.CQRS.Users.Handlers
 
             foreach (var user in users)
             {
+                var roleDto = new List<RoleDto>();
                 var roles = await _userManager.GetRolesAsync(user);
-                
+                foreach (var role in roles)
+                {
+                    var result = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Name.Equals(role)).ConfigureAwait(false);
+                    if (result is null)
+                    {
+                        continue;
+                    }
+
+                    roleDto.Add(new RoleDto
+                    {
+                        Id = result.Id,
+                        Name = result.Name
+                    });
+                }
+
                 // Apply role filter
                 if (!string.IsNullOrEmpty(request.RoleFilter) && !roles.Contains(request.RoleFilter))
                 {
@@ -77,7 +92,7 @@ namespace NJS.Application.CQRS.Users.Handlers
                     StandardRate = user.StandardRate ?? 0m,
                     IsConsultant = user.IsConsultant,
                     Avatar = user.Avatar,
-                    Roles = roles.ToList(),
+                    Roles = roleDto,
                     CreatedAt = user.CreatedAt
                 });
             }

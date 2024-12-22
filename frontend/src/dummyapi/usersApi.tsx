@@ -1,5 +1,6 @@
 import { AuthUser, UserRole } from "../models";
 import { users, } from "./database/dummyusers";
+import { axiosInstance } from './axiosConfig';
 
 // Mutable array to store users
 let mutableUsers = [...users];
@@ -22,9 +23,16 @@ export const createUser = (userData: Omit<AuthUser, 'id'>): AuthUser => {
 };
 
 // Read operations
-export const getAllUsers = (): AuthUser[] => {
-  return [...mutableUsers];
+export const getAllUsers = async (): Promise<AuthUser[]> => {
+  try {
+    const response = await axiosInstance.get('/user');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
 };
+
 
 export const getUserById = (id: number): AuthUser | undefined => {
   return mutableUsers.find(user => user.id === id);

@@ -36,11 +36,18 @@ namespace NJS.Application.CQRS.Users.Handlers
                 var roles = await _userManager.GetRolesAsync(user);
                 var permissions = new List<string>();
                 
+                var roleDto=new List<RoleDto>();
                 foreach (var roleName in roles)
                 {
                     var role = await _roleManager.FindByNameAsync(roleName);
+
                     if (role != null)
                     {
+                        roleDto.Add(new RoleDto
+                        {
+                            Name = role.Name,
+                            Id=role.Id
+                        });
                         var rolePermissions = await _mediator.Send(new GetRolePermissionsQuery(role.Id));
                         permissions.AddRange(rolePermissions.Select(p => p.Name));
                     }
@@ -54,7 +61,7 @@ namespace NJS.Application.CQRS.Users.Handlers
                     StandardRate = user.StandardRate ?? 0,
                     IsConsultant = user.IsConsultant,
                     Avatar = user.Avatar,
-                    Roles = roles.ToList(),
+                    Roles = roleDto,
                     Permissions = permissions.Distinct().ToList(),
                     CreatedAt = user.CreatedAt,
                     UpdatedAt = user.LastLogin

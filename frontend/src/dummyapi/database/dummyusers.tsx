@@ -123,6 +123,9 @@ export const validateUser = (username: string, password: string): AuthUser | nul
 };*/
 
 // User management utilities
+export const getUserById = (id: number): AuthUser | undefined => {
+  return users.find(user => user.id === id);
+};
 export const isAdmin = (user: AuthUser): boolean => {
-  return user.role === UserRole.Admin;
+  return true;//user.role === UserRole.Admin;
 };

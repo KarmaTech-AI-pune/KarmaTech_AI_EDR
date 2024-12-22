@@ -25,11 +25,28 @@ namespace NJS.Application.CQRS.Users.Handlers
         {
             var query = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == request.Id).ConfigureAwait(false);
             var roles = await _userManager.GetRolesAsync(query).ConfigureAwait(false);
+            var roleDto = new List<RoleDto>();
+
+            foreach (var item in roles)
+            {
+                var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Name.Equals(item)).ConfigureAwait(false);
+                if (role is null)
+                {
+                    continue;
+                }
+                roleDto.Add(new RoleDto
+                {
+                    Id = role.Id,
+                    Name = role.Name,
+                });
+
+            }
+
             return new UserDto
             {
                 Id = request.Id,
                 Email = query.Email,
-                Roles = roles.ToList(),
+                Roles = roleDto,
                 UserName = query.UserName
 
             };
