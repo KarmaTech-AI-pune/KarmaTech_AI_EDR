@@ -46,11 +46,11 @@ namespace NJS.Application.CQRS.Users.Handlers
             // Assign roles
             if (request.Roles != null && request.Roles.Any())
             {
-                foreach (var roleName in request.Roles)
+                foreach (var role in request.Roles)
                 {
-                    if (await _roleManager.RoleExistsAsync(roleName))
+                    if (await _roleManager.RoleExistsAsync(role.Name))
                     {
-                        await _userManager.AddToRoleAsync(user, roleName);
+                        await _userManager.AddToRoleAsync(user, role.Name);
                     }
                 }
             }
@@ -62,7 +62,7 @@ namespace NJS.Application.CQRS.Users.Handlers
 
             foreach (var item in userRoles)
             {
-                var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Name.Equals(item, StringComparison.OrdinalIgnoreCase)).ConfigureAwait(false);
+                var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Name.Equals(item)).ConfigureAwait(false);
                 if (role is null)
                 {
                     continue;

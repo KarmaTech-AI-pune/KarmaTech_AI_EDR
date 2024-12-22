@@ -47,7 +47,7 @@ export const getUsersByRole = (role: UserRole): AuthUser[] => {
 };
 
 // Update user
-export const updateUser = (id: number, userData: Partial<AuthUser>): AuthUser => {
+export const updateUser = (id: string, userData: Partial<AuthUser>): AuthUser => {
   const userIndex = mutableUsers.findIndex(user => user.id === id);
   if (userIndex === -1) {
     throw new Error('User not found');

@@ -96,6 +96,7 @@ namespace NJSAPI.Controllers
         public async Task<IActionResult> Create([FromBody] CreateUserCommand command)
         {
             command.Password = "Admin@123";
+
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -103,8 +104,7 @@ namespace NJSAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
-        [HttpPut("{id}")]
-        //  [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]       
         public async Task<IActionResult> Update(string id, [FromBody] UpdateUserCommand command)
         {
             if (id != command.Id)
@@ -117,8 +117,7 @@ namespace NJSAPI.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]        
         public async Task<IActionResult> Delete(string id)
         {
             var command = new DeleteUserCommand(id);
@@ -127,7 +126,7 @@ namespace NJSAPI.Controllers
             if (!result)
                 return NotFound();
 
-            return NoContent();
+            return CreatedAtAction(nameof(GetAll), new { });
         }
 
         [HttpGet("roles")]

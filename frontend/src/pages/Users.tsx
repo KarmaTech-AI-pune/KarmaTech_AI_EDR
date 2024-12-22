@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Typography,
@@ -13,63 +13,46 @@ import {
   IconButton,
   Chip,
   Box,
+  CircularProgress,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { AuthUser, User, UserRole } from '../models';
-import * as usersApi from '../dummyapi/usersApi';
+import { AuthUser, Role } from '../models/userModel';
 import UserDialog from '../components/dialogbox/adminpage/UserDialog';
+import { useUsers } from '../hooks/useUsers';
 
 const Users = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [standardRates, setStandardRates] = useState<Record<number, number>>({});
-  const [consultantStatus, setConsultantStatus] = useState<Record<number, boolean>>({});
+  const { users, loading, error, createUser, updateUser, deleteUser } = useUsers();
   const [open, setOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState({
-    username: '',
+  const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
+  const [formData, setFormData] = useState<{
+    userName: string;
+    name: string;
+    email: string;
+    password: string;
+    roles: Role[];
+    standardRate: number;
+    isConsultant: boolean;
+  }>({
+    userName: '',
     name: '',
     email: '',
     password: '',
-    role: UserRole.Admin,
-    standardRate: '0',
+    roles: [],
+    standardRate: 0,
     isConsultant: false,
   });
-
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = () => {
-    const fetchedUsers = usersApi.getAllUsers();
-    console.log(fetchedUsers);
-    setUsers(fetchedUsers);
-    
-    // Initialize UI state for new users
-    const newRates: Record<number, number> = {};
-    const newStatus: Record<number, boolean> = {};
-    fetchedUsers.forEach(user => {
-      if (!(user.id in standardRates)) {
-        newRates[user.id] = 0;
-      }
-      if (!(user.id in consultantStatus)) {
-        newStatus[user.id] = false;
-      }
-    });
-    setStandardRates(prev => ({ ...prev, ...newRates }));
-    setConsultantStatus(prev => ({ ...prev, ...newStatus }));
-  };
 
   const handleOpen = () => {
     setOpen(true);
     setEditingUser(null);
     setFormData({
-      username: '',
+      userName: '',
       name: '',
       email: '',
       password: '',
-      role: UserRole.Admin,
-      standardRate: '0',
+      roles: [],
+      standardRate: 0,
       isConsultant: false,
     });
   };
@@ -79,74 +62,50 @@ const Users = () => {
     setEditingUser(null);
   };
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: AuthUser) => {
     setEditingUser(user);
     setFormData({
-      ...user,
+      userName: user.userName,
+      name: user.name,
+      email: user.email,
       password: '', // Don't populate password for security
-      standardRate: standardRates[user.id]?.toString() || '0',
-      isConsultant: consultantStatus[user.id] || false,
+      roles: user.roles,
+      standardRate: user.standardRate,
+      isConsultant: user.isConsultant,
     });
     setOpen(true);
   };
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      const success = usersApi.deleteUser(id);
-      if (success) {
-        loadUsers();
-        // Clean up UI state
-        const newRates = { ...standardRates };
-        const newStatus = { ...consultantStatus };
-        delete newRates[id];
-        delete newStatus[id];
-        setStandardRates(newRates);
-        setConsultantStatus(newStatus);
+      try {
+        await deleteUser(id);
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Failed to delete user');
       }
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     try {
+      const userData = {
+        ...formData,
+        standardRate: Number(formData.standardRate),
+      };
+
       if (editingUser) {
-        // Update existing user
-        const updatedUser = usersApi.updateUser(editingUser.id, {
-          ...formData,
-          password: formData.password, // Keep old password if not changed
+        await updateUser(editingUser.id, {
+          ...userData,
+          password: formData.password || undefined, // Only send password if changed
         });
-        // Update UI state
-        setStandardRates(prev => ({
-          ...prev,
-          [updatedUser.id]: Number(formData.standardRate),
-        }));
-        setConsultantStatus(prev => ({
-          ...prev,
-          [updatedUser.id]: formData.isConsultant,
-        }));
       } else {
-        // Create new user
-        if (!formData.username || !formData.password || !formData.email || !formData.name) {
+        if (!formData.userName || !formData.password || !formData.email || !formData.name) {
           alert('Please fill in all required fields');
           return;
         }
-        const newUser = usersApi.createUser({
-          userName: formData.username,
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          roles: formData.role,
-        });
-        // Set UI state for new user
-        setStandardRates(prev => ({
-          ...prev,
-          [newUser.id]: Number(formData.standardRate),
-        }));
-        setConsultantStatus(prev => ({
-          ...prev,
-          [newUser.id]: formData.isConsultant,
-        }));
+        await createUser(userData);
       }
-      loadUsers();
       handleClose();
     } catch (error) {
       alert(error instanceof Error ? error.message : 'An error occurred');
@@ -157,16 +116,37 @@ const Users = () => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' 
+        ? checked 
+        : name === 'standardRate' 
+          ? Number(value) 
+          : value,
     }));
   };
 
   const handleRoleChange = (e: any) => {
+    const selectedRole = e.target.value;
     setFormData(prev => ({
       ...prev,
-      role: e.target.value,
+      roles: [{ id: String(Date.now()), name: selectedRole }],
     }));
   };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <Typography color="error">Error loading users: {error.message}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Container sx={{ mt: 10, mb: 4 }}>
@@ -190,13 +170,20 @@ const Users = () => {
           </TableHead>
           <TableBody>
             {users.map((user) => (
-             
               <TableRow key={user.id}>
                 <TableCell>{user.userName}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  <Chip label={user.roles} color="primary" variant="outlined" />
+                  {user.roles.map((role) => (
+                    <Chip
+                      key={role.id}
+                      label={role.name}
+                      color="primary"
+                      variant="outlined"
+                      style={{ marginRight: '5px' }}
+                    />
+                  ))}
                 </TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleEdit(user)} color="primary">

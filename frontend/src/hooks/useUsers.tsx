@@ -1,86 +1,78 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthUser } from '../models/userModel';
-import * as userApi from '../services/userApi';
+import * as usersApi from '../services/userApi';
 
-interface UseUsersReturn {
-  users: AuthUser[];
-  loading: boolean;
-  error: Error | null;
-  refetch: () => Promise<void>;
-  createUser: (user: Omit<AuthUser, 'id'>) => Promise<void>;
-  updateUser: (id: number, user: Partial<AuthUser>) => Promise<void>;
-  deleteUser: (id: number) => Promise<void>;
-}
-
-export const useUsers = (): UseUsersReturn => {
+export const useUsers = () => {
   const [users, setUsers] = useState<AuthUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const data = await userApi.getAllUsers();
+      const data = await usersApi.getAllUsers();
       setUsers(data);
+      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch users'));
+      setError(err instanceof Error ? err : new Error('An error occurred'));
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  };
 
   const createUser = async (user: Omit<AuthUser, 'id'>) => {
     try {
       setLoading(true);
+      const newUser = await usersApi.createUser(user);
+      setUsers(prev => [...prev, newUser]);
       setError(null);
-      await userApi.createUser(user);
-      await fetchUsers(); // Refresh the list after creating
+      return newUser;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to create user'));
+      setError(err instanceof Error ? err : new Error('An error occurred'));
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateUser = async (id: number, user: Partial<AuthUser>) => {
+  const updateUser = async (id: string, user: Partial<AuthUser>) => {
     try {
       setLoading(true);
+      const updatedUser = await usersApi.updateUser(id, user);
+      setUsers(prev => prev.map(u => u.id === id ? updatedUser : u));
       setError(null);
-      await userApi.updateUser(id, user);
-      await fetchUsers(); // Refresh the list after updating
+      return updatedUser;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to update user'));
+      setError(err instanceof Error ? err : new Error('An error occurred'));
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteUser = async (id: number) => {
+  const deleteUser = async (id: string) => {
     try {
       setLoading(true);
+      await usersApi.deleteUser(id);
+      setUsers(prev => prev.filter(user => user.id !== id));
       setError(null);
-      await userApi.deleteUser(id);
-      await fetchUsers(); // Refresh the list after deleting
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to delete user'));
+      setError(err instanceof Error ? err : new Error('An error occurred'));
       throw err;
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return {
     users,
     loading,
     error,
-    refetch: fetchUsers,
+    fetchUsers,
     createUser,
     updateUser,
     deleteUser,

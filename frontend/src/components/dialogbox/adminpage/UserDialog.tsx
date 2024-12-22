@@ -11,8 +11,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
+  FormHelperText,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
-import { AuthUser, UserRole } from '../../../models';
+import { AuthUser, Role } from '../../../models/userModel';
+import { useRoles } from '../../../hooks/useRoles';
 
 interface UserDialogProps {
   open: boolean;
@@ -20,12 +25,12 @@ interface UserDialogProps {
   onSubmit: () => void;
   editingUser: AuthUser | null;
   formData: {
-    username: string;
+    userName: string;
     name: string;
     email: string;
     password: string;
-    role: UserRole;
-    standardRate: string;
+    roles: Role[];
+    standardRate: number;
     isConsultant: boolean;
   };
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -41,16 +46,28 @@ const UserDialog: React.FC<UserDialogProps> = ({
   handleInputChange,
   handleRoleChange,
 }) => {
+  const { roles: availableRoles, loading, error } = useRoles();
+
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    console.error('Error loading roles:', error);
+  }
+
+  const selectedRoleNames = formData.roles.map(role => role.name);
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{editingUser ? 'Edit User' : 'Add User'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 2 }}>
           <TextField
-            name="username"
+            name="userName"
             label="Username"
             required
-            value={formData.username}
+            value={formData.userName}
             onChange={handleInputChange}
             fullWidth
           />
@@ -80,21 +97,42 @@ const UserDialog: React.FC<UserDialogProps> = ({
             onChange={handleInputChange}
             fullWidth
           />
-          <FormControl fullWidth>
+          <FormControl fullWidth required>
             <InputLabel>Roles</InputLabel>
             <Select
-              value={formData.role}
+              multiple
+              value={selectedRoleNames}
               onChange={handleRoleChange}
               label="Roles"
-              required
+              renderValue={(selected) => selected.join(', ')}
             >
-              {Object.values(UserRole).map((role) => (
-                <MenuItem key={role} value={role}>
-                  {role}
+              {availableRoles.map((role) => (
+                <MenuItem key={role.id} value={role.name}>
+                  <Checkbox checked={selectedRoleNames.includes(role.name)} />
+                  {role.name}
                 </MenuItem>
               ))}
             </Select>
+            <FormHelperText>Select at least one role</FormHelperText>
           </FormControl>
+          <TextField
+            name="standardRate"
+            label="Standard Rate"
+            type="number"
+            value={formData.standardRate.toString()}
+            onChange={handleInputChange}
+            fullWidth
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="isConsultant"
+                checked={formData.isConsultant}
+                onChange={handleInputChange}
+              />
+            }
+            label="Is Consultant"
+          />
         </Stack>
       </DialogContent>
       <DialogActions>

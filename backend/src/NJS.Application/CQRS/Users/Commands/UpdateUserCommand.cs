@@ -11,7 +11,7 @@ namespace NJS.Application.CQRS.Users.Commands
         public string Email { get; set; }
         public decimal StandardRate { get; set; }
         public bool IsConsultant { get; set; }
-        public List<string> Roles { get; set; }
+        public List<RoleDto> Roles { get; set; } = [];
         public string Avatar { get; set; }
     }
 }
