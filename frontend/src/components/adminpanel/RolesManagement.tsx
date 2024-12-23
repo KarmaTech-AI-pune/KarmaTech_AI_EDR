@@ -20,58 +20,49 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
 import BusinessIcon from '@mui/icons-material/Business';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import { RoleDefinition, PermissionType, UserRole } from '../../models';
-import { rolesApi } from '../../dummyapi/rolesApi';
+import * as rolesApi from '../../services/rolesApi';
+import type { RoleWithPermissionsDto, PermissionCategoryGroup } from '../../services/rolesApi';
 import RoleDialog from '../dialogbox/adminpage/RoleDialog';
 
-const PERMISSION_GROUPS = {
-  Project: [
-    PermissionType.VIEW_PROJECT,
-    PermissionType.CREATE_PROJECT,
-    PermissionType.EDIT_PROJECT,
-    PermissionType.DELETE_PROJECT,
-    PermissionType.REVIEW_PROJECT,
-    PermissionType.APPROVE_PROJECT,
-    PermissionType.SUBMIT_PROJECT_FOR_REVIEW,
-    PermissionType.SUBMIT_PROJECT_FOR_APPROVAL,
-  ],
-  'Business Development': [
-    PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-    PermissionType.CREATE_BUSINESS_DEVELOPMENT,
-    PermissionType.EDIT_BUSINESS_DEVELOPMENT,
-    PermissionType.DELETE_BUSINESS_DEVELOPMENT,
-    PermissionType.REVIEW_BUSINESS_DEVELOPMENT,
-    PermissionType.APPROVE_BUSINESS_DEVELOPMENT,
-    PermissionType.SUBMIT_FOR_REVIEW,
-    PermissionType.SUBMIT_FOR_APPROVAL,
-  ],
-  System: [
-    PermissionType.SYSTEM_ADMIN,
-  ],
-};
+interface FormData {
+  id: string;
+  name: string;
+  permissions: PermissionCategoryGroup[];
+}
 
 const RolesManagement = () => {
-  const [roles, setRoles] = useState<RoleDefinition[]>([]);
+  const [roles, setRoles] = useState<RoleWithPermissionsDto[]>([]);
   const [open, setOpen] = useState(false);
-  const [editingRole, setEditingRole] = useState<RoleDefinition | null>(null);
-  const [formData, setFormData] = useState({
+  const [editingRole, setEditingRole] = useState<RoleWithPermissionsDto | null>(null);
+  const [formData, setFormData] = useState<{
+    id: string;
+    name: string;
+    permissions: PermissionCategoryGroup[];
+  }>({
+    id: '',
     name: '',
-    permissions: [] as PermissionType[],
+    permissions: [],
   });
 
   useEffect(() => {
     loadRoles();
   }, []);
 
-  const loadRoles = () => {
-    const fetchedRoles = rolesApi.getAllRoles();
-    setRoles(fetchedRoles);
+  const loadRoles = async () => {
+    try {
+      const fetchedRoles = await rolesApi.getAllRolesWithPermissions();
+      setRoles(fetchedRoles);
+    } catch (error) {
+      console.error('Error loading roles:', error);
+      // TODO: Add error notification
+    }
   };
 
   const handleOpen = () => {
     setOpen(true);
     setEditingRole(null);
     setFormData({
+      id: '',
       name: '',
       permissions: [],
     });
@@ -82,60 +73,46 @@ const RolesManagement = () => {
     setEditingRole(null);
   };
 
-  const handleEdit = (role: RoleDefinition) => {
-    setEditingRole(role);
-    setFormData({
-      name: role.name,
-      permissions: role.permissions,
-    });
-    setOpen(true);
+  const handleEdit = async (role: RoleWithPermissionsDto) => {
+    try {
+      setEditingRole(role);
+      setFormData({
+        id: role.id,
+        name: role.name,
+        permissions: role.permissions,
+      });
+      setOpen(true);
+    } catch (error) {
+      console.error('Error loading role permissions:', error);
+      // TODO: Add error notification
+    }
   };
 
-  const handleDelete = async (role: RoleDefinition) => {
+  const handleDelete = async (role: RoleWithPermissionsDto) => {
     if (window.confirm('Are you sure you want to delete this role?')) {
       try {
-        const success = rolesApi.deleteRole(role.name as UserRole);
-        if (success) {
-          loadRoles();
-        }
+        await rolesApi.deleteRole(role.id);
+        await loadRoles();
       } catch (error) {
         console.error('Error deleting role:', error);
+        // TODO: Add error notification
       }
     }
   };
 
-  const handleSubmit = (roleData: RoleDefinition) => {
+  const handleSubmit = async (roleData: RoleWithPermissionsDto) => {
     try {
       if (editingRole) {
-        rolesApi.updateRole(editingRole.name as UserRole, roleData);
+        await rolesApi.updateRole(editingRole.id, roleData);
       } else {
-        rolesApi.createRole(roleData.name as UserRole, roleData);
+        await rolesApi.createRole(roleData);
       }
-      loadRoles();
+      await loadRoles();
       handleClose();
     } catch (error) {
       console.error('Error saving role:', error);
+      // TODO: Add error notification
     }
-  };
-
-  const getPermissionsByGroup = (permissions: PermissionType[]) => {
-    const groups: { [key: string]: PermissionType[] } = {
-      Project: [],
-      'Business Development': [],
-      System: [],
-    };
-
-    permissions.forEach(permission => {
-      if (PERMISSION_GROUPS.Project.includes(permission)) {
-        groups.Project.push(permission);
-      } else if (PERMISSION_GROUPS['Business Development'].includes(permission)) {
-        groups['Business Development'].push(permission);
-      } else if (PERMISSION_GROUPS.System.includes(permission)) {
-        groups.System.push(permission);
-      }
-    });
-
-    return groups;
   };
 
   const formatPermissionLabel = (permission: string) => {
@@ -167,23 +144,26 @@ const RolesManagement = () => {
       .join(' ');
   };
 
-  const renderPermissionChips = (role: RoleDefinition) => {
-    const groups = getPermissionsByGroup(role.permissions);
+  const renderPermissionChips = (role: RoleWithPermissionsDto) => {
+    const groups = role.permissions.reduce((acc, group) => ({
+      ...acc,
+      [group.category]: group.permissions.map(p => p.name)
+    }), {} as Record<string, string[]>);
     
     return (
       <Stack direction="row" spacing={1}>
-        {groups.Project.length > 0 && (
-          <Tooltip title={groups.Project.map(formatPermissionLabel).join(', ')}>
+        {groups['Project']?.length > 0 && (
+          <Tooltip title={groups['Project'].map(formatPermissionLabel).join(', ')}>
             <Chip
               icon={<FolderIcon />}
-              label={`${groups.Project.length} Project`}
+              label={`${groups['Project'].length} Project`}
               color="primary"
               variant="outlined"
               size="small"
             />
           </Tooltip>
         )}
-        {groups['Business Development'].length > 0 && (
+        {groups['Business Development']?.length > 0 && (
           <Tooltip title={groups['Business Development'].map(formatPermissionLabel).join(', ')}>
             <Chip
               icon={<BusinessIcon />}
@@ -194,8 +174,8 @@ const RolesManagement = () => {
             />
           </Tooltip>
         )}
-        {groups.System.length > 0 && (
-          <Tooltip title={groups.System.map(formatPermissionLabel).join(', ')}>
+        {groups['System']?.length > 0 && (
+          <Tooltip title={groups['System'].map(formatPermissionLabel).join(', ')}>
             <Chip
               icon={<AdminPanelSettingsIcon />}
               label="System Admin"

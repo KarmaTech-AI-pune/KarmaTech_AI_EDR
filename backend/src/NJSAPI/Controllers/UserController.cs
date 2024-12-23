@@ -117,7 +117,7 @@ namespace NJSAPI.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{id}")]        
+        [HttpDelete("{id}")]       
         public async Task<IActionResult> Delete(string id)
         {
             var command = new DeleteUserCommand(id);

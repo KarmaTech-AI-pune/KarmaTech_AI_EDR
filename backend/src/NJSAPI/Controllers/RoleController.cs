@@ -30,6 +30,22 @@ namespace NJSAPI.Controllers
             return Ok(roles);
         }
 
+        [HttpGet("getRolesWithPermissions")]
+        public async Task<IActionResult> GetRolesWithPermissions()
+        {
+            var query = new GetAllRolesWithPermissionsQuery();
+            var roles = await _mediator.Send(query);
+            return Ok(roles);
+        }
+
+        [HttpGet("getPermissionsByGroupedByCategory")]
+        public async Task<IActionResult> GetPermissionsByGroupedByCategory()
+        {
+            var query = new GetPermissionsByGroupedByCategoryQuery();
+            var roles = await _mediator.Send(query);
+            return Ok(roles);
+        }
+
         [HttpGet]
         [Route("{roleId}")]
         public async Task<ActionResult<IEnumerable<PermissionDto>>> GetRolePermissions(string roleId)

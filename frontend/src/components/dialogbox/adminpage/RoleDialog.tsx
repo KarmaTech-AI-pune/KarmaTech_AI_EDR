@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -18,50 +18,27 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  SelectChangeEvent,
+  CircularProgress,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { RoleDefinition, PermissionType} from '../../../models';
+import { PermissionDto, PermissionCategoryGroup, RoleWithPermissionsDto } from '../../../services/rolesApi';
+import * as rolesApi from '../../../services/rolesApi';
 
-const PERMISSION_GROUPS = {
-  Project: [
-    PermissionType.VIEW_PROJECT,
-    PermissionType.CREATE_PROJECT,
-    PermissionType.EDIT_PROJECT,
-    PermissionType.DELETE_PROJECT,
-    PermissionType.REVIEW_PROJECT,
-    PermissionType.APPROVE_PROJECT,
-    PermissionType.SUBMIT_PROJECT_FOR_REVIEW,
-    PermissionType.SUBMIT_PROJECT_FOR_APPROVAL,
-  ],
-  'Business Development': [
-    PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-    PermissionType.CREATE_BUSINESS_DEVELOPMENT,
-    PermissionType.EDIT_BUSINESS_DEVELOPMENT,
-    PermissionType.DELETE_BUSINESS_DEVELOPMENT,
-    PermissionType.REVIEW_BUSINESS_DEVELOPMENT,
-    PermissionType.APPROVE_BUSINESS_DEVELOPMENT,
-    PermissionType.SUBMIT_FOR_REVIEW,
-    PermissionType.SUBMIT_FOR_APPROVAL,
-  ],
-  System: [
-    PermissionType.SYSTEM_ADMIN,
-  ],
-};
+interface FormData {
+  id: string;
+  name: string;
+  permissions: PermissionCategoryGroup[];
+}
 
 interface RoleDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (roleData: RoleDefinition) => void;
-  editingRole: RoleDefinition | null;
-  roles: RoleDefinition[];
-  formData: {
-    name: string;
-    permissions: PermissionType[];
-  };
-  setFormData: React.Dispatch<React.SetStateAction<{
-    name: string;
-    permissions: PermissionType[];
-  }>>;
+  onSubmit: (roleData: RoleWithPermissionsDto) => void;
+  editingRole: RoleWithPermissionsDto | null;
+  roles: RoleWithPermissionsDto[];
+  formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }
 
 const formatPermissionLabel = (permission: string) => {
@@ -102,9 +79,29 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
   formData,
   setFormData,
 }) => {
-  const [selectedExistingRole, setSelectedExistingRole] = React.useState<string>('');
+  const [selectedExistingRole, setSelectedExistingRole] = useState<string>('');
+  const [availablePermissions, setAvailablePermissions] = useState<PermissionCategoryGroup[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleExistingRoleChange = (event: any) => {
+  useEffect(() => {
+    const loadPermissions = async () => {
+      if (open) {
+        try {
+          setLoading(true);
+          const permissions = await rolesApi.getPermissionsByGroupedByCategory();
+          setAvailablePermissions(permissions);
+        } catch (error) {
+          console.error('Error loading permissions:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadPermissions();
+  }, [open]);
+
+  const handleExistingRoleChange = (event: SelectChangeEvent<string>) => {
     const selectedRole = event.target.value;
     setSelectedExistingRole(selectedRole);
     
@@ -119,6 +116,7 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
       }
     } else {
       setFormData({
+        id: '',
         name: '',
         permissions: [],
       });
@@ -133,14 +131,50 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
     }));
   };
 
-  const handlePermissionChange = (permission: PermissionType) => {
+  const handlePermissionChange = (permission: PermissionDto) => {
     setFormData(prev => {
-      const newPermissions = prev.permissions.includes(permission)
-        ? prev.permissions.filter(p => p !== permission)
-        : [...prev.permissions, permission];
+      const category = permission.category;
+      const existingGroupIndex = prev.permissions.findIndex(g => g.category === category);
+      
+      if (existingGroupIndex === -1) {
+        // Add new permission group
+        return {
+          ...prev,
+          permissions: [
+            ...prev.permissions,
+            {
+              category,
+              permissions: [permission]
+            }
+          ]
+        };
+      }
+
+      const existingGroup = prev.permissions[existingGroupIndex];
+      const permissionExists = existingGroup.permissions.some(p => p.id === permission.id);
+      
+      const updatedPermissions = [...prev.permissions];
+      if (permissionExists) {
+        // Remove permission
+        updatedPermissions[existingGroupIndex] = {
+          ...existingGroup,
+          permissions: existingGroup.permissions.filter(p => p.id !== permission.id)
+        };
+        // Remove empty group
+        if (updatedPermissions[existingGroupIndex].permissions.length === 0) {
+          updatedPermissions.splice(existingGroupIndex, 1);
+        }
+      } else {
+        // Add permission
+        updatedPermissions[existingGroupIndex] = {
+          ...existingGroup,
+          permissions: [...existingGroup.permissions, permission]
+        };
+      }
+
       return {
         ...prev,
-        permissions: newPermissions,
+        permissions: updatedPermissions
       };
     });
   };
@@ -151,13 +185,65 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
       return;
     }
 
-    const roleData: RoleDefinition = {
-      id: editingRole?.id || Math.random().toString(),
+    const roleData: RoleWithPermissionsDto = {
+      id: editingRole?.id || '',
       name: formData.name,
       permissions: formData.permissions,
     };
 
     onSubmit(roleData);
+  };
+
+  const renderPermissions = () => {
+    if (loading) {
+      return (
+        <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>
+          <CircularProgress />
+          <Typography>Loading permissions...</Typography>
+        </Stack>
+      );
+    }
+
+    if (!availablePermissions.length) {
+      return (
+        <Typography color="text.secondary" sx={{ py: 2 }}>
+          No permissions available
+        </Typography>
+      );
+    }
+
+    return availablePermissions.map((group) => (
+      
+      <Accordion key={group.category}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="subtitle1">
+            {group.category}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <FormGroup>
+            {group.permissions.map((permission) => {
+              const isChecked = formData.permissions
+                .find(g => g.category === permission.category)
+                ?.permissions.some(p => p.id === permission.id) || false;
+
+              return (
+                <FormControlLabel
+                  key={permission.id}
+                  control={
+                    <Checkbox
+                      checked={isChecked}
+                      onChange={() => handlePermissionChange(permission)}
+                    />
+                  }
+                  label={formatPermissionLabel(permission.name)}
+                />
+              );
+            })}
+          </FormGroup>
+        </AccordionDetails>
+      </Accordion>
+    ));
   };
 
   return (
@@ -201,31 +287,7 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Select the permissions for this role. Choose carefully as these determine what actions the role can perform.
           </Typography>
-          {Object.entries(PERMISSION_GROUPS).map(([group, permissions]) => (
-            <Accordion key={group}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="subtitle1">
-                  {group}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <FormGroup>
-                  {permissions.map((permission) => (
-                    <FormControlLabel
-                      key={permission}
-                      control={
-                        <Checkbox
-                          checked={formData.permissions.includes(permission)}
-                          onChange={() => handlePermissionChange(permission)}
-                        />
-                      }
-                      label={formatPermissionLabel(permission)}
-                    />
-                  ))}
-                </FormGroup>
-              </AccordionDetails>
-            </Accordion>
-          ))}
+          {renderPermissions()}
         </Stack>
       </DialogContent>
       <DialogActions>
