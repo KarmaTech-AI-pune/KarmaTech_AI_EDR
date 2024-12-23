@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NJS.Application.CQRS.Roles.Commands;
 using NJS.Application.CQRS.Users.Commands;
 using NJS.Application.CQRS.Users.Queries;
 using NJS.Application.Dtos;
@@ -61,10 +62,36 @@ namespace NJSAPI.Controllers
             }
         }
 
-        [HttpPut]
-        [Route("{roleId}/permissions")]
+        [HttpPost]
+        public async Task<IActionResult> CreateRole([FromBody] RoleDefination role)
+        {
+            try
+            {
 
-        public async Task<IActionResult> UpdateRolePermissions(string roleId, [FromBody] List<int> permissionIds)
+                var command = new CreateRoleCommands(role);
+                var result = await _mediator.Send(command);
+
+                if (result)
+                {
+                    return Ok(new { message = "Role permissions mapping successfully" });
+                }
+
+                return BadRequest(new { message = "Failed to add role permissions" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+
+        [HttpPut]
+        [Route("{roleId}")]
+        public async Task<IActionResult> UpdateRolePermissions(string roleId, [FromBody] RoleDefination role)
         {
             try
             {
@@ -73,12 +100,12 @@ namespace NJSAPI.Controllers
                     return BadRequest(new { message = "Role ID is required" });
                 }
 
-                if (permissionIds == null || permissionIds.Count == 0)
+                if (role.Permissions == null || role.Permissions.Count == 0)
                 {
                     return BadRequest(new { message = "At least one permission must be specified" });
                 }
 
-                var command = new UpdateRolePermissionsCommand(roleId, permissionIds);
+                var command = new UpdateRolePermissionsCommand(roleId, role);
                 var result = await _mediator.Send(command);
 
                 if (result)
@@ -117,6 +144,22 @@ namespace NJSAPI.Controllers
             {
                 var role = await _mediator.Send(new GetRoleByNameQuery(roleName.ToLowerInvariant()));
                 return Ok(role);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        [Route("{roleId}")]
+        public async Task<ActionResult> Delete(string roleId)
+        {
+            try
+            {
+                var permissions = await _mediator.Send(new DeleteRoleCommand(roleId));
+               
+                return Ok(permissions);
             }
             catch (Exception ex)
             {

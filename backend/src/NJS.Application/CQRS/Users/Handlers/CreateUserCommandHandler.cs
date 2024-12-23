@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -73,7 +70,6 @@ namespace NJS.Application.CQRS.Users.Handlers
                     Name = role.Name
 
                 });
-
             }
 
             return new UserDto

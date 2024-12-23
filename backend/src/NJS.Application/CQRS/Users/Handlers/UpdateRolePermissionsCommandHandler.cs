@@ -21,7 +21,6 @@ namespace NJS.Application.CQRS.Users.Handlers
 
         public async Task<bool> Handle(UpdateRolePermissionsCommand request, CancellationToken cancellationToken)
         {
-           // using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
             try
             {
                 // Get the role with its current permissions
@@ -38,21 +37,22 @@ namespace NJS.Application.CQRS.Users.Handlers
                 _context.Set<RolePermission>().RemoveRange(role.RolePermissions);
 
                 // Add new role permissions
-                var newRolePermissions = request.PermissionIds.Select(permissionId => new RolePermission
-                {
-                    RoleId = role.Id,
-                    PermissionId = permissionId
-                });
+                var newRolePermissions = request.RoleDefination.Permissions
+               .SelectMany(category => category.Permissions)
+               .Select(permission => new RolePermission
+               {
+                   RoleId = role.Id,
+                   PermissionId = permission.Id
+               }).ToList();
 
                 await _context.Set<RolePermission>().AddRangeAsync(newRolePermissions, cancellationToken);
                 await _context.SaveChangesAsync(cancellationToken);
-                //await transaction.CommitAsync(cancellationToken);
 
                 return true;
             }
             catch (Exception)
             {
-               // await transaction.RollbackAsync(cancellationToken);
+                // await transaction.RollbackAsync(cancellationToken);
                 throw;
             }
         }

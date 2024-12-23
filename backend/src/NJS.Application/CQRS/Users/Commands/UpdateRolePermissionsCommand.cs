@@ -1,17 +1,18 @@
 using System.Collections.Generic;
 using MediatR;
+using NJS.Application.Dtos;
 
 namespace NJS.Application.CQRS.Users.Commands
 {
     public class UpdateRolePermissionsCommand : IRequest<bool>
     {
         public string RoleId { get; set; }
-        public List<int> PermissionIds { get; set; }
+        public RoleDefination RoleDefination { get; set; }
 
-        public UpdateRolePermissionsCommand(string roleId, List<int> permissionIds)
+        public UpdateRolePermissionsCommand(string roleId, RoleDefination roleDefination)
         {
             RoleId = roleId;
-            PermissionIds = permissionIds;
+            RoleDefination = roleDefination;
         }
     }
 }
