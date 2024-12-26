@@ -3,8 +3,6 @@ import { WBSTask, WBSTaskResourceAllocation, MonthlyHour } from "../../models";
 
 // WBS Task Resource Allocation Type Definition
 
-
-
 // Empty WBS Tasks array with the new schema
 export const wbsTasks: WBSTask[] = [{
   "id": 1733290000944,
@@ -71,7 +69,7 @@ export const resourceAllocations: WBSTaskResourceAllocation[] = [
     id: 1,
     wbs_task_id: 1733290002938,
     role_id: 2, 
-    employee_id: 2,
+    employee_id: "2",
     cost_rate: 150,
     "odc": 0,
     "total_hours": 20,
@@ -83,7 +81,7 @@ export const resourceAllocations: WBSTaskResourceAllocation[] = [
     id: 2,
     wbs_task_id: 1733290004019,
     role_id: 7, 
-    employee_id: 7,
+    employee_id: "7",
     cost_rate: 100,
     "odc": 300,
     "total_hours": 12,
@@ -95,7 +93,7 @@ export const resourceAllocations: WBSTaskResourceAllocation[] = [
     id: 3,
     wbs_task_id: 1733290040673,
     role_id: 3, 
-    employee_id: 3,
+    employee_id: "3",
     cost_rate: 100,
     "odc": 0,
     "total_hours": 22,

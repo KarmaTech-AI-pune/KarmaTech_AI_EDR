@@ -1,8 +1,5 @@
 import { resourceRole, Employee } from "../../models";
 
-// Employee type definition
-
-
 // Resource Roles table
 export const resourceRoles: resourceRole[] = [
     {
@@ -58,7 +55,7 @@ export const resourceRoles: resourceRole[] = [
 // Employees table with foreign key to Resource Roles
 export const employees: Employee[] = [
     {
-        id: 1,
+        id: "1",
         name: "Rajesh Kumar",
         email: "rajesh.kumar@company.com",
         role_id: 1,
@@ -67,7 +64,7 @@ export const employees: Employee[] = [
         is_active: true
     },
     {
-        id: 2,
+        id: "2",
         name: "Priya Sharma",
         email: "priya.sharma@company.com",
         role_id: 2,
@@ -76,7 +73,7 @@ export const employees: Employee[] = [
         is_active: true
     },
     {
-        id: 3,
+        id: "3",
         name: "Amit Patel",
         email: "amit.patel@company.com",
         role_id: 3,
@@ -85,7 +82,7 @@ export const employees: Employee[] = [
         is_active: true
     },
     {
-        id: 4,
+        id: "4",
         name: "Deepika Verma",
         email: "deepika.verma@company.com",
         role_id: 4,
@@ -94,7 +91,7 @@ export const employees: Employee[] = [
         is_active: true
     },
     {
-        id: 5,
+        id: "5",
         name: "Arjun Reddy",
         email: "arjun.reddy@company.com",
         role_id: 5,
@@ -103,7 +100,7 @@ export const employees: Employee[] = [
         is_active: true
     },
     {
-        id: 6,
+        id: "6",
         name: "Neha Gupta",
         email: "neha.gupta@company.com",
         role_id: 6,
@@ -112,7 +109,7 @@ export const employees: Employee[] = [
         is_active: true
     },
     {
-        id: 7,
+        id: "7",
         name: "Vikram Singh",
         email: "vikram.singh@company.com",
         role_id: 7,
@@ -121,7 +118,7 @@ export const employees: Employee[] = [
         is_active: true
     },
     {
-        id: 8,
+        id: "8",
         name: "Ananya Mehta",
         email: "ananya.mehta@company.com",
         role_id: 8,
@@ -130,7 +127,7 @@ export const employees: Employee[] = [
         is_active: true
     },
     {
-        id: 9,
+        id: "9",
         name: "Rahul Kapoor",
         email: "rahul.kapoor@company.com",
         role_id: 7,
@@ -139,7 +136,7 @@ export const employees: Employee[] = [
         is_active: true
     },
     {
-        id: 10,
+        id: "10",
         name: "Meera Iyer",
         email: "meera.iyer@company.com",
         role_id: 8,
@@ -154,7 +151,7 @@ export const projectResources = [
     {
         id: 1,
         projectId: 1,
-        employeeId: 1,
+        employeeId: "1",
         projectRate: 175,
         startDate: new Date("2024-01-01"),
         endDate: new Date("2024-12-31")
@@ -162,7 +159,7 @@ export const projectResources = [
     {
         id: 2,
         projectId: 1,
-        employeeId: 2,
+        employeeId: "2",
         projectRate: 150,
         startDate: new Date("2024-01-16"),
         endDate: new Date("2024-06-15")
@@ -170,7 +167,7 @@ export const projectResources = [
     {
         id: 3,
         projectId: 1,
-        employeeId: 3,
+        employeeId: "3",
         projectRate: 125,
         startDate: new Date("2024-02-01"),
         endDate: new Date("2024-05-31")
@@ -178,7 +175,7 @@ export const projectResources = [
     {
         id: 4,
         projectId: 1,
-        employeeId: 4,
+        employeeId: "4",
         projectRate: 115,
         startDate: new Date("2024-01-01"),
         endDate: new Date("2024-03-31")
@@ -186,7 +183,7 @@ export const projectResources = [
     {
         id: 5,
         projectId: 1,
-        employeeId: 5,
+        employeeId: "5",
         projectRate: 125,
         startDate: new Date("2024-03-01"),
         endDate: new Date("2024-06-30")
@@ -194,7 +191,7 @@ export const projectResources = [
     {
         id: 6,
         projectId: 1,
-        employeeId: 6,
+        employeeId: "6",
         projectRate: 125,
         startDate: new Date("2024-03-15"),
         endDate: new Date("2024-07-15")
@@ -202,7 +199,7 @@ export const projectResources = [
     {
         id: 7,
         projectId: 1,
-        employeeId: 7,
+        employeeId: "7",
         projectRate: 100,
         startDate: new Date("2024-01-15"),
         endDate: new Date("2024-03-15")
@@ -210,7 +207,7 @@ export const projectResources = [
     {
         id: 8,
         projectId: 1,
-        employeeId: 8,
+        employeeId: "8",
         projectRate: 110,
         startDate: new Date("2024-02-01"),
         endDate: new Date("2024-04-30")

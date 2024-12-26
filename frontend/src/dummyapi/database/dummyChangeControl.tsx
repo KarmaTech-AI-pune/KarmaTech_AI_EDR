@@ -2,7 +2,7 @@ import { ChangeControl } from "../../models";
 
 export const dummyChangeControl: ChangeControl[] = [
     {
-        id: 1,
+        id: "1",
         projectId: 1,
         srNo: 1,
         dateLogged: "2024-01-15",
@@ -17,7 +17,7 @@ export const dummyChangeControl: ChangeControl[] = [
         claimSituation: "Variation claim submitted"
     },
     {
-        id: 2,
+        id: "2",
         projectId: 1,
         srNo: 2,
         dateLogged: "2024-01-20",

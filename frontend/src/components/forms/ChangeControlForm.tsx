@@ -42,7 +42,7 @@ const ChangeControlForm: React.FC = () => {
   const context = useContext(projectManagementAppContext);
   const [rows, setRows] = useState<ChangeControl[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
@@ -92,12 +92,12 @@ const ChangeControlForm: React.FC = () => {
     }
   };
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     setEditingId(id);
     setDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     try {
       const success = deleteChangeControl(id);
       if (success) {

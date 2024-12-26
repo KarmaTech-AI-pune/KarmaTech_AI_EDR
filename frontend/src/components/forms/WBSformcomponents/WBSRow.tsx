@@ -50,7 +50,7 @@ const StickyCell = styled(TableCell)(({ theme }) => ({
 }));
 
 interface Employee {
-  id: number;
+  id: string;
   name: string;
   standard_rate: number;
   role_id: number;

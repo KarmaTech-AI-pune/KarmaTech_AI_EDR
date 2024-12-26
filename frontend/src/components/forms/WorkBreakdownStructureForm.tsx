@@ -245,7 +245,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
 
   const handleEmployeeChange = async (rowId: number, employeeId: string) => {
     try {
-      const employee = await ResourceAPI.getEmployeeById(parseInt(employeeId));
+      const employee = await ResourceAPI.getEmployeeById(employeeId);
       if (employee) {
         setRows(rows.map(row => {
           if (row.id === rowId) {

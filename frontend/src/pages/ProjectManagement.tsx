@@ -126,18 +126,20 @@ export const ProjectManagement: React.FC = () => {
 
   // First apply role-based filtering
   const roleFilteredProjects = projects.filter((project: Project) => {
-    if (!currentUser) return false;
+    if (!currentUser || !currentUser.roles) return false;
 
-    switch (currentUser.role) {
-      case 'Regional Manager':
-        return project.regionalManagerID === currentUser.id;
-      case 'Senior Project Manager':
-        return project.seniorProjectMangerId === currentUser.id;
-      case 'Project Manager':
-        return project.projectMangerId === currentUser.id;
-      default:
-        return true;
+    // Check if user has any of the management roles and match corresponding IDs
+    if (currentUser.roles.includes('Regional Manager') && project.regionalManagerID === currentUser.id) {
+      return true;
     }
+    if (currentUser.roles.includes('Senior Project Manager') && project.seniorProjectMangerId === currentUser.id) {
+      return true;
+    }
+    if (currentUser.roles.includes('Project Manager') && project.projectMangerId === currentUser.id) {
+      return true;
+    }
+
+    return false;
   });
 
   // Then apply search filtering

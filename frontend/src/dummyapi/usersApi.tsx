@@ -5,16 +5,27 @@ import { axiosInstance } from './axiosConfig';
 // Mutable array to store users
 let mutableUsers = [...users];
 
+// Generate a random string ID
+const generateId = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const length = 10;
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
 // Create a new user
 export const createUser = (userData: Omit<AuthUser, 'id'>): AuthUser => {
-  const newId = Math.max(...mutableUsers.map(user => user.id)) + 1;
+  const newId = generateId();
   const newUser: AuthUser = {
     ...userData,
     id: newId,
   };
   
-  // Check if username already exists
-  if (mutableUsers.some(user => user.username === userData.username)) {
+  // Check if userName already exists
+  if (mutableUsers.some(user => user.userName === userData.userName)) {
     throw new Error('Username already exists');
   }
 
@@ -33,17 +44,16 @@ export const getAllUsers = async (): Promise<AuthUser[]> => {
   }
 };
 
-
-export const getUserById = (id: number): AuthUser | undefined => {
+export const getUserById = (id: string): AuthUser | undefined => {
   return mutableUsers.find(user => user.id === id);
 };
 
-export const getUserByUsername = (username: string): AuthUser | undefined => {
-  return mutableUsers.find(user => user.username === username);
+export const getUserByUsername = (userName: string): AuthUser | undefined => {
+  return mutableUsers.find(user => user.userName === userName);
 };
 
 export const getUsersByRole = (role: UserRole): AuthUser[] => {
-  return mutableUsers.filter(user => user.role === role);
+  return mutableUsers.filter(user => user.roles.some(r => r.name === role));
 };
 
 // Update user
@@ -53,10 +63,10 @@ export const updateUser = (id: string, userData: Partial<AuthUser>): AuthUser =>
     throw new Error('User not found');
   }
 
-  // Check if username is being updated and if it already exists
-  if (userData.username && 
-      userData.username !== mutableUsers[userIndex].username && 
-      mutableUsers.some(user => user.username === userData.username)) {
+  // Check if userName is being updated and if it already exists
+  if (userData.userName && 
+      userData.userName !== mutableUsers[userIndex].userName && 
+      mutableUsers.some(user => user.userName === userData.userName)) {
     throw new Error('Username already exists');
   }
 
@@ -71,18 +81,18 @@ export const updateUser = (id: string, userData: Partial<AuthUser>): AuthUser =>
 };
 
 // Delete user
-export const deleteUser = (id: number): boolean => {
+export const deleteUser = (id: string): boolean => {
   const initialLength = mutableUsers.length;
   mutableUsers = mutableUsers.filter(user => user.id !== id);
   return mutableUsers.length !== initialLength;
 };
 
-// Search users by name or username
+// Search users by name or userName
 export const searchUsers = (query: string): AuthUser[] => {
   const lowercaseQuery = query.toLowerCase();
   return mutableUsers.filter(user => 
     user.name.toLowerCase().includes(lowercaseQuery) || 
-    user.username.toLowerCase().includes(lowercaseQuery)
+    user.userName.toLowerCase().includes(lowercaseQuery)
   );
 };
 
@@ -91,8 +101,8 @@ export const resetUsers = (): void => {
   mutableUsers = [...users];
 };
 
-export const validateUser = (username: string, password: string): AuthUser | null => {
-  const user = getUserByUsername(username);
+export const validateUser = (userName: string, password: string): AuthUser | null => {
+  const user = getUserByUsername(userName);
   if (user && user.password === password) {
     return user;
   }
@@ -101,5 +111,5 @@ export const validateUser = (username: string, password: string): AuthUser | nul
 
 // User management utilities
 export const isAdmin = (user: AuthUser): boolean => {
-  return user.role === UserRole.Admin;
+  return user.roles.some(role => role.name === UserRole.Admin);
 };

@@ -6,7 +6,7 @@ import { WBSTask, WBSTaskResourceAllocation, MonthlyHour, resourceRole as Resour
 interface ProjectResource {
     id: number;
     projectId: number;
-    employeeId: number;
+    employeeId: string;
     projectRate: number;
     startDate: Date;
     endDate: Date;
@@ -186,7 +186,7 @@ export const WBSStructureAPI = {
                     if (existingAllocation) {
                         await ResourceAPI.updateResourceAllocation(existingAllocation.id, {
                             role_id: rowData.role ? parseInt(rowData.role) : null,
-                            employee_id: rowData.name ? parseInt(rowData.name) : null,
+                            employee_id: rowData.name || null,
                             cost_rate: rowData.costRate,
                             odc: rowData.odc,
                             total_hours: totalHours,
@@ -196,7 +196,7 @@ export const WBSStructureAPI = {
                         await ResourceAPI.createResourceAllocation({
                             wbs_task_id: task.id,
                             role_id: rowData.role ? parseInt(rowData.role) : null,
-                            employee_id: rowData.name ? parseInt(rowData.name) : null,
+                            employee_id: rowData.name || null,
                             cost_rate: rowData.costRate,
                             odc: rowData.odc,
                             total_hours: totalHours,
@@ -218,7 +218,7 @@ export const WBSStructureAPI = {
                         await ResourceAPI.createResourceAllocation({
                             wbs_task_id: task.id,
                             role_id: rowData.role ? parseInt(rowData.role) : null,
-                            employee_id: rowData.name ? parseInt(rowData.name) : null,
+                            employee_id: rowData.name || null,
                             cost_rate: rowData.costRate,
                             odc: rowData.odc,
                             total_hours: totalHours,
@@ -288,7 +288,7 @@ export const ResourceAPI = {
         }
     },
 
-    getEmployeeById: async (id: number): Promise<Employee | undefined> => {
+    getEmployeeById: async (id: string): Promise<Employee | undefined> => {
         try {
             return employees.find(emp => emp.id === id);
         } catch (error) {
