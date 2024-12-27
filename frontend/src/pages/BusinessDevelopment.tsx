@@ -43,12 +43,12 @@ export const BusinessDevelopment: React.FC = () => {
 
       let response: OpportunityTracking[] = [];
       
-      if (currentUser.roles.some(role => role.name === UserRole.BusinessDevelopmentManager)) {
+      if (currentUser.roles.some(role => role === UserRole.BusinessDevelopmentManager)) {
         response = await opportunityApi.getByUserId(currentUser.id);
-      } else if (currentUser.roles.some(role => role.name === UserRole.RegionalManager)) {
+      } else if (currentUser.roles.some(role => role === UserRole.RegionalManager)) {
         response = await opportunityApi.getByReviewManagerId(currentUser.id);
       }  
-      else if (currentUser.roles.some(role => role.name === UserRole.RegionalDirector)) {
+      else if (currentUser.roles.some(role => role === UserRole.RegionalDirector)) {
         response = await opportunityApi.getByApprovalManagerId(currentUser.id);
       } else {
         response = await opportunityApi.getAll();
@@ -71,10 +71,12 @@ export const BusinessDevelopment: React.FC = () => {
           setError('Please log in to access Business Development');
           return;
         }
+        else console.log(user)
 
         setCurrentUser(user);
 
         if (user.roleDetails) {
+
           const hasOpportunityViewPermission = user.roleDetails.permissions.includes(
             PermissionType.VIEW_BUSINESS_DEVELOPMENT
           );

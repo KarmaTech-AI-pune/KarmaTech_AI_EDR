@@ -6,7 +6,7 @@ const usersRawData = {
     "name": "Admin User",
     "userName": "admin",
     "password": "password",
-    "roles": [{ id: "role1", name: UserRole.Admin }],
+    "roles": [UserRole.Admin],
     "standardRate": 100,
     "isConsultant": false
   },
@@ -14,7 +14,7 @@ const usersRawData = {
     "name": "Manasi Bapat",
     "userName": "PM1",
     "password": "password",
-    "roles": [{ id: "role2", name: UserRole.ProjectManager }],
+    "roles": [UserRole.ProjectManager],
     "standardRate": 80,
     "isConsultant": true
   },
@@ -22,7 +22,7 @@ const usersRawData = {
     "name": "Salaiddin Ahemad",
     "userName": "PM2",
     "password": "password",
-    "roles": [{ id: "role3", name: UserRole.ProjectManager }],
+    "roles": [UserRole.ProjectManager],
     "standardRate": 80,
     "isConsultant": true
   },
@@ -30,7 +30,7 @@ const usersRawData = {
     "name": "Vidyadhar Vengurlekar",
     "userName": "SPM1", 
     "password": "password",
-    "roles": [{ id: "role4", name: UserRole.SeniorProjectManager }],
+    "roles": [UserRole.SeniorProjectManager],
     "standardRate": 90,
     "isConsultant": false
   },
@@ -38,7 +38,7 @@ const usersRawData = {
     "name": "Mandar Pimputkar",
     "userName": "SPM2",
     "password": "password", 
-    "roles": [{ id: "role5", name: UserRole.SeniorProjectManager }],
+    "roles": [UserRole.SeniorProjectManager],
     "standardRate": 90,
     "isConsultant": false
   },
@@ -46,7 +46,7 @@ const usersRawData = {
     "name": "Vidyadhar Sontakke",
     "userName": "RM1",
     "password": "password",
-    "roles": [{ id: "role6", name: UserRole.RegionalManager }],
+    "roles": [UserRole.RegionalManager],
     "standardRate": 95,
     "isConsultant": false
   },
@@ -54,7 +54,7 @@ const usersRawData = {
     "name": "Sanjay Ghuleria",
     "userName": "RM2",
     "password": "password",
-    "roles": [{ id: "role7", name: UserRole.RegionalManager }],
+    "roles": [UserRole.RegionalManager ],
     "standardRate": 95,
     "isConsultant": false
   },
@@ -62,7 +62,7 @@ const usersRawData = {
     "name": "Pravin Bhawsar",
     "userName": "BDM1",
     "password": "password",
-    "roles": [{ id: "role8", name: UserRole.BusinessDevelopmentManager }],
+    "roles": [UserRole.BusinessDevelopmentManager],
     "standardRate": 85,
     "isConsultant": false
   },
@@ -70,7 +70,7 @@ const usersRawData = {
     "name": "Rohit Dembi",
     "userName": "BDM2",
     "password": "password",
-    "roles": [{ id: "role9", name: UserRole.BusinessDevelopmentManager }],
+    "roles": [UserRole.BusinessDevelopmentManager],
     "standardRate": 85,
     "isConsultant": false
   },
@@ -78,7 +78,7 @@ const usersRawData = {
     "name": "Nijam Ahemad",
     "userName": "SME1",
     "password": "password",
-    "roles": [{ id: "role10", name: UserRole.SubjectMatterExpert }],
+    "roles": [UserRole.SubjectMatterExpert],
     "standardRate": 75,
     "isConsultant": true
   },
@@ -86,7 +86,7 @@ const usersRawData = {
     "name": "Mnjunath Gowda",  
     "userName": "SME2",
     "password": "password",
-    "roles": [{ id: "role11", name: UserRole.SubjectMatterExpert }],
+    "roles": [UserRole.SubjectMatterExpert],
     "standardRate": 75,
     "isConsultant": true
   },
@@ -94,7 +94,7 @@ const usersRawData = {
     "name": "Pradipto Sarkar",
     "userName": "RM3",
     "password": "password",
-    "roles": [{ id: "role12", name: UserRole.RegionalManager }],
+    "roles": [UserRole.RegionalManager],
     "standardRate": 95,
     "isConsultant": false
   },
@@ -102,7 +102,7 @@ const usersRawData = {
     "name": "Yogeshwar Gokhale",
     "userName": "RD1",
     "password": "password",
-    "roles": [{ id: "role15", name: UserRole.RegionalDirector }],
+    "roles": [UserRole.RegionalDirector],
     "standardRate": 100,
     "isConsultant": false
   },
@@ -110,7 +110,7 @@ const usersRawData = {
     "name": "Vidyadhar Sontakke",
     "userName": "RD2",
     "password": "password",
-    "roles": [{ id: "role16", name: UserRole.RegionalDirector }],
+    "roles": [UserRole.RegionalDirector],
     "standardRate": 100,
     "isConsultant": false
   }
@@ -136,5 +136,5 @@ export const getUserById = (id: string): AuthUser | undefined => {
 };
 
 export const isAdmin = (user: AuthUser): boolean => {
-  return user.roles.some(role => role.name === UserRole.Admin);
+  return user.roles.some(role => role === UserRole.Admin);
 };

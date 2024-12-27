@@ -50,7 +50,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     bidFees: project?.bidFees || 0,
     emd: project?.emd || 0,
     formOfEMD: project?.formOfEMD || '',
-    bidManagerId: project?.bidManagerId || (context.user?.roles.some(role => role.name === UserRole.BusinessDevelopmentManager) ? context.user.id : "0"),
+    bidManagerId: project?.bidManagerId || (context.user?.roles.some(role => role[0] === UserRole.BusinessDevelopmentManager) ? context.user.id : "0"),
     reviewManagerId: project?.reviewManagerId,
     approvalManagerId: project?.approvalManagerId,
     contactPersonAtClient: project?.contactPersonAtClient || '',
@@ -98,7 +98,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     })));
 
     // Set default bid manager to current user if they are a BD manager
-    if (!project && context.user?.roles.some(role => role.name === UserRole.BusinessDevelopmentManager)) {
+    if (!project && context.user?.roles.some(role => role[0] === UserRole.BusinessDevelopmentManager)) {
       setFormData(prev => ({
         ...prev,
         bidManagerId: context.user?.id

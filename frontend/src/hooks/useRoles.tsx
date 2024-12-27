@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Role } from '../models/userModel';
+import {RoleDefinition } from '../models';
 import * as rolesApi from '../services/rolesApi';
 
 interface UseRolesReturn {
-  roles: Role[];
+  roles: RoleDefinition[];
   loading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
 }
 
 export const useRoles = (): UseRolesReturn => {
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [roles, setRoles] = useState<RoleDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

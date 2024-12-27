@@ -169,7 +169,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
             >
               {regionalManagers.map((rm) => (
                 <MenuItem key={rm.id} value={rm.id}>
-                  {rm.name} ({rm.roles[0].name})
+                  {rm.name} ({rm.roles[0]})
 
                 </MenuItem>
               ))}

@@ -1,70 +1,57 @@
 import { Credentials, LoginResponse, UserWithRole, Role } from '../types';
-import { validateUser } from './usersApi';
+import { 
+    validateUser, 
+} from './usersApi';
+import { rolesApi } from './rolesApi';
 
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
       const user = validateUser(credentials.username, credentials.password);
       
-      if (!user) {
-        return {
-          success: false,
-          message: 'Invalid username or password'
+      if (user) {
+        // Simulate token generation
+        const token = `dummy_token_${user.userName}_${Date.now()}`;
+        
+        // Get role details
+        const roleDetails: Role = {
+          id: user.roles[0],
+          name: user.roles[0],
+          permissions: rolesApi.getRolePermissions(user.roles[0])
         };
-      }
 
-      if (!user.roles || user.roles.length === 0) {
-        return {
-          success: false,
-          message: 'User has no assigned roles'
+        // Create user with role details
+        const userWithRole: UserWithRole = {
+          id: user.id,
+          userName : user.userName,
+          isConsultant : user.isConsultant,
+          standardRate : user.standardRate,
+          name: user.name,
+          email: user.email,
+          roles: user.roles,
+          roleDetails: roleDetails
         };
-      }
 
-      // Generate token
-      const token = `dummy_token_${user.userName}_${Date.now()}`;
-
-      // Map user role to include required permissions
-      const roleWithPermissions: Role = {
-        id: user.roles[0].id,
-        name: user.roles[0].name,
-        permissions: [] // Since this is a dummy API, we'll use an empty array for permissions
-      };
-
-      // Create user with role details
-      const userWithRole: UserWithRole = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        userName: user.userName,
-        roles: user.roles,
-        roleDetails: roleWithPermissions,
-        standardRate: user.standardRate,
-        isConsultant: user.isConsultant
-      };
-
-      try {
-        // Store user information in localStorage
+        // Store full user information in localStorage
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userWithRole));
-      } catch (storageError) {
-        console.error('Storage error:', storageError);
+        
         return {
-          success: false,
-          message: 'Failed to store session data'
+          success: true,
+          user: userWithRole,
+          token: token,
+          message: 'Login successful'
         };
       }
-
-      return {
-        success: true,
-        user: userWithRole,
-        token: token,
-        message: 'Login successful'
-      };
-    } catch (error) {
-      console.error('Login error:', error);
+      
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'An unexpected error occurred during login'
+        message: 'Invalid username or password'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'An error occurred during login'
       };
     }
   },

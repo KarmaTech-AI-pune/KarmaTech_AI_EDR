@@ -58,7 +58,7 @@ export const ProjectManagement: React.FC = () => {
         }
 
         setCurrentUser(user);
-
+        
         if (user.roleDetails) {
           const hasProjectViewPermission = user.roleDetails.permissions.includes(
             PermissionType.VIEW_PROJECT
@@ -126,20 +126,30 @@ export const ProjectManagement: React.FC = () => {
 
   // First apply role-based filtering
   const roleFilteredProjects = projects.filter((project: Project) => {
-    if (!currentUser || !currentUser.roles) return false;
+    if (!currentUser) return false;
 
-    // Check if user has any of the management roles and match corresponding IDs
-    if (currentUser.roles.some(role => role.name === 'Regional Manager') && project.regionalManagerID === currentUser.id) {
-      return true;
-    }
-    if (currentUser.roles.some(role => role.name === 'Senior Project Manager') && project.seniorProjectMangerId === currentUser.id) {
-      return true;
-    }
-    if (currentUser.roles.some(role => role.name === 'Project Manager') && project.projectMangerId === currentUser.id) {
+    // If user has admin permissions, show all projects
+    if (currentUser.roleDetails?.permissions.includes(PermissionType.SYSTEM_ADMIN)) {
       return true;
     }
 
-    return false;
+    // Check all roles the user has
+    console.log('Filtering project:', project.name);
+    console.log('Current user roles:', currentUser.roles);
+    
+    return currentUser.roles.some(role => {
+      console.log('Checking role:', role);
+      switch(role) {
+        case 'Regional Manager':
+          return project.regionalManagerID === currentUser.id;
+        case 'Senior Project Manager':
+          return project.seniorProjectMangerId === currentUser.id;
+        case 'Project Manager':
+          return project.projectMangerId === currentUser.id;
+        default:
+          return false;
+      }
+    });
   });
 
   // Then apply search filtering

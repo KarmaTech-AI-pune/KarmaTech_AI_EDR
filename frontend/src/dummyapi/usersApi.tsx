@@ -53,7 +53,7 @@ export const getUserByUsername = (userName: string): AuthUser | undefined => {
 };
 
 export const getUsersByRole = (role: UserRole): AuthUser[] => {
-  return mutableUsers.filter(user => user.roles.some(r => r.name === role));
+  return mutableUsers.filter(user => user.roles.some(r => r === role));
 };
 
 // Update user
@@ -111,5 +111,5 @@ export const validateUser = (userName: string, password: string): AuthUser | nul
 
 // User management utilities
 export const isAdmin = (user: AuthUser): boolean => {
-  return user.roles.some(role => role.name === UserRole.Admin);
+  return user.roles.some(role => role === UserRole.Admin);
 };
