@@ -72,26 +72,20 @@ namespace NJS.Domain.Extensions
                     new { Name = "Project Manager", Description = "Project Manager role", MinRate = 120.00m, IsResourceRole = true, Permissions = new[] {
                         "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "SUBMIT_PROJECT_FOR_REVIEW"
                     }},
-                    new { Name = "Senior Engineer", Description = "Senior Engineer role", MinRate = 100.00m, IsResourceRole = true, Permissions = new[] {
+                    new { Name = "Senior Project Manager", Description = "Senior Project Manager role", MinRate = 100.00m, IsResourceRole = true, Permissions = new[] {
                         "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "REVIEW_PROJECT", "SUBMIT_FOR_APPROVAL"
                     }},
-                    new { Name = "Engineer", Description = "Engineer role", MinRate = 80.00m, IsResourceRole = true, Permissions = new[] {
-                        "VIEW_PROJECT", "EDIT_PROJECT"
+                    new { Name = "Regional Manager", Description = "Regional Manager is Bid form reviewer role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
+                       "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT","APPROVE_PROJECT","CREATE_BUSINESS_DEVELOPMENT","EDIT_BUSINESS_DEVELOPMENT","DELETE_BUSINESS_DEVELOPMENT","VIEW_BUSINESS_DEVELOPMENT","REVIEW_BUSINESS_DEVELOPMENT","SUBMIT_FOR_APPROVAL",
                     }},
-                    new { Name = "Designer", Description = "Designer role", MinRate = 70.00m, IsResourceRole = true, Permissions = new[] {
-                        "VIEW_PROJECT", "EDIT_PROJECT"
+                    new { Name = "Business Development Manager", Description = "Bid manager role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
+                        "CREATE_BUSINESS_DEVELOPMENT","EDIT_BUSINESS_DEVELOPMENT","DELETE_BUSINESS_DEVELOPMENT","VIEW_BUSINESS_DEVELOPMENT","SUBMIT_FOR_REVIEW"
                     }},
-                    new { Name = "Consultant", Description = "Consultant role", MinRate = 90.00m, IsResourceRole = true, Permissions = new[] {
-                        "VIEW_PROJECT", "EDIT_PROJECT"
+                    new { Name = "Subject Matter Expert", Description = "Subject Matter Expert role", MinRate = 80.00m, IsResourceRole = true, Permissions = new[] {
+                       "CREATE_BUSINESS_DEVELOPMENT","EDIT_BUSINESS_DEVELOPMENT","DELETE_BUSINESS_DEVELOPMENT","VIEW_BUSINESS_DEVELOPMENT"
                     }},
-                     new { Name = "RegionalManager", Description = "Regional Manager is Bid form reviewer role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
-                        "SUBMIT_FOR_REVIEW,SUBMIT_FOR_APPROVAL"
-                    }},
-                      new { Name = "BusinessDevelopmentManager", Description = "Bid manager role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
-                        "SUBMIT_FOR_REVIEW"
-                    }},
-                       new { Name = "RegionalDirector", Description = "Approval Manager for BD form", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
-                        "APPROVE_BUSINESS_DEVELOPMENT"
+                       new { Name = "Regional Director", Description = "Approval Manager for BD form", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
+                        "VIEW_PROJECT","CREATE_PROJECT","EDIT_PROJECT","DELETE_PROJECT","APPROVE_PROJECT","CREATE_BUSINESS_DEVELOPMENT","EDIT_BUSINESS_DEVELOPMENT","DELETE_BUSINESS_DEVELOPMENT","VIEW_BUSINESS_DEVELOPMENT","APPROVE_BUSINESS_DEVELOPMENT"
                     }}
                 };
 
@@ -172,8 +166,6 @@ namespace NJS.Domain.Extensions
                 {
                     new { UserName = "pm1", Email = "pm1@example.com", Role = "Project Manager", StandardRate = 120.00m, IsConsultant = false },
                     new { UserName = "senior1", Email = "senior1@example.com", Role = "Senior Engineer", StandardRate = 100.00m, IsConsultant = true },
-                    new { UserName = "engineer1", Email = "engineer1@example.com", Role = "Engineer", StandardRate = 80.00m, IsConsultant = true },
-                    new { UserName = "designer1", Email = "designer1@example.com", Role = "Designer", StandardRate = 70.00m, IsConsultant = true }
                 };
 
                 foreach (var userData in users)
