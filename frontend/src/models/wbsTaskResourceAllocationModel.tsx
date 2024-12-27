@@ -1,7 +1,7 @@
 export interface WBSTaskResourceAllocation {
-    id: number;
-    wbs_task_id: number;
-    role_id: number | null; 
+    id: string;
+    wbs_task_id: string;
+    role_id: string | null; 
     employee_id: string | null;
     cost_rate: number;
     odc: number;

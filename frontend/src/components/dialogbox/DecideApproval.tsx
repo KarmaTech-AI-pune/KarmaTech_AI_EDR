@@ -19,7 +19,7 @@ import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 interface DecideApprovalProps {
   open: boolean;
   onClose: () => void;
-  opportunityId: number;
+  opportunityId: string;
   currentUser: string;
   onSubmit?: () => void;
 }
@@ -71,7 +71,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
 
     try {
       const newStatus = decision === 'approve' ? 'Approved' : 'Approval Rejected';
-      const workflowId = decision === 'approve' ? 6 : 5; // 6 for Approved, 5 for Approval Changes
+      const workflowId = decision === 'approve' ? "6" : "5"; // "6" for Approved, "5" for Approval Changes
 
       // Update both workflow and opportunity in one atomic operation
       await updateWorkflow(opportunityId, workflowId, {

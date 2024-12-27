@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { createInputRegister, updateInputRegister } from '../../../dummyapi/inputRegisterApi';
+import { InputRegisterRow } from '../../../models';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
@@ -37,32 +38,15 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-interface InputRegisterRow {
-  id: number;
-  projectId: number;
-  dataReceived: string;
-  receiptDate: string;
-  receivedFrom: string;
-  filesFormat: string;
-  noOfFiles: number;
-  fitForPurpose: boolean;
-  check: boolean;
-  checkedBy: string;
-  checkedDate: string;
-  custodian: string;
-  storagePath: string;
-  remarks: string;
-}
-
 interface InputRegisterDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: (data: InputRegisterRow) => void;
   initialData?: InputRegisterRow;
-  projectId: number;
+  projectId: string;
 }
 
-const emptyRow = (projectId: number): Omit<InputRegisterRow, 'id'> => ({
+const emptyRow = (projectId: string): Omit<InputRegisterRow, 'id'> => ({
   projectId,
   dataReceived: '',
   receiptDate: '',

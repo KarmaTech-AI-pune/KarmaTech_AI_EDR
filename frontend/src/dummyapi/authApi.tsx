@@ -1,54 +1,70 @@
 import { Credentials, LoginResponse, UserWithRole, Role } from '../types';
-import { 
-    validateUser, 
-} from './usersApi';
-import { rolesApi } from './rolesApi';
+import { validateUser } from './usersApi';
 
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
       const user = validateUser(credentials.username, credentials.password);
       
-      if (user) {
-        // Simulate token generation
-        const token = `dummy_token_${user.username}_${Date.now()}`;
-        
-        // Get role details
-        const roleDetails: Role = {
-          id: user.role,
-          name: user.role,
-          permissions: rolesApi.getRolePermissions(user.role)
-        };
-
-        // Create user with role details
-        const userWithRole: UserWithRole = {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          roleDetails: roleDetails
-        };
-
-        // Store full user information in localStorage
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(userWithRole));
-        
+      if (!user) {
         return {
-          success: true,
-          user: userWithRole,
-          token: token,
-          message: 'Login successful'
+          success: false,
+          message: 'Invalid username or password'
         };
       }
-      
+
+      if (!user.roles || user.roles.length === 0) {
+        return {
+          success: false,
+          message: 'User has no assigned roles'
+        };
+      }
+
+      // Generate token
+      const token = `dummy_token_${user.userName}_${Date.now()}`;
+
+      // Map user role to include required permissions
+      const roleWithPermissions: Role = {
+        id: user.roles[0].id,
+        name: user.roles[0].name,
+        permissions: [] // Since this is a dummy API, we'll use an empty array for permissions
+      };
+
+      // Create user with role details
+      const userWithRole: UserWithRole = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        userName: user.userName,
+        roles: user.roles,
+        roleDetails: roleWithPermissions,
+        standardRate: user.standardRate,
+        isConsultant: user.isConsultant
+      };
+
+      try {
+        // Store user information in localStorage
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userWithRole));
+      } catch (storageError) {
+        console.error('Storage error:', storageError);
+        return {
+          success: false,
+          message: 'Failed to store session data'
+        };
+      }
+
       return {
-        success: false,
-        message: 'Invalid username or password'
+        success: true,
+        user: userWithRole,
+        token: token,
+        message: 'Login successful'
       };
     } catch (error) {
+      console.error('Login error:', error);
       return {
         success: false,
-        message: 'An error occurred during login'
+        message: error instanceof Error ? error.message : 'An unexpected error occurred during login'
       };
     }
   },

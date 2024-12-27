@@ -4,8 +4,8 @@ import { WBSRowData } from '../types/wbs';
 import { WBSTask, WBSTaskResourceAllocation, MonthlyHour, resourceRole as ResourceRole, Employee } from "../models";
 // Project Resource type definition
 interface ProjectResource {
-    id: number;
-    projectId: number;
+    id: string;
+    projectId: string;
     employeeId: string;
     projectRate: number;
     startDate: Date;
@@ -30,7 +30,7 @@ let projectResources = [...initialProjectResources];
 
 // Individual WBS Task Management
 export const WBSTaskAPI = {
-    getWBSTaskById: async (taskId: number): Promise<WBSTask | undefined> => {
+    getWBSTaskById: async (taskId: string): Promise<WBSTask | undefined> => {
         try {
             return wbsTasks.find(task => task.id === taskId);
         } catch (error) {
@@ -63,7 +63,7 @@ export const WBSTaskAPI = {
         }
     },
 
-    updateWBSTask: async (taskId: number, taskData: Partial<WBSTask>): Promise<WBSTask> => {
+    updateWBSTask: async (taskId: string, taskData: Partial<WBSTask>): Promise<WBSTask> => {
         try {
             const index = wbsTasks.findIndex(task => task.id === taskId);
             if (index !== -1) {
@@ -83,11 +83,11 @@ export const WBSTaskAPI = {
         }
     },
 
-    deleteWBSTask: async (taskId: number): Promise<number[]> => {
+    deleteWBSTask: async (taskId: string): Promise<string[]> => {
         try {
-            const getAllChildTaskIds = (parentId: number): number[] => {
+            const getAllChildTaskIds = (parentId: string): string[] => {
                 const childTasks = wbsTasks.filter(task => task.parent_id === parentId);
-                return childTasks.reduce((ids: number[], task) => {
+                return childTasks.reduce((ids: string[], task) => {
                     return [...ids, task.id, ...getAllChildTaskIds(task.id)];
                 }, []);
             };
@@ -111,7 +111,7 @@ export const WBSTaskAPI = {
 
 // Overall WBS Structure Management
 export const WBSStructureAPI = {
-    getProjectWBS: async (projectId: number): Promise<WBSRowData[]> => {
+    getProjectWBS: async (projectId: string): Promise<WBSRowData[]> => {
         try {
             const tasks = wbsTasks.filter(task => task.project_id === projectId);
             
@@ -137,8 +137,8 @@ export const WBSStructureAPI = {
                     id: task.id,
                     level: task.level as 1 | 2 | 3,
                     title: task.title,
-                    role: allocation?.role_id?.toString() || null,
-                    name: allocation?.employee_id?.toString() || null,
+                    role: allocation?.role_id || null,
+                    name: allocation?.employee_id || null,
                     costRate: allocation?.cost_rate || 0,
                     monthlyHours: monthlyHoursObj,
                     odc: allocation?.odc || 0,
@@ -153,11 +153,11 @@ export const WBSStructureAPI = {
         }
     },
 
-    setProjectWBS: async (projectId: number, wbsData: WBSRowData[]): Promise<void> => {
+    setProjectWBS: async (projectId: string, wbsData: WBSRowData[]): Promise<void> => {
         try {
             const existingTasks = wbsTasks.filter(task => task.project_id === projectId);
             const existingTaskIds = new Set(existingTasks.map(task => task.id));
-            const processedTaskIds = new Set<number>();
+            const processedTaskIds = new Set<string>();
             for (const rowData of wbsData) {
                 let task: WBSTask;
 
@@ -185,7 +185,7 @@ export const WBSStructureAPI = {
 
                     if (existingAllocation) {
                         await ResourceAPI.updateResourceAllocation(existingAllocation.id, {
-                            role_id: rowData.role ? parseInt(rowData.role) : null,
+                            role_id: rowData.role || null,
                             employee_id: rowData.name || null,
                             cost_rate: rowData.costRate,
                             odc: rowData.odc,
@@ -195,7 +195,7 @@ export const WBSStructureAPI = {
                     } else if (rowData.role || rowData.name) {
                         await ResourceAPI.createResourceAllocation({
                             wbs_task_id: task.id,
-                            role_id: rowData.role ? parseInt(rowData.role) : null,
+                            role_id: rowData.role || null,
                             employee_id: rowData.name || null,
                             cost_rate: rowData.costRate,
                             odc: rowData.odc,
@@ -217,7 +217,7 @@ export const WBSStructureAPI = {
                     if (rowData.role || rowData.name) {
                         await ResourceAPI.createResourceAllocation({
                             wbs_task_id: task.id,
-                            role_id: rowData.role ? parseInt(rowData.role) : null,
+                            role_id: rowData.role || null,
                             employee_id: rowData.name || null,
                             cost_rate: rowData.costRate,
                             odc: rowData.odc,
@@ -270,7 +270,7 @@ export const ResourceAPI = {
         }
     },
 
-    getRoleById: async (id: number): Promise<ResourceRole | undefined> => {
+    getRoleById: async (id: string): Promise<ResourceRole | undefined> => {
         try {
             return resourceRoles.find(role => role.id === id);
         } catch (error) {
@@ -297,7 +297,7 @@ export const ResourceAPI = {
         }
     },
 
-    getProjectResources: async (projectId: number): Promise<ProjectResource[]> => {
+    getProjectResources: async (projectId: string): Promise<ProjectResource[]> => {
         try {
             return projectResources.filter(resource => resource.projectId === projectId);
         } catch (error) {
@@ -306,7 +306,7 @@ export const ResourceAPI = {
         }
     },
 
-    getResourceAllocations: async (projectId: number, month?: number, year?: number): Promise<WBSTaskResourceAllocation[]> => {
+    getResourceAllocations: async (projectId: string, month?: number, year?: number): Promise<WBSTaskResourceAllocation[]> => {
         try {
             const projectTasks = wbsTasks.filter(task => task.project_id === projectId);
             const taskIds = projectTasks.map(task => task.id);
@@ -374,7 +374,7 @@ export const ResourceAPI = {
         }
     },
 
-    updateResourceAllocation: async (allocationId: number, data: Partial<WBSTaskResourceAllocation>): Promise<WBSTaskResourceAllocation> => {
+    updateResourceAllocation: async (allocationId: string, data: Partial<WBSTaskResourceAllocation>): Promise<WBSTaskResourceAllocation> => {
         try {
             const index = resourceAllocations.findIndex(a => a.id === allocationId);
             if (index === -1) {
@@ -398,7 +398,7 @@ export const ResourceAPI = {
 
 // Monthly Hours Management
 export const MonthlyHoursAPI = {
-    getMonthlyHoursByProjectId: async (projectId: number): Promise<MonthlyHour[]> => {
+    getMonthlyHoursByProjectId: async (projectId: string): Promise<MonthlyHour[]> => {
         try {
             const projectTasks = wbsTasks.filter(task => task.project_id === projectId);
             const taskIds = projectTasks.map(task => task.id);
@@ -409,7 +409,7 @@ export const MonthlyHoursAPI = {
         }
     },
 
-    updateMonthlyHours: async (projectId: number, taskId: number, data: {
+    updateMonthlyHours: async (projectId: string, taskId: string, data: {
         monthly_hours: Partial<MonthlyHour>[]
     }): Promise<{
         monthly_hours: MonthlyHour[],
@@ -434,7 +434,7 @@ export const MonthlyHoursAPI = {
                     throw new Error('Missing required fields for monthly hours');
                 }
                 return {
-                    id: hourData.id!,
+                    id: hourData.id || Math.random().toString(),
                     task_id: taskId,
                     year: hourData.year,
                     month: hourData.month,

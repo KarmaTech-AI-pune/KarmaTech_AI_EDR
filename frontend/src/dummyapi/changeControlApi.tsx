@@ -23,7 +23,7 @@ export const getChangeControlById = (id: string): ChangeControl | undefined => {
     return changeControlData.find(cc => cc.id === id);
 };
 
-export const getChangeControlsByProjectId = (projectId: number): ChangeControl[] => {
+export const getChangeControlsByProjectId = (projectId: string): ChangeControl[] => {
     return changeControlData.filter(cc => cc.projectId === projectId);
 };
 

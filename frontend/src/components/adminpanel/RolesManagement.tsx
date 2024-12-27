@@ -24,11 +24,7 @@ import * as rolesApi from '../../services/rolesApi';
 import type { RoleWithPermissionsDto, PermissionCategoryGroup } from '../../services/rolesApi';
 import RoleDialog from '../dialogbox/adminpage/RoleDialog';
 
-interface FormData {
-  id: string;
-  name: string;
-  permissions: PermissionCategoryGroup[];
-}
+
 
 const RolesManagement = () => {
   const [roles, setRoles] = useState<RoleWithPermissionsDto[]>([]);

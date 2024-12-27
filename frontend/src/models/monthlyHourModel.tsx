@@ -1,6 +1,6 @@
 export interface MonthlyHour {
-    id: number;
-    task_id: number;
+    id: string;
+    task_id: string;
     year: string;
     month: string;
     planned_hours: number;

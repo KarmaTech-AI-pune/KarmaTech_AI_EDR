@@ -5,8 +5,8 @@ import { WBSTask, WBSTaskResourceAllocation, MonthlyHour } from "../../models";
 
 // Empty WBS Tasks array with the new schema
 export const wbsTasks: WBSTask[] = [{
-  "id": 1733290000944,
-  "project_id": 3,
+  "id": "1733290000944",
+  "project_id": "3",
   "parent_id": null,
   "level": 1,
   "title": "inception_report",
@@ -14,18 +14,18 @@ export const wbsTasks: WBSTask[] = [{
   "updated_at": new Date(2024,12,1),
 },
 {
-  "id": 1733290002101,
-  "project_id": 3,
-  "parent_id": 1733290000944,
+  "id": "1733290002101",
+  "project_id": "3",
+  "parent_id": "1733290000944",
   "level": 2,
   "title": "surveys",
   "created_at": new Date(2024,12,1),
   "updated_at": new Date(2024,12,1),
 },
 {
-  "id": 1733290002938,
-  "project_id": 3,
-  "parent_id": 1733290002101,
+  "id": "1733290002938",
+  "project_id": "3",
+  "parent_id": "1733290002101",
   "level": 3,
   "title": "topographical_survey",
   "created_at": new Date(2024,12,1),
@@ -33,9 +33,9 @@ export const wbsTasks: WBSTask[] = [{
   "resource_allocation": 1
 },
 {
-  "id": 1733290004019,
-  "project_id": 3,
-  "parent_id": 1733290002101,
+  "id": "1733290004019",
+  "project_id": "3",
+  "parent_id": "1733290002101",
   "level": 3,
   "title": "soil_investigation",
   "created_at": new Date(2024,12,1),
@@ -43,18 +43,18 @@ export const wbsTasks: WBSTask[] = [{
   "resource_allocation": 2
 },
 {
-  "id": 1733290005202,
-  "project_id": 3,
-  "parent_id": 1733290000944,
+  "id": "1733290005202",
+  "project_id": "3",
+  "parent_id": "1733290000944",
   "level": 2,
   "title": "design",
   "created_at": new Date(2024,12,1),
   "updated_at": new Date(2024,12,1),
 },
 {
-  "id": 1733290040673,
-  "project_id": 3,
-  "parent_id": 1733290005202,
+  "id": "1733290040673",
+  "project_id": "3",
+  "parent_id": "1733290005202",
   "level": 3,
   "title": "process_design",
   "created_at": new Date(2024,12,1),
@@ -66,9 +66,9 @@ export const wbsTasks: WBSTask[] = [{
 // Empty Resource Allocations array with the new type
 export const resourceAllocations: WBSTaskResourceAllocation[] = [
   {
-    id: 1,
-    wbs_task_id: 1733290002938,
-    role_id: 2, 
+    id: "1",
+    wbs_task_id: "1733290002938",
+    role_id: "2", 
     employee_id: "2",
     cost_rate: 150,
     "odc": 0,
@@ -78,9 +78,9 @@ export const resourceAllocations: WBSTaskResourceAllocation[] = [
     "updated_at": new Date(2024,12,1),
   },
   {
-    id: 2,
-    wbs_task_id: 1733290004019,
-    role_id: 7, 
+    id: "2",
+    wbs_task_id: "1733290004019",
+    role_id: "7", 
     employee_id: "7",
     cost_rate: 100,
     "odc": 300,
@@ -90,9 +90,9 @@ export const resourceAllocations: WBSTaskResourceAllocation[] = [
     "updated_at": new Date(2024,12,1),
   },
   {
-    id: 3,
-    wbs_task_id: 1733290040673,
-    role_id: 3, 
+    id: "3",
+    wbs_task_id: "1733290040673",
+    role_id: "3", 
     employee_id: "3",
     cost_rate: 100,
     "odc": 0,
@@ -105,8 +105,8 @@ export const resourceAllocations: WBSTaskResourceAllocation[] = [
 
 export const monthlyHours: MonthlyHour[] = [
   {
-    id: 1,
-    task_id: 1733290002938,
+    id: "1",
+    task_id: "1733290002938",
     year: "2022",
     month: "October",
     planned_hours: 20,
@@ -114,8 +114,8 @@ export const monthlyHours: MonthlyHour[] = [
     "updated_at": new Date(2024,12,1),
   },
   {
-    id: 2,
-    task_id: 1733290004019,
+    id: "2",
+    task_id: "1733290004019",
     year: "2022",
     month: "June",
     planned_hours: 12,
@@ -123,8 +123,8 @@ export const monthlyHours: MonthlyHour[] = [
     "updated_at": new Date(2024,12,1),
   },
   {
-    id: 3,
-    task_id: 1733290040673,
+    id: "3",
+    task_id: "1733290040673",
     year: "2022",
     month: "August",
     planned_hours: 10,
@@ -132,8 +132,8 @@ export const monthlyHours: MonthlyHour[] = [
     "updated_at": new Date(2024,12,1),
   },
   {
-    id: 4,
-    task_id: 1733290040673,
+    id: "4",
+    task_id: "1733290040673",
     year: "2022",
     month: "October",
     planned_hours: 12,

@@ -23,8 +23,8 @@ import { useRoles } from '../../hooks/useRoles';
 const UsersManagement = () => {
   const { roles } = useRoles();
   const [users, setUsers] = useState<AuthUser[]>([]);
-  const [standardRates, setStandardRates] = useState<Record<number, number>>({});
-  const [consultantStatus, setConsultantStatus] = useState<Record<number, boolean>>({});
+  const [standardRates, setStandardRates] = useState<Record<string, number>>({});
+  const [consultantStatus, setConsultantStatus] = useState<Record<string, boolean>>({});
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
   const [formData, setFormData] = useState({
@@ -46,8 +46,8 @@ const UsersManagement = () => {
       const fetchedUsers = await usersApi.getAllUsers();
       setUsers(fetchedUsers);
 
-      const newRates: Record<number, number> = {};
-      const newStatus: Record<number, boolean> = {};
+      const newRates: Record<string, number> = {};
+      const newStatus: Record<string, boolean> = {};
       fetchedUsers.forEach(user => {
         if (!(user.id in standardRates)) {
           newRates[user.id] = user.standardRate;
@@ -102,7 +102,7 @@ const UsersManagement = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         await usersApi.deleteUser(id);

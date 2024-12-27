@@ -1,6 +1,6 @@
 export interface InputRegisterRow {
-    id: number;
-    projectId: number;
+    id: string;
+    projectId: string;
     dataReceived: string;
     receiptDate: string;
     receivedFrom: string;

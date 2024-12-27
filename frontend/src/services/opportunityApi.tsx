@@ -11,9 +11,9 @@ const mapToOpportunityTracking = (backendEntity: any): OpportunityTracking => {
     bidFees: backendEntity.bidFees,
     emd: backendEntity.emd,
     formOfEMD: backendEntity.formOfEMD,
-    bidManagerId: parseInt(backendEntity.bidManagerId || '0'),
-    reviewManagerId: backendEntity.reviewManagerId ? parseInt(backendEntity.reviewManagerId) : undefined,
-    approvalManagerId: backendEntity.approvalManagerId ? parseInt(backendEntity.approvalManagerId) : undefined,
+    bidManagerId: backendEntity.bidManagerId || '0',
+    reviewManagerId: backendEntity.reviewManagerId ? backendEntity.reviewManagerId : undefined,
+    approvalManagerId: backendEntity.approvalManagerId ? backendEntity.approvalManagerId : undefined,
     contactPersonAtClient: backendEntity.contactPersonAtClient,
     dateOfSubmission: backendEntity.dateOfSubmission ? new Date(backendEntity.dateOfSubmission).toISOString().split('T')[0] : undefined,
     percentageChanceOfProjectHappening: backendEntity.percentageChanceOfProjectHappening,
@@ -35,7 +35,7 @@ const mapToOpportunityTracking = (backendEntity: any): OpportunityTracking => {
     durationOfProject: backendEntity.durationOfProject,
     fundingStream: backendEntity.fundingStream,
     contractType: backendEntity.contractType,
-    workflowId: 1 // Default workflow ID since it's not in the backend entity
+    workflowId: "1" // Default workflow ID since it's not in the backend entity
   };
 };
 

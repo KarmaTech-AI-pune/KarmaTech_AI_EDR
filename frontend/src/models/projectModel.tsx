@@ -1,13 +1,13 @@
 export type Project = {
-    id: number;
+    id: string;
     name: string;
     details?: string;
     clientName: string;
-    projectMangerId: number;
+    projectMangerId: string;
     office?: string;
     projectNo: string;
     typeOfJob?: string;
-    seniorProjectMangerId: number;
+    seniorProjectMangerId: string;
     sector?: string;
     region?: string;
     typeOfClient?: string;
@@ -18,5 +18,5 @@ export type Project = {
     currency: string;
     budget?: number;
     priority?: string;
-    regionalManagerID: number;
-  }
+    regionalManagerID: string;
+}

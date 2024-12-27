@@ -40,7 +40,7 @@ export const projectApi = {
     }
   },
 
-  getById: async (id: number): Promise<Project> => {
+  getById: async (id: string): Promise<Project> => {
     try {
       const project = findProjectById(id);
       if (!project) {
@@ -58,7 +58,11 @@ export const projectApi = {
       // Validate required fields
       validateRequiredFields(project);
 
-      const newId = projects.length > 0 ? Math.max(...projects.map(p => p.id || 0)) + 1 : 1;
+      // Generate new ID as string
+      const maxId = projects.length > 0 
+        ? Math.max(...projects.map(p => parseInt(p.id))) 
+        : 0;
+      const newId = (maxId + 1).toString();
       
       const formattedProject: Project = {
         ...project,
@@ -66,9 +70,9 @@ export const projectApi = {
         startDate: project.startDate || undefined,
         endDate: project.endDate || undefined,
         estimatedCost: Number(project.estimatedCost),
-        projectMangerId: Number(project.projectMangerId),
-        seniorProjectMangerId: Number(project.seniorProjectMangerId),
-        regionalManagerID: Number(project.regionalManagerID)
+        projectMangerId: project.projectMangerId,
+        seniorProjectMangerId: project.seniorProjectMangerId,
+        regionalManagerID: project.regionalManagerID
       };
 
       projects.push(formattedProject);
@@ -89,7 +93,7 @@ export const projectApi = {
     }
   },
 
-  update: async (id: number, project: Project): Promise<Project | null> => {
+  update: async (id: string, project: Project): Promise<Project | null> => {
     try {
       // Validate required fields
       validateRequiredFields(project);
@@ -102,9 +106,9 @@ export const projectApi = {
         startDate: project.startDate ? new Date(project.startDate).toISOString() : undefined,
         endDate: project.endDate ? new Date(project.endDate).toISOString() : undefined,
         estimatedCost: Number(project.estimatedCost),
-        projectMangerId: Number(project.projectMangerId),
-        seniorProjectMangerId: Number(project.seniorProjectMangerId),
-        regionalManagerID: Number(project.regionalManagerID)
+        projectMangerId: project.projectMangerId,
+        seniorProjectMangerId: project.seniorProjectMangerId,
+        regionalManagerID: project.regionalManagerID
       };
 
       projects[index] = formattedProject;
@@ -120,7 +124,7 @@ export const projectApi = {
     }
   },
 
-  delete: async (id: number): Promise<boolean> => {
+  delete: async (id: string): Promise<boolean> => {
     try {
       const initialLength = projects.length;
       const filteredProjects = projects.filter(p => p.id !== id);

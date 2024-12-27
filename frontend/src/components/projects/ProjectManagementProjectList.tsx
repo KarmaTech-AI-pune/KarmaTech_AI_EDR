@@ -12,7 +12,7 @@ import { ProjectInitializationDialog } from '../dialogbox/ProjectInitializationD
 export interface ProjectManagementProjectListProps {
   projects: Project[];
   emptyMessage?: string;
-  onProjectDeleted?: (projectId: number) => void;
+  onProjectDeleted?: (projectId: string) => void;
   onProjectUpdated?: () => void;
   filterStatuses?: ProjectStatus[];
 }

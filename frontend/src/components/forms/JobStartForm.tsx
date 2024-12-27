@@ -25,7 +25,7 @@ import { WBSRowData } from '../../types/wbs';
 import { FormWrapper } from './FormWrapper';
 
 interface TaskAllocation {
-  taskId: number;
+  taskId: string;
   title: string;
   rate: number;
   hours: number;

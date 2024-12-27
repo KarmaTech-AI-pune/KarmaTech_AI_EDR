@@ -36,7 +36,7 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
   const [currentTab, setCurrentTab] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<string>('');
-  const [opportunities, setOpportunities] = useState<Array<{id: number, workName: string, client: string}>>([]);
+  const [opportunities, setOpportunities] = useState<Array<{id: string, workName: string, client: string}>>([]);
   const [importedProjectData, setImportedProjectData] = useState<ProjectFormData | null>(null);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
           }
           return null;
         })
-        .filter((opp): opp is {id: number, workName: string, client: string} => opp !== null);
+        .filter((opp): opp is {id: string, workName: string, client: string} => opp !== null);
       
       setOpportunities(bidAcceptedOpportunities);
     }
@@ -86,7 +86,7 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
   };
 
   const handleImportProject = () => {
-    const opportunity = getOpportunityById(Number(selectedOpportunityId));
+    const opportunity = getOpportunityById(selectedOpportunityId);
     if (!opportunity) {
       setError('Failed to load opportunity data');
       return;
@@ -97,11 +97,11 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
       name: opportunity.workName,
       details: opportunity.notes || '',
       clientName: opportunity.client,
-      projectMangerId: 0, // Default value, needs to be selected
+      projectMangerId: "0", // Default value, needs to be selected
       office: opportunity.operation,
       projectNo: '', // Needs to be entered manually
       typeOfJob: opportunity.clientSector, // Using clientSector as type of job
-      seniorProjectMangerId: 0, // Default value, needs to be selected
+      seniorProjectMangerId: "0", // Default value, needs to be selected
       sector: opportunity.clientSector,
       region: '', // Needs to be selected
       typeOfClient: opportunity.clientSector,
@@ -112,7 +112,7 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
       currency: opportunity.currency,
       budget: opportunity.capitalValue, // Using capitalValue as initial budget
       priority: '', // Needs to be selected
-      regionalManagerID: opportunity.approvalManagerId || 0
+      regionalManagerID: opportunity.approvalManagerId || "0"
     };
 
     setImportedProjectData(projectData);

@@ -64,14 +64,14 @@ interface WBSTableProps {
     level2: WBSOption[];
     level3: { [key: string]: WBSOption[] };
   };
-  onAddRow: (level: 1 | 2 | 3, parentId?: number) => void;
-  onDeleteRow: (id: number) => void;
-  onLevelChange: (id: number, value: string) => void;
-  onRoleChange: (id: number, roleId: string) => void;
-  onEmployeeChange: (id: number, employeeId: string) => void;
-  onCostRateChange: (id: number, value: string) => void;
-  onHoursChange: (id: number, month: string, value: string) => void;
-  onODCChange: (id: number, value: string) => void;
+  onAddRow: (level: 1 | 2 | 3, parentId?: string) => void;
+  onDeleteRow: (id: string) => void;
+  onLevelChange: (id: string, value: string) => void;
+  onRoleChange: (id: string, roleId: string) => void;
+  onEmployeeChange: (id: string, employeeId: string) => void;
+  onCostRateChange: (id: string, value: string) => void;
+  onHoursChange: (id: string, month: string, value: string) => void;
+  onODCChange: (id: string, value: string) => void;
 }
 
 const WBSTable: React.FC<WBSTableProps> = ({
@@ -142,7 +142,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
     }
   };
 
-  const renderAddButton = (level: 1 | 2 | 3, parentId?: number): JSX.Element => {
+  const renderAddButton = (level: 1 | 2 | 3, parentId?: string): JSX.Element => {
     return (
       <AddButtonRow
         key={`add-button-level-${level}${parentId ? `-parent-${parentId}` : ''}`}

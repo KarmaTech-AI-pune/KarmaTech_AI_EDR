@@ -15,7 +15,7 @@ export const opportunityApi = {
     }
   },
 
-  getByUserId: async (userId: number): Promise<OpportunityTracking[]> => {
+  getByUserId: async (userId: string): Promise<OpportunityTracking[]> => {
     try {
       const opportunities = mutableOpportunityTrackings.filter(opp => opp.bidManagerId === userId);
       if (!opportunities.length) {
@@ -28,7 +28,7 @@ export const opportunityApi = {
     }
   },
 
-  getByReviewManagerId: async (userId: number): Promise<OpportunityTracking[]> => {
+  getByReviewManagerId: async (userId: string): Promise<OpportunityTracking[]> => {
     try {
       const opportunities = mutableOpportunityTrackings.filter(opp => opp.reviewManagerId === userId);
       if (!opportunities.length) {
@@ -41,7 +41,7 @@ export const opportunityApi = {
     }
   },
 
-  getByApprovalManagerId: async (userId: number): Promise<OpportunityTracking[]> => {
+  getByApprovalManagerId: async (userId: string): Promise<OpportunityTracking[]> => {
     try {
       const opportunities = mutableOpportunityTrackings.filter(opp => opp.approvalManagerId === userId);
       if (!opportunities.length) {
@@ -54,7 +54,7 @@ export const opportunityApi = {
     }
   },
 
-  getById: async (id: number): Promise<OpportunityTracking> => {
+  getById: async (id: string): Promise<OpportunityTracking> => {
     try {
       const opportunity = mutableOpportunityTrackings.find(opp => opp.id === id);
       if (!opportunity) {
@@ -67,7 +67,7 @@ export const opportunityApi = {
     }
   },
 
-  getByProjectId: async (projectId: number): Promise<OpportunityTracking[]> => {
+  getByProjectId: async (projectId: string): Promise<OpportunityTracking[]> => {
     try {
       const opportunities = mutableOpportunityTrackings.filter(opp => opp.projectId === projectId);
       if (!opportunities.length) {
@@ -86,7 +86,8 @@ export const opportunityApi = {
         throw new Error('Bid Manager ID is required');
       }
 
-      const newId = Math.max(...mutableOpportunityTrackings.map(opp => opp.id), 0) + 1;
+      const currentIds = mutableOpportunityTrackings.map(opp => parseInt(opp.id));
+      const newId = (Math.max(...currentIds, 0) + 1).toString();
 
       const newOpportunity: OpportunityTracking = {
         id: newId,
@@ -105,7 +106,7 @@ export const opportunityApi = {
         durationOfProject: opportunityData.durationOfProject || 0,
         fundingStream: opportunityData.fundingStream || '',
         contractType: opportunityData.contractType || '',
-        workflowId: opportunityData.workflowId || 1, // Default to Initial (ID: 1)
+        workflowId: opportunityData.workflowId || '1', // Default to Initial (ID: 1)
         // Optional fields
         bidFees: opportunityData.bidFees,
         emd: opportunityData.emd,
@@ -142,7 +143,7 @@ export const opportunityApi = {
       }
 
       // Validate workflow ID
-      if (!workflowStatuses.some(status => status.id === opportunityData.workflowId)) {
+      if (!workflowStatuses.some(status => status.id.toString() === opportunityData.workflowId)) {
         throw new Error('Invalid workflow ID');
       }
       
@@ -159,7 +160,7 @@ export const opportunityApi = {
     }
   },
 
-  delete: async (id: number): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     try {
       const index = mutableOpportunityTrackings.findIndex(opp => opp.id === id);
       if (index === -1) {

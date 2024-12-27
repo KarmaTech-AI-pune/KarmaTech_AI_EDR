@@ -23,8 +23,7 @@ import { projectManagementAppContext } from '../../App';
 import {projectManagementAppContextType } from '../../types';
 import { OpportunityTracking} from "../../models";
 import { getUsersByRole, } from '../../dummyapi/usersApi';
-import { UserRole,} from '../../models'
-
+import { UserRole,} from '../../models';
 interface OpportunityFormProps {
   open: boolean;
   onClose: () => void;
@@ -41,17 +40,17 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   error
 }) => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
-  const [bdManagers, setBdManagers] = useState<{id: number, name: string}[]>([]);
-  const [reviewManagers, setReviewManagers] = useState<{id: number, name: string}[]>([]);
-  const [approvalManagers, setApprovalManagers] = useState<{id: number, name: string}[]>([]);
+  const [bdManagers, setBdManagers] = useState<{id: string, name: string}[]>([]);
+  const [reviewManagers, setReviewManagers] = useState<{id: string, name: string}[]>([]);
+  const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
   const [formData, setFormData] = useState<Partial<OpportunityTracking>>({
-    projectId: project?.projectId || 0,
+    projectId: project?.projectId || "0",
     stage: project?.stage || '',
     strategicRanking: project?.strategicRanking || '',
     bidFees: project?.bidFees || 0,
     emd: project?.emd || 0,
     formOfEMD: project?.formOfEMD || '',
-    bidManagerId: project?.bidManagerId || (context.user?.role === UserRole.BusinessDevelopmentManager ? context.user.id : 0),
+    bidManagerId: project?.bidManagerId || (context.user?.roles.some(role => role.name === UserRole.BusinessDevelopmentManager) ? context.user.id : "0"),
     reviewManagerId: project?.reviewManagerId,
     approvalManagerId: project?.approvalManagerId,
     contactPersonAtClient: project?.contactPersonAtClient || '',
@@ -75,7 +74,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     durationOfProject: project?.durationOfProject || 0,
     fundingStream: project?.fundingStream || '',
     contractType: project?.contractType || '',
-    workflowId: project?.workflowId || 1 // Default to Initial (ID: 1)
+    workflowId: project?.workflowId || "1" // Default to Initial (ID: 1)
   });
 
   useEffect(() => {
@@ -99,11 +98,10 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     })));
 
     // Set default bid manager to current user if they are a BD manager
-    if (!project && context.user?.role === UserRole.BusinessDevelopmentManager) {
-      let id = context.user.id
+    if (!project && context.user?.roles.some(role => role.name === UserRole.BusinessDevelopmentManager)) {
       setFormData(prev => ({
         ...prev,
-        bidManagerId: id
+        bidManagerId: context.user?.id
       }));
     }
   }, [context.user, project]);
@@ -112,68 +110,24 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     if (project) {
       setFormData({
         ...project,
-        bidManagerId: project.bidManagerId || 0,
-        reviewManagerId: project.reviewManagerId,
-        approvalManagerId: project.approvalManagerId,
+        bidManagerId: project.bidManagerId || "0",
+        reviewManagerId: project.reviewManagerId || undefined,
+        approvalManagerId: project.approvalManagerId || undefined,
         dateOfSubmission: project.dateOfSubmission || new Date().toISOString().split('T')[0],
         likelyStartDate: project.likelyStartDate || new Date().toISOString().split('T')[0],
-        workflowId: project.workflowId || 1 // Default to Initial (ID: 1)
+        workflowId: project.workflowId || "1" // Default to Initial (ID: 1)
       });
     }
   }, [project]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
     const { name, value } = e.target;
-    
-    // Convert IDs to number when they change
-    if (name === 'bidManagerId' || name === 'reviewManagerId' || name === 'approvalManagerId' || name === 'workflowId') {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value === '' ? undefined : Number(value),
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value === '' ? undefined : value,
+    }));
   };
-/*
-  const canChangeWorkflowStatus = (currentId: number | undefined, newId: number): boolean => {
-    if (!context.user?.role) return false;
 
-    const userRole = context.user.role;
-    const currentStatus = getWorkflowStatusById(currentId || 1)?.status;
-    const newStatus = getWorkflowStatusById(newId)?.status;
-
-    if (!currentStatus || !newStatus) return false;
-
-    // BD Manager can submit for review
-    if (hasPermission(userRole, PermissionType.SUBMIT_FOR_REVIEW) &&
-        currentStatus === "Initial" &&
-        newStatus === "Sent for Review") {
-      return true;
-    }
-
-    // BD Head can review and submit for approval
-    if (hasPermission(userRole, PermissionType.REVIEW_BUSINESS_DEVELOPMENT)) {
-      if ((currentStatus === "Sent for Review" && newStatus === "Review Changes") ||
-          (currentStatus === "Sent for Review" && newStatus === "Sent for Approval")) {
-        return true;
-      }
-    }
-
-    // Regional Manager or VP BD can approve or request changes
-    if (hasPermission(userRole, PermissionType.APPROVE_BUSINESS_DEVELOPMENT)) {
-      if ((currentStatus === "Sent for Approval" && newStatus === "Approval Changes") ||
-          (currentStatus === "Sent for Approval" && newStatus === "Approved")) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-*/
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({

@@ -55,7 +55,7 @@ const ChangeControlForm: React.FC = () => {
     if (!context?.selectedProject?.id) return;
     
     try {
-      const data = getChangeControlsByProjectId(context.selectedProject.id);
+      const data = getChangeControlsByProjectId(context.selectedProject.id.toString());
       setRows(data);
       setError('');
     } catch (err) {
@@ -78,12 +78,12 @@ const ChangeControlForm: React.FC = () => {
 
     try {
       if (editingId !== null) {
-        const updated = updateChangeControl(editingId, { ...data, projectId: context.selectedProject.id });
+        const updated = updateChangeControl(editingId, { ...data, projectId: context.selectedProject.id.toString() });
         if (updated) {
           setRows(rows.map(row => row.id === editingId ? updated : row));
         }
       } else {
-        const created = createChangeControl({ ...data, projectId: context.selectedProject.id });
+        const created = createChangeControl({ ...data, projectId: context.selectedProject.id.toString() });
         setRows([...rows, created]);
       }
       setError('');

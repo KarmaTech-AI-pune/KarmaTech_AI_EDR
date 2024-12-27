@@ -1,4 +1,5 @@
-import { RoleDefinition } from '../models/roleDefinitionModel';
+import { RoleDefinition} from '../models/roleDefinitionModel';
+import { PermissionType } from '../models/permissionTypeModel';
 import { axiosInstance } from './axiosConfig';
 
 export interface RolePermissionDto {
@@ -95,6 +96,7 @@ export const getAllPermissions = async (): Promise<PermissionCategoryGroup[]> =>
     throw error;
   }
 };
+
 export const getPermissionsByGroupedByCategory = async (): Promise<PermissionCategoryGroup[]> => {
   try {
     const response = await axiosInstance.get('/api/role/getPermissionsByGroupedByCategory');
@@ -104,7 +106,6 @@ export const getPermissionsByGroupedByCategory = async (): Promise<PermissionCat
     throw error;
   }
 };
-
 
 export const getRolePermissions = async (roleId: string): Promise<PermissionDto[]> => {
   try {
@@ -116,9 +117,11 @@ export const getRolePermissions = async (roleId: string): Promise<PermissionDto[
   }
 };
 
-export const updateRolePermissions = async (roleId: string, permissions:[]): Promise<boolean> => {
+export const updateRolePermissions = async (roleId: string, permissions: PermissionType[]): Promise<boolean> => {
   try {
-    await axiosInstance.put(`/api/role/${roleId}/permissions`, { permissions });
+    // Convert enum values to strings for API
+    const permissionStrings = permissions.map(p => p.toString());
+    await axiosInstance.put(`/api/role/${roleId}/permissions`, { permissions: permissionStrings });
     return true;
   } catch (error) {
     console.error('Error updating role permissions:', error);
@@ -131,25 +134,29 @@ export const toRoleDefinition = (role: RoleWithPermissionsDto): RoleDefinition =
   id: role.id,
   name: role.name,
   permissions: role.permissions.flatMap(group => 
-    group.permissions.map(p => p.name)
-  )
+    group.permissions.map(p => PermissionType[p.name as keyof typeof PermissionType])
+  ).filter((p): p is PermissionType => p !== undefined)
 });
 
 export const fromRoleDefinition = (role: RoleDefinition, permissions: PermissionDto[]): RoleWithPermissionsDto => {
-  // Group permissions by category
-  const groupedPermissions = permissions.reduce((groups: Record<string, PermissionDto[]>, permission) => {
-    const category = permission.category;
+  // Group permissions by category and ensure type safety
+  const groupedPermissions = permissions.reduce<Record<string, PermissionDto[]>>((groups, permission) => {
+    const category = permission.category || 'Uncategorized';
     if (!groups[category]) {
       groups[category] = [];
     }
-    groups[category].push(permission);
+    // Check if the permission name exists in PermissionType enum
+    const permissionType = PermissionType[permission.name as keyof typeof PermissionType];
+    if (permissionType && role.permissions.includes(permissionType)) {
+      groups[category].push(permission);
+    }
     return groups;
   }, {});
 
-  // Convert to PermissionCategoryGroup array
-  const permissionGroups = Object.entries(groupedPermissions).map(([category, perms]) => ({
+  // Convert to PermissionCategoryGroup array with proper typing
+  const permissionGroups: PermissionCategoryGroup[] = Object.entries(groupedPermissions).map(([category, perms]) => ({
     category,
-    permissions: perms.filter(p => role.permissions.includes(p.name))
+    permissions: perms
   }));
 
   return {

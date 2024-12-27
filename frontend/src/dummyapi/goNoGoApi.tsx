@@ -11,7 +11,7 @@ export const goNoGoApi = {
     }
   },
 
-  getById: async (id: number): Promise<GoNoGoDecision> => {
+  getById: async (id: string): Promise<GoNoGoDecision> => {
     try {
       const decision = goNoGoDecisions.find(d => d.projectId === id);
       if (!decision) {
@@ -24,7 +24,7 @@ export const goNoGoApi = {
     }
   },
 
-  getByProjectId: async (projectId: number): Promise<GoNoGoDecision | null> => {
+  getByProjectId: async (projectId: string): Promise<GoNoGoDecision | null> => {
     try {
       const decision = getGoNoGoByProjectId(projectId);
       return decision || null;
@@ -37,7 +37,7 @@ export const goNoGoApi = {
     }
   },
 
-  create: async (projectId: number, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
+  create: async (projectId: string, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
     try {
       const newDecision = {
         ...data,
@@ -58,7 +58,7 @@ export const goNoGoApi = {
     }
   },
 
-  update: async (id: number, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
+  update: async (id: string, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
     try {
       const index = goNoGoDecisions.findIndex(d => d.projectId === id);
       if (index === -1) {
@@ -83,7 +83,7 @@ export const goNoGoApi = {
     }
   },
 
-  delete: async (id: number): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     try {
       const index = goNoGoDecisions.findIndex(d => d.projectId === id);
       if (index !== -1) {

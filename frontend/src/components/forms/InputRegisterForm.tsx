@@ -25,6 +25,7 @@ import InputRegisterDialog from './InputRegisterformcomponents/InputRegisterDial
 import { deleteInputRegister, getInputRegisterByProject } from '../../dummyapi/inputRegisterApi';
 import { projectManagementAppContext } from '../../App';
 import { FormWrapper } from './FormWrapper';
+import { InputRegisterRow } from '../../models';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -35,23 +36,6 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
     marginLeft: 'auto'
   }
 }));
-
-interface InputRegisterRow {
-  id: number;
-  projectId: number;
-  dataReceived: string;
-  receiptDate: string;
-  receivedFrom: string;
-  filesFormat: string;
-  noOfFiles: number;
-  fitForPurpose: boolean;
-  check: boolean;
-  checkedBy: string;
-  checkedDate: string;
-  custodian: string;
-  storagePath: string;
-  remarks: string;
-}
 
 const InputRegisterForm: React.FC = () => {
   const theme = useTheme();
@@ -68,7 +52,7 @@ const InputRegisterForm: React.FC = () => {
     }
 
     try {
-      const data = getInputRegisterByProject(context.selectedProject.id);
+      const data = getInputRegisterByProject(context.selectedProject.id.toString());
       setRows(data);
       setError('');
     } catch (err) {
@@ -109,7 +93,7 @@ const InputRegisterForm: React.FC = () => {
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     try {
       if (deleteInputRegister(id)) {
         setRows(rows.filter(row => row.id !== id));
@@ -314,7 +298,7 @@ const InputRegisterForm: React.FC = () => {
         onClose={handleCloseDialog}
         onSave={handleSave}
         initialData={selectedRow}
-        projectId={context.selectedProject.id}
+        projectId={context.selectedProject.id.toString()}
       />
     </Container>
   );

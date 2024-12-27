@@ -104,7 +104,7 @@ export const ProjectManagement: React.FC = () => {
     await fetchProjects();
   };
 
-  const handleProjectDeleted = async (projectId: number) => {
+  const handleProjectDeleted = async (projectId: string) => {
     try {
       await projectApi.delete(projectId);
       await fetchProjects();
@@ -129,13 +129,13 @@ export const ProjectManagement: React.FC = () => {
     if (!currentUser || !currentUser.roles) return false;
 
     // Check if user has any of the management roles and match corresponding IDs
-    if (currentUser.roles.includes('Regional Manager') && project.regionalManagerID === currentUser.id) {
+    if (currentUser.roles.some(role => role.name === 'Regional Manager') && project.regionalManagerID === currentUser.id) {
       return true;
     }
-    if (currentUser.roles.includes('Senior Project Manager') && project.seniorProjectMangerId === currentUser.id) {
+    if (currentUser.roles.some(role => role.name === 'Senior Project Manager') && project.seniorProjectMangerId === currentUser.id) {
       return true;
     }
-    if (currentUser.roles.includes('Project Manager') && project.projectMangerId === currentUser.id) {
+    if (currentUser.roles.some(role => role.name === 'Project Manager') && project.projectMangerId === currentUser.id) {
       return true;
     }
 

@@ -21,7 +21,7 @@ import { HistoryLoggingService } from '../../services/historyLoggingService';
 interface SendForReviewProps {
   open: boolean;
   onClose: () => void;
-  opportunityId?: number;
+  opportunityId?: string;
   currentUser: string | undefined;
   onSubmit?: () => void;
 }
@@ -33,7 +33,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
   currentUser,
   onSubmit 
 }) => {
-  const [selectedReviewer, setSelectedReviewer] = useState<number | ''>('');
+  const [selectedReviewer, setSelectedReviewer] = useState<string>('');
   const [reviewers, setReviewers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [manager,setManager] = useState<string | null>(null);
@@ -93,7 +93,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
       }
 
       // Update both workflow and opportunity in one atomic operation
-      await updateWorkflow(opportunityId, 2, { // 2 is the ID for "Sent for Review" status
+      await updateWorkflow(opportunityId, "2", { // "2" is the ID for "Sent for Review" status
         reviewManagerId: selectedReviewer,
         status: 'Under Review',
         submittedBy: currentUser

@@ -11,7 +11,7 @@ import { FormWrapper } from './FormWrapper';
 
 interface DeleteDialog {
   open: boolean;
-  rowId?: number;
+  rowId?: string;
   childCount: number;
 }
 
@@ -38,7 +38,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
   const [level3OptionsMap, setLevel3OptionsMap] = useState<{ [key: string]: WBSOption[] }>({});
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
 
-  const loadWBSData = async (projectId: number) => {
+  const loadWBSData = async (projectId: string) => {
     try {
       const wbsData = await WBSStructureAPI.getProjectWBS(projectId);
       const transformedRows = wbsData.map((task: any) => ({
@@ -181,9 +181,9 @@ const WorkBreakdownStructureForm: React.FC = () => {
     setMonths([...months, newMonth]);
   };
 
-  const addNewRow = (level: 1 | 2 | 3, parentId?: number) => {
+  const addNewRow = (level: 1 | 2 | 3, parentId?: string) => {
     const newRow: WBSRowData = {
-      id: Date.now(),
+      id: Date.now().toString(),
       level,
       title: '',
       role: null,
@@ -198,7 +198,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
     setRows([...rows, newRow]);
   };
 
-  const handleDeleteClick = (rowId: number) => {
+  const handleDeleteClick = (rowId: string) => {
     const childCount = rows.filter(r => 
       (r.level === 2 && rows.find(p => p.id === rowId)?.level === 1) ||
       (r.level === 3 && rows.find(p => p.id === rowId)?.level === 2)
@@ -229,7 +229,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
     handleDeleteCancel();
   };
 
-  const handleRoleChange = (rowId: number, roleId: string) => {
+  const handleRoleChange = (rowId: string, roleId: string) => {
     setRows(rows.map(row => {
       if (row.id === rowId) {
         return {
@@ -243,7 +243,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
     }));
   };
 
-  const handleEmployeeChange = async (rowId: number, employeeId: string) => {
+  const handleEmployeeChange = async (rowId: string, employeeId: string) => {
     try {
       const employee = await ResourceAPI.getEmployeeById(employeeId);
       if (employee) {
@@ -263,7 +263,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
     }
   };
 
-  const handleCostRateChange = (rowId: number, value: string) => {
+  const handleCostRateChange = (rowId: string, value: string) => {
     const row = rows.find(r => r.id === rowId);
     if (!row || !row.role) return;
 
@@ -296,7 +296,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
     }));
   };
 
-  const handleHoursChange = (rowId: number, month: string, value: string) => {
+  const handleHoursChange = (rowId: string, month: string, value: string) => {
     const hours = value === '' ? 0 : Math.min(Math.max(parseInt(value) || 0, 0), 160);
     
     setRows(rows.map(row => {
@@ -324,7 +324,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
     }));
   };
 
-  const handleODCChange = (rowId: number, value: string) => {
+  const handleODCChange = (rowId: string, value: string) => {
     const odc = value === '' ? 0 : Math.max(parseFloat(value) || 0, 0);
     
     setRows(rows.map(row => {
@@ -339,7 +339,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
     }));
   };
 
-  const handleLevelChange = (rowId: number, value: string) => {
+  const handleLevelChange = (rowId: string, value: string) => {
     setRows(rows.map(r => {
       if (r.id === rowId) {
         return { ...r, title: value };

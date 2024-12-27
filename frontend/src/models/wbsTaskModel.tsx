@@ -1,7 +1,7 @@
 export type WBSTask ={
-    id: number;
-    project_id: number; //links to ID in dummyProjects
-    parent_id: number | null; //links to a WBSTask parent
+    id: string;
+    project_id: string; //links to ID in dummyProjects
+    parent_id: string | null; //links to a WBSTask parent
     level: number;
     title: string;
     created_at: Date;

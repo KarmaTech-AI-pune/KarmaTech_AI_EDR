@@ -1,6 +1,6 @@
 export interface ChangeControl {
     id: string;
-    projectId: number;
+    projectId: string;
     srNo: number;
     dateLogged: string;
     originator: string;

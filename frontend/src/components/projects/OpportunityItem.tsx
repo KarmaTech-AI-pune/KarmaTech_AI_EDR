@@ -228,7 +228,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     }
   };
 
-  const getWorkflowStatusColor = (workflowId: number) => {
+  const getWorkflowStatusColor = (workflowId: string) => {
     const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
       case "Initial":

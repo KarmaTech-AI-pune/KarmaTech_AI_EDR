@@ -135,7 +135,7 @@ export const ProjectDetails: React.FC = () => {
     return 'Project Details';
   };
 
-  const getManagerName = (managerId: number) => {
+  const getManagerName = (managerId: string) => {
     const user = getUserById(managerId);
     return user ? user.name : 'Not assigned';
   };

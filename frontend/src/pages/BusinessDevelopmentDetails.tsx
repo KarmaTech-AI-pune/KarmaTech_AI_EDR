@@ -48,7 +48,7 @@ export const BusinessDevelopmentDetails = () => {
     );
   }
 
-  const histories = getHistoriesByOpportunityId(opportunity.id);
+  const histories = getHistoriesByOpportunityId(opportunity.id.toString());
 
   return (
     <Box 

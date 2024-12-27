@@ -30,7 +30,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
     }
   };
 
-  const getWorkflowButtonText = (workflowId: number) => {
+  const getWorkflowButtonText = (workflowId: string) => {
     const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
       case "Initial":

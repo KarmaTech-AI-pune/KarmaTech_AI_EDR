@@ -2,8 +2,8 @@ import { InputRegisterRow } from "../../models";
 
 export const dummyInputRegister: InputRegisterRow[] = [
     {
-        id: 1,
-        projectId: 1,
+        id: "1",
+        projectId: "1",
         dataReceived: "Topographical Survey and Soil Investigation Report",
         receiptDate: "2024-01-05",
         receivedFrom: "Geo Technical Consultants",
@@ -18,8 +18,8 @@ export const dummyInputRegister: InputRegisterRow[] = [
         remarks: "Complete soil profile and contour mapping received"
     },
     {
-        id: 2,
-        projectId: 1,
+        id: "2",
+        projectId: "1",
         dataReceived: "Existing Sewerage Network Details and Water Quality Analysis Reports",
         receiptDate: "2024-01-12",
         receivedFrom: "Municipal Corporation",

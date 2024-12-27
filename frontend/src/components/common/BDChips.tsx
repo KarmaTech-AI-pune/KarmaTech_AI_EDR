@@ -5,13 +5,13 @@ import { WorkflowEntry } from "../../models";
 import { getWorkflowByOpportunityId } from '../../dummyapi/opportunityWorkflowApi';
 
 type BDChipsProps = {
-  opportunityId: number;
+  opportunityId: string;
 };
 
 const WORKFLOW_CHIPS = [
-  { id: 1, label: "FB01 Opportunity Tracking" },
-  { id: 2, label: "FB02 Go/NoGo" },
-  { id: 3, label: "FB03 Bid Preparation" }
+  { id: "1", label: "FB01 Opportunity Tracking" },
+  { id: "2", label: "FB02 Go/NoGo" },
+  { id: "3", label: "FB03 Bid Preparation" }
 ];
 
 export const BDChips: React.FC<BDChipsProps> = ({ opportunityId }) => {
@@ -25,18 +25,18 @@ export const BDChips: React.FC<BDChipsProps> = ({ opportunityId }) => {
     fetchWorkflow();
   }, [opportunityId]);
 
-  const getChipStatus = (chipNumber: number) => {
+  const getChipStatus = (chipNumber: string) => {
     const formStage = workflow?.formStage;
 
     switch (formStage) {
       case 'opportunityTracking':
-        return chipNumber === 1 ? 'pending' : 'inactive';
+        return chipNumber === "1" ? 'pending' : 'inactive';
       case 'goNoGo':
-        return chipNumber === 1 ? 'completed' : 
-               chipNumber === 2 ? 'pending' : 'inactive';
+        return chipNumber === "1" ? 'completed' : 
+               chipNumber === "2" ? 'pending' : 'inactive';
       case 'bidPreparation':
-        return chipNumber === 1 || chipNumber === 2 ? 'completed' :
-               chipNumber === 3 ? 'pending' : 'inactive';
+        return chipNumber === "1" || chipNumber === "2" ? 'completed' :
+               chipNumber === "3" ? 'pending' : 'inactive';
       case 'bidSubmitted':
       case 'bidAccepted':
       case 'bidRejected':
