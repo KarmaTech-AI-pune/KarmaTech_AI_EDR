@@ -165,7 +165,6 @@ namespace NJS.Domain.Extensions
                 var users = new[]
                 {
                     new { UserName = "pm1", Email = "pm1@example.com", Role = "Project Manager", StandardRate = 120.00m, IsConsultant = false },
-                    new { UserName = "senior1", Email = "senior1@example.com", Role = "Senior Engineer", StandardRate = 100.00m, IsConsultant = true },
                 };
 
                 foreach (var userData in users)
@@ -263,24 +262,7 @@ namespace NJS.Domain.Extensions
                     await context.SaveChangesAsync();
 
                     // Assign users to WBS tasks
-                    var engineer = await userManager.FindByNameAsync("engineer1");
                     
-                    foreach (var task in tasks)
-                    {
-                        var userWBSTask = new UserWBSTask
-                        {
-                            UserId = engineer.Id,
-                            WBSTaskId = task.Id,
-                            CostRate = 80.00m,
-                            ODC = 0,
-                            TotalHours = 40,
-                            TotalCost = 3200.00m,
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedAt = DateTime.UtcNow
-                        };
-                        context.UserWBSTasks.Add(userWBSTask);
-                    }
-
                     await context.SaveChangesAsync();
                 }
             }

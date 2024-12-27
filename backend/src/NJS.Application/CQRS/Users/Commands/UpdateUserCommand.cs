@@ -8,6 +8,7 @@ namespace NJS.Application.CQRS.Users.Commands
     {
         public string Id { get; set; }
         public string UserName { get; set; }
+        public string Name { get; set; }
         public string Email { get; set; }
         public decimal StandardRate { get; set; }
         public bool IsConsultant { get; set; }

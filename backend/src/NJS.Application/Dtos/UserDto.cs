@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 
 namespace NJS.Application.Dtos
@@ -7,6 +7,7 @@ namespace NJS.Application.Dtos
     {
         public string Id { get; set; }
         public string UserName { get; set; }
+        public string Name { get; set; }
         public string Email { get; set; }
         public decimal StandardRate { get; set; }
         public bool IsConsultant { get; set; }

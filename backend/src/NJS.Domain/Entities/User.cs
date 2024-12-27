@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿﻿using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -8,6 +8,8 @@ namespace NJS.Domain.Entities
 {
     public class User : IdentityUser
     {
+        public string Name { get; set; }
+        
         public string? Avatar { get; set; }
         
         public DateTime CreatedAt { get; set; }

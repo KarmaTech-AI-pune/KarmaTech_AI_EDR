@@ -42,6 +42,12 @@ namespace NJS.Domain.Migrations
                 name: "WorkflowId",
                 table: "OpportunityTrackings");
 
+            migrationBuilder.AddColumn<string>(
+                name: "Name",
+                table: "AspNetUsers",
+                type: "nvarchar(max)",
+                nullable: true);
+
             migrationBuilder.CreateIndex(
                 name: "IX_GoNoGoDecisions_ProjectId",
                 table: "GoNoGoDecisions",
@@ -54,6 +60,10 @@ namespace NJS.Domain.Migrations
             migrationBuilder.DropIndex(
                 name: "IX_GoNoGoDecisions_ProjectId",
                 table: "GoNoGoDecisions");
+
+            migrationBuilder.DropColumn(
+                name: "Name",
+                table: "AspNetUsers");
 
             migrationBuilder.AddColumn<int>(
                 name: "ProjectId",

@@ -25,6 +25,7 @@ namespace NJS.Application.CQRS.Users.Handlers
             var user = new User
             {
                 UserName = request.UserName,
+                Name = request.Name,
                 Email = request.Email,
                 StandardRate = request.StandardRate,
                 IsConsultant = request.IsConsultant,
@@ -76,6 +77,7 @@ namespace NJS.Application.CQRS.Users.Handlers
             {
                 Id = user.Id.ToString(),
                 UserName = user.UserName,
+                Name = user.Name,
                 Email = user.Email,
                 StandardRate = user.StandardRate ?? 0m,
                 IsConsultant = user.IsConsultant,
