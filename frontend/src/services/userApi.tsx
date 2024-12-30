@@ -1,6 +1,57 @@
 import { AuthUser } from '../models/userModel';
 import { axiosInstance } from './axiosConfig';
 
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  token?: string;
+  user?: AuthUser;
+}
+
+export const login = async (username: string, password: string): Promise<LoginResponse> => {
+  try {
+    const response = await axiosInstance.post('/api/user/login', {
+      username,
+      password
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error during login:', error);
+    throw error;
+  }
+};
+
+export const getRoles = async (): Promise<string[]> => {
+  try {
+    const response = await axiosInstance.get('/api/user/roles');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching roles:', error);
+    throw error;
+  }
+};
+
+export const getUsersByRole = async (roleName: string): Promise<AuthUser[]> => {
+  try {
+    const response = await axiosInstance.get(`/api/user/by-role/${roleName}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching users with role ${roleName}:`, error);
+    throw error;
+  }
+};
+
+export const getPermissions = async (): Promise<string[]> => {
+  try {
+    const response = await axiosInstance.get('/api/user/permissions');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching permissions:', error);
+    throw error;
+  }
+};
+
+
 export const getAllUsers = async (): Promise<AuthUser[]> => {
   try {
     const response = await axiosInstance.get('/api/user');

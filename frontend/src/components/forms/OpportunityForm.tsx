@@ -21,9 +21,9 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
 import {projectManagementAppContextType } from '../../types';
-import { OpportunityTracking} from "../../models";
-import { getUsersByRole, } from '../../dummyapi/usersApi';
-import { UserRole,} from '../../models';
+import { AuthUser, OpportunityTracking } from "../../models";
+import { getUsersByRole } from '../../services/userApi';
+
 interface OpportunityFormProps {
   open: boolean;
   onClose: () => void;
@@ -44,13 +44,13 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   const [reviewManagers, setReviewManagers] = useState<{id: string, name: string}[]>([]);
   const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
   const [formData, setFormData] = useState<Partial<OpportunityTracking>>({
-    projectId: project?.projectId || "0",
+    projectId: project?.projectId || "",
     stage: project?.stage || '',
     strategicRanking: project?.strategicRanking || '',
     bidFees: project?.bidFees || 0,
     emd: project?.emd || 0,
     formOfEMD: project?.formOfEMD || '',
-    bidManagerId: project?.bidManagerId || (context.user?.roles.some(role => role[0] === UserRole.BusinessDevelopmentManager) ? context.user.id : "0"),
+    bidManagerId: project?.bidManagerId || '',
     reviewManagerId: project?.reviewManagerId,
     approvalManagerId: project?.approvalManagerId,
     contactPersonAtClient: project?.contactPersonAtClient || '',
@@ -78,44 +78,59 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   });
 
   useEffect(() => {
-    // Fetch managers when component mounts
-    const managers = getUsersByRole(UserRole.BusinessDevelopmentManager);
-    setBdManagers(managers.map(manager => ({
-      id: manager.id,
-      name: manager.name
-    })));
+    // Fetch managers when component mounts or formData changes
+    const fetchManagers = async () => {
+      // Helper function to convert users to unique manager objects and sort by name
+      const getUniqueManagers = (users: AuthUser[]) => {
+        // Create a Map with user ID as key to ensure uniqueness
+        const uniqueManagersMap = new Set<{ id: string; name: string }>();
+        
+        // Add each user to the map, overwriting any duplicates
+        users.forEach(user => {
+          // Ensure we have valid data
+          if(user.name) {
+            uniqueManagersMap.add({id: user.id, name: user.name})
+          }
+        });
+        
+        // Convert to array and sort by name
+        return Array.from(uniqueManagersMap.values())
+      };
 
-    const reviewers = getUsersByRole(UserRole.RegionalManager);
-    setReviewManagers(reviewers.map(reviewer => ({
-      id: reviewer.id,
-      name: reviewer.name
-    })));
+      try {
+        // Fetch and set BD Managers
+        const bdManagerUsers = await getUsersByRole('Business Development Manager');
+        const uniqueBdManagers = getUniqueManagers(bdManagerUsers);
+        setBdManagers(uniqueBdManagers);
+        
+        // Fetch and set Review Managers
+        const regionalManagerUsers = await getUsersByRole('Regional Manager');
+        const regionalDirectorUsers = await getUsersByRole('Regional Director');
+        const uniqueReviewers = getUniqueManagers(regionalManagerUsers);
+        setReviewManagers(uniqueReviewers);
+        
+        // Combine both arrays and get unique managers
+        const allApproverUsers = [...regionalManagerUsers, ...regionalDirectorUsers];
+        const uniqueApprovers = getUniqueManagers(allApproverUsers);
+        setApprovalManagers(uniqueApprovers);
+      } catch (error) {
+        console.error('Error fetching managers:', error);
+      }
+    };
 
-    const approvers = [...getUsersByRole(UserRole.RegionalManager), ...getUsersByRole(UserRole.RegionalDirector)];
-    setApprovalManagers(approvers.map(approver => ({
-      id: approver.id,
-      name: approver.name
-    })));
-
-    // Set default bid manager to current user if they are a BD manager
-    if (!project && context.user?.roles.some(role => role[0] === UserRole.BusinessDevelopmentManager)) {
-      setFormData(prev => ({
-        ...prev,
-        bidManagerId: context.user?.id
-      }));
-    }
+    fetchManagers();
   }, [context.user, project]);
 
   useEffect(() => {
     if (project) {
       setFormData({
         ...project,
-        bidManagerId: project.bidManagerId || "0",
-        reviewManagerId: project.reviewManagerId || undefined,
-        approvalManagerId: project.approvalManagerId || undefined,
+        bidManagerId: project.bidManagerId || '',
+        reviewManagerId: project.reviewManagerId,
+        approvalManagerId: project.approvalManagerId,
         dateOfSubmission: project.dateOfSubmission || new Date().toISOString().split('T')[0],
         likelyStartDate: project.likelyStartDate || new Date().toISOString().split('T')[0],
-        workflowId: project.workflowId || "1" // Default to Initial (ID: 1)
+        workflowId: project.workflowId || "1"
       });
     }
   }, [project]);
@@ -124,7 +139,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value === '' ? undefined : value,
+      [name]: value,
     }));
   };
 
@@ -148,40 +163,6 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     onSubmit(formData as OpportunityTracking);
   };
 
-  //const isEditMode = Boolean(project?.id);
-
-  // Get available workflow status options based on current status and user role
-  /*
-  const getAvailableWorkflowStatuses = (): number[] => {
-    if (!context.user?.role || !formData.workflowId) return [1]; // Default to Initial (ID: 1)
-
-    const userRole = context.user.role;
-    const currentStatus = getWorkflowStatusById(formData.workflowId)?.status;
-
-    if (!currentStatus) return [1];
-
-    switch (currentStatus) {
-      case "Initial":
-        return hasPermission(userRole, PermissionType.SUBMIT_FOR_REVIEW)
-          ? [1, 2] // Initial, Sent for Review
-          : [1];
-
-      case "Sent for Review":
-        return hasPermission(userRole, PermissionType.REVIEW_BUSINESS_DEVELOPMENT)
-          ? [2, 3, 4] // Sent for Review, Review Changes, Sent for Approval
-          : [2];
-
-      case "Sent for Approval":
-        return hasPermission(userRole, PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
-          ? [4, 5, 6] // Sent for Approval, Approval Changes, Approved
-          : [4];
-
-      default:
-        return [formData.workflowId];
-    }
-  };*/
-
-  // Rest of the component remains the same until the form fields
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
@@ -306,7 +287,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     </Select>
                   </FormControl>
                 </Grid>
-</Grid>
+              </Grid>
             </Grid>
 
             <Grid item xs={12}>
@@ -390,19 +371,19 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Bid Manager</InputLabel>
+                    <InputLabel>BD Manager</InputLabel>
                     <Select
                       name="bidManagerId"
-                      value={String(formData.bidManagerId || '')}
+                      value={formData.bidManagerId || ''}
                       onChange={handleChange}
-                      label="Bid Manager"
+                      label="BD Manager"
                       required
                     >
                       {bdManagers.map((manager) => (
-                          <MenuItem key={manager.id} value={String(manager.id)}>
-                            {manager.name}
-                          </MenuItem>
-                        ))}
+                        <MenuItem key={`bm_${manager.id}`} value={manager.id}>
+                          {manager.name}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -411,13 +392,13 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     <InputLabel>Review Manager</InputLabel>
                     <Select
                       name="reviewManagerId"
-                      value={String(formData.reviewManagerId || '')}
+                      value={formData.reviewManagerId || ''}
                       onChange={handleChange}
                       label="Review Manager"
                     >
                       <MenuItem value="">None</MenuItem>
                       {reviewManagers.map((manager) => (
-                        <MenuItem key={manager.id} value={String(manager.id)}>
+                        <MenuItem key={`rm_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -429,13 +410,13 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     <InputLabel>Approval Manager</InputLabel>
                     <Select
                       name="approvalManagerId"
-                      value={String(formData.approvalManagerId || '')}
+                      value={formData.approvalManagerId || ''}
                       onChange={handleChange}
                       label="Approval Manager"
                     >
                       <MenuItem value="">None</MenuItem>
                       {approvalManagers.map((manager) => (
-                        <MenuItem key={manager.id} value={String(manager.id)}>
+                        <MenuItem key={`am_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
