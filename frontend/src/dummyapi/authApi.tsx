@@ -15,8 +15,8 @@ export const authApi = {
         
         // Get role details
         const roleDetails: Role = {
-          id: user.roles[0],
-          name: user.roles[0],
+          id: user.roles[0].name,
+          name: user.roles[0].name,
           permissions: rolesApi.getRolePermissions(user.roles[0])
         };
 

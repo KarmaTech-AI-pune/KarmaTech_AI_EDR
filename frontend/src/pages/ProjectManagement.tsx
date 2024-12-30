@@ -139,7 +139,7 @@ export const ProjectManagement: React.FC = () => {
     
     return currentUser.roles.some(role => {
       console.log('Checking role:', role);
-      switch(role) {
+      switch(role.name) {
         case 'Regional Manager':
           return project.regionalManagerID === currentUser.id;
         case 'Senior Project Manager':

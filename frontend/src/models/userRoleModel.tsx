@@ -1,3 +1,4 @@
+/*
 export enum UserRole {
     Admin = 'Admin', //Admin
     ProjectManager = 'Project Manager', //PM
@@ -6,4 +7,4 @@ export enum UserRole {
     BusinessDevelopmentManager = 'Business Development Manager', //BDM
     RegionalDirector = 'Regional Director',
     SubjectMatterExpert = 'Subject Matter Expert',
-  }
+  }*/

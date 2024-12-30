@@ -18,7 +18,6 @@ import { UserWithRole} from '../types';
 import { OpportunityTracking } from  '../models';
 import { PermissionType } from '../models';
 import { opportunityApi } from '../dummyapi/opportunityApi';
-import { UserRole } from '../models';
 import { HistoryLoggingService } from '../services/historyLoggingService';
 
 const NAVBAR_HEIGHT = '64px';
@@ -43,12 +42,12 @@ export const BusinessDevelopment: React.FC = () => {
 
       let response: OpportunityTracking[] = [];
       
-      if (currentUser.roles.some(role => role === UserRole.BusinessDevelopmentManager)) {
+      if (currentUser.roles.some(role => role.name === "Business Development Manager")) {
         response = await opportunityApi.getByUserId(currentUser.id);
-      } else if (currentUser.roles.some(role => role === UserRole.RegionalManager)) {
+      } else if (currentUser.roles.some(role => role.name ===  "Regional Manager")) {
         response = await opportunityApi.getByReviewManagerId(currentUser.id);
       }  
-      else if (currentUser.roles.some(role => role === UserRole.RegionalDirector)) {
+      else if (currentUser.roles.some(role => role.name ===  "RegionalDirector")) {
         response = await opportunityApi.getByApprovalManagerId(currentUser.id);
       } else {
         response = await opportunityApi.getAll();

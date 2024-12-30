@@ -1,12 +1,12 @@
 import { AuthUser } from "../../models";
-import { UserRole } from "../../models";
+import { getRole } from "./dummyRoles";
 
 const usersRawData = {
   "usr1" : {
     "name": "Admin User",
     "userName": "admin",
     "password": "password",
-    "roles": [UserRole.Admin],
+    "roles": "Admin",
     "standardRate": 100,
     "isConsultant": false
   },
@@ -14,7 +14,7 @@ const usersRawData = {
     "name": "Manasi Bapat",
     "userName": "PM1",
     "password": "password",
-    "roles": [UserRole.ProjectManager],
+    "roles": "Project Manager",
     "standardRate": 80,
     "isConsultant": true
   },
@@ -22,7 +22,7 @@ const usersRawData = {
     "name": "Salaiddin Ahemad",
     "userName": "PM2",
     "password": "password",
-    "roles": [UserRole.ProjectManager],
+    "roles": "Project Manager",
     "standardRate": 80,
     "isConsultant": true
   },
@@ -30,7 +30,7 @@ const usersRawData = {
     "name": "Vidyadhar Vengurlekar",
     "userName": "SPM1", 
     "password": "password",
-    "roles": [UserRole.SeniorProjectManager],
+    "roles": "Senior Project Manager",
     "standardRate": 90,
     "isConsultant": false
   },
@@ -38,7 +38,7 @@ const usersRawData = {
     "name": "Mandar Pimputkar",
     "userName": "SPM2",
     "password": "password", 
-    "roles": [UserRole.SeniorProjectManager],
+    "roles": "Senior Project Manager",
     "standardRate": 90,
     "isConsultant": false
   },
@@ -46,7 +46,7 @@ const usersRawData = {
     "name": "Vidyadhar Sontakke",
     "userName": "RM1",
     "password": "password",
-    "roles": [UserRole.RegionalManager],
+    "roles": "Regional Manager",
     "standardRate": 95,
     "isConsultant": false
   },
@@ -54,7 +54,7 @@ const usersRawData = {
     "name": "Sanjay Ghuleria",
     "userName": "RM2",
     "password": "password",
-    "roles": [UserRole.RegionalManager ],
+    "roles": ["Regional Manager" ],
     "standardRate": 95,
     "isConsultant": false
   },
@@ -62,7 +62,7 @@ const usersRawData = {
     "name": "Pravin Bhawsar",
     "userName": "BDM1",
     "password": "password",
-    "roles": [UserRole.BusinessDevelopmentManager],
+    "roles": ["Business Development Manager"],
     "standardRate": 85,
     "isConsultant": false
   },
@@ -70,7 +70,7 @@ const usersRawData = {
     "name": "Rohit Dembi",
     "userName": "BDM2",
     "password": "password",
-    "roles": [UserRole.BusinessDevelopmentManager],
+    "roles": ["Business Development Manager"],
     "standardRate": 85,
     "isConsultant": false
   },
@@ -78,7 +78,7 @@ const usersRawData = {
     "name": "Nijam Ahemad",
     "userName": "SME1",
     "password": "password",
-    "roles": [UserRole.SubjectMatterExpert],
+    "roles": ["Subject Matter Expert"],
     "standardRate": 75,
     "isConsultant": true
   },
@@ -86,7 +86,7 @@ const usersRawData = {
     "name": "Mnjunath Gowda",  
     "userName": "SME2",
     "password": "password",
-    "roles": [UserRole.SubjectMatterExpert],
+    "roles": ["Subject Matter Expert"],
     "standardRate": 75,
     "isConsultant": true
   },
@@ -94,7 +94,7 @@ const usersRawData = {
     "name": "Pradipto Sarkar",
     "userName": "RM3",
     "password": "password",
-    "roles": [UserRole.RegionalManager],
+    "roles": ["Regional Manager"],
     "standardRate": 95,
     "isConsultant": false
   },
@@ -102,7 +102,7 @@ const usersRawData = {
     "name": "Yogeshwar Gokhale",
     "userName": "RD1",
     "password": "password",
-    "roles": [UserRole.RegionalDirector],
+    "roles": ["Regional Director"],
     "standardRate": 100,
     "isConsultant": false
   },
@@ -110,7 +110,7 @@ const usersRawData = {
     "name": "Vidyadhar Sontakke",
     "userName": "RD2",
     "password": "password",
-    "roles": [UserRole.RegionalDirector],
+    "roles": ["Regional Director"],
     "standardRate": 100,
     "isConsultant": false
   }
@@ -123,7 +123,7 @@ export const users: AuthUser[] = Object.entries(usersRawData).map(([id, user]) =
   email: `${user.userName}@example.com`,
   userName: user.userName,
   password: user.password,
-  roles: [...user.roles], // Create a new mutable array
+  roles: (Array.isArray(user.roles) ? user.roles : [user.roles]).map(role => getRole(role)),
   standardRate: user.standardRate,
   isConsultant: user.isConsultant,
   createdAt: new Date().toISOString(),
@@ -136,5 +136,5 @@ export const getUserById = (id: string): AuthUser | undefined => {
 };
 
 export const isAdmin = (user: AuthUser): boolean => {
-  return user.roles.some(role => role === UserRole.Admin);
+  return user.roles.some(role => role.name === "Admin");
 };

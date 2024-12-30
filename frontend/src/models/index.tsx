@@ -18,6 +18,6 @@ export type {OutwardRow} from "./outwardRowModel"
 export type {CheckReviewRow} from "./checkReviewModel"
 export type {ChangeControl} from "./changeControlModel"
 export type {User, AuthUser} from "./userModel"
-export { UserRole } from "./userRoleModel";
+export type { Role } from "./roleModel";
 export {PermissionType} from "./permissionTypeModel"
 export type {RoleDefinition} from "./roleDefinitionModel"

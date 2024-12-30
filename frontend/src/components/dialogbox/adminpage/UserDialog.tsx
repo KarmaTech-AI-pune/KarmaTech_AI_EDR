@@ -17,7 +17,7 @@ import {
   FormControlLabel,
   SelectChangeEvent,
 } from '@mui/material';
-import { AuthUser,UserRole } from '../../../models';
+import { AuthUser, Role } from '../../../models';
 import { useRoles } from '../../../hooks/useRoles';
 
 interface UserDialogProps {
@@ -30,7 +30,7 @@ interface UserDialogProps {
     name: string;
     email: string;
     password: string;
-    roles: UserRole[];
+    roles: Role[];
     standardRate: number;
     isConsultant: boolean;
   };
@@ -47,7 +47,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
   handleInputChange,
   handleRoleChange,
 }) => {
-  const { loading, error } = useRoles();
+  const { roles, loading, error } = useRoles();
   const selectedRoleNames = formData.roles;
 
   return (
@@ -107,15 +107,15 @@ const UserDialog: React.FC<UserDialogProps> = ({
                 <InputLabel>Roles</InputLabel>
                 <Select
                   multiple
-                  value={selectedRoleNames}
+                  value={selectedRoleNames.map(role => role.name)}
                   onChange={handleRoleChange}
                   label="Roles"
-                  renderValue={(selected) => selected.join(', ')}
+                  renderValue={(selected) => (selected as string[]).join(', ')}
                 >
-                  {Object.values(UserRole).map((role) => (
-                    <MenuItem key={role} value={role}>
-                      <Checkbox checked={selectedRoleNames.includes(role)} />
-                      {role}
+                  {roles.map((role) => (
+                    <MenuItem key={role.id} value={role.name}>
+                      <Checkbox checked={selectedRoleNames.some(r => r.id === role.id)} />
+                      {role.name}
                     </MenuItem>
                   ))}
                 </Select>

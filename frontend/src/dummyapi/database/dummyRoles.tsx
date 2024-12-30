@@ -1,8 +1,8 @@
-import { UserRole,PermissionType, RoleDefinition } from '../../models';
+import { PermissionType, RoleDefinition,Role } from '../../models';
 
 
-export const ROLES: Record<UserRole, RoleDefinition> = {
-  [UserRole.Admin]: {
+export const ROLES: Record<string, RoleDefinition> = {
+  "Admin": {
     id: 'admin',
     name: 'Administrator',
     permissions: [
@@ -27,7 +27,7 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.SYSTEM_ADMIN
     ]
   },
-  [UserRole.ProjectManager]: {
+  "Project Manager": {
     id: 'project_manager',
     name: 'Project Manager',
     permissions: [
@@ -38,7 +38,7 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.SUBMIT_PROJECT_FOR_REVIEW,
     ]
   },
-  [UserRole.SeniorProjectManager]: {
+  "Senior Project Manager": {
     id: 'senior_project_manager',
     name: 'Senior Project Manager',
     permissions: [
@@ -50,7 +50,7 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.SUBMIT_FOR_APPROVAL,
     ]
   },
-  [UserRole.RegionalManager]: {
+  "Regional Manager": {
     id: 'regional_manager',
     name: 'Regional Manager',
     permissions: [
@@ -68,7 +68,7 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.SUBMIT_FOR_APPROVAL,
     ]
   },
-  [UserRole.BusinessDevelopmentManager]: {
+  "Business Development Manager": {
     id: 'business_dev_manager',
     name: 'Business Development Manager',
     permissions: [
@@ -79,7 +79,7 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.SUBMIT_FOR_REVIEW
     ]
   },
-  [UserRole.SubjectMatterExpert]: {
+  "Subject Matter Expert": {
     id: 'subject_matter_expert',
     name: 'Subject Matter Expert',
     permissions: [
@@ -89,7 +89,7 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
     ]
   },
-  [UserRole.RegionalDirector]: {
+  "Regional Director": {
     id: 'regional_director',
     name: 'Regional Director',
     permissions: [
@@ -109,17 +109,25 @@ export const ROLES: Record<UserRole, RoleDefinition> = {
 };
 
 // Utility function to check if a user has a specific permission
-export const hasPermission = (role: UserRole, permission: PermissionType): boolean => {
+export const hasPermission = (role: string, permission: PermissionType): boolean => {
   const roleDefinition = ROLES[role];
   return roleDefinition.permissions.includes(permission);
 };
 
 // Get all permissions for a specific role
-export const getRolePermissions = (role: UserRole): PermissionType[] => {
+export const getRolePermissions = (role: string): PermissionType[] => {
   return ROLES[role].permissions;
 };
 
 // Get role definition by role
-export const getRoleDefinition = (role: UserRole): RoleDefinition => {
+export const getRoleDefinition = (role: string): RoleDefinition => {
   return ROLES[role];
 };
+
+export const getRole = (role:string) : Role => {
+  let r : RoleDefinition = ROLES[role]
+  return {
+    id: r.id,
+    name : r.name
+  }
+}

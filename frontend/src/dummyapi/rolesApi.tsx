@@ -1,56 +1,56 @@
-import { UserRole, PermissionType, RoleDefinition } from '../models';
+import { Role, PermissionType, RoleDefinition } from '../models';
 import { ROLES as INITIAL_ROLES } from './database/dummyRoles';
 
 // Create mutable copy of roles
-let MUTABLE_ROLES: Record<UserRole, RoleDefinition> = { ...INITIAL_ROLES };
+let MUTABLE_ROLES: Record<string, RoleDefinition> = { ...INITIAL_ROLES };
 
 export const rolesApi = {
   getAllRoles: (): RoleDefinition[] => {
     return Object.values(MUTABLE_ROLES);
   },
 
-  getRoleByName: (roleName: UserRole): RoleDefinition => {
-    return MUTABLE_ROLES[roleName];
+  getRoleByName: (roleName: Role): RoleDefinition => {
+    return MUTABLE_ROLES[roleName.name];
   },
 
-  checkPermission: (role: UserRole, permission: PermissionType): boolean => {
-    const roleDefinition = MUTABLE_ROLES[role];
+  checkPermission: (role: Role, permission: PermissionType): boolean => {
+    const roleDefinition = MUTABLE_ROLES[role.name];
     return roleDefinition.permissions.includes(permission);
   },
 
-  getRolePermissions: (role: UserRole): PermissionType[] => {
-    return MUTABLE_ROLES[role].permissions;
+  getRolePermissions: (role: Role): PermissionType[] => {
+    return MUTABLE_ROLES[role.name].permissions;
   },
 
-  getRoleDefinition: (role: UserRole): RoleDefinition => {
-    return MUTABLE_ROLES[role];
+  getRoleDefinition: (role: Role): RoleDefinition => {
+    return MUTABLE_ROLES[role.name];
   },
 
-  updateRole: (role: UserRole, updatedRole: RoleDefinition): RoleDefinition => {
-    if (!(role in MUTABLE_ROLES)) {
+  updateRole: (role: Role, updatedRole: RoleDefinition): RoleDefinition => {
+    if (!(role.name in MUTABLE_ROLES)) {
       throw new Error(`Role ${role} not found`);
     }
-    MUTABLE_ROLES[role] = {
-      ...MUTABLE_ROLES[role],
+    MUTABLE_ROLES[role.name] = {
+      ...MUTABLE_ROLES[role.name],
       ...updatedRole,
-      id: MUTABLE_ROLES[role].id // Preserve the original ID
+      id: MUTABLE_ROLES[role.name].id // Preserve the original ID
     };
-    return MUTABLE_ROLES[role];
+    return MUTABLE_ROLES[role.name];
   },
 
-  deleteRole: (role: UserRole): boolean => {
-    if (!(role in MUTABLE_ROLES)) {
+  deleteRole: (role: Role): boolean => {
+    if (!(role.name in MUTABLE_ROLES)) {
       return false;
     }
-    delete MUTABLE_ROLES[role];
+    delete MUTABLE_ROLES[role.name];
     return true;
   },
 
-  createRole: (role: UserRole, roleDefinition: RoleDefinition): RoleDefinition => {
-    if (role in MUTABLE_ROLES) {
+  createRole: (role: Role, roleDefinition: RoleDefinition): RoleDefinition => {
+    if (role.name in MUTABLE_ROLES) {
       throw new Error(`Role ${role} already exists`);
     }
-    MUTABLE_ROLES[role] = roleDefinition;
+    MUTABLE_ROLES[role.name] = roleDefinition;
     return roleDefinition;
   }
 };

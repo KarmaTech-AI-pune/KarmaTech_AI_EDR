@@ -12,7 +12,7 @@ import {
   FormHelperText,
   Backdrop
 } from '@mui/material';
-import { UserRole, AuthUser} from '../../models'
+import { AuthUser} from '../../models'
 import { getUsersByRole, getUserById } from '../../dummyapi/usersApi';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
@@ -53,7 +53,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
         }
       }
     };
-    const regionalManagers = getUsersByRole(UserRole.RegionalManager);
+    const regionalManagers = getUsersByRole('Regional Manager');
     setReviewers(regionalManagers);
     checkManager();
   }, [opportunityId]);

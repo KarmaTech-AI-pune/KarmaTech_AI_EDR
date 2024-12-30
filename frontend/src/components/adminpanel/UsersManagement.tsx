@@ -16,9 +16,10 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { AuthUser,UserRole } from '../../models';
+import { AuthUser, Role, RoleDefinition } from '../../models';
 import * as usersApi from '../../services/userApi';
 import UserDialog from '../dialogbox/adminpage/UserDialog';
+import { useRoles } from '../../hooks/useRoles';
 
 const UsersManagement = () => {
   const [users, setUsers] = useState<AuthUser[]>([]);
@@ -31,7 +32,7 @@ const UsersManagement = () => {
     name: '',
     email: '',
     password: '',
-    roles: [] as UserRole[],
+    roles: [] as Role[],
     standardRate: 0,
     isConsultant: false,
   });
@@ -44,7 +45,7 @@ const UsersManagement = () => {
     try {
       const fetchedUsers = await usersApi.getAllUsers();
       setUsers(fetchedUsers);
-
+      console.log(fetchedUsers)
       const newRates: Record<string, number> = {};
       const newStatus: Record<string, boolean> = {};
       fetchedUsers.forEach(user => {
@@ -90,7 +91,7 @@ const UsersManagement = () => {
         name: userDetails.name,
         email: userDetails.email,
         password: '', // Don't populate password for security
-        roles: userDetails.roles as UserRole[],
+        roles: userDetails.roles,
         standardRate: userDetails.standardRate,
         isConsultant: userDetails.isConsultant,
       });
@@ -170,9 +171,14 @@ const UsersManagement = () => {
     }));
   };
 
+  const { roles: availableRoles } = useRoles();
+
   const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
-    const selectedRoleNames = event.target.value as string[];
-    const selectedRoles = selectedRoleNames.map(name => name as UserRole);
+    const selectedValues = event.target.value as string[];
+    // Map selected role names to actual Role objects from the API
+    const selectedRoles = selectedValues
+      .map(value => availableRoles.find((role: RoleDefinition) => role.name === value))
+      .filter((role): role is RoleDefinition => role !== undefined);
     setFormData(prev => ({
       ...prev,
       roles: selectedRoles,
@@ -205,17 +211,17 @@ const UsersManagement = () => {
                 <TableCell>{user.userName}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                {/*<TableCell>
-                  {user.roles.map((role,id) => (
+                <TableCell>
+                  {user.roles.map((role, index) => (
                     <Chip
-                      key={id}
-                      label={role.}
+                      key={index}
+                      label={role.name}
                       color="primary"
                       variant="outlined"
                       style={{ marginRight: '5px' }}
                     />
                   ))}
-                  </TableCell>*/}
+                </TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleEdit(user)} color="primary">
                     <EditIcon />

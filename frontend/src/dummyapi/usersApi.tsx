@@ -1,4 +1,4 @@
-import { AuthUser, UserRole } from "../models";
+import { AuthUser} from "../models";
 import { users, } from "./database/dummyusers";
 import { axiosInstance } from './axiosConfig';
 
@@ -52,8 +52,8 @@ export const getUserByUsername = (userName: string): AuthUser | undefined => {
   return mutableUsers.find(user => user.userName === userName);
 };
 
-export const getUsersByRole = (role: UserRole): AuthUser[] => {
-  return mutableUsers.filter(user => user.roles.some(r => r === role));
+export const getUsersByRole = (role: string): AuthUser[] => {
+  return mutableUsers.filter(user => user.roles.some(r => r.name === role));
 };
 
 // Update user
@@ -111,5 +111,5 @@ export const validateUser = (userName: string, password: string): AuthUser | nul
 
 // User management utilities
 export const isAdmin = (user: AuthUser): boolean => {
-  return user.roles.some(role => role === UserRole.Admin);
+  return user.roles.some(role => role.name ===  "Admin");
 };
