@@ -12,19 +12,18 @@ import {
   IconButton,
   Chip,
   Box,
+  SelectChangeEvent,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { AuthUser, Role } from '../../models/userModel';
+import { AuthUser,UserRole } from '../../models';
 import * as usersApi from '../../services/userApi';
 import UserDialog from '../dialogbox/adminpage/UserDialog';
-import { useRoles } from '../../hooks/useRoles';
 
 const UsersManagement = () => {
-  const { roles } = useRoles();
   const [users, setUsers] = useState<AuthUser[]>([]);
-  const [standardRates, setStandardRates] = useState<Record<number, number>>({});
-  const [consultantStatus, setConsultantStatus] = useState<Record<number, boolean>>({});
+  const [standardRates, setStandardRates] = useState<Record<string, number>>({});
+  const [consultantStatus, setConsultantStatus] = useState<Record<string, boolean>>({});
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
   const [formData, setFormData] = useState({
@@ -32,7 +31,7 @@ const UsersManagement = () => {
     name: '',
     email: '',
     password: '',
-    roles: [] as Role[],
+    roles: [] as UserRole[],
     standardRate: 0,
     isConsultant: false,
   });
@@ -46,8 +45,8 @@ const UsersManagement = () => {
       const fetchedUsers = await usersApi.getAllUsers();
       setUsers(fetchedUsers);
 
-      const newRates: Record<number, number> = {};
-      const newStatus: Record<number, boolean> = {};
+      const newRates: Record<string, number> = {};
+      const newStatus: Record<string, boolean> = {};
       fetchedUsers.forEach(user => {
         if (!(user.id in standardRates)) {
           newRates[user.id] = user.standardRate;
@@ -91,7 +90,7 @@ const UsersManagement = () => {
         name: userDetails.name,
         email: userDetails.email,
         password: '', // Don't populate password for security
-        roles: userDetails.roles,
+        roles: userDetails.roles as UserRole[],
         standardRate: userDetails.standardRate,
         isConsultant: userDetails.isConsultant,
       });
@@ -102,7 +101,7 @@ const UsersManagement = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         await usersApi.deleteUser(id);
@@ -157,8 +156,10 @@ const UsersManagement = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' 
@@ -169,9 +170,9 @@ const UsersManagement = () => {
     }));
   };
 
-  const handleRoleChange = (e: any) => {
-    const selectedRoleNames = e.target.value as string[];
-    const selectedRoles = roles.filter(role => selectedRoleNames.includes(role.name));
+  const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
+    const selectedRoleNames = event.target.value as string[];
+    const selectedRoles = selectedRoleNames.map(name => name as UserRole);
     setFormData(prev => ({
       ...prev,
       roles: selectedRoles,
@@ -204,17 +205,17 @@ const UsersManagement = () => {
                 <TableCell>{user.userName}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  {user.roles.map((role) => (
+                {/*<TableCell>
+                  {user.roles.map((role,id) => (
                     <Chip
-                      key={role.id}
-                      label={role.name}
+                      key={id}
+                      label={role.}
                       color="primary"
                       variant="outlined"
                       style={{ marginRight: '5px' }}
                     />
                   ))}
-                </TableCell>
+                  </TableCell>*/}
                 <TableCell>
                   <IconButton onClick={() => handleEdit(user)} color="primary">
                     <EditIcon />

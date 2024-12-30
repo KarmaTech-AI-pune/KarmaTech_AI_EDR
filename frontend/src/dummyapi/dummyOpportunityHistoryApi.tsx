@@ -10,10 +10,8 @@ export const getAllOpportunityHistories = async (): Promise<OpportunityHistory[]
   });
 };
 
-// Get history by ID
-
 // Get histories by opportunity ID
-export const getOpportunityHistoriesByOpportunityId = async (opportunityId: number): Promise<OpportunityHistory[]> => {
+export const getOpportunityHistoriesByOpportunityId = async (opportunityId: string): Promise<OpportunityHistory[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(getHistoriesByOpportunityId(opportunityId));
@@ -25,8 +23,10 @@ export const getOpportunityHistoriesByOpportunityId = async (opportunityId: numb
 export const addOpportunityHistory = async (history: Omit<OpportunityHistory, "id">): Promise<OpportunityHistory> => {
   return new Promise((resolve) => {
     setTimeout(() => {
+      // Convert existing IDs to numbers, find max, then convert back to string
+      const maxId = Math.max(...opportunityHistories.map(h => parseInt(h.id))) + 1;
       const newHistory: OpportunityHistory = {
-        id: Math.max(...opportunityHistories.map(h => h.id)) + 1,
+        id: maxId.toString(),
         ...history
       };
       opportunityHistories.push(newHistory);

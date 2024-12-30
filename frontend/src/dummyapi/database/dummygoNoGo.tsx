@@ -1,8 +1,9 @@
 import { GoNoGoDecision, GoNoGoStatus } from "../../models"
+
 // Raw Go/No-Go data
-const goNoGoRawData ={
+const goNoGoRawData = {
   "1": {
-    "projectId": 1,
+    "projectId": "1",
     "bidType": "Lumpsum",
     "sector": "Water",
     "tenderFee": 5000,
@@ -38,7 +39,7 @@ const goNoGoRawData ={
     "completedBy": "System"
   },
   "2": {
-    "projectId": 4,
+    "projectId": "4",
     "bidType": "EPC",
     "sector": "Smart City",
     "tenderFee": 7500,
@@ -74,7 +75,7 @@ const goNoGoRawData ={
     "completedBy": "System"
   },
   "3": {
-    "projectId": 5,
+    "projectId": "5",
     "bidType": "Design-Build",
     "sector": "Coastal",
     "tenderFee": 4500,
@@ -154,7 +155,7 @@ export const goNoGoDecisions: GoNoGoDecision[] = Object.values(goNoGoRawData).ma
 }));
 
 // Utility functions
-export const getGoNoGoByProjectId = (projectId: number): GoNoGoDecision | undefined => {
+export const getGoNoGoByProjectId = (projectId: string): GoNoGoDecision | undefined => {
   return goNoGoDecisions.find(decision => decision.projectId === projectId);
 };
 

@@ -89,7 +89,7 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
       }
 
       try {
-        const data = await goNoGoApi.getByProjectId(projectId);
+        const data = await goNoGoApi.getByProjectId(projectId.toString());
         
         if (data && Object.keys(data).length > 0) {
           setGoNoGoDecision(data);

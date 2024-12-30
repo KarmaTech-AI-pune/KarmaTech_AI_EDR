@@ -20,11 +20,11 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     name: project?.name || '',
     details: project?.details || '',
     clientName: project?.clientName || '',
-    projectMangerId: project?.projectMangerId || 0,
+    projectMangerId: project?.projectMangerId || "0",
     office: project?.office || '',
     projectNo: project?.projectNo || '',
     typeOfJob: project?.typeOfJob || '',
-    seniorProjectMangerId: project?.seniorProjectMangerId || 0,
+    seniorProjectMangerId: project?.seniorProjectMangerId || "0",
     sector: project?.sector || '',
     region: project?.region || '',
     typeOfClient: project?.typeOfClient || '',
@@ -35,7 +35,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     currency: project?.currency || 'INR',
     budget: project?.budget || 0,
     priority: project?.priority || '',
-    regionalManagerID: project?.regionalManagerID || 0
+    regionalManagerID: project?.regionalManagerID || "0"
   });
 
   const projectManagers = getUsersByRole(UserRole.ProjectManager);
@@ -59,9 +59,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
       ...formData,
       estimatedCost: Number(formData.estimatedCost),
       budget: Number(formData.budget),
-      projectMangerId: Number(formData.projectMangerId),
-      seniorProjectMangerId: Number(formData.seniorProjectMangerId),
-      regionalManagerID: Number(formData.regionalManagerID)
+      projectMangerId: formData.projectMangerId,
+      seniorProjectMangerId: formData.seniorProjectMangerId,
+      regionalManagerID: formData.regionalManagerID
     });
   };
 
@@ -169,7 +169,8 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
             >
               {regionalManagers.map((rm) => (
                 <MenuItem key={rm.id} value={rm.id}>
-                  {rm.name} ({rm.role})
+                  {rm.name} ({rm.roles[0]})
+
                 </MenuItem>
               ))}
             </TextField>

@@ -19,6 +19,7 @@ namespace NJS.Domain.Database
                 adminUser = new User
                 {
                     UserName = "admin",
+                    Name = "Administrator",
                     Email = adminEmail,
                     EmailConfirmed = true
                 };

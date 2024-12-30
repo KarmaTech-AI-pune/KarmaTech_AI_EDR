@@ -7,7 +7,7 @@ export class HistoryLoggingService {
     }
 
     private static async createHistoryEntry(
-        opportunityId: number,
+        opportunityId: string,
         description: string
     ): Promise<OpportunityHistory> {
         const historyEntry: Omit<OpportunityHistory, 'id'> = {
@@ -25,7 +25,7 @@ export class HistoryLoggingService {
     }
 
     static async logNewProject(
-        opportunityId: number,
+        opportunityId: string,
         projectName: string,
         createdBy: string
     ): Promise<OpportunityHistory> {
@@ -34,7 +34,7 @@ export class HistoryLoggingService {
     }
 
     static async logSentOpportunityForApproval(
-        opportunityId: number,
+        opportunityId: string,
         sentBy: string,
         approver: string,
         comments?: string
@@ -46,7 +46,7 @@ export class HistoryLoggingService {
     }
 
     static async logApprovalDecision(
-        opportunityId: number,
+        opportunityId: string,
         decision: 'approved' | 'rejected',
         decidedBy: string,
         comments?: string
@@ -58,7 +58,7 @@ export class HistoryLoggingService {
     }
 
     static async logSentForReview(
-        opportunityId: number,
+        opportunityId: string,
         sentBy: string,
         reviewer: string,
         comments?: string
@@ -70,7 +70,7 @@ export class HistoryLoggingService {
     }
 
     static async logReviewDecision(
-        opportunityId: number,
+        opportunityId: string,
         decision: 'approved' | 'rejected',
         reviewedBy: string,
         comments?: string
@@ -82,7 +82,7 @@ export class HistoryLoggingService {
     }
 
     static async logStatusChange(
-        opportunityId: number,
+        opportunityId: string,
         oldStatus: string,
         newStatus: string,
         changedBy: string
@@ -92,7 +92,7 @@ export class HistoryLoggingService {
     }
 
     static async logCustomEvent(
-        opportunityId: number,
+        opportunityId: string,
         event: string,
         user: string,
         details?: string

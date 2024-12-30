@@ -1,131 +1,140 @@
 import { AuthUser } from "../../models";
 import { UserRole } from "../../models";
+
 const usersRawData = {
-  "1" : {
+  "usr1" : {
     "name": "Admin User",
-    "username": "admin",
+    "userName": "admin",
     "password": "password",
-    "role": UserRole.Admin
+    "roles": [UserRole.Admin],
+    "standardRate": 100,
+    "isConsultant": false
   },
-  "2" : {
+  "usr2" : {
     "name": "Manasi Bapat",
-    "username": "PM1",
+    "userName": "PM1",
     "password": "password",
-    "role": UserRole.ProjectManager
+    "roles": [UserRole.ProjectManager],
+    "standardRate": 80,
+    "isConsultant": true
   },
-  "3" : {
+  "usr3" : {
     "name": "Salaiddin Ahemad",
-    "username": "PM2",
+    "userName": "PM2",
     "password": "password",
-    "role": UserRole.ProjectManager
+    "roles": [UserRole.ProjectManager],
+    "standardRate": 80,
+    "isConsultant": true
   },
-  "4" : {
+  "usr4" : {
     "name": "Vidyadhar Vengurlekar",
-    "username": "SPM1", 
+    "userName": "SPM1", 
     "password": "password",
-    "role": UserRole.SeniorProjectManager
+    "roles": [UserRole.SeniorProjectManager],
+    "standardRate": 90,
+    "isConsultant": false
   },
-  "5" : {
+  "usr5" : {
     "name": "Mandar Pimputkar",
-    "username": "SPM2",
+    "userName": "SPM2",
     "password": "password", 
-    "role": UserRole.SeniorProjectManager
+    "roles": [UserRole.SeniorProjectManager],
+    "standardRate": 90,
+    "isConsultant": false
   },
-  "6" : {
+  "usr6" : {
     "name": "Vidyadhar Sontakke",
-    "username": "RM1",
+    "userName": "RM1",
     "password": "password",
-    "role": UserRole.RegionalManager
+    "roles": [UserRole.RegionalManager],
+    "standardRate": 95,
+    "isConsultant": false
   },
-  "7" : {
+  "usr7" : {
     "name": "Sanjay Ghuleria",
-    "username": "RM2",
+    "userName": "RM2",
     "password": "password",
-    "role": UserRole.RegionalManager  
+    "roles": [UserRole.RegionalManager ],
+    "standardRate": 95,
+    "isConsultant": false
   },
-  "8" : {
+  "usr8" : {
     "name": "Pravin Bhawsar",
-    "username": "BDM1",
+    "userName": "BDM1",
     "password": "password",
-    "role": UserRole.BusinessDevelopmentManager
+    "roles": [UserRole.BusinessDevelopmentManager],
+    "standardRate": 85,
+    "isConsultant": false
   },
-  "9" : {
+  "usr9" : {
     "name": "Rohit Dembi",
-    "username": "BDM2",
+    "userName": "BDM2",
     "password": "password",
-    "role": UserRole.BusinessDevelopmentManager
+    "roles": [UserRole.BusinessDevelopmentManager],
+    "standardRate": 85,
+    "isConsultant": false
   },
-  "10" : {
+  "usr10" : {
     "name": "Nijam Ahemad",
-    "username": "SME1",
+    "userName": "SME1",
     "password": "password",
-    "role": UserRole.SubjectMatterExpert
+    "roles": [UserRole.SubjectMatterExpert],
+    "standardRate": 75,
+    "isConsultant": true
   },
-  "11" : {
+  "usr11" : {
     "name": "Mnjunath Gowda",  
-    "username": "SME2",
+    "userName": "SME2",
     "password": "password",
-    "role": UserRole.SubjectMatterExpert
+    "roles": [UserRole.SubjectMatterExpert],
+    "standardRate": 75,
+    "isConsultant": true
   },
-  "12" : {
+  "usr12" : {
     "name": "Pradipto Sarkar",
-    "username": "RM3",
+    "userName": "RM3",
     "password": "password",
-    "role": UserRole.RegionalManager  
+    "roles": [UserRole.RegionalManager],
+    "standardRate": 95,
+    "isConsultant": false
   },
-  "15" : {
+  "usr15" : {
     "name": "Yogeshwar Gokhale",
-    "username": "RD1",
+    "userName": "RD1",
     "password": "password",
-    "role": UserRole.RegionalDirector
+    "roles": [UserRole.RegionalDirector],
+    "standardRate": 100,
+    "isConsultant": false
   },
-  "16" : {
+  "usr16" : {
     "name": "Vidyadhar Sontakke",
-    "username": "RD2",
+    "userName": "RD2",
     "password": "password",
-    "role": UserRole.RegionalDirector
+    "roles": [UserRole.RegionalDirector],
+    "standardRate": 100,
+    "isConsultant": false
   }
-} as const;
+};
 
 // Transform into typed array
 export const users: AuthUser[] = Object.entries(usersRawData).map(([id, user]) => ({
-  id: Number(id),
+  id,
   name: user.name,
-  email: `${user.username}@example.com`,
-  username: user.username,
+  email: `${user.userName}@example.com`,
+  userName: user.userName,
   password: user.password,
-  role: user.role,
+  roles: [...user.roles], // Create a new mutable array
+  standardRate: user.standardRate,
+  isConsultant: user.isConsultant,
   createdAt: new Date().toISOString(),
   lastLogin: null
 }));
 
 // Utility functions
-/*
-export const getUserByUsername = (username: string): AuthUser | undefined => {
-  return users.find(user => user.username === username);
-};
-
-export const getUserById = (id: number): AuthUser | undefined => {
+export const getUserById = (id: string): AuthUser | undefined => {
   return users.find(user => user.id === id);
 };
 
-export const getUsersByRole = (role: UserRole): AuthUser[] => {
-  return users.filter(user => user.role === role);
-};
-
-// Authentication utility
-export const validateUser = (username: string, password: string): AuthUser | null => {
-  const user = getUserByUsername(username);
-  if (user && user.password === password) {
-    return user;
-  }
-  return null;
-};*/
-
-// User management utilities
-export const getUserById = (id: number): AuthUser | undefined => {
-  return users.find(user => user.id === id);
-};
 export const isAdmin = (user: AuthUser): boolean => {
-  return true;//user.role === UserRole.Admin;
+  return user.roles.some(role => role === UserRole.Admin);
 };

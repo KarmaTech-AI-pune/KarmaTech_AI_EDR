@@ -4,7 +4,7 @@ export interface WBSOption {
 }
 
 export interface WBSRowData {
-  id: number;
+  id: string;
   level: 1 | 2 | 3;
   title: string;
   role: string | null;
@@ -14,7 +14,7 @@ export interface WBSRowData {
   odc: number;
   totalHours: number;
   totalCost: number;
-  parentId?: number | null;
+  parentId?: string | null;
 }
 
 export interface WBSChildTotals {

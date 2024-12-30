@@ -1,14 +1,14 @@
 export type OpportunityTracking = {
-    id: number;
-    projectId: number | null;  // Modified to allow null
+    id: string;
+    projectId: string | null;  // Modified to allow null
     stage: string;
     strategicRanking: string;
     bidFees?: number;
     emd?: number;
     formOfEMD?: string;
-    bidManagerId: number;
-    reviewManagerId?: number; // New field for Vice President BD
-    approvalManagerId?: number; // New field for Regional Manager
+    bidManagerId: string;
+    reviewManagerId?: string; // New field for Vice President BD
+    approvalManagerId?: string; // New field for Regional Manager
     contactPersonAtClient?: string;
     dateOfSubmission?: string;
     percentageChanceOfProjectHappening?: number;
@@ -30,6 +30,5 @@ export type OpportunityTracking = {
     durationOfProject: number;
     fundingStream: string;
     contractType: string;
-    workflowId: number; // Changed from workflowStatus to workflowId
-  }
-  
+    workflowId: string; // Changed from workflowStatus to workflowId
+}

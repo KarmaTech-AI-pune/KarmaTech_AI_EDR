@@ -1,25 +1,16 @@
 import { OpportunityTracking } from "../../models"
-/*
-export enum WorkflowStatus {
-  Initial = "Initial",
-  SentForReview = "Sent for Review",
-  ReviewChanges = "Review Changes",
-  SentForApproval = "Sent for Approval",
-  ApprovalChanges = "Approval Changes",
-  Approved = "Approved"
-}
-*/
+
 // Raw opportunity tracking data
 const opportunityTrackingRawData =  {
   "1":{
-    "id": 1,
-    "projectId": 2,
+    "id": "1",
+    "projectId": "usr2",
     "stage": "B",
     "strategicRanking": "H",
     "bidFees": 75000,
     "emd": 150000,
     "formOfEMD": "Bank Guarantee",
-    "bidManagerId": 8,
+    "bidManagerId": "usr8",
     "reviewManagerId": undefined, 
     "approvalManagerId": undefined, 
     "contactPersonAtClient": "Rajesh Kumar",
@@ -43,17 +34,17 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 36,
     "fundingStream": "Government Budget",
     "contractType": "EPC",
-    "workflowId": 1
+    "workflowId": "1"
   },
   "2":{
-    "id": 2,
-    "projectId": 3,
+    "id": "2",
+    "projectId": "usr3",
     "stage": "A",
     "strategicRanking": "M",
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManagerId": 9,
+    "bidManagerId": "usr9",
     "reviewManagerId": undefined, 
     "approvalManagerId": undefined, 
     "contactPersonAtClient": "Amit Patel",
@@ -77,17 +68,17 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 24,
     "fundingStream": "Government Grant",
     "contractType": "Item Rate",
-    "workflowId": 2
+    "workflowId": "2"
   },
   "3":{
-    "id": 3,
-    "projectId": 13,
+    "id": "3",
+    "projectId": "usr13",
     "stage": "B",
     "strategicRanking": "M",
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManagerId": 8,
+    "bidManagerId": "usr8",
     "reviewManagerId": undefined, 
     "approvalManagerId": undefined, 
     "contactPersonAtClient": "Amita Patel",
@@ -111,17 +102,17 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 30,
     "fundingStream": "Multilateral Funding",
     "contractType": "Lump Sum",
-    "workflowId": 3
+    "workflowId": "3"
   },
   "4":{
-    "id": 4,
-    "projectId": 15,
+    "id": "4",
+    "projectId": "usr15",
     "stage": "A",
     "strategicRanking": "M",
     "bidFees": 50000,
     "emd": 100000,
     "formOfEMD": "Bank Draft",
-    "bidManagerId": 9,
+    "bidManagerId": "usr9",
     "reviewManagerId": undefined, 
     "approvalManagerId": undefined, 
     "contactPersonAtClient": "Amit Patel",
@@ -145,19 +136,19 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 48,
     "fundingStream": "Government Budget",
     "contractType": "EPC",
-    "workflowId": 4
+    "workflowId": "4"
   },
   "5":{
-    "id": 5,
-    "projectId": 16,
+    "id": "5",
+    "projectId": "usr16",
     "stage": "A",
     "strategicRanking": "H",
     "bidFees": 60000,
     "emd": 120000,
     "formOfEMD": "Bank Guarantee",
-    "bidManagerId": 8,
-    "reviewManagerId": 6, 
-    "approvalManagerId": 15, 
+    "bidManagerId": "usr8",
+    "reviewManagerId": "usr6", 
+    "approvalManagerId": "usr15", 
     "contactPersonAtClient": "Suresh Singh",
     "dateOfSubmission": "2024-02-28",
     "percentageChanceOfProjectHappening": 70.0,
@@ -179,17 +170,17 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 24,
     "fundingStream": "Government Budget",
     "contractType": "EPC",
-    "workflowId": 5
+    "workflowId": "5"
   },
   "6":{
-    "id": 6,
-    "projectId": 2,
+    "id": "6",
+    "projectId": "usr2",
     "stage": "B",
     "strategicRanking": "H",
     "bidFees": 75000,
     "emd": 150000,
     "formOfEMD": "Bank Guarantee",
-    "bidManagerId": 8,
+    "bidManagerId": "usr8",
     "reviewManagerId": undefined, 
     "approvalManagerId": undefined, 
     "contactPersonAtClient": "Rajesh Kumar",
@@ -213,12 +204,12 @@ const opportunityTrackingRawData =  {
     "durationOfProject": 36,
     "fundingStream": "Government Budget",
     "contractType": "EPC",
-    "workflowId": 1
+    "workflowId": "1"
   },
 } as const;
 
 // Transform into typed array
-export const opportunityTrackings: OpportunityTracking[] =  Object.values(opportunityTrackingRawData).map(tracking => ({
+export const opportunityTrackings: OpportunityTracking[] = Object.values(opportunityTrackingRawData).map(tracking => ({
   id: tracking.id,
   projectId: tracking.projectId,
   stage: tracking.stage,
@@ -254,11 +245,11 @@ export const opportunityTrackings: OpportunityTracking[] =  Object.values(opport
 }));
 
 // Utility functions
-export const getOpportunityById = (id: number): OpportunityTracking | undefined => {
+export const getOpportunityById = (id: string): OpportunityTracking | undefined => {
   return opportunityTrackings.find(opportunity => opportunity.id === id);
 };
 
-export const getOpportunityByProjectId = (projectId: number): OpportunityTracking | undefined => {
+export const getOpportunityByProjectId = (projectId: string): OpportunityTracking | undefined => {
   return opportunityTrackings.find(opportunity => opportunity.projectId === projectId);
 };
 
@@ -270,20 +261,15 @@ export const getOpportunitiesByStrategicRanking = (ranking: string): Opportunity
   return opportunityTrackings.filter(opportunity => opportunity.strategicRanking === ranking);
 };
 
-export const getOpportunitiesByBidManager = (bidManagerId: number): OpportunityTracking[] => {
+export const getOpportunitiesByBidManager = (bidManagerId: string): OpportunityTracking[] => {
   return opportunityTrackings.filter(opportunity => opportunity.bidManagerId === bidManagerId);
 };
 
-export const getOpportunitiesByWorkflowId = (workflowId: number): OpportunityTracking[] => {
+export const getOpportunitiesByWorkflowId = (workflowId: string): OpportunityTracking[] => {
   return opportunityTrackings.filter(opportunity => opportunity.workflowId === workflowId);
 };
 
 // Updated utility function to get opportunities by review manager
-export const getOpportunitiesByReviewManager = (reviewManagerId: number): OpportunityTracking[] => {
-  return opportunityTrackings.filter(opportunity => {
-    console.group(opportunity.workName)
-    console.groupEnd()
-    opportunity.reviewManagerId === reviewManagerId 
-  }
-  );
+export const getOpportunitiesByReviewManager = (reviewManagerId: string): OpportunityTracking[] => {
+  return opportunityTrackings.filter(opportunity => opportunity.reviewManagerId === reviewManagerId);
 };

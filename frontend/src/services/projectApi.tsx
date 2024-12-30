@@ -12,7 +12,7 @@ export const projectApi = {
     }
   },
 
-  getById: async (id: number): Promise<Project> => {
+  getById: async (id: string): Promise<Project> => {
     try {
       const response = await axiosInstance.get(`project/${id}`);
       return response.data;
@@ -50,7 +50,7 @@ export const projectApi = {
     }
   },
 
-  update: async (id: number, project: Project): Promise<void> => {
+  update: async (id: string, project: Project): Promise<void> => {
     try {
       const formattedProject = {
         ...project,
@@ -66,7 +66,7 @@ export const projectApi = {
     }
   },
 
-  delete: async (id: number): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     try {
       await axiosInstance.delete(`project/${id}`);
     } catch (error) {

@@ -8,8 +8,9 @@ let mutableWorkflowData: WorkflowEntry[] = [...workflowData];
 
 // Create new workflow entry
 export const createWorkflow = async (data: Omit<WorkflowEntry, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const maxId = Math.max(...mutableWorkflowData.map(w => parseInt(w.id))) + 1;
     const newWorkflow: WorkflowEntry = {
-        id: mutableWorkflowData.length + 1,
+        id: maxId.toString(),
         ...data,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -19,12 +20,12 @@ export const createWorkflow = async (data: Omit<WorkflowEntry, 'id' | 'createdAt
 };
 
 // Get workflow entry by opportunity ID
-export const getWorkflowByOpportunityId = async (opportunityId: number) => {
+export const getWorkflowByOpportunityId = async (opportunityId: string) => {
     return mutableWorkflowData.find(w => w.opportunityId === opportunityId);
 };
 
 // Update workflow entry and opportunity atomically
-export const updateWorkflow = async (opportunityId: number, workflowId: number, opportunityData?: any) => {
+export const updateWorkflow = async (opportunityId: string, workflowId: string, opportunityData?: any) => {
     try {
         // First update the workflow
         const index = mutableWorkflowData.findIndex(w => w.opportunityId === opportunityId);
@@ -66,7 +67,7 @@ export const updateWorkflow = async (opportunityId: number, workflowId: number, 
 };
 
 // Delete workflow entry
-export const deleteWorkflow = async (id: number) => {
+export const deleteWorkflow = async (id: string) => {
     const index = mutableWorkflowData.findIndex(w => w.id === id);
     if (index !== -1) {
         const deletedWorkflow = mutableWorkflowData[index];
@@ -82,12 +83,12 @@ export const getAllWorkflows = async () => {
 };
 
 // Get workflow by ID
-export const getWorkflowById = async (id: number) => {
+export const getWorkflowById = async (id: string) => {
     return mutableWorkflowData.find(w => w.id === id);
 };
 
 // Update workflow stage
-export const updateWorkflowStage = async (id: number, formStage: WorkflowEntry['formStage']) => {
+export const updateWorkflowStage = async (id: string, formStage: WorkflowEntry['formStage']) => {
     const index = mutableWorkflowData.findIndex(w => w.id === id);
     if (index !== -1) {
         mutableWorkflowData[index] = {

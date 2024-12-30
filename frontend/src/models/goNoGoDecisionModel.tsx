@@ -1,4 +1,3 @@
-
 export enum GoNoGoStatus {
     'Green' = 0,
     'Amber' = 1,
@@ -6,7 +5,7 @@ export enum GoNoGoStatus {
   }
   
   export interface GoNoGoDecision {
-    projectId: number;
+    projectId: string;
     bidType: string;
     sector: string;
     tenderFee: number;
@@ -61,4 +60,3 @@ export enum GoNoGoStatus {
     lastModifiedAt?: string;
     lastModifiedBy?: string;
   }
-  

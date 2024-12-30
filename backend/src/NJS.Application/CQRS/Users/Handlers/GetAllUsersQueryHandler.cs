@@ -34,6 +34,7 @@ namespace NJS.Application.CQRS.Users.Handlers
             {
                 query = query.Where(u =>
                     u.UserName.Contains(request.SearchTerm) ||
+                    u.Name.Contains(request.SearchTerm) ||
                     u.Email.Contains(request.SearchTerm));
             }
 
@@ -88,6 +89,7 @@ namespace NJS.Application.CQRS.Users.Handlers
                 {
                     Id = user.Id.ToString(),
                     UserName = user.UserName,
+                    Name = user.Name,
                     Email = user.Email,
                     StandardRate = user.StandardRate ?? 0m,
                     IsConsultant = user.IsConsultant,
@@ -105,6 +107,7 @@ namespace NJS.Application.CQRS.Users.Handlers
             return sortBy.ToLower() switch
             {
                 "username" => isAscending ? query.OrderBy(u => u.UserName) : query.OrderByDescending(u => u.UserName),
+                "name" => isAscending ? query.OrderBy(u => u.Name) : query.OrderByDescending(u => u.Name),
                 "email" => isAscending ? query.OrderBy(u => u.Email) : query.OrderByDescending(u => u.Email),
                 "standardrate" => isAscending ? query.OrderBy(u => u.StandardRate) : query.OrderByDescending(u => u.StandardRate),
                 "createdat" => isAscending ? query.OrderBy(u => u.CreatedAt) : query.OrderByDescending(u => u.CreatedAt),

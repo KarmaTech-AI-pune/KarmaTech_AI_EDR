@@ -43,12 +43,12 @@ export const BusinessDevelopment: React.FC = () => {
 
       let response: OpportunityTracking[] = [];
       
-      if (currentUser.role === UserRole.BusinessDevelopmentManager) {
+      if (currentUser.roles.some(role => role === UserRole.BusinessDevelopmentManager)) {
         response = await opportunityApi.getByUserId(currentUser.id);
-      } else if (currentUser.role === UserRole.RegionalManager) {
+      } else if (currentUser.roles.some(role => role === UserRole.RegionalManager)) {
         response = await opportunityApi.getByReviewManagerId(currentUser.id);
       }  
-      else if (currentUser.role === UserRole.RegionalDirector) {
+      else if (currentUser.roles.some(role => role === UserRole.RegionalDirector)) {
         response = await opportunityApi.getByApprovalManagerId(currentUser.id);
       } else {
         response = await opportunityApi.getAll();
@@ -71,10 +71,12 @@ export const BusinessDevelopment: React.FC = () => {
           setError('Please log in to access Business Development');
           return;
         }
+        else console.log(user)
 
         setCurrentUser(user);
 
         if (user.roleDetails) {
+
           const hasOpportunityViewPermission = user.roleDetails.permissions.includes(
             PermissionType.VIEW_BUSINESS_DEVELOPMENT
           );
@@ -107,10 +109,10 @@ export const BusinessDevelopment: React.FC = () => {
   const initialOpportunityData: Partial<OpportunityTracking> = {
     client: '',
     status: 'Bid Under Preparation',
-    projectId: 0,
+    projectId: "0",
     stage: 'A',
     strategicRanking: 'M',
-    bidManagerId: 0,
+    bidManagerId: "0",
     operation: '',
     workName: '',
     clientSector: '',
@@ -166,7 +168,7 @@ export const BusinessDevelopment: React.FC = () => {
     await fetchOpportunities();
   };
 
-  const handleOpportunityDeleted = async (opportunityId: number) => {
+  const handleOpportunityDeleted = async (opportunityId: string) => {
     try {
       await opportunityApi.delete(opportunityId);
       await fetchOpportunities();

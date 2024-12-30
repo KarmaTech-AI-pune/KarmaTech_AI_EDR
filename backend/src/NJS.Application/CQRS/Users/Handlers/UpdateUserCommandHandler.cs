@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.Users.Commands;
@@ -35,6 +35,7 @@ namespace NJS.Application.CQRS.Users.Handlers
 
             // Update user properties
             user.UserName = request.UserName ?? user.UserName;
+            user.Name = request.Name ?? user.Name;
             user.Email = request.Email ?? user.Email;
             user.StandardRate = request.StandardRate;
             user.IsConsultant = request.IsConsultant;
@@ -109,6 +110,7 @@ namespace NJS.Application.CQRS.Users.Handlers
             {
                 Id = user.Id.ToString(),
                 UserName = user.UserName,
+                Name = user.Name,
                 Email = user.Email,
                 StandardRate = user.StandardRate ?? 0m,
                 IsConsultant = user.IsConsultant,

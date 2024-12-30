@@ -65,7 +65,7 @@ export type ProjectFormData = Omit<Project, 'id'>;
 
 export type ProjectItemProps = {
   project: Project;
-  onProjectDeleted?: (projectId: number) => void;
+  onProjectDeleted?: (projectId: string) => void;
   onProjectUpdated?: () => void;
 }
 
@@ -90,7 +90,7 @@ export type LoginResponse = {
 
 export type OpportunityItemProps = {
   opportunity: OpportunityTracking;
-  onOpportunityDeleted?: (opportunityId: number) => void;
+  onOpportunityDeleted?: (opportunityId: string) => void;
   onOpportunityUpdated?: () => void;
 };
 
@@ -103,6 +103,4 @@ export type OpportunityFormProps = {
 };
 
 // Optional: Create a type for creating a new Go/No-Go decision
-export type CreateGoNoGoDecisionDto = Omit<GoNoGoDecision, 'id'> & { id?: number };
-
-
+export type CreateGoNoGoDecisionDto = Omit<GoNoGoDecision, 'id'> & { id?: string };

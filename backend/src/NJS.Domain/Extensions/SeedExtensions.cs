@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -72,26 +72,20 @@ namespace NJS.Domain.Extensions
                     new { Name = "Project Manager", Description = "Project Manager role", MinRate = 120.00m, IsResourceRole = true, Permissions = new[] {
                         "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "SUBMIT_PROJECT_FOR_REVIEW"
                     }},
-                    new { Name = "Senior Engineer", Description = "Senior Engineer role", MinRate = 100.00m, IsResourceRole = true, Permissions = new[] {
+                    new { Name = "Senior Project Manager", Description = "Senior Project Manager role", MinRate = 100.00m, IsResourceRole = true, Permissions = new[] {
                         "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "REVIEW_PROJECT", "SUBMIT_FOR_APPROVAL"
                     }},
-                    new { Name = "Engineer", Description = "Engineer role", MinRate = 80.00m, IsResourceRole = true, Permissions = new[] {
-                        "VIEW_PROJECT", "EDIT_PROJECT"
+                    new { Name = "Regional Manager", Description = "Regional Manager is Bid form reviewer role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
+                        "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "APPROVE_PROJECT", "CREATE_BUSINESS_DEVELOPMENT", "EDIT_BUSINESS_DEVELOPMENT", "DELETE_BUSINESS_DEVELOPMENT", "VIEW_BUSINESS_DEVELOPMENT", "REVIEW_BUSINESS_DEVELOPMENT", "SUBMIT_FOR_APPROVAL"
                     }},
-                    new { Name = "Designer", Description = "Designer role", MinRate = 70.00m, IsResourceRole = true, Permissions = new[] {
-                        "VIEW_PROJECT", "EDIT_PROJECT"
+                    new { Name = "Business Development Manager", Description = "Bid manager role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
+                        "CREATE_BUSINESS_DEVELOPMENT", "EDIT_BUSINESS_DEVELOPMENT", "DELETE_BUSINESS_DEVELOPMENT", "VIEW_BUSINESS_DEVELOPMENT", "SUBMIT_FOR_REVIEW"
                     }},
-                    new { Name = "Consultant", Description = "Consultant role", MinRate = 90.00m, IsResourceRole = true, Permissions = new[] {
-                        "VIEW_PROJECT", "EDIT_PROJECT"
+                    new { Name = "Subject Matter Expert", Description = "Subject Matter Expert role", MinRate = 80.00m, IsResourceRole = true, Permissions = new[] {
+                        "CREATE_BUSINESS_DEVELOPMENT", "EDIT_BUSINESS_DEVELOPMENT", "DELETE_BUSINESS_DEVELOPMENT", "VIEW_BUSINESS_DEVELOPMENT"
                     }},
-                     new { Name = "RegionalManager", Description = "Regional Manager is Bid form reviewer role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
-                        "SUBMIT_FOR_REVIEW,SUBMIT_FOR_APPROVAL"
-                    }},
-                      new { Name = "BusinessDevelopmentManager", Description = "Bid manager role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
-                        "SUBMIT_FOR_REVIEW"
-                    }},
-                       new { Name = "RegionalDirector", Description = "Approval Manager for BD form", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
-                        "APPROVE_BUSINESS_DEVELOPMENT"
+                    new { Name = "Regional Director", Description = "Approval Manager for BD form", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
+                        "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "APPROVE_PROJECT", "CREATE_BUSINESS_DEVELOPMENT", "EDIT_BUSINESS_DEVELOPMENT", "DELETE_BUSINESS_DEVELOPMENT", "VIEW_BUSINESS_DEVELOPMENT", "APPROVE_BUSINESS_DEVELOPMENT"
                     }}
                 };
 
@@ -170,10 +164,19 @@ namespace NJS.Domain.Extensions
                 // Seed Other Users
                 var users = new[]
                 {
-                    new { UserName = "pm1", Email = "pm1@example.com", Role = "Project Manager", StandardRate = 120.00m, IsConsultant = false },
-                    new { UserName = "senior1", Email = "senior1@example.com", Role = "Senior Engineer", StandardRate = 100.00m, IsConsultant = true },
-                    new { UserName = "engineer1", Email = "engineer1@example.com", Role = "Engineer", StandardRate = 80.00m, IsConsultant = true },
-                    new { UserName = "designer1", Email = "designer1@example.com", Role = "Designer", StandardRate = 70.00m, IsConsultant = true }
+                    new { UserName = "PM1", Name = "Manasi Bapat", Email = "pm1@example.com", Role = "Project Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "PM2", Name = "Salaiddin Ahemad", Email = "pm2@example.com", Role = "Project Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "SPM1", Name = "Vidyadhar Vengurlekar", Email = "spm1@example.com", Role = "Senior Project Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "SPM2", Name = "Mandar Pimputkar", Email = "spm2@example.com", Role = "Senior Project Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "RM1", Name = "Vidyadhar Sontakke", Email = "rm1@example.com", Role = "Regional Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "RM2", Name = "Sanjay Ghuleria", Email = "rm2@example.com", Role = "Regional Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "BDM1", Name = "Pravin Bhawsar", Email = "bdm1@example.com", Role = "Business Development Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "BDM2", Name = "Rohit Dembi", Email = "bdm2@example.com", Role = "Business Development Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "SME1", Name = "Nijam Ahemad", Email = "sme1@example.com", Role = "Subject Matter Expert", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "SME2", Name = "Mnjunath Gowda", Email = "sme2@example.com", Role = "Subject Matter Expert", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "RM3", Name = "Pradipto Sarkar", Email = "rm3@example.com", Role = "Regional Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "RD1", Name = "Yogeshwar Gokhale", Email = "rd1@example.com", Role = "Regional Director", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "RD2", Name = "Vidyadhar S", Email = "rd2@example.com", Role = "Regional Director", StandardRate = 120.00m, IsConsultant = false }
                 };
 
                 foreach (var userData in users)
@@ -184,6 +187,7 @@ namespace NJS.Domain.Extensions
                         user = new User
                         {
                             UserName = userData.UserName,
+                            Name = userData.Name,
                             Email = userData.Email,
                             EmailConfirmed = true,
                             CreatedAt = DateTime.UtcNow,
@@ -271,24 +275,7 @@ namespace NJS.Domain.Extensions
                     await context.SaveChangesAsync();
 
                     // Assign users to WBS tasks
-                    var engineer = await userManager.FindByNameAsync("engineer1");
                     
-                    foreach (var task in tasks)
-                    {
-                        var userWBSTask = new UserWBSTask
-                        {
-                            UserId = engineer.Id,
-                            WBSTaskId = task.Id,
-                            CostRate = 80.00m,
-                            ODC = 0,
-                            TotalHours = 40,
-                            TotalCost = 3200.00m,
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedAt = DateTime.UtcNow
-                        };
-                        context.UserWBSTasks.Add(userWBSTask);
-                    }
-
                     await context.SaveChangesAsync();
                 }
             }

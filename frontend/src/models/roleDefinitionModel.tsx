@@ -1,6 +1,7 @@
+import { PermissionType } from './permissionTypeModel';
 
 export interface Permission {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   category: string;
@@ -16,7 +17,7 @@ export interface PermissionGroup {
 export interface RoleDefinition {
   id: string;
   name: string;
-  permissions: string[]; // Just permission names for backward compatibility
+  permissions: PermissionType[]; // Array of permission types
 }
 
 // Extended role definition with grouped permissions
@@ -32,7 +33,7 @@ export const convertToGroupedPermissions = (
   allPermissions: Permission[]
 ): RoleWithPermissions => {
   const groupedPermissions = allPermissions.reduce((groups: Record<string, Permission[]>, permission) => {
-    if (role.permissions.includes(permission.name)) {
+    if (role.permissions.includes(permission.name as unknown as PermissionType)) {
       if (!groups[permission.category]) {
         groups[permission.category] = [];
       }
@@ -54,5 +55,7 @@ export const convertToGroupedPermissions = (
 export const convertToSimplePermissions = (role: RoleWithPermissions): RoleDefinition => ({
   id: role.id,
   name: role.name,
-  permissions: role.permissions.flatMap(group => group.permissions.map(p => p.name))
+  permissions: role.permissions.flatMap(group => 
+    group.permissions.map(p => p.name as unknown as PermissionType)
+  )
 });

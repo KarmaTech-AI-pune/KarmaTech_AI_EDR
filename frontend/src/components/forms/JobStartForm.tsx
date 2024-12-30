@@ -25,7 +25,7 @@ import { WBSRowData } from '../../types/wbs';
 import { FormWrapper } from './FormWrapper';
 
 interface TaskAllocation {
-  taskId: number;
+  taskId: string;
   title: string;
   rate: number;
   hours: number;
@@ -33,7 +33,7 @@ interface TaskAllocation {
 }
 
 interface EmployeeAllocation {
-  id: number;
+  id: string;
   name: string;
   is_consultant: boolean;
   allocations: TaskAllocation[];
@@ -168,7 +168,7 @@ const JobStartForm: React.FC = () => {
           WBSStructureAPI.getProjectWBS(context.selectedProject.id)
         ]);
 
-        const employeeMap = new Map<number, EmployeeAllocation>();
+        const employeeMap = new Map<string, EmployeeAllocation>();
 
         allocations.forEach((allocation: WBSTaskResourceAllocation) => {
           if (!allocation.employee) return;
@@ -219,7 +219,7 @@ const JobStartForm: React.FC = () => {
       .reduce((total, emp) => total + emp.totalCost, 0);
   };
 
-  const handleRemarksChange = (employeeId: number, value: string) => {
+  const handleRemarksChange = (employeeId: string, value: string) => {
     setEmployeeAllocations(prevAllocations => 
       prevAllocations.map(emp => 
         emp.id === employeeId ? { ...emp, remarks: value } : emp
@@ -839,7 +839,7 @@ const JobStartForm: React.FC = () => {
                       <TableCell>
                         <TextField
                           size="small"
-                          fullWidth
+fullWidth
                           value={expenses['7'].remarks}
                           onChange={(e) => handleExpenseChange('7', 'remarks', e.target.value)}
                           sx={textFieldStyle}

@@ -45,10 +45,14 @@ namespace NJS.Application.CQRS.Users.Handlers
             return new UserDto
             {
                 Id = request.Id,
+                UserName = query.UserName,
+                Name = query.Name,
                 Email = query.Email,
+                StandardRate = query.StandardRate ?? 0m,
+                IsConsultant = query.IsConsultant,
+                Avatar = query.Avatar,
                 Roles = roleDto,
-                UserName = query.UserName
-
+                CreatedAt = query.CreatedAt
             };
         }
     }

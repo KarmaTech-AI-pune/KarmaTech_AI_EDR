@@ -29,7 +29,7 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
     }
   };
 
-  const getWorkflowColor = (workflowId: number) => {
+  const getWorkflowColor = (workflowId: string) => {
     const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
       case "Initial":
@@ -49,7 +49,7 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
     }
   };
 
-  const getManagerName = (managerId: number | undefined) => {
+  const getManagerName = (managerId: string | undefined) => {
     if (!managerId) return 'Not assigned';
     const manager = getUserById(managerId);
     return manager ? manager.name : 'Unknown';

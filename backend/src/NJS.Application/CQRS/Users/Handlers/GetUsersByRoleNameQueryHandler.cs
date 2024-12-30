@@ -57,6 +57,7 @@ namespace NJS.Application.CQRS.Users.Handlers
                 {
                     Id = user.Id,
                     UserName = user.UserName,
+                    Name = user.Name,
                     Email = user.Email,
                     StandardRate = user.StandardRate ?? 0,
                     IsConsultant = user.IsConsultant,

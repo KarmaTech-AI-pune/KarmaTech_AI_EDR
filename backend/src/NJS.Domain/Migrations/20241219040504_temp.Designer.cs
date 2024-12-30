@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NJS.Domain.Database;
 
@@ -11,9 +12,11 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    partial class ProjectManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20241219040504_temp")]
+    partial class temp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -387,7 +390,8 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("ProjectId")
+                        .IsUnique();
 
                     b.ToTable("GoNoGoDecisions");
                 });
@@ -490,6 +494,9 @@ namespace NJS.Domain.Migrations
                     b.Property<string>("ProbableQualifyingCriteria")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ReviewManagerId")
                         .HasColumnType("nvarchar(450)");
 
@@ -515,13 +522,20 @@ namespace NJS.Domain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("WorkflowId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ApprovalManagerId");
 
                     b.HasIndex("BidManagerId");
 
+                    b.HasIndex("ProjectId");
+
                     b.HasIndex("ReviewManagerId");
+
+                    b.HasIndex("WorkflowId");
 
                     b.ToTable("OpportunityTrackings");
                 });
@@ -762,9 +776,6 @@ namespace NJS.Domain.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -912,6 +923,60 @@ namespace NJS.Domain.Migrations
                     b.ToTable("WorkBreakdownStructures");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.WorkflowEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AssignedToId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CurrentStepNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalSteps")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WorkflowType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedToId");
+
+                    b.ToTable("WorkflowEntry");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityRole");
@@ -997,8 +1062,8 @@ namespace NJS.Domain.Migrations
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecision", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
+                        .WithOne("GoNoGoDecision")
+                        .HasForeignKey("NJS.Domain.Entities.GoNoGoDecision", "ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1015,15 +1080,29 @@ namespace NJS.Domain.Migrations
                         .WithMany()
                         .HasForeignKey("BidManagerId");
 
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany("OpportunityTrackings")
+                        .HasForeignKey("ProjectId");
+
                     b.HasOne("NJS.Domain.Entities.User", "ReviewManager")
                         .WithMany()
                         .HasForeignKey("ReviewManagerId");
+
+                    b.HasOne("NJS.Domain.Entities.WorkflowEntry", "Workflow")
+                        .WithMany()
+                        .HasForeignKey("WorkflowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ApprovalManager");
 
                     b.Navigation("BidManager");
 
+                    b.Navigation("Project");
+
                     b.Navigation("ReviewManager");
+
+                    b.Navigation("Workflow");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
@@ -1130,6 +1209,15 @@ namespace NJS.Domain.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.WorkflowEntry", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.User", "AssignedTo")
+                        .WithMany()
+                        .HasForeignKey("AssignedToId");
+
+                    b.Navigation("AssignedTo");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.Permission", b =>
                 {
                     b.Navigation("RolePermissions");
@@ -1137,6 +1225,10 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
                 {
+                    b.Navigation("GoNoGoDecision");
+
+                    b.Navigation("OpportunityTrackings");
+
                     b.Navigation("ProjectResources");
                 });
 

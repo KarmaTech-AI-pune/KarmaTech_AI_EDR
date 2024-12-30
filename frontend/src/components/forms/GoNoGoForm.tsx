@@ -1,4 +1,3 @@
-{/* Previous imports and interfaces remain unchanged */}
 import React, { useState, useEffect, useContext } from 'react';
 import {
   Accordion,
@@ -28,7 +27,6 @@ import { GoNoGoStatus} from "../../models";
 import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
 
-// [Previous interfaces and constants remain unchanged]
 interface GoNoGoFormProps {
   goNoGoDecision?: any;
   onSubmit?: (decision: any) => void;
@@ -132,11 +130,10 @@ const scoreRanges = [
 ];
 
 const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
-  {/* Previous state declarations and handlers remain unchanged */}
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const initialGoNoGoDecision = context.currentGoNoGoDecision;
   const [isEditing, setIsEditing] = useState(false);
-  const [decisionId, setDecisionId] = useState<number | null>(null);
+  const [decisionId, setDecisionId] = useState<string | null>(null);
 
   const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
     typeOfBid: '',
@@ -409,7 +406,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
         decisionComments: '',
         actionPlan: '',
   
-        projectId: context.selectedProject?.id,
+        projectId: context.selectedProject?.id.toString(),
         id: decisionId,
         completedDate: new Date().toISOString(),
         completedBy: context?.user?.name?.substring(0, 100) || '',
@@ -422,7 +419,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
       if (isEditing && decisionId) {
         await goNoGoApi.update(decisionId, updatedFields);
       } else {
-        await goNoGoApi.create(context.selectedProject?.id, updatedFields);
+        await goNoGoApi.create(context.selectedProject?.id.toString(), updatedFields);
       }
   
       if (context?.setScreenState) {

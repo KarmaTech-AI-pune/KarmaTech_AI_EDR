@@ -2,15 +2,15 @@ import { Project} from "../../models"
 
 const projectsData = {
   "1":{
-    "id": 1,
+    "id": "1",
     "name": "City Water Supply Upgrade",
     "details" : "City needs water supply upgrade", //
     "clientName": "Metropolis Municipality",
-    "projectMangerId" : 1, //
+    "projectMangerId" : "usr1", //
     "office" : "Mumbai",// 
     "projectNo" : "abc-123", //
     "typeOfJob" : "Water Supply",
-    "seniorProjectMangerId" : 1,
+    "seniorProjectMangerId" : "usr1",
     "sector": "Water",
     "region" : "West",
     "typeOfClient": "Government",
@@ -19,18 +19,18 @@ const projectsData = {
     "startDate": "2023-01-01",
     "endDate": "2024-12-31",
     "currency": "INR",
-    "regionalManagerID": 6
+    "regionalManagerID": "usr6"
   },
   "2":{
-    "id": 2,
+    "id": "2",
     "name": "Rural Sanitation Initiative",
     "details": "Comprehensive sanitation upgrade for rural areas",
     "clientName": "State Rural Development Dept",
-    "projectMangerId": 2,
+    "projectMangerId": "usr2",
     "office": "Delhi",
     "projectNo": "san-456",
     "typeOfJob": "Sanitation Infrastructure",
-    "seniorProjectMangerId": 4,
+    "seniorProjectMangerId": "usr4",
     "sector": "Sanitation",
     "region": "North",
     "typeOfClient": "Government",
@@ -39,18 +39,18 @@ const projectsData = {
     "startDate": "2023-03-15",
     "endDate": "2025-03-14",
     "currency": "INR",
-    "regionalManagerID": 7
+    "regionalManagerID": "usr7"
   },
   "3":{
-    "id": 3,
+    "id": "3",
     "name": "Industrial Park Drainage System",
     "details": "Development of comprehensive drainage system for industrial park",
     "clientName": "Industrial Development Corp",
-    "projectMangerId": 3,
+    "projectMangerId": "usr3",
     "office": "Pune",
     "projectNo": "ind-789",
     "typeOfJob": "Industrial Infrastructure",
-    "seniorProjectMangerId": 5,
+    "seniorProjectMangerId": "usr5",
     "sector": "Industrial",
     "region": "West",
     "typeOfClient": "Private",
@@ -59,18 +59,18 @@ const projectsData = {
     "startDate": "2022-07-01",
     "endDate": "2023-12-31",
     "currency": "INR",
-    "regionalManagerID": 6
+    "regionalManagerID": "usr6"
   },
   "4":{
-    "id": 4,
+    "id": "4",
     "name": "Smart City Water Management",
     "details": "Implementation of smart water management solutions",
     "clientName": "Smart City Development Authority",
-    "projectMangerId": 2,
+    "projectMangerId": "usr2",
     "office": "Bangalore",
     "projectNo": "smt-101",
     "typeOfJob": "Smart Infrastructure",
-    "seniorProjectMangerId": 4,
+    "seniorProjectMangerId": "usr4",
     "sector": "Smart City",
     "region": "South",
     "typeOfClient": "Government",
@@ -79,18 +79,18 @@ const projectsData = {
     "startDate": "2023-11-01",
     "endDate": "2025-10-31",
     "currency": "INR",
-    "regionalManagerID": 7
+    "regionalManagerID": "usr7"
   },
   "5":{
-    "id": 5,
+    "id": "5",
     "name": "Coastal Zone Protection",
     "details": "Coastal infrastructure protection and development",
     "clientName": "Maritime Development Board",
-    "projectMangerId": 3,
+    "projectMangerId": "usr3",
     "office": "Chennai",
     "projectNo": "cst-202",
     "typeOfJob": "Coastal Protection",
-    "seniorProjectMangerId": 5,
+    "seniorProjectMangerId": "usr5",
     "sector": "Coastal",
     "region": "South",
     "typeOfClient": "Government",
@@ -99,18 +99,18 @@ const projectsData = {
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
     "currency": "INR",
-    "regionalManagerID": 6
+    "regionalManagerID": "usr6"
   },
   "6":{
-    "id": 6,
+    "id": "6",
     "name": "Urban Flood Management",
     "details": "Urban flood prevention and management system",
     "clientName": "City Municipal Corporation",
-    "projectMangerId": 2,
+    "projectMangerId": "usr2",
     "office": "Kolkata",
     "projectNo": "ufl-303",
     "typeOfJob": "Flood Management",
-    "seniorProjectMangerId": 4,
+    "seniorProjectMangerId": "usr4",
     "sector": "Urban Infrastructure",
     "region": "East",
     "typeOfClient": "Government",
@@ -119,18 +119,18 @@ const projectsData = {
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
     "currency": "INR",
-    "regionalManagerID": 7
+    "regionalManagerID": "usr7"
   },
   "7": {
-    "id": 7,
+    "id": "7",
     "name": "Pune City Water Supply Upgrade",
     "details": "Comprehensive water supply upgrade for Pune city",
     "clientName": "Municipality",
-    "projectMangerId": 3,
+    "projectMangerId": "usr3",
     "office": "Pune",
     "projectNo": "pun-404",
     "typeOfJob": "Water Supply",
-    "seniorProjectMangerId": 5,
+    "seniorProjectMangerId": "usr5",
     "sector": "Water",
     "region": "West",
     "typeOfClient": "Government",
@@ -139,18 +139,18 @@ const projectsData = {
     "startDate": "2023-01-01",
     "endDate": "2024-12-31",
     "currency": "INR",
-    "regionalManagerID": 6
+    "regionalManagerID": "usr6"
   },
   "8": {
-    "id": 8,
+    "id": "8",
     "name": "Rural Initiative",
     "details": "Rural development and infrastructure improvement",
     "clientName": "Maharashtra Rural Development Dept",
-    "projectMangerId": 2,
+    "projectMangerId": "usr2",
     "office": "Mumbai",
     "projectNo": "rur-505",
     "typeOfJob": "Rural Development",
-    "seniorProjectMangerId": 4,
+    "seniorProjectMangerId": "usr4",
     "sector": "Sanitation",
     "region": "West",
     "typeOfClient": "Government",
@@ -159,18 +159,18 @@ const projectsData = {
     "startDate": "2023-03-15",
     "endDate": "2025-03-14",
     "currency": "INR",
-    "regionalManagerID": 7
+    "regionalManagerID": "usr7"
   },
   "9": {
-    "id": 9,
+    "id": "9",
     "name": "Industrial Park System",
     "details": "Industrial park infrastructure development",
     "clientName": "Industrial Development Corp",
-    "projectMangerId": 3,
+    "projectMangerId": "usr3",
     "office": "Hyderabad",
     "projectNo": "ind-606",
     "typeOfJob": "Industrial Infrastructure",
-    "seniorProjectMangerId": 5,
+    "seniorProjectMangerId": "usr5",
     "sector": "Industrial",
     "region": "South",
     "typeOfClient": "Private",
@@ -179,18 +179,18 @@ const projectsData = {
     "startDate": "2023-03-15",
     "endDate": "2025-03-14",
     "currency": "INR",
-    "regionalManagerID": 6
+    "regionalManagerID": "usr6"
   },
   "10": {
-    "id": 10,
+    "id": "10",
     "name": "City Water Management 2",
     "details": "Smart water management system implementation",
     "clientName": "Smart City Development Authority",
-    "projectMangerId": 2,
+    "projectMangerId": "usr2",
     "office": "Ahmedabad",
     "projectNo": "smt-707",
     "typeOfJob": "Smart Infrastructure",
-    "seniorProjectMangerId": 4,
+    "seniorProjectMangerId": "usr4",
     "sector": "Smart City",
     "region": "West",
     "typeOfClient": "Government",
@@ -199,18 +199,18 @@ const projectsData = {
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
     "currency": "INR",
-    "regionalManagerID": 6
+    "regionalManagerID": "usr6"
   },
   "11": {
-    "id": 11,
+    "id": "11",
     "name": "Coastal Protection 2",
     "details": "Coastal area protection and development",
     "clientName": "Maritime Development Board",
-    "projectMangerId": 3,
+    "projectMangerId": "usr3",
     "office": "Vizag",
     "projectNo": "cst-808",
     "typeOfJob": "Coastal Protection",
-    "seniorProjectMangerId": 5,
+    "seniorProjectMangerId": "usr5",
     "sector": "Coastal",
     "region": "East",
     "typeOfClient": "Government",
@@ -219,18 +219,18 @@ const projectsData = {
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
     "currency": "INR",
-    "regionalManagerID": 7
+    "regionalManagerID": "usr7"
   },
   "12": {
-    "id": 12,
+    "id": "12",
     "name": "Urban Management",
     "details": "Urban infrastructure management and development",
     "clientName": "City Municipal Corporation",
-    "projectMangerId": 2,
+    "projectMangerId": "usr2",
     "office": "Lucknow",
     "projectNo": "urb-909",
     "typeOfJob": "Urban Development",
-    "seniorProjectMangerId": 4,
+    "seniorProjectMangerId": "usr4",
     "sector": "Urban Infrastructure",
     "region": "North",
     "typeOfClient": "Government",
@@ -239,18 +239,18 @@ const projectsData = {
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
     "currency": "INR",
-    "regionalManagerID": 7
+    "regionalManagerID": "usr7"
   },
   "13": {
-    "id": 13,
+    "id": "13",
     "name": "Urban Management 23",
     "details": "Comprehensive urban management system",
     "clientName": "City Municipal Corporation",
-    "projectMangerId": 3,
+    "projectMangerId": "usr3",
     "office": "Bhopal",
     "projectNo": "urb-1010",
     "typeOfJob": "Urban Development",
-    "seniorProjectMangerId": 5,
+    "seniorProjectMangerId": "usr5",
     "sector": "Urban Infrastructure",
     "region": "Central",
     "typeOfClient": "Government",
@@ -259,18 +259,18 @@ const projectsData = {
     "startDate": "2023-11-15",
     "endDate": "2025-11-14",
     "currency": "INR",
-    "regionalManagerID": 6
+    "regionalManagerID": "usr6"
   },
   "14": {
-    "id": 14,
+    "id": "14",
     "name": "Mega Industrial Park",
     "details": "Large-scale industrial park development",
     "clientName": "State Industrial Development Corp",
-    "projectMangerId": 2,
+    "projectMangerId": "usr2",
     "office": "Nagpur",
     "projectNo": "ind-1111",
     "typeOfJob": "Industrial Infrastructure",
-    "seniorProjectMangerId": 4,
+    "seniorProjectMangerId": "usr4",
     "sector": "Industrial",
     "region": "Central",
     "typeOfClient": "Government",
@@ -279,18 +279,18 @@ const projectsData = {
     "startDate": "2023-12-01",
     "endDate": "2026-11-30",
     "currency": "INR",
-    "regionalManagerID": 7
+    "regionalManagerID": "usr7"
   },
   "15": {
-    "id": 15,
+    "id": "15",
     "name": "Expressway Stormwater Drainage",
     "details": "Stormwater drainage system for expressway",
     "clientName": "National Highway Authority",
-    "projectMangerId": 3,
+    "projectMangerId": "usr3",
     "office": "Gurgaon",
     "projectNo": "exp-1212",
     "typeOfJob": "Transportation Infrastructure",
-    "seniorProjectMangerId": 5,
+    "seniorProjectMangerId": "usr5",
     "sector": "Transportation",
     "region": "North",
     "typeOfClient": "Government",
@@ -299,7 +299,7 @@ const projectsData = {
     "startDate": "2023-12-05",
     "endDate": "2025-12-04",
     "currency": "INR",
-    "regionalManagerID": 12
+    "regionalManagerID": "usr12"
   }
 } as const;
 
@@ -309,7 +309,7 @@ export const projects: Project[] = Object.values(projectsData).map(project => ({
 }));
 
 // Utility function to get a single project by ID
-export const getProjectById = (id: number): Project | undefined => {
+export const getProjectById = (id: string): Project | undefined => {
   return projects.find(project => project.id === id);
 };
 

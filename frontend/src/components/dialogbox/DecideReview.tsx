@@ -20,7 +20,7 @@ import { UserRole, AuthUser} from '../../models'
 interface DecideReviewProps {
   open: boolean;
   onClose: () => void;
-  opportunityId?: number;
+  opportunityId?: string;
   currentUser: string;
   onDecisionMade?: () => void;
 }
@@ -34,7 +34,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 }) => {
   const [decision, setDecision] = useState('');
   const [comments, setComments] = useState('');
-  const [selectedManager, setSelectedManager] = useState<number | ''>('');
+  const [selectedManager, setSelectedManager] = useState<string>('');
   const [regionalDirectors, setRegionalDirectors] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,13 +98,13 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 
     try {
       const newStatus = decision === 'approve' ? 'Pending Approval' : 'Review Rejected';
-      const workflowId = decision === 'approve' ? 4 : 3; // 4 for "Sent for Approval", 3 for "Review Changes"
+      const workflowId = decision === 'approve' ? "4" : "3"; // "4" for "Sent for Approval", "3" for "Review Changes"
 
       // Update both workflow and opportunity in one atomic operation
       await updateWorkflow(opportunityId, workflowId, {
         status: newStatus,
         reviewComments: comments,
-        approvalManagerId: typeof selectedManager === 'number' ? selectedManager : undefined
+        approvalManagerId: selectedManager || undefined
       });
 
       // Log the review decision

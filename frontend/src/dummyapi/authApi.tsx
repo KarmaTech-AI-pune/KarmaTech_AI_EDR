@@ -11,21 +11,24 @@ export const authApi = {
       
       if (user) {
         // Simulate token generation
-        const token = `dummy_token_${user.username}_${Date.now()}`;
+        const token = `dummy_token_${user.userName}_${Date.now()}`;
         
         // Get role details
         const roleDetails: Role = {
-          id: user.role,
-          name: user.role,
-          permissions: rolesApi.getRolePermissions(user.role)
+          id: user.roles[0],
+          name: user.roles[0],
+          permissions: rolesApi.getRolePermissions(user.roles[0])
         };
 
         // Create user with role details
         const userWithRole: UserWithRole = {
           id: user.id,
+          userName : user.userName,
+          isConsultant : user.isConsultant,
+          standardRate : user.standardRate,
           name: user.name,
           email: user.email,
-          role: user.role,
+          roles: user.roles,
           roleDetails: roleDetails
         };
 

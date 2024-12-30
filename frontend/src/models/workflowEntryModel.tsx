@@ -1,8 +1,8 @@
 export interface WorkflowEntry {
-    id: number;
-    opportunityId: number;
-    formStage: 'opportunityTracking' | 'goNoGo' | 'bidPreparation' | 'bidSubmitted' | 'bidAccepted' | 'bidRejected';
-    workflowId: number; // Changed from workflowStatus to workflowId
+    id: string;
+    opportunityId: string;
+    formStage: string;
+    workflowId: string;
     createdAt: string;
     updatedAt: string;
 }

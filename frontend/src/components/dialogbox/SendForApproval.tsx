@@ -22,7 +22,7 @@ import { HistoryLoggingService } from '../../services/historyLoggingService';
 interface SendForApprovalProps {
   open: boolean;
   onClose: () => void;
-  opportunityId: number;
+  opportunityId: string;
   currentUser: string;
   onSubmit?: () => void;
 }
@@ -34,7 +34,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   currentUser,
   onSubmit 
 }) => {
-  const [selectedApprover, setSelectedApprover] = useState<number>(0);
+  const [selectedApprover, setSelectedApprover] = useState<string>('');
   const [approvers, setApprovers] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [director, setDirector] = useState<string | null>(null);
@@ -64,12 +64,12 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   }, [selectedApprover]);
 
   const handleApproverChange = (event: SelectChangeEvent) => {
-    setSelectedApprover(Number(event.target.value));
+    setSelectedApprover(event.target.value);
     setError(null);
   };
 
   const handleCancel = () => {
-    setSelectedApprover(0);
+    setSelectedApprover('');
     setError(null);
     onClose();
   };
@@ -88,7 +88,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       }
 
       // Update both workflow and opportunity in one atomic operation
-      await updateWorkflow(opportunityId, 4, { // 4 is the ID for "Sent for Approval" status
+      await updateWorkflow(opportunityId, "4", { // "4" is the ID for "Sent for Approval" status
         approvalManagerId: selectedApprover,
         status: 'Pending Approval'
       });
@@ -102,7 +102,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       );
 
       // Reset and close dialog
-      setSelectedApprover(0);
+      setSelectedApprover('');
       setError(null);
       
       if (onSubmit) {
@@ -163,7 +163,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
             <>
               <InputLabel>Regional Director</InputLabel>
               <Select
-                value={selectedApprover.toString()}
+                value={selectedApprover}
                 onChange={handleApproverChange}
                 label="Regional Director"
                 onClick={stopEventPropagation}

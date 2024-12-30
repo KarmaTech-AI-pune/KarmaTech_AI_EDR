@@ -50,18 +50,13 @@ const StickyCell = styled(TableCell)(({ theme }) => ({
 }));
 
 interface Employee {
-  id: number;
+  id: string;
   name: string;
   standard_rate: number;
-  role_id: number;
+  role_id: string;
 }
 
-interface Role {
-  id: number;
-  name: string;
-  min_rate: number;
-  description: string;
-}
+import { resourceRole as Role } from "../../../models";
 
 interface WBSRowProps {
   row: WBSRowData;
@@ -73,13 +68,13 @@ interface WBSRowProps {
   childTotals: WBSChildTotals | null;
   sequenceNumber: string;
   stickyColumn?: boolean;
-  onDelete: (id: number) => void;
-  onLevelChange: (id: number, value: string) => void;
-  onRoleChange: (id: number, roleId: string) => void;
-  onEmployeeChange: (id: number, employeeId: string) => void;
-  onCostRateChange: (id: number, value: string) => void;
-  onHoursChange: (id: number, month: string, value: string) => void;
-  onODCChange: (id: number, value: string) => void;
+  onDelete: (id: string) => void;
+  onLevelChange: (id: string, value: string) => void;
+  onRoleChange: (id: string, roleId: string) => void;
+  onEmployeeChange: (id: string, employeeId: string) => void;
+  onCostRateChange: (id: string, value: string) => void;
+  onHoursChange: (id: string, month: string, value: string) => void;
+  onODCChange: (id: string, value: string) => void;
 }
 
 const WBSRow: React.FC<WBSRowProps> = ({
@@ -100,7 +95,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
   onHoursChange,
   onODCChange,
 }) => {
-  const roleId = row.role ? parseInt(row.role) : null;
+  const roleId = row.role ? row.role : null;
   const selectedRole = roleId !== null ? roles.find(r => r.id === roleId) : undefined;
   const rateTooltip = selectedRole ? `Min Rate: ${selectedRole.min_rate}` : '';
   const employeesForRole = roleId !== null ? employees.filter(emp => emp.role_id === roleId) : [];

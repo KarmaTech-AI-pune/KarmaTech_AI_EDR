@@ -1,10 +1,11 @@
+import { UserRole } from ".";
 export type User = {
     id: string;
     userName: string;
     name: string;
     email: string;
     avatar?: string;
-    roles: Role[];
+    roles: UserRole[];
     standardRate: number;
     isConsultant: boolean;
   }
@@ -12,11 +13,7 @@ export type User = {
   export interface AuthUser extends User {
     userName: string;
     password: string; // Note: In a real app, passwords should be hashed
-    roles: Role[];
-  }
-  export interface Role{
-    id:string,
-    name:string;
+    roles: UserRole[];
   }
 
   /*
