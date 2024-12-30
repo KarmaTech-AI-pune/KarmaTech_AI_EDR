@@ -82,10 +82,10 @@ export const createUser = async (user: Omit<AuthUser, 'id'>): Promise<AuthUser> 
       userName: user.userName,
       name: user.name,
       email: user.email,
-      standardRate: user.standardRate,
-      isConsultant: user.isConsultant,
       avatar: user.avatar,
-      roles: roles
+      roles: roles,
+      IsConsultant: false,
+      StandardRate: 0
       // Note: Password is set to "Admin@123" by backend
     };
     
@@ -107,10 +107,10 @@ export const updateUser = async (id: string, user: Partial<AuthUser>): Promise<A
       userName: user.userName,
       name: user.name,
       email: user.email,
-      standardRate: user.standardRate,
-      isConsultant: user.isConsultant,
       avatar: user.avatar,
-      roles: roles
+      roles: roles,
+      IsConsultant: false,
+      StandardRate: 0
     };
     
     const response = await axiosInstance.put(`/api/user/${id}`, updateUserData);

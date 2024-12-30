@@ -23,8 +23,6 @@ import { useRoles } from '../../hooks/useRoles';
 
 const UsersManagement = () => {
   const [users, setUsers] = useState<AuthUser[]>([]);
-  const [standardRates, setStandardRates] = useState<Record<string, number>>({});
-  const [consultantStatus, setConsultantStatus] = useState<Record<string, boolean>>({});
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
   const [formData, setFormData] = useState({
@@ -33,8 +31,6 @@ const UsersManagement = () => {
     email: '',
     password: '',
     roles: [] as Role[],
-    standardRate: 0,
-    isConsultant: false,
   });
 
   useEffect(() => {
@@ -46,18 +42,6 @@ const UsersManagement = () => {
       const fetchedUsers = await usersApi.getAllUsers();
       setUsers(fetchedUsers);
       console.log(fetchedUsers)
-      const newRates: Record<string, number> = {};
-      const newStatus: Record<string, boolean> = {};
-      fetchedUsers.forEach(user => {
-        if (!(user.id in standardRates)) {
-          newRates[user.id] = user.standardRate;
-        }
-        if (!(user.id in consultantStatus)) {
-          newStatus[user.id] = user.isConsultant;
-        }
-      });
-      setStandardRates(prev => ({ ...prev, ...newRates }));
-      setConsultantStatus(prev => ({ ...prev, ...newStatus }));
     } catch (error) {
       console.error('Error loading users:', error);
     }
@@ -72,8 +56,6 @@ const UsersManagement = () => {
       email: '',
       password: '',
       roles: [],
-      standardRate: 0,
-      isConsultant: false,
     });
   };
 
@@ -92,8 +74,6 @@ const UsersManagement = () => {
         email: userDetails.email,
         password: '', // Don't populate password for security
         roles: userDetails.roles,
-        standardRate: userDetails.standardRate,
-        isConsultant: userDetails.isConsultant,
       });
       setOpen(true);
     } catch (error) {
@@ -107,12 +87,6 @@ const UsersManagement = () => {
       try {
         await usersApi.deleteUser(id);
         await loadUsers();
-        const newRates = { ...standardRates };
-        const newStatus = { ...consultantStatus };
-        delete newRates[id];
-        delete newStatus[id];
-        setStandardRates(newRates);
-        setConsultantStatus(newStatus);
       } catch (error) {
         console.error('Error deleting user:', error);
         alert('Failed to delete user');
@@ -123,32 +97,16 @@ const UsersManagement = () => {
   const handleSubmit = async () => {
     try {
       if (editingUser) {
-        const updatedUser = await usersApi.updateUser(editingUser.id, {
+        await usersApi.updateUser(editingUser.id, {
           ...formData,
           password: formData.password || undefined,
         });
-        setStandardRates(prev => ({
-          ...prev,
-          [updatedUser.id]: updatedUser.standardRate,
-        }));
-        setConsultantStatus(prev => ({
-          ...prev,
-          [updatedUser.id]: updatedUser.isConsultant,
-        }));
       } else {
         if (!formData.userName || !formData.password || !formData.email || !formData.name) {
           alert('Please fill in all required fields');
           return;
         }
-        const newUser = await usersApi.createUser(formData);
-        setStandardRates(prev => ({
-          ...prev,
-          [newUser.id]: newUser.standardRate,
-        }));
-        setConsultantStatus(prev => ({
-          ...prev,
-          [newUser.id]: newUser.isConsultant,
-        }));
+        await usersApi.createUser(formData);
       }
       await loadUsers();
       handleClose();
@@ -158,16 +116,10 @@ const UsersManagement = () => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' 
-        ? checked 
-        : name === 'standardRate' 
-          ? Number(value) 
-          : value,
+      [name]: value,
     }));
   };
 

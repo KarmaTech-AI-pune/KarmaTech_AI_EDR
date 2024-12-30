@@ -7,8 +7,6 @@ export type User = {
   email: string;
   avatar?: string;
   roles: Role[];
-  standardRate: number;
-  isConsultant: boolean;
 }
 
 export interface AuthUser extends User {

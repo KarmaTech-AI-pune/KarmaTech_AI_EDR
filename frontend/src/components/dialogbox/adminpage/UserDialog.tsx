@@ -14,7 +14,6 @@ import {
   CircularProgress,
   FormHelperText,
   Checkbox,
-  FormControlLabel,
   SelectChangeEvent,
 } from '@mui/material';
 import { AuthUser, Role } from '../../../models';
@@ -31,8 +30,6 @@ interface UserDialogProps {
     email: string;
     password: string;
     roles: Role[];
-    standardRate: number;
-    isConsultant: boolean;
   };
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleRoleChange: (event: SelectChangeEvent<string[]>) => void;
@@ -121,28 +118,6 @@ const UserDialog: React.FC<UserDialogProps> = ({
                 </Select>
                 <FormHelperText>Select at least one role</FormHelperText>
               </FormControl>
-              <TextField
-                name="standardRate"
-                label="Standard Rate"
-                type="number"
-                value={formData.standardRate}
-                onChange={handleInputChange}
-                inputProps={{ 
-                  min: 0,
-                  step: 0.01
-                }}
-                fullWidth
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="isConsultant"
-                    checked={formData.isConsultant}
-                    onChange={handleInputChange}
-                  />
-                }
-                label="Is Consultant"
-              />
             </Stack>
           </DialogContent>
           <DialogActions>
