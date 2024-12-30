@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using NJS.Application.CQRS.OpportunityTracking.Commands;
 using NJS.Application.CQRS.OpportunityTracking.Queries;
+using NJS.Domain.Enums;
 
 namespace NJSAPI.Controllers
 {
@@ -18,8 +19,8 @@ namespace NJSAPI.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetOpportunityTrackings(
-            [FromQuery] string? status = null,
-            [FromQuery] string? stage = null,
+            [FromQuery] OpportunityTrackingStatus? status = null,
+            [FromQuery] OpportunityStage? stage = null,
             [FromQuery] string? bidManagerId = null,
             [FromQuery] string? clientSector = null,
             [FromQuery] int pageNumber = 1,
@@ -72,8 +73,8 @@ namespace NJSAPI.Controllers
         [HttpGet("project/{projectId}")]
         public async Task<IActionResult> GetOpportunityTrackingsByProject(
             int projectId,
-            [FromQuery] string? status = null,
-            [FromQuery] string? stage = null,
+            [FromQuery] OpportunityTrackingStatus? status = null,
+            [FromQuery] OpportunityStage? stage = null,
             [FromQuery] string? bidManagerId = null,
             [FromQuery] string? clientSector = null,
             [FromQuery] int pageNumber = 1,

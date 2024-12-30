@@ -1,3 +1,4 @@
+using NJS.Domain.Enums;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -7,10 +8,7 @@ namespace NJS.Domain.Entities
     public class OpportunityTracking
     {
         [Key]
-        public int Id { get; set; }     
-        
-        [Required]
-        public string Stage { get; set; }
+        public int Id { get; set; }       
         
         [Required]
         public string StrategicRanking { get; set; }
@@ -66,9 +64,10 @@ namespace NJS.Domain.Entities
         public string ClientSector { get; set; }
         
         public DateTime LikelyStartDate { get; set; }
+        public OpportunityStage Stage { get; set; }
         
         [Required]
-        public string Status { get; set; }
+        public Enums.OpportunityTrackingStatus Status { get; set; }
         
         [Required]
         public string Currency { get; set; }
@@ -100,5 +99,7 @@ namespace NJS.Domain.Entities
         public DateTime UpdatedAt { get; set; }
         public string CreatedBy { get; set; }
         public string UpdatedBy { get; set; }
+
+        public ICollection<OpportunityHistory> OpportunityHistories { get; set; } = [];
     }
 }

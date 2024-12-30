@@ -16,19 +16,20 @@ namespace NJS.Repositories.Repositories
 
         public async Task<IEnumerable<OpportunityTracking>> GetAllAsync()
         {
-            return await _context.OpportunityTrackings             
+            return await _context.OpportunityTrackings
                 .ToListAsync();
         }
 
         public async Task<OpportunityTracking?> GetByIdAsync(int id)
         {
-            return await _context.OpportunityTrackings               
+            return await _context.OpportunityTrackings
                 .FirstOrDefaultAsync(ot => ot.Id == id);
         }
 
         public async Task<OpportunityTracking> AddAsync(OpportunityTracking opportunityTracking)
         {
-            _context.OpportunityTrackings.Add(opportunityTracking);
+
+            var entityEntry = _context.OpportunityTrackings.Add(opportunityTracking);
             await _context.SaveChangesAsync();
             return opportunityTracking;
         }

@@ -9,7 +9,7 @@ namespace NJS.Domain.Database
 {
     public class ProjectManagementContext : IdentityDbContext<User>
     {
-       public ProjectManagementContext(DbContextOptions<ProjectManagementContext> options) : base(options)
+        public ProjectManagementContext(DbContextOptions<ProjectManagementContext> options) : base(options)
         {
         }
 
@@ -25,11 +25,13 @@ namespace NJS.Domain.Database
         public DbSet<OpportunityTracking> OpportunityTrackings { get; set; }
         public DbSet<ProjectResource> ProjectResources { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
+        public DbSet<OpportunityStatus> OpportunityStatuses { get; set; }
+        public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-           
+
             // Configure Identity tables
             modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
             {
@@ -84,8 +86,12 @@ namespace NJS.Domain.Database
                 .HasPrecision(18, 2);
             modelBuilder.Entity<OpportunityTracking>()
                 .Property(o => o.NetNJSRevenue)
-                .HasPrecision(18, 2);         
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId); 
+            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
+            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
         }
     }
-   
+
 }

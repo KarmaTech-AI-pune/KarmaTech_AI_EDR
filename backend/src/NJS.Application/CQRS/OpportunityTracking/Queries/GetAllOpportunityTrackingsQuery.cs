@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using MediatR;
 using NJS.Application.Dtos;
+using NJS.Domain.Enums;
 
 namespace NJS.Application.CQRS.OpportunityTracking.Queries
 {
     public class GetAllOpportunityTrackingsQuery : IRequest<IEnumerable<OpportunityTrackingDto>>
     {
-        public string? Status { get; set; }
-        public string? Stage { get; set; }
+        public OpportunityTrackingStatus? Status { get; set; }
+        public OpportunityStage? Stage { get; set; }
         public string? BidManagerId { get; set; }
         public string? ClientSector { get; set; }      
         
@@ -24,8 +25,8 @@ namespace NJS.Application.CQRS.OpportunityTracking.Queries
         }
 
         public GetAllOpportunityTrackingsQuery(
-            string? status = null,
-            string? stage = null,
+            OpportunityTrackingStatus? status = null,
+            OpportunityStage? stage = null,
             string? bidManagerId = null,
             string? clientSector = null,
             int pageNumber = 1,

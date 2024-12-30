@@ -23,9 +23,11 @@ namespace NJS.Application.Extensions
             services.AddScoped<IGoNoGoDecisionRepository, GoNoGoDecisionRepository>();
             services.AddScoped<IOpportunityTrackingRepository, OpportunityTrackingRepository>();
             services.AddScoped<IPermissionRepository, PermissionRepository>();
+            services.AddScoped<IOpportunityHistoryRepository, OpportunityHistoryRepository>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
+            services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
             return services;
         }
     }

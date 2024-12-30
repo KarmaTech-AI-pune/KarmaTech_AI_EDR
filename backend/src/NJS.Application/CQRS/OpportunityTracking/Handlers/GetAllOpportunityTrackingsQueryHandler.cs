@@ -27,12 +27,12 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             var entities = await _repository.GetAllAsync();
             var filteredEntities = entities.AsEnumerable();
            
-            if (!string.IsNullOrEmpty(request.Status))
+            if (request.Status is not null)
             {
-                filteredEntities = filteredEntities.Where(x => x.Status == request.Status);
+                filteredEntities = filteredEntities.Where(x => x.Status == request.Status.Value!);
             }
 
-            if (!string.IsNullOrEmpty(request.Stage))
+            if (request.Stage is not null)
             {
                 filteredEntities = filteredEntities.Where(x => x.Stage == request.Stage);
             }

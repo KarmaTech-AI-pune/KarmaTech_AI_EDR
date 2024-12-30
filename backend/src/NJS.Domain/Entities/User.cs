@@ -9,9 +9,9 @@ namespace NJS.Domain.Entities
     public class User : IdentityUser
     {
         public string? Avatar { get; set; }
-        
+
         public DateTime CreatedAt { get; set; }
-        
+
         public DateTime? LastLogin { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
@@ -36,6 +36,8 @@ namespace NJS.Domain.Entities
 
         [InverseProperty("SeniorProjectManager")]
         public virtual ICollection<Project> SeniorManagedProjects { get; set; }
+
+        public ICollection<OpportunityHistory> OpportunityHistories { get; set; } = [];
 
         public User()
         {
