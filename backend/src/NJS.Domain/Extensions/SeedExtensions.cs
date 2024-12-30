@@ -164,7 +164,20 @@ namespace NJS.Domain.Extensions
                 // Seed Other Users
                 var users = new[]
                 {
-                    new { UserName = "pm1", Email = "pm1@example.com", Role = "Project Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "PM1", Email = "pm1@example.com", Role = "Project Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "PM2", Email = "pm2@example.com", Role = "Project Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "SPM1", Email = "spm1@example.com", Role = "Senior Project Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "SPM2", Email = "spm2@example.com", Role = "Senior Project Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "RM1", Email = "rm1@example.com", Role = "Regional Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "RM2", Email = "rm2@example.com", Role = "Regional Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "BDM1", Email = "bdm1@example.com", Role = "Business Development Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "BDM2", Email = "bdm2@example.com", Role = "Business Development Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "SME1", Email = "sme1@example.com", Role = "Subject Matter Expert", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "SME2", Email = "sme2@example.com", Role = "Subject Matter Expert", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "RM3", Email = "rm3@example.com", Role = "Regional Manager", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "RD1", Email = "rd1@example.com", Role = "Regional Director", StandardRate = 120.00m, IsConsultant = false },
+                    new { UserName = "RD2", Email = "rd2@example.com", Role = "Regional Director", StandardRate = 120.00m, IsConsultant = false },
+                    
                 };
 
                 foreach (var userData in users)
