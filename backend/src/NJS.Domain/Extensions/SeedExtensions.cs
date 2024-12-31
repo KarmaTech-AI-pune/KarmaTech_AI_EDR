@@ -132,6 +132,7 @@ namespace NJS.Domain.Extensions
                     adminUser = new User
                     {
                         UserName = "admin",
+                        
                         Email = adminEmail,
                         EmailConfirmed = true,
                         CreatedAt = DateTime.UtcNow,

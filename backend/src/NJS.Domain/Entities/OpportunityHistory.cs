@@ -12,8 +12,6 @@
         public DateTime ActionDate { get; set; }
         public string ActionBy { get; set; }
         public User ActionUser { get; set; }
-
-        public string? Ma { get; set; }
-        public User ActionUser { get; set; }
+       
     }
 }
