@@ -15,7 +15,7 @@ import {
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 import { getUsersByRole } from '../../dummyapi/usersApi';
-import { UserRole, AuthUser} from '../../models'
+import { AuthUser} from '../../models'
 
 interface DecideReviewProps {
   open: boolean;
@@ -40,7 +40,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 
   useEffect(() => {
     // Get all Regional Director users
-    const directors = getUsersByRole(UserRole.RegionalDirector);
+    const directors = getUsersByRole('Regional Director');
     setRegionalDirectors(directors);
   }, []);
 

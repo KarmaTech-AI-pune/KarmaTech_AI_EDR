@@ -9,7 +9,6 @@ import {
 } from '@mui/material';
 import { ProjectFormType, ProjectFormData } from '../../types';
 import { getUsersByRole } from '../../dummyapi/usersApi';
-import { UserRole } from '../../models'
 
 export const ProjectInitForm: React.FC<ProjectFormType> = ({
   project,
@@ -38,11 +37,11 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     regionalManagerID: project?.regionalManagerID || "0"
   });
 
-  const projectManagers = getUsersByRole(UserRole.ProjectManager);
-  const seniorProjectManagers = getUsersByRole(UserRole.SeniorProjectManager);
+  const projectManagers = getUsersByRole('Projectc Manager');
+  const seniorProjectManagers = getUsersByRole('Senior Project Manager');
   const regionalManagers = [
-    ...getUsersByRole(UserRole.RegionalManager),
-    ...getUsersByRole(UserRole.RegionalDirector)
+    ...getUsersByRole('Regional Manager'),
+    ...getUsersByRole('Regional Director')
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,7 +168,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
             >
               {regionalManagers.map((rm) => (
                 <MenuItem key={rm.id} value={rm.id}>
-                  {rm.name} ({rm.roles[0]})
+                  {rm.name} ({rm.roles[0].name})
 
                 </MenuItem>
               ))}

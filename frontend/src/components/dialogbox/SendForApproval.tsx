@@ -16,7 +16,7 @@ import {
 import { getUsersByRole, getUserById } from '../../dummyapi/usersApi';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
-import { UserRole, AuthUser} from '../../models'
+import { AuthUser} from '../../models'
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 
 interface SendForApprovalProps {
@@ -58,7 +58,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       else console.error("No ID set for opp")
     }
     // Get all Regional Directors
-    const regionalDirectors = getUsersByRole(UserRole.RegionalDirector);
+    const regionalDirectors = getUsersByRole('Regional Director');
     setApprovers(regionalDirectors);
     checkDirector();
   }, [selectedApprover]);

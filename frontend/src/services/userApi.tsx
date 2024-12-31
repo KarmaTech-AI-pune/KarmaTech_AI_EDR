@@ -55,6 +55,7 @@ export const getPermissions = async (): Promise<string[]> => {
 export const getAllUsers = async (): Promise<AuthUser[]> => {
   try {
     const response = await axiosInstance.get('/api/user');
+    console.log(response.data)
     return response.data;
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -74,17 +75,17 @@ export const getUserById = async (id: string): Promise<AuthUser> => {
 
 export const createUser = async (user: Omit<AuthUser, 'id'>): Promise<AuthUser> => {
   try {
-    // Convert UserRole[] to RoleDto[]
-    const roles = user.roles.map(role => ({ name: role }));
+    // Convert Role[] to RoleDto[]
+    const roles = user.roles;
     
     const createUserData = {
       userName: user.userName,
       name: user.name,
       email: user.email,
-      standardRate: user.standardRate,
-      isConsultant: user.isConsultant,
       avatar: user.avatar,
-      roles: roles
+      roles: roles,
+      IsConsultant: false,
+      StandardRate: 0
       // Note: Password is set to "Admin@123" by backend
     };
     
@@ -98,18 +99,18 @@ export const createUser = async (user: Omit<AuthUser, 'id'>): Promise<AuthUser> 
 
 export const updateUser = async (id: string, user: Partial<AuthUser>): Promise<AuthUser> => {
   try {
-    // Convert UserRole[] to RoleDto[]
-    const roles = user.roles?.map(role => ({ name: role })) || [];
+    // Convert Role[] to RoleDto[]
+    const roles = user.roles || [];
     
     const updateUserData = {
       id,
       userName: user.userName,
       name: user.name,
       email: user.email,
-      standardRate: user.standardRate,
-      isConsultant: user.isConsultant,
       avatar: user.avatar,
-      roles: roles
+      roles: roles,
+      IsConsultant: false,
+      StandardRate: 0
     };
     
     const response = await axiosInstance.put(`/api/user/${id}`, updateUserData);

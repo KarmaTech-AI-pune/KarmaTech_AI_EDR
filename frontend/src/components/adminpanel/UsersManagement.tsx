@@ -16,14 +16,13 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { AuthUser,UserRole } from '../../models';
+import { AuthUser, Role, RoleDefinition } from '../../models';
 import * as usersApi from '../../services/userApi';
 import UserDialog from '../dialogbox/adminpage/UserDialog';
+import { useRoles } from '../../hooks/useRoles';
 
 const UsersManagement = () => {
   const [users, setUsers] = useState<AuthUser[]>([]);
-  const [standardRates, setStandardRates] = useState<Record<string, number>>({});
-  const [consultantStatus, setConsultantStatus] = useState<Record<string, boolean>>({});
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
   const [formData, setFormData] = useState({
@@ -31,9 +30,7 @@ const UsersManagement = () => {
     name: '',
     email: '',
     password: '',
-    roles: [] as UserRole[],
-    standardRate: 0,
-    isConsultant: false,
+    roles: [] as Role[],
   });
 
   useEffect(() => {
@@ -44,19 +41,7 @@ const UsersManagement = () => {
     try {
       const fetchedUsers = await usersApi.getAllUsers();
       setUsers(fetchedUsers);
-
-      const newRates: Record<string, number> = {};
-      const newStatus: Record<string, boolean> = {};
-      fetchedUsers.forEach(user => {
-        if (!(user.id in standardRates)) {
-          newRates[user.id] = user.standardRate;
-        }
-        if (!(user.id in consultantStatus)) {
-          newStatus[user.id] = user.isConsultant;
-        }
-      });
-      setStandardRates(prev => ({ ...prev, ...newRates }));
-      setConsultantStatus(prev => ({ ...prev, ...newStatus }));
+      console.log(fetchedUsers)
     } catch (error) {
       console.error('Error loading users:', error);
     }
@@ -71,8 +56,6 @@ const UsersManagement = () => {
       email: '',
       password: '',
       roles: [],
-      standardRate: 0,
-      isConsultant: false,
     });
   };
 
@@ -90,9 +73,7 @@ const UsersManagement = () => {
         name: userDetails.name,
         email: userDetails.email,
         password: '', // Don't populate password for security
-        roles: userDetails.roles as UserRole[],
-        standardRate: userDetails.standardRate,
-        isConsultant: userDetails.isConsultant,
+        roles: userDetails.roles,
       });
       setOpen(true);
     } catch (error) {
@@ -106,12 +87,6 @@ const UsersManagement = () => {
       try {
         await usersApi.deleteUser(id);
         await loadUsers();
-        const newRates = { ...standardRates };
-        const newStatus = { ...consultantStatus };
-        delete newRates[id];
-        delete newStatus[id];
-        setStandardRates(newRates);
-        setConsultantStatus(newStatus);
       } catch (error) {
         console.error('Error deleting user:', error);
         alert('Failed to delete user');
@@ -122,32 +97,16 @@ const UsersManagement = () => {
   const handleSubmit = async () => {
     try {
       if (editingUser) {
-        const updatedUser = await usersApi.updateUser(editingUser.id, {
+        await usersApi.updateUser(editingUser.id, {
           ...formData,
           password: formData.password || undefined,
         });
-        setStandardRates(prev => ({
-          ...prev,
-          [updatedUser.id]: updatedUser.standardRate,
-        }));
-        setConsultantStatus(prev => ({
-          ...prev,
-          [updatedUser.id]: updatedUser.isConsultant,
-        }));
       } else {
         if (!formData.userName || !formData.password || !formData.email || !formData.name) {
           alert('Please fill in all required fields');
           return;
         }
-        const newUser = await usersApi.createUser(formData);
-        setStandardRates(prev => ({
-          ...prev,
-          [newUser.id]: newUser.standardRate,
-        }));
-        setConsultantStatus(prev => ({
-          ...prev,
-          [newUser.id]: newUser.isConsultant,
-        }));
+        await usersApi.createUser(formData);
       }
       await loadUsers();
       handleClose();
@@ -157,22 +116,21 @@ const UsersManagement = () => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' 
-        ? checked 
-        : name === 'standardRate' 
-          ? Number(value) 
-          : value,
+      [name]: value,
     }));
   };
 
+  const { roles: availableRoles } = useRoles();
+
   const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
-    const selectedRoleNames = event.target.value as string[];
-    const selectedRoles = selectedRoleNames.map(name => name as UserRole);
+    const selectedValues = event.target.value as string[];
+    // Map selected role names to actual Role objects from the API
+    const selectedRoles = selectedValues
+      .map(value => availableRoles.find((role: RoleDefinition) => role.name === value))
+      .filter((role): role is RoleDefinition => role !== undefined);
     setFormData(prev => ({
       ...prev,
       roles: selectedRoles,
@@ -205,17 +163,17 @@ const UsersManagement = () => {
                 <TableCell>{user.userName}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                {/*<TableCell>
-                  {user.roles.map((role,id) => (
+                <TableCell>
+                  {user.roles.map((role, index) => (
                     <Chip
-                      key={id}
-                      label={role.}
+                      key={index}
+                      label={role.name}
                       color="primary"
                       variant="outlined"
                       style={{ marginRight: '5px' }}
                     />
                   ))}
-                  </TableCell>*/}
+                </TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleEdit(user)} color="primary">
                     <EditIcon />
