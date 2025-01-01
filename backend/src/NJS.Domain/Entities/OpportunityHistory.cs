@@ -2,11 +2,14 @@
 
 namespace NJS.Domain.Entities
 {
+    /// <summary>
+    /// This is model used to opportunity workflow
+    /// </summary>
     public class OpportunityHistory
     {
         public OpportunityHistory()
         {
-            ActionDate=DateTime.UtcNow;
+            ActionDate = DateTime.UtcNow;
         }
         public int Id { get; set; }
         public int OpportunityId { get; set; }

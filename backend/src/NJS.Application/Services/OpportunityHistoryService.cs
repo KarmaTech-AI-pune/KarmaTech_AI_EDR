@@ -44,5 +44,10 @@ namespace NJS.Application.Services
             var orderBy= result.OrderByDescending(x=>x.ActionDate).FirstOrDefault();
             return orderBy;
         }
+
+        public async Task<List<OpportunityHistory>> GetByOpportunityIdAsync(int opportunityId)
+        {
+             return await _repository.GetByOpportunityIdAsync(opportunityId).ConfigureAwait(false);
+        }
     }
 }

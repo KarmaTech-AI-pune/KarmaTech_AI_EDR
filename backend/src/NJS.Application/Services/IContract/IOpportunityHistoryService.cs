@@ -10,6 +10,7 @@ namespace NJS.Application.Services.IContract
         Task UpdateHistoryAsync(OpportunityHistory opportunityHistory);
         Task DeleteHistoryAsync(int id);
         Task<OpportunityHistory> GetCurrentStatusForTractingAsync(int id);
+        Task<List<OpportunityHistory>> GetByOpportunityIdAsync(int opportunityId);
     }
 
 }
