@@ -37,5 +37,12 @@ namespace NJS.Application.Services
         {
             await _repository.DeleteAsync(id);
         }
+
+        public async Task<OpportunityHistory> GetCurrentStatusForTractingAsync(int id)
+        {
+            var result= await _repository.GetByOpportunityIdAsync(id).ConfigureAwait(false);  
+            var orderBy= result.OrderByDescending(x=>x.ActionDate).FirstOrDefault();
+            return orderBy;
+        }
     }
 }

@@ -1,7 +1,13 @@
-﻿namespace NJS.Domain.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace NJS.Domain.Entities
 {
     public class OpportunityHistory
     {
+        public OpportunityHistory()
+        {
+            ActionDate=DateTime.UtcNow;
+        }
         public int Id { get; set; }
         public int OpportunityId { get; set; }
         public OpportunityTracking Opportunity { get; set; }
@@ -12,6 +18,11 @@
         public DateTime ActionDate { get; set; }
         public string ActionBy { get; set; }
         public User ActionUser { get; set; }
-       
+
+        public string? AssignedToId { get; set; }
+
+        [ForeignKey("AssignedToId")]
+        public User AssignedTo { get; set; }
+
     }
 }

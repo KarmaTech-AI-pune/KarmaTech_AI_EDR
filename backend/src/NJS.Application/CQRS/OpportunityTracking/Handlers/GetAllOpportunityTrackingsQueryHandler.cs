@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ using NJS.Repositories.Interfaces;
 
 namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 {
-    public class GetAllOpportunityTrackingsQueryHandler 
+    public class GetAllOpportunityTrackingsQueryHandler
         : IRequestHandler<GetAllOpportunityTrackingsQuery, IEnumerable<OpportunityTrackingDto>>
     {
         private readonly IOpportunityTrackingRepository _repository;
@@ -24,9 +25,9 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             GetAllOpportunityTrackingsQuery request,
             CancellationToken cancellationToken)
         {
-            var entities = await _repository.GetAllAsync();
+            var entities = await _repository.GetAllAsync().ConfigureAwait(false);
             var filteredEntities = entities.AsEnumerable();
-           
+
             if (request.Status is not null)
             {
                 filteredEntities = filteredEntities.Where(x => x.Status == request.Status.Value!);
@@ -59,10 +60,9 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 .Take(request.PageSize);
 
             // Map to DTOs
-            return filteredEntities.Select(entity => new OpportunityTrackingDto
+           var result= filteredEntities.Select(entity => new OpportunityTrackingDto
             {
                 Id = entity.Id,
-             
                 Stage = entity.Stage,
                 StrategicRanking = entity.StrategicRanking,
                 BidFees = entity.BidFees,
@@ -91,9 +91,18 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 CapitalValue = entity.CapitalValue,
                 DurationOfProject = entity.DurationOfProject,
                 FundingStream = entity.FundingStream,
-                ContractType = entity.ContractType
-               
+                ContractType = entity.ContractType,
+                CurrentHistory = entity.OpportunityHistories.OrderByDescending(x => x.ActionDate)
+                .Select(history => new OpportunityHistoryDto
+                {
+                    Id = history.Id,
+                    Status = history.Status.Status
+                })
+                .FirstOrDefault()
+
             });
+
+            return result;
         }
 
         private IEnumerable<Domain.Entities.OpportunityTracking> ApplySorting(

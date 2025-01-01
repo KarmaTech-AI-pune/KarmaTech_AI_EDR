@@ -7,7 +7,6 @@ namespace NJS.Application.CQRS.OpportunityTracking.Commands
 {
     public class CreateOpportunityTrackingCommand : IRequest<OpportunityTrackingDto>
     {
-        public int? ProjectId { get; set; }
         public OpportunityStage Stage { get; set; }
         public string StrategicRanking { get; set; }
         public decimal? BidFees { get; set; }
@@ -37,6 +36,5 @@ namespace NJS.Application.CQRS.OpportunityTracking.Commands
         public int DurationOfProject { get; set; }
         public string FundingStream { get; set; }
         public string ContractType { get; set; }
-        public int WorkflowId { get; set; }
     }
 }
