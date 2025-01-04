@@ -1,102 +1,96 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
 using NJS.Application.CQRS.OpportunityTracking.Commands;
-using NJS.Application.CQRS.Users.Queries;
 using NJS.Application.Dtos;
-using NJS.Application.Services;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+using NJS.Domain.Enums;
+using NJS.Domain.GenericRepository;
 
 namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 {
-    public class OpportunitySentToApprovalHandler : IRequestHandler<OppertunityWorkflowCommand, OppertunityWorkflowDto>
+    /// <summary>
+    /// Action performed by Regional Manager, sent to approval
+    /// This handler to use for sent the opportunity to Regional Director 
+    /// </summary>
+    public class OpportunitySentToApprovalHandler : IRequestHandler<SendToApprovalCommand, OpportunityTrackingDto>
     {
         private readonly IOpportunityHistoryService _opportunityHistoryService;
+        private readonly IRepository<Domain.Entities.OpportunityTracking> _opportunityRepository;
         private readonly IUserContext _userContext;
         private readonly RoleManager<Role> _roleManager;
         private readonly UserManager<User> _userManager;
-        private readonly IMediator _mediator;
-        private readonly OpportunityHistoryService _historyService;
+       
 
         public OpportunitySentToApprovalHandler(IOpportunityHistoryService opportunityHistoryService,
           IUserContext userContext,
           UserManager<User> userManager,
-          RoleManager<Role> roleManager,
-         IMediator mediator,
-         OpportunityHistoryService historyService)
+          RoleManager<Role> roleManager,       
+         IRepository<Domain.Entities.OpportunityTracking> opportunityRepository)
 
         {
             _opportunityHistoryService = opportunityHistoryService;
             _userContext = userContext;
             _userManager = userManager;
             _roleManager = roleManager;
-            _mediator = mediator;
-            _historyService = historyService;
+           
+            _opportunityRepository = opportunityRepository;
         }
-        public async Task<OppertunityWorkflowDto> Handle(OppertunityWorkflowCommand request, CancellationToken cancellationToken)
+        public async Task<OpportunityTrackingDto> Handle(SendToApprovalCommand request, CancellationToken cancellationToken)
         {
+            //Here we expecting the Approve action performed by Regional Manager
             var currentUser = _userContext.GetCurrentUserId();
+            var opportunity = await _opportunityRepository.GetByIdAsync(request.OpportunityId);
+            if (opportunity == null)
+                throw new Exception($"Opportunity with ID {request.OpportunityId} not found");
 
-            var user = await _userManager.FindByIdAsync(request.AssignedToId).ConfigureAwait(false);
+            // Update opportunity Regional Director
+            opportunity.ApprovalManagerId = request.AssignedToId;
+            await _opportunityRepository.UpdateAsync(opportunity);
 
-            var roleDto = new GetRolesByUserIdQuery(user);
-            var roles = await _mediator.Send(roleDto);
-
-            var history = _historyService.GetCurrentStatusForTractingAsync(request.OppertunityId);
-
-            var opportunityHistory = new OpportunityHistory();
-
-            if (roles.Any(x => x.Name.Equals("Regional Manager")))
+            var opportunityHistory = new OpportunityHistory
             {
-
-                opportunityHistory = new OpportunityHistory
-                {
-                    //Regional Manager have two action 1.Approve, 2.Reject
-                    //If Approve need to select regional Manager
-                    // If Approve => Action should be Sent to Approval
-                    // If reject => Action should be Review Changes and sent back to Bid manager
+                //Regional Manager have two action 1.Approve, 2.Reject
+                //If Approve need to select regional Manager
+                // If Approve => Action should be Sent to Approval
+                // If reject => Action should be Review Changes and sent back to Bid manager
 
 
-                    OpportunityId = request.OppertunityId,
-                    Action = "Sent for Approval",
-                    ActionBy = currentUser,
-                    StatusId = 4, // consider is a fixed Id for status, please Db opportunityStatuses table and seed
-                    ActionDate = DateTime.UtcNow,
-                    AssignedToId = request.AssignedToId,
-                    Comments = request.Commnets
-                };
-                if (request.Action == "Reject")
-                {
-                    opportunityHistory = new OpportunityHistory
-                    {
-                        OpportunityId = request.OppertunityId,
-                        Action = "Sent for Approval",
-                        ActionBy = currentUser,
-                        StatusId = 3, // consider is a fixed Id for status, please Db opportunityStatuses table and seed
-                        ActionDate = DateTime.UtcNow,
-                        AssignedToId = "Back to Bid Mananger",
-                        Comments = request.Commnets
-                    };
-                }
-            }
-
-            var entity = new OpportunityHistory
-            {
-                OpportunityId = request.OppertunityId,
-                Action = "Sent to review",
+                OpportunityId = request.OpportunityId,
+                Action = request.Action,
                 ActionBy = currentUser,
-                StatusId = 2, // consider is a fixed Id for status, please Db opportunityStatuses table and seed
+                StatusId = 4, // consider is a fixed Id for status, please Db opportunityStatuses table and seed
                 ActionDate = DateTime.UtcNow,
-                AssignedToId = request.AssignedToId,
-                Comments = request.Commnets
+                AssignedToId = request.AssignedToId,//Sent to Regional Director
+                Comments = request.Comments
             };
-            return new OppertunityWorkflowDto();
+            await _opportunityHistoryService.AddHistoryAsync(opportunityHistory);
+            return new OpportunityTrackingDto
+            {
+                Id = opportunity.Id,
+                Status = opportunity.Status,
+                BidManagerId = opportunity.BidManagerId,
+                ReviewManagerId = opportunity.ReviewManagerId,
+                ApprovalManagerId = opportunity.ApprovalManagerId,
+                Operation = opportunity.Operation,
+                WorkName = opportunity.WorkName,
+                Client = opportunity.Client,
+                ClientSector = opportunity.ClientSector,
+                Currency = opportunity.Currency,
+                CapitalValue = opportunity.CapitalValue,
+                Stage = opportunity.Stage,
+                CurrentHistory = new OpportunityHistoryDto
+                {
+                    Action = "Sent for Approval",
+                    Comments = request.Comments,
+                    ActionBy = currentUser,
+                    AssignedToId = opportunityHistory.AssignedToId,
+                    ActionDate = DateTime.UtcNow
+                }
+            };
+
         }
+
     }
 }
+

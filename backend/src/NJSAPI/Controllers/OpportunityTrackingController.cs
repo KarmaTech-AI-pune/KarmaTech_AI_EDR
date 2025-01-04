@@ -175,17 +175,80 @@ namespace NJSAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Send To Review by BID Manager
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
         [HttpPost("SendToReview")]
-        public async Task<IActionResult> SendToReview([FromBody] OppertunityWorkflowCommand command)
+        public async Task<IActionResult> SendToReview([FromBody] SendToReviewCommand command)
         {
-
             try
             {
-                return Ok();
+                var result = await _mediator.Send(command);
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while sending  opportunity tracking to review.", error = ex.Message });
+                return StatusCode(500, new { message = "An error occurred while sending opportunity tracking to review.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Send To Review by Regional Manager
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        [HttpPost("SendToApproval")]
+        public async Task<IActionResult> SendToApproval([FromBody] SendToApprovalCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while sending opportunity tracking to review.", error = ex.Message });
+            }
+        }
+
+       /// <summary>
+       /// Command for Regional Director
+       /// </summary>
+       /// <param name="command"></param>
+       /// <returns></returns>
+
+        [HttpPost("SendToApprove")]
+        public async Task<IActionResult> SendToApprove([FromBody] SendToApproveCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while sending opportunity tracking to review.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Send to reject by Regional Manager
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        [HttpPost("Reject")]
+        public async Task<IActionResult> RejectOpportunity([FromBody] RejectOpportunityCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while rejecting opportunity.", error = ex.Message });
             }
         }
     }

@@ -1,53 +1,61 @@
-﻿using MediatR;
-using NJS.Application.CQRS.OpportunityTracking.Commands;
+using MediatR;
 using NJS.Application.Dtos;
-using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
+using NJS.Domain.Enums;
 using NJS.Domain.GenericRepository;
+using NJS.Application.CQRS.OpportunityTracking.Commands;
+using NJS.Application.Services.IContract;
 
 namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 {
     /// <summary>
-    /// Action performed by BID Manager, sent to Review
-    /// This handler to use for sent the opportunity to Regional Manager 
+    /// Action performed by Regional Manager, Review Changes
+    /// This handler to use for sent the opportunity to Bid Manager
     /// </summary>
-    public class OpportunitySentToReviewHandler : IRequestHandler<SendToReviewCommand, OpportunityTrackingDto>
+    public class RejectOpportunityCommandHandler : IRequestHandler<OpportunityWorkflowCommand, OpportunityTrackingDto>
     {
-        private readonly IOpportunityHistoryService _opportunityHistoryService;
-        private readonly IUserContext _userContext;
         private readonly IRepository<Domain.Entities.OpportunityTracking> _opportunityRepository;
         private readonly IRepository<OpportunityHistory> _historyRepository;
-        private readonly IRepository<OpportunityStatus> _statusRepository;
-        public OpportunitySentToReviewHandler(IOpportunityHistoryService opportunityHistoryService,
+        private readonly IUserContext _userContext;
+
+
+        public RejectOpportunityCommandHandler(
+            IRepository<Domain.Entities.OpportunityTracking> opportunityRepository,
+            IRepository<OpportunityHistory> historyRepository,
             IUserContext userContext)
         {
-            _opportunityHistoryService = opportunityHistoryService;
+            _opportunityRepository = opportunityRepository;
+            _historyRepository = historyRepository;
             _userContext = userContext;
         }
 
-        public async Task<OpportunityTrackingDto> Handle(SendToReviewCommand request, CancellationToken cancellationToken)
+        public async Task<OpportunityTrackingDto> Handle(OpportunityWorkflowCommand request, CancellationToken cancellationToken)
         {
             var currentUser = _userContext.GetCurrentUserId();
+            // Get the opportunity
             var opportunity = await _opportunityRepository.GetByIdAsync(request.OpportunityId);
             if (opportunity == null)
                 throw new Exception($"Opportunity with ID {request.OpportunityId} not found");
 
-            // Update opportunity Regional Director           
-            opportunity.ReviewManagerId = request.AssignedToId;
+            // Update opportunity status
+            opportunity.Status = OpportunityTrackingStatus.BID_REJECTED;
             await _opportunityRepository.UpdateAsync(opportunity);
 
-            var entity = new OpportunityHistory
+            // Create history entry
+            var history = new OpportunityHistory
             {
-                OpportunityId = request.OpportunityId,
-                Action = "Sent to review",
+                OpportunityId = opportunity.Id,
+                Id = 3,
+                Action = "Rejected",
+                Comments = request.Comments,
                 ActionBy = currentUser,
-                StatusId = 2, // consider is a fixed Id for status, please check Db opportunityStatuses table and seed
-                ActionDate = DateTime.UtcNow,
-                AssignedToId = request.AssignedToId,
-                Comments =request.Comments
+                AssignedToId = opportunity.BidManagerId, // Reassign to Bid Manager
+                ActionDate = DateTime.UtcNow
             };
 
-            await _opportunityHistoryService.AddHistoryAsync(entity);
+            await _historyRepository.AddAsync(history);
+
+            // Return updated opportunity
             return new OpportunityTrackingDto
             {
                 Id = opportunity.Id,
@@ -64,14 +72,13 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 Stage = opportunity.Stage,
                 CurrentHistory = new OpportunityHistoryDto
                 {
-                    Action = "Sent to review",
+                    Action = "Review Changes",
                     Comments = request.Comments,
-                    ActionBy = entity.ActionBy,
-                    AssignedToId = entity.AssignedToId,
+                    ActionBy = currentUser,
+                    AssignedToId = opportunity.BidManagerId,
                     ActionDate = DateTime.UtcNow
                 }
             };
         }
-       
     }
 }
