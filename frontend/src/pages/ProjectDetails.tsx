@@ -39,11 +39,10 @@ import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import { Project, OpportunityTracking } from '../models';
 import { projectManagementAppContext } from '../App';
 import { getUserById } from '../dummyapi/database/dummyusers';
-
-// Import all forms from index
 import {
   WorkBreakdownStructureForm,
   JobStartForm,
@@ -53,7 +52,8 @@ import {
   ChangeControlForm,
   MonthlyProgressForm,
   ProjectClosureForm,
-  FormsOverview
+  FormsOverview,
+  FeasibilityStudyForm
 } from '../components/forms';
 
 const DRAWER_WIDTH = 280;
@@ -92,18 +92,26 @@ const InfoItem: React.FC<{ label: string; value: string | number | undefined }> 
 );
 
 export const ProjectDetails: React.FC = () => {
+  const context = useContext(projectManagementAppContext);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState('overview');
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
   const [formsOpen, setFormsOpen] = useState(false);
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
-  const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
     setIsLoading(false);
     setError(null)
   }, []);
+
+  if (!context) {
+    return (
+      <Container>
+        <Alert severity="error">Context not available</Alert>
+      </Container>
+    );
+  }
 
   const handleSectionClick = (section: string) => {
     setSelectedSection(section);
@@ -141,6 +149,21 @@ export const ProjectDetails: React.FC = () => {
   };
 
   const formSections = [
+    {
+      id: 'feasibilityStudy',
+      title: 'PMD0. Feasibility Study',
+      icon: <AssessmentOutlinedIcon />,
+      component: <FeasibilityStudyForm 
+        projectId={typeof context.selectedProject?.id === 'string' 
+          ? parseInt(context.selectedProject.id, 10) 
+          : context.selectedProject?.id || 0
+        }
+        onSubmitSuccess={() => {
+          // Placeholder for future implementation
+          console.log('Feasibility study submitted');
+        }} 
+      />
+    },
     {
       id: 'wbs',
       title: 'PMD2. Work Breakdown Structure',
@@ -215,7 +238,7 @@ export const ProjectDetails: React.FC = () => {
     },
   ];
 
-  if (!context?.selectedProject) {
+  if (!context.selectedProject) {
     return (
       <Container>
         <Alert severity="warning">No project selected</Alert>
@@ -256,14 +279,15 @@ export const ProjectDetails: React.FC = () => {
     if (selectedSection === 'forms') {
       if (selectedForm) {
         const form = formSections.find(f => f.id === selectedForm);
-        return form?.component;
+        return form?.component || <FormsOverview onFormSelect={handleFormClick} />;
       }
       return <FormsOverview onFormSelect={handleFormClick} />;
     }
 
+    const project = context.selectedProject as Project;
+
     switch (selectedSection) {
       case 'overview':
-        const project = context.selectedProject as Project;
         return (
           <Box sx={{ p: 2 }}>
             <Grid container spacing={3}>

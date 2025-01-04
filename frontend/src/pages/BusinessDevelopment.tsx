@@ -14,8 +14,8 @@ import { OpportunityList } from '../components/projects/OpportunityList';
 import { OpportunityForm } from '../components/forms/OpportunityForm';
 import { Pagination } from '../components/Pagination';
 import { authApi } from '../dummyapi/authApi';
-import { UserWithRole} from '../types';
-import { OpportunityTracking } from  '../models';
+import { UserWithRole } from '../types';
+import { OpportunityTracking } from '../models';
 import { PermissionType } from '../models';
 import { opportunityApi } from '../dummyapi/opportunityApi';
 import { HistoryLoggingService } from '../services/historyLoggingService';
@@ -26,8 +26,8 @@ export const BusinessDevelopment: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canViewOpportunities, setCanViewOpportunities] = useState(false);
   const [canCreateOpportunity, setCanCreateOpportunity] = useState(false);
-  const [error, setError] = useState<string | undefined>();
-  const [formError, setFormError] = useState<string | undefined>();
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [formError, setFormError] = useState<string | undefined>(undefined);
   const [opportunities, setOpportunities] = useState<OpportunityTracking[]>([]);
   const [isCreatingOpportunity, setIsCreatingOpportunity] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,8 +37,12 @@ export const BusinessDevelopment: React.FC = () => {
   const fetchOpportunities = async () => {
     try {
       if (!currentUser) {
+        console.log('No current user, skipping opportunity fetch');
         return;
       }
+
+      console.log('Current User:', currentUser);
+      console.log('User Roles:', currentUser.roles);
 
       let response: OpportunityTracking[] = [];
       
@@ -53,65 +57,23 @@ export const BusinessDevelopment: React.FC = () => {
         response = await opportunityApi.getAll();
       }
       
+      console.log('Fetched Opportunities:', response);
       setOpportunities(response);
       setError(undefined);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch opportunities';
       console.error('Error fetching opportunities:', err);
-      setError(err.message || 'Failed to fetch opportunities');
+      setError(errorMessage);
     }
   };
-
-  useEffect(() => {
-    const checkUserPermissions = async () => {
-      try {
-        const user = await authApi.getCurrentUser();
-        
-        if (!user) {
-          setError('Please log in to access Business Development');
-          return;
-        }
-        else console.log(user)
-
-        setCurrentUser(user);
-
-        if (user.roleDetails) {
-
-          const hasOpportunityViewPermission = user.roleDetails.permissions.includes(
-            PermissionType.VIEW_BUSINESS_DEVELOPMENT
-          );
-          const hasOpportunityCreatePermission = user.roleDetails.permissions.includes(
-            PermissionType.CREATE_BUSINESS_DEVELOPMENT
-          );
-          
-          setCanViewOpportunities(hasOpportunityViewPermission);
-          setCanCreateOpportunity(hasOpportunityCreatePermission);
-
-          if (!hasOpportunityViewPermission) {
-            setError('You do not have permission to view opportunities');
-          }
-        }
-      } catch (err: any) {
-        setError(err.message || 'Error checking user permissions');
-        console.error(err);
-      }
-    };
-
-    checkUserPermissions();
-  }, []);
-
-  useEffect(() => {
-    if (currentUser && canViewOpportunities) {
-      fetchOpportunities();
-    }
-  }, [currentUser, canViewOpportunities]);
 
   const initialOpportunityData: Partial<OpportunityTracking> = {
     client: '',
     status: 'Bid Under Preparation',
-    projectId: "0",
+    projectId: 0,
     stage: 'A',
     strategicRanking: 'M',
-    bidManagerId: "0",
+    bidManagerId: '',
     operation: '',
     workName: '',
     clientSector: '',
@@ -130,7 +92,7 @@ export const BusinessDevelopment: React.FC = () => {
     }
   };
 
-  const handleSubmitOpportunity = async (opportunityData: OpportunityTracking) => {
+  const handleSubmitOpportunity = async (opportunityData: Partial<OpportunityTracking>) => {
     try {
       if (!currentUser?.name) {
         throw new Error('User not authenticated');
@@ -140,15 +102,15 @@ export const BusinessDevelopment: React.FC = () => {
         ...opportunityData,
         createdBy: currentUser.name,
         createdAt: new Date().toISOString(),
-        lastModifiedBy: currentUser.name,
-        lastModifiedAt: new Date().toISOString()
+        updatedBy: currentUser.name,
+        updatedAt: new Date().toISOString()
       };
 
       const createdOpportunity = await opportunityApi.create(submissionData);
 
       if (createdOpportunity.id) {
         await HistoryLoggingService.logNewProject(
-          createdOpportunity.id,
+          createdOpportunity.id.toString(),
           createdOpportunity.workName || 'Unnamed Opportunity',
           currentUser.name
         );
@@ -157,23 +119,10 @@ export const BusinessDevelopment: React.FC = () => {
       await fetchOpportunities();
       setIsCreatingOpportunity(false);
       setFormError(undefined);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create opportunity';
       console.error('Error creating opportunity:', err);
-      setFormError(err.message || 'Failed to create opportunity');
-    }
-  };
-
-  const handleOpportunityUpdated = async () => {
-    await fetchOpportunities();
-  };
-
-  const handleOpportunityDeleted = async (opportunityId: string) => {
-    try {
-      await opportunityApi.delete(opportunityId);
-      await fetchOpportunities();
-    } catch (err: any) {
-      console.error('Error deleting opportunity:', err);
-      setError(err.message || 'Failed to delete opportunity');
+      setFormError(errorMessage);
     }
   };
 
@@ -201,6 +150,65 @@ export const BusinessDevelopment: React.FC = () => {
   const currentOpportunities = filteredOpportunities.slice(indexOfFirstOpportunity, indexOfLastOpportunity);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  useEffect(() => {
+    const checkUserPermissions = async () => {
+      try {
+        const user = await authApi.getCurrentUser();
+        
+        if (!user) {
+          console.log('No user found, setting error');
+          setError('Please log in to access Business Development');
+          return;
+        }
+
+        console.log('Authenticated User:', user);
+
+        setCurrentUser(user);
+
+        if (user.roleDetails) {
+          console.log('User Role Details:', user.roleDetails);
+
+          const hasOpportunityViewPermission = user.roleDetails.permissions.includes(
+            PermissionType.VIEW_BUSINESS_DEVELOPMENT
+          );
+          const hasOpportunityCreatePermission = user.roleDetails.permissions.includes(
+            PermissionType.CREATE_BUSINESS_DEVELOPMENT
+          );
+          
+          console.log('View Permission:', hasOpportunityViewPermission);
+          console.log('Create Permission:', hasOpportunityCreatePermission);
+          
+          setCanViewOpportunities(hasOpportunityViewPermission);
+          setCanCreateOpportunity(hasOpportunityCreatePermission);
+
+          if (!hasOpportunityViewPermission) {
+            setError('You do not have permission to view opportunities');
+          }
+        } else {
+          console.log('No role details found for user');
+        }
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Error checking user permissions';
+        console.error('Full error in permission check:', err);
+        setError(errorMessage);
+      }
+    };
+
+    checkUserPermissions();
+  }, []);
+
+  useEffect(() => {
+    if (currentUser && canViewOpportunities) {
+      console.log('Attempting to fetch opportunities');
+      fetchOpportunities();
+    } else {
+      console.log('Cannot fetch opportunities', { 
+        currentUser: !!currentUser, 
+        canViewOpportunities 
+      });
+    }
+  }, [currentUser, canViewOpportunities]);
 
   if (error) {
     return (
@@ -303,8 +311,8 @@ export const BusinessDevelopment: React.FC = () => {
         <OpportunityList
           opportunities={currentOpportunities}
           emptyMessage="No business development opportunities found"
-          onOpportunityDeleted={handleOpportunityDeleted}
-          onOpportunityUpdated={handleOpportunityUpdated}
+          onOpportunityDeleted={() => {}}
+          onOpportunityUpdated={() => {}}
         />
 
         <Box sx={{ 

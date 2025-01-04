@@ -4,7 +4,7 @@ import { PermissionType, RoleDefinition,Role } from '../../models';
 export const ROLES: Record<string, RoleDefinition> = {
   "Admin": {
     id: 'admin',
-    name: 'Administrator',
+    name: 'Admin',
     permissions: [
       PermissionType.VIEW_PROJECT,
       PermissionType.CREATE_PROJECT,

@@ -1,83 +1,110 @@
-import { OpportunityTracking } from '../models';
-import { opportunityTrackings } from './database/dummyopportunityTracking';
-import { workflowStatuses } from './database/dummyOpporunityWorkflow';
+import { axiosInstance } from '../services/axiosConfig';
+import { 
+  OpportunityTracking, 
+  normalizeOpportunityTracking, 
+  prepareOpportunityTrackingForSubmission 
+} from '../models/opportunityTrackingModel';
 
-// Create a mutable copy of the opportunity trackings for the dummy API
-let mutableOpportunityTrackings: OpportunityTracking[] = [...opportunityTrackings];
+// Backend-specific model for sending data
+export interface BackendOpportunityTracking {
+  id?: number;
+  projectId?: number | null;
+  stage: number; // Numeric representation of stage
+  strategicRanking: string;
+  bidManagerId?: string;
+  reviewManagerId?: string;
+  approvalManagerId?: string;
+  operation: string;
+  workName: string;
+  client: string;
+  clientSector: string;
+  likelyStartDate: string;
+  status: number; // Numeric representation of status
+  currency: string;
+  capitalValue: number;
+  durationOfProject: number;
+  fundingStream: string;
+  contractType: string;
 
+  // Optional fields
+  bidFees: number;
+  emd: number;
+  formOfEMD?: string;
+  contactPersonAtClient?: string;
+  dateOfSubmission?: string;
+  percentageChanceOfProjectHappening?: number;
+  percentageChanceOfNJSSuccess?: number;
+  likelyCompetition?: string;
+  grossRevenue: number;
+  netNJSRevenue: number;
+  followUpComments?: string;
+  notes?: string;
+  probableQualifyingCriteria?: string;
+}
+
+// Mapping functions to convert frontend types to backend numeric values
+const mapStageToBackend = (stage: string | undefined): number => {
+  switch (stage) {
+    case 'A':
+      return 1;
+    case 'B':
+      return 2;
+    case 'C':
+      return 3;
+    case 'D':
+      return 4;
+    default:
+      return 0; // Default to None
+  }
+};
+const mapStageFromBackend =(stage: number | undefined): string => {
+  switch (stage) {
+    case 1:
+      return 'A';
+    case 2:
+      return 'B';
+    case 3:
+      return  'C';
+    case 4:
+      return 'D';
+    default:
+      return 'None'; // Default to None
+  }
+}
+
+const mapStatusToBackend = (status: string | undefined): number => {
+  switch (status) {
+    case 'Bid Under Preparation':
+      return 0;
+    case 'Bid Submitted':
+      return 1;
+    case 'Bid Rejected':
+      return 2;
+    case 'Bid Accepted':
+      return 3;
+    default:
+      return 0; // Default to Bid Under Preparation
+  }
+};
+
+const mapStatusFromBackend = (status: number | undefined): string => {
+  switch (status) {
+    case 0:
+      return 'Bid Under Preparation';
+    case 1:
+      return 'Bid Submitted';
+    case 2:
+      return 'Bid Rejected';     
+    case 3:
+      return 'Bid Accepted';
+    default:
+      return 'Bid Under Preparation'; // Default to Bid Under Preparation
+  }
+};
 export const opportunityApi = {
-  getAll: async (): Promise<OpportunityTracking[]> => {
-    try {
-      return [...mutableOpportunityTrackings];
-    } catch (error) {
-      console.error('Error fetching opportunities:', error);
-      throw new Error('Failed to fetch opportunities');
-    }
-  },
-
-  getByUserId: async (userId: string): Promise<OpportunityTracking[]> => {
-    try {
-      const opportunities = mutableOpportunityTrackings.filter(opp => opp.bidManagerId === userId);
-      if (!opportunities.length) {
-        console.warn(`No opportunities found for user ${userId}`);
-      }
-      return opportunities;
-    } catch (error) {
-      console.error(`Error fetching opportunities for user ${userId}:`, error);
-      throw new Error(`Failed to fetch opportunities for user ${userId}`);
-    }
-  },
-
-  getByReviewManagerId: async (userId: string): Promise<OpportunityTracking[]> => {
-    try {
-      const opportunities = mutableOpportunityTrackings.filter(opp => opp.reviewManagerId === userId);
-      if (!opportunities.length) {
-        console.warn(`No opportunities found for review manager ${userId}`);
-      }
-      return opportunities;
-    } catch (error) {
-      console.error(`Error fetching opportunities for review manager ${userId}:`, error);
-      throw new Error(`Failed to fetch opportunities for review manager ${userId}`);
-    }
-  },
-
-  getByApprovalManagerId: async (userId: string): Promise<OpportunityTracking[]> => {
-    try {
-      const opportunities = mutableOpportunityTrackings.filter(opp => opp.approvalManagerId === userId);
-      if (!opportunities.length) {
-        console.warn(`No opportunities found for approval manager ${userId}`);
-      }
-      return opportunities;
-    } catch (error) {
-      console.error(`Error fetching opportunities for approval manager ${userId}:`, error);
-      throw new Error(`Failed to fetch opportunities for approval manager ${userId}`);
-    }
-  },
-
-  getById: async (id: string): Promise<OpportunityTracking> => {
-    try {
-      const opportunity = mutableOpportunityTrackings.find(opp => opp.id === id);
-      if (!opportunity) {
-        throw new Error(`Opportunity with id ${id} not found`);
-      }
-      return { ...opportunity };
-    } catch (error) {
-      console.error(`Error fetching opportunity ${id}:`, error);
-      throw error;
-    }
-  },
-
-  getByProjectId: async (projectId: string): Promise<OpportunityTracking[]> => {
-    try {
-      const opportunities = mutableOpportunityTrackings.filter(opp => opp.projectId === projectId);
-      if (!opportunities.length) {
-        console.warn(`No opportunities found for project ${projectId}`);
-      }
-      return opportunities.map(opp => ({ ...opp }));
-    } catch (error) {
-      console.error(`Error fetching opportunities for project ${projectId}:`, error);
-      throw new Error(`Failed to fetch opportunities for project ${projectId}`);
-    }
+  // Utility function to convert string IDs to numbers
+  convertStringToNumberId: (id: string | number): number => {
+    return typeof id === 'string' ? parseInt(id, 10) : id;
   },
 
   create: async (opportunityData: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
@@ -85,94 +112,107 @@ export const opportunityApi = {
       if (!opportunityData.bidManagerId) {
         throw new Error('Bid Manager ID is required');
       }
+  
+      // Normalize and prepare data for submission
+      const normalizedData = normalizeOpportunityTracking(opportunityData);
+      const preparedData = prepareOpportunityTrackingForSubmission(normalizedData);
 
-      const currentIds = mutableOpportunityTrackings.map(opp => parseInt(opp.id));
-      const newId = (Math.max(...currentIds, 0) + 1).toString();
-
-      const newOpportunity: OpportunityTracking = {
-        id: newId,
-        projectId: opportunityData.projectId || null,
-        stage: opportunityData.stage || 'A',
-        strategicRanking: opportunityData.strategicRanking || 'M',
-        bidManagerId: opportunityData.bidManagerId,
-        operation: opportunityData.operation || '',
-        workName: opportunityData.workName || '',
-        client: opportunityData.client || '',
-        clientSector: opportunityData.clientSector || '',
-        likelyStartDate: opportunityData.likelyStartDate || new Date().toISOString().split('T')[0],
-        status: opportunityData.status || 'Bid Under Preparation',
-        currency: opportunityData.currency || 'INR',
-        capitalValue: opportunityData.capitalValue || 0,
-        durationOfProject: opportunityData.durationOfProject || 0,
-        fundingStream: opportunityData.fundingStream || '',
-        contractType: opportunityData.contractType || '',
-        workflowId: opportunityData.workflowId || '1', // Default to Initial (ID: 1)
+      // Prepare the opportunity object with default values and convert to backend model
+      const command: BackendOpportunityTracking = {       
+        stage: mapStageToBackend(preparedData.stage || 'A'),
+        strategicRanking: preparedData.strategicRanking || 'M',
+        bidManagerId: preparedData.bidManagerId,
+        operation: preparedData.operation || '',
+        workName: preparedData.workName || '',
+        client: preparedData.client || '',
+        clientSector: preparedData.clientSector || '',
+        likelyStartDate: preparedData.likelyStartDate instanceof Date 
+          ? preparedData.likelyStartDate.toISOString().split('T')[0] 
+          : (preparedData.likelyStartDate || new Date().toISOString().split('T')[0]),
+        status: mapStatusToBackend(preparedData.status || 'Bid Under Preparation'),
+        currency: preparedData.currency || 'INR',
+        capitalValue: preparedData.capitalValue || 0,
+        durationOfProject: preparedData.durationOfProject || 0,
+        fundingStream: preparedData.fundingStream || '',
+        contractType: preparedData.contractType || '',
         // Optional fields
-        bidFees: opportunityData.bidFees,
-        emd: opportunityData.emd,
-        formOfEMD: opportunityData.formOfEMD,
-        contactPersonAtClient: opportunityData.contactPersonAtClient,
-        dateOfSubmission: opportunityData.dateOfSubmission,
-        percentageChanceOfProjectHappening: opportunityData.percentageChanceOfProjectHappening,
-        percentageChanceOfNJSSuccess: opportunityData.percentageChanceOfNJSSuccess,
-        likelyCompetition: opportunityData.likelyCompetition,
-        grossRevenue: opportunityData.grossRevenue,
-        netNJSRevenue: opportunityData.netNJSRevenue,
-        followUpComments: opportunityData.followUpComments,
-        notes: opportunityData.notes,
-        probableQualifyingCriteria: opportunityData.probableQualifyingCriteria,
+        bidFees: preparedData.bidFees,
+        emd: preparedData.emd,
+        formOfEMD: preparedData.formOfEMD,
+        contactPersonAtClient: preparedData.contactPersonAtClient,
+        dateOfSubmission: preparedData.dateOfSubmission instanceof Date 
+          ? preparedData.dateOfSubmission.toISOString().split('T')[0] 
+          : preparedData.dateOfSubmission,
+        percentageChanceOfProjectHappening: preparedData.percentageChanceOfProjectHappening,
+        percentageChanceOfNJSSuccess: preparedData.percentageChanceOfNJSSuccess,
+        likelyCompetition: preparedData.likelyCompetition,
+        grossRevenue: preparedData.grossRevenue,
+        netNJSRevenue: preparedData.netNJSRevenue,
+        followUpComments: preparedData.followUpComments,
+        notes: preparedData.notes,
+        probableQualifyingCriteria: preparedData.probableQualifyingCriteria       
       };
+      console.log(command);
       
-      mutableOpportunityTrackings.push(newOpportunity);
-      return { ...newOpportunity };
+      // Make API call to backend
+      const response = await axiosInstance.post<OpportunityTracking>('api/OpportunityTracking', command);
+      
+      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
     } catch (error) {
       console.error('Error creating opportunity:', error);
       throw error;
     }
   },
 
-  update: async (opportunityData: OpportunityTracking): Promise<OpportunityTracking> => {
+  getByUserId: async (userId: string): Promise<OpportunityTracking[]> => {
     try {
-      if (!opportunityData.id) {
-        throw new Error('Opportunity ID is required for update');
-      }
-
-      const index = mutableOpportunityTrackings.findIndex(opp => opp.id === opportunityData.id);
-      if (index === -1) {
-        throw new Error(`Opportunity with id ${opportunityData.id} not found`);
-      }
-
-      // Validate workflow ID
-      if (!workflowStatuses.some(status => status.id.toString() === opportunityData.workflowId)) {
-        throw new Error('Invalid workflow ID');
-      }
-      
-      mutableOpportunityTrackings = [
-        ...mutableOpportunityTrackings.slice(0, index),
-        { ...opportunityData },
-        ...mutableOpportunityTrackings.slice(index + 1)
-      ];
-
-      return { ...opportunityData };
+      const response = await axiosInstance.get<OpportunityTracking[]>(`/OpportunityTracking/user/${userId}`);
+      return response.data.map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking);
     } catch (error) {
-      console.error('Error updating opportunity:', error);
+      console.error('Error fetching opportunities by user ID:', error);
       throw error;
     }
   },
 
-  delete: async (id: string): Promise<void> => {
+  getByReviewManagerId: async (reviewManagerId: string): Promise<OpportunityTracking[]> => {
     try {
-      const index = mutableOpportunityTrackings.findIndex(opp => opp.id === id);
-      if (index === -1) {
-        throw new Error(`Opportunity with id ${id} not found`);
-      }
-      
-      mutableOpportunityTrackings = [
-        ...mutableOpportunityTrackings.slice(0, index),
-        ...mutableOpportunityTrackings.slice(index + 1)
-      ];
+      const response = await axiosInstance.get<OpportunityTracking[]>(`api/OpportunityTracking/review-manager/${reviewManagerId}`);
+      return response.data.map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking);
     } catch (error) {
-      console.error(`Error deleting opportunity ${id}:`, error);
+      console.error('Error fetching opportunities by review manager ID:', error);
+      throw error;
+    }
+  },
+
+  getByApprovalManagerId: async (approvalManagerId: string): Promise<OpportunityTracking[]> => {
+    try {
+      const response = await axiosInstance.get<OpportunityTracking[]>(`api/OpportunityTracking/approval-manager/${approvalManagerId}`);
+      return response.data.map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking);
+    } catch (error) {
+      console.error('Error fetching opportunities by approval manager ID:', error);
+      throw error;
+    }
+  },
+
+  getAll: async (): Promise<OpportunityTracking[]> => {
+    try {
+      const response = await axiosInstance.get<OpportunityTracking[]>('api/OpportunityTracking');
+      return response.data.map(opp => ({
+        ...opp,
+        stage: mapStageFromBackend(opp.stage),
+        status: mapStatusFromBackend(opp.status)
+      })).map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking);
+    } catch (error) {
+      console.error('Error fetching all opportunities:', error);
+      throw error;
+    }
+  },
+
+  delete: async (opportunityId: number): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/OpportunityTracking/${opportunityId}`);
+    } catch (error) {
+      console.error('Error deleting opportunity:', error);
       throw error;
     }
   }
