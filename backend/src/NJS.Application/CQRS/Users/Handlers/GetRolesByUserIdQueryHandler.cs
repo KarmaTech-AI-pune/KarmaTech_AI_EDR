@@ -16,9 +16,34 @@ namespace NJS.Application.CQRS.Users.Handlers
             _userManager = userManager;
             _roleManager = roleManager;
         }
-        public  async Task<IList<RoleDto>> Handle(GetRolesByUserIdQuery request, CancellationToken cancellationToken)
+        public async Task<IList<RoleDto>> Handle(GetRolesByUserIdQuery request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var roles = await _userManager.GetRolesAsync(request.User);
+
+            // Retrieve RoleDto objects for each role
+            var roleDtos = new List<RoleDto>();
+
+            foreach (var roleName in roles)
+            {
+                // Get the role entity by role name
+                var role = await _roleManager.FindByNameAsync(roleName);
+
+                if (role != null)
+                {
+                    // Map to RoleDto
+                    var roleDto = new RoleDto
+                    {
+                        Id = role.Id, // Assuming you have an Id in Role entity
+                        Name = role.Name // Assuming you have a Name in Role entity
+                    };
+
+                    roleDtos.Add(roleDto);
+                }
+            }
+
+            // Return the list of RoleDto
+            return roleDtos;
+
         }
     }
 }

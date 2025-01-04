@@ -34,8 +34,7 @@ namespace NJS.Application.Dtos
         public decimal CapitalValue { get; set; }
         public int DurationOfProject { get; set; }
         public string FundingStream { get; set; }
-        public string ContractType { get; set; }
-        public int? WorkflowId { get; set; }
+        public string ContractType { get; set; }       
         public OpportunityHistoryDto CurrentHistory { get; set; }
     }
 }

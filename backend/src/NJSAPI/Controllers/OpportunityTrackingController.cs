@@ -3,6 +3,7 @@ using MediatR;
 using NJS.Application.CQRS.OpportunityTracking.Commands;
 using NJS.Application.CQRS.OpportunityTracking.Queries;
 using NJS.Domain.Enums;
+using DocumentFormat.OpenXml.Office2010.Excel;
 
 namespace NJSAPI.Controllers
 {
@@ -28,7 +29,7 @@ namespace NJSAPI.Controllers
             [FromQuery] string? sortBy = null,
             [FromQuery] bool isAscending = true)
         {
-            try 
+            try
             {
                 var query = new GetAllOpportunityTrackingsQuery(
                     status,
@@ -52,7 +53,7 @@ namespace NJSAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOpportunityTracking(int id)
         {
-            try 
+            try
             {
                 var query = new GetOpportunityTrackingByIdQuery(id);
                 var result = await _mediator.Send(query);
@@ -82,7 +83,7 @@ namespace NJSAPI.Controllers
             [FromQuery] string? sortBy = null,
             [FromQuery] bool isAscending = true)
         {
-            try 
+            try
             {
                 var query = new GetAllOpportunityTrackingsQuery(
                     status,
@@ -92,16 +93,16 @@ namespace NJSAPI.Controllers
                     pageNumber,
                     pageSize,
                     sortBy,
-                    isAscending                 
+                    isAscending
                 );
-                
+
                 var result = await _mediator.Send(query);
-                
+
                 if (result == null)
                 {
                     return NotFound($"No opportunity trackings found for project ID {projectId}.");
                 }
-                
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -113,7 +114,7 @@ namespace NJSAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateOpportunityTracking([FromBody] CreateOpportunityTrackingCommand command)
         {
-            try 
+            try
             {
                 if (command == null)
                 {
@@ -132,7 +133,7 @@ namespace NJSAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateOpportunityTracking(int id, [FromBody] UpdateOpportunityTrackingCommand command)
         {
-            try 
+            try
             {
                 if (id != command.Id)
                 {
@@ -156,7 +157,7 @@ namespace NJSAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOpportunityTracking(int id)
         {
-            try 
+            try
             {
                 var command = new DeleteOpportunityTrackingCommand(id);
                 var result = await _mediator.Send(command);
@@ -171,6 +172,83 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = $"An error occurred while deleting opportunity tracking {id}.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Send To Review by BID Manager
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        [HttpPost("SendToReview")]
+        public async Task<IActionResult> SendToReview([FromBody] SendToReviewCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while sending opportunity tracking to review.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Send To Review by Regional Manager
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        [HttpPost("SendToApproval")]
+        public async Task<IActionResult> SendToApproval([FromBody] SendToApprovalCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while sending opportunity tracking to review.", error = ex.Message });
+            }
+        }
+
+       /// <summary>
+       /// Command for Regional Director
+       /// </summary>
+       /// <param name="command"></param>
+       /// <returns></returns>
+
+        [HttpPost("SendToApprove")]
+        public async Task<IActionResult> SendToApprove([FromBody] SendToApproveCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while sending opportunity tracking to review.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Send to reject by Regional Manager
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        [HttpPost("Reject")]
+        public async Task<IActionResult> RejectOpportunity([FromBody] RejectOpportunityCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while rejecting opportunity.", error = ex.Message });
             }
         }
     }
