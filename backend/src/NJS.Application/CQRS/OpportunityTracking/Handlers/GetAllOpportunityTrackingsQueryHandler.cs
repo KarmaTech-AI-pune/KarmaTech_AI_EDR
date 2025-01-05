@@ -96,7 +96,9 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 .Select(history => new OpportunityHistoryDto
                 {
                     Id = history.Id,
-                    Status = history.Status.Status
+                    Status = history.Status.Status,
+                    StatusId= history.Status.Id
+
                 })
                 .FirstOrDefault()
 

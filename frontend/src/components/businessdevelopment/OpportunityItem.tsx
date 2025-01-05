@@ -38,6 +38,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   onOpportunityDeleted, 
   onOpportunityUpdated 
 }) => {
+  console.log(opportunity.currentHistory)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [formError, setFormError] = useState<string | undefined>();
@@ -136,7 +137,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     }
   };
 
-  const getWorkflowStatusColor = (workflowId: string) => {
+  const getWorkflowStatusColor = (workflowId : number) => {
     const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
       case "Initial":
@@ -204,8 +205,8 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                   icon={<Assessment />}
                 />
                 <Chip 
-                  label={getWorkflowStatusById(opportunity.workflowId)?.status || 'Unknown'}
-                  color={getWorkflowStatusColor(opportunity.workflowId)}
+                  label={getWorkflowStatusById(opportunity.currentHistory.statusId)?.status}
+                  color={getWorkflowStatusColor(opportunity.currentHistory.statusId)}
                   size="small"
                   icon={<WorkHistory />}
                 />

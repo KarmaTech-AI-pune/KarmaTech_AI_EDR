@@ -7,7 +7,7 @@ export class HistoryLoggingService {
     }
 
     private static async createHistoryEntry(
-        opportunityId: string,
+        opportunityId: number,
         description: string
     ): Promise<OpportunityHistory> {
         const historyEntry: Omit<OpportunityHistory, 'id'> = {
@@ -25,7 +25,7 @@ export class HistoryLoggingService {
     }
 
     static async logNewProject(
-        opportunityId: string,
+        opportunityId: number,
         projectName: string,
         createdBy: string
     ): Promise<OpportunityHistory> {
@@ -58,7 +58,7 @@ export class HistoryLoggingService {
     }
 
     static async logSentForReview(
-        opportunityId: string,
+        opportunityId: number,
         sentBy: string,
         reviewer: string,
         comments?: string
@@ -70,7 +70,7 @@ export class HistoryLoggingService {
     }
 
     static async logReviewDecision(
-        opportunityId: string,
+        opportunityId: number,
         decision: 'approved' | 'rejected',
         reviewedBy: string,
         comments?: string
@@ -82,7 +82,7 @@ export class HistoryLoggingService {
     }
 
     static async logStatusChange(
-        opportunityId: string,
+        opportunityId: number,
         oldStatus: string,
         newStatus: string,
         changedBy: string

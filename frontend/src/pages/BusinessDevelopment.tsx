@@ -110,7 +110,7 @@ export const BusinessDevelopment: React.FC = () => {
 
       if (createdOpportunity.id) {
         await HistoryLoggingService.logNewProject(
-          createdOpportunity.id.toString(),
+          createdOpportunity.id,
           createdOpportunity.workName || 'Unnamed Opportunity',
           currentUser.name
         );

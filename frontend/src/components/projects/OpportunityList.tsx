@@ -15,6 +15,7 @@ export const OpportunityList: React.FC<OpportunityListProps> = ({
   onOpportunityDeleted,
   onOpportunityUpdated
 }) => {
+  console.log("cc",opportunities)
   if (opportunities.length === 0) {
     return <div>{emptyMessage}</div>;
   }
@@ -22,6 +23,7 @@ export const OpportunityList: React.FC<OpportunityListProps> = ({
   return (
     <div>
       {opportunities.map((opportunity) => (
+        
         <OpportunityItem
           key={opportunity.id}
           opportunity={opportunity}

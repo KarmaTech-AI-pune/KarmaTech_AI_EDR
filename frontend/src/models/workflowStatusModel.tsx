@@ -1,4 +1,4 @@
 export interface WorkflowStatus {
-    id: string;
+    id: number;
     status: string;
 }

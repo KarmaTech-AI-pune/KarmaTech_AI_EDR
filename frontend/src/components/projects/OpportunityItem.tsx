@@ -50,7 +50,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
   const [formError, setFormError] = useState<string | undefined>();
   const context = useContext(projectManagementAppContext);
-
+   console.log("dd",opportunity.currentHistory);
   useEffect(() => {
     const checkUserPermissions = async () => {
       try {
@@ -181,7 +181,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const getWorkflowDialog = () => {
     if (!currentUser?.name) return null;
 
-    const status = getWorkflowStatusById(opportunity.workflowId)?.status;
+    const status = getWorkflowStatusById(opportunity.currentHistory.statusId)?.status;
     switch (status) {
       case "Initial":
       case "Review Changes":
@@ -228,7 +228,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     }
   };
 
-  const getWorkflowStatusColor = (workflowId: string) => {
+  const getWorkflowStatusColor = (workflowId: number) => {
     const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
       case "Initial":
@@ -298,8 +298,8 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                   icon={<Assessment />}
                 />
                 <Chip 
-                  label={getWorkflowStatusById(opportunity.workflowId)?.status || 'Unknown'}
-                  color={getWorkflowStatusColor(opportunity.workflowId)}
+                  label={getWorkflowStatusById(opportunity.currentHistory.statusId)?.status || 'Unknown'}
+                  color={getWorkflowStatusColor(opportunity.currentHistory.statusId)}
                   size="small"
                   icon={<WorkHistory />}
                 />

@@ -8,7 +8,7 @@ using NJS.Repositories.Interfaces;
 
 namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 {
-    public class GetOpportunityTrackingByIdQueryHandler 
+    public class GetOpportunityTrackingByIdQueryHandler
         : IRequestHandler<GetOpportunityTrackingByIdQuery, OpportunityTrackingDto>
     {
         private readonly IOpportunityTrackingRepository _repository;
@@ -30,7 +30,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 
             return new OpportunityTrackingDto
             {
-                Id = entity.Id,              
+                Id = entity.Id,
                 Stage = entity.Stage,
                 StrategicRanking = entity.StrategicRanking,
                 BidFees = entity.BidFees,
@@ -59,8 +59,17 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 CapitalValue = entity.CapitalValue,
                 DurationOfProject = entity.DurationOfProject,
                 FundingStream = entity.FundingStream,
-                ContractType = entity.ContractType
-              
+                ContractType = entity.ContractType,
+                CurrentHistory = entity.OpportunityHistories.OrderByDescending(x => x.ActionDate)
+                .Select(history => new OpportunityHistoryDto
+                {
+                    Id = history.Id,
+                    Status = history.Status.Status,
+                    StatusId = history.Status.Id
+
+                })
+                .FirstOrDefault()
+
             };
         }
     }

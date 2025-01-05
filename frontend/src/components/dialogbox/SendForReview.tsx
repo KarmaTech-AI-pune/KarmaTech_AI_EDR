@@ -21,7 +21,7 @@ import { HistoryLoggingService } from '../../services/historyLoggingService';
 interface SendForReviewProps {
   open: boolean;
   onClose: () => void;
-  opportunityId?: string;
+  opportunityId?: number;
   currentUser: string | undefined;
   onSubmit?: () => void;
 }

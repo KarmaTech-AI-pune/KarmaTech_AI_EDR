@@ -5,7 +5,7 @@ import { WorkflowEntry } from "../../models";
 import { getWorkflowByOpportunityId } from '../../dummyapi/opportunityWorkflowApi';
 
 type BDChipsProps = {
-  opportunityId: string;
+  opportunityId: number;
 };
 
 const WORKFLOW_CHIPS = [

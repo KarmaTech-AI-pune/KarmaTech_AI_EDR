@@ -20,7 +20,7 @@ import { AuthUser} from '../../models'
 interface DecideReviewProps {
   open: boolean;
   onClose: () => void;
-  opportunityId?: string;
+  opportunityId?: number;
   currentUser: string;
   onDecisionMade?: () => void;
 }

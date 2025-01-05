@@ -2,27 +2,27 @@ import { WorkflowEntry, WorkflowStatus } from "../../models";
 
 export const workflowStatuses: WorkflowStatus[] = [
     {
-        id: "1",
+        id: 1,
         status: "Initial"
     },
     {
-        id: "2",
+        id: 2,
         status: "Sent for Review"
     },
     {
-        id: "3",
+        id: 3,
         status: "Review Changes"
     },
     {
-        id: "4",
+        id:4,
         status: "Sent for Approval"
     },
     {
-        id: "5",
+        id: 5,
         status: "Approval Changes"
     },
     {
-        id: "6",
+        id: 6,
         status: "Approved"
     }
 ];
@@ -80,7 +80,7 @@ export const workflowData: WorkflowEntry[] = [
 ];
 
 // Utility functions
-export const getWorkflowStatusById = (id: string): WorkflowStatus | undefined => {
+export const getWorkflowStatusById = (id: number) => {
     return workflowStatuses.find(status => status.id === id);
 };
 

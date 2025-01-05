@@ -1,3 +1,5 @@
+import { OpportunityHistory } from "./opportunityHistoryModel";
+
 // Local type definitions
 type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E';
 type OpportunityTrackingStatus = 
@@ -6,6 +8,7 @@ type OpportunityTrackingStatus =
   'Under Evaluation' | 
   'Awarded' | 
   'Not Awarded';
+
 
 export interface OpportunityTracking {
   id: number;
@@ -47,6 +50,7 @@ export interface OpportunityTracking {
   updatedAt: Date | string;
   createdBy: string;
   updatedBy: string;
+  currentHistory: OpportunityHistory;
 }
 
 // Utility function to convert string dates to Date objects

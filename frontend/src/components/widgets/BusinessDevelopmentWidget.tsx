@@ -29,7 +29,7 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
     }
   };
 
-  const getWorkflowColor = (workflowId: string) => {
+  const getWorkflowColor = (workflowId: number) => {
     const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
       case "Initial":
@@ -81,8 +81,8 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
                 sx={{ mr: 1, mb: 1 }}
               />
               <Chip 
-                label={`Workflow: ${getWorkflowStatusById(opportunity.workflowId)?.status || 'Not specified'}`}
-                color={getWorkflowColor(opportunity.workflowId)}
+                label={`Workflow: ${getWorkflowStatusById(opportunity.currentHistory.statusId)?.status || 'Not specified'}`}
+                color={getWorkflowColor(opportunity.currentHistory.statusId)}
                 sx={{ mb: 1 }}
               />
             </Grid>

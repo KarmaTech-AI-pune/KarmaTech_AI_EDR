@@ -31,8 +31,8 @@ namespace NJS.Repositories.Repositories
 
         public async Task<OpportunityTracking> GetByIdAsync(int id)
         {
-            var opportunity = await _context.OpportunityTrackings
-                .FirstOrDefaultAsync(o => o.Id == id);
+            var opportunity = await _context.OpportunityTrackings.Include(x => x.OpportunityHistories).ThenInclude(x => x.Status)
+                .FirstAsync(o => o.Id == id);
 
             if (opportunity == null)
             {
@@ -65,7 +65,7 @@ namespace NJS.Repositories.Repositories
 
         public async Task<IEnumerable<OpportunityTracking>> GetAllAsync()
         {
-            return await _context.OpportunityTrackings.ToListAsync();
+            return await _context.OpportunityTrackings.Include(x=>x.OpportunityHistories).ThenInclude(x=>x.Status).ToListAsync();
         }
 
         public async Task<OpportunityTracking> UpdateAsync(OpportunityTracking opportunityTracking)
