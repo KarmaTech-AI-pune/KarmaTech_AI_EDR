@@ -137,16 +137,19 @@ export const opportunityApi = {
       const preparedData = prepareOpportunityTrackingForSubmission(normalizedData);
 
       // Prepare the opportunity object with default values and convert to backend model
-      const command: BackendOpportunityTracking = {       
+      const command: BackendOpportunityTracking = {
+        
         stage: mapStageToBackend(preparedData.stage as OpportunityStage || 'A'),
         strategicRanking: preparedData.strategicRanking || 'M',
         bidManagerId: preparedData.bidManagerId,
+        approvalManagerId: preparedData.approvalManagerId|| undefined,
+        reviewManagerId: preparedData.reviewManagerId || undefined,
         operation: preparedData.operation || '',
         workName: preparedData.workName || '',
         client: preparedData.client || '',
         clientSector: preparedData.clientSector || '',
-        likelyStartDate: preparedData.likelyStartDate instanceof Date 
-          ? preparedData.likelyStartDate.toISOString().split('T')[0] 
+        likelyStartDate: preparedData.likelyStartDate instanceof Date
+          ? preparedData.likelyStartDate.toISOString().split('T')[0]
           : (preparedData.likelyStartDate || new Date().toISOString().split('T')[0]),
         status: mapStatusToBackend(preparedData.status as OpportunityTrackingStatus || 'Bid Under Preparation'),
         currency: preparedData.currency || 'INR',
@@ -159,8 +162,8 @@ export const opportunityApi = {
         emd: preparedData.emd || 0,
         formOfEMD: preparedData.formOfEMD,
         contactPersonAtClient: preparedData.contactPersonAtClient,
-        dateOfSubmission: preparedData.dateOfSubmission instanceof Date 
-          ? preparedData.dateOfSubmission.toISOString().split('T')[0] 
+        dateOfSubmission: preparedData.dateOfSubmission instanceof Date
+          ? preparedData.dateOfSubmission.toISOString().split('T')[0]
           : preparedData.dateOfSubmission,
         percentageChanceOfProjectHappening: preparedData.percentageChanceOfProjectHappening,
         percentageChanceOfNJSSuccess: preparedData.percentageChanceOfNJSSuccess,
@@ -169,9 +172,9 @@ export const opportunityApi = {
         netNJSRevenue: preparedData.netNJSRevenue || 0,
         followUpComments: preparedData.followUpComments,
         notes: preparedData.notes,
-        probableQualifyingCriteria: preparedData.probableQualifyingCriteria       
+        probableQualifyingCriteria: preparedData.probableQualifyingCriteria,
+        currentHistory: preparedData.currentHistory
       };
-      console.log(command);
       
       // Make API call to backend
       const response = await axiosInstance.post<OpportunityTracking>('api/OpportunityTracking', command);
@@ -185,8 +188,14 @@ export const opportunityApi = {
 
   getByUserId: async (userId: string): Promise<OpportunityTracking[]> => {
     try {
-      const response = await axiosInstance.get<OpportunityTracking[]>(`/OpportunityTracking/user/${userId}`);
-      return response.data.map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking);
+      const response = await axiosInstance.get<OpportunityTracking[]>(`api/OpportunityTracking/bid-manager/${userId}`);
+      return response.data
+        .map(opp => ({
+          ...opp,
+          stage: mapStageFromBackend(Number(opp.stage)),  // Mapping the stage
+          status: mapStatusFromBackend(Number(opp.status)) // Mapping the status
+        }))
+        .map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking); // Normalizing the data
     } catch (error) {
       console.error('Error fetching opportunities by user ID:', error);
       throw error;
@@ -195,9 +204,15 @@ export const opportunityApi = {
 
   getByReviewManagerId: async (reviewManagerId: string): Promise<OpportunityTracking[]> => {
     try {
-      const response = await axiosInstance.get<OpportunityTracking[]>(`api/OpportunityTracking/review-manager/${reviewManagerId}`);
-      return response.data.map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking);
-    } catch (error) {
+      const response = await axiosInstance.get<OpportunityTracking[]>(`api/OpportunityTracking/regional-manager/${reviewManagerId}`);
+     return response.data
+        .map(opp => ({
+          ...opp,
+          stage: mapStageFromBackend(Number(opp.stage)),  // Mapping the stage
+          status: mapStatusFromBackend(Number(opp.status)) // Mapping the status
+        }))
+        .map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking); // Normalizing the data
+    }catch (error) {
       console.error('Error fetching opportunities by review manager ID:', error);
       throw error;
     }
@@ -205,8 +220,14 @@ export const opportunityApi = {
 
   getByApprovalManagerId: async (approvalManagerId: string): Promise<OpportunityTracking[]> => {
     try {
-      const response = await axiosInstance.get<OpportunityTracking[]>(`api/OpportunityTracking/approval-manager/${approvalManagerId}`);
-      return response.data.map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking);
+      const response = await axiosInstance.get<OpportunityTracking[]>(`api/OpportunityTracking/regional-director/${approvalManagerId}`);
+      return response.data
+        .map(opp => ({
+          ...opp,
+          stage: mapStageFromBackend(Number(opp.stage)),  // Mapping the stage
+          status: mapStatusFromBackend(Number(opp.status)) // Mapping the status
+        }))
+        .map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking); // Normalizing the data
     } catch (error) {
       console.error('Error fetching opportunities by approval manager ID:', error);
       throw error;

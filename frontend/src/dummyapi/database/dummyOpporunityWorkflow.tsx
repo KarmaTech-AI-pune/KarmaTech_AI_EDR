@@ -31,7 +31,7 @@ export const workflowStatuses: WorkflowStatus[] = [
 export const workflowData: WorkflowEntry[] = [
     {
         id: "1",
-        opportunityId: "1",
+        opportunityId: 1,
         formStage: 'opportunityTracking',
         workflowId: "1", // Maps to "Initial" status
         createdAt: '2024-01-15T10:00:00Z',
@@ -39,7 +39,7 @@ export const workflowData: WorkflowEntry[] = [
     },
     {
         id: "2",
-        opportunityId: "2",
+        opportunityId: 2,
         formStage: 'opportunityTracking',
         workflowId: "1", // Maps to "Initial" status
         createdAt: '2024-01-16T10:00:00Z',
@@ -47,7 +47,7 @@ export const workflowData: WorkflowEntry[] = [
     },
     {
         id: "3",
-        opportunityId: "3",
+        opportunityId: 3,
         formStage: 'opportunityTracking',
         workflowId: "1", // Maps to "Initial" status
         createdAt: '2024-01-17T10:00:00Z',
@@ -55,7 +55,7 @@ export const workflowData: WorkflowEntry[] = [
     },
     {
         id: "4",
-        opportunityId: "4",
+        opportunityId: 4,
         formStage: 'opportunityTracking',
         workflowId: "1", // Maps to "Initial" status
         createdAt: '2024-01-18T10:00:00Z',
@@ -63,7 +63,7 @@ export const workflowData: WorkflowEntry[] = [
     },
     {
         id: "5",
-        opportunityId: "5",
+        opportunityId: 5,
         formStage: 'goNoGo',
         workflowId: "1", // Maps to "Initial" status
         createdAt: '2024-01-19T10:00:00Z',
@@ -71,7 +71,7 @@ export const workflowData: WorkflowEntry[] = [
     },
     {
         id: "6",
-        opportunityId: "6",
+        opportunityId: 6,
         formStage: 'bidAccepted',
         workflowId: "6",
         createdAt: '2024-01-16T10:00:00Z',

@@ -43,8 +43,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   const [bdManagers, setBdManagers] = useState<{id: string, name: string}[]>([]);
   const [reviewManagers, setReviewManagers] = useState<{id: string, name: string}[]>([]);
   const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
-  const [formData, setFormData] = useState<Partial<OpportunityTracking>>({
-    projectId: project?.projectId || "",
+  const [formData, setFormData] = useState<Partial<OpportunityTracking>>({    
     stage: project?.stage || '',
     strategicRanking: project?.strategicRanking || '',
     bidFees: project?.bidFees || 0,
@@ -74,7 +73,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     durationOfProject: project?.durationOfProject || 0,
     fundingStream: project?.fundingStream || '',
     contractType: project?.contractType || '',
-    workflowId: project?.workflowId || "1" // Default to Initial (ID: 1)
+    // Default to Initial (ID: 1)
   });
 
   useEffect(() => {
@@ -130,7 +129,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         approvalManagerId: project.approvalManagerId,
         dateOfSubmission: project.dateOfSubmission || new Date().toISOString().split('T')[0],
         likelyStartDate: project.likelyStartDate || new Date().toISOString().split('T')[0],
-        workflowId: project.workflowId || "1"
+       
       });
     }
   }, [project]);

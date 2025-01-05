@@ -41,31 +41,11 @@ namespace NJS.Repositories.Repositories
 
             return opportunity;
         }
-
-        public async Task<IEnumerable<OpportunityTracking>> GetByUserIdAsync(string userId)
-        {
-            return await _context.OpportunityTrackings
-                .Where(o => o.BidManagerId == userId)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<OpportunityTracking>> GetByReviewManagerIdAsync(string reviewManagerId)
-        {
-            return await _context.OpportunityTrackings
-                .Where(o => o.ReviewManagerId == reviewManagerId)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<OpportunityTracking>> GetByApprovalManagerIdAsync(string approvalManagerId)
-        {
-            return await _context.OpportunityTrackings
-                .Where(o => o.ApprovalManagerId == approvalManagerId)
-                .ToListAsync();
-        }
+       
 
         public async Task<IEnumerable<OpportunityTracking>> GetAllAsync()
         {
-            return await _context.OpportunityTrackings.Include(x=>x.OpportunityHistories).ThenInclude(x=>x.Status).ToListAsync();
+            return await _context.OpportunityTrackings.Include(x => x.OpportunityHistories).ThenInclude(x => x.Status).ToListAsync();
         }
 
         public async Task<OpportunityTracking> UpdateAsync(OpportunityTracking opportunityTracking)
@@ -85,9 +65,31 @@ namespace NJS.Repositories.Repositories
         public async Task DeleteAsync(int id)
         {
             var opportunity = await GetByIdAsync(id);
-            
+
             _context.OpportunityTrackings.Remove(opportunity);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<OpportunityTracking>> GetByBidManagerIdAsync(string bidManagerId)
+        {
+
+            return await _context.OpportunityTrackings.Include(x => x.OpportunityHistories).ThenInclude(x => x.Status)
+                .Where(o => o.BidManagerId == bidManagerId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<OpportunityTracking>> GetByRegionalManagerIdAsync(string regionalManagerId)
+        {
+            return await _context.OpportunityTrackings.Include(x => x.OpportunityHistories).ThenInclude(x => x.Status)
+                .Where(o => o.ReviewManagerId == regionalManagerId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<OpportunityTracking>> GetByRegionalDirectorIdAsync(string regionalDirectorId)
+        {
+            return await _context.OpportunityTrackings.Include(x => x.OpportunityHistories).ThenInclude(x => x.Status)
+                .Where(o => o.ApprovalManagerId == regionalDirectorId)
+                .ToListAsync();
         }
     }
 }

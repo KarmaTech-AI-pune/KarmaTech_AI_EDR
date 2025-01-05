@@ -245,7 +245,7 @@ export const opportunityTrackings: OpportunityTracking[] = Object.values(opportu
 }));
 
 // Utility functions
-export const getOpportunityById = (id: string): OpportunityTracking | undefined => {
+export const getOpportunityById = (id: number): OpportunityTracking | undefined => {
   return opportunityTrackings.find(opportunity => opportunity.id === id);
 };
 

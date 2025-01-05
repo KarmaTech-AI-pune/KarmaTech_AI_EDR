@@ -90,7 +90,7 @@ export type LoginResponse = {
 
 export type OpportunityItemProps = {
   opportunity: OpportunityTracking;
-  onOpportunityDeleted?: (opportunityId: string) => void;
+  onOpportunityDeleted?: (opportunityId: number) => void;
   onOpportunityUpdated?: () => void;
 };
 

@@ -3,12 +3,13 @@ using MediatR;
 using NJS.Application.CQRS.OpportunityTracking.Commands;
 using NJS.Application.CQRS.OpportunityTracking.Queries;
 using NJS.Domain.Enums;
-using DocumentFormat.OpenXml.Office2010.Excel;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NJSAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OpportunityTrackingController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -41,6 +42,51 @@ namespace NJSAPI.Controllers
                     sortBy,
                     isAscending
                 );
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving opportunity trackings.", error = ex.Message });
+            }
+        }
+
+        [HttpGet("bid-manager/{bidManagerId}")]
+        public async Task<IActionResult> GetOpportunityTrackingsByBidManager(string bidManagerId)
+        {
+            try
+            {
+                var query = new GetOpportunityTrackingsByBidManagerQuery(bidManagerId);
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving opportunity trackings.", error = ex.Message });
+            }
+        }
+
+        [HttpGet("regional-manager/{regionalManagerId}")]
+        public async Task<IActionResult> GetOpportunityTrackingsByRegionalManager(string regionalManagerId)
+        {
+            try
+            {
+                var query = new GetOpportunityTrackingsByRegionalManagerQuery(regionalManagerId);
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving opportunity trackings.", error = ex.Message });
+            }
+        }
+
+        [HttpGet("regional-director/{regionalDirectorId}")]
+        public async Task<IActionResult> GetOpportunityTrackingsByRegionalDirector(string regionalDirectorId)
+        {
+            try
+            {
+                var query = new GetOpportunityTrackingsByRegionalDirectorQuery(regionalDirectorId);
                 var result = await _mediator.Send(query);
                 return Ok(result);
             }

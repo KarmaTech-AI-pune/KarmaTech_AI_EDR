@@ -9,7 +9,7 @@ import {
     Alert,
     Container
 } from '@mui/material';
-import { authApi } from '../dummyapi/api';
+import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
 

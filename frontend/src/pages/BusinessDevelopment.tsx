@@ -13,7 +13,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { OpportunityList } from '../components/projects/OpportunityList';
 import { OpportunityForm } from '../components/forms/OpportunityForm';
 import { Pagination } from '../components/Pagination';
-import { authApi } from '../dummyapi/authApi';
+import { authApi } from '../services/authApi';
 import { UserWithRole } from '../types';
 import { OpportunityTracking } from '../models';
 import { PermissionType } from '../models';
