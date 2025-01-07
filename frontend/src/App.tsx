@@ -6,7 +6,7 @@ import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManageme
 import { Navbar } from './components/navigation/Navbar'
 import { Dashboard } from './components/Dashboard'
 import { ResourceManagement } from './components/ResourceManagement'
-import { authApi } from './dummyapi/api'
+import { authApi } from './services/authApi'
 import { PermissionType } from './models'
 import GoNoGoForm from './components/forms/GoNoGoForm'
 import BidPreparationForm from './components/forms/BidPreparationForm'
@@ -42,7 +42,7 @@ function App() {
           setCanApproveBD(false);
           return;
         }
-
+  debugger;
         setCurrentUser(user);
 
         if (user.roleDetails) {

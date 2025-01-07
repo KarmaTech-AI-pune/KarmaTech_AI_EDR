@@ -54,7 +54,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
   const canShowWorkflowButton = () => {
     if (!context) return false;
     
-    const status = getWorkflowStatusById(opportunity.workflowId)?.status;
+    const status = getWorkflowStatusById(opportunity.currentHistory.statusId)?.status;
     if (!status || status === "Approved") {
       return false;
     }
@@ -77,7 +77,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
   const getWorkflowDialog = () => {
     if (!context?.currentUser?.name) return null;
 
-    const status = getWorkflowStatusById(opportunity.workflowId)?.status;
+    const status = getWorkflowStatusById(opportunity.currentHistory.statusId)?.status;
     switch (status) {
       case "Initial":
       case "Review Changes":
@@ -138,7 +138,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
           color="primary"
           startIcon={<Send />}
         >
-          {getWorkflowButtonText(opportunity.workflowId)}
+          {getWorkflowButtonText(opportunity.currentHistory.statusId)}
         </Button>
       )}
       {getWorkflowDialog()}

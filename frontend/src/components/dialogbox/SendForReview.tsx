@@ -41,7 +41,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
   useEffect(() => {
     // Get all Regional Manager users
     const checkManager = async() =>{
-      if(opportunityId){
+      if(opportunityId){        
         let res =  await opportunityApi.getById(opportunityId);
         if(res.reviewManagerId) {
           let managerUser = await getUserById(res.reviewManagerId);
