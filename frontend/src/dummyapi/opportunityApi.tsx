@@ -4,6 +4,7 @@ import {
   normalizeOpportunityTracking, 
   prepareOpportunityTrackingForSubmission 
 } from '../models/opportunityTrackingModel';
+import { OpportunityHistory } from '../models/opportunityHistoryModel';
 
 type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E';
 type OpportunityTrackingStatus = 
@@ -35,20 +36,20 @@ export interface BackendOpportunityTracking {
   contractType: string;
 
   // Optional fields
-  bidFees: number;
-  emd: number;
+  bidFees?: number;
+  emd?: number;
   formOfEMD?: string;
   contactPersonAtClient?: string;
   dateOfSubmission?: string;
   percentageChanceOfProjectHappening?: number;
   percentageChanceOfNJSSuccess?: number;
   likelyCompetition?: string;
-  grossRevenue: number;
-  netNJSRevenue: number;
+  grossRevenue?: number;
+  netNJSRevenue?: number;
   followUpComments?: string;
   notes?: string;
   probableQualifyingCriteria?: string;
-  currentHistory:any;
+  currentHistory?: OpportunityHistory[];
 }
 
 // Mapping functions to convert frontend types to backend numeric values
@@ -138,7 +139,6 @@ export const opportunityApi = {
 
       // Prepare the opportunity object with default values and convert to backend model
       const command: BackendOpportunityTracking = {
-        
         stage: mapStageToBackend(preparedData.stage as OpportunityStage || 'A'),
         strategicRanking: preparedData.strategicRanking || 'M',
         bidManagerId: preparedData.bidManagerId,
@@ -173,7 +173,11 @@ export const opportunityApi = {
         followUpComments: preparedData.followUpComments,
         notes: preparedData.notes,
         probableQualifyingCriteria: preparedData.probableQualifyingCriteria,
-        currentHistory: preparedData.currentHistory
+        currentHistory: preparedData.currentHistory 
+          ? Array.isArray(preparedData.currentHistory) 
+            ? preparedData.currentHistory 
+            : [preparedData.currentHistory]
+          : undefined
       };
       
       // Make API call to backend
@@ -182,6 +186,66 @@ export const opportunityApi = {
       return normalizeOpportunityTracking(response.data) as OpportunityTracking;
     } catch (error) {
       console.error('Error creating opportunity:', error);
+      throw error;
+    }
+  },
+
+  update: async (opportunityId: number, opportunityData: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
+    try {
+      // Normalize and prepare data for submission
+      const normalizedData = normalizeOpportunityTracking(opportunityData);
+      const preparedData = prepareOpportunityTrackingForSubmission(normalizedData);
+
+      // Prepare the opportunity object with default values and convert to backend model
+      const command: BackendOpportunityTracking = {
+        id: opportunityId,
+        stage: mapStageToBackend(preparedData.stage as OpportunityStage || 'A'),
+        strategicRanking: preparedData.strategicRanking || 'M',
+        bidManagerId: preparedData.bidManagerId,
+        approvalManagerId: preparedData.approvalManagerId|| undefined,
+        reviewManagerId: preparedData.reviewManagerId || undefined,
+        operation: preparedData.operation || '',
+        workName: preparedData.workName || '',
+        client: preparedData.client || '',
+        clientSector: preparedData.clientSector || '',
+        likelyStartDate: preparedData.likelyStartDate instanceof Date
+          ? preparedData.likelyStartDate.toISOString().split('T')[0]
+          : (preparedData.likelyStartDate || new Date().toISOString().split('T')[0]),
+        status: mapStatusToBackend(preparedData.status as OpportunityTrackingStatus || 'Bid Under Preparation'),
+        currency: preparedData.currency || 'INR',
+        capitalValue: preparedData.capitalValue || 0,
+        durationOfProject: preparedData.durationOfProject || 0,
+        fundingStream: preparedData.fundingStream || '',
+        contractType: preparedData.contractType || '',
+        // Optional fields
+        bidFees: preparedData.bidFees || 0,
+        emd: preparedData.emd || 0,
+        formOfEMD: preparedData.formOfEMD,
+        contactPersonAtClient: preparedData.contactPersonAtClient,
+        dateOfSubmission: preparedData.dateOfSubmission instanceof Date
+          ? preparedData.dateOfSubmission.toISOString().split('T')[0]
+          : preparedData.dateOfSubmission,
+        percentageChanceOfProjectHappening: preparedData.percentageChanceOfProjectHappening,
+        percentageChanceOfNJSSuccess: preparedData.percentageChanceOfNJSSuccess,
+        likelyCompetition: preparedData.likelyCompetition,
+        grossRevenue: preparedData.grossRevenue || 0,
+        netNJSRevenue: preparedData.netNJSRevenue || 0,
+        followUpComments: preparedData.followUpComments,
+        notes: preparedData.notes,
+        probableQualifyingCriteria: preparedData.probableQualifyingCriteria,
+        currentHistory: preparedData.currentHistory 
+          ? Array.isArray(preparedData.currentHistory) 
+            ? preparedData.currentHistory 
+            : [preparedData.currentHistory]
+          : undefined
+      };
+      
+      // Make API call to backend
+      const response = await axiosInstance.put<OpportunityTracking>(`api/OpportunityTracking/${opportunityId}`, command);
+      
+      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+    } catch (error) {
+      console.error('Error updating opportunity:', error);
       throw error;
     }
   },
@@ -267,9 +331,62 @@ export const opportunityApi = {
 
   delete: async (opportunityId: number): Promise<void> => {
     try {
-      await axiosInstance.delete(`/OpportunityTracking/${opportunityId}`);
+      await axiosInstance.delete(`api/OpportunityTracking/${opportunityId}`);
     } catch (error) {
       console.error('Error deleting opportunity:', error);
+      throw error;
+    }
+  },
+
+  // Additional methods for sending to review, approval, etc.
+  sendToReview: async (opportunityId: number, reviewManagerId: string): Promise<OpportunityTracking> => {
+    try {
+      const response = await axiosInstance.post<OpportunityTracking>('api/OpportunityTracking/SendToReview', { 
+        opportunityId, 
+        reviewManagerId 
+      });
+      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+    } catch (error) {
+      console.error('Error sending opportunity to review:', error);
+      throw error;
+    }
+  },
+
+  sendToApproval: async (opportunityId: number, approvalManagerId: string): Promise<OpportunityTracking> => {
+    try {
+      const response = await axiosInstance.post<OpportunityTracking>('api/OpportunityTracking/SendToApproval', { 
+        opportunityId, 
+        approvalManagerId 
+      });
+      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+    } catch (error) {
+      console.error('Error sending opportunity to approval:', error);
+      throw error;
+    }
+  },
+
+  sendToApprove: async (opportunityId: number, regionalDirectorId: string): Promise<OpportunityTracking> => {
+    try {
+      const response = await axiosInstance.post<OpportunityTracking>('api/OpportunityTracking/SendToApprove', { 
+        opportunityId, 
+        regionalDirectorId 
+      });
+      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+    } catch (error) {
+      console.error('Error sending opportunity to approve:', error);
+      throw error;
+    }
+  },
+
+  reject: async (opportunityId: number, rejectionReason: string): Promise<OpportunityTracking> => {
+    try {
+      const response = await axiosInstance.post<OpportunityTracking>('api/OpportunityTracking/Reject', { 
+        opportunityId, 
+        rejectionReason 
+      });
+      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+    } catch (error) {
+      console.error('Error rejecting opportunity:', error);
       throw error;
     }
   }
