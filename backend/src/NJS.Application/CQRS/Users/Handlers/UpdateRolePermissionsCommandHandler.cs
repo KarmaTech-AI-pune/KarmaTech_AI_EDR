@@ -1,59 +1,65 @@
-using System;
+using MediatR;
+using Microsoft.AspNetCore.Identity;
+using NJS.Application.CQRS.Users.Commands;
+using NJS.Application.Dtos;
+using NJS.Domain.Entities;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using NJS.Application.CQRS.Users.Commands;
-using NJS.Domain.Database;
-using NJS.Domain.Entities;
 
 namespace NJS.Application.CQRS.Users.Handlers
 {
-    public class UpdateRolePermissionsCommandHandler : IRequestHandler<UpdateRolePermissionsCommand, bool>
+    public class UpdateRolePermissionsCommandHandler : IRequestHandler<UpdateRolePermissionsCommand>
     {
-        private readonly ProjectManagementContext _context;
+        private readonly RoleManager<Role> _roleManager;
 
-        public UpdateRolePermissionsCommandHandler(ProjectManagementContext context)
+        public UpdateRolePermissionsCommandHandler(RoleManager<Role> roleManager)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _roleManager = roleManager;
         }
 
-        public async Task<bool> Handle(UpdateRolePermissionsCommand request, CancellationToken cancellationToken)
+        public async Task Handle(UpdateRolePermissionsCommand request, CancellationToken cancellationToken)
         {
-            try
+            var role = await _roleManager.FindByIdAsync(request.RoleId);
+            if (role == null)
             {
-                // Get the role with its current permissions
-                var role = await _context.Set<Role>()
-                    .Include(r => r.RolePermissions)
-                    .FirstOrDefaultAsync(r => r.Id == request.RoleId, cancellationToken);
-
-                if (role == null)
-                {
-                    throw new InvalidOperationException($"Role with ID {request.RoleId} not found.");
-                }
-
-                // Remove existing role permissions
-                _context.Set<RolePermission>().RemoveRange(role.RolePermissions);
-
-                // Add new role permissions
-                var newRolePermissions = request.RoleDefination.Permissions
-               .SelectMany(category => category.Permissions)
-               .Select(permission => new RolePermission
-               {
-                   RoleId = role.Id,
-                   PermissionId = permission.Id
-               }).ToList();
-
-                await _context.Set<RolePermission>().AddRangeAsync(newRolePermissions, cancellationToken);
-                await _context.SaveChangesAsync(cancellationToken);
-
-                return true;
+                throw new System.InvalidOperationException($"Role with ID {request.RoleId} not found.");
             }
-            catch (Exception)
+
+            // Flatten permissions from categories
+            var allPermissions = request.RoleDefination.Permissions
+                .SelectMany(category => category.Permissions)
+                .Distinct()
+                .ToList();
+
+            // Update role name if changed
+            if (role.Name != request.RoleDefination.Name)
             {
-                // await transaction.RollbackAsync(cancellationToken);
-                throw;
+                var renameResult = await _roleManager.SetRoleNameAsync(role, request.RoleDefination.Name);
+                if (!renameResult.Succeeded)
+                {
+                    throw new System.InvalidOperationException("Failed to update role name.");
+                }
+            }
+
+            // Note: Actual permission management depends on your specific implementation
+            // This might involve:
+            // 1. Removing existing claims
+            // 2. Adding new claims based on permissions
+            // 3. Using a custom permission system
+            
+            // Example of how you might update claims (pseudo-code):
+            // await _roleManager.RemoveClaimsAsync(role, await _roleManager.GetClaimsAsync(role));
+            // foreach (var permission in allPermissions)
+            // {
+            //     await _roleManager.AddClaimAsync(role, new Claim("Permission", permission));
+            // }
+
+            // Persist changes
+            var updateResult = await _roleManager.UpdateAsync(role);
+            if (!updateResult.Succeeded)
+            {
+                throw new System.InvalidOperationException("Failed to update role.");
             }
         }
     }

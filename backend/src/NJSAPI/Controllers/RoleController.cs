@@ -13,7 +13,6 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-
     public class RoleController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -67,7 +66,6 @@ namespace NJSAPI.Controllers
         {
             try
             {
-
                 var command = new CreateRoleCommands(role);
                 var result = await _mediator.Send(command);
 
@@ -88,7 +86,6 @@ namespace NJSAPI.Controllers
             }
         }
 
-
         [HttpPut]
         [Route("{roleId}")]
         public async Task<IActionResult> UpdateRolePermissions(string roleId, [FromBody] RoleDefination role)
@@ -99,21 +96,13 @@ namespace NJSAPI.Controllers
                 {
                     return BadRequest(new { message = "Role ID is required" });
                 }
-
                 if (role.Permissions == null || role.Permissions.Count == 0)
                 {
                     return BadRequest(new { message = "At least one permission must be specified" });
                 }
-
                 var command = new UpdateRolePermissionsCommand(roleId, role);
-                var result = await _mediator.Send(command);
-
-                if (result)
-                {
-                    return Ok(new { message = "Role permissions updated successfully" });
-                }
-
-                return BadRequest(new { message = "Failed to update role permissions" });
+                await _mediator.Send(command);
+                return Ok(new { message = "Role permissions updated successfully" });
             }
             catch (InvalidOperationException ex)
             {
@@ -125,12 +114,6 @@ namespace NJSAPI.Controllers
             }
         }
 
-        /// <summary>
-        /// Get role details by role name
-        /// </summary>
-        /// <param name="roleName"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
         [HttpGet]
         [Route("GetRoleByName/{roleName}")]
         public async Task<ActionResult<RoleDto>> GetRoleByName(string roleName)
@@ -153,17 +136,34 @@ namespace NJSAPI.Controllers
 
         [HttpDelete]
         [Route("{roleId}")]
-        public async Task<ActionResult> Delete(string roleId)
+        public async Task<IActionResult> Delete(string roleId)
         {
+            if (string.IsNullOrWhiteSpace(roleId))
+            {
+                return BadRequest(new { message = "Invalid role ID" });
+            }
+
             try
             {
-                var permissions = await _mediator.Send(new DeleteRoleCommand(roleId));
+                // Explicitly create the command with the role ID
+                DeleteRoleCommand deleteCommand = new DeleteRoleCommand(roleId);
+
+                // Explicitly declare the task and await its result
+                Task<bool> deleteTask = _mediator.Send(deleteCommand);
+                bool deleteResult = await deleteTask;
                
-                return Ok(permissions);
+                // Check the result and return appropriate response
+                if (deleteResult)
+                {
+                    return Ok(new { message = "Role deleted successfully" });
+                }
+                
+                return BadRequest(new { message = "Failed to delete role" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                // Log the exception details (consider using a logging framework)
+                return StatusCode(500, new { message = "An error occurred while deleting the role", details = ex.Message });
             }
         }
     }

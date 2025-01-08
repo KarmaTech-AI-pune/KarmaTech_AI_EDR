@@ -17,12 +17,17 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
         private readonly IUserContext _userContext;
         private readonly IRepository<Domain.Entities.OpportunityTracking> _opportunityRepository;
         private readonly IRepository<OpportunityHistory> _historyRepository;
-        private readonly IRepository<OpportunityStatus> _statusRepository;
-        public OpportunitySentToReviewHandler(IOpportunityHistoryService opportunityHistoryService,
-            IUserContext userContext)
+
+        public OpportunitySentToReviewHandler(
+            IOpportunityHistoryService opportunityHistoryService,
+            IUserContext userContext,
+            IRepository<Domain.Entities.OpportunityTracking> opportunityRepository,
+            IRepository<OpportunityHistory> historyRepository)
         {
             _opportunityHistoryService = opportunityHistoryService;
             _userContext = userContext;
+            _opportunityRepository = opportunityRepository;
+            _historyRepository = historyRepository;
         }
 
         public async Task<OpportunityTrackingDto> Handle(SendToReviewCommand request, CancellationToken cancellationToken)
@@ -44,7 +49,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 StatusId = 2, // consider is a fixed Id for status, please check Db opportunityStatuses table and seed
                 ActionDate = DateTime.UtcNow,
                 AssignedToId = request.AssignedToId,
-                Comments =request.Comments
+                Comments = request.Comments
             };
 
             await _opportunityHistoryService.AddHistoryAsync(entity);
@@ -72,6 +77,5 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 }
             };
         }
-       
     }
 }

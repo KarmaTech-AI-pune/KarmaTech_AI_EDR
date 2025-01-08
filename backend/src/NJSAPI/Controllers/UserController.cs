@@ -44,14 +44,12 @@ namespace NJSAPI.Controllers
 
                 if (success)
                 {
-
                     var userDto = new UserDto
                     {
-                        Id = user.Id,
-                        UserName = user.UserName,
-                        Email = user.Email,
-                        Avatar = user.Avatar,
-
+                        Id = user?.Id ?? string.Empty,
+                        UserName = user?.UserName ?? string.Empty,
+                        Email = user?.Email ?? string.Empty,
+                        Avatar = user?.Avatar ?? string.Empty,
                     };
 
                     return Ok(new
@@ -144,7 +142,6 @@ namespace NJSAPI.Controllers
             var users = await _mediator.Send(query);
             return Ok(users);
         }
-
 
         [HttpGet("permissions")]
         public async Task<IActionResult> GetPermissions()

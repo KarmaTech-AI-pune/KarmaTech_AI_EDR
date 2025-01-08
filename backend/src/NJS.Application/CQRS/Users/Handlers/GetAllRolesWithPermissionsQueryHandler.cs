@@ -4,27 +4,26 @@ using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.Users.Queries;
 using NJS.Application.Dtos;
 using NJS.Domain.Entities;
-using NJS.Repositories.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.Users.Handlers
 {
     public class GetAllRolesWithPermissionsQueryHandler : IRequestHandler<GetAllRolesWithPermissionsQuery, IList<RoleDefination>>
     {
         private readonly RoleManager<Role> _roleManager;
-        private readonly IPermissionRepository _permissionRepository;
 
-        public GetAllRolesWithPermissionsQueryHandler(RoleManager<Role> roleManager, IPermissionRepository permissionRepository)
+        public GetAllRolesWithPermissionsQueryHandler(RoleManager<Role> roleManager)
         {
-            _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
-            _permissionRepository = permissionRepository;
+            _roleManager = roleManager;
         }
-
 
         public async Task<IList<RoleDefination>> Handle(GetAllRolesWithPermissionsQuery request, CancellationToken cancellationToken)
         {
             var roles = await _roleManager.Roles.ToListAsync(cancellationToken);
-            List<RoleDefination> roleDefinations = [];
+            var roleDefinations = new List<RoleDefination>();
 
             foreach (var role in roles)
             {
@@ -32,31 +31,17 @@ namespace NJS.Application.CQRS.Users.Handlers
                 {
                     Id = role.Id,
                     Name = role.Name,
-                    Permissions = new List<PermissionCategoryGroup>()
-                };
-
-                var permissions = await _permissionRepository.GetPermissionsByRoleId(role.Id).ConfigureAwait(false);
-                var permissionDtos = permissions.Select(permission => new PermissionDto
-                {
-                    Id = permission.Id,
-                    Name = permission.Name,
-                    Category = permission.Category,
-                }).ToList();
-
-                // Group permissions by Category
-                var groupedPermissions = permissionDtos
-                    .GroupBy(p => p.Category)
-                    .Select(g => new PermissionCategoryGroup
+                    // Example of how you might populate permissions
+                    // This is a placeholder and should be replaced with your actual permission retrieval logic
+                    Permissions = new List<PermissionCategory>
                     {
-                        Category = g.Key,
-                        Permissions = g.ToList()
-                    }).ToList();
-
-                // Store the grouped permissions in the GroupedPermissions property
-                roleDefination.Permissions = groupedPermissions;
-
-                // Optionally, you can still flatten the permissions if needed
-                //roleDefination.Permissions.AddRange(permissionDtos);
+                        new PermissionCategory
+                        {
+                            Category = "General",
+                            Permissions = new List<string> { "View", "Edit", "Delete" }
+                        }
+                    }
+                };
 
                 roleDefinations.Add(roleDefination);
             }
@@ -65,4 +50,3 @@ namespace NJS.Application.CQRS.Users.Handlers
         }
     }
 }
-

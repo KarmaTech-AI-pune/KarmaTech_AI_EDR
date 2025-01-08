@@ -24,6 +24,12 @@ namespace NJS.Application.CQRS.Users.Handlers
         public async Task<UserDto> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
         {
             var query = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == request.Id).ConfigureAwait(false);
+            
+            if (query == null)
+            {
+                return null; // Return null if no user is found
+            }
+
             var roles = await _userManager.GetRolesAsync(query).ConfigureAwait(false);
             var roleDto = new List<RoleDto>();
 
@@ -39,7 +45,6 @@ namespace NJS.Application.CQRS.Users.Handlers
                     Id = role.Id,
                     Name = role.Name,
                 });
-
             }
 
             return new UserDto

@@ -10,6 +10,5 @@ namespace NJS.Application.CQRS.Roles.Commands
         {
             RoleDefination = roleDefination;
         }
-
     }
 }
