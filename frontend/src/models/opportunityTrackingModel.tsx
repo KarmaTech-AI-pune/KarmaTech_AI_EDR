@@ -50,11 +50,12 @@ export interface OpportunityTracking {
   updatedAt: Date | string;
   createdBy: string;
   updatedBy: string;
-  currentHistory: OpportunityHistory;
+  currentHistory?: OpportunityHistory | OpportunityHistory[];
 }
 
 // Utility function to convert string dates to Date objects
-export function normalizeOpportunityTracking(opp: Partial<OpportunityTracking>): Partial<OpportunityTracking> {
+export function normalizeOpportunityTracking(opp: Partial<OpportunityTracking> | null | undefined): Partial<OpportunityTracking> {
+  if (!opp) return {};
   const normalized: Partial<OpportunityTracking> = { ...opp };
 
   if (opp.likelyStartDate) {
@@ -81,11 +82,19 @@ export function normalizeOpportunityTracking(opp: Partial<OpportunityTracking>):
       : new Date(opp.updatedAt);
   }
 
+  // Normalize currentHistory: convert array to first item if it's an array
+  if (opp.currentHistory && Array.isArray(opp.currentHistory)) {
+    normalized.currentHistory = opp.currentHistory.length > 0 
+      ? opp.currentHistory[0] 
+      : undefined;
+  }
+
   return normalized;
 }
 
 // Utility function to convert dates to ISO string for API submission
-export function prepareOpportunityTrackingForSubmission(opp: Partial<OpportunityTracking>): Partial<OpportunityTracking> {
+export function prepareOpportunityTrackingForSubmission(opp: Partial<OpportunityTracking> | null | undefined): Partial<OpportunityTracking> {
+  if (!opp) return {};
   const prepared: Partial<OpportunityTracking> = { ...opp };
 
   if (opp.likelyStartDate instanceof Date) {
@@ -102,6 +111,13 @@ export function prepareOpportunityTrackingForSubmission(opp: Partial<Opportunity
 
   if (opp.updatedAt instanceof Date) {
     prepared.updatedAt = opp.updatedAt.toISOString();
+  }
+
+  // Prepare currentHistory: convert single item to array if it exists
+  if (opp.currentHistory) {
+    prepared.currentHistory = Array.isArray(opp.currentHistory) 
+      ? opp.currentHistory.filter(Boolean)  // Remove any undefined/null items
+      : [opp.currentHistory];
   }
 
   return prepared;
