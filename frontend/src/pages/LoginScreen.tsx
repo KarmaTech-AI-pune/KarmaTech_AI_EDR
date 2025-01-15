@@ -80,7 +80,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#1976d2'
                     }}
                 >
-                    AI-Driven Project Management
+                    NJSEI Project Management
                 </Typography>
                 <Typography 
                     variant="h6" 
@@ -89,7 +89,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#666'
                     }}
                 >
-                    The Automated Project Manager
+                    ISO 9000 Project Management Forms Application
                 </Typography>
             </Container>
 
