@@ -27,6 +27,7 @@ namespace NJS.Domain.Database
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<OpportunityStatus> OpportunityStatuses { get; set; }
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
+        public DbSet<Region> Regions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

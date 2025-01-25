@@ -14,7 +14,8 @@ import {
 } from '@mui/material';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
-import { getUsersByRole } from '../../dummyapi/usersApi';
+
+import { getUsersByRole } from '../../services/userApi';
 import { AuthUser} from '../../models'
 
 interface DecideReviewProps {
@@ -40,9 +41,13 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 
   useEffect(() => {
     // Get all Regional Director users
-    const directors = getUsersByRole('Regional Director');
-    setRegionalDirectors(directors);
+    getRoles()   
   }, []);
+
+  const getRoles = async()=>{
+          const roles= await getUsersByRole('Regional Director');
+          setRegionalDirectors(roles);
+  }
 
   const handleDecisionChange = (event: any) => {
     event.stopPropagation();

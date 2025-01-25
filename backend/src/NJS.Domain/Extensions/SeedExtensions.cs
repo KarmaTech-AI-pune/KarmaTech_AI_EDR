@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Identity.Client.Extensibility;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
+using System.Security.Authentication;
 
 namespace NJS.Domain.Extensions
 {
@@ -24,7 +26,7 @@ namespace NJS.Domain.Extensions
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 
-               // await context.Database.MigrateAsync();
+                // await context.Database.MigrateAsync();
 
                 // Seed Permissions
                 var permissions = new[]
@@ -93,8 +95,8 @@ namespace NJS.Domain.Extensions
                 {
                     if (!await roleManager.RoleExistsAsync(roleData.Name))
                     {
-                        var role = new Role 
-                        { 
+                        var role = new Role
+                        {
                             Name = roleData.Name,
                             Description = roleData.Description,
                             NormalizedName = roleData.Name.ToUpper(),
@@ -116,7 +118,7 @@ namespace NJS.Domain.Extensions
                                     CreatedAt = DateTime.UtcNow,
                                     CreatedBy = "System"
                                 });
-                            
+
                             context.AddRange(rolePermissions);
                             await context.SaveChangesAsync();
                         }
@@ -132,7 +134,7 @@ namespace NJS.Domain.Extensions
                     adminUser = new User
                     {
                         UserName = "admin",
-                        
+
                         Email = adminEmail,
                         EmailConfirmed = true,
                         CreatedAt = DateTime.UtcNow,
@@ -276,8 +278,23 @@ namespace NJS.Domain.Extensions
                     await context.SaveChangesAsync();
 
                     // Assign users to WBS tasks
-                    
+
                     await context.SaveChangesAsync();
+                }
+
+                if (!context.Regions.Any())
+                {
+                    var regions = new List<Region>()
+                    {
+                        new Region() { Name = "North", Code = "NOR" },
+                        new Region() { Name = "South", Code = "SOUT" },
+                        new Region() { Name = "East", Code = "EA" },
+                        new Region() { Name = "West", Code = "WE" },
+                        new Region() { Name = "Central", Code = "CEN" }
+                    };
+                   
+                    context.AddRangeAsync(regions);
+                    context.SaveChanges();
                 }
             }
             catch (Exception)
