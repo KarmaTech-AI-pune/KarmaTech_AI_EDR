@@ -12,7 +12,7 @@ import {
   MenuItem,
   FormHelperText
 } from '@mui/material';
-import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
+import { opportunityApi } from '../../services/opportunityApi';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 
 import { getUsersByRole } from '../../services/userApi';
@@ -104,13 +104,17 @@ const DecideReview: React.FC<DecideReviewProps> = ({
     try {
       const newStatus = decision === 'approve' ? 'Pending Approval' : 'Review Rejected';
       const workflowId = decision === 'approve' ? "4" : "3"; // "4" for "Sent for Approval", "3" for "Review Changes"
-
+      //c (data: {
+       // opportunityId: number;
+        //approvalManagerId: string;
+        //comments?: string;
       // Update both workflow and opportunity in one atomic operation
-      await updateWorkflow(opportunityId, workflowId, {
-        status: newStatus,
-        reviewComments: comments,
-        approvalManagerId: selectedManager || undefined
-      });
+      await opportunityApi.sendToApproval({
+              opportunityId: opportunityId,
+              approvalManagerId: selectedManager,
+              comments: `Sent for review by ${currentUser}`
+            });
+     
 
       // Log the review decision
       if (decision === 'approve') {
