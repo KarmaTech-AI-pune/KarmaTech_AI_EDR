@@ -33,7 +33,7 @@ export const LoginScreen: React.FC = () => {
             
             if (result.success && result.token && result.user) {
                 localStorage.setItem('token', result.token);
-                const storedToken = localStorage.getItem('token');
+                const storedToken = localStorage.getItem('token');               
                 if (storedToken) {
                     setUser(result.user);
                     setIsAuthenticated(true);

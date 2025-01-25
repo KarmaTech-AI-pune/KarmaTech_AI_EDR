@@ -83,7 +83,7 @@ export const authApi = {
   },
 
   checkAuth: async (): Promise<boolean> => {
-    try {
+      try {
       const token = localStorage.getItem('token');
       if (!token) return false;
 
@@ -92,9 +92,8 @@ export const authApi = {
       if (decodedToken.exp * 1000 < Date.now()) {
         await authApi.logout();
         return false;
-      }
-      const response = await axiosInstance.get('api/user/verify');
-      return response.data.valid;
+      }    
+      return true;
     } catch (error) {
       return false;
     }

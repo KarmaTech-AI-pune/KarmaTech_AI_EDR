@@ -24,9 +24,9 @@ export const addOpportunityHistory = async (history: Omit<OpportunityHistory, "i
   return new Promise((resolve) => {
     setTimeout(() => {
       // Convert existing IDs to numbers, find max, then convert back to string
-      const maxId = Math.max(...opportunityHistories.map(h => parseInt(h.id))) + 1;
+      const maxId = Math.max(...opportunityHistories.map(h => h.id)) + 1;
       const newHistory: OpportunityHistory = {
-        id: maxId.toString(),
+        id: maxId,
         ...history
       };
       opportunityHistories.push(newHistory);

@@ -42,7 +42,7 @@ function App() {
           setCanApproveBD(false);
           return;
         }
-  debugger;
+ 
         setCurrentUser(user);
 
         if (user.roleDetails) {

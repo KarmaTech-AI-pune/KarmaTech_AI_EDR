@@ -34,7 +34,7 @@ export class HistoryLoggingService {
     }
 
     static async logSentOpportunityForApproval(
-        opportunityId: string,
+        opportunityId: number,
         sentBy: string,
         approver: string,
         comments?: string
@@ -46,7 +46,7 @@ export class HistoryLoggingService {
     }
 
     static async logApprovalDecision(
-        opportunityId: string,
+        opportunityId: number,
         decision: 'approved' | 'rejected',
         decidedBy: string,
         comments?: string
@@ -92,7 +92,7 @@ export class HistoryLoggingService {
     }
 
     static async logCustomEvent(
-        opportunityId: string,
+        opportunityId: number,
         event: string,
         user: string,
         details?: string
