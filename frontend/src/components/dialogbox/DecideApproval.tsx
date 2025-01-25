@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog,
   DialogTitle,
@@ -14,7 +14,8 @@ import {
   FormHelperText
 } from '@mui/material';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
-import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
+import { opportunityApi } from '../../services/opportunityApi';
+import { OpportunityTracking } from '../../models';
 
 interface DecideApprovalProps {
   open: boolean;
@@ -36,6 +37,24 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
   const [decision, setDecision] = useState<DecisionType | ''>('');
   const [comments, setComments] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [opportunity, setOpportunity] = useState<OpportunityTracking | null>(null);
+
+  useEffect(() => {
+    const fetchOpportunityDetails = async () => {
+      try {
+        // Use the existing method to convert ID and fetch opportunity details
+        const opportunityDetails = await opportunityApi.getById(Number(opportunityId));
+        setOpportunity(opportunityDetails);
+      } catch (err) {
+        console.error('Failed to fetch opportunity details:', err);
+        setError('Failed to load opportunity details');
+      }
+    };
+
+    if (open) {
+      fetchOpportunityDetails();
+    }
+  }, [open, opportunityId]);
 
   const handleDecisionChange = (event: SelectChangeEvent) => {
     event.stopPropagation();
@@ -69,14 +88,20 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       return;
     }
 
+    if (!opportunity?.approvalManagerId) {
+      setError('No approval manager found for this opportunity');
+      return;
+    }
+
     try {
       const newStatus = decision === 'approve' ? 'Approved' : 'Approval Rejected';
       const workflowId = decision === 'approve' ? "6" : "5"; // "6" for Approved, "5" for Approval Changes
 
       // Update both workflow and opportunity in one atomic operation
-      await updateWorkflow(opportunityId, workflowId, {
-        status: newStatus,
-        approvalComments: comments
+      await opportunityApi.decideReview({
+        opportunityId: Number(opportunityId),
+        approvalManagerId: opportunity.approvalManagerId,
+        comments: `decide for review by ${currentUser}`
       });
 
       // Map decision to the correct format for history logging
@@ -84,7 +109,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
 
       // Log the approval decision
       await HistoryLoggingService.logApprovalDecision(
-        opportunityId,
+        Number(opportunityId),
         mappedDecision,
         currentUser,
         comments
@@ -92,7 +117,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
 
       // Log status change
       await HistoryLoggingService.logStatusChange(
-        opportunityId,
+        Number(opportunityId),
         decision === 'approve' ? 'Pending Approval' : 'Approval Rejected',
         newStatus,
         currentUser
