@@ -92,7 +92,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
         lastModifiedBy: context?.currentUser?.name || 'Unknown'
       };
       
-      await opportunityApi.update(updatedOpportunity);
+      await opportunityApi.update(opportunity.id,updatedOpportunity);
       setEditDialogOpen(false);
       setFormError(undefined);
       

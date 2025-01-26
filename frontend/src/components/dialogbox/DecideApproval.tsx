@@ -15,11 +15,12 @@ import {
 } from '@mui/material';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
+import { opportunityApi } from '../../services/opportunityApi';
 
 interface DecideApprovalProps {
   open: boolean;
   onClose: () => void;
-  opportunityId: string;
+  opportunityId: number;
   currentUser: string;
   onSubmit?: () => void;
 }
@@ -58,6 +59,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
   };
 
   const handleSubmit = async (event: React.MouseEvent) => {
+    debugger;
     event.stopPropagation();
     if (!decision) {
       setError('Please select a decision');
@@ -74,6 +76,23 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       const workflowId = decision === 'approve' ? "6" : "5"; // "6" for Approved, "5" for Approval Changes
 
       // Update both workflow and opportunity in one atomic operation
+  
+      if(decision === 'approve' ){
+        await  opportunityApi.sendToApprove({
+          opportunityId: opportunityId,
+          action : "Approve",
+          comments: comments,
+          approvalRegionalDirectorId: ''
+        });
+      }
+      else{
+        await  opportunityApi.rejectOpportunityByRegionalDirector({
+          opportunityId: opportunityId,
+          action : "Reject",
+          comments: comments,
+          approvalRegionalDirectorId: ''
+        })
+      }
       await updateWorkflow(opportunityId, workflowId, {
         status: newStatus,
         approvalComments: comments

@@ -34,6 +34,7 @@ export const BusinessDevelopment: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [opportunitiesPerPage] = useState(5);
 
+ 
   const fetchOpportunities = async () => {
     try {
       if (!currentUser) {
@@ -196,10 +197,11 @@ export const BusinessDevelopment: React.FC = () => {
     };
 
     checkUserPermissions();
+    fetchOpportunities();
   }, []);
 
   useEffect(() => {
-    if (currentUser && canViewOpportunities) {
+      if (currentUser && canViewOpportunities) {
       console.log('Attempting to fetch opportunities');
       fetchOpportunities();
     } else {
