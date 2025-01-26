@@ -195,29 +195,6 @@ export const opportunityApi = {
       throw error;
     }
   },
-  decideReview: async (data: {
-    opportunityId: number;
-    approvalManagerId: string;
-    comments?: string;
-  }): Promise<OpportunityTracking> => {
-    try {
-      const response = await axiosInstance.post<BackendOpportunityTracking>('api/OpportunityTracking/SendToApprove', {
-        opportunityId: data.opportunityId,
-        assignedToId: data.approvalManagerId,
-        comments: data.comments,
-        action: 'DecideToReview' // Added explicit action
-      });
-
-      return normalizeOpportunityTracking({
-        ...response.data,
-        stage: mapStageFromBackend(Number(response.data.stage)),
-        status: mapStatusFromBackend(Number(response.data.status))
-      }) as OpportunityTracking;
-    } catch (error) {
-      console.error('Error sending opportunity for approval:', error);
-      throw error;
-    }
-  },
 
   sendToReview: async (data: {
     opportunityId: number;
