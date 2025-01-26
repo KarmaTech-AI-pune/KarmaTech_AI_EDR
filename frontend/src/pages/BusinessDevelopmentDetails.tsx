@@ -7,7 +7,7 @@ import { OpportunityTracking } from '../models';
 import { getHistoriesByOpportunityId } from '../dummyapi/database/dummyOpportunityHistory';
 import { OpportunityTrackingWorkflow } from '../components/common/OpportunityTrackingWorkflow';
 import { BDChips } from '../components/common/BDChips';
-import { opportunityApi } from '../dummyapi/opportunityApi';
+import { opportunityApi } from '../services/opportunityApi';
 
 const NAVBAR_HEIGHT = '64px';
 

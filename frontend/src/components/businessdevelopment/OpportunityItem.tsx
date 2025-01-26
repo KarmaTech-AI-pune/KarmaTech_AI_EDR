@@ -27,7 +27,7 @@ import {
 import { OpportunityTracking} from "../../models";
 import { OpportunityItemProps} from '../../types';
 import { useState, useContext} from 'react';
-import { opportunityApi } from '../../dummyapi/opportunityApi';
+import { opportunityApi } from '../../services/opportunityApi';
 import { OpportunityForm } from '../forms/OpportunityForm';
 import { projectManagementAppContext } from '../../App';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';

@@ -27,10 +27,10 @@ import {
 import { OpportunityItemProps, UserWithRole } from '../../types';
 import { OpportunityTracking } from '../../models';
 import { useState, useContext, useEffect } from 'react';
-import { opportunityApi } from '../../dummyapi/opportunityApi';
+import { opportunityApi } from '../../services/opportunityApi';
 import { OpportunityForm } from '../forms/OpportunityForm';
 import { projectManagementAppContext } from '../../App';
-import { authApi } from '../../dummyapi/authApi';
+import { authApi } from '../../services/authApi';
 import { PermissionType } from '../../models';
 import { DecideApproval, DecideReview, SendForReview } from '../dialogbox';
 import { OpportunityTrackingWorkflow } from '../common/OpportunityTrackingWorkflow';
