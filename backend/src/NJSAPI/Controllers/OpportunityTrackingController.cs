@@ -1,65 +1,94 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NJS.Domain.Entities;
-using NJS.Repositories.Interfaces;
-using NJS.Application.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using MediatR;
+using NJS.Application.CQRS.OpportunityTracking.Commands;
+using NJS.Application.CQRS.OpportunityTracking.Queries;
+using NJS.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NJSAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OpportunityTrackingController : ControllerBase
     {
-        private readonly IOpportunityTrackingRepository _repository;
+        private readonly IMediator _mediator;
 
-        public OpportunityTrackingController(IOpportunityTrackingRepository repository)
+        public OpportunityTrackingController(IMediator mediator)
         {
-            _repository = repository;
+            _mediator = mediator;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetOpportunityTrackings()
+        public async Task<IActionResult> GetOpportunityTrackings(
+            [FromQuery] OpportunityTrackingStatus? status = null,
+            [FromQuery] OpportunityStage? stage = null,
+            [FromQuery] string? bidManagerId = null,
+            [FromQuery] string? clientSector = null,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] bool isAscending = true)
         {
-            try 
+            try
             {
-                var opportunityTrackings = await _repository.GetAllAsync();
-                
-                var opportunityTrackingDtos = opportunityTrackings.Select(ot => new 
-                {
-                    Id = ot.Id,
-                    ProjectId = ot.ProjectId,
-                    ProjectName = ot.Project?.Name, // Only include project name
-                    Stage = ot.Stage,
-                    StrategicRanking = ot.StrategicRanking,
-                    BidFees = ot.BidFees,
-                    EMD = ot.EMD,
-                    FormOfEMD = ot.FormOfEMD,
-                    BidManager = ot.BidManager,
-                    ContactPersonAtClient = ot.ContactPersonAtClient,
-                    DateOfSubmission = ot.DateOfSubmission,
-                    PercentageChanceOfProjectHappening = ot.PercentageChanceOfProjectHappening,
-                    PercentageChanceOfNJSSuccess = ot.PercentageChanceOfNJSSuccess,
-                    LikelyCompetition = ot.LikelyCompetition,
-                    DateOfResult = ot.DateOfResult,
-                    GrossRevenue = ot.GrossRevenue,
-                    NetNJSRevenue = ot.NetNJSRevenue,
-                    FollowUpComments = ot.FollowUpComments,
-                    Notes = ot.Notes,
-                    ProbableQualifyingCriteria = ot.ProbableQualifyingCriteria,
-                    Month = ot.Month,
-                    Year = ot.Year,
-                    TrackedBy = ot.TrackedBy,
-                    CreatedAt = ot.CreatedAt,
-                    CreatedBy = ot.CreatedBy,
-                    LastModifiedAt = ot.LastModifiedAt,
-                    LastModifiedBy = ot.LastModifiedBy
-                }).ToList();
+                var query = new GetAllOpportunityTrackingsQuery(
+                    status,
+                    stage,
+                    bidManagerId,
+                    clientSector,
+                    pageNumber,
+                    pageSize,
+                    sortBy,
+                    isAscending
+                );
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving opportunity trackings.", error = ex.Message });
+            }
+        }
 
-                return Ok(opportunityTrackingDtos);
+        [HttpGet("bid-manager/{bidManagerId}")]
+        public async Task<IActionResult> GetOpportunityTrackingsByBidManager(string bidManagerId)
+        {
+            try
+            {
+                var query = new GetOpportunityTrackingsByBidManagerQuery(bidManagerId);
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving opportunity trackings.", error = ex.Message });
+            }
+        }
+
+        [HttpGet("regional-manager/{regionalManagerId}")]
+        public async Task<IActionResult> GetOpportunityTrackingsByRegionalManager(string regionalManagerId)
+        {
+            try
+            {
+                var query = new GetOpportunityTrackingsByRegionalManagerQuery(regionalManagerId);
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving opportunity trackings.", error = ex.Message });
+            }
+        }
+
+        [HttpGet("regional-director/{regionalDirectorId}")]
+        public async Task<IActionResult> GetOpportunityTrackingsByRegionalDirector(string regionalDirectorId)
+        {
+            try
+            {
+                var query = new GetOpportunityTrackingsByRegionalDirectorQuery(regionalDirectorId);
+                var result = await _mediator.Send(query);
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -68,50 +97,19 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<object>> GetOpportunityTracking(int id)
+        public async Task<IActionResult> GetOpportunityTracking(int id)
         {
-            try 
+            try
             {
-                var opportunityTracking = await _repository.GetByIdAsync(id);
-                
-                if (opportunityTracking == null)
+                var query = new GetOpportunityTrackingByIdQuery(id);
+                var result = await _mediator.Send(query);
+
+                if (result == null)
                 {
                     return NotFound($"Opportunity Tracking with ID {id} not found.");
                 }
 
-                // Create a DTO without circular references
-                var dto = new 
-                {
-                    Id = opportunityTracking.Id,
-                    ProjectId = opportunityTracking.ProjectId,
-                    ProjectName = opportunityTracking.Project?.Name,
-                    Stage = opportunityTracking.Stage,
-                    StrategicRanking = opportunityTracking.StrategicRanking,
-                    BidFees = opportunityTracking.BidFees,
-                    EMD = opportunityTracking.EMD,
-                    FormOfEMD = opportunityTracking.FormOfEMD,
-                    BidManager = opportunityTracking.BidManager,
-                    ContactPersonAtClient = opportunityTracking.ContactPersonAtClient,
-                    DateOfSubmission = opportunityTracking.DateOfSubmission,
-                    PercentageChanceOfProjectHappening = opportunityTracking.PercentageChanceOfProjectHappening,
-                    PercentageChanceOfNJSSuccess = opportunityTracking.PercentageChanceOfNJSSuccess,
-                    LikelyCompetition = opportunityTracking.LikelyCompetition,
-                    DateOfResult = opportunityTracking.DateOfResult,
-                    GrossRevenue = opportunityTracking.GrossRevenue,
-                    NetNJSRevenue = opportunityTracking.NetNJSRevenue,
-                    FollowUpComments = opportunityTracking.FollowUpComments,
-                    Notes = opportunityTracking.Notes,
-                    ProbableQualifyingCriteria = opportunityTracking.ProbableQualifyingCriteria,
-                    Month = opportunityTracking.Month,
-                    Year = opportunityTracking.Year,
-                    TrackedBy = opportunityTracking.TrackedBy,
-                    CreatedAt = opportunityTracking.CreatedAt,
-                    CreatedBy = opportunityTracking.CreatedBy,
-                    LastModifiedAt = opportunityTracking.LastModifiedAt,
-                    LastModifiedBy = opportunityTracking.LastModifiedBy
-                };
-
-                return Ok(dto);
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -120,50 +118,38 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("project/{projectId}")]
-        public async Task<ActionResult<IEnumerable<object>>> GetOpportunityTrackingsByProject(int projectId)
+        public async Task<IActionResult> GetOpportunityTrackingsByProject(
+            int projectId,
+            [FromQuery] OpportunityTrackingStatus? status = null,
+            [FromQuery] OpportunityStage? stage = null,
+            [FromQuery] string? bidManagerId = null,
+            [FromQuery] string? clientSector = null,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] bool isAscending = true)
         {
-            try 
+            try
             {
-                var opportunityTrackings = await _repository.GetByProjectIdAsync(projectId);
-                
-                if (opportunityTrackings == null || !opportunityTrackings.Any())
+                var query = new GetAllOpportunityTrackingsQuery(
+                    status,
+                    stage,
+                    bidManagerId,
+                    clientSector,
+                    pageNumber,
+                    pageSize,
+                    sortBy,
+                    isAscending
+                );
+
+                var result = await _mediator.Send(query);
+
+                if (result == null)
                 {
                     return NotFound($"No opportunity trackings found for project ID {projectId}.");
                 }
 
-                // Create DTOs without circular references
-                var dtos = opportunityTrackings.Select(ot => new 
-                {
-                    Id = ot.Id,
-                    ProjectId = ot.ProjectId,
-                    ProjectName = ot.Project?.Name,
-                    Stage = ot.Stage,
-                    StrategicRanking = ot.StrategicRanking,
-                    BidFees = ot.BidFees,
-                    EMD = ot.EMD,
-                    FormOfEMD = ot.FormOfEMD,
-                    BidManager = ot.BidManager,
-                    ContactPersonAtClient = ot.ContactPersonAtClient,
-                    DateOfSubmission = ot.DateOfSubmission,
-                    PercentageChanceOfProjectHappening = ot.PercentageChanceOfProjectHappening,
-                    PercentageChanceOfNJSSuccess = ot.PercentageChanceOfNJSSuccess,
-                    LikelyCompetition = ot.LikelyCompetition,
-                    DateOfResult = ot.DateOfResult,
-                    GrossRevenue = ot.GrossRevenue,
-                    NetNJSRevenue = ot.NetNJSRevenue,
-                    FollowUpComments = ot.FollowUpComments,
-                    Notes = ot.Notes,
-                    ProbableQualifyingCriteria = ot.ProbableQualifyingCriteria,
-                    Month = ot.Month,
-                    Year = ot.Year,
-                    TrackedBy = ot.TrackedBy,
-                    CreatedAt = ot.CreatedAt,
-                    CreatedBy = ot.CreatedBy,
-                    LastModifiedAt = ot.LastModifiedAt,
-                    LastModifiedBy = ot.LastModifiedBy
-                }).ToList();
-
-                return Ok(dtos);
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -172,28 +158,17 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<object>> CreateOpportunityTracking([FromBody] OpportunityTracking opportunityTracking)
+        public async Task<IActionResult> CreateOpportunityTracking([FromBody] CreateOpportunityTrackingCommand command)
         {
-            try 
+            try
             {
-                if (opportunityTracking == null)
+                if (command == null)
                 {
                     return BadRequest("Opportunity tracking data is null.");
                 }
 
-                var createdOpportunityTracking = await _repository.AddAsync(opportunityTracking);
-                
-                // Create a DTO for the created opportunity tracking
-                var dto = new 
-                {
-                    Id = createdOpportunityTracking.Id,
-                    ProjectId = createdOpportunityTracking.ProjectId,
-                    ProjectName = createdOpportunityTracking.Project?.Name,
-                    Stage = createdOpportunityTracking.Stage,
-                    // Add other properties as needed
-                };
-
-                return CreatedAtAction(nameof(GetOpportunityTracking), new { id = createdOpportunityTracking.Id }, dto);
+                var result = await _mediator.Send(command);
+                return CreatedAtAction(nameof(GetOpportunityTracking), new { id = result.Id }, result);
             }
             catch (Exception ex)
             {
@@ -202,23 +177,22 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateOpportunityTracking(int id, [FromBody] OpportunityTracking opportunityTracking)
+        public async Task<IActionResult> UpdateOpportunityTracking(int id, [FromBody] UpdateOpportunityTrackingCommand command)
         {
-            try 
+            try
             {
-                if (id != opportunityTracking.Id)
+                if (id != command.Id)
                 {
                     return BadRequest("Mismatched opportunity tracking ID.");
                 }
 
-                var existingOpportunityTracking = await _repository.GetByIdAsync(id);
-                if (existingOpportunityTracking == null)
+                var result = await _mediator.Send(command);
+                if (result == null)
                 {
                     return NotFound($"Opportunity tracking with ID {id} not found.");
                 }
 
-                await _repository.UpdateAsync(opportunityTracking);
-                return NoContent();
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -229,20 +203,97 @@ namespace NJSAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOpportunityTracking(int id)
         {
-            try 
+            try
             {
-                var existingOpportunityTracking = await _repository.GetByIdAsync(id);
-                if (existingOpportunityTracking == null)
+                var command = new DeleteOpportunityTrackingCommand(id);
+                var result = await _mediator.Send(command);
+
+                if (!result)
                 {
                     return NotFound($"Opportunity tracking with ID {id} not found.");
                 }
 
-                await _repository.DeleteAsync(id);
                 return NoContent();
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = $"An error occurred while deleting opportunity tracking {id}.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Send To Review by BID Manager
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        [HttpPost("SendToReview")]
+        public async Task<IActionResult> SendToReview([FromBody] SendToReviewCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while sending opportunity tracking to review.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Send To Review by Regional Manager
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        [HttpPost("SendToApproval")]
+        public async Task<IActionResult> SendToApproval([FromBody] SendToApprovalCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while sending opportunity tracking to review.", error = ex.Message });
+            }
+        }
+
+       /// <summary>
+       /// Command for Regional Director
+       /// </summary>
+       /// <param name="command"></param>
+       /// <returns></returns>
+        [HttpPost("SendToApprove")]
+        public async Task<IActionResult> SendToApprove([FromBody] SendToApproveCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while sending opportunity tracking to review.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Send to reject by Regional Manager
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        [HttpPost("Reject")]
+        public async Task<IActionResult> RejectOpportunity([FromBody] RejectOpportunityCommand command)
+        {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while rejecting opportunity.", error = ex.Message });
             }
         }
     }

@@ -1,15 +1,23 @@
 // File: frontend/src/types/index.ts
 // Purpose: typescript types
+import { Project, OpportunityTracking, GoNoGoDecision } from '../models';
+import { User } from '../models';
+import { PermissionType } from '../models'
 
 export type screensArrayType = {
     [key : string] : JSX.Element
 }
 
-export type User = {
-  id: number;
+
+
+export type Role = {
+  id: string;
   name: string;
-  email: string;
-  avatar?: string;
+  permissions: PermissionType[];
+}
+
+export type UserWithRole = User & {
+  roleDetails: Role;
 }
 
 export type projectManagementAppContextType  = {
@@ -20,10 +28,24 @@ export type projectManagementAppContextType  = {
     user: User | null;
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
     handleLogout: () => void;
-    selectedProject?: Project | null;
-    setSelectedProject?: React.Dispatch<React.SetStateAction<Project | null>>;
+    selectedProject?: Project | OpportunityTracking | null;
+    setSelectedProject?: React.Dispatch<React.SetStateAction<Project | OpportunityTracking | null>>;
     currentGoNoGoDecision: GoNoGoDecision | null;
     setCurrentGoNoGoDecision: React.Dispatch<React.SetStateAction<GoNoGoDecision | null>>;
+    currentUser: UserWithRole | null;
+    setCurrentUser: React.Dispatch<React.SetStateAction<UserWithRole | null>>;
+    canEditOpportunity: boolean;
+    setCanEditOpportunity : React.Dispatch<React.SetStateAction<boolean>>;
+    canDeleteOpportunity: boolean;
+    setCanDeleteOpportunity : React.Dispatch<React.SetStateAction<boolean>>;
+    canSubmitForReview: boolean;
+    setCanSubmitForReview : React.Dispatch<React.SetStateAction<boolean>>;
+    canReviewBD: boolean;
+    setCanReviewBD : React.Dispatch<React.SetStateAction<boolean>>;
+    canApproveBD: boolean;
+    setCanApproveBD : React.Dispatch<React.SetStateAction<boolean>>;
+    canSubmitForApproval: boolean;
+    setCanSubmitForApproval : React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export enum ProjectStatus {
@@ -37,35 +59,18 @@ export enum ProjectStatus {
   'Completed' = 7
 }
 
-export type Project = {
-  id: number;
-  name: string;
-  clientName: string;
-  clientSector: string;
-  sector: string;
-  estimatedCost: number;
-  startDate?: string;
-  endDate?: string;
-  status: ProjectStatus;
-  progress: number;
-  contractType: string;
-  currency: string;
-  createdAt: string;
-  createdBy: string;
-  budget?: number;
-  priority?: string;
-}
+
 
 export type ProjectFormData = Omit<Project, 'id'>;
 
 export type ProjectItemProps = {
   project: Project;
-  onProjectDeleted?: (projectId: number) => void;
+  onProjectDeleted?: (projectId: string) => void;
   onProjectUpdated?: () => void;
 }
 
 export type ProjectFormType = {
-  project?: Project;
+  project?: ProjectFormData | Project;
   onSubmit: (data: ProjectFormData) => void;
   onCancel?: () => void;
 }
@@ -79,99 +84,23 @@ export type LoginResponse = {
   success: boolean;
   message: string;
   token?: string;
-  user?: User;
+  user?: UserWithRole;
 }
 
-export type OpportunityTracking = {
-  id: number;
-  projectId: number;
-  stage: string;
-  strategicRanking: string;
-  bidFees?: number;
-  emd?: number;
-  formOfEMD?: string;
-  bidManager: string;
-  contactPersonAtClient?: string;
-  dateOfSubmission?: string;
-  percentageChanceOfProjectHappening?: number;
-  percentageChanceOfNJSSuccess?: number;
-  likelyCompetition?: string;
-  grossRevenue?: number;
-  netNJSRevenue?: number;
-  followUpComments?: string;
-  notes?: string;
-  probableQualifyingCriteria?: string;
-  month: number;
-  year: number;
-  trackedBy: string;
-  createdAt: string;
-  createdBy: string;
-  lastModifiedAt?: string;
-  lastModifiedBy?: string;
-}
 
-export enum GoNoGoStatus {
-  'Green' = 0,
-  'Amber' = 1,
-  'Red' = 2
-}
+export type OpportunityItemProps = {
+  opportunity: OpportunityTracking;
+  onOpportunityDeleted?: (opportunityId: number) => void;
+  onOpportunityUpdated?: () => void;
+};
 
-export interface GoNoGoDecision {
-  projectId: number;
-  bidType: string;
-  sector: string;
-  tenderFee: number;
-  emdAmount: number;
-  // Removed submissionMode
+export type OpportunityFormData = Omit<OpportunityTracking, 'id'>;
 
-  // Rest of the interface remains the same
-  marketingPlanScore: number;
-  marketingPlanComments: string;
-  clientRelationshipScore: number;
-  clientRelationshipComments: string;
-  projectKnowledgeScore: number;
-  projectKnowledgeComments: string;
-  technicalEligibilityScore: number;
-  technicalEligibilityComments: string;
-  financialEligibilityScore: number;
-  financialEligibilityComments: string;
-  staffAvailabilityScore: number;
-  staffAvailabilityComments: string;
-  competitionAssessmentScore: number;
-  competitionAssessmentComments: string;
-  competitivePositionScore: number;
-  competitivePositionComments: string;
-  futureWorkPotentialScore: number;
-  futureWorkPotentialComments: string;
-  profitabilityScore: number;
-  profitabilityComments: string;
-  resourceAvailabilityScore: number;
-  resourceAvailabilityComments: string;
-  bidScheduleScore: number;
-  bidScheduleComments: string;
-
-  // Total Score and Decision
-  totalScore: number;
-  status: GoNoGoStatus;
-  decisionComments: string;
-
-  // Approval Information
-  completedDate: string;
-  completedBy: string;
-  reviewedDate?: string;
-  reviewedBy?: string;
-  approvedDate?: string;
-  approvedBy?: string;
-
-  // Action Plan
-  actionPlan?: string;
-
-  // Audit Fields
-  createdAt: string;
-  createdBy: string;
-  lastModifiedAt?: string;
-  lastModifiedBy?: string;
-}
+export type OpportunityFormProps = {
+  opportunity?: OpportunityTracking;
+  onSubmit: (data: OpportunityFormData) => void;
+  onCancel?: () => void;
+};
 
 // Optional: Create a type for creating a new Go/No-Go decision
-export type CreateGoNoGoDecisionDto = Omit<GoNoGoDecision, 'id'> & { id?: number };
+export type CreateGoNoGoDecisionDto = Omit<GoNoGoDecision, 'id'> & { id?: string };

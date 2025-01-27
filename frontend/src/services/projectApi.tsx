@@ -1,4 +1,4 @@
-import { Project } from '../types';
+import { Project } from '../models';
 import { axiosInstance } from './axiosConfig';
 
 export const projectApi = {
@@ -12,7 +12,7 @@ export const projectApi = {
     }
   },
 
-  getById: async (id: number): Promise<Project> => {
+  getById: async (id: string): Promise<Project> => {
     try {
       const response = await axiosInstance.get(`project/${id}`);
       return response.data;
@@ -28,11 +28,8 @@ export const projectApi = {
         ...project,
         startDate: undefined,
         endDate: undefined,
-        estimatedCost: Number(project.estimatedCost),
-        progress: Number(project.progress)
+        estimatedCost: Number(project.estimatedCost)
       };
-
-      console.log('Creating project with formatted data:', formattedProject);
       
       const response = await axiosInstance.post('project', formattedProject);
       return response.data;
@@ -53,14 +50,13 @@ export const projectApi = {
     }
   },
 
-  update: async (id: number, project: Project): Promise<void> => {
+  update: async (id: string, project: Project): Promise<void> => {
     try {
       const formattedProject = {
         ...project,
         startDate: project.startDate ? new Date(project.startDate).toISOString() : undefined,
         endDate: project.endDate ? new Date(project.endDate).toISOString() : undefined,
-        estimatedCost: Number(project.estimatedCost),
-        progress: Number(project.progress)
+        estimatedCost: Number(project.estimatedCost)
       };
 
       await axiosInstance.put(`project/${id}`, formattedProject);
@@ -70,7 +66,7 @@ export const projectApi = {
     }
   },
 
-  delete: async (id: number): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     try {
       await axiosInstance.delete(`project/${id}`);
     } catch (error) {

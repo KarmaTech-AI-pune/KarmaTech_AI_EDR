@@ -22,6 +22,42 @@ namespace NJS.Domain.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasDiscriminator().HasValue("IdentityRole");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -137,11 +173,9 @@ namespace NJS.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CompetitionAnalysis")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ContractType")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("FinancialInformation")
@@ -149,7 +183,6 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("FundingStream")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("ProbabilityAssessment")
@@ -157,14 +190,12 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ProjectDetails")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
                     b.Property<string>("QualifyingCriteria")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("StrategicRanking")
@@ -356,132 +387,67 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId")
-                        .IsUnique();
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("GoNoGoDecisions");
+                });
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            BidScheduleComments = "Timeline is achievable",
-                            BidScheduleScore = 8,
-                            BidType = "Lumpsum",
-                            ClientRelationshipComments = "Good relationship with municipality",
-                            ClientRelationshipScore = 7,
-                            CompetitionAssessmentComments = "Limited competition in this sector",
-                            CompetitionAssessmentScore = 8,
-                            CompetitivePositionComments = "Strong market position",
-                            CompetitivePositionScore = 8,
-                            CompletedBy = "System",
-                            CompletedDate = new DateTime(2022, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedAt = new DateTime(2022, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            DecisionComments = "Project aligns with our expertise",
-                            EMDAmount = 100000m,
-                            FinancialEligibilityComments = "Strong financial position",
-                            FinancialEligibilityScore = 8,
-                            FutureWorkPotentialComments = "High potential for similar projects",
-                            FutureWorkPotentialScore = 9,
-                            MarketingPlanComments = "Strong marketing strategy in water sector",
-                            MarketingPlanScore = 8,
-                            ProfitabilityComments = "Good profit margins expected",
-                            ProfitabilityScore = 8,
-                            ProjectId = 1,
-                            ProjectKnowledgeComments = "Extensive experience in water supply projects",
-                            ProjectKnowledgeScore = 8,
-                            ResourceAvailabilityComments = "Resources can be allocated",
-                            ResourceAvailabilityScore = 7,
-                            Sector = "Water",
-                            StaffAvailabilityComments = "Required staff available",
-                            StaffAvailabilityScore = 7,
-                            Status = 0,
-                            TechnicalEligibilityComments = "Meets all technical requirements",
-                            TechnicalEligibilityScore = 9,
-                            TenderFee = 5000m,
-                            TotalScore = 95
-                        },
-                        new
-                        {
-                            Id = 2,
-                            BidScheduleComments = "Timeline manageable",
-                            BidScheduleScore = 7,
-                            BidType = "EPC",
-                            ClientRelationshipComments = "Strong relationship with authority",
-                            ClientRelationshipScore = 8,
-                            CompetitionAssessmentComments = "Moderate competition",
-                            CompetitionAssessmentScore = 7,
-                            CompetitivePositionComments = "Good market position",
-                            CompetitivePositionScore = 7,
-                            CompletedBy = "System",
-                            CompletedDate = new DateTime(2023, 10, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedAt = new DateTime(2023, 10, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            DecisionComments = "Proceed with careful resource planning",
-                            EMDAmount = 150000m,
-                            FinancialEligibilityComments = "Financially capable",
-                            FinancialEligibilityScore = 8,
-                            FutureWorkPotentialComments = "Potential for future smart city projects",
-                            FutureWorkPotentialScore = 8,
-                            MarketingPlanComments = "Developing marketing strategy",
-                            MarketingPlanScore = 7,
-                            ProfitabilityComments = "Acceptable profit margins",
-                            ProfitabilityScore = 7,
-                            ProjectId = 4,
-                            ProjectKnowledgeComments = "Good understanding of requirements",
-                            ProjectKnowledgeScore = 7,
-                            ResourceAvailabilityComments = "Resource planning required",
-                            ResourceAvailabilityScore = 6,
-                            Sector = "Smart City",
-                            StaffAvailabilityComments = "Some resource allocation needed",
-                            StaffAvailabilityScore = 6,
-                            Status = 1,
-                            TechnicalEligibilityComments = "Meets technical criteria",
-                            TechnicalEligibilityScore = 8,
-                            TenderFee = 7500m,
-                            TotalScore = 86
-                        },
-                        new
-                        {
-                            Id = 3,
-                            BidScheduleComments = "Timeline challenging",
-                            BidScheduleScore = 6,
-                            BidType = "Design-Build",
-                            ClientRelationshipComments = "New client relationship",
-                            ClientRelationshipScore = 6,
-                            CompetitionAssessmentComments = "Strong competition in sector",
-                            CompetitionAssessmentScore = 5,
-                            CompetitivePositionComments = "Limited competitive advantage",
-                            CompetitivePositionScore = 5,
-                            CompletedBy = "System",
-                            CompletedDate = new DateTime(2023, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedAt = new DateTime(2023, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            DecisionComments = "Project risks outweigh potential benefits",
-                            EMDAmount = 90000m,
-                            FinancialEligibilityComments = "Financial requirements met",
-                            FinancialEligibilityScore = 7,
-                            FutureWorkPotentialComments = "Moderate future potential",
-                            FutureWorkPotentialScore = 6,
-                            MarketingPlanComments = "Limited market presence in coastal sector",
-                            MarketingPlanScore = 5,
-                            ProfitabilityComments = "Low profit margins expected",
-                            ProfitabilityScore = 5,
-                            ProjectId = 5,
-                            ProjectKnowledgeComments = "Limited experience in coastal projects",
-                            ProjectKnowledgeScore = 5,
-                            ResourceAvailabilityComments = "Significant resource gaps",
-                            ResourceAvailabilityScore = 4,
-                            Sector = "Coastal",
-                            StaffAvailabilityComments = "Resource constraints identified",
-                            StaffAvailabilityScore = 4,
-                            Status = 2,
-                            TechnicalEligibilityComments = "Some technical gaps identified",
-                            TechnicalEligibilityScore = 6,
-                            TenderFee = 4500m,
-                            TotalScore = 64
-                        });
+            modelBuilder.Entity("NJS.Domain.Entities.OpportunityHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ActionBy")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ActionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AssignedToId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OpportunityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionBy");
+
+                    b.HasIndex("AssignedToId");
+
+                    b.HasIndex("OpportunityId");
+
+                    b.HasIndex("StatusId");
+
+                    b.ToTable("OpportunityHistories");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.OpportunityStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OpportunityStatuses");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityTracking", b =>
@@ -492,223 +458,156 @@ namespace NJS.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApprovalManagerId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<decimal?>("BidFees")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("BidManager")
+                    b.Property<string>("BidManagerId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<decimal>("CapitalValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Client")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientSector")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ContactPersonAtClient")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ContractType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("DateOfResult")
-                        .HasColumnType("date");
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("DateOfSubmission")
-                        .HasColumnType("date");
+                        .HasColumnType("datetime2");
 
-                    b.Property<decimal?>("EMD")
+                    b.Property<int>("DurationOfProject")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("Emd")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("FollowUpComments")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FormOfEMD")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FundingStream")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("GrossRevenue")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("LikelyCompetition")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("LikelyStartDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<decimal?>("NetNJSRevenue")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("PercentageChanceOfNJSSuccess")
                         .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("PercentageChanceOfProjectHappening")
                         .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ProbableQualifyingCriteria")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ProjectId")
+                    b.Property<string>("ReviewManagerId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Stage")
                         .HasColumnType("int");
 
-                    b.Property<string>("Stage")
-                        .IsRequired()
-                        .HasMaxLength(1)
-                        .HasColumnType("nvarchar(1)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<string>("StrategicRanking")
                         .IsRequired()
-                        .HasMaxLength(1)
-                        .HasColumnType("nvarchar(1)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TrackedBy")
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WorkName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovalManagerId");
+
+                    b.HasIndex("BidManagerId");
+
+                    b.HasIndex("ReviewManagerId");
+
+                    b.ToTable("OpportunityTrackings");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("OpportunityTrackings");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            BidFees = 75000m,
-                            BidManager = "John Smith",
-                            ContactPersonAtClient = "Rajesh Kumar",
-                            CreatedAt = new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            DateOfSubmission = new DateTime(2023, 12, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EMD = 150000m,
-                            FollowUpComments = "Client very interested in smart solutions",
-                            FormOfEMD = "Bank Guarantee",
-                            GrossRevenue = 7500000m,
-                            LastModifiedAt = new DateTime(2023, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LastModifiedBy = "System",
-                            LikelyCompetition = "L&T, HCC, Gammon",
-                            Month = 11,
-                            NetNJSRevenue = 6000000m,
-                            Notes = "Need to focus on IoT integration",
-                            PercentageChanceOfNJSSuccess = 65.0m,
-                            PercentageChanceOfProjectHappening = 75.5m,
-                            ProbableQualifyingCriteria = "Similar project experience, Local presence",
-                            ProjectId = 2,
-                            Stage = "B",
-                            StrategicRanking = "H",
-                            TrackedBy = "System",
-                            Year = 2023
-                        },
-                        new
-                        {
-                            Id = 2,
-                            BidFees = 50000m,
-                            BidManager = "Sarah Johnson",
-                            ContactPersonAtClient = "Amit Patel",
-                            CreatedAt = new DateTime(2023, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            DateOfSubmission = new DateTime(2023, 12, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EMD = 100000m,
-                            FollowUpComments = "Technical presentation scheduled",
-                            FormOfEMD = "Bank Draft",
-                            GrossRevenue = 3200000m,
-                            LastModifiedAt = new DateTime(2023, 11, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LastModifiedBy = "System",
-                            LikelyCompetition = "Tata Projects, SPML Infra",
-                            Month = 11,
-                            NetNJSRevenue = 2500000m,
-                            Notes = "Focus on flood prediction systems",
-                            PercentageChanceOfNJSSuccess = 55.0m,
-                            PercentageChanceOfProjectHappening = 60.0m,
-                            ProbableQualifyingCriteria = "Similar project experience, Local presence",
-                            ProjectId = 3,
-                            Stage = "A",
-                            StrategicRanking = "M",
-                            TrackedBy = "System",
-                            Year = 2023
-                        },
-                        new
-                        {
-                            Id = 3,
-                            BidFees = 50000m,
-                            BidManager = "John Johnson",
-                            ContactPersonAtClient = "Amita Patel",
-                            CreatedAt = new DateTime(2023, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            DateOfSubmission = new DateTime(2023, 12, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EMD = 100000m,
-                            FollowUpComments = "Technical presentation scheduled",
-                            FormOfEMD = "Bank Draft",
-                            GrossRevenue = 3200000m,
-                            LastModifiedAt = new DateTime(2023, 11, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LastModifiedBy = "System",
-                            LikelyCompetition = "Tata Projects, SPML Infra",
-                            Month = 11,
-                            NetNJSRevenue = 2500000m,
-                            Notes = "Focus on flood prediction systems",
-                            PercentageChanceOfNJSSuccess = 55.0m,
-                            PercentageChanceOfProjectHappening = 60.0m,
-                            ProbableQualifyingCriteria = "Similar project experience, Local presence",
-                            ProjectId = 13,
-                            Stage = "B",
-                            StrategicRanking = "M",
-                            TrackedBy = "System",
-                            Year = 2023
-                        },
-                        new
-                        {
-                            Id = 4,
-                            BidFees = 50000m,
-                            BidManager = "Sarah Johnson",
-                            ContactPersonAtClient = "Amit Patel",
-                            CreatedAt = new DateTime(2023, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            DateOfSubmission = new DateTime(2023, 12, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EMD = 100000m,
-                            FollowUpComments = "Technical presentation scheduled",
-                            FormOfEMD = "Bank Draft",
-                            GrossRevenue = 3200000m,
-                            LastModifiedAt = new DateTime(2023, 11, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            LastModifiedBy = "System",
-                            LikelyCompetition = "Tata Projects, SPML Infra, ABC",
-                            Month = 11,
-                            NetNJSRevenue = 2500000m,
-                            Notes = "Focus on flood prediction systems",
-                            PercentageChanceOfNJSSuccess = 55.0m,
-                            PercentageChanceOfProjectHappening = 60.0m,
-                            ProbableQualifyingCriteria = "Similar project experience, Local presence",
-                            ProjectId = 15,
-                            Stage = "A",
-                            StrategicRanking = "M",
-                            TrackedBy = "System",
-                            Year = 2023
-                        });
+                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
@@ -779,10 +678,19 @@ namespace NJS.Domain.Migrations
                     b.Property<int>("Progress")
                         .HasColumnType("int");
 
+                    b.Property<string>("ProjectManagerId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RegionalManagerId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Sector")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("SeniorProjectManagerId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
@@ -792,281 +700,101 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Projects");
+                    b.HasIndex("ProjectManagerId");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            ClientName = "Metropolis Municipality",
-                            ClientSector = "Government",
-                            ContractType = "EPC",
-                            CreatedAt = new DateTime(2022, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EndDate = new DateTime(2024, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EstimatedCost = 5000000m,
-                            Name = "City Water Supply Upgrade",
-                            Progress = 65,
-                            Sector = "Water",
-                            StartDate = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Status = 6
-                        },
-                        new
-                        {
-                            Id = 2,
-                            ClientName = "State Rural Development Dept",
-                            ClientSector = "Government",
-                            ContractType = "Design-Build",
-                            CreatedAt = new DateTime(2023, 2, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EndDate = new DateTime(2025, 3, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EstimatedCost = 2000000m,
-                            Name = "Rural Sanitation Initiative",
-                            Progress = 25,
-                            Sector = "Sanitation",
-                            StartDate = new DateTime(2023, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Status = 0
-                        },
-                        new
-                        {
-                            Id = 3,
-                            ClientName = "Industrial Development Corp",
-                            ClientSector = "Private",
-                            ContractType = "Turnkey",
-                            CreatedAt = new DateTime(2022, 6, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EndDate = new DateTime(2023, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EstimatedCost = 3500000m,
-                            Name = "Industrial Park Drainage System",
-                            Progress = 100,
-                            Sector = "Industrial",
-                            StartDate = new DateTime(2022, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Status = 0
-                        },
-                        new
-                        {
-                            Id = 4,
-                            ClientName = "Smart City Development Authority",
-                            ClientSector = "Government",
-                            ContractType = "EPC",
-                            CreatedAt = new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EstimatedCost = 7500000m,
-                            Name = "Smart City Water Management",
-                            Progress = 0,
-                            Sector = "Smart City",
-                            Status = 1
-                        },
-                        new
-                        {
-                            Id = 5,
-                            ClientName = "Maritime Development Board",
-                            ClientSector = "Government",
-                            ContractType = "Design-Build",
-                            CreatedAt = new DateTime(2023, 5, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EndDate = new DateTime(2025, 5, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EstimatedCost = 4500000m,
-                            Name = "Coastal Zone Protection",
-                            Progress = 45,
-                            Sector = "Coastal",
-                            StartDate = new DateTime(2023, 6, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Status = 2
-                        },
-                        new
-                        {
-                            Id = 6,
-                            ClientName = "City Municipal Corporation",
-                            ClientSector = "Government",
-                            ContractType = "EPC",
-                            CreatedAt = new DateTime(2023, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EstimatedCost = 3200000m,
-                            Name = "Urban Flood Management",
-                            Progress = 0,
-                            Sector = "Urban Infrastructure",
-                            Status = 1
-                        },
-                        new
-                        {
-                            Id = 7,
-                            ClientName = "Municipality",
-                            ClientSector = "Government",
-                            ContractType = "EPC",
-                            CreatedAt = new DateTime(2022, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EndDate = new DateTime(2024, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EstimatedCost = 600000m,
-                            Name = "Pune City Water Supply Upgrade",
-                            Progress = 65,
-                            Sector = "Water",
-                            StartDate = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Status = 6
-                        },
-                        new
-                        {
-                            Id = 8,
-                            ClientName = "Maharashtra Rural Development Dept",
-                            ClientSector = "Government",
-                            ContractType = "Design-Build",
-                            CreatedAt = new DateTime(2023, 2, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EndDate = new DateTime(2025, 3, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EstimatedCost = 2000000m,
-                            Name = "Rural Initiative",
-                            Progress = 25,
-                            Sector = "Sanitation",
-                            StartDate = new DateTime(2023, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Status = 3
-                        },
-                        new
-                        {
-                            Id = 9,
-                            ClientName = "Industrial Development Corp",
-                            ClientSector = "Private",
-                            ContractType = "Turnkey",
-                            CreatedAt = new DateTime(2022, 6, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EndDate = new DateTime(2023, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EstimatedCost = 3500000m,
-                            Name = "Industrial Park System",
-                            Progress = 100,
-                            Sector = "Industrial",
-                            StartDate = new DateTime(2022, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Status = 3
-                        },
-                        new
-                        {
-                            Id = 10,
-                            ClientName = "Smart City Development Authority",
-                            ClientSector = "Government",
-                            ContractType = "EPC",
-                            CreatedAt = new DateTime(2023, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EstimatedCost = 7500000m,
-                            Name = "City Water Management 2",
-                            Progress = 0,
-                            Sector = "Smart City",
-                            Status = 4
-                        },
-                        new
-                        {
-                            Id = 11,
-                            ClientName = "Maritime Development Board",
-                            ClientSector = "Government",
-                            ContractType = "Design-Build",
-                            CreatedAt = new DateTime(2023, 5, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EndDate = new DateTime(2025, 5, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            EstimatedCost = 4500000m,
-                            Name = "Coastal Protection 2",
-                            Progress = 45,
-                            Sector = "Coastal",
-                            StartDate = new DateTime(2023, 6, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Status = 5
-                        },
-                        new
-                        {
-                            Id = 12,
-                            ClientName = "City Municipal Corporation",
-                            ClientSector = "Government",
-                            ContractType = "EPC",
-                            CreatedAt = new DateTime(2023, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EstimatedCost = 3200000m,
-                            Name = "Urban Management",
-                            Progress = 0,
-                            Sector = "Urban Infrastructure",
-                            Status = 5
-                        },
-                        new
-                        {
-                            Id = 13,
-                            ClientName = "City Municipal Corporation",
-                            ClientSector = "Government",
-                            ContractType = "EPC",
-                            CreatedAt = new DateTime(2023, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EstimatedCost = 3900000m,
-                            Name = "Urban Management 23",
-                            Progress = 0,
-                            Sector = "Urban Infrastructure",
-                            Status = 7
-                        },
-                        new
-                        {
-                            Id = 14,
-                            ClientName = "State Industrial Development Corp",
-                            ClientSector = "Government",
-                            ContractType = "EPC",
-                            CreatedAt = new DateTime(2023, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EstimatedCost = 12500000m,
-                            Name = "Mega Industrial Park",
-                            Progress = 0,
-                            Sector = "Industrial",
-                            Status = 0
-                        },
-                        new
-                        {
-                            Id = 15,
-                            ClientName = "National Highway Authority",
-                            ClientSector = "Government",
-                            ContractType = "Design-Build",
-                            CreatedAt = new DateTime(2023, 12, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
-                            Currency = "INR",
-                            EstimatedCost = 7800000m,
-                            Name = "Expressway Stormwater Drainage",
-                            Progress = 0,
-                            Sector = "Transportation",
-                            Status = 0
-                        });
+                    b.HasIndex("RegionalManagerId");
+
+                    b.HasIndex("SeniorProjectManagerId");
+
+                    b.ToTable("Projects");
                 });
 
-            modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectResource", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("AllocationPercentage")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Description")
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ProjectRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
+                    b.HasIndex("ProjectId");
 
-                    b.ToTable("AspNetRoles", (string)null);
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ProjectResources");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.Region", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Regions");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.RolePermission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PermissionId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.User", b =>
@@ -1078,7 +806,6 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Avatar")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -1095,6 +822,12 @@ namespace NJS.Domain.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsConsultant")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LastLogin")
                         .HasColumnType("datetime2");
 
@@ -1103,6 +836,9 @@ namespace NJS.Domain.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -1123,6 +859,9 @@ namespace NJS.Domain.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("StandardRate")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -1152,8 +891,25 @@ namespace NJS.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("CostRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("ODC")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<double>("TotalHours")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("WBSTaskId")
@@ -1176,32 +932,34 @@ namespace NJS.Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("Budget")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ResourceAllocation")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Resources")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("StartDate")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("WorkBreakdownStructureId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
 
                     b.HasIndex("WorkBreakdownStructureId");
 
@@ -1220,7 +978,6 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Structure")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -1230,9 +987,29 @@ namespace NJS.Domain.Migrations
                     b.ToTable("WorkBreakdownStructures");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
+                {
+                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityRole");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool?>("IsResourceRole")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("MinRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasDiscriminator().HasValue("Role");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("NJS.Domain.Entities.Role", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1259,7 +1036,7 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.HasOne("NJS.Domain.Entities.Role", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1295,30 +1072,130 @@ namespace NJS.Domain.Migrations
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecision", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.Project", "Project")
-                        .WithOne("GoNoGoDecision")
-                        .HasForeignKey("NJS.Domain.Entities.GoNoGoDecision", "ProjectId")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.OpportunityHistory", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.User", "ActionUser")
+                        .WithMany("OpportunityHistories")
+                        .HasForeignKey("ActionBy");
+
+                    b.HasOne("NJS.Domain.Entities.User", "AssignedTo")
+                        .WithMany()
+                        .HasForeignKey("AssignedToId");
+
+                    b.HasOne("NJS.Domain.Entities.OpportunityTracking", "Opportunity")
+                        .WithMany("OpportunityHistories")
+                        .HasForeignKey("OpportunityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NJS.Domain.Entities.OpportunityStatus", "Status")
+                        .WithMany("OpportunityHistories")
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ActionUser");
+
+                    b.Navigation("AssignedTo");
+
+                    b.Navigation("Opportunity");
+
+                    b.Navigation("Status");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityTracking", b =>
                 {
+                    b.HasOne("NJS.Domain.Entities.User", "ApprovalManager")
+                        .WithMany()
+                        .HasForeignKey("ApprovalManagerId");
+
+                    b.HasOne("NJS.Domain.Entities.User", "BidManager")
+                        .WithMany()
+                        .HasForeignKey("BidManagerId");
+
+                    b.HasOne("NJS.Domain.Entities.User", "ReviewManager")
+                        .WithMany()
+                        .HasForeignKey("ReviewManagerId");
+
+                    b.Navigation("ApprovalManager");
+
+                    b.Navigation("BidManager");
+
+                    b.Navigation("ReviewManager");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.User", "ProjectManager")
+                        .WithMany("ManagedProjects")
+                        .HasForeignKey("ProjectManagerId");
+
+                    b.HasOne("NJS.Domain.Entities.User", "RegionalManager")
+                        .WithMany("RegionalManagerProjects")
+                        .HasForeignKey("RegionalManagerId");
+
+                    b.HasOne("NJS.Domain.Entities.User", "SeniorProjectManager")
+                        .WithMany("SeniorManagedProjects")
+                        .HasForeignKey("SeniorProjectManagerId");
+
+                    b.Navigation("ProjectManager");
+
+                    b.Navigation("RegionalManager");
+
+                    b.Navigation("SeniorProjectManager");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectResource", b =>
+                {
                     b.HasOne("NJS.Domain.Entities.Project", "Project")
-                        .WithMany("OpportunityTrackings")
-                        .HasForeignKey("ProjectId");
+                        .WithMany("ProjectResources")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NJS.Domain.Entities.User", "User")
+                        .WithMany("ProjectResources")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Project");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.RolePermission", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NJS.Domain.Entities.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.UserWBSTask", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.User", "User")
                         .WithMany("UserWBSTasks")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.HasOne("NJS.Domain.Entities.WBSTask", "WBSTask")
                         .WithMany("UserWBSTasks")
@@ -1333,11 +1210,17 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("NJS.Domain.Entities.WBSTask", b =>
                 {
+                    b.HasOne("NJS.Domain.Entities.WBSTask", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId");
+
                     b.HasOne("NJS.Domain.Entities.WorkBreakdownStructure", "WorkBreakdownStructure")
                         .WithMany("Tasks")
                         .HasForeignKey("WorkBreakdownStructureId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Parent");
 
                     b.Navigation("WorkBreakdownStructure");
                 });
@@ -1353,26 +1236,56 @@ namespace NJS.Domain.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.OpportunityStatus", b =>
+                {
+                    b.Navigation("OpportunityHistories");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.OpportunityTracking", b =>
+                {
+                    b.Navigation("OpportunityHistories");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
                 {
-                    b.Navigation("GoNoGoDecision");
-
-                    b.Navigation("OpportunityTrackings");
+                    b.Navigation("ProjectResources");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.User", b =>
                 {
+                    b.Navigation("ManagedProjects");
+
+                    b.Navigation("OpportunityHistories");
+
+                    b.Navigation("ProjectResources");
+
+                    b.Navigation("RegionalManagerProjects");
+
+                    b.Navigation("SeniorManagedProjects");
+
                     b.Navigation("UserWBSTasks");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WBSTask", b =>
                 {
+                    b.Navigation("Children");
+
                     b.Navigation("UserWBSTasks");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WorkBreakdownStructure", b =>
                 {
                     b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
                 });
 #pragma warning restore 612, 618
         }

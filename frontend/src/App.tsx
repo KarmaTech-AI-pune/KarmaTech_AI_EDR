@@ -1,16 +1,15 @@
-import { screensArrayType, projectManagementAppContextType, User, Project, GoNoGoDecision } from './types'
+import { screensArrayType, projectManagementAppContextType, UserWithRole  } from './types'
+import { User} from './models'
+import { Project, GoNoGoDecision, OpportunityTracking,} from "./models"
 import { createContext, useState, useEffect } from 'react'
-import { Home, ProjectDetails, Opportunities, LoginScreen } from './pages'
+import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails, AdminPanel } from './pages'
 import { Navbar } from './components/navigation/Navbar'
 import { Dashboard } from './components/Dashboard'
-import { ProjectList } from './components/projects/ProjectList'
 import { ResourceManagement } from './components/ResourceManagement'
-import { ReportsList } from './components/ReportsList'
-import { NotificationCenter } from './components/navigation/NotificationCenter'
-import { authApi } from './services/api'
+import { authApi } from './services/authApi'
+import { PermissionType } from './models'
 import GoNoGoForm from './components/forms/GoNoGoForm'
 import BidPreparationForm from './components/forms/BidPreparationForm'
-
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
 function App() {
@@ -18,8 +17,66 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [selectedProject, setSelectedProject] = useState<Project | OpportunityTracking | null>(null)
+
   const [currentGoNoGoDecision, setCurrentGoNoGoDecision] = useState<GoNoGoDecision | null>(null)
+  const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
+  const [canEditOpportunity, setCanEditOpportunity] = useState(false);
+  const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
+  const [canSubmitForReview, setCanSubmitForReview] = useState(false);
+  const [canReviewBD, setCanReviewBD] = useState(false);
+  const [canApproveBD, setCanApproveBD] = useState(false);
+  const [canSubmitForApproval, setCanSubmitForApproval] = useState(false);
+
+  useEffect(() => {
+    const checkUserPermissions = async () => {
+      try {
+        const user = await authApi.getCurrentUser();
+        
+        if (!user) {
+          setCurrentUser(null);
+          setCanEditOpportunity(false);
+          setCanDeleteOpportunity(false);
+          setCanSubmitForReview(false);
+          setCanReviewBD(false);
+          setCanApproveBD(false);
+          return;
+        }
+ 
+        setCurrentUser(user);
+
+        if (user.roleDetails) {
+          setCanEditOpportunity(
+            user.roleDetails.permissions.includes(PermissionType.EDIT_BUSINESS_DEVELOPMENT)
+          );
+          setCanDeleteOpportunity(
+            user.roleDetails.permissions.includes(PermissionType.DELETE_BUSINESS_DEVELOPMENT)
+          );
+          setCanSubmitForReview(
+            user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
+          );
+          setCanSubmitForApproval(
+            user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL)
+          );
+          setCanReviewBD(
+            user.roleDetails.permissions.includes(PermissionType.REVIEW_BUSINESS_DEVELOPMENT)
+          );
+          setCanApproveBD(
+            user.roleDetails.permissions.includes(PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
+          );
+        }
+      } catch (error) {
+        console.error('Error checking user permissions:', error);
+        setCanEditOpportunity(false);
+        setCanDeleteOpportunity(false);
+        setCanSubmitForReview(false);
+        setCanReviewBD(false);
+        setCanApproveBD(false);
+      }
+    };
+    
+    checkUserPermissions();
+  }, [user]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -42,6 +99,7 @@ function App() {
         setIsLoading(false);
       }
     };
+    
 
     checkAuth();
   }, []);
@@ -59,19 +117,14 @@ function App() {
     "Login": <LoginScreen />,
     "Home": <Home />,
     "Dashboard": <Dashboard />,
-    "Projects": <ProjectList />,
-    "Opportunities" : <Opportunities />,
+    "Business Development": <BusinessDevelopment />,
+    "Project Management": <ProjectManagement />,
     "Resources": <ResourceManagement />,
-    "Reports": <ReportsList />,
-    "Notifications": <NotificationCenter />,
     "Project Details": <ProjectDetails />,
-    "Go/No Go Decision": selectedProject ? (
-      <GoNoGoForm 
-        project={selectedProject}
-        goNoGoDecision={currentGoNoGoDecision}
-      />
-    ) : <div>No project selected</div>,
-    'Bid Preparation' : <BidPreparationForm />
+    "Business Development Details": <BusinessDevelopmentDetails />,
+    "Bid Preparation Form" : <BidPreparationForm/>,
+    "GoNoGo Form" : <GoNoGoForm />,
+    "Admin Panel": <AdminPanel />,
   };
 
   if (isLoading) {
@@ -99,7 +152,21 @@ function App() {
       selectedProject,
       setSelectedProject,
       currentGoNoGoDecision,
-      setCurrentGoNoGoDecision
+      setCurrentGoNoGoDecision,
+      currentUser,
+      setCurrentUser,
+      canEditOpportunity,
+      setCanEditOpportunity,
+      canDeleteOpportunity,
+      setCanDeleteOpportunity,
+      canSubmitForReview,
+      setCanSubmitForReview,
+      canReviewBD,
+      setCanReviewBD,
+      canApproveBD,
+      setCanApproveBD,
+      canSubmitForApproval,
+      setCanSubmitForApproval
     }}>
       {isAuthenticated && <Navbar />}
       {screenArray[screenState]}

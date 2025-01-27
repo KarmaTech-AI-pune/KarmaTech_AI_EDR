@@ -1,4 +1,4 @@
-import { GoNoGoDecision } from '../types';
+import { GoNoGoDecision } from '../models';
 import { axiosInstance } from './axiosConfig';
 
 export const goNoGoApi = {
@@ -12,7 +12,7 @@ export const goNoGoApi = {
     }
   },
 
-  getById: async (id: number): Promise<GoNoGoDecision> => {
+  getById: async (id: string): Promise<GoNoGoDecision> => {
     try {
       const response = await axiosInstance.get(`GoNoGoDecision/${id}`);
       return response.data;
@@ -22,7 +22,7 @@ export const goNoGoApi = {
     }
   },
 
-  getByProjectId: async (projectId: number): Promise<GoNoGoDecision | null> => {
+  getByProjectId: async (projectId: string): Promise<GoNoGoDecision | null> => {
     try {
       const response = await axiosInstance.get(`GoNoGoDecision/project/${projectId}`);
       return response.data;
@@ -35,9 +35,8 @@ export const goNoGoApi = {
     }
   },
 
-  create: async (projectId: number, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
+  create: async (projectId: string, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
     try {
-      console.log(`Creating GoNoGo Decision for Project ${projectId}:`, JSON.stringify(data));
       const response = await axiosInstance.post(`GoNoGoDecision`, data);
       return response.data;
     } catch (error: any) {
@@ -51,9 +50,8 @@ export const goNoGoApi = {
     }
   },
 
-  update: async (id: number, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
+  update: async (id: string, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
     try {
-      console.log(`Updating GoNoGo Decision ${id}:`, JSON.stringify(data));
       const response = await axiosInstance.put(`GoNoGoDecision/${id}`, data);
       return response.data;
     } catch (error: any) {
@@ -67,7 +65,7 @@ export const goNoGoApi = {
     }
   },
 
-  delete: async (id: number): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     try {
       await axiosInstance.delete(`GoNoGoDecision/${id}`);
     } catch (error) {

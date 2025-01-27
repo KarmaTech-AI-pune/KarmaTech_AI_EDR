@@ -1,27 +1,30 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
+using NJS.Application.CQRS.Projects.Commands;
+using NJS.Application.CQRS.Projects.Queries;
+using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
-using NJS.Repositories.Interfaces;
 using NJSAPI.Controllers;
 
 namespace NJS.API.Tests.Controllers
 {
     public class ProjectsControllerTests
     {
-        private readonly Mock<IProjectRepository> _mockProjectRepository;
         private readonly Mock<IProjectManagementService> _mockProjectManagementService;
-        private readonly ProjectsController _controller;
+        private readonly ProjectController _controller;
+        private readonly Mock<IMediator> _mediator;
 
         public ProjectsControllerTests()
         {
-            _mockProjectRepository = new Mock<IProjectRepository>();
             _mockProjectManagementService = new Mock<IProjectManagementService>();
-            _controller = new ProjectsController(_mockProjectRepository.Object, _mockProjectManagementService.Object);
+            _mediator = new Mock<IMediator>();
+            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object);
         }
 
         [Fact]
-        public async Task GetAll_ShouldReturnsOkResult_WithListOfProjects()
+        public async Task GetAll_ShouldReturnOkResult_WithListOfProjects()
         {
             // Arrange
             var mockProjects = new List<Project>
@@ -30,7 +33,8 @@ namespace NJS.API.Tests.Controllers
                 new Project { Id = 2, Name = "Project 2" }
             };
 
-            _mockProjectRepository.Setup(repo => repo.GetAll()).ReturnsAsync(mockProjects);
+            _mediator.Setup(m => m.Send(It.IsAny<GetAllProjectsQuery>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(mockProjects);
 
             // Act
             var result = await _controller.GetAll();
@@ -42,15 +46,17 @@ namespace NJS.API.Tests.Controllers
         }
 
         [Fact]
-        public void GetById_ShouldReturnsOkResult_WhenProjectExistsWithProject()
+        public async Task GetById_ShouldReturnOkResult_WhenProjectExists()
         {
             // Arrange
             var projectId = 1;
             var mockProject = new Project { Id = projectId, Name = "Project 1" };
-            _mockProjectRepository.Setup(repo => repo.GetById(projectId)).Returns(mockProject);
+            
+            _mediator.Setup(m => m.Send(It.Is<GetProjectByIdQuery>(q => q.Id == projectId), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(mockProject);
 
             // Act
-            var result = _controller.GetById(projectId);
+            var result = await _controller.GetById(projectId);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -59,101 +65,171 @@ namespace NJS.API.Tests.Controllers
         }
 
         [Fact]
-        public void GetById_ShouldReturnsNotFound_WhenProjectDoesNotExist()
+        public async Task GetById_ShouldReturnNotFound_WhenProjectDoesNotExist()
         {
             // Arrange
             var projectId = 1;
-            _mockProjectRepository.Setup(repo => repo.GetById(projectId)).Returns((Project)null);
+            _mediator.Setup(m => m.Send(It.Is<GetProjectByIdQuery>(q => q.Id == projectId), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync((Project)null);
 
             // Act
-            var result = _controller.GetById(projectId);
+            var result = await _controller.GetById(projectId);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
-       
+        [Fact]
+        public async Task Create_ShouldReturnCreatedAtAction_WhenValidProject()
+        {
+            // Arrange
+            var projectDto = new ProjectDto { Name = "New Project" };
+            var createdId = 1;
+
+            _mediator.Setup(m => m.Send(It.Is<CreateProjectCommand>(c => c.ProjectDto == projectDto), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(createdId);
+
+            // Act
+            var result = await _controller.Create(projectDto);
+
+            // Assert
+            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
+            Assert.Equal("GetById", createdAtActionResult.ActionName);
+            Assert.Equal(createdId, createdAtActionResult.RouteValues["id"]);
+            Assert.Equal(createdId, createdAtActionResult.Value);
+        }
 
         [Fact]
-        public void Update_ShouldReturnsNoContent_WhenProjectExists()
+        public async Task Create_ShouldReturnBadRequest_WhenModelStateIsInvalid()
+        {
+            // Arrange
+            var projectDto = new ProjectDto();
+            _controller.ModelState.AddModelError("Name", "Name is required");
+
+            // Act
+            var result = await _controller.Create(projectDto);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task Create_ShouldReturnInternalServerError_WhenExceptionOccurs()
+        {
+            // Arrange
+            var projectDto = new ProjectDto { Name = "New Project" };
+            _mediator.Setup(m => m.Send(It.IsAny<CreateProjectCommand>(), It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(new Exception("Test exception"));
+
+            // Act
+            var result = await _controller.Create(projectDto);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, statusCodeResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task Update_ShouldReturnNoContent_WhenProjectUpdatedSuccessfully()
         {
             // Arrange
             var projectId = 1;
-            var updatedProject = new Project { Id = projectId, Name = "Updated Project" };
-            _mockProjectRepository.Setup(repo => repo.GetById(projectId)).Returns(updatedProject);
-            _mockProjectRepository.Setup(repo => repo.Update(updatedProject)).Verifiable();
+            var projectDto = new ProjectDto { Id = projectId, Name = "Updated Project" };
+
+            _mediator.Setup(m => m.Send(It.Is<UpdateProjectCommand>(c => c.Id == projectId && c.ProjectDto == projectDto), 
+                                      It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Unit.Value);
 
             // Act
-            var result = _controller.Update(projectId, updatedProject);
+            var result = await _controller.Update(projectId, projectDto);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            _mockProjectRepository.Verify();
         }
 
         [Fact]
-        public void Update_ShouldReturnsNotFound_WhenProjectDoesNotExist()
+        public async Task Update_ShouldReturnBadRequest_WhenIdMismatch()
         {
             // Arrange
             var projectId = 1;
-            var updatedProject = new Project { Id = projectId, Name = "Updated Project" };
-            _mockProjectRepository.Setup(repo => repo.GetById(projectId)).Returns((Project)null);
+            var projectDto = new ProjectDto { Id = 2, Name = "Updated Project" };
 
             // Act
-            var result = _controller.Update(projectId, updatedProject);
+            var result = await _controller.Update(projectId, projectDto);
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            Assert.IsType<BadRequestObjectResult>(result);
         }
 
         [Fact]
-        public void Delete_ShouldReturnsNoContent_WhenProjectExists()
+        public async Task Delete_ShouldReturnNoContent_WhenProjectDeletedSuccessfully()
         {
             // Arrange
             var projectId = 1;
-            var project = new Project { Id = projectId, Name = "Project 1" };
-            _mockProjectRepository.Setup(repo => repo.GetById(projectId)).Returns(project);
-            _mockProjectRepository.Setup(repo => repo.Delete(projectId)).Verifiable();
+            _mediator.Setup(m => m.Send(It.Is<DeleteProjectCommand>(c => c.Id == projectId), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Unit.Value);
 
             // Act
-            var result = _controller.Delete(projectId);
+            var result = await _controller.Delete(projectId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            _mockProjectRepository.Verify();
         }
 
         [Fact]
-        public void Delete_ShouldReturnsNotFound_WhenProjectDoesNotExist()
+        public async Task Delete_ShouldReturnInternalServerError_WhenExceptionOccurs()
         {
             // Arrange
             var projectId = 1;
-            _mockProjectRepository.Setup(repo => repo.GetById(projectId)).Returns((Project)null);
+            _mediator.Setup(m => m.Send(It.IsAny<DeleteProjectCommand>(), It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(new Exception("Test exception"));
 
             // Act
-            var result = _controller.Delete(projectId);
+            var result = await _controller.Delete(projectId);
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var statusCodeResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, statusCodeResult.StatusCode);
         }
 
         [Fact]
-        public void CreateFeasibilityStudy_ShouldReturnsCreatedAtAction_WhenProjectExists()
+        public async Task CreateFeasibilityStudy_ShouldReturnCreatedAtAction_WhenSuccessful()
         {
             // Arrange
             var projectId = 1;
-            var feasibilityStudy = new FeasibilityStudy { Id = 1, ProjectDetails = "Feasibility 1" };
-            var project = new Project { Id = projectId, Name = "Project 1" };
+            var command = new CreateFeasibilityStudyCommand
+            {
+                ProjectId = projectId,
+                Description = "Test Description",
+                Title = "Test Title",
+                CreatedAt = DateTime.UtcNow
+            };
 
-            _mockProjectRepository.Setup(repo => repo.GetById(projectId)).Returns(project);
-            _mockProjectManagementService.Setup(service => service.CreateFeasibilityStudy(It.IsAny<FeasibilityStudy>()));
+            var feasibilityStudyId = 1;
+            _mediator.Setup(m => m.Send(It.Is<CreateFeasibilityStudyCommand>(c => c.ProjectId == projectId), 
+                                      It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(feasibilityStudyId);
 
             // Act
-            var result = _controller.CreateFeasibilityStudy(projectId, feasibilityStudy);
+            var result = await _controller.CreateFeasibilityStudy(projectId, command);
 
             // Assert
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
             Assert.Equal("GetFeasibilityStudy", createdAtActionResult.ActionName);
+            Assert.Equal(projectId, createdAtActionResult.RouteValues["id"]);
+        }
+
+        [Fact]
+        public async Task CreateFeasibilityStudy_ShouldReturnBadRequest_WhenCommandIsNull()
+        {
+            // Arrange
+            var projectId = 1;
+
+            // Act
+            var result = await _controller.CreateFeasibilityStudy(projectId, null);
+
+            // Assert
+            Assert.IsType<BadRequestResult>(result);
         }
 
         [Fact]
@@ -161,9 +237,9 @@ namespace NJS.API.Tests.Controllers
         {
             // Arrange
             var projectId = 1;
-            var feasibilityStudy = new FeasibilityStudy { Id = 1, ProjectDetails = "Feasibility 1" };
-
-            _mockProjectManagementService.Setup(service => service.GetFeasibilityStudy(projectId)).Returns(feasibilityStudy);
+            var feasibilityStudy = new FeasibilityStudy { Id = 1, ProjectDetails = "Feasibility Study Details" };
+            _mockProjectManagementService.Setup(s => s.GetFeasibilityStudy(projectId))
+                                       .Returns(feasibilityStudy);
 
             // Act
             var result = _controller.GetFeasibilityStudy(projectId);
@@ -174,21 +250,19 @@ namespace NJS.API.Tests.Controllers
             Assert.Equal(feasibilityStudy.Id, returnValue.Id);
         }
 
-        [Fact(Skip ="Skip for time being")]
-        public async Task Create_ReturnsCreatedAtAction_WhenValidProject()
+        [Fact]
+        public void GetFeasibilityStudy_ShouldReturnNotFound_WhenFeasibilityStudyDoesNotExist()
         {
             // Arrange
-            var newProject = new Project { Id = 1, Name = "New Project" };
-           // _mockProjectRepository.Setup(repo => repo.Add(It.IsAny<Project>())).ReturnsAsync(newProject);
+            var projectId = 1;
+            _mockProjectManagementService.Setup(s => s.GetFeasibilityStudy(projectId))
+                                       .Returns((FeasibilityStudy)null);
 
             // Act
-            var result = await _controller.Create(newProject);
+            var result = _controller.GetFeasibilityStudy(projectId);
 
             // Assert
-            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
-            Assert.Equal("GetById", createdAtActionResult.ActionName);
-            Assert.Equal(newProject.Id, createdAtActionResult.RouteValues["id"]);
-            Assert.Equal(newProject, createdAtActionResult.Value);
+            Assert.IsType<NotFoundResult>(result);
         }
     }
 }

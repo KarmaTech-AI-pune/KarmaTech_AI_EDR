@@ -6,9 +6,10 @@ import {
     CardContent, 
     Typography, 
     Box, 
-    Alert
+    Alert,
+    Container
 } from '@mui/material';
-import { authApi } from '../services/api';
+import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
 
@@ -28,19 +29,12 @@ export const LoginScreen: React.FC = () => {
         };
 
         try {
-            console.log('Attempting login...'); // Debug log
             const result = await authApi.login(credentials);
-            console.log('Login response:', result); // Debug log
             
             if (result.success && result.token && result.user) {
-                // Wait for token to be set
                 localStorage.setItem('token', result.token);
-                console.log('Token set in localStorage'); // Debug log
-                
-                // Verify token is set before proceeding
-                const storedToken = localStorage.getItem('token');
+                const storedToken = localStorage.getItem('token');               
                 if (storedToken) {
-                    console.log('Token verified in localStorage'); // Debug log
                     setUser(result.user);
                     setIsAuthenticated(true);
                     setScreenState('Home');
@@ -51,7 +45,7 @@ export const LoginScreen: React.FC = () => {
                 setError(result.message || 'Invalid username or password');
             }
         } catch (err: any) {
-            console.error('Login error:', err); // Debug log
+            console.error('Login error:', err);
             setError(err.message || 'An error occurred. Please try again.');
         }
     };
@@ -59,17 +53,56 @@ export const LoginScreen: React.FC = () => {
     return (
         <Box 
             display="flex" 
+            flexDirection="column"
             justifyContent="center" 
             alignItems="center" 
             minHeight="100vh"
-            bgcolor="background.default"
+            bgcolor="#f5f5f5"
+            padding={3}
         >
-            <Card sx={{ maxWidth: 400, width: '100%' }}>
-                <CardContent>
+            <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 4 }}>
+                <Box sx={{ mb: 3 }}>
+                    <img 
+                        src="/logo-final.png" 
+                        alt="NJSEI Logo" 
+                        style={{ 
+                            maxWidth: '200px',
+                            marginBottom: '1rem'
+                        }} 
+                    />
+                </Box>
+                <Typography 
+                    variant="h4" 
+                    component="h1" 
+                    sx={{ 
+                        mb: 1,
+                        fontWeight: 'bold',
+                        color: '#1976d2'
+                    }}
+                >
+                    NJSEI Project Management
+                </Typography>
+                <Typography 
+                    variant="h6" 
+                    sx={{ 
+                        mb: 4,
+                        color: '#666'
+                    }}
+                >
+                    ISO 9000 Project Management Forms Application
+                </Typography>
+            </Container>
+
+            <Card 
+                sx={{ 
+                    maxWidth: 450,
+                    width: '100%',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    borderRadius: 2
+                }}
+            >
+                <CardContent sx={{ p: 4 }}>
                     <Typography variant="h5" component="h2" align="center" gutterBottom>
-                        NJSEI Project Management
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary" align="center" gutterBottom>
                         Login to your account
                     </Typography>
                     <form onSubmit={handleLogin}>
@@ -80,6 +113,12 @@ export const LoginScreen: React.FC = () => {
                             margin="normal"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
+                            sx={{ 
+                                mb: 2,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 1
+                                }
+                            }}
                         />
                         <TextField
                             fullWidth
@@ -89,19 +128,35 @@ export const LoginScreen: React.FC = () => {
                             margin="normal"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            sx={{ 
+                                mb: 3,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 1
+                                }
+                            }}
                         />
                         <Button 
                             type="submit" 
                             fullWidth 
                             variant="contained" 
                             color="primary"
-                            sx={{ mt: 2 }}
+                            size="large"
+                            sx={{ 
+                                mt: 2,
+                                mb: 2,
+                                py: 1.5,
+                                borderRadius: 1,
+                                textTransform: 'none',
+                                fontSize: '1.1rem'
+                            }}
                         >
                             Log In
                         </Button>
                     </form>
-                    <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-                        <a href="#" style={{ color: 'primary.main' }}>Forgot password?</a>
+                    <Typography variant="body2" align="center" sx={{ mt: 2, color: '#666' }}>
+                        <a href="#" style={{ color: '#1976d2', textDecoration: 'none' }}>
+                            Forgot password?
+                        </a>
                     </Typography>
                 </CardContent>
             </Card>
@@ -112,7 +167,8 @@ export const LoginScreen: React.FC = () => {
                         position: 'fixed', 
                         bottom: 16, 
                         right: 16, 
-                        maxWidth: 300 
+                        maxWidth: 300,
+                        boxShadow: 2
                     }}
                 >
                     {error}

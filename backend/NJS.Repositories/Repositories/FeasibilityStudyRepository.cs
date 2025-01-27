@@ -1,4 +1,5 @@
-//File: backend/src/NJS.Application/Repositories/FeasibilityStudyRepository.cs
+using Microsoft.EntityFrameworkCore;
+using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 
@@ -6,44 +7,44 @@ namespace NJS.Repositories.Repositories
 {
     public class FeasibilityStudyRepository : IFeasibilityStudyRepository
     {
-        private static List<FeasibilityStudy> _feasibilityStudies = new List<FeasibilityStudy>();
+        private readonly ProjectManagementContext _context;
+
+        public FeasibilityStudyRepository(ProjectManagementContext context)
+        {
+            _context = context;
+        }
 
         public IEnumerable<FeasibilityStudy> GetAll()
         {
-            return _feasibilityStudies;
+            return _context.FeasibilityStudies
+                .Include(fs => fs.Project)
+                .ToList();
         }
 
         public FeasibilityStudy GetById(int id)
         {
-            return _feasibilityStudies.FirstOrDefault(fs => fs.Id == id);
+            return _context.FeasibilityStudies
+                .Include(fs => fs.Project)
+                .FirstOrDefault(fs => fs.Id == id);
         }
 
         public FeasibilityStudy GetByProjectId(int projectId)
         {
-            return _feasibilityStudies.FirstOrDefault(fs => fs.ProjectId == projectId);
+            return _context.FeasibilityStudies
+                .Include(fs => fs.Project)
+                .FirstOrDefault(fs => fs.ProjectId == projectId);
         }
 
         public void Add(FeasibilityStudy feasibilityStudy)
         {
-            feasibilityStudy.Id = _feasibilityStudies.Count + 1;
-            _feasibilityStudies.Add(feasibilityStudy);
+            _context.FeasibilityStudies.Add(feasibilityStudy);
+            _context.SaveChanges();
         }
 
         public void Update(FeasibilityStudy feasibilityStudy)
         {
-            var existingStudy = _feasibilityStudies.FirstOrDefault(fs => fs.Id == feasibilityStudy.Id);
-            if (existingStudy != null)
-            {
-                existingStudy.ProjectDetails = feasibilityStudy.ProjectDetails;
-                existingStudy.StrategicRanking = feasibilityStudy.StrategicRanking;
-                existingStudy.FinancialInformation = feasibilityStudy.FinancialInformation;
-                existingStudy.StudyDate = feasibilityStudy.StudyDate;
-                existingStudy.ProbabilityAssessment = feasibilityStudy.ProbabilityAssessment;
-                existingStudy.CompetitionAnalysis = feasibilityStudy.CompetitionAnalysis;
-                existingStudy.FundingStream = feasibilityStudy.FundingStream;
-                existingStudy.ContractType = feasibilityStudy.ContractType;
-                existingStudy.QualifyingCriteria = feasibilityStudy.QualifyingCriteria;
-            }
+            _context.Entry(feasibilityStudy).State = EntityState.Modified;
+            _context.SaveChanges();
         }
     }
 }

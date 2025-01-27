@@ -1,40 +1,30 @@
 import React, { useState } from 'react';
-import { 
-  Accordion, 
-  AccordionSummary, 
-  AccordionDetails, 
-  Typography, 
-  TextField, 
-  Button, 
-  Grid,
-  Checkbox,
-  FormControlLabel,
-  Paper,
-  Container,
+import {
   Box,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  Card,
-  CardContent,
-  IconButton
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+  TextField,
+  Checkbox,
+  Button,
+  IconButton,
+  Typography,
+  Container,
+  Switch,
+  FormControlLabel,
+  Alert
 } from '@mui/material';
-import { 
-  ExpandMore as ExpandMoreIcon, 
-  Add as AddIcon, 
-  Delete as DeleteIcon 
-} from '@mui/icons-material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { format } from 'date-fns';
+import { FormWrapper } from './FormWrapper';
 
-// Define a type for document categories
-interface DocumentCategory {
-  name: string;
-  subcategories: string[];
-}
-
-// Predefined categories and subcategories with proper typing
-const DOCUMENT_CATEGORIES: DocumentCategory[] = [
+const DOCUMENT_CATEGORIES = [
   {
     name: 'Earnest Money Deposit',
     subcategories: []
@@ -100,347 +90,365 @@ const DOCUMENT_CATEGORIES: DocumentCategory[] = [
   }
 ];
 
-// Create a custom theme
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    background: {
-      default: '#f4f4f4'
-    }
-  },
-  components: {
-    MuiAccordion: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          borderRadius: '8px',
-          marginBottom: '16px',
-          '&:before': {
-            display: 'none',
-          }
-        }
-      }
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          borderRadius: '8px',
-        }
-      }
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: '8px',
-          textTransform: 'none',
-          padding: '12px 24px',
-        }
-      }
-    }
-  }
-});
-
-interface HeaderInfo {
-  projectName: string;
-  bidNumber: string;
-  businessDevelopmentHead: string;
-  client: string;
-  regionalBusinessDevelopmentHead: string;
-  submissionDate: string;
-  submissionMode: string;
+interface ChecklistItem {
+  id: string;
+  srNo: number;
+  description: string;
+  remarks: string;
+  enclosed: boolean;
+  date: Date | null;
+  isSubItem?: boolean;
+  hasSubcategories?: boolean;
+  parentId?: string;
+  categoryIndex?: number;
 }
 
-interface FooterInfo {
-  preparedBy: string;
-  reviewedBy: string;
-  approvedBy: string;
-  date: string;
-}
+const initializeChecklist = (): ChecklistItem[] => {
+  let srNo = 1;
+  const items: ChecklistItem[] = [];
+  
+  DOCUMENT_CATEGORIES.forEach((category, index) => {
+    const categoryId = `main-${srNo}`;
+    items.push({
+      id: categoryId,
+      srNo: srNo,
+      description: category.name,
+      remarks: '',
+      enclosed: false,
+      date: null,
+      hasSubcategories: category.subcategories.length > 0,
+      categoryIndex: index
+    });
 
-interface DocumentEntry {
-  category: string;
-  subcategory?: string;
-  isRequired: boolean;
-  isEnclosed: boolean;
-  date?: string;
-  remarks?: string;
-}
+    category.subcategories.forEach((subcat, subIndex) => {
+      items.push({
+        id: `sub-${srNo}-${subIndex}`,
+        srNo: srNo,
+        description: subcat,
+        remarks: '',
+        enclosed: false,
+        date: null,
+        isSubItem: true,
+        parentId: categoryId,
+        categoryIndex: index
+      });
+    });
+
+    srNo++;
+  });
+
+  return items;
+};
 
 const BidPreparationForm: React.FC = () => {
-  const [header, setHeader] = useState<HeaderInfo>({
-    projectName: '',
-    bidNumber: '',
-    businessDevelopmentHead: '',
-    client: '',
-    regionalBusinessDevelopmentHead: '',
-    submissionDate: '',
-    submissionMode: ''
-  });
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(initializeChecklist());
+  const [nextSrNo, setNextSrNo] = useState(DOCUMENT_CATEGORIES.length + 1);
+  const [editMode, setEditMode] = useState(false);
+  const [error, setError] = useState<string>('');
 
-  const [footer, setFooter] = useState<FooterInfo>({
-    preparedBy: '',
-    reviewedBy: '',
-    approvedBy: '',
-    date: ''
-  });
-
-  const [documentEntries, setDocumentEntries] = useState<DocumentEntry[]>([]);
-
-  const handleHeaderChange = (field: keyof HeaderInfo, value: string) => {
-    setHeader(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleFooterChange = (field: keyof FooterInfo, value: string) => {
-    setFooter(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleAddDocumentEntry = () => {
-    setDocumentEntries([
-      ...documentEntries, 
-      { 
-        category: '', 
-        subcategory: '', 
-        isRequired: false, 
-        isEnclosed: false, 
-        date: '', 
-        remarks: '' 
-      }
-    ]);
-  };
-
-  const updateDocumentEntry = (index: number, updates: Partial<DocumentEntry>) => {
-    const updatedEntries = [...documentEntries];
-    updatedEntries[index] = {
-      ...updatedEntries[index],
-      ...updates
+  const handleAddItem = () => {
+    const newItem: ChecklistItem = {
+      id: String(Date.now()),
+      srNo: nextSrNo,
+      description: '',
+      remarks: '',
+      enclosed: false,
+      date: null
     };
-    setDocumentEntries(updatedEntries);
+    setChecklist([...checklist, newItem]);
+    setNextSrNo(nextSrNo + 1);
   };
 
-  const removeDocumentEntry = (index: number) => {
-    const updatedEntries = documentEntries.filter((_, i) => i !== index);
-    setDocumentEntries(updatedEntries);
+  const findInsertionIndex = (parentId: string): number => {
+    const parentIndex = checklist.findIndex(item => item.id === parentId);
+    const parentItem = checklist[parentIndex];
+    
+    if (parentItem.hasSubcategories) {
+      let lastSubItemIndex = parentIndex;
+      for (let i = parentIndex + 1; i < checklist.length; i++) {
+        if (!checklist[i].isSubItem) break;
+        lastSubItemIndex = i;
+      }
+      return lastSubItemIndex;
+    }
+    
+    return parentIndex;
   };
+
+  const handleAddSubItem = (parentId: string, categoryIndex: number) => {
+    const insertAfterIndex = findInsertionIndex(parentId);
+    const parentItem = checklist.find(item => item.id === parentId)!;
+    
+    const newItem: ChecklistItem = {
+      id: `new-${Date.now()}`,
+      srNo: parentItem.srNo,
+      description: '',
+      remarks: '',
+      enclosed: false,
+      date: null,
+      isSubItem: true,
+      parentId: parentItem.hasSubcategories ? parentId : undefined,
+      categoryIndex
+    };
+
+    const newChecklist = [
+      ...checklist.slice(0, insertAfterIndex + 1),
+      newItem,
+      ...checklist.slice(insertAfterIndex + 1)
+    ];
+
+    setChecklist(newChecklist);
+  };
+
+  const handleDeleteItem = (id: string) => {
+    setChecklist(checklist.filter(item => item.id !== id && item.parentId !== id));
+  };
+
+  const handleUpdateItem = (id: string, field: keyof ChecklistItem, value: any) => {
+    setChecklist(checklist.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const handleSubmit = async () => {
+    try {
+      // TODO: Implement submission logic
+      console.log('Submitting checklist:', checklist);
+      setError('');
+    } catch (err) {
+      setError('Failed to save checklist data');
+    }
+  };
+
+  const formContent = (
+    <Container 
+      maxWidth="xl" 
+      sx={{ 
+        py: 2,
+        minHeight: '100vh',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        '& .MuiPaper-root': {
+          boxShadow: 'none',
+          border: '1px solid rgba(224, 224, 224, 1)',
+          borderRadius: 1,
+          mb: 2
+        }
+      }}
+    >
+      <Box sx={{ 
+        width: '100%',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        pr: 1
+      }}>
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center'
+          }}>
+            <Typography variant="h6" component="h2">
+              FB03 Bid Preparation Checklist
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              {editMode && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddItem}
+                  size="small"
+                >
+                  Add New Item
+                </Button>
+              )}
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={editMode}
+                    onChange={() => setEditMode(!editMode)}
+                    color="primary"
+                  />
+                }
+                label="Edit Mode"
+              />
+            </Box>
+          </Box>
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+        </Paper>
+
+        <Paper sx={{ 
+          flex: 1,
+          mb: 2,
+          '& > div': {
+            overflowX: 'auto'
+          }
+        }}>
+          <Table sx={{ minWidth: 800 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold', width: '80px' }}>Sr. No.</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', width: '200px' }}>Remarks</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', width: '120px' }}>Enclosed</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', width: '200px' }}>Date</TableCell>
+                {editMode && (
+                  <TableCell sx={{ fontWeight: 'bold', width: '100px' }}>Actions</TableCell>
+                )}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {checklist.map((item) => (
+                <TableRow 
+                  key={item.id}
+                  sx={item.isSubItem ? { 
+                    '& > td:first-of-type': { pl: 4 },
+                    '& > td': { backgroundColor: 'rgba(0, 0, 0, 0.02)' }
+                  } : {}}
+                >
+                  <TableCell>{item.isSubItem ? '' : item.srNo}</TableCell>
+                  <TableCell>
+                    {item.hasSubcategories ? (
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        {item.description}
+                      </Typography>
+                    ) : editMode ? (
+                      <TextField
+                        fullWidth
+                        variant="standard"
+                        value={item.description}
+                        onChange={(e) => handleUpdateItem(item.id, 'description', e.target.value)}
+                      />
+                    ) : (
+                      <Typography>{item.description}</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {!item.hasSubcategories && (
+                      editMode ? (
+                        <TextField
+                          fullWidth
+                          variant="standard"
+                          value={item.remarks}
+                          onChange={(e) => handleUpdateItem(item.id, 'remarks', e.target.value)}
+                        />
+                      ) : (
+                        <Typography>{item.remarks}</Typography>
+                      )
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    {!item.hasSubcategories && (
+                      editMode ? (
+                        <Checkbox
+                          checked={item.enclosed}
+                          onChange={(e) => handleUpdateItem(item.id, 'enclosed', e.target.checked)}
+                        />
+                      ) : (
+                        <Typography>{item.enclosed ? 'Yes' : 'No'}</Typography>
+                      )
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {!item.hasSubcategories && (
+                      editMode ? (
+                        <DatePicker
+                          value={item.date}
+                          onChange={(newValue) => handleUpdateItem(item.id, 'date', newValue)}
+                          slotProps={{
+                            textField: {
+                              variant: "standard",
+                              fullWidth: true
+                            }
+                          }}
+                        />
+                      ) : (
+                        <Typography>
+                          {item.date ? format(item.date, 'dd/MM/yyyy') : ''}
+                        </Typography>
+                      )
+                    )}
+                  </TableCell>
+                  {editMode && (
+                    <TableCell>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'flex-end',
+                        gap: 1,
+                        minWidth: '80px'
+                      }}>
+                        {!item.isSubItem && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleAddSubItem(item.id, item.categoryIndex!)}
+                            color="primary"
+                            sx={{ 
+                              '&:hover': { 
+                                backgroundColor: 'rgba(25, 118, 210, 0.04)' 
+                              }
+                            }}
+                          >
+                            <AddIcon />
+                          </IconButton>
+                        )}
+                        {!item.hasSubcategories && (
+                          <IconButton 
+                            size="small" 
+                            onClick={() => handleDeleteItem(item.id)}
+                            sx={{ 
+                              color: 'error.main',
+                              '&:hover': { 
+                                backgroundColor: 'rgba(211, 47, 47, 0.04)' 
+                              }
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        )}
+                        {item.hasSubcategories && (
+                          <Box sx={{ width: 32 }} />
+                        )}
+                      </Box>
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>
+
+        <Paper sx={{ p: 2 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'flex-end',
+            gap: 2
+          }}>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={handleSubmit}
+              disabled={checklist.length === 0}
+            >
+              Save Checklist
+            </Button>
+          </Box>
+        </Paper>
+      </Box>
+    </Container>
+  );
 
   return (
-    <ThemeProvider theme={theme}>
-      <Container maxWidth="lg">
-        <Box sx={{ 
-          backgroundColor: 'background.default', 
-          minHeight: '100vh', 
-          py: 4 
-        }}>
-          <Paper elevation={3} sx={{ 
-            p: 4, 
-            borderRadius: 2,
-            backgroundColor: 'white'
-          }}>
-            <Typography 
-              variant="h4" 
-              gutterBottom 
-              sx={{ 
-                textAlign: 'center', 
-                mb: 4,
-                fontWeight: 'bold',
-                color: 'primary.main'
-              }}
-            >
-              Bid Preparation Form
-            </Typography>
-
-            {/* Header Section */}
-            <Card sx={{ mb: 4, borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-                  Header Information
-                </Typography>
-                <Grid container spacing={3}>
-                  {(Object.keys(header) as Array<keyof HeaderInfo>).map((field) => (
-                    <Grid item xs={12} sm={6} key={field}>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        label={field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        value={header[field]}
-                        onChange={(e) => handleHeaderChange(field, e.target.value)}
-                        type={field.includes('Date') ? 'date' : 'text'}
-                        InputLabelProps={field.includes('Date') ? { shrink: true } : {}}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              </CardContent>
-            </Card>
-
-            {/* Document Entries Section */}
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: 2, 
-                color: 'primary.main',
-                display: 'flex', 
-                alignItems: 'center' 
-              }}
-            >
-              Document Entries
-              <IconButton 
-                color="primary" 
-                onClick={handleAddDocumentEntry}
-                sx={{ ml: 2 }}
-              >
-                <AddIcon />
-              </IconButton>
-            </Typography>
-
-            {documentEntries.map((entry, index) => (
-              <Card key={index} sx={{ mb: 3, borderRadius: 2 }}>
-                <CardContent>
-                  <Grid container spacing={3} alignItems="center">
-                    <Grid item xs={12} sm={5}>
-                      <FormControl fullWidth variant="outlined">
-                        <InputLabel>Category</InputLabel>
-                        <Select
-                          value={entry.category}
-                          onChange={(e) => {
-                            const selectedCategory = DOCUMENT_CATEGORIES.find(
-                              cat => cat.name === e.target.value
-                            );
-                            updateDocumentEntry(index, { 
-                              category: e.target.value as string,
-                              subcategory: selectedCategory && selectedCategory.subcategories.length ? '' : undefined
-                            });
-                          }}
-                          label="Category"
-                        >
-                          {DOCUMENT_CATEGORIES.map((category) => (
-                            <MenuItem key={category.name} value={category.name}>
-                              {category.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-
-                    {DOCUMENT_CATEGORIES.find(cat => cat.name === entry.category)?.subcategories.length && (
-                      <Grid item xs={12} sm={5}>
-                        <FormControl fullWidth variant="outlined">
-                          <InputLabel>Subcategory</InputLabel>
-                          <Select
-                            value={entry.subcategory || ''}
-                            onChange={(e) => updateDocumentEntry(index, { subcategory: e.target.value as string })}
-                            label="Subcategory"
-                          >
-                            {DOCUMENT_CATEGORIES.find(cat => cat.name === entry.category)?.subcategories.map((subcategory: string) => (
-                              <MenuItem key={subcategory} value={subcategory}>
-                                {subcategory}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                    )}
-
-                    <Grid item xs={6} sm={1}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={entry.isRequired}
-                            onChange={(e) => updateDocumentEntry(index, { isRequired: e.target.checked })}
-                            color="primary"
-                          />
-                        }
-                        label="Required"
-                      />
-                    </Grid>
-
-                    <Grid item xs={6} sm={1}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={entry.isEnclosed}
-                            onChange={(e) => updateDocumentEntry(index, { isEnclosed: e.target.checked })}
-                            color="primary"
-                          />
-                        }
-                        label="Enclosed"
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={5}>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        label="Date"
-                        type="date"
-                        InputLabelProps={{ shrink: true }}
-                        value={entry.date || ''}
-                        onChange={(e) => updateDocumentEntry(index, { date: e.target.value })}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={5}>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        label="Remarks"
-                        value={entry.remarks || ''}
-                        onChange={(e) => updateDocumentEntry(index, { remarks: e.target.value })}
-                      />
-                    </Grid>
-
-                    <Grid item xs={2}>
-                      <IconButton 
-                        color="error" 
-                        onClick={() => removeDocumentEntry(index)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            ))}
-
-            {/* Footer (Signature) Section */}
-            <Card sx={{ mb: 4, borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-                  Signature (Footer)
-                </Typography>
-                <Grid container spacing={3}>
-                  {(Object.keys(footer) as Array<keyof FooterInfo>).map((field) => (
-                    <Grid item xs={12} sm={6} key={field}>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        label={field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        value={footer[field]}
-                        onChange={(e) => handleFooterChange(field, e.target.value)}
-                        type={field === 'date' ? 'date' : 'text'}
-                        InputLabelProps={field === 'date' ? { shrink: true } : {}}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              </CardContent>
-            </Card>
-
-            {/* Submit Button */}
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                size="large"
-              >
-                Submit Bid Preparation Form
-              </Button>
-            </Box>
-          </Paper>
-        </Box>
-      </Container>
-    </ThemeProvider>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <FormWrapper>
+        {formContent}
+      </FormWrapper>
+    </LocalizationProvider>
   );
 };
 

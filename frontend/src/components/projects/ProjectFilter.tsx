@@ -1,15 +1,44 @@
-import { FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
+import React from 'react';
+import { 
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem, 
+  SelectChangeEvent 
+} from '@mui/material';
 import { ProjectStatus } from '../../types';
 
-interface ProjectFilterProps {
+export interface ProjectFilterProps {
   onFilterChange: (status: ProjectStatus | '') => void;
   currentFilter: ProjectStatus | '';
+  statuses?: ProjectStatus[];
 }
 
-export const ProjectFilter: React.FC<ProjectFilterProps> = ({ onFilterChange, currentFilter }) => {
+export const ProjectFilter: React.FC<ProjectFilterProps> = ({ 
+  onFilterChange, 
+  currentFilter, 
+  statuses 
+}) => {
   const handleChange = (event: SelectChangeEvent<ProjectStatus | ''>) => {
     const selectedValue = event.target.value;
     onFilterChange(selectedValue as ProjectStatus | '');
+  };
+
+  // Use provided statuses or default to all statuses
+  const statusesToRender = statuses || Object.values(ProjectStatus).filter(
+    status => typeof status === 'number'
+  );
+
+  // Mapping to convert enum values to readable strings
+  const statusLabels: Record<ProjectStatus, string> = {
+    [ProjectStatus.Opportunity]: 'Opportunity',
+    [ProjectStatus['Decision Pending']]: 'Decision Pending',
+    [ProjectStatus.Cancelled]: 'Cancelled',
+    [ProjectStatus['Bid Submitted']]: 'Bid Submitted',
+    [ProjectStatus['Bid Rejected']]: 'Bid Rejected',
+    [ProjectStatus['Bid Accepted']]: 'Bid Accepted',
+    [ProjectStatus['In Progress']]: 'In Progress',
+    [ProjectStatus.Completed]: 'Completed'
   };
 
   return (
@@ -21,14 +50,11 @@ export const ProjectFilter: React.FC<ProjectFilterProps> = ({ onFilterChange, cu
         onChange={handleChange}
       >
         <MenuItem value="">All</MenuItem>
-        <MenuItem value={ProjectStatus.Opportunity}>Opportunity</MenuItem>
-        <MenuItem value={ProjectStatus['Decision Pending']}>Decision Pending</MenuItem>
-        <MenuItem value={ProjectStatus.Cancelled}>Cancelled</MenuItem>
-        <MenuItem value={ProjectStatus['Bid Submitted']}>Bid Submitted</MenuItem>
-        <MenuItem value={ProjectStatus['Bid Rejected']}>Bid Rejected</MenuItem>
-        <MenuItem value={ProjectStatus['Bid Accepted']}>Bid Accepted</MenuItem>
-        <MenuItem value={ProjectStatus['In Progress']}>In Progress</MenuItem>
-        <MenuItem value={ProjectStatus.Completed}>Completed</MenuItem>
+        {statusesToRender.map(status => (
+          <MenuItem key={status} value={status}>
+            {statusLabels[status as ProjectStatus]}
+          </MenuItem>
+        ))}
       </Select>
     </FormControl>
   );

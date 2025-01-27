@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Typography, Paper, Grid, Button, Alert } from '@mui/material';
 import { CheckCircle, Cancel } from '@mui/icons-material';
-import { Project, ProjectStatus } from '../../types';
+import { Project} from '../../models';
 //import { updateProjectStatus } from '../../services/api';
 
 interface DecisionWidgetProps {
@@ -9,27 +9,16 @@ interface DecisionWidgetProps {
   onStatusUpdate?: (updatedProject: Project) => void;
 }
 
-const DecisionWidget: React.FC<DecisionWidgetProps> = ({ project, onStatusUpdate }) => {
+const DecisionWidget: React.FC<DecisionWidgetProps> = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Only render for projects with Decision Pending status
-  if (project.status !== ProjectStatus['Bid Submitted']) {
-    return null;
-  }
+  
 
-  const handleStatusUpdate = async (newStatus: ProjectStatus) => {
+  const handleStatusUpdate = async () => {
     setIsLoading(true);
     setError(null);
-    /*
-    try {
-      const updatedProject = await updateProjectStatus(project.id, newStatus);
-      onStatusUpdate?.(updatedProject);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }*/
   };
 
   return (
@@ -58,7 +47,7 @@ const DecisionWidget: React.FC<DecisionWidgetProps> = ({ project, onStatusUpdate
             variant="contained"
             color="success"
             startIcon={<CheckCircle />}
-            onClick={() => handleStatusUpdate(ProjectStatus['Bid Accepted'])}
+            onClick={() => handleStatusUpdate()}
             disabled={isLoading}
             sx={{ 
               textTransform: 'none', 
@@ -74,7 +63,7 @@ const DecisionWidget: React.FC<DecisionWidgetProps> = ({ project, onStatusUpdate
             variant="contained"
             color="error"
             startIcon={<Cancel />}
-            onClick={() => handleStatusUpdate(ProjectStatus['Bid Rejected'])}
+            onClick={() => handleStatusUpdate()}
             disabled={isLoading}
             sx={{ 
               textTransform: 'none', 
