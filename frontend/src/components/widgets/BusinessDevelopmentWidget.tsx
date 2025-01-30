@@ -55,6 +55,10 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
 
   const getWorkflowColor = (workflowId: number) => {
     const status = getWorkflowStatusById(workflowId)?.status;
+    
+    if (status) {
+      localStorage.setItem('workflowStatus', status);
+    }
     switch (status) {
       case "Initial":
         return 'default';
