@@ -175,6 +175,7 @@ export const opportunityApi = {
   sendToApproval: async (data: {
     opportunityId: number;
     approvalManagerId: string;
+    action: string,
     comments?: string;
   }): Promise<OpportunityTracking> => {
     try {
@@ -182,7 +183,7 @@ export const opportunityApi = {
         opportunityId: data.opportunityId,
         assignedToId: data.approvalManagerId,
         comments: data.comments,
-        action: 'SendToApproval' // Added explicit action
+        action: data.action 
       });
 
       return normalizeOpportunityTracking({
@@ -195,17 +196,19 @@ export const opportunityApi = {
       throw error;
     }
   },
-  decideReview: async (data: {
+
+  RejectByRegionManagerSentToBidManager: async (data: {
     opportunityId: number;
     approvalManagerId: string;
+    action: string,
     comments?: string;
   }): Promise<OpportunityTracking> => {
     try {
-      const response = await axiosInstance.post<BackendOpportunityTracking>('api/OpportunityTracking/SendToApprove', {
+      const response = await axiosInstance.post<BackendOpportunityTracking>('api/OpportunityTracking/Reject', {
         opportunityId: data.opportunityId,
         assignedToId: data.approvalManagerId,
         comments: data.comments,
-        action: 'DecideToReview' // Added explicit action
+        action: data.action 
       });
 
       return normalizeOpportunityTracking({
@@ -218,7 +221,6 @@ export const opportunityApi = {
       throw error;
     }
   },
-
   sendToReview: async (data: {
     opportunityId: number;
     reviewManagerId: string;
@@ -239,6 +241,57 @@ export const opportunityApi = {
       }) as OpportunityTracking;
     } catch (error) {
       console.error('Error sending opportunity for review:', error);
+      throw error;
+    }
+  },
+
+
+  sendToApprove: async (data: {
+    opportunityId: number;
+    approvalRegionalDirectorId: string;
+    action: string,
+    comments?: string;
+  }): Promise<OpportunityTracking> => {
+    try {
+      const response = await axiosInstance.post<BackendOpportunityTracking>('api/OpportunityTracking/SendToApprove', {
+        opportunityId: data.opportunityId,
+        assignedToId: data.approvalRegionalDirectorId,
+        comments: data.comments,
+        action: data.action 
+      });
+
+      return normalizeOpportunityTracking({
+        ...response.data,
+        stage: mapStageFromBackend(Number(response.data.stage)),
+        status: mapStatusFromBackend(Number(response.data.status))
+      }) as OpportunityTracking;
+    } catch (error) {
+      console.error('Error sending opportunity for approval:', error);
+      throw error;
+    }
+  },
+
+  rejectOpportunityByRegionalDirector: async (data: {
+    opportunityId: number;
+    approvalRegionalDirectorId: string;
+    action: string,
+    comments?: string;
+  }): Promise<OpportunityTracking> => {
+    try {
+      const response = await axiosInstance.post<BackendOpportunityTracking>('api/OpportunityTracking/SendToApprove', {
+        opportunityId: data.opportunityId,
+        assignedToId: data.approvalRegionalDirectorId,
+        comments: data.comments,
+        action: data.action 
+      });
+
+      return normalizeOpportunityTracking({
+        ...response.data,
+        stage: mapStageFromBackend(Number(response.data.stage)),
+        status: mapStatusFromBackend(Number(response.data.status))
+      }) as OpportunityTracking;
+    } catch (error) {
+      console.error('Error sending opportunity for approval:', error);
       throw error;
     }
   },

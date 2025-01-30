@@ -51,7 +51,7 @@ export const updateWorkflow = async (opportunityId: number, workflowId: string, 
         if (opportunityData) {
             const opportunity = await opportunityApi.getById(opportunityId);
             if (opportunity) {
-                await opportunityApi.update({
+                await opportunityApi.update(opportunityId,{
                     ...opportunity,
                     ...opportunityData,
                     workflowId: workflowId // Ensure workflow ID is updated in opportunity as well

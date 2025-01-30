@@ -12,24 +12,27 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
     /// Action performed by Regional Manager, Review Changes
     /// This handler to use for sent the opportunity to Bid Manager
     /// </summary>
-    public class RejectOpportunityCommandHandler : IRequestHandler<OpportunityWorkflowCommand, OpportunityTrackingDto>
+    public class RejectOpportunityCommandHandler : IRequestHandler<RejectOpportunityCommand, OpportunityTrackingDto>
     {
         private readonly IRepository<Domain.Entities.OpportunityTracking> _opportunityRepository;
         private readonly IRepository<OpportunityHistory> _historyRepository;
         private readonly IUserContext _userContext;
+        private readonly IOpportunityHistoryService _opportunityHistoryService;
 
 
         public RejectOpportunityCommandHandler(
             IRepository<Domain.Entities.OpportunityTracking> opportunityRepository,
             IRepository<OpportunityHistory> historyRepository,
-            IUserContext userContext)
+            IUserContext userContext,
+            IOpportunityHistoryService opportunityHistoryService)
         {
             _opportunityRepository = opportunityRepository;
             _historyRepository = historyRepository;
             _userContext = userContext;
+            _opportunityHistoryService = opportunityHistoryService;
         }
 
-        public async Task<OpportunityTrackingDto> Handle(OpportunityWorkflowCommand request, CancellationToken cancellationToken)
+        public async Task<OpportunityTrackingDto> Handle(RejectOpportunityCommand request, CancellationToken cancellationToken)
         {
             var currentUser = _userContext.GetCurrentUserId();
             // Get the opportunity
@@ -38,6 +41,8 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 throw new Exception($"Opportunity with ID {request.OpportunityId} not found");
 
             // Update opportunity status
+            opportunity.UpdatedAt = DateTime.UtcNow;
+            opportunity.UpdatedBy = currentUser;    
             opportunity.Status = OpportunityTrackingStatus.BID_REJECTED;
             await _opportunityRepository.UpdateAsync(opportunity);
 
@@ -45,16 +50,17 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             var history = new OpportunityHistory
             {
                 OpportunityId = opportunity.Id,
-                Id = 3,
-                Action = "Rejected",
+                StatusId = 3,
+                Action = "Review Changes",
                 Comments = request.Comments,
                 ActionBy = currentUser,
                 AssignedToId = opportunity.BidManagerId, // Reassign to Bid Manager
                 ActionDate = DateTime.UtcNow
             };
 
-            await _historyRepository.AddAsync(history);
-
+            await _historyRepository.AddAsync(history).ConfigureAwait(false);
+            await _historyRepository.SaveChangesAsync();
+          
             // Return updated opportunity
             return new OpportunityTrackingDto
             {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Dialog,
   DialogTitle,
@@ -14,13 +14,13 @@ import {
   FormHelperText
 } from '@mui/material';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
+import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { opportunityApi } from '../../services/opportunityApi';
-import { OpportunityTracking } from '../../models';
 
 interface DecideApprovalProps {
   open: boolean;
   onClose: () => void;
-  opportunityId: string;
+  opportunityId: number;
   currentUser: string;
   onSubmit?: () => void;
 }
@@ -37,24 +37,6 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
   const [decision, setDecision] = useState<DecisionType | ''>('');
   const [comments, setComments] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [opportunity, setOpportunity] = useState<OpportunityTracking | null>(null);
-
-  useEffect(() => {
-    const fetchOpportunityDetails = async () => {
-      try {
-        // Use the existing method to convert ID and fetch opportunity details
-        const opportunityDetails = await opportunityApi.getById(Number(opportunityId));
-        setOpportunity(opportunityDetails);
-      } catch (err) {
-        console.error('Failed to fetch opportunity details:', err);
-        setError('Failed to load opportunity details');
-      }
-    };
-
-    if (open) {
-      fetchOpportunityDetails();
-    }
-  }, [open, opportunityId]);
 
   const handleDecisionChange = (event: SelectChangeEvent) => {
     event.stopPropagation();
@@ -77,6 +59,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
   };
 
   const handleSubmit = async (event: React.MouseEvent) => {
+    debugger;
     event.stopPropagation();
     if (!decision) {
       setError('Please select a decision');
@@ -88,20 +71,31 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       return;
     }
 
-    if (!opportunity?.approvalManagerId) {
-      setError('No approval manager found for this opportunity');
-      return;
-    }
-
     try {
       const newStatus = decision === 'approve' ? 'Approved' : 'Approval Rejected';
       const workflowId = decision === 'approve' ? "6" : "5"; // "6" for Approved, "5" for Approval Changes
 
       // Update both workflow and opportunity in one atomic operation
-      await opportunityApi.decideReview({
-        opportunityId: Number(opportunityId),
-        approvalManagerId: opportunity.approvalManagerId,
-        comments: `decide for review by ${currentUser}`
+  
+      if(decision === 'approve' ){
+        await  opportunityApi.sendToApprove({
+          opportunityId: opportunityId,
+          action : "Approve",
+          comments: comments,
+          approvalRegionalDirectorId: ''
+        });
+      }
+      else{
+        await  opportunityApi.rejectOpportunityByRegionalDirector({
+          opportunityId: opportunityId,
+          action : "Reject",
+          comments: comments,
+          approvalRegionalDirectorId: ''
+        })
+      }
+      await updateWorkflow(opportunityId, workflowId, {
+        status: newStatus,
+        approvalComments: comments
       });
 
       // Map decision to the correct format for history logging
@@ -109,7 +103,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
 
       // Log the approval decision
       await HistoryLoggingService.logApprovalDecision(
-        Number(opportunityId),
+        opportunityId,
         mappedDecision,
         currentUser,
         comments
@@ -117,7 +111,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
 
       // Log status change
       await HistoryLoggingService.logStatusChange(
-        Number(opportunityId),
+        opportunityId,
         decision === 'approve' ? 'Pending Approval' : 'Approval Rejected',
         newStatus,
         currentUser

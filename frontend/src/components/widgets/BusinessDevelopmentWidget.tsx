@@ -1,7 +1,8 @@
 import { OpportunityTracking } from '../../models';
 import { Card, CardContent, Typography, Grid, Chip, Divider, Box } from '@mui/material';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
-import { getUserById } from '../../dummyapi/usersApi';
+import { getUserById } from '../../services/userApi';
+import { useEffect, useState } from 'react';
 
 interface BusinessDevelopmentWidgetProps {
   opportunity: OpportunityTracking;
@@ -12,7 +13,30 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
     if (value === undefined || value === null) return 'Not specified';
     return currency ? `${currency} ${value.toLocaleString()}` : value.toLocaleString();
   };
+  const useManagerName = (managerId?: string) => {
+    const [managerName, setManagerName] = useState<string>('Not assigned');
+  
+  useEffect(() => {
+    const fetchManagerName = async () => {
+      if (!managerId) {
+        setManagerName('Not assigned');
+        return;
+      }
 
+      try {
+        const manager = await getUserById(managerId);
+        setManagerName(manager ? manager.name : 'Unknown');
+      } catch (error) {
+        console.error('Error fetching manager:', error);
+        setManagerName('Unknown');
+      }
+    };
+
+    fetchManagerName();
+  }, [managerId]);
+
+  return managerName;
+};
   const getStatusColor = (status: string | undefined) => {
     if (!status) return 'default';
     switch (status.toLowerCase()) {
@@ -31,6 +55,10 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
 
   const getWorkflowColor = (workflowId: number) => {
     const status = getWorkflowStatusById(workflowId)?.status;
+    
+    if (status) {
+      localStorage.setItem('workflowStatus', status);
+    }
     switch (status) {
       case "Initial":
         return 'default';
@@ -49,10 +77,15 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
     }
   };
 
-  const getManagerName = (managerId: string | undefined) => {
+  const getManagerName = async (managerId: string | undefined) => {
     if (!managerId) return 'Not assigned';
-    const manager = getUserById(managerId);
-    return manager ? manager.name : 'Unknown';
+    try {
+      const manager = await getUserById(managerId);
+      return manager ? manager.name : 'Unknown';
+    } catch (error) {
+      console.error('Error fetching manager:', error);
+      return 'Unknown';
+    }
   };
 
   return (
@@ -115,13 +148,13 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
             </Typography>
             <Box sx={{ mb: 2 }}>
               <Typography variant="body1" gutterBottom>
-                Bid Manager: {getManagerName(opportunity.bidManagerId)}
+                Bid Manager: {useManagerName(opportunity.bidManagerId)}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                Review Manager: {getManagerName(opportunity.reviewManagerId)}
+                Review Manager: {useManagerName(opportunity.reviewManagerId)}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                Approval Manager: {getManagerName(opportunity.approvalManagerId)}
+                Approval Manager: {useManagerName(opportunity.approvalManagerId)}
               </Typography>
             </Box>
           </Grid>

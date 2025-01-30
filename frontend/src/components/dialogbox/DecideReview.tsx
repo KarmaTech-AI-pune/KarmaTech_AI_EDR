@@ -109,12 +109,23 @@ const DecideReview: React.FC<DecideReviewProps> = ({
         //approvalManagerId: string;
         //comments?: string;
       // Update both workflow and opportunity in one atomic operation
+      if(decision === 'approve'){
       await opportunityApi.sendToApproval({
               opportunityId: opportunityId,
               approvalManagerId: selectedManager,
-              comments: `Sent for review by ${currentUser}`
+              action:decision,
+              comments: comments
             });
-     
+          }
+          else{
+            await opportunityApi.RejectByRegionManagerSentToBidManager({
+              opportunityId: opportunityId,
+              approvalManagerId: selectedManager,
+              action:decision,
+              comments: `Rejected by ${currentUser}`
+            });
+          }
+          
 
       // Log the review decision
       if (decision === 'approve') {

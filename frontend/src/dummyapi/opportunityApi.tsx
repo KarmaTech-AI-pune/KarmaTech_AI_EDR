@@ -195,7 +195,7 @@ export const opportunityApi = {
       // Normalize and prepare data for submission
       const normalizedData = normalizeOpportunityTracking(opportunityData);
       const preparedData = prepareOpportunityTrackingForSubmission(normalizedData);
-
+ 
       // Prepare the opportunity object with default values and convert to backend model
       const command: BackendOpportunityTracking = {
         id: opportunityId,

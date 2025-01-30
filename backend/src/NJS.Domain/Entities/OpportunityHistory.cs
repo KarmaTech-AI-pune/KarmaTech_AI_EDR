@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
@@ -11,6 +12,8 @@ namespace NJS.Domain.Entities
         {
             ActionDate = DateTime.UtcNow;
         }
+
+        [Key]
         public int Id { get; set; }
         public int OpportunityId { get; set; }
         public OpportunityTracking Opportunity { get; set; }

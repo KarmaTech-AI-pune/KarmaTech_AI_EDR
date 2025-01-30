@@ -13,8 +13,8 @@ import {
   FormHelperText,
   Backdrop
 } from '@mui/material';
-import { getUsersByRole, getUserById } from '../../dummyapi/usersApi';
-import { opportunityApi } from '../../dummyapi/opportunityApi';
+import { getUsersByRole, getUserById } from '../../services/userApi'
+import { opportunityApi } from '../../services/opportunityApi';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
 import { AuthUser} from '../../models'
 import { HistoryLoggingService } from '../../services/historyLoggingService';
@@ -41,9 +41,13 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
 
   useEffect(() => {
     const checkDirector = async() =>{
+      // Get all Regional Directors
+    const regionalDirectors = await getUsersByRole('Regional Director');
+    setApprovers(regionalDirectors);
+
       if(opportunityId){
         let res =  await opportunityApi.getById(opportunityId)
-
+      debugger;
         if(res.approvalManagerId)
         {
           let directorUser = await getUserById(res.approvalManagerId)
@@ -56,10 +60,9 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
         }
       }
       else console.error("No ID set for opp")
+    
+    
     }
-    // Get all Regional Directors
-    const regionalDirectors = getUsersByRole('Regional Director');
-    setApprovers(regionalDirectors);
     checkDirector();
   }, [selectedApprover]);
 
@@ -85,9 +88,20 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       const selectedApproverDetails = approvers.find(a => a.id === selectedApprover);
       if (!selectedApproverDetails) {
         throw new Error('Selected approver not found');
+        
       }
 
+        
+
+      //Send to Approvel to Regional Direcotir
+       await opportunityApi.sendToApproval({
+                    opportunityId: opportunityId,
+                    approvalManagerId: selectedApprover,
+                    action:'Send to Approvel',
+                    comments: "Send to Approvel"
+                  });
       // Update both workflow and opportunity in one atomic operation
+    
       await updateWorkflow(opportunityId, "4", { // "4" is the ID for "Sent for Approval" status
         approvalManagerId: selectedApprover,
         status: 'Pending Approval'

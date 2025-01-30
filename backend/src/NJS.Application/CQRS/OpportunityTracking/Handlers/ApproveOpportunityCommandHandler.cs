@@ -46,8 +46,8 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 history = new OpportunityHistory
                 {
                     OpportunityId = opportunity.Id,
-                    Id = 5,//Approval Changes
-                    Action = "Rejected",
+                    StatusId = 5,//Approval Changes
+                    Action = "Approval Changes",
                     Comments = request.Comments,
                     ActionBy = currentUser,
                     AssignedToId = opportunity.ReviewManagerId, // Reassign to Regional Manager
@@ -62,7 +62,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 history = new OpportunityHistory
                 {
                     OpportunityId = opportunity.Id,
-                    Id = 6,//Approved
+                    StatusId = 6,//Approved
                     Action = "Approved",
                     Comments = request.Comments,
                     ActionBy = currentUser,
@@ -72,6 +72,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 
 
             await _historyRepository.AddAsync(history);
+            await _historyRepository.SaveChangesAsync();
 
             // Return updated opportunity
             return new OpportunityTrackingDto
