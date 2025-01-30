@@ -83,7 +83,7 @@ export const BusinessDevelopmentDetails = () => {
             variant="contained" 
             color="primary"
             onClick={handleGoNoGoClick}
-            disabled={localStorage.getItem('workflowStatus') == "Approved"}
+            disabled={localStorage.getItem('workflowStatus') != "Approved"}
           >
             Go to GoNoGo Form
           </Button>
