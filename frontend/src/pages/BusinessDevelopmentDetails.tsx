@@ -39,6 +39,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { projectManagementAppContext } from '../App';
 import { OpportunityTracking } from '../models';
 import { OpportunityForm } from '../components/forms/OpportunityForm';
+import BidPreparationForm from '../components/forms/BidPreparationForm';
 import { BDChips } from '../components/common/BDChips';
 import { opportunityApi } from '../services/opportunityApi';
 import { HistoryWidget } from '../components/widgets/HistoryWidget';
@@ -294,10 +295,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
           case 'bidPrep':
             return (
               <Box sx={{ p: 3 }}>
-                <Typography variant="h6">Bid Preparation Form</Typography>
-                <Typography variant="body1" color="text.secondary">
-                  This form will be implemented soon.
-                </Typography>
+                <Typography variant="h6" gutterBottom>Bid Preparation Form</Typography>
+                <BidPreparationForm />
               </Box>
             );
           default:

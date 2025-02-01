@@ -244,44 +244,39 @@ const BidPreparationForm: React.FC = () => {
         flexDirection: 'column',
         pr: 1
       }}>
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center'
-          }}>
-            <Typography variant="h6" component="h2">
-              FB03 Bid Preparation Checklist
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              {editMode && (
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddItem}
-                  size="small"
-                >
-                  Add New Item
-                </Button>
-              )}
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={editMode}
-                    onChange={() => setEditMode(!editMode)}
-                    color="primary"
-                  />
-                }
-                label="Edit Mode"
-              />
-            </Box>
-          </Box>
-          {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
-            </Alert>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          mb: 2,
+          gap: 2, 
+          alignItems: 'center' 
+        }}>
+          {editMode && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAddItem}
+              size="small"
+            >
+              Add New Item
+            </Button>
           )}
-        </Paper>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={editMode}
+                onChange={() => setEditMode(!editMode)}
+                color="primary"
+              />
+            }
+            label="Edit Mode"
+          />
+        </Box>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         <Paper sx={{ 
           flex: 1,
@@ -445,9 +440,8 @@ const BidPreparationForm: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <FormWrapper>
+     
         {formContent}
-      </FormWrapper>
     </LocalizationProvider>
   );
 };
