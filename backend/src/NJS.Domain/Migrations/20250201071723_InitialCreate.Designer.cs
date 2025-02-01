@@ -12,7 +12,7 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20250129115419_InitialCreate")]
+    [Migration("20250201071723_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

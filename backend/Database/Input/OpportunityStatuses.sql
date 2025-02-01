@@ -1,11 +1,3 @@
-
-
-
-CREATE TABLE OpportunityStatuses (
-    Id INT PRIMARY KEY,
-    Status VARCHAR(255) NOT NULL
-);
-
 SET IDENTITY_INSERT OpportunityStatuses ON;
 INSERT INTO OpportunityStatuses (Id, Status)
 VALUES
