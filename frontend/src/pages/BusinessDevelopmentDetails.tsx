@@ -40,6 +40,7 @@ import { projectManagementAppContext } from '../App';
 import { OpportunityTracking } from '../models';
 import { OpportunityForm } from '../components/forms/OpportunityForm';
 import BidPreparationForm from '../components/forms/BidPreparationForm';
+import GoNoGoForm from "../components/forms/GoNoGoForm";
 import { BDChips } from '../components/common/BDChips';
 import { opportunityApi } from '../services/opportunityApi';
 import { HistoryWidget } from '../components/widgets/HistoryWidget';
@@ -218,7 +219,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
       title: 'Go/No-Go Decision',
       icon: <AssessmentIcon />,
       onClick: handleGoNoGoClick,
-      disabled: localStorage.getItem('workflowStatus') !== "Approved"
+      //disabled: localStorage.getItem('workflowStatus') !== "Approved"
     },
     {
       id: 'bidPrep',
@@ -275,12 +276,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
             );
           case 'goNoGo':
             return (
-              <Box sx={{ p: 3 }}>
-                <Typography variant="h6">Go/No-Go Decision Form</Typography>
-                <Typography variant="body1" color="text.secondary">
-                  This form will be implemented soon.
-                </Typography>
-              </Box>
+              
+                  <GoNoGoForm />
             );
           case 'bidPrep':
             return (
@@ -530,7 +527,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                           },
                         }}
                         onClick={() => handleFormClick(item.id)}
-                        disabled={item.disabled}
+                        //disabled={item.disabled}
                       >
                         <ListItemIcon>
                           {item.icon}
