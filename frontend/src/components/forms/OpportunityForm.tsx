@@ -15,6 +15,8 @@ import {
   Alert,
   Typography,
   Divider,
+  Paper,
+  Box,
 } from '@mui/material';
 import { DateField } from '@mui/x-date-pickers/DateField';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -44,7 +46,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   const [reviewManagers, setReviewManagers] = useState<{id: string, name: string}[]>([]);
   const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
   const [formData, setFormData] = useState<Partial<OpportunityTracking>>({    
-    stage: project?.stage || '',
+    stage: project?.stage || undefined,
     strategicRanking: project?.strategicRanking || '',
     bidFees: project?.bidFees || 0,
     emd: project?.emd || 0,
@@ -67,7 +69,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     client: project?.client || '',
     clientSector: project?.clientSector || '',
     likelyStartDate: project?.likelyStartDate || new Date().toISOString().split('T')[0],
-    status: project?.status || '',
+    status: project?.status || undefined,
     currency: project?.currency || 'INR',
     capitalValue: project?.capitalValue || 0,
     durationOfProject: project?.durationOfProject || 0,
@@ -169,8 +171,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
           FB01 Opportunity Tracking
         </Typography>
       </DialogTitle>
+      <DialogContent>
+        <Box sx={{ p: 2 }}>
       <form onSubmit={handleSubmit}>
-        <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -605,14 +608,17 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
             </Grid>
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+        <DialogActions sx={{ mt: 3 }}>
+          <Button onClick={onClose} color="inherit">
+            Cancel
+          </Button>
           <Button type="submit" variant="contained" color="primary">
             {project?.id ? 'Update Opportunity' : 'Create Opportunity'}
           </Button>
         </DialogActions>
       </form>
+        </Box>
+      </DialogContent>
     </Dialog>
   );
 };

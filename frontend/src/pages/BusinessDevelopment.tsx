@@ -271,13 +271,15 @@ export const BusinessDevelopment: React.FC = () => {
           )}
         </Box>
 
-        <OpportunityForm
-          open={isCreatingOpportunity}
-          onSubmit={handleSubmitOpportunity}
-          onClose={handleCancelOpportunity}
-          project={initialOpportunityData}
-          error={formError}
-        />
+        {isCreatingOpportunity && (
+          <OpportunityForm
+            open={isCreatingOpportunity}
+            onSubmit={handleSubmitOpportunity}
+            onClose={handleCancelOpportunity}
+            project={initialOpportunityData}
+            error={formError}
+          />
+        )}
 
         <Divider sx={{ mb: 3 }} />
 

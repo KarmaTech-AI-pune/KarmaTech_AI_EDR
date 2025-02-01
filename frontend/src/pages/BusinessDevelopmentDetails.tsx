@@ -19,7 +19,8 @@ import {
   Card,
   CardContent,
   Chip,
-  Button
+  Button,
+  TextField
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -37,7 +38,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { projectManagementAppContext } from '../App';
 import { OpportunityTracking } from '../models';
-import { OpportunityTrackingWorkflow } from '../components/common/OpportunityTrackingWorkflow';
+import { OpportunityForm } from '../components/forms/OpportunityForm';
 import { BDChips } from '../components/common/BDChips';
 import { opportunityApi } from '../services/opportunityApi';
 import { HistoryWidget } from '../components/widgets/HistoryWidget';
@@ -86,6 +87,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const [formsOpen, setFormsOpen] = useState(false);
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const [histories, setHistories] = useState<OpportunityHistory[]>([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const context = useContext(projectManagementAppContext);
   const opportunity = context?.selectedProject as OpportunityTracking;
 
@@ -195,15 +197,22 @@ export const BusinessDevelopmentDetails: React.FC = () => {
     });
   };
 
+  const handleFormSubmit = async (data: OpportunityTracking) => {
+    try {
+      await opportunityApi.create(data);
+      handleOpportunityUpdate();
+      setIsFormOpen(false);
+    } catch (error) {
+      console.error('Error updating opportunity:', error);
+    }
+  };
+
   const formSections = [
     {
       id: 'opportunityTracking',
       title: 'Opportunity Tracking',
       icon: <DescriptionIcon />,
-      component: <OpportunityTrackingWorkflow 
-        opportunity={opportunity} 
-        onOpportunityUpdated={handleOpportunityUpdate}
-      />
+      onClick: () => setIsFormOpen(true)
     },
     {
       id: 'goNoGo',
@@ -247,75 +256,53 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const renderContent = () => {
     if (selectedSection === 'forms') {
       if (selectedForm) {
-        const form = formSections.find(f => f.id === selectedForm);
-        return form?.component || (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>Forms Overview</Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
-                <Card sx={{ height: '100%' }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <DescriptionIcon sx={{ mr: 1, color: 'primary.main' }} />
-                      <Typography variant="h6">Opportunity Tracking</Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Track and manage opportunity details, client information, and project specifics.
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      onClick={() => handleFormClick('opportunityTracking')}
-                    >
-                      View Form
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Card sx={{ height: '100%' }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <AssessmentIcon sx={{ mr: 1, color: 'primary.main' }} />
-                      <Typography variant="h6">Go/No-Go Decision</Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Evaluate project viability and make informed decisions on opportunity pursuit.
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      onClick={handleGoNoGoClick}
-                      disabled={localStorage.getItem('workflowStatus') !== "Approved"}
-                    >
-                      View Form
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Card sx={{ height: '100%' }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <AssignmentIcon sx={{ mr: 1, color: 'primary.main' }} />
-                      <Typography variant="h6">Bid Preparation</Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Prepare and manage bid documentation and submission details.
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      onClick={handleBidPrepClick}
-                    >
-                      View Form
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </Box>
-        );
+        switch (selectedForm) {
+          case 'opportunityTracking':
+            return (
+              <Box sx={{ p: 3 }}>
+                <Paper sx={{ p: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Opportunity Tracking Form
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 3 }}>
+                    View and edit opportunity tracking details for {opportunity.workName}
+                  </Typography>
+                  <Button 
+                    variant="contained" 
+                    onClick={() => setIsFormOpen(true)}
+                  >
+                    Open Form
+                  </Button>
+                </Paper>
+                <OpportunityForm
+                  open={isFormOpen}
+                  onClose={() => setIsFormOpen(false)}
+                  onSubmit={handleFormSubmit}
+                  project={opportunity}
+                />
+              </Box>
+            );
+          case 'goNoGo':
+            return (
+              <Box sx={{ p: 3 }}>
+                <Typography variant="h6">Go/No-Go Decision Form</Typography>
+                <Typography variant="body1" color="text.secondary">
+                  This form will be implemented soon.
+                </Typography>
+              </Box>
+            );
+          case 'bidPrep':
+            return (
+              <Box sx={{ p: 3 }}>
+                <Typography variant="h6">Bid Preparation Form</Typography>
+                <Typography variant="body1" color="text.secondary">
+                  This form will be implemented soon.
+                </Typography>
+              </Box>
+            );
+          default:
+            return null;
+        }
       }
       return (
         <Box sx={{ p: 3 }}>
@@ -471,6 +458,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   };
 
   return (
+    <>
     <Box 
       sx={{ 
         display: 'flex',
@@ -587,12 +575,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
           <Typography variant="h4" gutterBottom>
             {opportunity.workName}
           </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
-            <OpportunityTrackingWorkflow 
-              opportunity={opportunity} 
-              onOpportunityUpdated={handleOpportunityUpdate}
-            />
-          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }} />
           <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 3 }}>
             <BDChips opportunityId={opportunity.id} />
           </Box>
@@ -600,5 +583,6 @@ export const BusinessDevelopmentDetails: React.FC = () => {
         </Box>
       </Box>
     </Box>
+    </>
   );
 };
