@@ -88,7 +88,6 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const [formsOpen, setFormsOpen] = useState(false);
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const [histories, setHistories] = useState<OpportunityHistory[]>([]);
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const context = useContext(projectManagementAppContext);
   const opportunity = context?.selectedProject as OpportunityTracking;
 
@@ -202,7 +201,6 @@ export const BusinessDevelopmentDetails: React.FC = () => {
     try {
       await opportunityApi.create(data);
       handleOpportunityUpdate();
-      setIsFormOpen(false);
     } catch (error) {
       console.error('Error updating opportunity:', error);
     }
@@ -213,7 +211,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
       id: 'opportunityTracking',
       title: 'Opportunity Tracking',
       icon: <DescriptionIcon />,
-      onClick: () => setIsFormOpen(true)
+      onClick: () => handleFormClick('opportunityTracking')
     },
     {
       id: 'goNoGo',
@@ -268,19 +266,11 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                   <Typography variant="body1" sx={{ mb: 3 }}>
                     View and edit opportunity tracking details for {opportunity.workName}
                   </Typography>
-                  <Button 
-                    variant="contained" 
-                    onClick={() => setIsFormOpen(true)}
-                  >
-                    Open Form
-                  </Button>
+                  <OpportunityForm
+                    onSubmit={handleFormSubmit}
+                    project={opportunity}
+                  />
                 </Paper>
-                <OpportunityForm
-                  open={isFormOpen}
-                  onClose={() => setIsFormOpen(false)}
-                  onSubmit={handleFormSubmit}
-                  project={opportunity}
-                />
               </Box>
             );
           case 'goNoGo':

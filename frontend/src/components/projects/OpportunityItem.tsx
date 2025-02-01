@@ -181,7 +181,9 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const getWorkflowDialog = () => {
     if (!currentUser?.name) return null;
 
-    const status = getWorkflowStatusById(opportunity.currentHistory.statusId)?.status;
+    const status = opportunity.currentHistory && !Array.isArray(opportunity.currentHistory) 
+      ? getWorkflowStatusById(opportunity.currentHistory.statusId)?.status
+      : null;
     switch (status) {
       case "Initial":
       case "Review Changes":
@@ -297,12 +299,14 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                   size="small"
                   icon={<Assessment />}
                 />
-                <Chip 
-                  label={getWorkflowStatusById(opportunity.currentHistory.statusId)?.status || 'Unknown'}
-                  color={getWorkflowStatusColor(opportunity.currentHistory.statusId)}
-                  size="small"
-                  icon={<WorkHistory />}
-                />
+                {opportunity.currentHistory && !Array.isArray(opportunity.currentHistory) && (
+                  <Chip 
+                    label={getWorkflowStatusById(opportunity.currentHistory.statusId)?.status || 'Unknown'}
+                    color={getWorkflowStatusColor(opportunity.currentHistory.statusId)}
+                    size="small"
+                    icon={<WorkHistory />}
+                  />
+                )}
                 <Chip 
                   label={opportunity.status || 'No Status'}
                   variant="outlined"
@@ -468,14 +472,24 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
       {/* Workflow Dialog */}
       {getWorkflowDialog()}
 
-      {/* Edit Form */}
-      <OpportunityForm 
-        open={editDialogOpen}
-        onClose={handleEditClose}
-        onSubmit={handleEditSubmit}
-        project={opportunity}
-        error={formError}
-      />
+      {/* Edit Dialog */}
+      {editDialogOpen && (
+        <Dialog
+          open={editDialogOpen}
+          onClose={handleEditClose}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Edit Opportunity</DialogTitle>
+          <DialogContent>
+            <OpportunityForm 
+              onSubmit={handleEditSubmit}
+              project={opportunity}
+              error={formError}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };

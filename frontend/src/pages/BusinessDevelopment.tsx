@@ -6,7 +6,9 @@ import {
   Button,
   Divider,
   IconButton,
-  Alert
+  Alert,
+  Dialog,
+  DialogContent
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -272,13 +274,20 @@ export const BusinessDevelopment: React.FC = () => {
         </Box>
 
         {isCreatingOpportunity && (
-          <OpportunityForm
-            open={isCreatingOpportunity}
-            onSubmit={handleSubmitOpportunity}
+          <Dialog 
+            open={isCreatingOpportunity} 
             onClose={handleCancelOpportunity}
-            project={initialOpportunityData}
-            error={formError}
-          />
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogContent>
+              <OpportunityForm
+                onSubmit={handleSubmitOpportunity}
+                project={initialOpportunityData}
+                error={formError}
+              />
+            </DialogContent>
+          </Dialog>
         )}
 
         <Divider sx={{ mb: 3 }} />

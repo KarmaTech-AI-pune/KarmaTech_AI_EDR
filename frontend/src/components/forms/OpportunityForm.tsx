@@ -1,9 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   TextField,
   Grid,
@@ -27,16 +23,12 @@ import { AuthUser, OpportunityTracking } from "../../models";
 import { getUsersByRole } from '../../services/userApi';
 
 interface OpportunityFormProps {
-  open: boolean;
-  onClose: () => void;
   onSubmit: (data: OpportunityTracking) => void;
   project?: Partial<OpportunityTracking>;
   error?: string;
 }
 
 export const OpportunityForm: React.FC<OpportunityFormProps> = ({
-  open,
-  onClose,
   onSubmit,
   project,
   error
@@ -165,14 +157,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-          FB01 Opportunity Tracking
-        </Typography>
-      </DialogTitle>
-      <DialogContent>
-        <Box sx={{ p: 2 }}>
+    <Box>
       <form onSubmit={handleSubmit}>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -608,17 +593,12 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
             </Grid>
           </Grid>
-        <DialogActions sx={{ mt: 3 }}>
-          <Button onClick={onClose} color="inherit">
-            Cancel
-          </Button>
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
           <Button type="submit" variant="contained" color="primary">
             {project?.id ? 'Update Opportunity' : 'Create Opportunity'}
           </Button>
-        </DialogActions>
-      </form>
         </Box>
-      </DialogContent>
-    </Dialog>
+      </form>
+    </Box>
   );
 };

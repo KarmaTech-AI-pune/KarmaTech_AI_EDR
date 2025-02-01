@@ -12,7 +12,6 @@ interface OpportunityListProps {
 export const OpportunityList: React.FC<OpportunityListProps> = ({ 
   opportunities,
   emptyMessage = 'No opportunities found',
-  onOpportunityDeleted,
   onOpportunityUpdated
 }) => {
   console.log("cc",opportunities)
@@ -27,7 +26,6 @@ export const OpportunityList: React.FC<OpportunityListProps> = ({
         <OpportunityItem
           key={opportunity.id}
           opportunity={opportunity}
-          onOpportunityDeleted={onOpportunityDeleted}
           onOpportunityUpdated={onOpportunityUpdated}
         />
       ))}
