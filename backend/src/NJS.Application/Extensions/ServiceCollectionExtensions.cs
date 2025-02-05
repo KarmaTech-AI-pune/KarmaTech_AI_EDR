@@ -11,7 +11,6 @@ namespace NJS.Application.Extensions
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-
             services.AddMediatR(cfg =>
             {
                 cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
@@ -24,11 +23,13 @@ namespace NJS.Application.Extensions
             services.AddScoped<IOpportunityTrackingRepository, OpportunityTrackingRepository>();
             services.AddScoped<IPermissionRepository, PermissionRepository>();
             services.AddScoped<IOpportunityHistoryRepository, OpportunityHistoryRepository>();
+            services.AddScoped<IGoNoGoRepository, GoNoGoRepository>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
             services.AddScoped<IUserContext, UserContext>();
+
             return services;
         }
     }

@@ -29,6 +29,16 @@ namespace NJS.Domain.Database
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
         public DbSet<Region> Regions { get; set; }
 
+        public DbSet<GoNoGoDecisionOpportunity> GoNoGoDecisionOpportunities { get; set; }
+        // To:
+        public DbSet<ScoringCriteria> ScoringCriteria { get; set; }
+
+        public DbSet<ScoreRange> ScoreRange { get; set; }
+
+        public DbSet<ScoringDescriptions> ScoringDescription { get; set; }
+
+        public DbSet<ScoringDescriptionSummarry> ScoringDescriptionSummarry { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -89,9 +99,15 @@ namespace NJS.Domain.Database
                 .Property(o => o.NetNJSRevenue)
                 .HasPrecision(18, 2);
 
+           
+
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId); 
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
+
+            modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoringCriterias).WithMany(s => s.GoNoGoDecisionOpportunities).HasForeignKey(oh => oh.ScoringCriteriaId);
+            modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoreRanges).WithMany(s => s.GoNoGoDecisionOpportunitiesScoring).HasForeignKey(oh => oh.ScoreRangeId);
+            modelBuilder.Entity<ScoringDescriptionSummarry>().HasOne(oh => oh.ScoringDescriptions).WithMany(s => s.ScoringDescriptionSummarry).HasForeignKey(oh => oh.ScoringDescriptionID);
         }
     }
 

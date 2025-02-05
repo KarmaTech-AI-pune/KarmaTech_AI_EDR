@@ -392,6 +392,59 @@ namespace NJS.Domain.Migrations
                     b.ToTable("GoNoGoDecisions");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionOpportunity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BdHead")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Emd")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EnderFee")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Office")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OpportunityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Region")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RegionalBDHead")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ScoreRangeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ScoringCriteriaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Sector")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TypeOfBid")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TypeOfClient")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScoreRangeId");
+
+                    b.HasIndex("ScoringCriteriaId");
+
+                    b.ToTable("GoNoGoDecisionOpportunities");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -797,6 +850,102 @@ namespace NJS.Domain.Migrations
                     b.ToTable("RolePermissions");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ScoreRange", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("label")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("range")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("value")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScoreRange");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ScoringCriteria", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ByDate")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ByWhom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Label")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("ShowComments")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScoringCriteria");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ScoringDescriptionSummarry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("High")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Low")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Medium")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ScoringDescriptionID")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScoringDescriptionID");
+
+                    b.ToTable("ScoringDescriptionSummarry");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ScoringDescriptions", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("label")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScoringDescription");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.User", b =>
                 {
                     b.Property<string>("Id")
@@ -1080,6 +1229,21 @@ namespace NJS.Domain.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionOpportunity", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.ScoreRange", "ScoreRanges")
+                        .WithMany("GoNoGoDecisionOpportunitiesScoring")
+                        .HasForeignKey("ScoreRangeId");
+
+                    b.HasOne("NJS.Domain.Entities.ScoringCriteria", "ScoringCriterias")
+                        .WithMany("GoNoGoDecisionOpportunities")
+                        .HasForeignKey("ScoringCriteriaId");
+
+                    b.Navigation("ScoreRanges");
+
+                    b.Navigation("ScoringCriterias");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityHistory", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.User", "ActionUser")
@@ -1191,6 +1355,17 @@ namespace NJS.Domain.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ScoringDescriptionSummarry", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.ScoringDescriptions", "ScoringDescriptions")
+                        .WithMany("ScoringDescriptionSummarry")
+                        .HasForeignKey("ScoringDescriptionID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ScoringDescriptions");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.UserWBSTask", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.User", "User")
@@ -1254,6 +1429,21 @@ namespace NJS.Domain.Migrations
             modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
                 {
                     b.Navigation("ProjectResources");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ScoreRange", b =>
+                {
+                    b.Navigation("GoNoGoDecisionOpportunitiesScoring");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ScoringCriteria", b =>
+                {
+                    b.Navigation("GoNoGoDecisionOpportunities");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ScoringDescriptions", b =>
+                {
+                    b.Navigation("ScoringDescriptionSummarry");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.User", b =>

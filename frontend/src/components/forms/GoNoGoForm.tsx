@@ -26,6 +26,7 @@ import {projectManagementAppContextType } from '../../types';
 import { GoNoGoStatus} from "../../models";
 import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
+import {goNoGoOpportunityApi} from '../../services/goNoGoOpportunityApi';
 
 interface GoNoGoFormProps {
   goNoGoDecision?: any;
@@ -115,19 +116,20 @@ const scoringDescriptions: { [key: string]: { [key: string]: string } } = {
   }
 };
 
-const scoreRanges = [
-  { value: 10, label: '10 - Excellent', range: 'high' },
-  { value: 9, label: '9 - Excellent', range: 'high' },
-  { value: 8, label: '8 - Excellent', range: 'high' },
-  { value: 7, label: '7 - Good', range: 'medium' },
-  { value: 6, label: '6 - Good', range: 'medium' },
-  { value: 5, label: '5 - Good', range: 'medium' },
-  { value: 4, label: '4 - Poor', range: 'low' },
-  { value: 3, label: '3 - Poor', range: 'low' },
-  { value: 2, label: '2 - Poor', range: 'low' },
-  { value: 1, label: '1 - Poor', range: 'low' },
-  { value: 0, label: '0 - Not Rated', range: 'low' }
-];
+const { getScoringRanges } = goNoGoOpportunityApi;
+const [scoreRanges, setScoreRanges] = useState<{ id: number; value: number; label: string; range: string }[]>([]);
+
+useEffect(() => {
+  const fetchScoreRanges = async () => {
+    try {
+      const ranges = await goNoGoOpportunityApi.getScoringRanges();
+      setScoreRanges(ranges);
+    } catch (error) {
+      console.error('Error fetching scoring ranges', error);
+    }
+  };
+  fetchScoreRanges();
+}, [goNoGoOpportunityApi.getScoringRanges]);
 
 const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
