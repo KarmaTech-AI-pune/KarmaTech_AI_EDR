@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Identity.Client.Extensibility;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using System.Security.Authentication;

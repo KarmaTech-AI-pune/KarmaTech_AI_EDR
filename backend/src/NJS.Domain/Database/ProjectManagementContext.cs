@@ -14,8 +14,8 @@ namespace NJS.Domain.Database
         }
 
         public DbSet<Project> Projects { get; set; }
-        public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
+        public new DbSet<User> Users { get; set; }
+        public new DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<FeasibilityStudy> FeasibilityStudies { get; set; }
         public DbSet<GoNoGoDecision> GoNoGoDecisions { get; set; }
