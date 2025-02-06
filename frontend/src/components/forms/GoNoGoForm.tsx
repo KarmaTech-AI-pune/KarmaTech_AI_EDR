@@ -1,613 +1,194 @@
-import React, { useState, useEffect, useContext } from 'react';
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Typography,
-  Box,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Button,
-  Paper,
-  Grid,
-  Collapse,
-  Card,
-  CardContent,
-  List,
-  ListItem,
-  ListItemText
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CommentIcon from '@mui/icons-material/Comment';
-import {projectManagementAppContextType } from '../../types';
-import { GoNoGoStatus} from "../../models";
-import { projectManagementAppContext } from '../../App';
-import { goNoGoApi } from '../../dummyapi/api';
+import React, { useState, useEffect } from 'react';
+import { useWorkflow } from '../../hooks/useWorkflow';
+import { useRoles } from '../../hooks/useRoles';
+import { GoNoGoDecision } from '../../models/goNoGoDecisionModel';
+import { WorkflowStatus } from '../../models/workflowModel';
 
 interface GoNoGoFormProps {
-  goNoGoDecision?: any;
-  onSubmit?: (decision: any) => void;
+    projectId: string;
+    initialDecision?: GoNoGoDecision;
+    onSubmit: (decision: GoNoGoDecision) => void;
 }
 
-interface ScoringCriteria {
-  byWhom: string;
-  byDate: string;
-  comments: string;
-  score: number;
-  showComments: boolean;
-}
+export const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ 
+    projectId, 
+    initialDecision, 
+    onSubmit 
+}) => {
+    const { 
+        workflowInstance, 
+        initiateGoNoGoWorkflow, 
+        createDecisionVersion,
+        advanceWorkflowStep,
+        loading,
+        error 
+    } = useWorkflow();
 
-interface HeaderInfo {
-  typeOfBid: string;
-  sector: string;
-  bdHead: string;
-  office: string;
-  regionalBDHead: string;
-  region: string;
-  typeOfClient: string;
-  tenderFee: string;
-  emd: string;
-}
+    const { currentUserRole } = useRoles();
 
-const scoringDescriptions: { [key: string]: { [key: string]: string } } = {
-  marketingPlan: {
-    high: 'Fits well with marketing strategy',
-    medium: 'Fits somewhat into the marketing strategy',
-    low: 'Does not fit with marketing strategy'
-  },
-  clientRelationship: {
-    high: 'Excellent relationships, no past problem projects',
-    medium: 'Fair/good relationships, some project problems',
-    low: 'Strained relationship(s), problem project(s), selectability questionable'
-  },
-  projectKnowledge: {
-    high: 'Strategic project, excellent knowledge of project development',
-    medium: 'Known about project, but some knowledge of project development',
-    low: 'Knew nothing about project prior to receipt of RFQ/RFP'
-  },
-  technicalEligibility: {
-    high: 'Meets all criteria on its own',
-    medium: 'Need of JV or some support to meet the criteria',
-    low: 'Does not meet qualification criteria'
-  },
-  financialEligibility: {
-    high: 'Meets all criteria on its own',
-    medium: 'Need of JV or some support to meet the criteria',
-    low: 'Does not meet qualification criteria'
-  },
-  keyStaffAvailability: {
-    high: 'All competent key staff available',
-    medium: 'Most competent key staff available but some outsourcing required',
-    low: 'Major outsourcing required'
-  },
-  projectCompetition: {
-    high: 'NJS has inside track, and competition is manageable',
-    medium: 'NJS faces formidable competition, and have limited intelligence on it',
-    low: 'Project appears to be wired for competition'
-  },
-  competitionPosition: {
-    high: 'NJS qualifications are technically superior',
-    medium: 'Qualifications are equivalent to competition, or we may have a slight edge',
-    low: 'NJS qualifications are lower to the competition'
-  },
-  futureWorkPotential: {
-    high: 'Project will lead to future work',
-    medium: 'Possible future work',
-    low: 'One-time project, no future work'
-  },
-  projectProfitability: {
-    high: 'Good profit potential',
-    medium: 'Competitive pricing, Moderate potential profit',
-    low: 'Risky and may lead to little/no profit'
-  },
-  projectSchedule: {
-    high: 'More than adequate, project will not adversely impact other projects',
-    medium: 'Adequate, other projects may be adversely impacted',
-    low: 'Not adequate, other projects will be adversely impacted'
-  },
-  bidTimeAndCosts: {
-    high: 'Favorable',
-    medium: 'Reasonable',
-    low: 'Constrained'
-  }
-};
-
-const scoreRanges = [
-  { value: 10, label: '10 - Excellent', range: 'high' },
-  { value: 9, label: '9 - Excellent', range: 'high' },
-  { value: 8, label: '8 - Excellent', range: 'high' },
-  { value: 7, label: '7 - Good', range: 'medium' },
-  { value: 6, label: '6 - Good', range: 'medium' },
-  { value: 5, label: '5 - Good', range: 'medium' },
-  { value: 4, label: '4 - Poor', range: 'low' },
-  { value: 3, label: '3 - Poor', range: 'low' },
-  { value: 2, label: '2 - Poor', range: 'low' },
-  { value: 1, label: '1 - Poor', range: 'low' },
-  { value: 0, label: '0 - Not Rated', range: 'low' }
-];
-
-const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
-  const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
-  const initialGoNoGoDecision = context.currentGoNoGoDecision;
-  const [isEditing, setIsEditing] = useState(false);
-  const [decisionId, setDecisionId] = useState<string | null>(null);
-
-  const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
-    typeOfBid: '',
-    sector: '',
-    bdHead: '',
-    office: '',
-    regionalBDHead: '',
-    region: '',
-    typeOfClient: '',
-    tenderFee: '',
-    emd: '',
-  });
-
-  const [criteria, setCriteria] = useState<{ [key: string]: ScoringCriteria }>({
-    marketingPlan: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    clientRelationship: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    projectKnowledge: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    technicalEligibility: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    financialEligibility: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    keyStaffAvailability: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    projectCompetition: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    competitionPosition: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    futureWorkPotential: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    projectProfitability: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    projectSchedule: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false },
-    bidTimeAndCosts: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false }
-  });
-
-  useEffect(() => {
-    if (initialGoNoGoDecision) {
-      setIsEditing(true);
-      setDecisionId(initialGoNoGoDecision.projectId);
-      setHeaderInfo(prev => ({
-        ...prev,
-        typeOfBid: initialGoNoGoDecision.bidType || '',
-        sector: initialGoNoGoDecision.sector || '',
-        tenderFee: initialGoNoGoDecision.tenderFee?.toString() || '',
-        emd: initialGoNoGoDecision.emdAmount?.toString() || ''
-      }));
-      
-      setCriteria(prev => ({
-        ...prev,
-        marketingPlan: {
-          ...prev.marketingPlan,
-          score: initialGoNoGoDecision.marketingPlanScore || 0,
-          comments: initialGoNoGoDecision.marketingPlanComments || ''
-        },
-        clientRelationship: {
-          ...prev.clientRelationship,
-          score: initialGoNoGoDecision.clientRelationshipScore || 0,
-          comments: initialGoNoGoDecision.clientRelationshipComments || ''
-        },
-        projectKnowledge: {
-          ...prev.projectKnowledge,
-          score: initialGoNoGoDecision.projectKnowledgeScore || 0,
-          comments: initialGoNoGoDecision.projectKnowledgeComments || ''
-        },
-        technicalEligibility: {
-          ...prev.technicalEligibility,
-          score: initialGoNoGoDecision.technicalEligibilityScore || 0,
-          comments: initialGoNoGoDecision.technicalEligibilityComments || ''
-        },
-        financialEligibility: {
-          ...prev.financialEligibility,
-          score: initialGoNoGoDecision.financialEligibilityScore || 0,
-          comments: initialGoNoGoDecision.financialEligibilityComments || ''
-        },
-        keyStaffAvailability: {
-          ...prev.keyStaffAvailability,
-          score: initialGoNoGoDecision.staffAvailabilityScore || 0,
-          comments: initialGoNoGoDecision.staffAvailabilityComments || ''
-        },
-        projectCompetition: {
-          ...prev.projectCompetition,
-          score: initialGoNoGoDecision.competitionAssessmentScore || 0,
-          comments: initialGoNoGoDecision.competitionAssessmentComments || ''
-        },
-        competitionPosition: {
-          ...prev.competitionPosition,
-          score: initialGoNoGoDecision.competitivePositionScore || 0,
-          comments: initialGoNoGoDecision.competitivePositionComments || ''
-        },
-        futureWorkPotential: {
-          ...prev.futureWorkPotential,
-          score: initialGoNoGoDecision.futureWorkPotentialScore || 0,
-          comments: initialGoNoGoDecision.futureWorkPotentialComments || ''
-        },
-        projectProfitability: {
-          ...prev.projectProfitability,
-          score: initialGoNoGoDecision.profitabilityScore || 0,
-          comments: initialGoNoGoDecision.profitabilityComments || ''
-        },
-        projectSchedule: {
-          ...prev.projectSchedule,
-          score: initialGoNoGoDecision.bidScheduleScore || 0,
-          comments: initialGoNoGoDecision.bidScheduleComments || ''
-        },
-        bidTimeAndCosts: {
-          ...prev.bidTimeAndCosts,
-          score: initialGoNoGoDecision.resourceAvailabilityScore || 0,
-          comments: initialGoNoGoDecision.resourceAvailabilityComments || ''
-        }
-      }));
-
-      if (context?.setCurrentGoNoGoDecision) {
-        context.setCurrentGoNoGoDecision(null);
-      }
-    }
-  }, [initialGoNoGoDecision, context]);
-
-  const handleHeaderChange = (field: keyof HeaderInfo, value: string) => {
-    setHeaderInfo(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleCriteriaChange = (
-    criteriaKey: string,
-    field: keyof ScoringCriteria,
-    value: string | number | boolean
-  ) => {
-    setCriteria(prev => ({
-      ...prev,
-      [criteriaKey]: { ...prev[criteriaKey], [field]: value }
-    }));
-  };
-
-  const calculateTotalScore = () => {
-    return Object.values(criteria).reduce((sum, item) => sum + item.score, 0);
-  };
-
-  const getDecisionStatus = () => {
-    const totalScore = calculateTotalScore();
-    if (totalScore >= 84) return { text: 'GO', color: '#4caf50' };
-    if (totalScore >= 50) return { text: 'GO', color: '#ff9800' };
-    return { text: 'NO GO', color: '#f44336' };
-  };
-
-  const getTotalScoreStatus = (): GoNoGoStatus => {
-    const totalScore = calculateTotalScore();
-    if (totalScore >= 84) return GoNoGoStatus.Green;
-    if (totalScore >= 50) return GoNoGoStatus.Amber;
-    return GoNoGoStatus.Red;
-  };
-
-  const showName = (key:string) => {
-    return key[0].toUpperCase() + key.replace(/([A-Z])/g, ' $1').trim().slice(1)
-  };
-
-  const getDescriptionColor = (range: string) => {
-    switch (range) {
-      case 'high':
-        return '#4caf50';
-      case 'medium':
-        return '#ff9800';
-      case 'low':
-        return '#f44336';
-      default:
-        return 'inherit';
-    }
-  };
-
-  const renderScoringDescriptions = (criteriaKey: string, currentScore: number) => {
-    return (
-      <List dense>
-        {Object.entries(scoringDescriptions[criteriaKey]).map(([range, description]) => {
-          const isSelected = scoreRanges.find(s => s.value === currentScore)?.range === range;
-          return (
-            <ListItem key={range} sx={{
-              backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
-              color: isSelected ? getDescriptionColor(range) : 'inherit',
-              fontWeight: isSelected ? 'bold' : 'normal'
-            }}>
-              <ListItemText
-                primary={description}
-                primaryTypographyProps={{
-                  style: {
-                    color: isSelected ? getDescriptionColor(range) : 'inherit',
-                    fontWeight: isSelected ? 'bold' : 'normal'
-                  }
-                }}
-              />
-            </ListItem>
-          );
-        })}
-      </List>
-    );
-  };
-
-  const handleSubmit = async () => {
-    try {
-      if (!context.selectedProject?.id) {
-        console.error('No project ID found in context');
-        return;
-      }
-  
-      // Validate required header fields
-      if (!headerInfo.typeOfBid || headerInfo.typeOfBid.length > 50) {
-        console.error('Invalid Bid Type');
-        return;
-      }
-    
-      if (!headerInfo.sector || headerInfo.sector.length > 50) {
-        console.error('Invalid Sector');
-        return;
-      }
-    
-      // Validate numeric fields
-      const tenderFee = Number(headerInfo.tenderFee);
-      const emdAmount = Number(headerInfo.emd);
-    
-      if (isNaN(tenderFee) || tenderFee < 0) {
-        console.error('Invalid Tender Fee');
-        return;
-      }
-    
-      if (isNaN(emdAmount) || emdAmount < 0) {
-        console.error('Invalid EMD Amount');
-        return;
-      }
-    
-      // Validate scoring criteria
-      const scoringFields = [
-        'marketingPlan', 'clientRelationship', 'projectKnowledge', 
-        'technicalEligibility', 'financialEligibility', 'keyStaffAvailability', 
-        'projectCompetition', 'competitionPosition', 'futureWorkPotential', 
-        'projectProfitability', 'projectSchedule', 'bidTimeAndCosts'
-      ];
-    
-      const invalidScores = scoringFields.filter(field => {
-        const score = criteria[field].score;
-        return score < 0 || score > 10;
-      });
-    
-      if (invalidScores.length > 0) {
-        return;
-      }
-    
-      const updatedFields = {
-        bidType: headerInfo.typeOfBid,
-        sector: headerInfo.sector,
-        tenderFee: tenderFee,
-        emdAmount: emdAmount,
+    const [decision, setDecision] = useState<GoNoGoDecision>({
+        projectId,
+        bidType: initialDecision?.bidType || '',
+        sector: initialDecision?.sector || '',
+        tenderFee: initialDecision?.tenderFee || 0,
+        emdAmount: initialDecision?.emdAmount || 0,
         
-        marketingPlanScore: criteria.marketingPlan.score,
-        marketingPlanComments: criteria.marketingPlan.comments,
-        clientRelationshipScore: criteria.clientRelationship.score,
-        clientRelationshipComments: criteria.clientRelationship.comments,
-        projectKnowledgeScore: criteria.projectKnowledge.score,
-        projectKnowledgeComments: criteria.projectKnowledge.comments,
-        technicalEligibilityScore: criteria.technicalEligibility.score,
-        technicalEligibilityComments: criteria.technicalEligibility.comments,
-        financialEligibilityScore: criteria.financialEligibility.score,
-        financialEligibilityComments: criteria.financialEligibility.comments,
-        staffAvailabilityScore: criteria.keyStaffAvailability.score,
-        staffAvailabilityComments: criteria.keyStaffAvailability.comments,
-        competitionAssessmentScore: criteria.projectCompetition.score,
-        competitionAssessmentComments: criteria.projectCompetition.comments,
-        competitivePositionScore: criteria.competitionPosition.score,
-        competitivePositionComments: criteria.competitionPosition.comments,
-        futureWorkPotentialScore: criteria.futureWorkPotential.score,
-        futureWorkPotentialComments: criteria.futureWorkPotential.comments,
-        profitabilityScore: criteria.projectProfitability.score,
-        profitabilityComments: criteria.projectProfitability.comments,
-        resourceAvailabilityScore: criteria.bidTimeAndCosts.score,
-        resourceAvailabilityComments: criteria.bidTimeAndCosts.comments,
-        bidScheduleScore: criteria.projectSchedule.score,
-        bidScheduleComments: criteria.projectSchedule.comments,
-  
-        totalScore: calculateTotalScore(),
-        status: getTotalScoreStatus(),
-        decisionComments: '',
-        actionPlan: '',
-  
-        projectId: context.selectedProject?.id.toString(),
-        id: decisionId,
-        completedDate: new Date().toISOString(),
-        completedBy: context?.user?.name?.substring(0, 100) || '',
-        createdAt: new Date().toISOString(),
-        createdBy: context?.user?.name?.substring(0, 100) || '',
-        lastModifiedAt: new Date().toISOString(),
-        lastModifiedBy: context?.user?.name?.substring(0, 100) || ''
-      };
-  
-      if (isEditing && decisionId) {
-        await goNoGoApi.update(decisionId, updatedFields);
-      } else {
-        await goNoGoApi.create(context.selectedProject?.id.toString(), updatedFields);
-      }
-  
-      if (context?.setScreenState) {
-        context.setScreenState("Project Details");
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'An unknown error occurred while saving the decision';
-      
-      console.error('Error saving go/no-go decision:', {
-        message: errorMessage,
-        error: error
-      });
-    }
-  };
+        // Workflow-related fields
+        workflowInstanceId: initialDecision?.workflowInstanceId,
+        currentVersion: initialDecision?.currentVersion || 1,
+        workflowStatus: initialDecision?.workflowStatus || WorkflowStatus.Initiated,
 
-  return (
-    <Box sx={{ p: 3, pt: 8, maxWidth: 1200, margin: 'auto' }}>
-      {/* Title section matching WBS form style */}
-      <Paper sx={{ p: 2, mb: 3, border: '1px solid rgba(224, 224, 224, 1)', boxShadow: 'none' }}>
-        <Typography variant="h5">Go/No Go Decision Form</Typography>
-      </Paper>
+        // Scoring fields (example)
+        marketingPlanScore: initialDecision?.marketingPlanScore || 0,
+        marketingPlanComments: initialDecision?.marketingPlanComments || '',
+        // ... other scoring fields
+        
+        totalScore: initialDecision?.totalScore || 0,
+        status: initialDecision?.status || 0, // GoNoGoStatus enum
+        decisionComments: initialDecision?.decisionComments || '',
+    });
 
-      <Accordion defaultExpanded>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">Header Information</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Type of Bid</InputLabel>
-                <Select
-                  value={headerInfo.typeOfBid}
-                  onChange={(e) => handleHeaderChange('typeOfBid', e.target.value)}
-                  label="Type of Bid"
-                >
-                  <MenuItem value="Lumpsum">Lumpsum</MenuItem>
-                  <MenuItem value="ItemRate">Item Rate</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Sector"
-                value={headerInfo.sector}
-                onChange={(e) => handleHeaderChange('sector', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="BD Head"
-                value={headerInfo.bdHead}
-                onChange={(e) => handleHeaderChange('bdHead', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Office"
-                value={headerInfo.office}
-                onChange={(e) => handleHeaderChange('office', e.target.value)}
-              />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
+    useEffect(() => {
+        // If no workflow instance exists, initiate one
+        const initWorkflow = async () => {
+            if (!workflowInstance) {
+                try {
+                    await initiateGoNoGoWorkflow(projectId, 'GoNoGoForm');
+                } catch (err) {
+                    console.error('Failed to initiate workflow', err);
+                }
+            }
+        };
 
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Scoring Criteria
-        </Typography>
-        {Object.entries(criteria).map(([key, value]) => (
-          <Card key={key} sx={{ mb: 2 }}>
-            <CardContent>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle1">
-                    {showName(key)}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Score</InputLabel>
-                    <Select
-                      value={value.score}
-                      onChange={(e) => handleCriteriaChange(key, 'score', Number(e.target.value))}
-                      label="Score"
-                    >
-                      {scoreRanges.map((range) => (
-                        <MenuItem key={range.value} value={range.value}>
-                          {range.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  {renderScoringDescriptions(key, value.score)}
-                </Grid>
-                <Grid item xs={12}>
-                  <Button
-                    startIcon={<CommentIcon />}
-                    onClick={() => handleCriteriaChange(key, 'showComments', !value.showComments)}
-                    size="small"
-                  >
-                    {value.showComments ? 'Hide Comments' : 'Add Comments'}
-                  </Button>
-                </Grid>
-                <Grid item xs={12}>
-                  <Collapse in={value.showComments}>
-                    <Box sx={{ mt: 2 }}>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            label="By Whom"
-                            value={value.byWhom}
-                            onChange={(e) => handleCriteriaChange(key, 'byWhom', e.target.value)}
-                            size="small"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            type="date"
-                            label="By Date"
-                            value={value.byDate}
-                            onChange={(e) => handleCriteriaChange(key, 'byDate', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            size="small"
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <TextField
-                            fullWidth
-                            multiline
-                            rows={2}
-                            label="Comments/Actions"
-                            value={value.comments}
-                            onChange={(e) => handleCriteriaChange(key, 'comments', e.target.value)}
-                            size="small"
-                          />
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  </Collapse>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
+        initWorkflow();
+    }, [projectId, initiateGoNoGoWorkflow]);
 
-      <Paper elevation={3} sx={{ p: 3, mt: 4, bgcolor: '#f5f5f5' }}>
-        <Typography variant="h6" gutterBottom>
-          Decision Summary
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <Typography variant="body1">
-              Total Score: {calculateTotalScore()}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography 
-              variant="body1" 
-              sx={{ color: getDecisionStatus().color, fontWeight: 'bold' }}
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!workflowInstance) {
+            console.error('No workflow instance');
+            return;
+        }
+
+        try {
+            // Create a new decision version
+            const decisionVersion = await createDecisionVersion(
+                workflowInstance.id,
+                JSON.stringify(decision),
+                currentUserRole || 'Unknown',
+                decision.decisionComments,
+                decision.status.toString()
+            );
+
+            // Optionally advance workflow step if appropriate
+            if (currentUserRole === 'BDM' || currentUserRole === 'Regional Manager') {
+                await advanceWorkflowStep(workflowInstance.id);
+            }
+
+            // Update decision with workflow information
+            const updatedDecision = {
+                ...decision,
+                workflowInstanceId: workflowInstance.id,
+                currentVersion: decisionVersion.versionNumber,
+                workflowStatus: workflowInstance.status
+            };
+
+            // Call parent component's submit handler
+            onSubmit(updatedDecision);
+        } catch (err) {
+            console.error('Failed to submit decision', err);
+        }
+    };
+
+    // Render form fields
+    return (
+        <form onSubmit={handleSubmit}>
+            {/* Basic Project Information */}
+            <div>
+                <label>Bid Type</label>
+                <input 
+                    type="text" 
+                    value={decision.bidType}
+                    onChange={(e) => setDecision({...decision, bidType: e.target.value})}
+                />
+            </div>
+
+            <div>
+                <label>Sector</label>
+                <input 
+                    type="text" 
+                    value={decision.sector}
+                    onChange={(e) => setDecision({...decision, sector: e.target.value})}
+                />
+            </div>
+
+            {/* Scoring Sections */}
+            <div>
+                <label>Marketing Plan Score</label>
+                <input 
+                    type="number" 
+                    value={decision.marketingPlanScore}
+                    onChange={(e) => setDecision({
+                        ...decision, 
+                        marketingPlanScore: parseInt(e.target.value)
+                    })}
+                />
+                <textarea 
+                    value={decision.marketingPlanComments}
+                    onChange={(e) => setDecision({
+                        ...decision, 
+                        marketingPlanComments: e.target.value
+                    })}
+                />
+            </div>
+
+            {/* Total Score and Decision */}
+            <div>
+                <label>Total Score</label>
+                <input 
+                    type="number" 
+                    value={decision.totalScore}
+                    onChange={(e) => setDecision({
+                        ...decision, 
+                        totalScore: parseInt(e.target.value)
+                    })}
+                />
+            </div>
+
+            <div>
+                <label>Decision Comments</label>
+                <textarea 
+                    value={decision.decisionComments}
+                    onChange={(e) => setDecision({
+                        ...decision, 
+                        decisionComments: e.target.value
+                    })}
+                />
+            </div>
+
+            {/* Workflow Status Display */}
+            {workflowInstance && (
+                <div>
+                    <p>Workflow Status: {workflowInstance.status}</p>
+                    <p>Current Step: {workflowInstance.currentStepOrder}</p>
+                </div>
+            )}
+
+            {/* Submit Button */}
+            <button 
+                type="submit" 
+                disabled={loading}
             >
-              Decision Status: {getDecisionStatus().text}
-            </Typography>
-          </Grid>
-        </Grid>
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-          >
-            {isEditing ? 'Update Decision' : 'Submit Decision'}
-          </Button>
-        </Box>
-      </Paper>
-    </Box>
-  );
-};
+                {loading ? 'Submitting...' : 'Submit Decision'}
+            </button>
 
-export default GoNoGoForm;
+            {/* Error Handling */}
+            {error && (
+                <div className="error-message">
+                    {error}
+                </div>
+            )}
+        </form>
+    );
+};
