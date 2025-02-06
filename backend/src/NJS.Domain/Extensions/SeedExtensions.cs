@@ -1,4 +1,4 @@
-﻿﻿using Microsoft.AspNetCore.Builder;
+﻿﻿﻿﻿﻿﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +25,7 @@ namespace NJS.Domain.Extensions
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 
-                // await context.Database.MigrateAsync();
+                await context.Database.MigrateAsync();
 
                 // Seed Permissions
                 var permissions = new[]
@@ -133,7 +133,7 @@ namespace NJS.Domain.Extensions
                     adminUser = new User
                     {
                         UserName = "admin",
-
+                        Name = "Administrator",
                         Email = adminEmail,
                         EmailConfirmed = true,
                         CreatedAt = DateTime.UtcNow,

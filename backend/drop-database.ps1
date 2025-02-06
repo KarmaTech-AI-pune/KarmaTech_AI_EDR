@@ -1,0 +1,7 @@
+$query = "
+USE master;
+ALTER DATABASE NJSAPIProjectManagement SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+DROP DATABASE NJSAPIProjectManagement;
+"
+
+sqlcmd -S "DESKTOP-FD6DS0H" -Q $query

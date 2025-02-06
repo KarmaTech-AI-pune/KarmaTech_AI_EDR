@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace NJS.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class newMigrations3 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,7 +34,7 @@ namespace NJS.Domain.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LastLogin = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -67,7 +67,7 @@ namespace NJS.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -95,8 +95,8 @@ namespace NJS.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -110,8 +110,8 @@ namespace NJS.Domain.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     value = table.Column<int>(type: "int", nullable: false),
-                    label = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    range = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    label = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    range = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -124,10 +124,10 @@ namespace NJS.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Label = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ByWhom = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ByDate = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Label = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ByWhom = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ByDate = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Score = table.Column<int>(type: "int", nullable: false),
                     ShowComments = table.Column<bool>(type: "bit", nullable: true)
                 },
@@ -142,7 +142,7 @@ namespace NJS.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    label = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    label = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -292,8 +292,8 @@ namespace NJS.Domain.Migrations
                     ContractType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -372,7 +372,7 @@ namespace NJS.Domain.Migrations
                     RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     PermissionId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -398,14 +398,14 @@ namespace NJS.Domain.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TypeOfBid = table.Column<int>(type: "int", nullable: false),
-                    Sector = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BdHead = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Office = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RegionalBDHead = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Region = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TypeOfClient = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    EnderFee = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Emd = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Sector = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BdHead = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Office = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RegionalBDHead = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Region = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TypeOfClient = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EnderFee = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Emd = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OpportunityId = table.Column<int>(type: "int", nullable: false),
                     ScoringCriteriaId = table.Column<int>(type: "int", nullable: true),
                     ScoreRangeId = table.Column<int>(type: "int", nullable: true)
@@ -432,9 +432,9 @@ namespace NJS.Domain.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ScoringDescriptionID = table.Column<int>(type: "int", nullable: false),
-                    High = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Medium = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Low = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    High = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Medium = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Low = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -455,10 +455,10 @@ namespace NJS.Domain.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     OpportunityId = table.Column<int>(type: "int", nullable: false),
                     StatusId = table.Column<int>(type: "int", nullable: false),
-                    Action = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ActionDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ActionBy = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    ActionBy = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     AssignedToId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
@@ -468,7 +468,8 @@ namespace NJS.Domain.Migrations
                         name: "FK_OpportunityHistories_AspNetUsers_ActionBy",
                         column: x => x.ActionBy,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_OpportunityHistories_AspNetUsers_AssignedToId",
                         column: x => x.AssignedToId,
@@ -495,15 +496,15 @@ namespace NJS.Domain.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProjectId = table.Column<int>(type: "int", nullable: false),
-                    ProjectDetails = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProjectDetails = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StrategicRanking = table.Column<int>(type: "int", nullable: false),
                     FinancialInformation = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     StudyDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ProbabilityAssessment = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    CompetitionAnalysis = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    FundingStream = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ContractType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    QualifyingCriteria = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    CompetitionAnalysis = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FundingStream = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ContractType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    QualifyingCriteria = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -589,7 +590,7 @@ namespace NJS.Domain.Migrations
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     AllocationPercentage = table.Column<double>(type: "float", nullable: false),
-                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -615,7 +616,7 @@ namespace NJS.Domain.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProjectId = table.Column<int>(type: "int", nullable: false),
-                    Structure = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Structure = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -635,7 +636,7 @@ namespace NJS.Domain.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Level = table.Column<int>(type: "int", nullable: false),
                     ParentId = table.Column<int>(type: "int", nullable: true),
                     WorkBreakdownStructureId = table.Column<int>(type: "int", nullable: false),
@@ -665,7 +666,7 @@ namespace NJS.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     WBSTaskId = table.Column<int>(type: "int", nullable: false),
                     CostRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     ODC = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
@@ -681,7 +682,8 @@ namespace NJS.Domain.Migrations
                         name: "FK_UserWBSTasks_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_UserWBSTasks_WBSTasks_WBSTaskId",
                         column: x => x.WBSTaskId,
