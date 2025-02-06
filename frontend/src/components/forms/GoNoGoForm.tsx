@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkflow } from '../../hooks/useWorkflow';
 import { useRoles } from '../../hooks/useRoles';
-import { GoNoGoDecision } from '../../models/goNoGoDecisionModel';
+import { GoNoGoDecision, GoNoGoStatus } from '../../models/goNoGoDecisionModel';
 import { WorkflowStatus } from '../../models/workflowModel';
 
 interface GoNoGoFormProps {
@@ -10,7 +10,7 @@ interface GoNoGoFormProps {
     onSubmit: (decision: GoNoGoDecision) => void;
 }
 
-export const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ 
+const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ 
     projectId, 
     initialDecision, 
     onSubmit 
@@ -38,14 +38,52 @@ export const GoNoGoForm: React.FC<GoNoGoFormProps> = ({
         currentVersion: initialDecision?.currentVersion || 1,
         workflowStatus: initialDecision?.workflowStatus || WorkflowStatus.Initiated,
 
-        // Scoring fields (example)
+        // Scoring fields
         marketingPlanScore: initialDecision?.marketingPlanScore || 0,
         marketingPlanComments: initialDecision?.marketingPlanComments || '',
-        // ... other scoring fields
+        clientRelationshipScore: initialDecision?.clientRelationshipScore || 0,
+        clientRelationshipComments: initialDecision?.clientRelationshipComments || '',
+        projectKnowledgeScore: initialDecision?.projectKnowledgeScore || 0,
+        projectKnowledgeComments: initialDecision?.projectKnowledgeComments || '',
+        technicalEligibilityScore: initialDecision?.technicalEligibilityScore || 0,
+        technicalEligibilityComments: initialDecision?.technicalEligibilityComments || '',
+        financialEligibilityScore: initialDecision?.financialEligibilityScore || 0,
+        financialEligibilityComments: initialDecision?.financialEligibilityComments || '',
+        staffAvailabilityScore: initialDecision?.staffAvailabilityScore || 0,
+        staffAvailabilityComments: initialDecision?.staffAvailabilityComments || '',
+        competitionAssessmentScore: initialDecision?.competitionAssessmentScore || 0,
+        competitionAssessmentComments: initialDecision?.competitionAssessmentComments || '',
+        competitivePositionScore: initialDecision?.competitivePositionScore || 0,
+        competitivePositionComments: initialDecision?.competitivePositionComments || '',
+        futureWorkPotentialScore: initialDecision?.futureWorkPotentialScore || 0,
+        futureWorkPotentialComments: initialDecision?.futureWorkPotentialComments || '',
+        profitabilityScore: initialDecision?.profitabilityScore || 0,
+        profitabilityComments: initialDecision?.profitabilityComments || '',
+        resourceAvailabilityScore: initialDecision?.resourceAvailabilityScore || 0,
+        resourceAvailabilityComments: initialDecision?.resourceAvailabilityComments || '',
+        bidScheduleScore: initialDecision?.bidScheduleScore || 0,
+        bidScheduleComments: initialDecision?.bidScheduleComments || '',
         
         totalScore: initialDecision?.totalScore || 0,
-        status: initialDecision?.status || 0, // GoNoGoStatus enum
+        status: initialDecision?.status || GoNoGoStatus.Green,
         decisionComments: initialDecision?.decisionComments || '',
+
+        // Approval Information
+        completedDate: initialDecision?.completedDate || new Date().toISOString(),
+        completedBy: initialDecision?.completedBy || '',
+        reviewedDate: initialDecision?.reviewedDate,
+        reviewedBy: initialDecision?.reviewedBy,
+        approvedDate: initialDecision?.approvedDate,
+        approvedBy: initialDecision?.approvedBy,
+
+        // Action Plan
+        actionPlan: initialDecision?.actionPlan || '',
+
+        // Audit Fields
+        createdAt: initialDecision?.createdAt || new Date().toISOString(),
+        createdBy: initialDecision?.createdBy || '',
+        lastModifiedAt: initialDecision?.lastModifiedAt,
+        lastModifiedBy: initialDecision?.lastModifiedBy
     });
 
     useEffect(() => {
@@ -61,7 +99,7 @@ export const GoNoGoForm: React.FC<GoNoGoFormProps> = ({
         };
 
         initWorkflow();
-    }, [projectId, initiateGoNoGoWorkflow]);
+    }, [projectId, initiateGoNoGoWorkflow, workflowInstance]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -87,7 +125,7 @@ export const GoNoGoForm: React.FC<GoNoGoFormProps> = ({
             }
 
             // Update decision with workflow information
-            const updatedDecision = {
+            const updatedDecision: GoNoGoDecision = {
                 ...decision,
                 workflowInstanceId: workflowInstance.id,
                 currentVersion: decisionVersion.versionNumber,
@@ -192,3 +230,5 @@ export const GoNoGoForm: React.FC<GoNoGoFormProps> = ({
         </form>
     );
 };
+
+export default GoNoGoForm;

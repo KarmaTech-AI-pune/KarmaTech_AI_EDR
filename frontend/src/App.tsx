@@ -1,6 +1,8 @@
-import { screensArrayType, projectManagementAppContextType, UserWithRole  } from './types'
+import { ReactElement } from 'react';
+import { projectManagementAppContextType, UserWithRole  } from './types'
 import { User} from './models'
-import { Project, GoNoGoDecision, OpportunityTracking,} from "./models"
+import { Project, OpportunityTracking } from "./models"
+import { GoNoGoDecision } from "./models/goNoGoDecisionModel"
 import { createContext, useState, useEffect } from 'react'
 import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails, AdminPanel } from './pages'
 import { Navbar } from './components/navigation/Navbar'
@@ -65,8 +67,8 @@ function App() {
             user.roleDetails.permissions.includes(PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
           );
         }
-      } catch (error) {
-        console.error('Error checking user permissions:', error);
+      } catch (err) {
+        console.error('Error checking user permissions:', err as Error);
         setCanEditOpportunity(false);
         setCanDeleteOpportunity(false);
         setCanSubmitForReview(false);
@@ -93,14 +95,14 @@ function App() {
             handleLogout();
           }
         }
-      } catch (error) {
+      } catch (err) {
+        console.error('Error checking auth:', err as Error);
         handleLogout();
       } finally {
         setIsLoading(false);
       }
     };
     
-
     checkAuth();
   }, []);
 
@@ -113,7 +115,7 @@ function App() {
     setCurrentGoNoGoDecision(null);
   };
 
-  const screenArray : screensArrayType = {
+  const screenArray: { [key: string]: ReactElement } = {
     "Login": <LoginScreen />,
     "Home": <Home />,
     "Dashboard": <Dashboard />,
@@ -123,7 +125,16 @@ function App() {
     "Project Details": <ProjectDetails />,
     "Business Development Details": <BusinessDevelopmentDetails />,
     "Bid Preparation Form" : <BidPreparationForm/>,
-    "GoNoGo Form" : <GoNoGoForm />,
+    "GoNoGo Form" : selectedProject ? (
+      <GoNoGoForm 
+        projectId={selectedProject.id} 
+        initialDecision={currentGoNoGoDecision || undefined}
+        onSubmit={(decision) => {
+          setCurrentGoNoGoDecision(decision);
+          setScreenState("Business Development Details");
+        }}
+      />
+    ) : <div>No project selected</div>,
     "Admin Panel": <AdminPanel />,
   };
 

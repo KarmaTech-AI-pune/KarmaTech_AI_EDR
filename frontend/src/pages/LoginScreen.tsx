@@ -9,7 +9,7 @@ import {
     Alert,
     Container
 } from '@mui/material';
-import { authApi } from '../services/authApi';
+import { authApi } from '../dummyapi/authApi';
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
 
@@ -44,9 +44,9 @@ export const LoginScreen: React.FC = () => {
             } else {
                 setError(result.message || 'Invalid username or password');
             }
-        } catch (err: any) {
+        } catch (err) {
             console.error('Login error:', err);
-            setError(err.message || 'An error occurred. Please try again.');
+            setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
         }
     };
 

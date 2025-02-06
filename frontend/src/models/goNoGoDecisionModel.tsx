@@ -1,11 +1,16 @@
+import { WorkflowStatus } from './workflowModel';
+
 export enum GoNoGoStatus {
     'Green' = 0,
     'Amber' = 1,
     'Red' = 2
-  }
-  
-  export interface GoNoGoDecision {
+}
+
+export interface GoNoGoDecision {
     projectId: string;
+    workflowInstanceId?: string;
+    currentVersion?: number;
+    workflowStatus?: WorkflowStatus;
     bidType: string;
     sector: string;
     tenderFee: number;
