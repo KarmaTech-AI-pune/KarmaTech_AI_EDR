@@ -50,6 +50,12 @@ export interface BackendOpportunityTracking {
   notes?: string;
   probableQualifyingCriteria?: string;
   currentHistory?: OpportunityHistory[];
+
+  // Audit fields
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 // Mapping functions to convert frontend types to backend numeric values
@@ -134,8 +140,8 @@ export const opportunityApi = {
       }
   
       // Normalize and prepare data for submission
-      const normalizedData = normalizeOpportunityTracking(opportunityData);
-      const preparedData = prepareOpportunityTrackingForSubmission(normalizedData);
+      const initialNormalizedData = normalizeOpportunityTracking(opportunityData);
+      const preparedData = prepareOpportunityTrackingForSubmission(initialNormalizedData);
 
       // Prepare the opportunity object with default values and convert to backend model
       const command: BackendOpportunityTracking = {
@@ -183,7 +189,16 @@ export const opportunityApi = {
       // Make API call to backend
       const response = await axiosInstance.post<OpportunityTracking>('api/OpportunityTracking', command);
       
-      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+      // Normalize the response data, including audit fields
+      const normalizedData = {
+        ...response.data,
+        createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
+        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined,
+        createdBy: response.data.createdBy,
+        updatedBy: response.data.updatedBy
+      };
+      
+      return normalizeOpportunityTracking(normalizedData) as OpportunityTracking;
     } catch (error) {
       console.error('Error creating opportunity:', error);
       throw error;
@@ -243,7 +258,16 @@ export const opportunityApi = {
       // Make API call to backend
       const response = await axiosInstance.put<OpportunityTracking>(`api/OpportunityTracking/${opportunityId}`, command);
       
-      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+      // Normalize the response data, including audit fields
+      const updatedData = {
+        ...response.data,
+        createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
+        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined,
+        createdBy: response.data.createdBy,
+        updatedBy: response.data.updatedBy
+      };
+      
+      return normalizeOpportunityTracking(updatedData) as OpportunityTracking;
     } catch (error) {
       console.error('Error updating opportunity:', error);
       throw error;
@@ -257,7 +281,9 @@ export const opportunityApi = {
         .map(opp => ({
           ...opp,
           stage: mapStageFromBackend(Number(opp.stage)),  // Mapping the stage
-          status: mapStatusFromBackend(Number(opp.status)) // Mapping the status
+          status: mapStatusFromBackend(Number(opp.status)), // Mapping the status
+          createdAt: opp.createdAt ? new Date(opp.createdAt) : undefined,
+          updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined
         }))
         .map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking); // Normalizing the data
     } catch (error) {
@@ -273,7 +299,9 @@ export const opportunityApi = {
         .map(opp => ({
           ...opp,
           stage: mapStageFromBackend(Number(opp.stage)),  // Mapping the stage
-          status: mapStatusFromBackend(Number(opp.status)) // Mapping the status
+          status: mapStatusFromBackend(Number(opp.status)), // Mapping the status
+          createdAt: opp.createdAt ? new Date(opp.createdAt) : undefined,
+          updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined
         }))
         .map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking); // Normalizing the data
     }catch (error) {
@@ -289,7 +317,9 @@ export const opportunityApi = {
         .map(opp => ({
           ...opp,
           stage: mapStageFromBackend(Number(opp.stage)),  // Mapping the stage
-          status: mapStatusFromBackend(Number(opp.status)) // Mapping the status
+          status: mapStatusFromBackend(Number(opp.status)), // Mapping the status
+          createdAt: opp.createdAt ? new Date(opp.createdAt) : undefined,
+          updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined
         }))
         .map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking); // Normalizing the data
     } catch (error) {
@@ -305,7 +335,9 @@ export const opportunityApi = {
       return response.data.map(opp => ({
         ...opp,
         stage: mapStageFromBackend(Number(opp.stage)),
-        status: mapStatusFromBackend(Number(opp.status))
+        status: mapStatusFromBackend(Number(opp.status)),
+        createdAt: opp.createdAt ? new Date(opp.createdAt) : undefined,
+        updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined
       })).map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking);
     } catch (error) {
       console.error('Error fetching all opportunities:', error);
@@ -321,7 +353,9 @@ export const opportunityApi = {
       return normalizeOpportunityTracking({
         ...opp,
         stage: mapStageFromBackend(Number(opp.stage)),
-        status: mapStatusFromBackend(Number(opp.status))
+        status: mapStatusFromBackend(Number(opp.status)),
+        createdAt: opp.createdAt ? new Date(opp.createdAt) : undefined,
+        updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined
       }) as OpportunityTracking;
     } catch (error) {
       console.error('Error fetching opportunity:', error);
@@ -345,7 +379,12 @@ export const opportunityApi = {
         opportunityId, 
         reviewManagerId 
       });
-      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+      const normalizedResponse = {
+        ...response.data,
+        createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
+        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined
+      };
+      return normalizeOpportunityTracking(normalizedResponse) as OpportunityTracking;
     } catch (error) {
       console.error('Error sending opportunity to review:', error);
       throw error;
@@ -358,7 +397,12 @@ export const opportunityApi = {
         opportunityId, 
         approvalManagerId 
       });
-      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+      const normalizedResponse = {
+        ...response.data,
+        createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
+        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined
+      };
+      return normalizeOpportunityTracking(normalizedResponse) as OpportunityTracking;
     } catch (error) {
       console.error('Error sending opportunity to approval:', error);
       throw error;
@@ -371,7 +415,12 @@ export const opportunityApi = {
         opportunityId, 
         regionalDirectorId 
       });
-      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+      const normalizedResponse = {
+        ...response.data,
+        createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
+        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined
+      };
+      return normalizeOpportunityTracking(normalizedResponse) as OpportunityTracking;
     } catch (error) {
       console.error('Error sending opportunity to approve:', error);
       throw error;
@@ -384,7 +433,12 @@ export const opportunityApi = {
         opportunityId, 
         rejectionReason 
       });
-      return normalizeOpportunityTracking(response.data) as OpportunityTracking;
+      const normalizedResponse = {
+        ...response.data,
+        createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
+        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined
+      };
+      return normalizeOpportunityTracking(normalizedResponse) as OpportunityTracking;
     } catch (error) {
       console.error('Error rejecting opportunity:', error);
       throw error;

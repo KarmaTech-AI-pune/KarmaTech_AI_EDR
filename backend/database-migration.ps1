@@ -6,8 +6,7 @@ $ErrorActionPreference = 'Stop'
 try {
     # Drop existing database
     Write-Host "Dropping existing database..." -ForegroundColor Yellow
-    dotnet ef database drop --project src/NJS.Domain --startup-project src/NJSAPI --force
-
+  cd ..
     # Remove existing migrations
     Write-Host "Removing existing migrations..." -ForegroundColor Yellow
     dotnet ef migrations remove --project src/NJS.Domain --startup-project src/NJSAPI

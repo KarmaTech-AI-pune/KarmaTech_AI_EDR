@@ -1,4 +1,5 @@
 using System;
+using NJS.Domain.Enums;
 
 namespace NJS.Application.Dtos
 {
@@ -6,12 +7,10 @@ namespace NJS.Application.Dtos
     {
         public int Id { get; set; }
         public int OpportunityId { get; set; }
-        public DateTime ActionDate { get; set; }
-        public string Comments { get; set; }
-        public string Status { get; set; }
-        public int StatusId { get; set; }
-        public string Action { get; set; }
         public string ActionBy { get; set; }
-        public string AssignedToId { get; set; }
+        public int StatusId { get; set; }
+        public string Comments { get; set; }
+        public DateTime ActionDate { get; set; }
+        public OpportunityTrackingStatus Status { get; set; }
     }
 }

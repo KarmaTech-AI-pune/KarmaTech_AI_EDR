@@ -1,12 +1,13 @@
 using NJS.Domain.Enums;
 using System;
+using System.Collections.Generic;
 
 namespace NJS.Application.Dtos
 {
     public class OpportunityTrackingDto
     {
-        public int Id { get; set; }      
-        public OpportunityStage Stage { get; set; }
+        public ICollection<OpportunityHistoryDto> CurrentHistory { get; set; } = new List<OpportunityHistoryDto>();
+        public int Id { get; set; }
         public string StrategicRanking { get; set; }
         public decimal? BidFees { get; set; }
         public decimal? Emd { get; set; }
@@ -29,12 +30,18 @@ namespace NJS.Application.Dtos
         public string Client { get; set; }
         public string ClientSector { get; set; }
         public DateTime LikelyStartDate { get; set; }
+        public OpportunityStage Stage { get; set; }
         public OpportunityTrackingStatus Status { get; set; }
         public string Currency { get; set; }
         public decimal CapitalValue { get; set; }
         public int DurationOfProject { get; set; }
         public string FundingStream { get; set; }
-        public string ContractType { get; set; }       
-        public OpportunityHistoryDto CurrentHistory { get; set; }
+        public string ContractType { get; set; }
+
+        // Audit fields
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string CreatedBy { get; set; }
+        public string UpdatedBy { get; set; }
     }
 }

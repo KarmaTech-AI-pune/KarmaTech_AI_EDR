@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    public class OpportunityTracking
+public class OpportunityTracking : IAuditableEntity
     {
         [Key]
         public int Id { get; set; }       
