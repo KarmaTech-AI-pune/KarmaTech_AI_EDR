@@ -1,5 +1,4 @@
-﻿﻿using AutoMapper;
-using AutoMapper.Extensions.Microsoft.DependencyInjection;
+﻿﻿﻿﻿﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
