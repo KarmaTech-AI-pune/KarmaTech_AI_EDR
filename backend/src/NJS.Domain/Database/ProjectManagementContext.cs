@@ -98,7 +98,12 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OpportunityTracking>()
                 .Property(o => o.NetNJSRevenue)
                 .HasPrecision(18, 2);
-
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.CreatedBy).IsRequired(false);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.UpdatedBy).IsRequired(false);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.ApprovalManagerId).IsRequired(false);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.ReviewManagerId).IsRequired(false);
+            modelBuilder.Entity<OpportunityHistory>().Property(o => o.Comments).IsRequired(false);
+            
            
 
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId); 
