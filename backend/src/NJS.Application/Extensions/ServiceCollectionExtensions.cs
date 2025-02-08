@@ -1,6 +1,6 @@
-﻿﻿using Microsoft.Extensions.DependencyInjection;
+﻿﻿﻿using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
-using AutoMapper.Extensions.Microsoft.DependencyInjection;
 
 namespace NJS.Application.Extensions
 {
