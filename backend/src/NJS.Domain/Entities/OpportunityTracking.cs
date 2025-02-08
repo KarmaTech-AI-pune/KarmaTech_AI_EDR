@@ -52,16 +52,16 @@ public class OpportunityTracking : IAuditableEntity
         public string? ProbableQualifyingCriteria { get; set; }
         
         [Required]
-        public string Operation { get; set; }
+        public string? Operation { get; set; }
         
         [Required]
-        public string WorkName { get; set; }
+        public string? WorkName { get; set; }
         
         [Required]
-        public string Client { get; set; }
+        public string? Client { get; set; }
         
         [Required]
-        public string ClientSector { get; set; }
+        public string? ClientSector { get; set; }
         
         public DateTime LikelyStartDate { get; set; }
         public OpportunityStage Stage { get; set; }
@@ -70,7 +70,7 @@ public class OpportunityTracking : IAuditableEntity
         public Enums.OpportunityTrackingStatus Status { get; set; }
         
         [Required]
-        public string Currency { get; set; }
+        public string? Currency { get; set; }
         
         [Column(TypeName = "decimal(18,2)")]
         public decimal CapitalValue { get; set; }
@@ -78,27 +78,27 @@ public class OpportunityTracking : IAuditableEntity
         public int DurationOfProject { get; set; }
         
         [Required]
-        public string FundingStream { get; set; }
+        public string? FundingStream { get; set; }
         
         [Required]
-        public string ContractType { get; set; }       
+        public string? ContractType { get; set; }       
       
       
 
         [ForeignKey("BidManagerId")]
-        public User BidManager { get; set; }
+        public User? BidManager { get; set; }
 
         [ForeignKey("ReviewManagerId")]
-        public User ReviewManager { get; set; }
+        public User? ReviewManager { get; set; }
 
         [ForeignKey("ApprovalManagerId")]
-        public User ApprovalManager { get; set; }
+        public User? ApprovalManager { get; set; }
 
         // Audit fields
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public string CreatedBy { get; set; }
-        public string UpdatedBy { get; set; }
+        public string? CreatedBy { get; set; }
+        public string? UpdatedBy { get; set; }
 
         public ICollection<OpportunityHistory> OpportunityHistories { get; set; } = [];
     }

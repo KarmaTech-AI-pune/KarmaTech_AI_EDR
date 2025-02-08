@@ -4,8 +4,6 @@ using System.Text;
 using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
 using Microsoft.AspNetCore.Authorization;
-using NJS.Application.Services;
-using NJSAPI.Services;
 
 internal class Program
 {
@@ -15,7 +13,7 @@ internal class Program
         // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
 

@@ -19,7 +19,7 @@ import { authApi } from '../services/authApi';
 import { UserWithRole } from '../types';
 import { OpportunityTracking } from '../models';
 import { PermissionType } from '../models';
-import { opportunityApi } from '../dummyapi/opportunityApi';
+import { opportunityApi } from '../services/opportunityApi';
 import { HistoryLoggingService } from '../services/historyLoggingService';
 
 const NAVBAR_HEIGHT = '64px';

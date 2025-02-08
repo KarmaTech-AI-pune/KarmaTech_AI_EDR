@@ -94,18 +94,18 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         // Fetch and set BD Managers
         const bdManagerUsers = await getUsersByRole('Business Development Manager');
         const uniqueBdManagers = getUniqueManagers(bdManagerUsers);
-        setBdManagers(uniqueBdManagers);
+        setBdManagers(bdManagerUsers);
         
         // Fetch and set Review Managers
         const regionalManagerUsers = await getUsersByRole('Regional Manager');
         const regionalDirectorUsers = await getUsersByRole('Regional Director');
         const uniqueReviewers = getUniqueManagers(regionalManagerUsers);
-        setReviewManagers(uniqueReviewers);
+        setReviewManagers(regionalManagerUsers);
         
         // Combine both arrays and get unique managers
         const allApproverUsers = [...regionalManagerUsers, ...regionalDirectorUsers];
         const uniqueApprovers = getUniqueManagers(allApproverUsers);
-        setApprovalManagers(uniqueApprovers);
+        setApprovalManagers(allApproverUsers);
       } catch (error) {
         console.error('Error fetching managers:', error);
       }
