@@ -1,4 +1,4 @@
-﻿namespace NJS.Application.Services.IContract
+﻿﻿namespace NJS.Application.Services.IContract
 {
     public interface IUserContext
     {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NJS.Domain.Enums;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -180,10 +181,5 @@ namespace NJS.Domain.Entities
         public string? LastModifiedBy { get; set; }
     }
 
-    public enum GoNoGoStatus
-    {
-        Green,  // GO - Proceed with proposal
-        Amber,  // GO with action plan
-        Red     // NO GO - Do not proceed
-    }
+   
 }

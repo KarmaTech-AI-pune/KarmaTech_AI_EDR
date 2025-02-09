@@ -1,14 +1,8 @@
+using NJS.Domain.Enums;
 using System;
 
 namespace NJS.Application.Dtos
 {
-    public enum GoNoGoStatus
-    {
-        Green = 0,
-        Amber = 1,
-        Red = 2
-    }
-
     public class GoNoGoDecisionDto
     {
         public int ProjectId { get; set; }

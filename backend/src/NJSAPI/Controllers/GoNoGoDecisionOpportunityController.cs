@@ -20,7 +20,7 @@ public class GoNoGoDecisionOpportunityController : ControllerBase
     }
 
     [HttpGet("GetScoringCriteria")]
-    public async Task<ActionResult<ScoringCriteria>> GetScoringCriteria()
+    public async Task<ActionResult<NJS.Domain.Entities.ScoringCriteria>> GetScoringCriteria()
     {
         try
         {
@@ -63,7 +63,7 @@ public class GoNoGoDecisionOpportunityController : ControllerBase
             result.ForEach(x => {
                 scoringDescriptionModel.Add(new ScoringDescriptionModel
                 {
-                    Label = x.label,
+                    Label = x.Label,
                     listModels= new ScoringDescriptionListModel
                     {
                         byWhom = "",

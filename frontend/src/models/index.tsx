@@ -30,7 +30,7 @@ export interface Project {
 }
 
 export interface OpportunityTracking {
-    id: string;
+    id: number;
     name: string;
     description?: string;
     status: string;
@@ -64,4 +64,9 @@ export interface RoleDefinition {
     id: string;
     name: string;
     permissions: PermissionType[];
+}
+
+export enum TypeOfBid {
+    Lumpsum = 0,
+    ItemRate = 1
 }

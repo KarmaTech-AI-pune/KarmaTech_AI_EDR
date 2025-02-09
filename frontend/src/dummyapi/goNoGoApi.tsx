@@ -1,3 +1,4 @@
+import { axiosInstance } from '../services/axiosConfig';
 import { GoNoGoDecision } from '../models';
 import { goNoGoDecisions, getGoNoGoByProjectId } from './database/dummygoNoGo';
 
@@ -39,14 +40,14 @@ export const goNoGoApi = {
 
   create: async (projectId: string, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
     try {
-      const newDecision = {
-        ...data,
-        projectId,
-        createdAt: new Date().toISOString(),
-        createdBy: 'System'
+      debugger;
+      const decision = {
+        ...data        
       };
-      goNoGoDecisions.push(newDecision);
-      return newDecision;
+       const response = await axiosInstance.post<GoNoGoDecision>('api/GoNoGoDecision/createForm', decision);
+            
+      goNoGoDecisions.push(decision);
+      return decision;
     } catch (error: any) {
       if (error.response?.status === 400) {
         const validationErrors = error.response.data.errors;

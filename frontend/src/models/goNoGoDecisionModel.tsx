@@ -1,3 +1,4 @@
+import { TypeOfBid } from '.';
 import { WorkflowStatus } from './workflowModel';
 
 export enum GoNoGoStatus {
@@ -7,11 +8,12 @@ export enum GoNoGoStatus {
 }
 
 export interface GoNoGoDecision {
-    projectId: string;
+    id: number,
+    opprotunityId: number;
     workflowInstanceId?: string;
     currentVersion?: number;
     workflowStatus?: WorkflowStatus;
-    bidType: string;
+    bidType: TypeOfBid;
     sector: string;
     tenderFee: number;
     emdAmount: number;

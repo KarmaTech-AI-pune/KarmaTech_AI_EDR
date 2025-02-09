@@ -38,6 +38,8 @@ namespace NJS.Domain.Database
         public DbSet<ScoringDescriptions> ScoringDescription { get; set; }
 
         public DbSet<ScoringDescriptionSummarry> ScoringDescriptionSummarry { get; set; }
+        public DbSet<GoNoGoDecisionHeader> GoNoGoDecisionHeaders { get; set; }
+        public DbSet<GoNoGoDecisionTransaction> GoNoGoDecisionTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -113,6 +115,27 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoringCriterias).WithMany(s => s.GoNoGoDecisionOpportunities).HasForeignKey(oh => oh.ScoringCriteriaId);
             modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoreRanges).WithMany(s => s.GoNoGoDecisionOpportunitiesScoring).HasForeignKey(oh => oh.ScoreRangeId);
             modelBuilder.Entity<ScoringDescriptionSummarry>().HasOne(oh => oh.ScoringDescriptions).WithMany(s => s.ScoringDescriptionSummarry).HasForeignKey(oh => oh.ScoringDescriptionID);
+
+            // Configure GoNoGoDecisionTransaction relationships
+            modelBuilder.Entity<GoNoGoDecisionTransaction>()
+                .HasOne(t => t.GoNoGoDecisionHeader)
+                .WithMany()
+                .HasForeignKey(t => t.GoNoGoDecisionHeaderId);
+
+            modelBuilder.Entity<GoNoGoDecisionTransaction>()
+                .HasOne(t => t.ScoringCriterias)
+                .WithMany()
+                .HasForeignKey(t => t.ScoringCriteriaId);
+
+            // Configure GoNoGoDecisionHeader relationships
+            modelBuilder.Entity<GoNoGoDecisionHeader>()
+                .HasOne(h => h.OpportunityTracking)
+                .WithMany()
+                .HasForeignKey(h => h.OpportunityId);
+
+            modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.TypeOfClient).IsRequired(false);
+            modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.RegionalBDHead).IsRequired(false);
+          
         }
     }
 

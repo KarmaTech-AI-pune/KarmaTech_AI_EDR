@@ -5,6 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel.DataAnnotations;
+using NJS.Application.Dtos;
+using MediatR;
+using System.Threading.Tasks;
+using NJS.Application.CQRS.Handlers.GoNoGoDecision;
 
 namespace NJSAPI.Controllers
 {
@@ -13,87 +17,14 @@ namespace NJSAPI.Controllers
     public class GoNoGoDecisionController : ControllerBase
     {
         private readonly IGoNoGoDecisionRepository _repository;
+        private readonly IMediator _mediator;
 
-        public GoNoGoDecisionController(IGoNoGoDecisionRepository repository)
+        public GoNoGoDecisionController(IGoNoGoDecisionRepository repository, IMediator mediator)
         {
             _repository = repository;
+            _mediator = mediator;
         }
 
-        private List<string> ValidateModel(GoNoGoDecision decision)
-        {
-            var validationErrors = new List<string>();
-
-            // Validate string length constraints
-            if (string.IsNullOrEmpty(decision.BidType) || decision.BidType.Length > 50)
-                validationErrors.Add("Bid Type must be between 1 and 50 characters");
-
-            if (string.IsNullOrEmpty(decision.Sector) || decision.Sector.Length > 50)
-                validationErrors.Add("Sector must be between 1 and 50 characters");
-
-            // Validate numeric ranges for scores
-            var scoringFields = new[]
-            {
-                new { Score = decision.MarketingPlanScore, Name = "Marketing Plan" },
-                new { Score = decision.ClientRelationshipScore, Name = "Client Relationship" },
-                new { Score = decision.ProjectKnowledgeScore, Name = "Project Knowledge" },
-                new { Score = decision.TechnicalEligibilityScore, Name = "Technical Eligibility" },
-                new { Score = decision.FinancialEligibilityScore, Name = "Financial Eligibility" },
-                new { Score = decision.StaffAvailabilityScore, Name = "Staff Availability" },
-                new { Score = decision.CompetitionAssessmentScore, Name = "Competition Assessment" },
-                new { Score = decision.CompetitivePositionScore, Name = "Competitive Position" },
-                new { Score = decision.FutureWorkPotentialScore, Name = "Future Work Potential" },
-                new { Score = decision.ProfitabilityScore, Name = "Profitability" },
-                new { Score = decision.ResourceAvailabilityScore, Name = "Resource Availability" },
-                new { Score = decision.BidScheduleScore, Name = "Bid Schedule" }
-            };
-
-            foreach (var field in scoringFields)
-            {
-                if (field.Score < 0 || field.Score > 10)
-                    validationErrors.Add($"{field.Name} Score must be between 0 and 10");
-            }
-
-            // Validate comment lengths
-            var commentFields = new[]
-            {
-                new { Comment = decision.MarketingPlanComments, Name = "Marketing Plan" },
-                new { Comment = decision.ClientRelationshipComments, Name = "Client Relationship" },
-                new { Comment = decision.ProjectKnowledgeComments, Name = "Project Knowledge" },
-                new { Comment = decision.TechnicalEligibilityComments, Name = "Technical Eligibility" },
-                new { Comment = decision.FinancialEligibilityComments, Name = "Financial Eligibility" },
-                new { Comment = decision.StaffAvailabilityComments, Name = "Staff Availability" },
-                new { Comment = decision.CompetitionAssessmentComments, Name = "Competition Assessment" },
-                new { Comment = decision.CompetitivePositionComments, Name = "Competitive Position" },
-                new { Comment = decision.FutureWorkPotentialComments, Name = "Future Work Potential" },
-                new { Comment = decision.ProfitabilityComments, Name = "Profitability" },
-                new { Comment = decision.ResourceAvailabilityComments, Name = "Resource Availability" },
-                new { Comment = decision.BidScheduleComments, Name = "Bid Schedule" }
-            };
-
-            foreach (var field in commentFields)
-            {
-                if (string.IsNullOrEmpty(field.Comment) || field.Comment.Length > 1000)
-                    validationErrors.Add($"{field.Name} Comments must be between 1 and 1000 characters");
-            }
-
-            // Validate numeric fields
-            if (decision.TenderFee < 0)
-                validationErrors.Add("Tender Fee cannot be negative");
-
-            if (decision.EMDAmount < 0)
-                validationErrors.Add("EMD Amount cannot be negative");
-
-            // Validate audit fields
-            if (string.IsNullOrEmpty(decision.CompletedBy) || decision.CompletedBy.Length > 100)
-                validationErrors.Add("Completed By must be between 1 and 100 characters");
-
-            if (string.IsNullOrEmpty(decision.CreatedBy) || decision.CreatedBy.Length > 100)
-                validationErrors.Add("Created By must be between 1 and 100 characters");
-
-            return validationErrors;
-        }
-
-        // Existing CRUD methods remain the same
         [HttpGet]
         public ActionResult<IEnumerable<GoNoGoDecision>> GetAll()
         {
@@ -142,28 +73,75 @@ namespace NJSAPI.Controllers
             }
         }
 
-        [HttpPost]
-        public ActionResult<GoNoGoDecision> Create([FromBody] GoNoGoDecision decision)
+        [HttpPost("createForm")]
+        public async Task<ActionResult<GoNoGoDecision>> CreateForm([FromBody] GoNoGoForm decision)
         {
             try
             {
-                var validationErrors = ValidateModel(decision);
-                if (validationErrors.Any())
+                var command = new CreateGoNoGoDecisionHeaderCommand
                 {
-                    return BadRequest(new 
-                    { 
-                        message = "Validation failed", 
-                        errors = validationErrors 
-                    });
-                }
+                    HeaderInfo = new HeaderInfoCommand
+                    {
+                        BidType = decision.HeaderInfo.TypeOfBid,
+                        Sector = decision.HeaderInfo.Sector,
+                        BdHead = decision.HeaderInfo.BdHead,
+                        Office = decision.HeaderInfo.Office,                        
+                        TenderFee = decision.HeaderInfo.TenderFee,
+                        EmdAmount = decision.HeaderInfo.Emd
+                    },
+                    MetaData = new MetaDataCommand
+                    {
+                        OpprotunityId = decision.MetaData.OpprotunityId,
+                        CompletedDate = decision.MetaData.CompletedDate,
+                        CompletedBy = decision.MetaData.CompletedBy
+                    },
+                    Summary = new SummaryCommand
+                    {
+                        TotalScore = decision.Summary.TotalScore,
+                        Status = decision.Summary.Status,
+                        DecisionComments = decision.Summary.DecisionComments,
+                        ActionPlan = decision.Summary.ActionPlan
+                    },
+                    ScoringCriteria = new ScoringCriteriaCommand
+                    {
+                        MarketingPlan = MapCriteriaItem(decision.ScoringCriteria.MarketingPlan),
+                        Profitability = MapCriteriaItem(decision.ScoringCriteria.Profitability),
+                        ProjectKnowledge = MapCriteriaItem(decision.ScoringCriteria.ProjectKnowledge),
+                        ResourceAvailability = MapCriteriaItem(decision.ScoringCriteria.ResourceAvailability),
+                        StaffAvailability = MapCriteriaItem(decision.ScoringCriteria.StaffAvailability),
+                        TechnicalEligibility = MapCriteriaItem(decision.ScoringCriteria.TechnicalEligibility),
+                        ClientRelationship = MapCriteriaItem(decision.ScoringCriteria.ClientRelationship),
+                        CompetitionAssessment = MapCriteriaItem(decision.ScoringCriteria.CompetitionAssessment),
+                        CompetitivePosition = MapCriteriaItem(decision.ScoringCriteria.CompetitivePosition),
+                        FutureWorkPotential = MapCriteriaItem(decision.ScoringCriteria.FutureWorkPotential),
+                        BidSchedule = MapCriteriaItem(decision.ScoringCriteria.BidSchedule),
+                        FinancialEligibility = MapCriteriaItem(decision.ScoringCriteria.FinancialEligibility)
+                    }
+                };
 
-                _repository.Add(decision);
-                return CreatedAtAction(nameof(GetById), new { id = decision.Id }, decision);
+                var headerId = await _mediator.Send(command);
+
+                return Ok(new { 
+                    HeaderId = headerId,
+                    Message = "Go/No-Go decision created successfully"
+                });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+
+        private ScoringCriteriaCommand.CriteriaItem MapCriteriaItem(CriteriaItem item)
+        {
+            if (item == null) return null;
+
+            return new ScoringCriteriaCommand.CriteriaItem
+            {
+                Comments = item.Comments,
+                Score = item.Score,
+                ScoringDescriptionId = item.ScoringDescriptionId
+            };
         }
 
         [HttpPut("{id}")]
@@ -173,16 +151,6 @@ namespace NJSAPI.Controllers
             {
                 if (id != decision.Id)
                     return BadRequest("ID mismatch");
-
-                var validationErrors = ValidateModel(decision);
-                if (validationErrors.Any())
-                {
-                    return BadRequest(new 
-                    { 
-                        message = "Validation failed", 
-                        errors = validationErrors[0]
-                    });
-                }
 
                 var existingDecision = _repository.GetById(id);
                 if (existingDecision == null)
