@@ -1,3 +1,13 @@
+export enum GoNoGoVersionStatus {
+    BDM_PENDING = 0,
+    BDM_APPROVED = 1,
+    RM_PENDING = 2,
+    RM_APPROVED = 3,
+    RD_PENDING = 4,
+    RD_APPROVED = 5,
+    COMPLETED = 6
+}
+
 export enum WorkflowStatus {
     Initiated = 'Initiated',
     InProgress = 'InProgress',

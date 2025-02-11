@@ -1,69 +1,71 @@
-import { TypeOfBid } from '.';
-import { WorkflowStatus } from './workflowModel';
+import { GoNoGoStatus, TypeOfBid } from "./types";
 
-export enum GoNoGoStatus {
-    'Green' = 0,
-    'Amber' = 1,
-    'Red' = 2
+export interface HeaderInformation {
+  bidType: TypeOfBid;
+  sector: string;
+  tenderFee: number;
+  emdAmount: number;
+  office: string;
+  bdHead: string;
 }
 
 export interface GoNoGoDecision {
-    id: number,
-    opprotunityId: number;
-    workflowInstanceId?: string;
-    currentVersion?: number;
-    workflowStatus?: WorkflowStatus;
-    bidType: TypeOfBid;
-    sector: string;
-    tenderFee: number;
-    emdAmount: number;
-    // Removed submissionMode
-  
-    // Rest of the interface remains the same
-    marketingPlanScore: number;
-    marketingPlanComments: string;
-    clientRelationshipScore: number;
-    clientRelationshipComments: string;
-    projectKnowledgeScore: number;
-    projectKnowledgeComments: string;
-    technicalEligibilityScore: number;
-    technicalEligibilityComments: string;
-    financialEligibilityScore: number;
-    financialEligibilityComments: string;
-    staffAvailabilityScore: number;
-    staffAvailabilityComments: string;
-    competitionAssessmentScore: number;
-    competitionAssessmentComments: string;
-    competitivePositionScore: number;
-    competitivePositionComments: string;
-    futureWorkPotentialScore: number;
-    futureWorkPotentialComments: string;
-    profitabilityScore: number;
-    profitabilityComments: string;
-    resourceAvailabilityScore: number;
-    resourceAvailabilityComments: string;
-    bidScheduleScore: number;
-    bidScheduleComments: string;
-  
-    // Total Score and Decision
-    totalScore: number;
-    status: GoNoGoStatus;
-    decisionComments: string;
-  
-    // Approval Information
-    completedDate: string;
-    completedBy: string;
-    reviewedDate?: string;
-    reviewedBy?: string;
-    approvedDate?: string;
-    approvedBy?: string;
-  
-    // Action Plan
-    actionPlan?: string;
-  
-    // Audit Fields
-    createdAt: string;
-    createdBy: string;
-    lastModifiedAt?: string;
-    lastModifiedBy?: string;
-  }
+  id?: number;
+  bidType: TypeOfBid;
+  sector: string;
+  bdHead: string;
+  office: string;
+  regionalBDHead?: string;
+  region?: string;
+  typeOfClient?: string;
+  tenderFee: number;
+  emdAmount: number;
+  totalScore: number;
+  status: GoNoGoStatus;
+  opprotunityId: number;
+  projectId?: number;
+
+  // Scoring fields
+  marketingPlanScore: number;
+  marketingPlanComments: string;
+  clientRelationshipScore: number;
+  clientRelationshipComments: string;
+  projectKnowledgeScore: number;
+  projectKnowledgeComments: string;
+  technicalEligibilityScore: number;
+  technicalEligibilityComments: string;
+  financialEligibilityScore: number;
+  financialEligibilityComments: string;
+  staffAvailabilityScore: number;
+  staffAvailabilityComments: string;
+  competitionAssessmentScore: number;
+  competitionAssessmentComments: string;
+  competitivePositionScore: number;
+  competitivePositionComments: string;
+  futureWorkPotentialScore: number;
+  futureWorkPotentialComments: string;
+  profitabilityScore: number;
+  profitabilityComments: string;
+  bidScheduleScore: number;
+  bidScheduleComments: string;
+  resourceAvailabilityScore: number;
+  resourceAvailabilityComments: string;
+
+  // Metadata
+  completedDate?: string;
+  completedBy?: string;
+  createdAt?: string;
+  createdBy?: string;
+  lastModifiedAt?: string;
+  lastModifiedBy?: string;
+  decisionComments?: string;
+  actionPlan?: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  roles: string[];
+  currentRole: string;
+}

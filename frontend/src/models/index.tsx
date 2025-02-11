@@ -1,4 +1,7 @@
-export { GoNoGoStatus } from './goNoGoDecisionModel';
+export * from './types';
+export * from './goNoGoDecisionModel';
+export * from './goNoGoVersionModel';
+export * from './workflowModel';
 
 export interface User {
     id: string;

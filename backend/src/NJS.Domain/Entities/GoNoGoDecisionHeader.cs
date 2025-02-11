@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using NJS.Domain.Enums;
@@ -30,5 +31,10 @@ namespace NJS.Domain.Entities
         public DateTime UpdatedAt { get; set; }
         public string UpdatedBy { get; set; }
         public string CreatedBy { get; set; }
+
+        public int? CurrentVersion { get; set; }
+        public GoNoGoVersionStatus? VersionStatus { get; set; }
+        
+        public virtual ICollection<GoNoGoVersion> Versions { get; set; }
     }
 }

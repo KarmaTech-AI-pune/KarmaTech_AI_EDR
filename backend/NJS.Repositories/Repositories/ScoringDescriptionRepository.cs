@@ -14,6 +14,11 @@ namespace NJS.Repositories.Repositories
             _context = context;
         }
 
+        public async Task<IEnumerable<ScoreRange>> GetAllScoreRangeAsync()
+        {
+            return await _context.ScoreRange.ToListAsync();
+        }
+
         public async Task<IEnumerable<ScoringDescriptions>> GetAllScoringDescriptionsWithSummariesAsync()
         {
             return await _context.ScoringDescription

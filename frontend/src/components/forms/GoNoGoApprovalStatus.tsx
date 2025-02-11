@@ -1,0 +1,103 @@
+import React from 'react';
+import {
+  Paper,
+  Typography,
+  Box,
+  Stepper,
+  Step,
+  StepLabel,
+  Button
+} from '@mui/material';
+import { GoNoGoVersionStatus } from '../../models/workflowModel';
+
+interface Props {
+  status: GoNoGoVersionStatus;
+  onApprove?: () => void;
+  userRole: string;
+  isEditable: boolean;
+}
+
+const approvalSteps = [
+  { label: 'BDM Review', role: 'Business Development Manager', pending: GoNoGoVersionStatus.BDM_PENDING, approved: GoNoGoVersionStatus.BDM_APPROVED },
+  { label: 'RM Review', role: 'Regional Manager', pending: GoNoGoVersionStatus.RM_PENDING, approved: GoNoGoVersionStatus.RM_APPROVED },
+  { label: 'RD Review', role: 'Regional Director', pending: GoNoGoVersionStatus.RD_PENDING, approved: GoNoGoVersionStatus.RD_APPROVED }
+];
+
+const getActiveStep = (status: GoNoGoVersionStatus): number => {
+  switch (status) {
+    case GoNoGoVersionStatus.BDM_PENDING:
+      return 0;
+    case GoNoGoVersionStatus.BDM_APPROVED:
+    case GoNoGoVersionStatus.RM_PENDING:
+      return 1;
+    case GoNoGoVersionStatus.RM_APPROVED:
+    case GoNoGoVersionStatus.RD_PENDING:
+      return 2;
+    case GoNoGoVersionStatus.RD_APPROVED:
+    case GoNoGoVersionStatus.COMPLETED:
+      return 3;
+    default:
+      return 0;
+  }
+};
+
+const getStepState = (
+  stepIndex: number,
+  currentStatus: GoNoGoVersionStatus
+): 'completed' | 'active' | 'pending' => {
+  const activeStep = getActiveStep(currentStatus);
+  if (stepIndex < activeStep - 1) return 'completed';
+  if (stepIndex === activeStep - 1) return 'active';
+  return 'pending';
+};
+
+const canUserApprove = (status: GoNoGoVersionStatus, userRole: string): boolean => {
+  const currentStep = approvalSteps.find(step => 
+    status === step.pending && userRole === step.role
+  );
+  return !!currentStep;
+};
+
+const GoNoGoApprovalStatus: React.FC<Props> = ({
+  status,
+  onApprove,
+  userRole,
+  isEditable
+}) => {
+  const activeStep = getActiveStep(status);
+
+  return (
+    <Paper sx={{ p: 2, mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6">Approval Status</Typography>
+        {canUserApprove(status, userRole) && onApprove && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onApprove}
+            disabled={!isEditable}
+          >
+            Approve
+          </Button>
+        )}
+      </Box>
+      <Stepper activeStep={activeStep}>
+        {approvalSteps.map((step, index) => {
+          const stepState = getStepState(index, status);
+          return (
+            <Step key={step.label} completed={stepState === 'completed'}>
+              <StepLabel>{step.label}</StepLabel>
+            </Step>
+          );
+        })}
+      </Stepper>
+      {status === GoNoGoVersionStatus.COMPLETED && (
+        <Typography sx={{ mt: 2, color: 'success.main' }}>
+          All approvals completed
+        </Typography>
+      )}
+    </Paper>
+  );
+};
+
+export default GoNoGoApprovalStatus;

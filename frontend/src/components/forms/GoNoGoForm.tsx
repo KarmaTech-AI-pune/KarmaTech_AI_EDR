@@ -1,6 +1,5 @@
 import { ScoringDescriptionsResponse } from '../../services/scoringDescriptionApi';
-
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
   Accordion,
   AccordionSummary,
@@ -24,8 +23,12 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
-import {projectManagementAppContextType } from '../../types';
-import { GoNoGoStatus, TypeOfBid } from "../../models";
+import { projectManagementAppContextType } from '../../types';
+import { GoNoGoStatus, TypeOfBid } from "../../models/types";
+import { GoNoGoVersionDto } from "../../models/goNoGoVersionModel";
+import { GoNoGoVersionStatus } from "../../models/workflowModel";
+import GoNoGoVersionHistory from "./GoNoGoVersionHistory";
+import GoNoGoApprovalStatus from "./GoNoGoApprovalStatus";
 import { GoNoGoDecision } from "../../models/goNoGoDecisionModel";
 import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
@@ -57,7 +60,8 @@ interface HeaderInformation {
   sector: string;
   tenderFee: number;
   emdAmount: number;
-office:string;
+  office: string;
+  bdHead: string;
 }
 
 interface DecisionSummary {
@@ -79,10 +83,41 @@ interface MetaData {
 }
 
 interface GoNoGoDecisionPayload {
-  headerInfo: HeaderInformation;
-  scoringCriteria: ScoringCriteriaPayload;
-  summary: DecisionSummary;
-  metadata: MetaData;
+  HeaderInfo: {
+    TypeOfBid: TypeOfBid;
+    Sector: string;
+    TenderFee: number;
+    Emd: number;
+    Office: string;
+    BdHead: string;
+  };
+  ScoringCriteria: {
+    MarketingPlan: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    ClientRelationship: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    ProjectKnowledge: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    TechnicalEligibility: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    FinancialEligibility: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    StaffAvailability: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    CompetitionAssessment: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    CompetitivePosition: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    FutureWorkPotential: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    Profitability: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    BidSchedule: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    ResourceAvailability: { Score: number; Comments: string; ScoringDescriptionId: number; };
+  };
+  Summary: {
+    TotalScore: number;
+    Status: GoNoGoStatus;
+    DecisionComments: string;
+    ActionPlan: string;
+  };
+  MetaData: {
+    OpprotunityId: number;
+    Id?: number;
+    CompletedDate: string;
+    CompletedBy: string;   
+    CreatedBy: string;   
+  };
 }
 
 interface GoNoGoFormProps {
@@ -99,6 +134,8 @@ interface ScoringCriteria {
   scoringDescriptionId: number;
 }
 
+type ScoringCriteriaField = keyof ScoringCriteria;
+
 interface HeaderInfo {
   typeOfBid: TypeOfBid;
   sector: string;
@@ -111,113 +148,62 @@ interface HeaderInfo {
   emd: string;
 }
 
-const scoreRanges = [
-  { value: 10, label: '10 - Excellent', range: 'high' },
-  { value: 9, label: '9 - Excellent', range: 'high' },
-  { value: 8, label: '8 - Excellent', range: 'high' },
-  { value: 7, label: '7 - Good', range: 'medium' },
-  { value: 6, label: '6 - Good', range: 'medium' },
-  { value: 5, label: '5 - Good', range: 'medium' },
-  { value: 4, label: '4 - Poor', range: 'low' },
-  { value: 3, label: '3 - Poor', range: 'low' },
-  { value: 2, label: '2 - Poor', range: 'low' },
-  { value: 1, label: '1 - Poor', range: 'low' },
-  { value: 0, label: '0 - Not Rated', range: 'low' }
-];
-
 const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
-  const transformToPayload = (decision: GoNoGoDecision): GoNoGoDecisionPayload => ({
-    headerInfo: {
-      bidType: decision.bidType || '',
-      sector: decision.sector || '',
-      tenderFee: decision.tenderFee || 0,
-      emdAmount: decision.emdAmount || 0
-    },
-    scoringCriteria: {
-      marketingPlan: {
-        score: decision.marketingPlanScore || 0,
-        comments: decision.marketingPlanComments || '',
-        scoringDescriptionId: 1
-      },
-      clientRelationship: {
-        score: decision.clientRelationshipScore || 0,
-        comments: decision.clientRelationshipComments || '',
-        scoringDescriptionId: 2
-      },
-      projectKnowledge: {
-        score: decision.projectKnowledgeScore || 0,
-        comments: decision.projectKnowledgeComments || '',
-        scoringDescriptionId: 3
-      },
-      technicalEligibility: {
-        score: decision.technicalEligibilityScore || 0,
-        comments: decision.technicalEligibilityComments || '',
-        scoringDescriptionId: 4
-      },
-      financialEligibility: {
-        score: decision.financialEligibilityScore || 0,
-        comments: decision.financialEligibilityComments || '',
-        scoringDescriptionId: 5
-      },
-      staffAvailability: {
-        score: decision.staffAvailabilityScore || 0,
-        comments: decision.staffAvailabilityComments || '',
-        scoringDescriptionId: 6
-      },
-      competitionAssessment: {
-        score: decision.competitionAssessmentScore || 0,
-        comments: decision.competitionAssessmentComments || '',
-        scoringDescriptionId: 7
-      },
-      competitivePosition: {
-        score: decision.competitivePositionScore || 0,
-        comments: decision.competitivePositionComments || '',
-        scoringDescriptionId: 8
-      },
-      futureWorkPotential: {
-        score: decision.futureWorkPotentialScore || 0,
-        comments: decision.futureWorkPotentialComments || '',
-        scoringDescriptionId: 9
-      },
-      profitability: {
-        score: decision.profitabilityScore || 0,
-        comments: decision.profitabilityComments || '',
-        scoringDescriptionId: 10
-      },
-      bidSchedule: {
-        score: decision.bidScheduleScore || 0,
-        comments: decision.bidScheduleComments || '',
-        scoringDescriptionId: 11
-      },
-      resourceAvailability: {
-        score: decision.resourceAvailabilityScore || 0,
-        comments: decision.resourceAvailabilityComments || '',
-        scoringDescriptionId: 12
+  const [descriptions, setDescriptions] = useState<ScoringDescriptionsResponse>({ descriptions: {} });
+  
+  // Load initial Go/No Go decision data
+  useEffect(() => {  
+    const loadInitialData = async () => {
+      if (context.selectedProject?.id) {
+        try {
+          const response = await goNoGoApi.getByOpportunityId(context.selectedProject.id);
+          if (response && response.id) {
+            setDecisionId(response.id);
+            await loadVersions(response.id);
+            setIsEditing(true);
+          }
+        } catch (error) {
+          console.error('Error loading Go/No Go decision:', error);
+        }
       }
-    },
-    summary: {
-      totalScore: decision.totalScore || 0,
-      status: decision.status || GoNoGoStatus.Red,
-      decisionComments: decision.decisionComments || '',
-      actionPlan: decision.actionPlan || ''
-    },
-    metadata: {
-      opprotunityId: decision.opprotunityId ,
-      id: 0,
-      completedDate: decision.completedDate || new Date().toISOString(),
-      completedBy: decision.completedBy || '',
-      createdAt: decision.createdAt || new Date().toISOString(),
-      createdBy: decision.createdBy || '',
-      lastModifiedAt: decision.lastModifiedAt || new Date().toISOString(),
-      lastModifiedBy: decision.lastModifiedBy || ''
+    };
+
+    loadInitialData();
+  }, [context.selectedProject?.id]);
+
+  useEffect(() => {
+    const getScoringDescription = async () => {
+      
+        try {
+          const response = await getScoringDescriptions();
+          
+          setDescriptions(response);
+        } catch (error) {
+          console.error('Error loading Go/No Go decision:', error);
+        }
+     
+    };
+
+    getScoringDescription();
+  },[]);
+
+  const getDescriptionColor = (range: string) => {
+    switch (range) {
+      case 'high':
+        return '#4caf50';
+      case 'medium':
+        return '#ff9800';
+      case 'low':
+        return '#f44336';
+      default:
+        return 'inherit';
     }
-  });
-
-  const initialGoNoGoDecision = context.currentGoNoGoDecision ? 
-    transformToPayload(context.currentGoNoGoDecision) : null;
-
+  };
+  const [versions, setVersions] = useState<GoNoGoVersionDto[]>([]);
+  const [currentVersion, setCurrentVersion] = useState<GoNoGoVersionDto | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [decisionId, setDecisionId] = useState<number | null>(null);
   const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
     typeOfBid: TypeOfBid.Lumpsum,
@@ -246,113 +232,142 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
     bidtimeandcosts: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
 
-  useEffect(() => {
-    if (initialGoNoGoDecision) {
-      setIsEditing(true);
-      setDecisionId(initialGoNoGoDecision.metadata.id || null);
-      setHeaderInfo(prev => ({
-        ...prev,
-        typeOfBid: initialGoNoGoDecision.headerInfo.bidType as TypeOfBid || TypeOfBid.Lumpsum,
-        sector: initialGoNoGoDecision.headerInfo.sector || '',
-        tenderFee: initialGoNoGoDecision.headerInfo.tenderFee?.toString() || '',
-        emd: initialGoNoGoDecision.headerInfo.emdAmount?.toString() || ''
-      }));
-      
-      setCriteria(prev => ({
-        ...prev,
-        marketingplan: {
-          ...prev.marketingplan,
-          score: initialGoNoGoDecision.scoringCriteria?.marketingPlan?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.marketingPlan?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.marketingPlan?.scoringDescriptionId || 1
-        },
-        clientrelationship: {
-          ...prev.clientrelationship,
-          score: initialGoNoGoDecision.scoringCriteria?.clientRelationship?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.clientRelationship?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.clientRelationship?.scoringDescriptionId || 2
-        },
-        projectknowledge: {
-          ...prev.projectknowledge,
-          score: initialGoNoGoDecision.scoringCriteria?.projectKnowledge?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.projectKnowledge?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.projectKnowledge?.scoringDescriptionId || 3
-        },
-        technicaleligibility: {
-          ...prev.technicaleligibility,
-          score: initialGoNoGoDecision.scoringCriteria?.technicalEligibility?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.technicalEligibility?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.technicalEligibility?.scoringDescriptionId || 4
-        },
-        financialeligibility: {
-          ...prev.financialeligibility,
-          score: initialGoNoGoDecision.scoringCriteria?.financialEligibility?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.financialEligibility?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.financialEligibility?.scoringDescriptionId || 5
-        },
-        keystaffavailability: {
-          ...prev.keystaffavailability,
-          score: initialGoNoGoDecision.scoringCriteria?.staffAvailability?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.staffAvailability?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.staffAvailability?.scoringDescriptionId || 6
-        },
-        projectcompetition: {
-          ...prev.projectcompetition,
-          score: initialGoNoGoDecision.scoringCriteria?.competitionAssessment?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.competitionAssessment?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.competitionAssessment?.scoringDescriptionId || 7
-        },
-        competitionposition: {
-          ...prev.competitionposition,
-          score: initialGoNoGoDecision.scoringCriteria?.competitivePosition?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.competitivePosition?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.competitivePosition?.scoringDescriptionId || 8
-        },
-        futureworkpotential: {
-          ...prev.futureworkpotential,
-          score: initialGoNoGoDecision.scoringCriteria?.futureWorkPotential?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.futureWorkPotential?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.futureWorkPotential?.scoringDescriptionId || 9
-        },
-        projectprofitability: {
-          ...prev.projectprofitability,
-          score: initialGoNoGoDecision.scoringCriteria?.profitability?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.profitability?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.profitability?.scoringDescriptionId || 10
-        },
-        projectschedule: {
-          ...prev.projectschedule,
-          score: initialGoNoGoDecision.scoringCriteria?.bidSchedule?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.bidSchedule?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.bidSchedule?.scoringDescriptionId || 11
-        },
-        bidtimeandcosts: {
-          ...prev.bidtimeandcosts,
-          score: initialGoNoGoDecision.scoringCriteria?.resourceAvailability?.score || 0,
-          comments: initialGoNoGoDecision.scoringCriteria?.resourceAvailability?.comments || '',
-          scoringDescriptionId: initialGoNoGoDecision.scoringCriteria?.resourceAvailability?.scoringDescriptionId || 12
-        }
-      }));
-
-      if (context?.setCurrentGoNoGoDecision) {
-        context.setCurrentGoNoGoDecision(null);
-      }
-    }
-  }, [initialGoNoGoDecision, context]);
-
-  const handleHeaderChange = (field: keyof HeaderInfo, value: string | TypeOfBid) => {
-    setHeaderInfo(prev => ({ ...prev, [field]: value }));
-  };
-
   const handleCriteriaChange = (
+    
     criteriaKey: string,
-    field: keyof ScoringCriteria,
+    field: ScoringCriteriaField,
     value: string | number | boolean
   ) => {
     setCriteria(prev => ({
       ...prev,
-      [criteriaKey]: { ...prev[criteriaKey], [field]: value }
+      [criteriaKey]: {
+        ...prev[criteriaKey],
+        [field]: field === 'score' 
+          ? Number(value)
+          : value
+      }
     }));
+  };
+
+  const handleScoreChange = (criteriaKey: string, value: string | number) => {
+    const numericValue = typeof value === 'string' ? parseInt(value, 10) : value;
+    handleCriteriaChange(criteriaKey, 'score', numericValue);
+  };
+
+  const mapScoringCriteria = (dbCriteria: any) => {
+    const mappings = {
+      MarketingPlan: 'marketingplan',
+      ClientRelationship: 'clientrelationship',
+      ProjectKnowledge: 'projectknowledge',
+      TechnicalEligibility: 'technicaleligibility',
+      FinancialEligibility: 'financialeligibility',
+      StaffAvailability: 'keystaffavailability',
+      CompetitionAssessment: 'projectcompetition',
+      CompetitivePosition: 'competitionposition',
+      FutureWorkPotential: 'futureworkpotential',
+      Profitability: 'projectprofitability',
+      BidSchedule: 'projectschedule',
+      ResourceAvailability: 'bidtimeandcosts'
+    };
+
+    const newCriteria: { [key: string]: ScoringCriteria } = {};
+    
+    Object.entries(mappings).forEach(([dbKey, stateKey]) => {
+      const dbValue = dbCriteria[dbKey];
+      if (dbValue) {
+        newCriteria[stateKey] = {
+          byWhom: '',
+          byDate: '',
+          comments: dbValue.Comments || '',
+          score: dbValue.Score || 0,
+          showComments: false,
+          scoringDescriptionId: dbValue.ScoringDescriptionId
+        };
+      }
+    });
+
+    return newCriteria;
+  };
+
+  const handleVersionSelect = useCallback((version: GoNoGoVersionDto) => {
+    debugger;
+    setCurrentVersion(version);
+    const formData = JSON.parse(version.formData);
+    
+    // Update header info
+    setHeaderInfo(prev => ({
+      ...prev,
+      typeOfBid: formData.HeaderInfo.TypeOfBid,
+      sector: formData.HeaderInfo.Sector || '',
+      tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
+      emd: formData.HeaderInfo.EmdAmount?.toString() || '',
+      office: formData.HeaderInfo.Office
+    }));
+
+    // Update scoring criteria
+    const mappedCriteria = mapScoringCriteria(formData.ScoringCriteria);
+    setCriteria(prev => ({
+      ...prev,
+      ...mappedCriteria
+    }));
+  }, []);
+
+  const handleApproveVersion = useCallback(async (version: GoNoGoVersionDto) => {
+    try {
+      setIsLoading(true);
+      await goNoGoApi.approveVersion(version.goNoGoDecisionHeaderId, version.versionNumber, {
+        approvedBy: context?.user?.userName || '',
+        comments: ''
+      });
+      if (version.goNoGoDecisionHeaderId) {
+        await loadVersions(version.goNoGoDecisionHeaderId);
+      }
+    } catch (error) {
+      console.error('Error approving version:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [context?.user?.name]);
+
+  const loadVersions = useCallback(async (headerId: number) => {
+    try {
+      setIsLoading(true);
+      const fetchedVersions = await goNoGoApi.getVersions(headerId);
+      setVersions(fetchedVersions);
+      if (fetchedVersions.length > 0) {
+        const latestVersion = fetchedVersions[fetchedVersions.length - 1];
+        setCurrentVersion(latestVersion);
+      }
+    } catch (error) {
+      console.error('Error loading versions:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const canEditForm = useCallback((): boolean => {
+   debugger;
+    if (!currentVersion) return true;
+     const status = currentVersion.status as GoNoGoVersionStatus;
+     return status === GoNoGoVersionStatus.BDM_PENDING ||
+            status === GoNoGoVersionStatus.RM_PENDING ||
+            status === GoNoGoVersionStatus.RD_PENDING;
+  }, [currentVersion]);
+
+  const handleHeaderChange = (field: keyof HeaderInfo, value: string | TypeOfBid) => {
+    setHeaderInfo(prev => {
+      if (field === 'typeOfBid') {
+        // Convert string to TypeOfBid enum
+        const enumValue = typeof value === 'string' ? parseInt(value, 10) : value;
+        const typedValue: TypeOfBid = enumValue;
+        return { ...prev, typeOfBid: typedValue };
+      }
+      return { ...prev, [field]: value };
+    });
+  };
+
+  const showName = (key: string) => {
+    return key[0].toUpperCase() + key.replace(/([A-Z])/g, ' $1').trim().slice(1);
   };
 
   const calculateTotalScore = () => {
@@ -366,44 +381,180 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
     return { text: 'NO GO', color: '#f44336' };
   };
 
-  const getTotalScoreStatus = (): GoNoGoStatus => {
-    const totalScore = calculateTotalScore();
-    if (totalScore >= 84) return GoNoGoStatus.Green;
-    if (totalScore >= 50) return GoNoGoStatus.Amber;
-    return GoNoGoStatus.Red;
-  };
+  const handleSubmit = async () => {
+    try {
+      if (!context.selectedProject?.id) {
+        console.error('No project ID found in context');
+        return;
+      }
 
-  const showName = (key:string) => {
-    return key[0].toUpperCase() + key.replace(/([A-Z])/g, ' $1').trim().slice(1)
-  };
+      const tenderFee = parseInt(headerInfo.tenderFee) || 0;
+      const emdAmount = parseInt(headerInfo.emd) || 0;
 
-  const getDescriptionColor = (range: string) => {
-    switch (range) {
-      case 'high':
-        return '#4caf50';
-      case 'medium':
-        return '#ff9800';
-      case 'low':
-        return '#f44336';
-      default:
-        return 'inherit';
+      const updatedFields: GoNoGoDecisionPayload = {
+        HeaderInfo: {
+          TypeOfBid: Number(headerInfo?.typeOfBid || 0),
+          Sector: headerInfo?.sector || '',
+          TenderFee: tenderFee || 0,
+          Emd: emdAmount || 0,
+          Office: headerInfo?.office || '',
+          BdHead: headerInfo?.bdHead || ''
+        },
+        ScoringCriteria: {
+          MarketingPlan: {
+            Score: criteria.marketingplan.score,
+            Comments: criteria.marketingplan.comments,
+            ScoringDescriptionId: criteria.marketingplan.scoringDescriptionId
+          },
+          ClientRelationship: {
+            Score: criteria.clientrelationship.score,
+            Comments: criteria.clientrelationship.comments,
+            ScoringDescriptionId: criteria.clientrelationship.scoringDescriptionId
+          },
+          ProjectKnowledge: {
+            Score: criteria.projectknowledge.score,
+            Comments: criteria.projectknowledge.comments,
+            ScoringDescriptionId: criteria.projectknowledge.scoringDescriptionId
+          },
+          TechnicalEligibility: {
+            Score: criteria.technicaleligibility.score,
+            Comments: criteria.technicaleligibility.comments,
+            ScoringDescriptionId: criteria.technicaleligibility.scoringDescriptionId
+          },
+          FinancialEligibility: {
+            Score: criteria.financialeligibility.score,
+            Comments: criteria.financialeligibility.comments,
+            ScoringDescriptionId: criteria.financialeligibility.scoringDescriptionId
+          },
+          StaffAvailability: {
+            Score: criteria.keystaffavailability.score,
+            Comments: criteria.keystaffavailability.comments,
+            ScoringDescriptionId: criteria.keystaffavailability.scoringDescriptionId
+          },
+          CompetitionAssessment: {
+            Score: criteria.projectcompetition.score,
+            Comments: criteria.projectcompetition.comments,
+            ScoringDescriptionId: criteria.projectcompetition.scoringDescriptionId
+          },
+          CompetitivePosition: {
+            Score: criteria.competitionposition.score,
+            Comments: criteria.competitionposition.comments,
+            ScoringDescriptionId: criteria.competitionposition.scoringDescriptionId
+          },
+          FutureWorkPotential: {
+            Score: criteria.futureworkpotential.score,
+            Comments: criteria.futureworkpotential.comments,
+            ScoringDescriptionId: criteria.futureworkpotential.scoringDescriptionId
+          },
+          Profitability: {
+            Score: criteria.projectprofitability.score,
+            Comments: criteria.projectprofitability.comments,
+            ScoringDescriptionId: criteria.projectprofitability.scoringDescriptionId
+          },
+          BidSchedule: {
+            Score: criteria.projectschedule.score,
+            Comments: criteria.projectschedule.comments,
+            ScoringDescriptionId: criteria.projectschedule.scoringDescriptionId
+          },
+          ResourceAvailability: {
+            Score: criteria.bidtimeandcosts.score,
+            Comments: criteria.bidtimeandcosts.comments,
+            ScoringDescriptionId: criteria.bidtimeandcosts.scoringDescriptionId
+          }
+        },
+        Summary: {
+          TotalScore: calculateTotalScore(),
+          Status: getDecisionStatus().text === 'GO' ? GoNoGoStatus.Green : GoNoGoStatus.Red,
+          DecisionComments: '',
+          ActionPlan: ''
+        },
+        MetaData: {
+          OpprotunityId: context.selectedProject.id,
+          Id: decisionId || 0,
+          CompletedDate: new Date().toISOString(),
+          CompletedBy: context?.user?.name?.substring(0, 100) || '',         
+          CreatedBy: context?.user?.name?.substring(0, 100) || '',
+         
+        }
+      };
+
+      if (isEditing && decisionId) {
+        // Map to GoNoGoDecision format
+        const mappedDecision: GoNoGoDecision = {
+          id: decisionId,
+          bidType: updatedFields.HeaderInfo.TypeOfBid,
+          sector: updatedFields.HeaderInfo.Sector,
+          bdHead: updatedFields.HeaderInfo.BdHead,
+          office: updatedFields.HeaderInfo.Office,
+          tenderFee: updatedFields.HeaderInfo.TenderFee,
+          emdAmount: updatedFields.HeaderInfo.Emd,
+          totalScore: updatedFields.Summary.TotalScore,
+          status: updatedFields.Summary.Status,
+          opprotunityId: updatedFields.MetaData.OpprotunityId,
+          
+          // Map scoring fields
+          marketingPlanScore: updatedFields.ScoringCriteria.MarketingPlan.Score,
+          marketingPlanComments: updatedFields.ScoringCriteria.MarketingPlan.Comments,
+          clientRelationshipScore: updatedFields.ScoringCriteria.ClientRelationship.Score,
+          clientRelationshipComments: updatedFields.ScoringCriteria.ClientRelationship.Comments,
+          projectKnowledgeScore: updatedFields.ScoringCriteria.ProjectKnowledge.Score,
+          projectKnowledgeComments: updatedFields.ScoringCriteria.ProjectKnowledge.Comments,
+          technicalEligibilityScore: updatedFields.ScoringCriteria.TechnicalEligibility.Score,
+          technicalEligibilityComments: updatedFields.ScoringCriteria.TechnicalEligibility.Comments,
+          financialEligibilityScore: updatedFields.ScoringCriteria.FinancialEligibility.Score,
+          financialEligibilityComments: updatedFields.ScoringCriteria.FinancialEligibility.Comments,
+          staffAvailabilityScore: updatedFields.ScoringCriteria.StaffAvailability.Score,
+          staffAvailabilityComments: updatedFields.ScoringCriteria.StaffAvailability.Comments,
+          competitionAssessmentScore: updatedFields.ScoringCriteria.CompetitionAssessment.Score,
+          competitionAssessmentComments: updatedFields.ScoringCriteria.CompetitionAssessment.Comments,
+          competitivePositionScore: updatedFields.ScoringCriteria.CompetitivePosition.Score,
+          competitivePositionComments: updatedFields.ScoringCriteria.CompetitivePosition.Comments,
+          futureWorkPotentialScore: updatedFields.ScoringCriteria.FutureWorkPotential.Score,
+          futureWorkPotentialComments: updatedFields.ScoringCriteria.FutureWorkPotential.Comments,
+          profitabilityScore: updatedFields.ScoringCriteria.Profitability.Score,
+          profitabilityComments: updatedFields.ScoringCriteria.Profitability.Comments,
+          bidScheduleScore: updatedFields.ScoringCriteria.BidSchedule.Score,
+          bidScheduleComments: updatedFields.ScoringCriteria.BidSchedule.Comments,
+          resourceAvailabilityScore: updatedFields.ScoringCriteria.ResourceAvailability.Score,
+          resourceAvailabilityComments: updatedFields.ScoringCriteria.ResourceAvailability.Comments,
+
+          // Metadata
+          completedDate: updatedFields.MetaData.CompletedDate,
+          completedBy: updatedFields.MetaData.CompletedBy,
+          createdBy: updatedFields.MetaData.CreatedBy,
+          decisionComments: updatedFields.Summary.DecisionComments,
+          actionPlan: updatedFields.Summary.ActionPlan
+        };
+
+        const response = await goNoGoApi.update(decisionId.toString(), mappedDecision);
+        if (response.id) {
+          await loadVersions(response.id);
+        }
+      } else {
+        
+        const response = await goNoGoApi.create(context.selectedProject.id.toString(), updatedFields);
+        if (response.headerId) {
+          await loadVersions(response.headerId);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving go/no-go decision:', error);
     }
   };
 
-  const [descriptions, setDescriptions] = useState<ScoringDescriptionsResponse>({ descriptions: {} });
-
-  useEffect(() => {
-    const fetchDescriptions = async () => {
-      try {
-        const fetchedDescriptions = await getScoringDescriptions();
-        console.log("scorefetchedDescriptions ing",fetchedDescriptions);
-        setDescriptions(fetchedDescriptions);
-      } catch (error) {
-        console.error('Error fetching scoring descriptions:', error);
-      }
-    };
-    fetchDescriptions();
-  }, []);
+  const scoreRanges = [
+    { value: 10, label: '10 - Excellent', range: 'high' },
+    { value: 9, label: '9 - Excellent', range: 'high' },
+    { value: 8, label: '8 - Excellent', range: 'high' },
+    { value: 7, label: '7 - Good', range: 'medium' },
+    { value: 6, label: '6 - Good', range: 'medium' },
+    { value: 5, label: '5 - Good', range: 'medium' },
+    { value: 4, label: '4 - Poor', range: 'low' },
+    { value: 3, label: '3 - Poor', range: 'low' },
+    { value: 2, label: '2 - Poor', range: 'low' },
+    { value: 1, label: '1 - Poor', range: 'low' },
+    { value: 0, label: '0 - Not Rated', range: 'low' }
+  ];
 
   const renderScoringDescriptions = (criteriaKey: string, currentScore: number) => {
     const key = criteriaKey.toLowerCase();
@@ -444,163 +595,27 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
     );
   };
 
-  const handleSubmit = async () => {
-    try {     
-      if (!context.selectedProject?.id) {
-        console.error('No project ID found in context');
-        return;
-      }        
-    
-      if (!headerInfo.sector || headerInfo.sector.length > 50) {
-        console.error('Invalid Sector');
-        return;
-      }
-    
-      // Validate numeric fields
-      const tenderFee = Number(headerInfo.tenderFee);
-      const emdAmount = Number(headerInfo.emd);
-    
-      if (isNaN(tenderFee) || tenderFee < 0) {
-        console.error('Invalid Tender Fee');
-        return;
-      }
-    
-      if (isNaN(emdAmount) || emdAmount < 0) {
-        console.error('Invalid EMD Amount');
-        return;
-      }
-    
-      // Validate scoring criteria
-      const scoringFields = [
-        'marketingplan', 'clientrelationship', 'projectknowledge', 
-        'technicaleligibility', 'financialeligibility', 'keystaffavailability', 
-        'projectcompetition', 'competitionposition', 'futureworkpotential', 
-        'projectprofitability', 'projectschedule', 'bidtimeandcosts'
-      ];
-    
-      const invalidScores = scoringFields.filter(field => {
-        const score = criteria[field].score;
-        return score < 0 || score > 10;
-      });
-    
-      if (invalidScores.length > 0) {
-        return;
-      }
-    
-      const scoringCriteria: ScoringCriteriaPayload = {
-        marketingPlan: {
-          score: criteria.marketingplan.score,
-          comments: criteria.marketingplan.comments,
-          scoringDescriptionId: criteria.marketingplan.scoringDescriptionId
-        },
-        clientRelationship: {
-          score: criteria.clientrelationship.score,
-          comments: criteria.clientrelationship.comments,
-          scoringDescriptionId: criteria.clientrelationship.scoringDescriptionId
-        },
-        projectKnowledge: {
-          score: criteria.projectknowledge.score,
-          comments: criteria.projectknowledge.comments,
-          scoringDescriptionId: criteria.projectknowledge.scoringDescriptionId
-        },
-        technicalEligibility: {
-          score: criteria.technicaleligibility.score,
-          comments: criteria.technicaleligibility.comments,
-          scoringDescriptionId: criteria.technicaleligibility.scoringDescriptionId
-        },
-        financialEligibility: {
-          score: criteria.financialeligibility.score,
-          comments: criteria.financialeligibility.comments,
-          scoringDescriptionId: criteria.financialeligibility.scoringDescriptionId
-        },
-        staffAvailability: {
-          score: criteria.keystaffavailability.score,
-          comments: criteria.keystaffavailability.comments,
-          scoringDescriptionId: criteria.keystaffavailability.scoringDescriptionId
-        },
-        competitionAssessment: {
-          score: criteria.projectcompetition.score,
-          comments: criteria.projectcompetition.comments,
-          scoringDescriptionId: criteria.projectcompetition.scoringDescriptionId
-        },
-        competitivePosition: {
-          score: criteria.competitionposition.score,
-          comments: criteria.competitionposition.comments,
-          scoringDescriptionId: criteria.competitionposition.scoringDescriptionId
-        },
-        futureWorkPotential: {
-          score: criteria.futureworkpotential.score,
-          comments: criteria.futureworkpotential.comments,
-          scoringDescriptionId: criteria.futureworkpotential.scoringDescriptionId
-        },
-        profitability: {
-          score: criteria.projectprofitability.score,
-          comments: criteria.projectprofitability.comments,
-          scoringDescriptionId: criteria.projectprofitability.scoringDescriptionId
-        },
-        bidSchedule: {
-          score: criteria.projectschedule.score,
-          comments: criteria.projectschedule.comments,
-          scoringDescriptionId: criteria.projectschedule.scoringDescriptionId
-        },
-        resourceAvailability: {
-          score: criteria.bidtimeandcosts.score,
-          comments: criteria.bidtimeandcosts.comments,
-          scoringDescriptionId: criteria.bidtimeandcosts.scoringDescriptionId
-        }
-      };
-
-      const updatedFields: GoNoGoDecisionPayload = {
-        headerInfo: {
-          bidType: headerInfo.typeOfBid as TypeOfBid,
-          sector: headerInfo.sector,
-          tenderFee: tenderFee,
-          emdAmount: emdAmount,
-          office: headerInfo.office,
-          bdHead:headerInfo.bdHead
-        },
-        
-        scoringCriteria,
-        
-        summary: {
-          totalScore: calculateTotalScore(),
-          status: getTotalScoreStatus(),
-          decisionComments: '',
-          actionPlan: ''
-        },
-        
-        metadata: {
-          opprotunityId : context.selectedProject?.id,
-          id: decisionId || 0,
-          completedDate: new Date().toISOString(),
-          completedBy: context?.user?.name?.substring(0, 100) || '',         
-          createdBy: context?.user?.name?.substring(0, 100) || '',          
-        }
-      };
-  
-      if (isEditing && decisionId) {
-        await goNoGoApi.update(decisionId, updatedFields);
-      } else {
-        await goNoGoApi.create(context.selectedProject?.id.toString(), updatedFields);
-      }
-  
-      if (context?.setScreenState) {
-        context.setScreenState("Project Details");
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'An unknown error occurred while saving the decision';
-      
-      console.error('Error saving go/no-go decision:', {
-        message: errorMessage,
-        error: error
-      });
-    }
-  };
-
   return (
     <Box sx={{ p: 3, pt: 8, maxWidth: 1200, margin: 'auto' }}>
+      {currentVersion && (
+        <GoNoGoApprovalStatus
+          status={currentVersion.status as GoNoGoVersionStatus}
+          onApprove={() => handleApproveVersion(currentVersion)}
+          userRole={String(context?.user?.roles?.[0].name || '')}
+          isEditable={canEditForm()}
+        />
+      )}
+
+      {versions  && (
+        <GoNoGoVersionHistory
+          versions={versions}
+          currentVersion={currentVersion?.versionNumber || 1}
+          onVersionSelect={handleVersionSelect}
+          onApprove={handleApproveVersion}
+          userRole={String(context?.user?.roles?.[0].name || '')}
+        />
+      )}
+
       {/* Title section matching WBS form style */}
       <Paper sx={{ p: 2, mb: 3, border: '1px solid rgba(224, 224, 224, 1)', boxShadow: 'none' }}>
         <Typography variant="h5">Go/No Go Decision Form</Typography>
@@ -616,12 +631,12 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
               <FormControl fullWidth>
                 <InputLabel>Type of Bid</InputLabel>
                 <Select
-                  value={headerInfo.typeOfBid}
-                  onChange={(e) => handleHeaderChange('typeOfBid', e.target.value)}
+                  value={headerInfo.typeOfBid.toString()}
+                  onChange={(e) => handleHeaderChange('typeOfBid', Number(e.target.value) as TypeOfBid)}
                   label="Type of Bid"
                 >
-                  <MenuItem value={TypeOfBid.Lumpsum}>Lumpsum</MenuItem>
-                  <MenuItem value={TypeOfBid.ItemRate}>Item Rate</MenuItem>
+                  <MenuItem value={TypeOfBid.Lumpsum.toString()}>Lumpsum</MenuItem>
+                  <MenuItem value={TypeOfBid.ItemRate.toString()}>Item Rate</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -671,7 +686,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
                     <InputLabel>Score</InputLabel>
                     <Select
                       value={value.score}
-                      onChange={(e) => handleCriteriaChange(key, 'score', Number(e.target.value))}
+                      onChange={(e) => handleScoreChange(key, e.target.value)}
                       label="Score"
                     >
                       {scoreRanges.map((range) => (
@@ -763,6 +778,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
             variant="contained"
             color="primary"
             onClick={handleSubmit}
+            disabled={!canEditForm()}
           >
             {isEditing ? 'Update Decision' : 'Submit Decision'}
           </Button>

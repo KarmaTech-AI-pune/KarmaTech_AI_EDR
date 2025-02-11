@@ -34,6 +34,7 @@ namespace NJS.Domain.Database
         public DbSet<ScoringCriteria> ScoringCriteria { get; set; }
 
         public DbSet<ScoreRange> ScoreRange { get; set; }
+        public DbSet<GoNoGoVersion> GoNoGoVersions { get; set; }
 
         public DbSet<ScoringDescriptions> ScoringDescription { get; set; }
 

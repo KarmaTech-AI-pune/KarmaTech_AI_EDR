@@ -1,4 +1,5 @@
 using NJS.Application.Dtos;
+using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 
 namespace NJS.Application.Services
@@ -11,6 +12,7 @@ namespace NJS.Application.Services
         {
             _scoringDescriptionRepository = scoringDescriptionRepository;
         }
+      
 
         public async Task<ScoringDescriptionDto> GetScoringDescriptionsAsync()
         {

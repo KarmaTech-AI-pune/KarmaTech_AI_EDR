@@ -97,6 +97,9 @@ namespace NJS.Application.CQRS.Handlers.GoNoGoDecision
                 UpdatedAt = dateTime,
                 CreatedBy = currentUserId,
                 UpdatedBy = currentUserId
+              
+              
+                
             };
 
             var transactions = new List<GoNoGoDecisionTransaction>();
