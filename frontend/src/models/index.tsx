@@ -1,7 +1,10 @@
-export * from './types';
 export * from './goNoGoDecisionModel';
-export * from './goNoGoVersionModel';
-export * from './workflowModel';
+export {
+    GoNoGoStatus,
+    TypeOfBid,
+    WorkflowStatus,
+    GoNoGoVersionStatus
+} from './types';
 
 export interface User {
     id: string;
@@ -33,12 +36,38 @@ export interface Project {
 }
 
 export interface OpportunityTracking {
-    id: number;
-    name: string;
-    description?: string;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
+    id?: number;
+    stage?: string;
+    strategicRanking?: string;
+    bidFees?: number;
+    emd?: number;
+    formOfEMD?: string;
+    bidManagerId?: string;
+    reviewManagerId?: string;
+    approvalManagerId?: string;
+    contactPersonAtClient?: string;
+    dateOfSubmission?: string;
+    percentageChanceOfProjectHappening?: number;
+    percentageChanceOfNJSSuccess?: number;
+    likelyCompetition?: string;
+    grossRevenue?: number;
+    netNJSRevenue?: number;
+    followUpComments?: string;
+    notes?: string;
+    probableQualifyingCriteria?: string;
+    operation?: string;
+    workName?: string;
+    client?: string;
+    clientSector?: string;
+    likelyStartDate?: string;
+    status?: string;
+    currency?: string;
+    capitalValue?: number;
+    durationOfProject?: number;
+    fundingStream?: string;
+    contractType?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export enum PermissionType {
@@ -67,9 +96,4 @@ export interface RoleDefinition {
     id: string;
     name: string;
     permissions: PermissionType[];
-}
-
-export enum TypeOfBid {
-    Lumpsum = 0,
-    ItemRate = 1
 }

@@ -19,7 +19,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
 import {projectManagementAppContextType } from '../../types';
-import { AuthUser, OpportunityTracking } from "../../models";
+import { OpportunityTracking } from "../../models";
+import { AuthUser } from "../../models/userModel";
 import { getUsersByRole } from '../../services/userApi';
 
 interface OpportunityFormProps {
@@ -94,18 +95,18 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         // Fetch and set BD Managers
         const bdManagerUsers = await getUsersByRole('Business Development Manager');
         const uniqueBdManagers = getUniqueManagers(bdManagerUsers);
-        setBdManagers(bdManagerUsers);
+        setBdManagers(uniqueBdManagers);
         
         // Fetch and set Review Managers
         const regionalManagerUsers = await getUsersByRole('Regional Manager');
         const regionalDirectorUsers = await getUsersByRole('Regional Director');
         const uniqueReviewers = getUniqueManagers(regionalManagerUsers);
-        setReviewManagers(regionalManagerUsers);
+        setReviewManagers(uniqueReviewers);
         
         // Combine both arrays and get unique managers
         const allApproverUsers = [...regionalManagerUsers, ...regionalDirectorUsers];
         const uniqueApprovers = getUniqueManagers(allApproverUsers);
-        setApprovalManagers(allApproverUsers);
+        setApprovalManagers(uniqueApprovers);
       } catch (error) {
         console.error('Error fetching managers:', error);
       }
@@ -144,7 +145,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     }));
   };
 
-  const handleDateChange = (field: keyof Pick<OpportunityTracking, 'dateOfSubmission' | 'likelyStartDate'>) => (value: Date | null) => {
+  const handleDateChange = (field: 'dateOfSubmission' | 'likelyStartDate') => (value: Date | null) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value ? value.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -367,7 +368,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       required
                     >
                       {bdManagers.map((manager) => (
-                        <MenuItem key={`bm_${manager.id}`} value={manager.id}>
+                        <MenuItem key={`bd_manager_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -385,7 +386,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     >
                       <MenuItem value="">None</MenuItem>
                       {reviewManagers.map((manager) => (
-                        <MenuItem key={`rm_${manager.id}`} value={manager.id}>
+                        <MenuItem key={`review_manager_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -403,7 +404,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     >
                       <MenuItem value="">None</MenuItem>
                       {approvalManagers.map((manager) => (
-                        <MenuItem key={`am_${manager.id}`} value={manager.id}>
+                        <MenuItem key={`approval_manager_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
