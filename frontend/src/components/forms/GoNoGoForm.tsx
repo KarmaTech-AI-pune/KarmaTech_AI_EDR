@@ -25,8 +25,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
 import { projectManagementAppContextType } from '../../types';
 import { GoNoGoStatus, TypeOfBid } from "../../models/types";
-import { GoNoGoVersionDto } from "../../models/goNoGoVersionModel";
-import { GoNoGoVersionStatus } from "../../models/workflowModel";
+import { CreateGoNoGoVersionDto, GoNoGoVersionDto } from "../../models/goNoGoVersionModel";
+import { getStatusesForRole, GoNoGoVersionStatus } from "../../models/workflowModel";
 import GoNoGoVersionHistory from "./GoNoGoVersionHistory";
 import GoNoGoApprovalStatus from "./GoNoGoApprovalStatus";
 import { GoNoGoDecision } from "../../models/goNoGoDecisionModel";
@@ -158,10 +158,13 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
       if (context.selectedProject?.id) {
         try {
           const response = await goNoGoApi.getByOpportunityId(context.selectedProject.id);
+          debugger;
           if (response && response.id) {
+            setTotalScore(response.totalScore)
             setDecisionId(response.id);
-            await loadVersions(response.id);
             setIsEditing(true);
+            await loadVersions(response.id);
+            
           }
         } catch (error) {
           console.error('Error loading Go/No Go decision:', error);
@@ -204,6 +207,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
   const [currentVersion, setCurrentVersion] = useState<GoNoGoVersionDto | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [totalScore, setTotalScore] = useState<number | null>(null);
   const [decisionId, setDecisionId] = useState<number | null>(null);
   const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
     typeOfBid: TypeOfBid.Lumpsum,
@@ -289,12 +293,10 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
     return newCriteria;
   };
 
-  const handleVersionSelect = useCallback((version: GoNoGoVersionDto) => {
-    debugger;
+  const handleVersionSelect = useCallback((version: GoNoGoVersionDto) => {   
     setCurrentVersion(version);
-    const formData = JSON.parse(version.formData);
+    const formData = JSON.parse(version.formData)   
     
-    // Update header info
     setHeaderInfo(prev => ({
       ...prev,
       typeOfBid: formData.HeaderInfo.TypeOfBid,
@@ -345,14 +347,56 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
     }
   }, []);
 
-  const canEditForm = useCallback((): boolean => {
-   debugger;
-    if (!currentVersion) return true;
-     const status = currentVersion.status as GoNoGoVersionStatus;
-     return status === GoNoGoVersionStatus.BDM_PENDING ||
-            status === GoNoGoVersionStatus.RM_PENDING ||
-            status === GoNoGoVersionStatus.RD_PENDING;
-  }, [currentVersion]);
+
+    const canEditForm = useCallback((): boolean => {
+        if (!currentVersion) return true;
+
+        const status = currentVersion.status as GoNoGoVersionStatus;
+        const userRole = context?.user?.roles?.[0].name;
+
+        // Allow editing if it's the user's turn to approve or if they are the creator
+        switch (status) {
+            case GoNoGoVersionStatus.BDM_PENDING:
+                return userRole === 'Business Development Manager';
+            case GoNoGoVersionStatus.RM_PENDING:
+                return userRole === 'Regional Manager';
+            case GoNoGoVersionStatus.RD_PENDING:
+                return userRole === 'Regional Director';
+            case GoNoGoVersionStatus.BDM_APPROVED:
+            case GoNoGoVersionStatus.RM_APPROVED:
+                return userRole === 'Regional Manager';
+            case GoNoGoVersionStatus.RM_APPROVED:
+            case GoNoGoVersionStatus.RD_APPROVED:
+                return userRole === 'Regional Director';
+            default:
+                return false;
+        }
+    }, [currentVersion, context?.user?.roles]);
+
+    const canEditForm1 = useCallback((): boolean => {
+      if (!currentVersion) return true;
+
+      const status = currentVersion.status as GoNoGoVersionStatus;
+      const userRole = context?.user?.roles?.[0].name;
+
+      // Allow editing if it's the user's turn to approve or if they are the creator
+      switch (status) {
+          case GoNoGoVersionStatus.BDM_PENDING && userRole === 'Business Development Manager':
+              return true;
+          case GoNoGoVersionStatus.RM_PENDING:
+              return userRole === 'Regional Manager';
+          case GoNoGoVersionStatus.RD_PENDING:
+              return userRole === 'Regional Director';
+          case GoNoGoVersionStatus.BDM_APPROVED:
+          case GoNoGoVersionStatus.RM_APPROVED:
+              return userRole === 'Regional Manager';
+          case GoNoGoVersionStatus.RM_APPROVED:
+          case GoNoGoVersionStatus.RD_APPROVED:
+              return userRole === 'Regional Director';
+          default:
+              return false;
+      }
+  }, [currentVersion, context?.user?.roles]);
 
   const handleHeaderChange = (field: keyof HeaderInfo, value: string | TypeOfBid) => {
     setHeaderInfo(prev => {
@@ -478,57 +522,22 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
         }
       };
 
-      if (isEditing && decisionId) {
-        // Map to GoNoGoDecision format
-        const mappedDecision: GoNoGoDecision = {
-          id: decisionId,
-          bidType: updatedFields.HeaderInfo.TypeOfBid,
-          sector: updatedFields.HeaderInfo.Sector,
-          bdHead: updatedFields.HeaderInfo.BdHead,
-          office: updatedFields.HeaderInfo.Office,
-          tenderFee: updatedFields.HeaderInfo.TenderFee,
-          emdAmount: updatedFields.HeaderInfo.Emd,
-          totalScore: updatedFields.Summary.TotalScore,
-          status: updatedFields.Summary.Status,
-          opprotunityId: updatedFields.MetaData.OpprotunityId,
-          
-          // Map scoring fields
-          marketingPlanScore: updatedFields.ScoringCriteria.MarketingPlan.Score,
-          marketingPlanComments: updatedFields.ScoringCriteria.MarketingPlan.Comments,
-          clientRelationshipScore: updatedFields.ScoringCriteria.ClientRelationship.Score,
-          clientRelationshipComments: updatedFields.ScoringCriteria.ClientRelationship.Comments,
-          projectKnowledgeScore: updatedFields.ScoringCriteria.ProjectKnowledge.Score,
-          projectKnowledgeComments: updatedFields.ScoringCriteria.ProjectKnowledge.Comments,
-          technicalEligibilityScore: updatedFields.ScoringCriteria.TechnicalEligibility.Score,
-          technicalEligibilityComments: updatedFields.ScoringCriteria.TechnicalEligibility.Comments,
-          financialEligibilityScore: updatedFields.ScoringCriteria.FinancialEligibility.Score,
-          financialEligibilityComments: updatedFields.ScoringCriteria.FinancialEligibility.Comments,
-          staffAvailabilityScore: updatedFields.ScoringCriteria.StaffAvailability.Score,
-          staffAvailabilityComments: updatedFields.ScoringCriteria.StaffAvailability.Comments,
-          competitionAssessmentScore: updatedFields.ScoringCriteria.CompetitionAssessment.Score,
-          competitionAssessmentComments: updatedFields.ScoringCriteria.CompetitionAssessment.Comments,
-          competitivePositionScore: updatedFields.ScoringCriteria.CompetitivePosition.Score,
-          competitivePositionComments: updatedFields.ScoringCriteria.CompetitivePosition.Comments,
-          futureWorkPotentialScore: updatedFields.ScoringCriteria.FutureWorkPotential.Score,
-          futureWorkPotentialComments: updatedFields.ScoringCriteria.FutureWorkPotential.Comments,
-          profitabilityScore: updatedFields.ScoringCriteria.Profitability.Score,
-          profitabilityComments: updatedFields.ScoringCriteria.Profitability.Comments,
-          bidScheduleScore: updatedFields.ScoringCriteria.BidSchedule.Score,
-          bidScheduleComments: updatedFields.ScoringCriteria.BidSchedule.Comments,
-          resourceAvailabilityScore: updatedFields.ScoringCriteria.ResourceAvailability.Score,
-          resourceAvailabilityComments: updatedFields.ScoringCriteria.ResourceAvailability.Comments,
+      if (isEditing && decisionId) { 
+       debugger;  
 
-          // Metadata
-          completedDate: updatedFields.MetaData.CompletedDate,
-          completedBy: updatedFields.MetaData.CompletedBy,
-          createdBy: updatedFields.MetaData.CreatedBy,
-          decisionComments: updatedFields.Summary.DecisionComments,
-          actionPlan: updatedFields.Summary.ActionPlan
+      
+        const createGoNoAfterUpdate: CreateGoNoGoVersionDto={
+          formData: JSON.stringify(updatedFields),
+          comments: '',
+          createdBy: context?.user?.name?.substring(0, 100) || '',
+          goNoGoDecisionHeaderId: decisionId,
+          versionNumber:currentVersion?.versionNumber||0,
+          status: currentVersion?.status||0,
+          createdAt: new Date().toISOString()         
         };
-
-        const response = await goNoGoApi.update(decisionId.toString(), mappedDecision);
-        if (response.id) {
-          await loadVersions(response.id);
+        const response = await goNoGoApi.createVersion(decisionId, createGoNoAfterUpdate);
+        if (response.goNoGoDecisionHeaderId) {
+          await loadVersions(response.goNoGoDecisionHeaderId);
         }
       } else {
         
@@ -608,11 +617,12 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
 
       {versions  && (
         <GoNoGoVersionHistory
-          versions={versions}
+          versions={versions}         
           currentVersion={currentVersion?.versionNumber || 1}
           onVersionSelect={handleVersionSelect}
           onApprove={handleApproveVersion}
           userRole={String(context?.user?.roles?.[0].name || '')}
+          score={totalScore||0}
         />
       )}
 
@@ -780,7 +790,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
             onClick={handleSubmit}
             disabled={!canEditForm()}
           >
-            {isEditing ? 'Update Decision' : 'Submit Decision'}
+            {currentVersion?.versionNumber ? 'Update Decision' : 'Submit Decision'}
           </Button>
         </Box>
       </Paper>

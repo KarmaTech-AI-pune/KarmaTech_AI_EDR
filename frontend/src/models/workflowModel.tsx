@@ -8,6 +8,18 @@ export enum GoNoGoVersionStatus {
     COMPLETED = 6
 }
 
+export function getStatusesForRole(role: string): GoNoGoVersionStatus {
+    switch (role) {
+        case 'BDM':
+            return GoNoGoVersionStatus.BDM_APPROVED;
+        case 'RM': 
+        return GoNoGoVersionStatus.RM_PENDING;           
+        case 'RD': 
+            return GoNoGoVersionStatus.RD_APPROVED; 
+        default:
+            return GoNoGoVersionStatus.COMPLETED; 
+    }
+}
 export enum WorkflowStatus {
     Initiated = 'Initiated',
     InProgress = 'InProgress',

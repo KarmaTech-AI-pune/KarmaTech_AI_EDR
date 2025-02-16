@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
@@ -12,6 +13,7 @@ namespace NJS.Repositories.Repositories
     public class GoNoGoDecisionRepository : IGoNoGoDecisionRepository
     {
         private readonly ProjectManagementContext _context;
+
 
         public GoNoGoDecisionRepository(ProjectManagementContext context)
         {
@@ -134,13 +136,22 @@ namespace NJS.Repositories.Repositories
             version.VersionNumber = (header.Versions?.Count() ?? 0) + 1;
             version.CreatedAt = DateTime.UtcNow;
             version.Status = header.Versions?.Any() != true
-                ? GoNoGoVersionStatus.BDM_PENDING.ToString()
-                : GetNextVersionStatus(header.VersionStatus.Value).ToString();
+                ? GoNoGoVersionStatus.BDM_PENDING
+                : GetNextVersionStatus(header.VersionStatus.Value);
 
             _context.GoNoGoVersions.Add(version);
 
             header.CurrentVersion = version.VersionNumber;
-            header.VersionStatus = Enum.Parse<GoNoGoVersionStatus>(version.Status);
+            header.VersionStatus = version.Status;
+
+            await _context.SaveChangesAsync();
+            return version;
+        }
+
+        public async Task<GoNoGoVersion> UpdateVersion(GoNoGoVersion version)
+        {
+
+            _context.GoNoGoVersions.Add(version);
 
             await _context.SaveChangesAsync();
             return version;
@@ -154,15 +165,21 @@ namespace NJS.Repositories.Repositories
 
         public async Task<IEnumerable<GoNoGoVersion>> GetVersions(int headerId)
         {
-            return await _context.GoNoGoVersions
-                .Where(v => v.GoNoGoDecisionHeaderId == headerId)
-                .OrderBy(v => v.VersionNumber)
-                .ToListAsync();
+            var result = await _context.GoNoGoVersions
+                     .Where(v => v.GoNoGoDecisionHeaderId == headerId)
+                     .OrderByDescending(v => v.CreatedAt)
+                     .ToListAsync();
+
+          var groupedResult = result
+                     .GroupBy(x => new { x.GoNoGoDecisionHeaderId, x.VersionNumber }) 
+                     .Select(g => g.FirstOrDefault())  
+                     .ToList();
+            return groupedResult;
         }
 
         public async Task<GoNoGoVersion> ApproveVersion(int headerId, int versionNumber, string approver, string comments)
         {
-            var version = await _context.GoNoGoVersions
+            var version = await _context.GoNoGoVersions.OrderByDescending(x => x.CreatedAt)
                 .FirstOrDefaultAsync(v => v.GoNoGoDecisionHeaderId == headerId && v.VersionNumber == versionNumber);
 
             if (version == null)
@@ -176,8 +193,8 @@ namespace NJS.Repositories.Repositories
             version.ApprovedAt = DateTime.UtcNow;
             version.Comments = comments;
 
-            var nextStatus = GetNextVersionStatus(Enum.Parse<GoNoGoVersionStatus>(version.Status));
-            version.Status = nextStatus.ToString();
+            var nextStatus = GetNextVersionStatus(version.Status);
+            version.Status = nextStatus;
             header.VersionStatus = nextStatus;
 
             await _context.SaveChangesAsync();
@@ -195,23 +212,28 @@ namespace NJS.Repositories.Repositories
             return result > 0;
         }
 
-        private GoNoGoVersionStatus GetNextVersionStatus(GoNoGoVersionStatus currentStatus)
+        private GoNoGoVersionStatus GetNextVersionStatus(GoNoGoVersionStatus currentStatus) => currentStatus switch
         {
-            return currentStatus switch
-            {
-                GoNoGoVersionStatus.BDM_PENDING => GoNoGoVersionStatus.BDM_APPROVED,
-                GoNoGoVersionStatus.BDM_APPROVED => GoNoGoVersionStatus.RM_PENDING,
-                GoNoGoVersionStatus.RM_PENDING => GoNoGoVersionStatus.RM_APPROVED,
-                GoNoGoVersionStatus.RM_APPROVED => GoNoGoVersionStatus.RD_PENDING,
-                GoNoGoVersionStatus.RD_PENDING => GoNoGoVersionStatus.RD_APPROVED,
-                GoNoGoVersionStatus.RD_APPROVED => GoNoGoVersionStatus.COMPLETED,
-                _ => throw new Exception("Invalid version status")
-            };
-        }
+            GoNoGoVersionStatus.BDM_PENDING => GoNoGoVersionStatus.BDM_APPROVED,
+            GoNoGoVersionStatus.BDM_APPROVED => GoNoGoVersionStatus.RM_PENDING,
+            GoNoGoVersionStatus.RM_PENDING => GoNoGoVersionStatus.RM_APPROVED,
+            GoNoGoVersionStatus.RM_APPROVED => GoNoGoVersionStatus.RD_PENDING,
+            GoNoGoVersionStatus.RD_PENDING => GoNoGoVersionStatus.RD_APPROVED,
+            GoNoGoVersionStatus.RD_APPROVED => GoNoGoVersionStatus.COMPLETED,
+            _ => throw new Exception("Invalid version status")
+        };
 
         public async Task<GoNoGoDecisionHeader> GetByOpportunityId(int opportuntiy)
         {
-            var header = await _context.GoNoGoDecisionHeaders.Where(x=>x.OpportunityId == opportuntiy).OrderByDescending(x=>x.CreatedAt).FirstOrDefaultAsync();
+            var header = await _context.GoNoGoDecisionHeaders.Where(x => x.OpportunityId == opportuntiy).OrderByDescending(x => x.CreatedAt).FirstOrDefaultAsync();
+            return header;
+        }
+
+        public async Task<GoNoGoDecisionHeader?> GetHeaderIncludeVersionsByHeaderIdAsync(int id)
+        {
+            var header = await _context.GoNoGoDecisionHeaders
+                .Include(h => h.Versions)
+                .FirstOrDefaultAsync(h => h.Id == id);
             return header;
         }
     }

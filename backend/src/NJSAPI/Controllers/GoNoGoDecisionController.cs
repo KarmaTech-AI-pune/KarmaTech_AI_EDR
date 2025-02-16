@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using NJS.Application.CQRS.Handlers.GoNoGoDecision;
 using NJS.Domain.Enums;
 using System.Text.Json;
+using NJS.Application.Services.IContract;
 
 namespace NJSAPI.Controllers
 {
@@ -19,12 +20,14 @@ namespace NJSAPI.Controllers
     public class GoNoGoDecisionController : ControllerBase
     {
         private readonly IGoNoGoDecisionRepository _repository;
+        private readonly IGoNoGoDecisionService _decisionService;
         private readonly IMediator _mediator;
 
-        public GoNoGoDecisionController(IGoNoGoDecisionRepository repository, IMediator mediator)
+        public GoNoGoDecisionController(IGoNoGoDecisionRepository repository, IMediator mediator, IGoNoGoDecisionService decisionService)
         {
             _repository = repository;
             _mediator = mediator;
+            _decisionService = decisionService;
         }
 
         [HttpGet]
@@ -76,7 +79,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("opportunity/{projectId}")]
-        public async Task< ActionResult<GoNoGoDecisionHeader>> GetByOpportunityId(int projectId)
+        public async Task<ActionResult<GoNoGoDecisionHeader>> GetByOpportunityId(int projectId)
         {
             try
             {
@@ -106,7 +109,7 @@ namespace NJSAPI.Controllers
                         BidType = decision.HeaderInfo.TypeOfBid,
                         Sector = decision.HeaderInfo.Sector,
                         BdHead = decision.HeaderInfo.BdHead,
-                        Office = decision.HeaderInfo.Office,                        
+                        Office = decision.HeaderInfo.Office,
                         TenderFee = decision.HeaderInfo.TenderFee,
                         EmdAmount = decision.HeaderInfo.Emd
                     },
@@ -148,12 +151,13 @@ namespace NJSAPI.Controllers
                     GoNoGoDecisionHeaderId = headerId,
                     FormData = JsonSerializer.Serialize(decision),
                     CreatedBy = decision.MetaData.CompletedBy,
-                    Status = GoNoGoVersionStatus.BDM_PENDING.ToString()
+                    Status = GoNoGoVersionStatus.BDM_PENDING
                 };
 
                 var createdVersion = await _repository.CreateVersion(version);
 
-                return Ok(new { 
+                return Ok(new
+                {
                     HeaderId = headerId,
                     VersionId = createdVersion.Id,
                     VersionNumber = createdVersion.VersionNumber,
@@ -230,7 +234,7 @@ namespace NJSAPI.Controllers
                     GoNoGoDecisionHeaderId = v.GoNoGoDecisionHeaderId,
                     VersionNumber = v.VersionNumber,
                     FormData = v.FormData,
-                    Status = Enum.Parse<GoNoGoVersionStatus>(v.Status),
+                    Status = v.Status,
                     CreatedBy = v.CreatedBy,
                     CreatedAt = v.CreatedAt,
                     ApprovedBy = v.ApprovedBy,
@@ -245,6 +249,8 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+
 
         [HttpGet("{headerId}/versions/{versionNumber}")]
         public async Task<ActionResult<GoNoGoVersionDto>> GetVersion(int headerId, int versionNumber)
@@ -261,7 +267,7 @@ namespace NJSAPI.Controllers
                     GoNoGoDecisionHeaderId = version.GoNoGoDecisionHeaderId,
                     VersionNumber = version.VersionNumber,
                     FormData = version.FormData,
-                    Status = Enum.Parse<GoNoGoVersionStatus>(version.Status),
+                    Status = version.Status,
                     CreatedBy = version.CreatedBy,
                     CreatedAt = version.CreatedAt,
                     ApprovedBy = version.ApprovedBy,
@@ -286,7 +292,10 @@ namespace NJSAPI.Controllers
                 {
                     GoNoGoDecisionHeaderId = headerId,
                     FormData = dto.FormData,
-                    Comments = dto.Comments
+                    Comments = dto.Comments,
+                    ApprovedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy=dto.CreatedBy
                 };
 
                 var createdVersion = await _repository.CreateVersion(version);
@@ -296,7 +305,7 @@ namespace NJSAPI.Controllers
                     GoNoGoDecisionHeaderId = createdVersion.GoNoGoDecisionHeaderId,
                     VersionNumber = createdVersion.VersionNumber,
                     FormData = createdVersion.FormData,
-                    Status = Enum.Parse<GoNoGoVersionStatus>(createdVersion.Status),
+                    Status = createdVersion.Status,
                     CreatedBy = createdVersion.CreatedBy,
                     CreatedAt = createdVersion.CreatedAt,
                     Comments = createdVersion.Comments
@@ -308,18 +317,56 @@ namespace NJSAPI.Controllers
             }
         }
 
+        [HttpPost("{headerId}/versions/update")]
+        public async Task<ActionResult<GoNoGoVersionDto>> UpdateVersion(int headerId, [FromBody] CreateGoNoGoVersionDto dto)
+        {
+            try
+            {
+                var version = new GoNoGoVersion
+                {
+                    GoNoGoDecisionHeaderId = headerId,
+                    FormData = dto.FormData,
+                    Comments = dto.Comments,
+                    ApprovedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = dto.CreatedBy,
+                    VersionNumber= dto.VersionNumber    
+                    
+                    
+                };
+
+                var createdVersion = await _decisionService.UpdateVersion(version);
+                return Ok(new GoNoGoVersionDto
+                {
+                    Id = createdVersion.Id,
+                    GoNoGoDecisionHeaderId = createdVersion.GoNoGoDecisionHeaderId,
+                    VersionNumber = createdVersion.VersionNumber,
+                    FormData = createdVersion.FormData,
+                    Status = createdVersion.Status,
+                    CreatedBy = createdVersion.CreatedBy,
+                    CreatedAt = createdVersion.CreatedAt,
+                    Comments = createdVersion.Comments
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
         [HttpPost("{headerId}/versions/{versionNumber}/approve")]
         public async Task<ActionResult<GoNoGoVersionDto>> ApproveVersion(
-            int headerId, 
-            int versionNumber, 
+            int headerId,
+            int versionNumber,
             [FromBody] ApproveGoNoGoVersionDto dto)
         {
             try
             {
                 var approvedVersion = await _repository.ApproveVersion(
-                    headerId, 
-                    versionNumber, 
-                    dto.ApprovedBy, 
+                    headerId,
+                    versionNumber,
+                    dto.ApprovedBy,
                     dto.Comments
                 );
 
@@ -329,7 +376,7 @@ namespace NJSAPI.Controllers
                     GoNoGoDecisionHeaderId = approvedVersion.GoNoGoDecisionHeaderId,
                     VersionNumber = approvedVersion.VersionNumber,
                     FormData = approvedVersion.FormData,
-                    Status = Enum.Parse<GoNoGoVersionStatus>(approvedVersion.Status),
+                    Status = approvedVersion.Status,
                     CreatedBy = approvedVersion.CreatedBy,
                     CreatedAt = approvedVersion.CreatedAt,
                     ApprovedBy = approvedVersion.ApprovedBy,
@@ -340,7 +387,7 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
-}
-}
 }

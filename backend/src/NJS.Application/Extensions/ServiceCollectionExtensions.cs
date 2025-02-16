@@ -31,6 +31,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
+            services.AddScoped<IGoNoGoDecisionService, GoNoGoDecisionService>();
             services.AddScoped<IUserContext, UserContext>();
             
             return services;

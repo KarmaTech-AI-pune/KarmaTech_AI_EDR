@@ -1,12 +1,15 @@
 ﻿using NJS.Domain.Entities;
 using NJS.Domain.Enums;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace NJS.Repositories.Interfaces
+namespace NJS.Application.Services.IContract
 {
-    public interface IGoNoGoDecisionRepository
+    public interface IGoNoGoDecisionService
     {
-        // Decision methods
         IEnumerable<GoNoGoDecision> GetAll();
         GoNoGoDecision GetById(int id);
         GoNoGoDecision GetByProjectId(int projectId);
@@ -34,5 +37,4 @@ namespace NJS.Repositories.Interfaces
         Task<bool> DeleteTransaction(int id);
         Task<GoNoGoDecisionHeader?> GetHeaderIncludeVersionsByHeaderIdAsync(int id);
     }
-
 }

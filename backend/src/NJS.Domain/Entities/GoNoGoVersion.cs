@@ -18,9 +18,9 @@ namespace NJS.Domain.Entities
         public int VersionNumber { get; set; }
         
         public string? FormData { get; set; } // JSON data of form state
-        
-        public string Status { get; set; } // BDM_PENDING, BDM_APPROVED, RM_PENDING, RM_APPROVED, RD_PENDING, RD_APPROVED
-        
+
+        public GoNoGoVersionStatus Status { get; set; } // BDM_PENDING, BDM_APPROVED, RM_PENDING, RM_APPROVED, RD_PENDING, RD_APPROVED
+
         public string CreatedBy { get; set; }
         
         public DateTime CreatedAt { get; set; }
@@ -30,5 +30,6 @@ namespace NJS.Domain.Entities
         public DateTime? ApprovedAt { get; set; }
         
         public string? Comments { get; set; }
+        public string? ActonBy {  get; set; }
     }
 }

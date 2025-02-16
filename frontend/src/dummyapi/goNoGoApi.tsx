@@ -1,6 +1,6 @@
 import { axiosInstance as axios } from './axiosConfig';
 import { GoNoGoDecision } from '../models/goNoGoDecisionModel';
-import { GoNoGoVersionDto, CreateGoNoGoVersionDto, ApproveGoNoGoVersionDto } from '../models/goNoGoVersionModel.tsx';
+import { GoNoGoVersionDto, CreateGoNoGoVersionDto, ApproveGoNoGoVersionDto, RejectGoNoGoVersionDto } from '../models/goNoGoVersionModel.tsx';
 
 export const goNoGoApi = {
     getAll: async () => {
@@ -53,8 +53,9 @@ export const goNoGoApi = {
         return response.data;
     },
 
-    createVersion: async (headerId: number, data: CreateGoNoGoVersionDto): Promise<GoNoGoVersionDto> => {
-        const response = await axios.post(`/api/gonogodecision/${headerId}/versions`, data);
+    createVersion: async (headerId: number, dto: CreateGoNoGoVersionDto): Promise<GoNoGoVersionDto> => {
+        const response = await axios.post(`/api/gonogodecision/${headerId}/versions/update`, dto);
+        debugger;
         return response.data;
     },
 

@@ -24,6 +24,7 @@ const approvalSteps = [
 ];
 
 const getActiveStep = (status: GoNoGoVersionStatus): number => {
+  debugger;
   switch (status) {
     case GoNoGoVersionStatus.BDM_PENDING:
       return 0;
@@ -46,12 +47,14 @@ const getStepState = (
   currentStatus: GoNoGoVersionStatus
 ): 'completed' | 'active' | 'pending' => {
   const activeStep = getActiveStep(currentStatus);
+  debugger;
   if (stepIndex < activeStep - 1) return 'completed';
   if (stepIndex === activeStep - 1) return 'active';
   return 'pending';
 };
 
 const canUserApprove = (status: GoNoGoVersionStatus, userRole: string): boolean => {
+  debugger;
   const currentStep = approvalSteps.find(step => 
     status === step.pending && userRole === step.role
   );

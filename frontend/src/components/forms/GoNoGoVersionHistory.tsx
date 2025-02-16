@@ -3,9 +3,7 @@ import {
   Paper,
   Typography,
   List,
-  ListItem,
   ListItemText,
-  ListItemSecondaryAction,
   Button,
   Chip,
   Box,
@@ -16,14 +14,14 @@ import { GoNoGoVersionStatus } from '../../models/workflowModel';
 
 interface Props {
   versions: GoNoGoVersionDto[];
-  currentVersion: number;
+  currentVersion: GoNoGoVersionDto | null;
   onVersionSelect: (version: GoNoGoVersionDto) => void;
   onApprove: (version: GoNoGoVersionDto) => void;
   userRole: string;
+  score:number;
 }
 
 const canUserApprove = (status: GoNoGoVersionStatus, userRole: string): boolean => {
-  debugger;
   switch (status) {
     case GoNoGoVersionStatus.BDM_PENDING:
       return userRole === 'Business Development Manager';
@@ -57,7 +55,8 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
   currentVersion,
   onVersionSelect,
   onApprove,
-  userRole
+  userRole,
+  score
 }) => {
   return (
     <Paper sx={{ p: 2, mb: 3 }}>
@@ -68,24 +67,22 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
         {versions.map((version) => (
           <ListItemButton
             key={version.id}
-            selected={version.versionNumber === currentVersion}
+            selected={currentVersion?.versionNumber === version.versionNumber}
             onClick={() => onVersionSelect(version)}
           >
             <ListItemText
               primary={`Version ${version.versionNumber}`}
               secondary={
                 <>
-                  Created by {version.createdBy} on {new Date(version.createdAt).toLocaleDateString()}
-                  {version.approvedBy && (
-                    <><br />Approved by {version.approvedBy} on {new Date(version.approvedAt!).toLocaleDateString()}</>
-                  )}
-                  {version.comments && <><br />Comments: {version.comments}</>}
+                  Created by {version.createdBy} on {new Date(version.createdAt).toLocaleDateString()}                
+                 
+                  <br /> Score: {score}
                 </>
               }
             />
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Chip
-                label={version.status}
+                label={version.versionNumber}
                 color={getStatusColor(version.status)}
                 size="small"
               />
@@ -99,7 +96,7 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
                     onApprove(version);
                   }}
                 >
-                  Approve
+                  Sent to Approve
                 </Button>
               )}
             </Box>
