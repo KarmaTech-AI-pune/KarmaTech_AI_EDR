@@ -26,17 +26,19 @@ const approvalSteps = [
 const getActiveStep = (status: GoNoGoVersionStatus): number => {
   debugger;
   switch (status) {
-    case GoNoGoVersionStatus.BDM_PENDING:
+    case GoNoGoVersionStatus.BDM_PENDING:    
       return 0;
-    case GoNoGoVersionStatus.BDM_APPROVED:
+      case GoNoGoVersionStatus.BDM_APPROVED:    
+      return 1;
     case GoNoGoVersionStatus.RM_PENDING:
       return 1;
     case GoNoGoVersionStatus.RM_APPROVED:
+      return 2;
     case GoNoGoVersionStatus.RD_PENDING:
       return 2;
     case GoNoGoVersionStatus.RD_APPROVED:
     case GoNoGoVersionStatus.COMPLETED:
-      return 3;
+      return 2;
     default:
       return 0;
   }

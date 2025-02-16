@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.SqlServer.Server;
+using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using NJS.Repositories.Interfaces;
+using System.Text.Json;
 
 public class GoNoGoDecisionService : IGoNoGoDecisionService
 {
@@ -128,33 +131,39 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public async Task<GoNoGoVersion> UpdateVersion(GoNoGoVersion version)
     {
-        var header = await GetHeaderIncludeVersionsByHeaderIdAsync(version.GoNoGoDecisionHeaderId);
+        var summary = JsonSerializer.Deserialize<GoNoGoForm>(version.FormData!);
 
-        version.ActonBy = _userContext.GetCurrentUserId();
+       var header = await GetHeaderIncludeVersionsByHeaderIdAsync(version.GoNoGoDecisionHeaderId);
+
+       
+      version.ActonBy = _userContext.GetCurrentUserId();
 
         var user = await _userManager.FindByIdAsync(_userContext.GetCurrentUserId());
         var roles = await _userManager.GetRolesAsync(user);
         if (roles.Any(x => x.Equals("Regional Manager")))
         {
             version.VersionNumber += 1;
+            version.Status = GoNoGoVersionStatus.RM_PENDING;
 
         }
         if (roles.Any(x => x.Equals("Regional Director")))
         {
             version.VersionNumber += 1;
+            version.Status = GoNoGoVersionStatus.RD_PENDING;
         }
 
         if (header == null)
             throw new Exception("GoNoGo decision header not found");
 
-       // version.VersionNumber = (header.Versions?.Count() ?? 0) + 1;
+      
 
-        version.CreatedAt = DateTime.UtcNow;
-        version.Status = version.Status;
+         version.CreatedAt = DateTime.UtcNow;
+       
 
 
         header.CurrentVersion = version.VersionNumber;
         header.VersionStatus = version.Status;
+        header.TotalScore= summary!.Summary.TotalScore;
 
         return await _goNoGoDecision.UpdateVersion(version);
     }

@@ -24,10 +24,12 @@ interface Props {
 const canUserApprove = (status: GoNoGoVersionStatus, userRole: string): boolean => {
   switch (status) {
     case GoNoGoVersionStatus.BDM_PENDING:
+      
       return userRole === 'Business Development Manager';
     case GoNoGoVersionStatus.RM_PENDING:
       return userRole === 'Regional Manager';
-    case GoNoGoVersionStatus.RD_PENDING:
+    case GoNoGoVersionStatus.RD_PENDING:      
+        case GoNoGoVersionStatus.COMPLETED:
       return userRole === 'Regional Director';
     default:
       return false;
@@ -76,7 +78,7 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
                 <>
                   Created by {version.createdBy} on {new Date(version.createdAt).toLocaleDateString()}                
                  
-                  <br /> Score: {score}
+                  <br /> Score: {version.formData.Summary}
                 </>
               }
             />

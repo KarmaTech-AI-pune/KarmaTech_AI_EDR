@@ -162,7 +162,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
           if (response && response.id) {
             setTotalScore(response.totalScore)
             setDecisionId(response.id);
-            setIsEditing(true);
+            //setIsEditing(true);
             await loadVersions(response.id);
             
           }
@@ -207,6 +207,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
   const [currentVersion, setCurrentVersion] = useState<GoNoGoVersionDto | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isVersionSelected, setIsVersionSelected] = useState(false);
   const [totalScore, setTotalScore] = useState<number | null>(null);
   const [decisionId, setDecisionId] = useState<number | null>(null);
   const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
@@ -294,7 +295,9 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
   };
 
   const handleVersionSelect = useCallback((version: GoNoGoVersionDto) => {   
+    setIsEditing(true);
     setCurrentVersion(version);
+    setIsVersionSelected(true);
     const formData = JSON.parse(version.formData)   
     
     setHeaderInfo(prev => ({
@@ -356,15 +359,16 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
 
         // Allow editing if it's the user's turn to approve or if they are the creator
         switch (status) {
-            case GoNoGoVersionStatus.BDM_PENDING:
+            case GoNoGoVersionStatus.BDM_PENDING :
                 return userRole === 'Business Development Manager';
             case GoNoGoVersionStatus.RM_PENDING:
                 return userRole === 'Regional Manager';
             case GoNoGoVersionStatus.RD_PENDING:
                 return userRole === 'Regional Director';
             case GoNoGoVersionStatus.BDM_APPROVED:
+              return userRole === 'Regional Manager';
             case GoNoGoVersionStatus.RM_APPROVED:
-                return userRole === 'Regional Manager';
+                return userRole === 'Regional Director';
             case GoNoGoVersionStatus.RM_APPROVED:
             case GoNoGoVersionStatus.RD_APPROVED:
                 return userRole === 'Regional Director';
@@ -373,30 +377,6 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
         }
     }, [currentVersion, context?.user?.roles]);
 
-    const canEditForm1 = useCallback((): boolean => {
-      if (!currentVersion) return true;
-
-      const status = currentVersion.status as GoNoGoVersionStatus;
-      const userRole = context?.user?.roles?.[0].name;
-
-      // Allow editing if it's the user's turn to approve or if they are the creator
-      switch (status) {
-          case GoNoGoVersionStatus.BDM_PENDING && userRole === 'Business Development Manager':
-              return true;
-          case GoNoGoVersionStatus.RM_PENDING:
-              return userRole === 'Regional Manager';
-          case GoNoGoVersionStatus.RD_PENDING:
-              return userRole === 'Regional Director';
-          case GoNoGoVersionStatus.BDM_APPROVED:
-          case GoNoGoVersionStatus.RM_APPROVED:
-              return userRole === 'Regional Manager';
-          case GoNoGoVersionStatus.RM_APPROVED:
-          case GoNoGoVersionStatus.RD_APPROVED:
-              return userRole === 'Regional Director';
-          default:
-              return false;
-      }
-  }, [currentVersion, context?.user?.roles]);
 
   const handleHeaderChange = (field: keyof HeaderInfo, value: string | TypeOfBid) => {
     setHeaderInfo(prev => {
@@ -522,10 +502,8 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
         }
       };
 
-      if (isEditing && decisionId) { 
-       debugger;  
-
-      
+      if (decisionId) { 
+       debugger;       
         const createGoNoAfterUpdate: CreateGoNoGoVersionDto={
           formData: JSON.stringify(updatedFields),
           comments: '',
@@ -533,7 +511,8 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
           goNoGoDecisionHeaderId: decisionId,
           versionNumber:currentVersion?.versionNumber||0,
           status: currentVersion?.status||0,
-          createdAt: new Date().toISOString()         
+          createdAt: new Date().toISOString()  
+           
         };
         const response = await goNoGoApi.createVersion(decisionId, createGoNoAfterUpdate);
         if (response.goNoGoDecisionHeaderId) {
@@ -790,7 +769,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
             onClick={handleSubmit}
             disabled={!canEditForm()}
           >
-            {currentVersion?.versionNumber ? 'Update Decision' : 'Submit Decision'}
+            {(currentVersion?.versionNumber)? 'Update Decision' : 'Submit Decision'}
           </Button>
         </Box>
       </Paper>

@@ -10,7 +10,7 @@ export interface GoNoGoVersionDto {
     createdAt: string;
     approvedBy?: string;
     approvedAt?: string;
-    comments?: string;   
+    comments?: string;     
 }
 
 export interface CreateGoNoGoVersionDto {
@@ -22,7 +22,7 @@ export interface CreateGoNoGoVersionDto {
     createdAt: string;
     approvedBy?: string;
     approvedAt?: string;
-    comments?: string;
+    comments?: string;   
     
 }
 
