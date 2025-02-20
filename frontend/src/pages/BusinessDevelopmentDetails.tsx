@@ -214,6 +214,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
     }
   };
 
+  const isOpportunityApproved = opportunity?.currentHistory?.statusId === 6;
+
   const formSections = [
     {
       id: 'opportunityTracking',
@@ -227,7 +229,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
       title: 'Go/No-Go Decision',
       icon: <AssessmentIcon />,
       onClick: handleGoNoGoClick,
-      disabled: true // Always disabled
+      disabled: !isOpportunityApproved // Enable only when opportunity is approved
     },
     {
       id: 'bidPrep',
@@ -338,7 +340,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                     variant="contained"
                     fullWidth
                     onClick={handleGoNoGoClick}
-                    disabled={true} // Always disabled
+                    disabled={!isOpportunityApproved} // Enable only when opportunity is approved
                   >
                     View Form
                   </Button>
