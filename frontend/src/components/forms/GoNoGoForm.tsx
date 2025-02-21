@@ -158,13 +158,48 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
       if (context.selectedProject?.id) {
         try {
           const response = await goNoGoApi.getByOpportunityId(context.selectedProject.id);
-          debugger;
           if (response && response.id) {
-            setTotalScore(response.totalScore)
+            setTotalScore(response.totalScore);
             setDecisionId(response.id);
-            //setIsEditing(true);
-            await loadVersions(response.id);
-            
+
+            // Fetch all versions
+            const fetchedVersions = await goNoGoApi.getVersions(response.id);
+            setVersions(fetchedVersions);
+
+            // Find the latest version approved by RD
+            if (fetchedVersions.length > 0) {
+              // Sort versions by version number in descending order
+              const sortedVersions = [...fetchedVersions].sort((a, b) => b.versionNumber - a.versionNumber);
+              
+              // Find the latest version that is approved by RD
+              const latestRDVersion = sortedVersions.find(version => 
+                version.status === GoNoGoVersionStatus.RD_APPROVED
+              );
+
+              if (latestRDVersion) {
+
+                setCurrentVersion(latestRDVersion);
+                setIsVersionSelected(true);
+                
+                // Parse and set the latest RD version's data
+                const formData = JSON.parse(latestRDVersion.formData);
+                setHeaderInfo(prev => ({
+                  ...prev,
+                  typeOfBid: formData.HeaderInfo.TypeOfBid,
+                  sector: formData.HeaderInfo.Sector || '',
+                  tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
+                  emd: formData.HeaderInfo.EmdAmount?.toString() || '',
+                  office: formData.HeaderInfo.Office
+                }));
+
+                // Update scoring criteria with latest RD version's data
+                const mappedCriteria = mapScoringCriteria(formData.ScoringCriteria);
+                setCriteria(prev => ({
+                  ...prev,
+                  ...mappedCriteria
+                }));
+              }
+            }
           }
         } catch (error) {
           console.error('Error loading Go/No Go decision:', error);
