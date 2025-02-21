@@ -14,7 +14,7 @@ import { GoNoGoVersionStatus } from '../../models/workflowModel';
 
 interface Props {
   versions: GoNoGoVersionDto[];
-  currentVersion: GoNoGoVersionDto | null;
+  currentVersion: number;
   onVersionSelect: (version: GoNoGoVersionDto) => void;
   onApprove: (version: GoNoGoVersionDto) => void;
   userRole: string;
@@ -69,16 +69,16 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
         {versions.map((version) => (
           <ListItemButton
             key={version.id}
-            selected={currentVersion?.versionNumber === version.versionNumber}
+            selected={currentVersion === version.versionNumber}
             onClick={() => onVersionSelect(version)}
           >
             <ListItemText
               primary={`Version ${version.versionNumber}`}
               secondary={
                 <>
-                  Created by {version.createdBy} on {new Date(version.createdAt).toLocaleDateString()}                
+                  Created by {version.createdBy} on {new Date(version.createdAt).toLocaleString('en-IN')}                
                  
-                  <br /> Score: {version.formData.Summary}
+                  <br /> Score: {JSON.parse(version.formData).Summary.TotalScore}
                 </>
               }
             />

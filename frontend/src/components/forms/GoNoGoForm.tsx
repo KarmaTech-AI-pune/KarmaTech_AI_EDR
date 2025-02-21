@@ -495,7 +495,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
         MetaData: {
           OpprotunityId: context.selectedProject.id,
           Id: decisionId || 0,
-          CompletedDate: new Date().toISOString(),
+          CompletedDate: new Date().toLocaleString('en-IN'),
           CompletedBy: context?.user?.name?.substring(0, 100) || '',         
           CreatedBy: context?.user?.name?.substring(0, 100) || '',
          
@@ -511,7 +511,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
           goNoGoDecisionHeaderId: decisionId,
           versionNumber:currentVersion?.versionNumber||0,
           status: currentVersion?.status||0,
-          createdAt: new Date().toISOString()  
+          createdAt: new Date().toLocaleString('en-IN')  
            
         };
         const response = await goNoGoApi.createVersion(decisionId, createGoNoAfterUpdate);
@@ -591,6 +591,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
           onApprove={() => handleApproveVersion(currentVersion)}
           userRole={String(context?.user?.roles?.[0].name || '')}
           isEditable={canEditForm()}
+          score={calculateTotalScore()}
         />
       )}
 

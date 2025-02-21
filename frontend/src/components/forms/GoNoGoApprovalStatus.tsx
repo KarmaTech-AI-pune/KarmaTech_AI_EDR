@@ -15,6 +15,7 @@ interface Props {
   onApprove?: () => void;
   userRole: string;
   isEditable: boolean;
+  score?: number;
 }
 
 const approvalSteps = [
@@ -67,14 +68,22 @@ const GoNoGoApprovalStatus: React.FC<Props> = ({
   status,
   onApprove,
   userRole,
-  isEditable
+  isEditable,
+  score
 }) => {
   const activeStep = getActiveStep(status);
 
   return (
     <Paper sx={{ p: 2, mb: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">Approval Status</Typography>
+        <Box>
+          <Typography variant="h6">Approval Status</Typography>
+          {score !== undefined && (
+            <Typography variant="body1" sx={{ mt: 1 }}>
+              Score: {score}
+            </Typography>
+          )}
+        </Box>
         {canUserApprove(status, userRole) && onApprove && (
           <Button
             variant="contained"
