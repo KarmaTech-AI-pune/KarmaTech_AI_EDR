@@ -16,7 +16,7 @@ import { opportunityApi } from '../../services/opportunityApi';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 
 import { getUsersByRole } from '../../services/userApi';
-import { AuthUser} from '../../models'
+import { AuthUser } from '../../models/userModel';
 
 interface DecideReviewProps {
   open: boolean;
@@ -104,28 +104,28 @@ const DecideReview: React.FC<DecideReviewProps> = ({
     try {
       const newStatus = decision === 'approve' ? 'Pending Approval' : 'Review Rejected';
       const workflowId = decision === 'approve' ? "4" : "3"; // "4" for "Sent for Approval", "3" for "Review Changes"
-      //c (data: {
-       // opportunityId: number;
-        //approvalManagerId: string;
-        //comments?: string;
+
+      // Notify parent immediately for optimistic update
+      if (onDecisionMade) {
+        onDecisionMade();
+      }
+
       // Update both workflow and opportunity in one atomic operation
       if(decision === 'approve'){
-      await opportunityApi.sendToApproval({
-              opportunityId: opportunityId,
-              approvalManagerId: selectedManager,
-              action:decision,
-              comments: comments
-            });
-          }
-          else{
-            await opportunityApi.RejectByRegionManagerSentToBidManager({
-              opportunityId: opportunityId,
-              approvalManagerId: selectedManager,
-              action:decision,
-              comments: `Rejected by ${currentUser}`
-            });
-          }
-          
+        await opportunityApi.sendToApproval({
+          opportunityId: opportunityId,
+          approvalManagerId: selectedManager,
+          action: decision,
+          comments: comments
+        });
+      } else {
+        await opportunityApi.RejectByRegionManagerSentToBidManager({
+          opportunityId: opportunityId,
+          approvalManagerId: selectedManager,
+          action: decision,
+          comments: comments || `Rejected by ${currentUser}`
+        });
+      }
 
       // Log the review decision
       if (decision === 'approve') {
@@ -159,11 +159,6 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       setSelectedManager('');
       setError(null);
       onClose();
-      
-      // Notify parent component to refresh the opportunities list
-      if (onDecisionMade) {
-        onDecisionMade();
-      }
     } catch (err: any) {
       setError(err.message || 'Failed to submit review decision');
     }

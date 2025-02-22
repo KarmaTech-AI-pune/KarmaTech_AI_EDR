@@ -89,6 +89,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const [formsOpen, setFormsOpen] = useState(false);
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const [histories, setHistories] = useState<OpportunityHistory[]>([]);
+  const [refreshed, setRefreshed] = useState(false);
   const context = useContext(projectManagementAppContext);
   const opportunity = context?.selectedProject as OpportunityTracking;
 
@@ -99,6 +100,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
         if (opportunity) {
           const historyData = await getOpportunityHistoriesByOpportunityId(opportunity.id.toString());
           setHistories(historyData);
+          // Reset the refresh trigger after data is fetched
+          setRefreshed(false);
         }
       } catch (err) {
         console.error('Error fetching histories:', err);
@@ -109,7 +112,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
     };
 
     fetchData();
-  }, [opportunity]);
+  }, [opportunity, refreshed]); // Add refreshed to dependencies
 
   const handleOpportunityUpdate = async () => {
     if (opportunity && context?.setSelectedProject) {
@@ -117,6 +120,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
         const updatedOpportunity = await opportunityApi.getById(opportunity.id);
         if (updatedOpportunity) {
           context.setSelectedProject(updatedOpportunity);
+          // Trigger refresh after opportunity is updated
+          setRefreshed(true);
         }
       } catch (error) {
         console.error('Error refreshing opportunity:', error);
@@ -201,31 +206,37 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const handleFormSubmit = async (data: OpportunityTracking) => {
     try {
       await opportunityApi.create(data);
+      // Trigger refresh after form submission
+      setRefreshed(true);
       handleOpportunityUpdate();
     } catch (error) {
       console.error('Error updating opportunity:', error);
     }
   };
 
+  const isOpportunityApproved = opportunity?.currentHistory?.statusId === 6;
+
   const formSections = [
     {
       id: 'opportunityTracking',
       title: 'Opportunity Tracking',
       icon: <DescriptionIcon />,
-      onClick: () => handleFormClick('opportunityTracking')
+      onClick: () => handleFormClick('opportunityTracking'),
+      disabled: !opportunity
     },
     {
       id: 'goNoGo',
       title: 'Go/No-Go Decision',
       icon: <AssessmentIcon />,
       onClick: handleGoNoGoClick,
-      //disabled: localStorage.getItem('workflowStatus') !== "Approved"
+      disabled: !isOpportunityApproved // Enable only when opportunity is approved
     },
     {
       id: 'bidPrep',
       title: 'Bid Preparation',
       icon: <AssignmentIcon />,
-      onClick: handleBidPrepClick
+      onClick: handleBidPrepClick,
+      disabled: true // Always disabled
     }
   ];
 
@@ -308,6 +319,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                     variant="contained"
                     fullWidth
                     onClick={() => handleFormClick('opportunityTracking')}
+                    disabled={!opportunity} // Only enabled when there's an opportunity
                   >
                     View Form
                   </Button>
@@ -328,7 +340,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                     variant="contained"
                     fullWidth
                     onClick={handleGoNoGoClick}
-                    disabled={localStorage.getItem('workflowStatus') !== "Approved"}
+                    disabled={!isOpportunityApproved} // Enable only when opportunity is approved
                   >
                     View Form
                   </Button>
@@ -349,6 +361,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                     variant="contained"
                     fullWidth
                     onClick={handleBidPrepClick}
+                    disabled={true} // Always disabled
                   >
                     View Form
                   </Button>
@@ -527,7 +540,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                           },
                         }}
                         onClick={() => handleFormClick(item.id)}
-                        //disabled={item.disabled}
+                        disabled={item.disabled}
                       >
                         <ListItemIcon>
                           {item.icon}

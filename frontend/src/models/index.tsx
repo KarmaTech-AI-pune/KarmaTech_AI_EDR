@@ -35,7 +35,16 @@ export interface Project {
     updatedAt: string;
 }
 
+export interface OpportunityHistory {
+  statusId: number;
+  status: string;
+}
+
 export interface OpportunityTracking {
+  currentHistory?: {
+    statusId: number;
+    status: string;
+  };
     id?: number;
     stage?: string;
     strategicRanking?: string;
