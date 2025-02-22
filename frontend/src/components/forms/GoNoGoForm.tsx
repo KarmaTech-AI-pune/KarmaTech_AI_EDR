@@ -164,41 +164,41 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
 
             // Fetch all versions
             const fetchedVersions = await goNoGoApi.getVersions(response.id);
-            setVersions(fetchedVersions);
 
-            // Find the latest version approved by RD
-            if (fetchedVersions.length > 0) {
-              // Sort versions by version number in descending order
-              const sortedVersions = [...fetchedVersions].sort((a, b) => b.versionNumber - a.versionNumber);
+            // Sort versions by version number in ascending order
+            const sortedVersions = [...fetchedVersions].sort((a, b) => a.versionNumber - b.versionNumber);
+
+            // Get versions in order (BDM = 1, RM = 2, RD = 3)
+            const bdmVersion = sortedVersions.find(v => v.versionNumber === 1);
+            const rmVersion = sortedVersions.find(v => v.versionNumber === 2);
+            const rdVersion = sortedVersions.find(v => v.versionNumber === 3);
+
+            // Set the versions in the correct order (RD -> RM -> BDM)
+            const orderedVersions = [rdVersion, rmVersion, bdmVersion].filter((v): v is GoNoGoVersionDto => v !== undefined);
+            setVersions(orderedVersions);
+
+            // Set the current version to the RD version if it exists
+            if (rdVersion) {
+              setCurrentVersion(rdVersion);
+              setIsVersionSelected(true);
               
-              // Find the latest version that is approved by RD
-              const latestRDVersion = sortedVersions.find(version => 
-                version.status === GoNoGoVersionStatus.RD_APPROVED
-              );
+              // Parse and set the RD version's data
+              const formData = JSON.parse(rdVersion.formData);
+              setHeaderInfo(prev => ({
+                ...prev,
+                typeOfBid: formData.HeaderInfo.TypeOfBid,
+                sector: formData.HeaderInfo.Sector || '',
+                tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
+                emd: formData.HeaderInfo.EmdAmount?.toString() || '',
+                office: formData.HeaderInfo.Office
+              }));
 
-              if (latestRDVersion) {
-
-                setCurrentVersion(latestRDVersion);
-                setIsVersionSelected(true);
-                
-                // Parse and set the latest RD version's data
-                const formData = JSON.parse(latestRDVersion.formData);
-                setHeaderInfo(prev => ({
-                  ...prev,
-                  typeOfBid: formData.HeaderInfo.TypeOfBid,
-                  sector: formData.HeaderInfo.Sector || '',
-                  tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
-                  emd: formData.HeaderInfo.EmdAmount?.toString() || '',
-                  office: formData.HeaderInfo.Office
-                }));
-
-                // Update scoring criteria with latest RD version's data
-                const mappedCriteria = mapScoringCriteria(formData.ScoringCriteria);
-                setCriteria(prev => ({
-                  ...prev,
-                  ...mappedCriteria
-                }));
-              }
+              // Update scoring criteria with RD version's data
+              const mappedCriteria = mapScoringCriteria(formData.ScoringCriteria);
+              setCriteria(prev => ({
+                ...prev,
+                ...mappedCriteria
+              }));
             }
           }
         } catch (error) {
@@ -373,10 +373,26 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
     try {
       setIsLoading(true);
       const fetchedVersions = await goNoGoApi.getVersions(headerId);
-      setVersions(fetchedVersions);
-      if (fetchedVersions.length > 0) {
-        const latestVersion = fetchedVersions[fetchedVersions.length - 1];
-        setCurrentVersion(latestVersion);
+
+      // Sort versions by version number in ascending order
+      const sortedVersions = [...fetchedVersions].sort((a, b) => a.versionNumber - b.versionNumber);
+
+      // Get versions in order (BDM = 1, RM = 2, RD = 3)
+      const bdmVersion = sortedVersions.find(v => v.versionNumber === 1);
+      const rmVersion = sortedVersions.find(v => v.versionNumber === 2);
+      const rdVersion = sortedVersions.find(v => v.versionNumber === 3);
+
+      // Set the versions in the correct order (RD -> RM -> BDM)
+      const orderedVersions = [rdVersion, rmVersion, bdmVersion].filter((v): v is GoNoGoVersionDto => v !== undefined);
+      setVersions(orderedVersions);
+
+      // Set the current version to the RD version if it exists
+      if (rdVersion) {
+        setCurrentVersion(rdVersion);
+        setIsVersionSelected(true);
+      } else if (orderedVersions.length > 0) {
+        setCurrentVersion(orderedVersions[0]);
+        setIsVersionSelected(true);
       }
     } catch (error) {
       console.error('Error loading versions:', error);
@@ -538,23 +554,43 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
       };
 
       if (decisionId) { 
-       debugger;       
-        const createGoNoAfterUpdate: CreateGoNoGoVersionDto={
+        // Check if we already have 3 versions
+        if (versions.length >= 3) {
+          console.error('Maximum number of versions (3) reached');
+          return;
+        }
+
+        // Get the next status based on current user's role
+        const userRole = context?.user?.roles?.[0].name;
+        let nextStatus = GoNoGoVersionStatus.BDM_PENDING;
+        
+        if (userRole === 'Business Development Manager') {
+          nextStatus = GoNoGoVersionStatus.RM_PENDING;
+        } else if (userRole === 'Regional Manager') {
+          nextStatus = GoNoGoVersionStatus.RD_PENDING;
+        } else if (userRole === 'Regional Director') {
+          nextStatus = GoNoGoVersionStatus.RD_APPROVED;
+        }
+
+        // Get the next version number
+        const nextVersionNumber = (currentVersion?.versionNumber || 0) + 1;
+
+        const createGoNoAfterUpdate: CreateGoNoGoVersionDto = {
           formData: JSON.stringify(updatedFields),
           comments: '',
           createdBy: context?.user?.name?.substring(0, 100) || '',
           goNoGoDecisionHeaderId: decisionId,
-          versionNumber:currentVersion?.versionNumber||0,
-          status: currentVersion?.status||0,
+          versionNumber: nextVersionNumber,
+          status: nextStatus,
           createdAt: new Date().toLocaleString('en-IN')  
-           
         };
+        
         const response = await goNoGoApi.createVersion(decisionId, createGoNoAfterUpdate);
         if (response.goNoGoDecisionHeaderId) {
           await loadVersions(response.goNoGoDecisionHeaderId);
         }
       } else {
-        
+        // For new decisions, start with version 1 and BDM_PENDING status
         const response = await goNoGoApi.create(context.selectedProject.id.toString(), updatedFields);
         if (response.headerId) {
           await loadVersions(response.headerId);
