@@ -25,25 +25,19 @@ const approvalSteps = [
 ];
 
 const getActiveStep = (status: GoNoGoVersionStatus): number => {
-  debugger;
   switch (status) {
-    case GoNoGoVersionStatus.BDM_PENDING:    
-      return 0;
-      case GoNoGoVersionStatus.BDM_APPROVED:    
-      return 1;
-    case GoNoGoVersionStatus.RM_PENDING:
-      return 1;
+    case GoNoGoVersionStatus.BDM_APPROVED:    
+      return 1; // After BDM approval, move to RM step.
     case GoNoGoVersionStatus.RM_APPROVED:
-      return 2;
-    case GoNoGoVersionStatus.RD_PENDING:
-      return 2;
+      return 2; // After RM approval, move to RD step.
     case GoNoGoVersionStatus.RD_APPROVED:
     case GoNoGoVersionStatus.COMPLETED:
-      return 2;
+      return 3; // After RD approval or completion, all steps are completed.
     default:
-      return 0;
+      return 0; // Default to the first step.
   }
 };
+
 
 const getStepState = (
   stepIndex: number,
@@ -51,8 +45,8 @@ const getStepState = (
 ): 'completed' | 'active' | 'pending' => {
   const activeStep = getActiveStep(currentStatus);
   debugger;
-  if (stepIndex < activeStep - 1) return 'completed';
-  if (stepIndex === activeStep - 1) return 'active';
+  if (stepIndex < activeStep ) return 'completed';
+  if (stepIndex === activeStep ) return 'active';
   return 'pending';
 };
 

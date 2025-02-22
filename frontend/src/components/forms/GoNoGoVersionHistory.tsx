@@ -57,8 +57,7 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
   currentVersion,
   onVersionSelect,
   onApprove,
-  userRole,
-  score
+  userRole  
 }) => {
   return (
     <Paper sx={{ p: 2, mb: 3 }}>

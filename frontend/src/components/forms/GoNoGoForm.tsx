@@ -177,6 +177,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
             const orderedVersions = [rdVersion, rmVersion, bdmVersion].filter((v): v is GoNoGoVersionDto => v !== undefined);
             setVersions(orderedVersions);
 
+          
             // Set the current version to the RD version if it exists
             if (rdVersion) {
               setCurrentVersion(rdVersion);
@@ -334,7 +335,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
     setCurrentVersion(version);
     setIsVersionSelected(true);
     const formData = JSON.parse(version.formData)   
-    
+  
     setHeaderInfo(prev => ({
       ...prev,
       typeOfBid: formData.HeaderInfo.TypeOfBid,
@@ -446,6 +447,8 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
   };
 
   const calculateTotalScore = () => {
+
+    console.log(criteria);
     return Object.values(criteria).reduce((sum, item) => sum + item.score, 0);
   };
 
@@ -546,14 +549,14 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
         MetaData: {
           OpprotunityId: context.selectedProject.id,
           Id: decisionId || 0,
-          CompletedDate: new Date().toLocaleString('en-IN'),
+          CompletedDate: new Date().toLocaleString(),
           CompletedBy: context?.user?.name?.substring(0, 100) || '',         
           CreatedBy: context?.user?.name?.substring(0, 100) || '',
          
         }
       };
 
-      if (decisionId) { 
+      if (decisionId && currentVersion!==null) { 
         // Check if we already have 3 versions
         if (versions.length >= 3) {
           console.error('Maximum number of versions (3) reached');
@@ -572,24 +575,23 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
           nextStatus = GoNoGoVersionStatus.RD_APPROVED;
         }
 
-        // Get the next version number
-        const nextVersionNumber = (currentVersion?.versionNumber || 0) + 1;
-
+        
         const createGoNoAfterUpdate: CreateGoNoGoVersionDto = {
           formData: JSON.stringify(updatedFields),
           comments: '',
           createdBy: context?.user?.name?.substring(0, 100) || '',
           goNoGoDecisionHeaderId: decisionId,
-          versionNumber: nextVersionNumber,
+          versionNumber: currentVersion?.versionNumber,
           status: nextStatus,
-          createdAt: new Date().toLocaleString('en-IN')  
+          createdAt: new Date().toISOString()
         };
         
         const response = await goNoGoApi.createVersion(decisionId, createGoNoAfterUpdate);
-        if (response.goNoGoDecisionHeaderId) {
+        if (response.goNoGoDecisionHeaderId ) {
           await loadVersions(response.goNoGoDecisionHeaderId);
         }
-      } else {
+      }
+       else {
         // For new decisions, start with version 1 and BDM_PENDING status
         const response = await goNoGoApi.create(context.selectedProject.id.toString(), updatedFields);
         if (response.headerId) {
