@@ -71,7 +71,9 @@ const GoNoGoApprovalStatus: React.FC<Props> = ({
     <Paper sx={{ p: 2, mb: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Box>
-          <Typography variant="h6">Approval Status</Typography>
+          <Typography variant="h6">
+            {status === GoNoGoVersionStatus.RD_APPROVED ? 'Approval Complete' : 'Approval Status'}
+          </Typography>
           {score !== undefined && (
             <Typography variant="body1" sx={{ mt: 1 }}>
               Score: {score}
