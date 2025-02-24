@@ -33,6 +33,7 @@ namespace NJS.Repositories.Interfaces
         Task<bool> DeleteHeader(int id);
         Task<bool> DeleteTransaction(int id);
         Task<GoNoGoDecisionHeader?> GetHeaderIncludeVersionsByHeaderIdAsync(int id);
+        GoNoGoVersion GetVersionsByUser(string currentUser);
     }
 
 }

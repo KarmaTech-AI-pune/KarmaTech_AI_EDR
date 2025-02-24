@@ -55,7 +55,7 @@ const canUserApprove = (status: GoNoGoVersionStatus, userRole: string): boolean 
   const currentStep = approvalSteps.find(step => 
     status === step.pending && userRole === step.role
   );
-  return !!currentStep;
+  return !!currentStep && userRole === 'Regional Director';;
 };
 
 const GoNoGoApprovalStatus: React.FC<Props> = ({

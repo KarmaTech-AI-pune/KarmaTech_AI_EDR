@@ -11,7 +11,7 @@ export interface RolePermissionDto {
 export interface PermissionDto {
   id: number;
   name: string;
-  description: string | null;
+  description: string;
   category: string;
   roles: RolePermissionDto[];
 }

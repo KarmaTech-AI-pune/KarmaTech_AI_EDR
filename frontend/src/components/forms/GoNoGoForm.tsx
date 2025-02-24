@@ -557,12 +557,8 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = () => {
       };
 
       if (decisionId && currentVersion!==null) { 
-        // Check if we already have 3 versions
-        if (versions.length >= 3) {
-          console.error('Maximum number of versions (3) reached');
-          return;
-        }
-
+        
+       
         // Get the next status based on current user's role
         const userRole = context?.user?.roles?.[0].name;
         let nextStatus = GoNoGoVersionStatus.BDM_PENDING;
