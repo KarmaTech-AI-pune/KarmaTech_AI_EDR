@@ -236,6 +236,11 @@ namespace NJS.Repositories.Repositories
                 .FirstOrDefaultAsync(h => h.Id == id);
             return header;
         }
+
+        public GoNoGoVersion GetVersionsByUser(string currentUser)
+        {
+            return _context.GoNoGoVersions.Where(x => x.ActonBy == currentUser).OrderByDescending(x => x.CreatedAt).FirstOrDefault();
+        }
     }
 
 
