@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Dialog,
   DialogTitle,
@@ -14,9 +14,7 @@ import {
 } from '@mui/material';
 import { opportunityApi } from '../../services/opportunityApi';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
-
-import { getUsersByRole } from '../../services/userApi';
-import { AuthUser } from '../../models/userModel';
+import { getUserById } from '../../services/userApi';
 
 interface DecideReviewProps {
   open: boolean;
@@ -35,33 +33,14 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 }) => {
   const [decision, setDecision] = useState('');
   const [comments, setComments] = useState('');
-  const [selectedManager, setSelectedManager] = useState<string>('');
-  const [regionalDirectors, setRegionalDirectors] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Get all Regional Director users
-    getRoles()   
-  }, []);
-
-  const getRoles = async()=>{
-          const roles= await getUsersByRole('Regional Director');
-          setRegionalDirectors(roles);
-  }
 
   const handleDecisionChange = (event: any) => {
     event.stopPropagation();
     setDecision(event.target.value);
     setError(null);
-    // Reset fields when decision changes
+    // Reset comments when decision changes
     setComments('');
-    setSelectedManager('');
-  };
-
-  const handleManagerChange = (event: any) => {
-    event.stopPropagation();
-    setSelectedManager(event.target.value);
-    setError(null);
   };
 
   const handleCommentsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +53,6 @@ const DecideReview: React.FC<DecideReviewProps> = ({
     event.stopPropagation();
     setDecision('');
     setComments('');
-    setSelectedManager('');
     setError(null);
     onClose();
   };
@@ -83,11 +61,6 @@ const DecideReview: React.FC<DecideReviewProps> = ({
     event.stopPropagation();
     if (!decision) {
       setError('Please select a decision');
-      return;
-    }
-
-    if (decision === 'approve' && !selectedManager) {
-      setError('Please select a Regional Director');
       return;
     }
 
@@ -112,31 +85,38 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 
       // Update both workflow and opportunity in one atomic operation
       if(decision === 'approve'){
+        // Get opportunity to get the RD
+        const opportunity = await opportunityApi.getById(opportunityId);
+        const regionalDirectorId = opportunity.approvalManagerId;
+
+        if (!regionalDirectorId) {
+          setError('No Regional Director assigned to this opportunity');
+          return;
+        }
+
         await opportunityApi.sendToApproval({
           opportunityId: opportunityId,
-          approvalManagerId: selectedManager,
+          approvalManagerId: regionalDirectorId,
           action: decision,
           comments: comments
         });
-      } else {
-        await opportunityApi.RejectByRegionManagerSentToBidManager({
-          opportunityId: opportunityId,
-          approvalManagerId: selectedManager,
-          action: decision,
-          comments: comments || `Rejected by ${currentUser}`
-        });
-      }
 
-      // Log the review decision
-      if (decision === 'approve') {
-        const selectedDirectorDetails = regionalDirectors.find(m => m.id === selectedManager);
+        // Get RD name for logging
+        const rdUser = await getUserById(regionalDirectorId);
         await HistoryLoggingService.logReviewDecision(
           opportunityId,
           'approved',
           currentUser,
-          `Sent for approval to ${selectedDirectorDetails?.name}`
+          `Sent for approval to ${rdUser?.name || 'Regional Director'}`
         );
       } else {
+        await opportunityApi.RejectByRegionManagerSentToBidManager({
+          opportunityId: opportunityId,
+          approvalManagerId: '', // Not needed for rejection
+          action: decision,
+          comments: comments || `Rejected by ${currentUser}`
+        });
+
         await HistoryLoggingService.logReviewDecision(
           opportunityId,
           'rejected',
@@ -156,7 +136,6 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       // Reset form and close dialog
       setDecision('');
       setComments('');
-      setSelectedManager('');
       setError(null);
       onClose();
     } catch (err: any) {
@@ -209,34 +188,6 @@ const DecideReview: React.FC<DecideReviewProps> = ({
           </Select>
           {error && <FormHelperText>{error}</FormHelperText>}
         </FormControl>
-
-        {decision === 'approve' && (
-          <FormControl 
-            fullWidth 
-            margin="normal"
-            error={!!error && !selectedManager}
-            onClick={handleDialogClick}
-          >
-            <InputLabel>Regional Director</InputLabel>
-            <Select
-              value={selectedManager}
-              onChange={handleManagerChange}
-              label="Regional Director"
-              onClick={handleDialogClick}
-            >
-              {regionalDirectors.map((director) => (
-                <MenuItem 
-                  key={director.id} 
-                  value={director.id}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {director.name}
-                </MenuItem>
-              ))}
-            </Select>
-            {error && !selectedManager && <FormHelperText>{error}</FormHelperText>}
-          </FormControl>
-        )}
 
         {decision === 'reject' && (
           <TextField
