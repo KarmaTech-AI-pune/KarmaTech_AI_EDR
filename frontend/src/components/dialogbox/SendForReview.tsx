@@ -145,12 +145,12 @@ const SendForReview: React.FC<SendForReviewProps> = ({
       setSelectedReviewer('');
       setError(null);
       
-      // Call callbacks in correct order
+      // Call callbacks in correct order with await to ensure proper sequence
       if (onSubmit) {
-        onSubmit(); // This will trigger the status update in parent
+        await onSubmit(); // Wait for status update in parent
       }
       if (onReviewSent) {
-        onReviewSent(); // Additional refresh if needed
+        await onReviewSent(); // Wait for refresh to complete
       }
       onClose();
     } catch (err: unknown) {

@@ -46,14 +46,14 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
     setWorkflowDialogOpen(true);
   };
 
-  const handleWorkflowClose = (success: boolean = false) => {
+  const handleWorkflowClose = async (success: boolean = false) => {
     setWorkflowDialogOpen(false);
     if (success) {
       // Update status immediately for instant feedback
       const nextStatusId = (opportunity.currentHistory?.statusId || 0) + 1;
       setLocalStatusId(nextStatusId);
       if (onOpportunityUpdated) {
-        onOpportunityUpdated();
+        await onOpportunityUpdated();
       }
     }
   };
@@ -83,7 +83,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
   const canShowWorkflowButton = () => {
     if (!context) return false;
     
-    const workflowStatus = getWorkflowStatusById(opportunity.currentHistory?.statusId || 0);
+    const workflowStatus = getWorkflowStatusById(localStatusId);
     const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
     if (!status || status === "Approved") {
       return false;
@@ -107,7 +107,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
   const getWorkflowDialog = () => {
     if (!context?.currentUser?.name) return null;
 
-    const workflowStatus = getWorkflowStatusById(opportunity.currentHistory?.statusId || 0);
+    const workflowStatus = getWorkflowStatusById(localStatusId);
     const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
     switch (status) {
       case "Initial":
@@ -118,7 +118,8 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
             onClose={() => handleWorkflowClose(false)}
             currentUser={context.currentUser.name}
             opportunityId={opportunity.id}
-            onSubmit={() => handleWorkflowClose(true)}
+            onSubmit={async () => await handleWorkflowClose(true)}
+            onReviewSent={onOpportunityUpdated}
           />
         );
       case "Approval Changes":
@@ -130,7 +131,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
             onClose={() => handleWorkflowClose(false)}
             opportunityId={opportunity.id}
             currentUser={context?.currentUser.name}
-            onSubmit={() => handleWorkflowClose(true)}
+            onSubmit={async () => await handleWorkflowClose(true)}
             />
           );
         } else if (context?.canSubmitForApproval) {
@@ -140,7 +141,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
             onClose={() => handleWorkflowClose(false)}
             opportunityId={opportunity.id}
             currentUser={context?.currentUser.name}
-            onSubmit={() => handleWorkflowClose(true)}
+            onSubmit={async () => await handleWorkflowClose(true)}
             />
           );
         }
@@ -152,14 +153,11 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
             onClose={() => handleWorkflowClose(false)}
             opportunityId={opportunity.id}
             currentUser={context.currentUser.name}
-            onDecisionMade={() => {
+            onDecisionMade={async () => {
               // Update status immediately when decision is made
               const nextStatusId = (opportunity.currentHistory?.statusId || 0) + 1;
               setLocalStatusId(nextStatusId);
-              if (onOpportunityUpdated) {
-                onOpportunityUpdated();
-              }
-              handleWorkflowClose(true);
+              await handleWorkflowClose(true);
             }}
           />
         );
