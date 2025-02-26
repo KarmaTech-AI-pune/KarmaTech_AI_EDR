@@ -140,7 +140,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: Number(value),
+      [name]: value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0',
     }));
   };
 

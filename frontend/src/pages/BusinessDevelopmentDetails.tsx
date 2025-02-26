@@ -90,6 +90,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const [histories, setHistories] = useState<OpportunityHistory[]>([]);
   const [refreshed, setRefreshed] = useState(false);
+  const [goNoGoDecisionStatus, setGoNoGoDecisionStatus] = useState<string | null>(null);
+  const [goNoGoVersionNumber, setGoNoGoVersionNumber] = useState<number | null>(null);
   const context = useContext(projectManagementAppContext);
   const opportunity = context?.selectedProject as OpportunityTracking;
 
@@ -98,7 +100,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
       try {
         setIsLoading(true);
         if (opportunity) {
-          const historyData = await getOpportunityHistoriesByOpportunityId(opportunity.id.toString());
+          const historyData = await getOpportunityHistoriesByOpportunityId(opportunity.id?.toString() || '0');
           setHistories(historyData);
           // Reset the refresh trigger after data is fetched
           setRefreshed(false);
@@ -117,9 +119,10 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const handleOpportunityUpdate = async () => {
     if (opportunity && context?.setSelectedProject) {
       try {
-        const updatedOpportunity = await opportunityApi.getById(opportunity.id);
+        const updatedOpportunity = await opportunityApi.getById(opportunity.id || 0);
         if (updatedOpportunity) {
-          context.setSelectedProject(updatedOpportunity);
+          // Use type assertion to match expected type
+          context.setSelectedProject(updatedOpportunity as any);
           // Trigger refresh after opportunity is updated
           setRefreshed(true);
         }
@@ -205,7 +208,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
 
   const handleFormSubmit = async (data: OpportunityTracking) => {
     try {
-      await opportunityApi.create(data);
+      // Use type assertion to match expected type
+      await opportunityApi.create(data as any);
       // Trigger refresh after form submission
       setRefreshed(true);
       handleOpportunityUpdate();
@@ -236,7 +240,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
       title: 'Bid Preparation',
       icon: <AssignmentIcon />,
       onClick: handleBidPrepClick,
-      disabled: true // Always disabled
+      disabled: !(goNoGoDecisionStatus === "GO" && goNoGoVersionNumber === 3) // Enable only when version 3 has GO status
     }
   ];
 
@@ -287,8 +291,12 @@ export const BusinessDevelopmentDetails: React.FC = () => {
             );
           case 'goNoGo':
             return (
-              
-                  <GoNoGoForm />
+              <GoNoGoForm 
+                onDecisionStatusChange={(status, versionNumber) => {
+                  setGoNoGoDecisionStatus(status);
+                  setGoNoGoVersionNumber(versionNumber);
+                }}
+              />
             );
           case 'bidPrep':
             return (
@@ -361,7 +369,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                     variant="contained"
                     fullWidth
                     onClick={handleBidPrepClick}
-                    disabled={true} // Always disabled
+                    disabled={!(goNoGoDecisionStatus === "GO" && goNoGoVersionNumber === 3)} // Enable only when version 3 has GO status
                   >
                     View Form
                   </Button>
@@ -404,10 +412,10 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                 <InfoCard title="Financial Details" icon={<AttachMoneyIcon />}>
                   <InfoItem 
                     label="Capital Value" 
-                    value={formatCurrency(opportunity.capitalValue, opportunity.currency)} 
+                    value={formatCurrency(opportunity.capitalValue, opportunity.currency || 'USD')} 
                   />
                   <Chip 
-                    label={opportunity.currency}
+                    label={opportunity.currency || 'USD'}
                     size="small"
                     color="primary"
                     sx={{ mt: 1 }}
@@ -576,7 +584,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }} />
           <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 3 }}>
-            <BDChips opportunityId={opportunity.id} />
+            <BDChips opportunityId={opportunity.id || 0} />
           </Box>
           {renderContent()}
         </Box>

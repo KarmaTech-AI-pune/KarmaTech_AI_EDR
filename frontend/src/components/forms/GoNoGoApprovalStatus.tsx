@@ -44,18 +44,16 @@ const getStepState = (
   currentStatus: GoNoGoVersionStatus
 ): 'completed' | 'active' | 'pending' => {
   const activeStep = getActiveStep(currentStatus);
-  debugger;
   if (stepIndex < activeStep ) return 'completed';
   if (stepIndex === activeStep ) return 'active';
   return 'pending';
 };
 
 const canUserApprove = (status: GoNoGoVersionStatus, userRole: string): boolean => {
-  debugger;
   const currentStep = approvalSteps.find(step => 
     status === step.pending && userRole === step.role
   );
-  return !!currentStep && userRole === 'Regional Director';;
+  return !!currentStep;
 };
 
 const GoNoGoApprovalStatus: React.FC<Props> = ({
