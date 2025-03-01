@@ -1,6 +1,6 @@
 import { axiosInstance as axios } from './axiosConfig';
 import { GoNoGoDecision } from '../models/goNoGoDecisionModel';
-import { GoNoGoVersionDto, CreateGoNoGoVersionDto, ApproveGoNoGoVersionDto, RejectGoNoGoVersionDto } from '../models/goNoGoVersionModel.tsx';
+import { GoNoGoVersionDto, CreateGoNoGoVersionDto, ApproveGoNoGoVersionDto } from '../models/goNoGoVersionModel.tsx';
 
 export const goNoGoApi = {
     getAll: async () => {
@@ -23,14 +23,14 @@ export const goNoGoApi = {
         return response.data;
     },
 
-    create: async (projectId: string, decision: any) => {
+    create: async (decision: GoNoGoDecision) => {
         const response = await axios.post(`/api/gonogodecision/createForm`, {
             ...decision
         });
         return response.data;
     },
 
-    update: async (id: string, decision: any) => {
+    update: async (decision: GoNoGoDecision) => {
         const response = await axios.post(`/api/gonogodecision/createForm`, {
             ...decision
         });

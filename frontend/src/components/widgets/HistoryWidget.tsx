@@ -70,7 +70,7 @@ export const HistoryWidget = ({ histories, title = "History" }: HistoryWidgetPro
           <List>
             {histories.map((history) => (
               <ListItem 
-                key={history.id} 
+                key={history.opportunityId} 
                 sx={{
                   mb: 2,
                   bgcolor: 'background.paper',

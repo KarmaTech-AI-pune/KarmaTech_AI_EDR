@@ -1,4 +1,5 @@
 export * from './goNoGoDecisionModel';
+
 export {
     GoNoGoStatus,
     TypeOfBid,
@@ -15,29 +16,50 @@ export interface User {
     standardRate: number;
     isConsultant: boolean;
     createdAt: string;
-    lastLogin: string | null;
+    avatar:string;
+    lastLogin?: string | null;
     password?: string;
 }
 
 export interface Role {
     id: string;
     name: string;
+    permissions: string[];
 }
 
 export interface Project {
-    id: number;
+    id: string;
     name: string;
     description?: string;
     status: string;
+    projectNo: string;
+    typeOfJob:string;
+    sector:string;
+    priority:string;
+    clientName:string;
+    typeOfClient:string;
+    region:string;
+    office:string;
+    currency: string;
+    budget: number;
+    feeType:string;
     startDate?: string;
     endDate?: string;
+    details:string;
     createdAt: string;
     updatedAt: string;
+    seniorProjectMangerId:string;
+    regionalManagerID:string;
+    projectMangerId:string;
+    estimatedCost:number;
 }
 
 export interface OpportunityHistory {
-  statusId: number;
-  status: string;
+    opportunityId:number;
+    date:string;
+    description:string;
+    statusId?: number;
+    status?: string;
 }
 
 export interface OpportunityTracking {
@@ -106,3 +128,9 @@ export interface RoleDefinition {
     name: string;
     permissions: PermissionType[];
 }
+
+export * from './wbsTaskModel';
+export * from './wbsTaskResourceAllocationModel';
+export * from './monthlyHourModel';
+export * from './resourceRoleModel';
+export * from './employeeModel';

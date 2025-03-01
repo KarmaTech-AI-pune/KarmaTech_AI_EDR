@@ -135,6 +135,8 @@ export const getUserById = (id: string): AuthUser | undefined => {
   return users.find(user => user.id === id);
 };
 
+import { Role } from "../../models";
+
 export const isAdmin = (user: AuthUser): boolean => {
-  return user.roles.some(role => role.name === "Admin");
+  return user.roles.some((role: Role) => role.name === "Admin");
 };

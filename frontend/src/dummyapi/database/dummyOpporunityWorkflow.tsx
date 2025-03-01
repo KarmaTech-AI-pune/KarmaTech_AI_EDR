@@ -1,4 +1,5 @@
-import { WorkflowEntry, WorkflowStatus } from "../../models";
+import { WorkflowStatus } from "../../models/workflowStatusModel";
+import { WorkflowEntry } from "../../models/workflowEntryModel";
 
 export const workflowStatuses: WorkflowStatus[] = [
     {

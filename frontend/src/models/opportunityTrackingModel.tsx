@@ -1,8 +1,8 @@
 import { OpportunityHistory } from "./opportunityHistoryModel";
 
 // Local type definitions
-type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E';
-type OpportunityTrackingStatus = 
+export type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E';
+type OpportunityTrackingStatus =
   'Bid Under Preparation' | 
   'Bid Submitted' | 
   'Under Evaluation' | 

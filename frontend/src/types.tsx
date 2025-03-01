@@ -54,3 +54,9 @@ export interface LoginResponse {
     token?: string;
     message?: string;
 }
+
+export interface OpportunityItemProps {
+    opportunity: OpportunityTracking;
+    onOpportunityDeleted?: (id: string) => void;
+    onOpportunityUpdated?: () => void;
+}

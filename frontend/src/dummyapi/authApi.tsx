@@ -1,4 +1,5 @@
-import { Credentials, LoginResponse, UserWithRole, Role } from '../types';
+import { Credentials, LoginResponse, UserWithRole } from '../types';
+import { Role } from '../models';
 import { 
     validateUser, 
 } from './usersApi';
@@ -27,7 +28,11 @@ export const authApi = {
           name: user.name,
           email: user.email,
           roles: user.roles,
-          roleDetails: roleDetails
+          roleDetails: roleDetails,
+          standardRate: user.standardRate,
+          isConsultant: user.isConsultant,
+          createdAt: user.createdAt,
+          avatar: user.avatar
         };
 
         // Store full user information in localStorage
@@ -46,7 +51,7 @@ export const authApi = {
         success: false,
         message: 'Invalid username or password'
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         message: 'An error occurred during login'
@@ -81,7 +86,7 @@ export const authApi = {
       }
 
       return null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }

@@ -29,8 +29,8 @@ export const authApi = {
         // Decode token and store user data
         const decodedToken = jwtDecode<DecodedToken>(token);
         const role = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-        var permissions = decodedToken.Permissions;//join(',').split(',').map(p => p.trim());
-        var temp= normalizePermissions(permissions);
+        const permissions = decodedToken.Permissions;//join(',').split(',').map(p => p.trim());
+        const temp = normalizePermissions(permissions);
         // Create user with role details
         const userWithRole: UserWithRole = {
           id: decodedToken.sub,
@@ -47,7 +47,10 @@ export const authApi = {
             id: role,
             name: role,
             permissions: temp.map(p => PermissionType[p as keyof typeof PermissionType])
-          }
+          },
+          standardRate: response.data.user.standardRate,
+          isConsultant: response.data.user.isConsultant,
+          createdAt: response.data.user.createdAt
         };
 
         // Store user information
@@ -150,4 +153,3 @@ function normalizePermissions(permissions: any) {
     return []; // Return an empty array if the format is unexpected
   
 };
-

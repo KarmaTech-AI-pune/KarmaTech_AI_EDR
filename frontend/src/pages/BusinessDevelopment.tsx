@@ -50,14 +50,14 @@ export const BusinessDevelopment: React.FC = () => {
       let response: OpportunityTracking[] = [];
       
       if (currentUser.roles.some(role => role.name === "Business Development Manager")) {
-        response = await opportunityApi.getByUserId(currentUser.id);
+        response = (await opportunityApi.getByUserId(currentUser.id)) as OpportunityTracking[];
       } else if (currentUser.roles.some(role => role.name ===  "Regional Manager")) {
-        response = await opportunityApi.getByReviewManagerId(currentUser.id);
+        response = (await opportunityApi.getByReviewManagerId(currentUser.id)) as OpportunityTracking[];
       }  
       else if (currentUser.roles.some(role => role.name ===  "RegionalDirector")) {
-        response = await opportunityApi.getByApprovalManagerId(currentUser.id);
+        response = (await opportunityApi.getByApprovalManagerId(currentUser.id)) as OpportunityTracking[];
       } else {
-        response = await opportunityApi.getAll();
+        response = (await opportunityApi.getAll()) as OpportunityTracking[];
       }
       
       console.log('Fetched Opportunities:', response);
@@ -73,7 +73,7 @@ export const BusinessDevelopment: React.FC = () => {
   const initialOpportunityData: Partial<OpportunityTracking> = {
     client: '',
     status: 'Bid Under Preparation',
-    projectId: 0,
+    id: 0,
     stage: 'A',
     strategicRanking: 'M',
     bidManagerId: '',
