@@ -1,8 +1,9 @@
-import { OpportunityTracking } from '../../models';
+
 import { Card, CardContent, Typography, Grid, Chip, Divider, Box } from '@mui/material';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { getUserById } from '../../services/userApi';
 import { useEffect, useState } from 'react';
+import { OpportunityTracking } from '../../models/opportunityTrackingModel';
 
 interface BusinessDevelopmentWidgetProps {
   opportunity: OpportunityTracking;

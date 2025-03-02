@@ -315,18 +315,18 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
 
   const mapScoringCriteria = (dbCriteria: any) => {
     const mappings = {
-      MarketingPlan: 'marketingplan',
-      ClientRelationship: 'clientrelationship',
-      ProjectKnowledge: 'projectknowledge',
-      TechnicalEligibility: 'technicaleligibility',
-      FinancialEligibility: 'financialeligibility',
-      StaffAvailability: 'keystaffavailability',
-      CompetitionAssessment: 'projectcompetition',
-      CompetitivePosition: 'competitionposition',
-      FutureWorkPotential: 'futureworkpotential',
-      Profitability: 'projectprofitability',
-      BidSchedule: 'projectschedule',
-      ResourceAvailability: 'bidtimeandcosts'
+      MarketingPlan: 'Marketing Plan',
+      ClientRelationship: 'Client Relationship',
+      ProjectKnowledge: 'Project Knowledge',
+      TechnicalEligibility: 'Technical Eligibility',
+      FinancialEligibility: 'Financial Eligibility',
+      StaffAvailability: 'Key Staff Availability',
+      CompetitionAssessment: 'Project Competition',
+      CompetitivePosition: 'Competition Position',
+      FutureWorkPotential: 'Future Work Potential',
+      Profitability: 'Project Profitability',
+      BidSchedule: 'Project Schedule',
+      ResourceAvailability: 'Bid Time and Costs'
     };
 
     const newCriteria: { [key: string]: ScoringCriteria } = {};

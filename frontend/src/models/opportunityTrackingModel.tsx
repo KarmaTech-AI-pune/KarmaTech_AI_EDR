@@ -9,7 +9,6 @@ type OpportunityTrackingStatus =
   'Awarded' | 
   'Not Awarded';
 
-
 export interface OpportunityTracking {
   id: number;
   projectId?: number | null;

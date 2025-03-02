@@ -18,9 +18,10 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
 import {projectManagementAppContextType } from '../../types';
-import { OpportunityTracking } from "../../models";
+
 import { AuthUser } from "../../models/userModel";
 import { getUsersByRole } from '../../services/userApi';
+import { OpportunityTracking } from '../../models/opportunityTrackingModel';
 
 interface OpportunityFormProps {
   onSubmit: (data: OpportunityTracking) => void;
