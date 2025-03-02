@@ -1,60 +1,18 @@
-import { ChecklistItem } from './bidPreparationApi';
-
-export interface BidVersion {
-  number: number;
-  createdBy: string;
-  createdAt: string;
-  checklist: ChecklistItem[];
-}
+import { axiosInstance } from './axiosConfig';
 
 export interface BidVersionHistory {
-  versions: BidVersion[];
-  currentReviewer: 'BDM' | 'RM' | 'RD';
-  currentChecklist: ChecklistItem[];
+  id: number;
+  version: number;
+  modifiedBy: string;
+  modifiedDate: Date;
+  comments: string;
 }
 
-// Store version history data in memory
-let versionHistory: BidVersionHistory = {
-  versions: [],
-  currentReviewer: 'BDM',
-  currentChecklist: []
+export const getBidVersionHistory = async (): Promise<BidVersionHistory[]> => {
+  const response = await axiosInstance.get('/api/BidVersionHistory');
+  return response.data;
 };
 
-export const getBidVersionHistory = () => {
-  return Promise.resolve(versionHistory);
-};
-
-export const updateCurrentChecklist = (checklist: ChecklistItem[]) => {
-  versionHistory.currentChecklist = checklist;
-  return Promise.resolve(versionHistory);
-};
-
-export const sendToApprove = (checklist: ChecklistItem[], reviewer: string) => {
-  const newVersion: BidVersion = {
-    number: versionHistory.versions.length + 1,
-    createdBy: reviewer,
-    createdAt: new Date().toLocaleString(),
-    checklist
-  };
-
-  // Add new version to the beginning of the array
-  versionHistory.versions.unshift(newVersion);
-
-  // Update current reviewer
-  if (versionHistory.currentReviewer === 'BDM') {
-    versionHistory.currentReviewer = 'RM';
-  } else if (versionHistory.currentReviewer === 'RM') {
-    versionHistory.currentReviewer = 'RD';
-  }
-
-  return Promise.resolve(versionHistory);
-};
-
-export const resetVersionHistory = () => {
-  versionHistory = {
-    versions: [],
-    currentReviewer: 'BDM',
-    currentChecklist: []
-  };
-  return Promise.resolve(versionHistory);
+export const updateCurrentChecklist = async (checklist: any): Promise<void> => {
+  await axiosInstance.put('/api/BidVersionHistory/current', checklist);
 };

@@ -26,10 +26,9 @@ import CommentIcon from '@mui/icons-material/Comment';
 import { projectManagementAppContextType } from '../../types';
 import { GoNoGoStatus, TypeOfBid } from "../../models/types";
 import { CreateGoNoGoVersionDto, GoNoGoVersionDto } from "../../models/goNoGoVersionModel";
-import { getStatusesForRole, GoNoGoVersionStatus } from "../../models/workflowModel";
+import { GoNoGoVersionStatus } from "../../models/workflowModel";
 import GoNoGoVersionHistory from "./GoNoGoVersionHistory";
 import GoNoGoApprovalStatus from "./GoNoGoApprovalStatus";
-import { GoNoGoDecision } from "../../models/goNoGoDecisionModel";
 import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
 import { getScoringDescriptions } from '../../services/scoringDescriptionApi';
@@ -126,9 +125,7 @@ interface GoNoGoFormProps {
   onDecisionStatusChange?: (status: string, versionNumber: number) => void;
 }
 
-interface ScoringCriteria {
-  byWhom: string;
-  byDate: string;
+interface ScoringCriteria { 
   comments: string;
   score: number;
   showComments: boolean;
@@ -267,18 +264,18 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
   });
 
   const [criteria, setCriteria] = useState<{ [key: string]: ScoringCriteria }>({
-    marketingplan: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 1 },
-    clientrelationship: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 2 },
-    projectknowledge: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 3 },
-    technicaleligibility: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 4 },
-    financialeligibility: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 5 },
-    keystaffavailability: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 6 },
-    projectcompetition: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 7 },
-    competitionposition: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 8 },
-    futureworkpotential: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 9 },
-    projectprofitability: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 10 },
-    projectschedule: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 11 },
-    bidtimeandcosts: { byWhom: '', byDate: '', comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
+    marketingplan: {   comments: '', score: 0, showComments: false, scoringDescriptionId: 1 },
+    clientrelationship:   { comments: '', score: 0, showComments: false, scoringDescriptionId: 2 },
+    projectknowledge:     { comments: '', score: 0, showComments: false, scoringDescriptionId: 3 },
+    technicaleligibility: { comments: '', score: 0, showComments: false, scoringDescriptionId: 4 },
+    financialeligibility: { comments: '', score: 0, showComments: false, scoringDescriptionId: 5 },
+    keystaffavailability: { comments: '', score: 0, showComments: false, scoringDescriptionId: 6 },
+    projectcompetition:   { comments: '', score: 0, showComments: false, scoringDescriptionId: 7 },
+    competitionposition:  { comments: '', score: 0, showComments: false, scoringDescriptionId: 8 },
+    futureworkpotential:  { comments: '', score: 0, showComments: false, scoringDescriptionId: 9 },
+    projectprofitability: { comments: '', score: 0, showComments: false, scoringDescriptionId: 10 },
+    projectschedule:      { comments: '', score: 0, showComments: false, scoringDescriptionId: 11 },
+    bidtimeandcosts:      { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
 
   const calculateTotalScore = () => {
@@ -334,9 +331,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
     Object.entries(mappings).forEach(([dbKey, stateKey]) => {
       const dbValue = dbCriteria[dbKey];
       if (dbValue) {
-        newCriteria[stateKey] = {
-          byWhom: '',
-          byDate: '',
+        newCriteria[stateKey] = {        
           comments: dbValue.Comments || '',
           score: dbValue.Score || 0,
           showComments: false,
@@ -798,26 +793,6 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
                   <Collapse in={value.showComments}>
                     <Box sx={{ mt: 2 }}>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            label="By Whom"
-                            value={value.byWhom}
-                            onChange={(e) => handleCriteriaChange(key, 'byWhom', e.target.value)}
-                            size="small"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            type="date"
-                            label="By Date"
-                            value={value.byDate}
-                            onChange={(e) => handleCriteriaChange(key, 'byDate', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            size="small"
-                          />
-                        </Grid>
                         <Grid item xs={12}>
                           <TextField
                             fullWidth

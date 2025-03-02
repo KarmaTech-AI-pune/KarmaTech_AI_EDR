@@ -18,7 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\NJS.Repositories\NJS.Repositories.csproj" />
+    
+    <ProjectReference Include="..\..\NJS.Repositories\NJS.Repositories.csproj" />    
+    <ProjectReference Include="..\NJS.Domain\NJS.Domain.csproj" />
+    
   </ItemGroup>
 
   <ItemGroup>

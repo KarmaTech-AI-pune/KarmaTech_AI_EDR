@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import BidVersionHistory from './BidVersionHistory';
 import {
   Box,
@@ -24,260 +24,435 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format } from 'date-fns';
 import { FormWrapper } from './FormWrapper';
-import { getBidVersionHistory, updateCurrentChecklist } from '../../dummyapi/bidVersionHistoryApi';
+import { bidPreparationApi, DocumentCategory } from '../../dummyapi/bidPreparationApi';
+import { projectManagementAppContext } from '../../App';
+import { projectManagementAppContextType } from '../../types';
 
-const DOCUMENT_CATEGORIES = [
-  {
-    name: 'Earnest Money Deposit',
-    subcategories: []
-  },
-  {
-    name: 'Covering Letter',
-    subcategories: []
-  },
-  {
-    name: 'Company Information',
-    subcategories: [
-      'Company registration certificate',
-      'Service tax registration certificate',
-      'PAN card',
-      'List of Directors and details',
-      'Authorization from parent company',
-      'Power of Attorney',
-      'ISO 9001 certificate'
-    ]
-  },
-  {
-    name: 'Company Brochure',
-    subcategories: []
-  },
-  {
-    name: 'Annual Turnover Form',
-    subcategories: [
-      'CA Certificate',
-      'Balance Sheets'
-    ]
-  },
-  {
-    name: 'Bidder Information',
-    subcategories: [
-      'Information regarding status of Bidder',
-      'Experience Certificates',
-      'Project Data Sheets',
-      'List of Expertise',
-      'CVs',
-      'Approach and Methodology'
-    ]
-  },
-  {
-    name: 'Legal Documents',
-    subcategories: [
-      'Form for de-bar declaration',
-      'Indemnity Bond'
-    ]
-  },
-  {
-    name: 'Project Planning',
-    subcategories: [
-      'Work schedule',
-      'Employee schedule'
-    ]
-  },
-  {
-    name: 'Tender Documents',
-    subcategories: [
-      'Tender Doc and Addenda',
-      'Tender Costing'
-    ]
-  }
-];
 
-interface ChecklistItem {
-  id: string;
-  srNo: number;
-  description: string;
-  remarks: string;
-  enclosed: boolean;
-  date: Date | null;
-  isSubItem?: boolean;
-  hasSubcategories?: boolean;
-  parentId?: string;
-  categoryIndex?: number;
-}
 
-const initializeChecklist = (): ChecklistItem[] => {
-  // ... (initializeChecklist implementation remains the same)
-  let srNo = 1;
-  const items: ChecklistItem[] = [];
-  
-  DOCUMENT_CATEGORIES.forEach((category, index) => {
-    const categoryId = `main-${srNo}`;
-    items.push({
-      id: categoryId,
-      srNo: srNo,
-      description: category.name,
-      remarks: '',
-      enclosed: false,
-      date: null,
-      hasSubcategories: category.subcategories.length > 0,
-      categoryIndex: index
-    });
+const initializeCategories = (): DocumentCategory[] => {
+  return [
+    {
+      id: '1',
+      name: 'Earnest Money Deposit',
+      level: 0,
+      children: [],
+      isRequired: true,
+      isEnclosed: false
+    },
+    {
+      id: '2',
+      name: 'Covering Letter',
+      level: 0,
+      children: [],
+      isRequired: true,
+      isEnclosed: false
+    },
+    {
+      id: '3',
+      name: 'Company Information',
+      level: 0,
+      children: [
+        {
+          id: '3-1',
+          name: 'Company registration certificate',
+          level: 1,
+          parentId: '3',
+          children: [],
+          isRequired: true,
+          isEnclosed: false
+        },
+        {
+          id: '3-2',
+          name: 'Service tax registration certificate',
+          level: 1,
+          parentId: '3',
+          children: [],
+          isRequired: true,
+          isEnclosed: false
+        },
+        {
+          id: '3-3',
+          name: 'PAN card',
+          level: 1,
+          parentId: '3',
+          children: [],
+          isRequired: true,
+          isEnclosed: false
+        },
+        {
+          id: '3-4',
+          name: 'List of Directors and details',
+          level: 1,
+          parentId: '3',
+          children: [],
+          isRequired: true,
+          isEnclosed: false
+        },
+        {
+          id: '3-5',
+          name: 'Authorization from parent company',
+          level: 1,
+          parentId: '3',
+          children: [],
+          isRequired: true,
+          isEnclosed: false
+        }
+      ],
+      isRequired: true,
+      isEnclosed: false
+    },
+    {
+      id: '4',
+      name: 'Company Brochure',
+      level: 0,
+      children: [],
+      isRequired: true,
+      isEnclosed: false
+    },
+    {
+      id: '5',
+      name: 'Annual Turnover Form',
+      level: 0,
+      children: [{
+        id: '5-1',
+        name: 'Information regarding status of Bidder',
+        level: 1,
+        parentId: '5',
+        children: [],
+        isRequired: true,
+        isEnclosed: false
+      },{
+      
+      id: '5-2',
+      name: 'Experience Certificates',
+      level: 1,
+      parentId: '5',
+      children: [],
+      isRequired: true,
+      isEnclosed: false
+    },
+    {
+      
+      id: '5-3',
+      name: 'Project Data Sheets',
+      level: 1,
+      parentId: '5',
+      children: [],
+      isRequired: true,
+      isEnclosed: false
+    },
+    {
+      
+      id: '5-4',
+      name: 'CVs',
+      level: 1,
+      parentId: '5',
+      children: [],
+      isRequired: true,
+      isEnclosed: false
+    },
+    {
+      id: '5-5',
+      name: 'Approach and Methodology',
+      level: 1,
+      parentId: '5',
+      children: [],
+      isRequired: true,
+      isEnclosed: false
+    }
+      
+    ],
+      isRequired: true,
+      isEnclosed: false
+    },
+    {
+      id: '6',
+      name: 'Legal Documents',
+      level: 0,
+      children: [{
+        id: '6-1',
+        name: 'Form for de-bar declaration',
+        level: 1,
+        parentId: '6',
+        children: [],
+        isRequired: true,
+        isEnclosed: false
+      },{
+      
+      id: '6-2',
+      name: 'Indemnity Bond',
+      level: 1,
+      parentId: '6',
+      children: [],
+      isRequired: true,
+      isEnclosed: false
+    }
+    ],
+      isRequired: true,
+      isEnclosed: false
+    },
 
-    category.subcategories.forEach((subcat, subIndex) => {
-      items.push({
-        id: `sub-${srNo}-${subIndex}`,
-        srNo: srNo,
-        description: subcat,
-        remarks: '',
-        enclosed: false,
-        date: null,
-        isSubItem: true,
-        parentId: categoryId,
-        categoryIndex: index
-      });
-    });
-
-    srNo++;
-  });
-
-  return items;
+    {
+      id: '7',
+      name: 'Project Planning',
+      level: 0,
+      children: [{
+        id: '7-1',
+        name: 'Work schedule',
+        level: 1,
+        parentId: '7',
+        children: [],
+        isRequired: true,
+        isEnclosed: false
+      },{
+      
+      id: '7-2',
+      name: 'Employee schedule',
+      level: 1,
+      parentId: '7',
+      children: [],
+      isRequired: true,
+      isEnclosed: false
+    }
+    ],
+      isRequired: true,
+      isEnclosed: false
+    },
+    {
+      id: '8',
+      name: 'Tender Documents',
+      level: 0,
+      children: [{
+        id: '8-1',
+        name: 'Tender Doc and Addenda',
+        level: 1,
+        parentId: '8',
+        children: [],
+        isRequired: true,
+        isEnclosed: false
+      },{
+      
+      id: '8-2',
+      name: 'Tender Costing',
+      level: 1,
+      parentId: '8',
+      children: [],
+      isRequired: true,
+      isEnclosed: false
+    }
+    ],
+      isRequired: true,
+      isEnclosed: false
+    }
+    // Add other categories similarly...
+  ];
 };
 
-const BidPreparationForm: React.FC = () => {
-  const [checklist, setChecklist] = useState<ChecklistItem[]>(initializeChecklist());
-  const [nextSrNo, setNextSrNo] = useState(DOCUMENT_CATEGORIES.length + 1);
+const BidPreparationForm:  React.FC = () => { 
+   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
+  const [categories, setCategories] = useState<DocumentCategory[]>(initializeCategories());
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState<string>('');
-  const [versionHistory, setVersionHistory] = useState<any>(null);
 
   useEffect(() => {
-    loadVersionHistory();
+    loadBidPreparationData();
   }, []);
 
-  const loadVersionHistory = async () => {
+  const loadBidPreparationData = async () => {
     try {
-      const history = await getBidVersionHistory();
-      setVersionHistory(history);
-    } catch (err) {
-      setError('Failed to load version history');
-    }
-  };
-
-  const handleAddItem = () => {
-    const newItem: ChecklistItem = {
-      id: String(Date.now()),
-      srNo: nextSrNo,
-      description: '',
-      remarks: '',
-      enclosed: false,
-      date: null
-    };
-    setChecklist([...checklist, newItem]);
-    setNextSrNo(nextSrNo + 1);
-  };
-
-  const findInsertionIndex = (parentId: string): number => {
-    const parentIndex = checklist.findIndex(item => item.id === parentId);
-    const parentItem = checklist[parentIndex];
-    
-    if (parentItem.hasSubcategories) {
-      let lastSubItemIndex = parentIndex;
-      for (let i = parentIndex + 1; i < checklist.length; i++) {
-        if (!checklist[i].isSubItem) break;
-        lastSubItemIndex = i;
+      const data = await bidPreparationApi.getBidPreparationData(context.selectedProject?.id);
+      if (data.documentCategoriesJson) {
+        setCategories(JSON.parse(data.documentCategoriesJson));
       }
-      return lastSubItemIndex;
+      setError('');
+    } catch (err) {
+      setError('Failed to load bid preparation data');
     }
-    
-    return parentIndex;
   };
 
-  const handleAddSubItem = (parentId: string, categoryIndex: number) => {
-    const insertAfterIndex = findInsertionIndex(parentId);
-    const parentItem = checklist.find(item => item.id === parentId)!;
-    
-    const newItem: ChecklistItem = {
-      id: `new-${Date.now()}`,
-      srNo: parentItem.srNo,
-      description: '',
-      remarks: '',
-      enclosed: false,
-      date: null,
-      isSubItem: true,
-      parentId: parentItem.hasSubcategories ? parentId : undefined,
-      categoryIndex
+  const handleAddCategory = (parentId?: string) => {
+    const newCategory: DocumentCategory = {
+      id: `cat-${Date.now()}`,
+      name: '',
+      level: parentId ? (findCategory(parentId, categories)?.level ?? 0) + 1 : 0,
+      parentId,
+      children: [],
+      isRequired: false,
+      isEnclosed: false
     };
 
-    const newChecklist = [
-      ...checklist.slice(0, insertAfterIndex + 1),
-      newItem,
-      ...checklist.slice(insertAfterIndex + 1)
-    ];
-
-    setChecklist(newChecklist);
+    if (parentId) {
+      const parentCategory = findCategory(parentId, categories);
+      if (parentCategory) {
+        setCategories(updateCategoryChildren(categories, parentId, [...parentCategory.children, newCategory]));
+      }
+    } else {
+      setCategories([...categories, newCategory]);
+    }
   };
 
-  const handleDeleteItem = (id: string) => {
-    setChecklist(checklist.filter(item => item.id !== id && item.parentId !== id));
+  const findCategory = (id: string, cats: DocumentCategory[]): DocumentCategory | undefined => {
+    for (const cat of cats) {
+      if (cat.id === id) return cat;
+      const found = findCategory(id, cat.children);
+      if (found) return found;
+    }
+    return undefined;
   };
 
-  const handleUpdateItem = (id: string, field: keyof ChecklistItem, value: any) => {
-    setChecklist(checklist.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ));
+  const updateCategoryChildren = (cats: DocumentCategory[], parentId: string, newChildren: DocumentCategory[]): DocumentCategory[] => {
+    return cats.map(cat => {
+      if (cat.id === parentId) {
+        return { ...cat, children: newChildren };
+      }
+      if (cat.children.length > 0) {
+        return { ...cat, children: updateCategoryChildren(cat.children, parentId, newChildren) };
+      }
+      return cat;
+    });
+  };
+
+  const handleUpdateCategory = (id: string, field: keyof DocumentCategory, value: any) => {
+    const updateCategory = (cats: DocumentCategory[]): DocumentCategory[] => {
+      return cats.map(cat => {
+        if (cat.id === id) {
+          return { ...cat, [field]: value };
+        }
+        if (cat.children.length > 0) {
+          return { ...cat, children: updateCategory(cat.children) };
+        }
+        return cat;
+      });
+    };
+
+    setCategories(updateCategory(categories));
+  };
+
+  const handleDeleteCategory = (id: string) => {
+    const deleteFromCategories = (cats: DocumentCategory[]): DocumentCategory[] => {
+      return cats.filter(cat => {
+        if (cat.id === id) return false;
+        if (cat.children.length > 0) {
+          cat.children = deleteFromCategories(cat.children);
+        }
+        return true;
+      });
+    };
+
+    setCategories(deleteFromCategories(categories));
   };
 
   const handleSubmit = async () => {
     try {
-      // Save checklist and update version history
-      console.log('Submitting checklist:', checklist);
-      await updateCurrentChecklist(checklist);
-      await loadVersionHistory(); // Reload version history after update
+      await bidPreparationApi.updateBidPreparationData(categories, context.selectedProject?.id);
       setError('');
     } catch (err) {
-      setError('Failed to save checklist data');
+      setError('Failed to save bid preparation data');
     }
   };
 
-  const formContent = (
-    <Container 
-      maxWidth="xl" 
-      sx={{ 
-        py: 2,
-        minHeight: '100vh',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        '& .MuiPaper-root': {
-          boxShadow: 'none',
-          border: '1px solid rgba(224, 224, 224, 1)',
-          borderRadius: 1,
-          mb: 2
-        }
-      }}
-    >
-      <Box sx={{ 
-        width: '100%',
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        pr: 1
-      }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'flex-end', 
-          mb: 2,
-          gap: 2, 
-          alignItems: 'center' 
-        }}>
+  const renderCategoryRow = (category: DocumentCategory, depth: number = 0) => {
+    const isParentCategory = category.children.length > 0;
+    return (
+      <React.Fragment key={category.id}>
+        <TableRow>
+          <TableCell></TableCell>
+          <TableCell sx={{ pl: depth * 4 }}>
+            {editMode ? (
+              <TextField
+                fullWidth
+                variant="standard"
+                value={category.name}
+                onChange={(e) => handleUpdateCategory(category.id, 'name', e.target.value)}
+              />
+            ) : (
+              <Typography 
+              sx={{ 
+                fontWeight: isParentCategory ? 'bold' : 'normal',
+                color: isParentCategory ? 'primary.main' : 'text.primary'
+              }}
+            >
+              {category.name}
+            </Typography>
+            )}
+          </TableCell>
+          <TableCell>
+            {editMode ? (
+              <TextField
+                fullWidth
+                variant="standard"
+                value={category.remarks || ''}
+                onChange={(e) => handleUpdateCategory(category.id, 'remarks', e.target.value)}
+              />
+            ) : (
+              <Typography>{category.remarks}</Typography>
+            )}
+          </TableCell>
+          <TableCell align="center">
+            <Checkbox
+              checked={category.isEnclosed}
+              onChange={(e) => handleUpdateCategory(category.id, 'isEnclosed', e.target.checked)}
+              disabled={!editMode}
+            />
+          </TableCell>
+          <TableCell>
+            {editMode ? (
+              <DatePicker
+                value={category.date || null}
+                onChange={(newValue) => handleUpdateCategory(category.id, 'date', newValue)}
+                slotProps={{
+                  textField: {
+                    variant: "standard",
+                    fullWidth: true
+                  }
+                }}
+              />
+            ) : (
+              <Typography>
+                {category.date ? format(new Date(category.date), 'dd/MM/yyyy') : ''}
+              </Typography>
+            )}
+          </TableCell>
+          {editMode && (
+            <TableCell>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <IconButton
+                  size="small"
+                  onClick={() => handleAddCategory(category.id)}
+                  color="primary"
+                >
+                  <AddIcon />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() => handleDeleteCategory(category.id)}
+                  color="error"
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            </TableCell>
+          )}
+        </TableRow>
+        {category.children.map(child => renderCategoryRow(child, depth + 1))}
+      </React.Fragment>
+    );
+  };
+
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <BidVersionHistory opportunityId={context.selectedProject?.id} />
+      <Container maxWidth="xl" sx={{ py: 2 }}>
+        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
           {editMode && (
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={handleAddItem}
+              onClick={() => handleAddCategory()}
               size="small"
             >
-              Add New Item
+              Add Category
             </Button>
           )}
           <FormControlLabel
@@ -291,176 +466,42 @@ const BidPreparationForm: React.FC = () => {
             label="Edit Mode"
           />
         </Box>
+
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
 
-        <Paper sx={{ 
-          flex: 1,
-          mb: 2,
-          '& > div': {
-            overflowX: 'auto'
-          }
-        }}>
-          <Table sx={{ minWidth: 800 }}>
+        <Paper sx={{ mb: 2 }}>
+          <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 'bold', width: '80px' }}>Sr. No.</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', width: '200px' }}>Remarks</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', width: '120px' }}>Enclosed</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', width: '200px' }}>Date</TableCell>
-                {editMode && (
-                  <TableCell sx={{ fontWeight: 'bold', width: '100px' }}>Actions</TableCell>
-                )}
+               <TableCell></TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell>Remarks</TableCell>
+                <TableCell align="center">Enclosed</TableCell>
+                <TableCell>Date</TableCell>
+                {editMode && <TableCell>Actions</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
-              {checklist.map((item) => (
-                <TableRow 
-                  key={item.id}
-                  sx={item.isSubItem ? { 
-                    '& > td:first-of-type': { pl: 4 },
-                    '& > td': { backgroundColor: 'rgba(0, 0, 0, 0.02)' }
-                  } : {}}
-                >
-                  <TableCell>{item.isSubItem ? '' : item.srNo}</TableCell>
-                  <TableCell>
-                    {item.hasSubcategories ? (
-                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                        {item.description}
-                      </Typography>
-                    ) : editMode ? (
-                      <TextField
-                        fullWidth
-                        variant="standard"
-                        value={item.description}
-                        onChange={(e) => handleUpdateItem(item.id, 'description', e.target.value)}
-                      />
-                    ) : (
-                      <Typography>{item.description}</Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {!item.hasSubcategories && (
-                      editMode ? (
-                        <TextField
-                          fullWidth
-                          variant="standard"
-                          value={item.remarks}
-                          onChange={(e) => handleUpdateItem(item.id, 'remarks', e.target.value)}
-                        />
-                      ) : (
-                        <Typography>{item.remarks}</Typography>
-                      )
-                    )}
-                  </TableCell>
-                  <TableCell align="center">
-                    {!item.hasSubcategories && (
-                      editMode ? (
-                        <Checkbox
-                          checked={item.enclosed}
-                          onChange={(e) => handleUpdateItem(item.id, 'enclosed', e.target.checked)}
-                        />
-                      ) : (
-                        <Typography>{item.enclosed ? 'Yes' : 'No'}</Typography>
-                      )
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {!item.hasSubcategories && (
-                      editMode ? (
-                        <DatePicker
-                          value={item.date}
-                          onChange={(newValue) => handleUpdateItem(item.id, 'date', newValue)}
-                          slotProps={{
-                            textField: {
-                              variant: "standard",
-                              fullWidth: true
-                            }
-                          }}
-                        />
-                      ) : (
-                        <Typography>
-                          {item.date ? format(item.date, 'dd/MM/yyyy') : ''}
-                        </Typography>
-                      )
-                    )}
-                  </TableCell>
-                  {editMode && (
-                    <TableCell>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'flex-end',
-                        gap: 1,
-                        minWidth: '80px'
-                      }}>
-                        {!item.isSubItem && (
-                          <IconButton
-                            size="small"
-                            onClick={() => handleAddSubItem(item.id, item.categoryIndex!)}
-                            color="primary"
-                            sx={{ 
-                              '&:hover': { 
-                                backgroundColor: 'rgba(25, 118, 210, 0.04)' 
-                              }
-                            }}
-                          >
-                            <AddIcon />
-                          </IconButton>
-                        )}
-                        {!item.hasSubcategories && (
-                          <IconButton 
-                            size="small" 
-                            onClick={() => handleDeleteItem(item.id)}
-                            sx={{ 
-                              color: 'error.main',
-                              '&:hover': { 
-                                backgroundColor: 'rgba(211, 47, 47, 0.04)' 
-                              }
-                            }}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        )}
-                        {item.hasSubcategories && (
-                          <Box sx={{ width: 32 }} />
-                        )}
-                      </Box>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
+              {categories.map(category => renderCategoryRow(category))}
             </TableBody>
           </Table>
         </Paper>
 
-        <Paper sx={{ p: 2 }}>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'flex-end',
-            gap: 2
-          }}>
-            <Button 
-              variant="contained" 
-              color="primary"
-              onClick={handleSubmit}
-              disabled={checklist.length === 0}
-            >
-              Save Checklist
-            </Button>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
-  );
-
-  return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <BidVersionHistory />
-      {formContent}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            disabled={categories.length === 0}
+          >
+            Save Changes
+          </Button>
+        </Box>
+      </Container>
     </LocalizationProvider>
   );
 };

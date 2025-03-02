@@ -1,29 +1,45 @@
-export interface ChecklistItem {
+import { axiosInstance } from './axiosConfig';
+
+export interface DocumentCategory {
   id: string;
-  srNo: number;
-  description: string;
-  remarks: string;
-  enclosed: boolean;
-  date: Date | null;
-  isSubItem?: boolean;
-  hasSubcategories?: boolean;
+  name: string;
+  level: number;
   parentId?: string;
-  categoryIndex?: number;
+  children: DocumentCategory[];
+  isRequired: boolean;
+  isEnclosed: boolean;
+  date?: Date;
+  remarks?: string;
 }
 
-// Store checklist data in memory
-let checklist: ChecklistItem[] = [];
+export interface BidPreparationData {
+  id: number;
+  documentCategoriesJson: string;
+  opportunityId: number;
+  userId: string;
+  createdDate: Date;
+  modifiedDate: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+  updatedBy: string;
+}
 
-export const getBidPreparationChecklist = () => {
-  return Promise.resolve(checklist);
+const getBidPreparationData = async (id: number | undefined): Promise<BidPreparationData> => {
+  const response = await axiosInstance.get('/api/BidPreparation');
+  return response.data;
 };
 
-export const updateBidPreparationChecklist = (updatedChecklist: ChecklistItem[]) => {
-  checklist = updatedChecklist;
-  return Promise.resolve(checklist);
+const updateBidPreparationData = async (documentCategories: DocumentCategory[], opportunityId: number | undefined): Promise<boolean> => {
+  const response = await axiosInstance.put('/api/BidPreparation', {
+    documentCategoriesJson: JSON.stringify(documentCategories),
+    opportunityId,
+    userId:''
+  });
+  return response.data;
 };
 
-export const saveBidPreparationChecklist = (newChecklist: ChecklistItem[]) => {
-  checklist = newChecklist;
-  return Promise.resolve(checklist);
+export const bidPreparationApi = {
+  getBidPreparationData,
+  updateBidPreparationData
 };

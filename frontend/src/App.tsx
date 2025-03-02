@@ -126,14 +126,7 @@ function App() {
     "Business Development Details": <BusinessDevelopmentDetails />,
     "Bid Preparation Form" : <BidPreparationForm/>,
     "GoNoGo Form" : selectedProject ? (
-      <GoNoGoForm 
-        projectId={selectedProject.id} 
-        initialDecision={currentGoNoGoDecision || undefined}
-        onSubmit={(decision) => {
-          setCurrentGoNoGoDecision(decision);
-          setScreenState("Business Development Details");
-        }}
-      />
+      <GoNoGoForm />
     ) : <div>No project selected</div>,
     "Admin Panel": <AdminPanel />,
   };
