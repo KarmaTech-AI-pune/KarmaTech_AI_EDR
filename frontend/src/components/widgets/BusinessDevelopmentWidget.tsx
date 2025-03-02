@@ -77,17 +77,6 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
     }
   };
 
-  const getManagerName = async (managerId: string | undefined) => {
-    if (!managerId) return 'Not assigned';
-    try {
-      const manager = await getUserById(managerId);
-      return manager ? manager.name : 'Unknown';
-    } catch (error) {
-      console.error('Error fetching manager:', error);
-      return 'Unknown';
-    }
-  };
-
   return (
     <Card sx={{ mb: 3, boxShadow: 3 }}>
       <CardContent>

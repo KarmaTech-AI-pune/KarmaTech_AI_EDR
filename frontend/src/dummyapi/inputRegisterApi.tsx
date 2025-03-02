@@ -1,5 +1,5 @@
 import { dummyInputRegister } from './database/dummyInputRegister';
-import { InputRegisterRow} from '../models';
+import { InputRegisterRow} from '../models/inputRegisterRowModel';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mutable array to store input register entries

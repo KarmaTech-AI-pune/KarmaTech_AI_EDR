@@ -156,7 +156,7 @@ export const goNoGoDecisions: GoNoGoDecision[] = Object.values(goNoGoRawData).ma
 
 // Utility functions
 export const getGoNoGoByProjectId = (projectId: string): GoNoGoDecision | undefined => {
-  return goNoGoDecisions.find(decision => decision.projectId === projectId);
+  return goNoGoDecisions.find(decision => decision.projectId?.toString() === projectId);
 };
 
 export const getGoNoGoByStatus = (status: GoNoGoStatus): GoNoGoDecision[] => {

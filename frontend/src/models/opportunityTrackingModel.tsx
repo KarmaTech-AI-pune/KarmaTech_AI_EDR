@@ -29,6 +29,7 @@ export interface OpportunityTracking {
   durationOfProject: number;
   fundingStream: string;
   contractType: string;
+  workflowId?: string;
 
   // Optional fields
   bidFees: number;

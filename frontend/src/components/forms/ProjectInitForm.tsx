@@ -7,7 +7,7 @@ import {
   MenuItem,
   Paper
 } from '@mui/material';
-import { ProjectFormType, ProjectFormData } from '../../types';
+import { ProjectFormType, ProjectFormData } from '../../types/index.tsx';
 import { getUsersByRole } from '../../dummyapi/usersApi';
 
 export const ProjectInitForm: React.FC<ProjectFormType> = ({
@@ -26,6 +26,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     seniorProjectMangerId: project?.seniorProjectMangerId || "0",
     sector: project?.sector || '',
     region: project?.region || '',
+    status: project?.status || '',
+    createdAt: project?.createdAt || '',
+    updatedAt: project?.updatedAt || '',
     typeOfClient: project?.typeOfClient || '',
     estimatedCost: project?.estimatedCost || 0,
     feeType: project?.feeType || 'Lumpsum',

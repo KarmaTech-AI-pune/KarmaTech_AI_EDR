@@ -22,7 +22,6 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format } from 'date-fns';
-import { FormWrapper } from './FormWrapper';
 
 const DOCUMENT_CATEGORIES = [
   {
@@ -204,8 +203,8 @@ const BidPreparationForm: React.FC = () => {
     setChecklist(checklist.filter(item => item.id !== id && item.parentId !== id));
   };
 
-  const handleUpdateItem = (id: string, field: keyof ChecklistItem, value: any) => {
-    setChecklist(checklist.map(item => 
+  const handleUpdateItem = <T extends keyof ChecklistItem>(id: string, field: T, value: ChecklistItem[T]) => {
+    setChecklist(checklist.map(item =>
       item.id === id ? { ...item, [field]: value } : item
     ));
   };
@@ -215,7 +214,7 @@ const BidPreparationForm: React.FC = () => {
       // TODO: Implement submission logic
       console.log('Submitting checklist:', checklist);
       setError('');
-    } catch (err) {
+    } catch {
       setError('Failed to save checklist data');
     }
   };

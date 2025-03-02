@@ -1,4 +1,4 @@
-export * from './goNoGoDecisionModel';
+export type { GoNoGoDecision } from './goNoGoDecisionModel';
 
 export {
     GoNoGoStatus,
@@ -16,7 +16,7 @@ export interface User {
     standardRate: number;
     isConsultant: boolean;
     createdAt: string;
-    avatar:string;
+    avatar?:string;
     lastLogin?: string | null;
     password?: string;
 }
@@ -58,6 +58,7 @@ export interface OpportunityHistory {
     opportunityId:number;
     date:string;
     description:string;
+    id: number;
     statusId?: number;
     status?: string;
 }
@@ -99,6 +100,8 @@ export interface OpportunityTracking {
     contractType?: string;
     createdAt?: string;
     updatedAt?: string;
+    workflowId?: string;
+    projectId?: string;
 }
 
 export enum PermissionType {
@@ -129,8 +132,15 @@ export interface RoleDefinition {
     permissions: PermissionType[];
 }
 
-export * from './wbsTaskModel';
-export * from './wbsTaskResourceAllocationModel';
-export * from './monthlyHourModel';
-export * from './resourceRoleModel';
-export * from './employeeModel';
+export type { WBSTask } from './wbsTaskModel';
+export type { WBSTaskResourceAllocation } from './wbsTaskResourceAllocationModel';
+export type { MonthlyHour } from './monthlyHourModel';
+export type { resourceRole } from './resourceRoleModel';
+export type { Employee } from './employeeModel';
+export type { CheckReviewRow } from './checkReviewModel';
+export type { ChangeControl } from './changeControlModel';
+export type { InwardRow } from './inwardRowModel';
+export type { OutwardRow } from './outwardRowModel';
+export type { ProjectClosureRow } from './projectClosureRowModel';
+export type { ProjectClosureComment } from './projectClosureCommentModel';
+export type { InputRegisterRow } from './inputRegisterRowModel';

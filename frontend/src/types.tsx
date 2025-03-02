@@ -12,7 +12,7 @@ export interface UserWithRole extends User {
         id: string;
         name: string;
         permissions: string[];
-    };
+    } | null;
 }
 
 export interface projectManagementAppContextType {

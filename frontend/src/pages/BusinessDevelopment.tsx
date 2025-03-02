@@ -73,7 +73,7 @@ export const BusinessDevelopment: React.FC = () => {
   const initialOpportunityData: Partial<OpportunityTracking> = {
     client: '',
     status: 'Bid Under Preparation',
-    id: 0,
+    id: undefined,
     stage: 'A',
     strategicRanking: 'M',
     bidManagerId: '',

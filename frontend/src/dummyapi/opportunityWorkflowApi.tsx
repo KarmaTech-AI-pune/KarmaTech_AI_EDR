@@ -21,8 +21,8 @@ export const createWorkflow = async (data: Omit<WorkflowEntry, 'id' | 'createdAt
 };
 
 // Get workflow entry by opportunity ID
-export const getWorkflowByOpportunityId = async (opportunityId: number) => {
-    return mutableWorkflowData.find(w => w.opportunityId === opportunityId);
+export const getWorkflowByOpportunityId = async (opportunityId: string | number) => {
+    return mutableWorkflowData.find(w => w.opportunityId === Number(opportunityId));
 };
 
 // Update workflow entry and opportunity atomically

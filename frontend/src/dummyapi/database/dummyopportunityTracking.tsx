@@ -3,7 +3,7 @@ import { OpportunityTracking } from "../../models"
 // Raw opportunity tracking data
 const opportunityTrackingRawData =  {
   "1":{
-    "id": "1",
+    "id": 1,
     "projectId": "usr2",
     "stage": "B",
     "strategicRanking": "H",
@@ -37,7 +37,7 @@ const opportunityTrackingRawData =  {
     "workflowId": "1"
   },
   "2":{
-    "id": "2",
+    "id": 2,
     "projectId": "usr3",
     "stage": "A",
     "strategicRanking": "M",
@@ -71,7 +71,7 @@ const opportunityTrackingRawData =  {
     "workflowId": "2"
   },
   "3":{
-    "id": "3",
+    "id": 3,
     "projectId": "usr13",
     "stage": "B",
     "strategicRanking": "M",
@@ -105,7 +105,7 @@ const opportunityTrackingRawData =  {
     "workflowId": "3"
   },
   "4":{
-    "id": "4",
+    "id": 4,
     "projectId": "usr15",
     "stage": "A",
     "strategicRanking": "M",
@@ -139,7 +139,7 @@ const opportunityTrackingRawData =  {
     "workflowId": "4"
   },
   "5":{
-    "id": "5",
+    "id": 5,
     "projectId": "usr16",
     "stage": "A",
     "strategicRanking": "H",
@@ -173,7 +173,7 @@ const opportunityTrackingRawData =  {
     "workflowId": "5"
   },
   "6":{
-    "id": "6",
+    "id": 6,
     "projectId": "usr2",
     "stage": "B",
     "strategicRanking": "H",
@@ -210,7 +210,7 @@ const opportunityTrackingRawData =  {
 
 // Transform into typed array
 export const opportunityTrackings: OpportunityTracking[] = Object.values(opportunityTrackingRawData).map(tracking => ({
-  id: tracking.id,
+  id: tracking.id as number | undefined,
   projectId: tracking.projectId,
   stage: tracking.stage,
   strategicRanking: tracking.strategicRanking,
@@ -245,31 +245,31 @@ export const opportunityTrackings: OpportunityTracking[] = Object.values(opportu
 }));
 
 // Utility functions
-export const getOpportunityById = (id: number): OpportunityTracking | undefined => {
-  return opportunityTrackings.find(opportunity => opportunity.id === id);
+export const getOpportunityById = (id: string | number): OpportunityTracking | undefined => {
+  return opportunityTrackings.find(opportunity => String(opportunity.id) === String(id));
 };
 
 export const getOpportunityByProjectId = (projectId: string): OpportunityTracking | undefined => {
-  return opportunityTrackings.find(opportunity => opportunity.projectId === projectId);
+  return opportunityTrackings.find(opportunity => opportunity.projectId === String(projectId));
 };
 
 export const getOpportunitiesByStage = (stage: string): OpportunityTracking[] => {
-  return opportunityTrackings.filter(opportunity => opportunity.stage === stage);
+  return opportunityTrackings.filter(opportunity => opportunity.stage === String(stage));
 };
 
 export const getOpportunitiesByStrategicRanking = (ranking: string): OpportunityTracking[] => {
-  return opportunityTrackings.filter(opportunity => opportunity.strategicRanking === ranking);
+  return opportunityTrackings.filter(opportunity => opportunity.strategicRanking === String(ranking));
 };
 
 export const getOpportunitiesByBidManager = (bidManagerId: string): OpportunityTracking[] => {
-  return opportunityTrackings.filter(opportunity => opportunity.bidManagerId === bidManagerId);
+  return opportunityTrackings.filter(opportunity => opportunity.bidManagerId === String(bidManagerId));
 };
 
 export const getOpportunitiesByWorkflowId = (workflowId: string): OpportunityTracking[] => {
-  return opportunityTrackings.filter(opportunity => opportunity.workflowId === workflowId);
+  return opportunityTrackings.filter(opportunity => opportunity.workflowId === String(workflowId));
 };
 
 // Updated utility function to get opportunities by review manager
 export const getOpportunitiesByReviewManager = (reviewManagerId: string): OpportunityTracking[] => {
-  return opportunityTrackings.filter(opportunity => opportunity.reviewManagerId === reviewManagerId);
+  return opportunityTrackings.filter(opportunity => opportunity.reviewManagerId === String(reviewManagerId));
 };

@@ -35,7 +35,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
   const [comments, setComments] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const handleDecisionChange = (event: any) => {
+  const handleDecisionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     event.stopPropagation();
     setDecision(event.target.value);
     setError(null);
@@ -76,7 +76,6 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 
     try {
       const newStatus = decision === 'approve' ? 'Pending Approval' : 'Review Rejected';
-      const workflowId = decision === 'approve' ? "4" : "3"; // "4" for "Sent for Approval", "3" for "Review Changes"
 
       // Notify parent immediately for optimistic update
       if (onDecisionMade) {
@@ -138,7 +137,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       setComments('');
       setError(null);
       onClose();
-    } catch (err: any) {
+    } catch (err: Error) {
       setError(err.message || 'Failed to submit review decision');
     }
   };

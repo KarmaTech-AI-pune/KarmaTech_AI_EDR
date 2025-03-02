@@ -1,7 +1,7 @@
 import { ListItem,Typography, Dialog, DialogTitle, DialogContent, DialogActions, Box, Grid } from '@mui/material';
 import { Button } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { ProjectItemProps, ProjectFormData } from '../../types';
+import { ProjectItemProps, ProjectFormData } from '../../types/index';
 import { useState, useContext, useEffect } from 'react';
 import { projectApi } from '../../dummyapi/api';
 import { ProjectInitForm } from '../forms/ProjectInitForm';

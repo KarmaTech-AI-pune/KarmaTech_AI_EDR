@@ -6,7 +6,7 @@ import {
   MenuItem, 
   SelectChangeEvent 
 } from '@mui/material';
-import { ProjectStatus } from '../../types';
+import { ProjectStatus } from '../../types/index';
 
 export interface ProjectFilterProps {
   onFilterChange: (status: ProjectStatus | '') => void;

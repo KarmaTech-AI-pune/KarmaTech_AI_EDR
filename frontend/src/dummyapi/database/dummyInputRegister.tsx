@@ -1,4 +1,4 @@
-import { InputRegisterRow } from "../../models";
+import { InputRegisterRow } from "../../models/inputRegisterRowModel";
 
 export const dummyInputRegister: InputRegisterRow[] = [
     {

@@ -10,7 +10,7 @@ import { OpportunityTracking } from '../../models';
 interface OpportunityListProps {
   opportunities: OpportunityTracking[];
   emptyMessage?: string;
-  onOpportunityDeleted?: (opportunityId: number) => void;
+  onOpportunityDeleted?: (opportunityId: string) => void;
   onOpportunityUpdated?: () => void;
 }
 

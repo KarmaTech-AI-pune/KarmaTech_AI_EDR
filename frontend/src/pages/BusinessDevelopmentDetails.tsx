@@ -99,7 +99,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
       try {
         setIsLoading(true);
         if (opportunity) {
-          const historyData = await getOpportunityHistoriesByOpportunityId(opportunity.id?.toString() || '0');
+          const historyData = await getOpportunityHistoriesByOpportunityId(opportunity.id ?? 0);
           setHistories(historyData);
           // Reset the refresh trigger after data is fetched
           setRefreshed(false);
