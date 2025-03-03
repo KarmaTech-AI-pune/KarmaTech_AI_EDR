@@ -16,7 +16,8 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Role } from '../../models/index';
+import { PermissionType } from '../../models/index';
+import { Role } from '../../models/roleModel';
 import { AuthUser } from '../../models/userModel';
 import { RoleDefinition } from '../../models/roleDefinitionModel';
 import * as usersApi from '../../services/userApi';
@@ -33,6 +34,9 @@ const UsersManagement = () => {
     email: '',
     password: '',
     roles: [] as Role[],
+    standardRate: 0,
+    isConsultant: false,
+    createdAt: new Date().toISOString(),
   });
 
   useEffect(() => {
@@ -58,6 +62,9 @@ const UsersManagement = () => {
       email: '',
       password: '',
       roles: [],
+      standardRate: 0,
+      isConsultant: false,
+      createdAt: new Date().toISOString(),
     });
   };
 
@@ -76,6 +83,9 @@ const UsersManagement = () => {
         email: userDetails.email,
         password: '', // Don't populate password for security
         roles: userDetails.roles,
+        standardRate: userDetails.standardRate,
+        isConsultant: userDetails.isConsultant,
+        createdAt: userDetails.createdAt,
       });
       setOpen(true);
     } catch (error) {
@@ -130,18 +140,18 @@ const UsersManagement = () => {
   const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
     const selectedValues = event.target.value as string[];
     // Map selected role names to actual Role objects from the API
-const selectedRoles = selectedValues
-  .map(value => availableRoles.find((role: RoleDefinition) => role.name === value))
-  .filter((role): role is RoleDefinition => role !== undefined)
-  .map(roleDefinition => ({
-    id: roleDefinition.id,
-    name: roleDefinition.name,
-    permissions: roleDefinition.permissions.map(permission => permission.toString()),
-  }));
-setFormData(prev => ({
-  ...prev,
-  roles: selectedRoles,
-}));
+    const selectedRoles = selectedValues
+      .map(value => availableRoles.find((role: RoleDefinition) => role.name === value))
+      .filter((role): role is RoleDefinition => role !== undefined)
+      .map(roleDefinition => ({
+        id: roleDefinition.id,
+        name: roleDefinition.name,
+        permissions: roleDefinition.permissions.map(permission => permission as PermissionType),
+      }));
+    setFormData(prev => ({
+      ...prev,
+      roles: selectedRoles,
+    }));
   };
 
   return (

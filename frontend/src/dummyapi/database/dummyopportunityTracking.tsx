@@ -210,7 +210,7 @@ const opportunityTrackingRawData =  {
 
 // Transform into typed array
 export const opportunityTrackings: OpportunityTracking[] = Object.values(opportunityTrackingRawData).map(tracking => ({
-  id: tracking.id as number | undefined,
+  id: tracking.id,
   projectId: tracking.projectId,
   stage: tracking.stage,
   strategicRanking: tracking.strategicRanking,

@@ -158,7 +158,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
     const loadInitialData = async () => {
       if (context.selectedProject?.id) {
         try {
-          const response = await goNoGoApi.getByOpportunityId(context.selectedProject.id);
+          const response = await goNoGoApi.getByOpportunityId(Number(context.selectedProject.id));
           if (response && response.id) {
             setTotalScore(response.totalScore);
             setDecisionId(response.id);
@@ -454,7 +454,6 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
               return userRole === 'Regional Manager';
             case GoNoGoVersionStatus.RM_APPROVED:
                 return userRole === 'Regional Director';
-            case GoNoGoVersionStatus.RM_APPROVED:
             case GoNoGoVersionStatus.RD_APPROVED:
                 return userRole === 'Regional Director';
             default:
@@ -568,7 +567,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
           ActionPlan: ''
         },
         MetaData: {
-          OpprotunityId: context.selectedProject.id,
+          OpprotunityId: Number(context.selectedProject.id),
           Id: decisionId || 0,
           CompletedDate: new Date().toLocaleString(),
           CompletedBy: context?.user?.name?.substring(0, 100) || '',         

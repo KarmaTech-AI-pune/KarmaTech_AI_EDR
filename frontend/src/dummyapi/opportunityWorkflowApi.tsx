@@ -50,14 +50,14 @@ export const updateWorkflow = async (opportunityId: number, workflowId: string, 
 
         // Then update the opportunity if opportunityData is provided
         if (opportunityData) {
-            const opportunity = await opportunityApi.getById(opportunityId);
-            if (opportunity) {
-                await opportunityApi.update(opportunityId,{
-                    ...opportunity,
-                    ...opportunityData,
-                    workflowId: workflowId // Ensure workflow ID is updated in opportunity as well
-                });
-            }
+          const opportunity = await opportunityApi.getById(opportunityId);
+          if (opportunity) {
+            await opportunityApi.update(opportunityId, {
+              ...opportunity,
+              ...opportunityData,
+              workflowId: workflowId, // Ensure workflow ID is updated in opportunity as well
+            });
+          }
         }
 
         return updatedWorkflow;

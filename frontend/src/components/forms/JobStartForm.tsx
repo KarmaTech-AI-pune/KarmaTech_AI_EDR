@@ -164,8 +164,8 @@ const JobStartForm: React.FC = () => {
         setError(null);
 
         const [allocations, wbsTasks] = await Promise.all([
-          ResourceAPI.getResourceAllocations(context.selectedProject.id),
-          WBSStructureAPI.getProjectWBS(context.selectedProject.id)
+          ResourceAPI.getResourceAllocations(context.selectedProject.id.toString()),
+          WBSStructureAPI.getProjectWBS(context.selectedProject.id.toString())
         ]);
 
         const employeeMap = new Map<string, EmployeeAllocation>();

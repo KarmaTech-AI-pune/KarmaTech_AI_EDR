@@ -101,12 +101,25 @@ export const BusinessDevelopment: React.FC = () => {
         throw new Error('User not authenticated');
       }
 
+      // Construct a valid OpportunityHistory object
+      const currentHistory = {
+        id: 0, // Provide a default value
+        opportunityId: 0, // Provide a default value
+        action: 'Created', // Provide a default value
+        status: opportunityData.status || '', // Use the status from the form
+        statusId: 1, // Provide a default value
+        assignedToId: currentUser.id, // Provide a default value
+        date: new Date().toISOString(), // Provide a default value
+        description: 'Opportunity Created', // Provide a default value
+      };
+
       const submissionData = {
         ...opportunityData,
         createdBy: currentUser.name,
         createdAt: new Date().toISOString(),
         updatedBy: currentUser.name,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        currentHistory: currentHistory, // Assign the constructed OpportunityHistory object
       };
 
       const createdOpportunity = await opportunityApi.create(submissionData);
