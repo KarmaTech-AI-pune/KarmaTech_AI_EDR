@@ -1,4 +1,4 @@
-import { AuthUser } from "../../models";
+import { AuthUser } from "../../models/userModel";
 import { getRole } from "./dummyRoles";
 
 const usersRawData = {

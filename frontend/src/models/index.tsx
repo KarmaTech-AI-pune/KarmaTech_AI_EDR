@@ -68,7 +68,7 @@ export interface OpportunityTracking {
     statusId: number;
     status: string;
   };
-    id?: number;
+    id: number;
     stage?: string;
     strategicRanking?: string;
     bidFees?: number;

@@ -4,20 +4,22 @@ import { DecideApproval, DecideReview, SendForReview, SendForApproval } from '..
 import { useState, useContext, useEffect } from 'react';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { projectManagementAppContext } from '../../App';
+import { OpportunityTracking } from '../../models/opportunityTrackingModel';
+
 interface WorkflowStatus {
   id: number;
   name: string;
   status: string;
 }
 
-interface OpportunityHistory {
-  statusId: number;
-}
+// interface OpportunityHistory {
+//   statusId: number;
+// }
 
-interface OpportunityTracking {
-  id: number;
-  currentHistory: OpportunityHistory;
-}
+// interface OpportunityTracking {
+//   id: number;
+//   currentHistory: OpportunityHistory;
+// }
 
 // Type guard to check if workflow status is valid
 const isValidWorkflowStatus = (status: any): status is WorkflowStatus => {
