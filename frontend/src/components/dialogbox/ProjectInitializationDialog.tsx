@@ -82,7 +82,7 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
   };
 
   const handleOpportunitySelect = (event: SelectChangeEvent<string>) => {
-    setSelectedOpportunityId(event.target.target.value);
+    setSelectedOpportunityId(event.target.value);
     setImportedProjectData(null);
   };
 

@@ -121,7 +121,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
         const updatedOpportunity = await opportunityApi.getById(opportunity.id || 0);
         if (updatedOpportunity) {
           // Use type assertion to match expected type
-          context.setSelectedProject(updatedOpportunity as any);
+          context.setSelectedProject(updatedOpportunity as OpportunityTracking); // Line 124
           // Trigger refresh after opportunity is updated
           setRefreshed(true);
         }
@@ -208,7 +208,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const handleFormSubmit = async (data: OpportunityTracking) => {
     try {
       // Use type assertion to match expected type
-      await opportunityApi.create(data as any);
+      await opportunityApi.create(data as Partial<OpportunityTracking>);
       // Trigger refresh after form submission
       setRefreshed(true);
       handleOpportunityUpdate();
@@ -217,7 +217,9 @@ export const BusinessDevelopmentDetails: React.FC = () => {
     }
   };
 
-  const isOpportunityApproved = opportunity?.currentHistory?.statusId === 6;
+const isOpportunityApproved = Array.isArray(opportunity?.currentHistory)
+  ? opportunity?.currentHistory.some((history) => history.statusId === 6)
+  : opportunity?.currentHistory?.statusId === 6;
 
   const formSections = [
     {

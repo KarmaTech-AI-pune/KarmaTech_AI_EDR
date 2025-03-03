@@ -59,15 +59,14 @@ export interface OpportunityHistory {
     date:string;
     description:string;
     id: number;
-    statusId?: number;
-    status?: string;
+    statusId: number;
+    status: string;
+    action: string;
+    assignedToId: string;
 }
 
 export interface OpportunityTracking {
-  currentHistory?: {
-    statusId: number;
-    status: string;
-  };
+  currentHistory?: OpportunityHistory | OpportunityHistory[];
     id: number;
     stage?: string;
     strategicRanking?: string;
