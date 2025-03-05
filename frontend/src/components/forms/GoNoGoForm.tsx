@@ -550,7 +550,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
           emdAmount: updatedFields.HeaderInfo.Emd,
           totalScore: updatedFields.Summary.TotalScore,
           status: updatedFields.Summary.Status,
-          opprotunityId: updatedFields.MetaData.OpprotunityId,
+          opportunityId: updatedFields.MetaData.OpprotunityId,
           
           // Scoring fields
           marketingPlanScore: updatedFields.ScoringCriteria.MarketingPlan.Score,

@@ -154,7 +154,7 @@ export const goNoGoDecisions: GoNoGoDecision[] = Object.values(goNoGoRawData).ma
   createdBy: decision.completedBy,
   bdHead: "",
   office: "",
-  opprotunityId: null
+  opportunityId: null
 }));
 
 // Utility functions
