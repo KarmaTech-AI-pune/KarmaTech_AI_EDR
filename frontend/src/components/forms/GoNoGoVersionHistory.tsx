@@ -18,19 +18,15 @@ interface Props {
   onVersionSelect: (version: GoNoGoVersionDto) => void;
   onApprove: (version: GoNoGoVersionDto) => void;
   userRole: string;
-  score:number;
+  score: number;
 }
 
 const canUserApprove = (status: GoNoGoVersionStatus, userRole: string): boolean => {
   switch (status) {
     case GoNoGoVersionStatus.BDM_PENDING:
-      
       return userRole === 'Business Development Manager';
     case GoNoGoVersionStatus.RM_PENDING:
       return userRole === 'Regional Manager';
-    case GoNoGoVersionStatus.RD_PENDING:      
-        case GoNoGoVersionStatus.COMPLETED:
-      return userRole === 'Regional Director';
     default:
       return false;
   }
@@ -57,7 +53,7 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
   currentVersion,
   onVersionSelect,
   onApprove,
-  userRole  
+  userRole
 }) => {
   return (
     <Paper sx={{ p: 2, mb: 3 }}>
@@ -75,8 +71,8 @@ const GoNoGoVersionHistory: React.FC<Props> = ({
               primary={`Version ${version.versionNumber}`}
               secondary={
                 <>
-                  Created by {version.createdBy} on {new Date(version.createdAt).toLocaleString('en-IN')}                
-                 
+                  Created by {version.createdBy} on {new Date(version.createdAt).toLocaleString('en-IN')}
+
                   <br /> Score: {JSON.parse(version.formData).Summary.TotalScore}
                 </>
               }
