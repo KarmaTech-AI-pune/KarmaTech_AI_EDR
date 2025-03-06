@@ -1,5 +1,6 @@
-import { WorkflowStatus } from "../../models/workflowStatusModel";
 import { WorkflowEntry } from "../../models/workflowEntryModel";
+import { WorkflowStatus } from "../../models/workflowStatusModel";
+
 
 export const workflowStatuses: WorkflowStatus[] = [
     {
@@ -85,8 +86,8 @@ export const getWorkflowStatusById = (id: number) => {
     return workflowStatuses.find(status => status.id === id);
 };
 
-export const getWorkflowStatusByName = (status: string): WorkflowStatus | undefined => {
+export function getWorkflowStatusByName({ status }: { status: string; }): WorkflowStatus {
     return workflowStatuses.find(s => s.status === status);
-};
+}
 
 export default workflowData;

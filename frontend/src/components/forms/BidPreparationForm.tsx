@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import BidVersionHistory from './BidVersionHistory';
 import {
   Box,
   Table,
@@ -23,6 +24,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format } from 'date-fns';
 import { FormWrapper } from './FormWrapper';
+import { getBidVersionHistory, updateCurrentChecklist } from '../../dummyapi/bidVersionHistoryApi';
 
 const DOCUMENT_CATEGORIES = [
   {
@@ -104,6 +106,7 @@ interface ChecklistItem {
 }
 
 const initializeChecklist = (): ChecklistItem[] => {
+  // ... (initializeChecklist implementation remains the same)
   let srNo = 1;
   const items: ChecklistItem[] = [];
   
@@ -145,6 +148,20 @@ const BidPreparationForm: React.FC = () => {
   const [nextSrNo, setNextSrNo] = useState(DOCUMENT_CATEGORIES.length + 1);
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState<string>('');
+  const [versionHistory, setVersionHistory] = useState<any>(null);
+
+  useEffect(() => {
+    loadVersionHistory();
+  }, []);
+
+  const loadVersionHistory = async () => {
+    try {
+      const history = await getBidVersionHistory();
+      setVersionHistory(history);
+    } catch (err) {
+      setError('Failed to load version history');
+    }
+  };
 
   const handleAddItem = () => {
     const newItem: ChecklistItem = {
@@ -212,8 +229,10 @@ const BidPreparationForm: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      // TODO: Implement submission logic
+      // Save checklist and update version history
       console.log('Submitting checklist:', checklist);
+      await updateCurrentChecklist(checklist);
+      await loadVersionHistory(); // Reload version history after update
       setError('');
     } catch (err) {
       setError('Failed to save checklist data');
@@ -440,8 +459,8 @@ const BidPreparationForm: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-     
-        {formContent}
+      <BidVersionHistory />
+      {formContent}
     </LocalizationProvider>
   );
 };
