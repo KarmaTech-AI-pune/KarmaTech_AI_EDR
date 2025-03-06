@@ -4,7 +4,7 @@ import { DecideApproval, DecideReview, SendForReview, SendForApproval } from '..
 import { useState, useContext, useEffect } from 'react';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { projectManagementAppContext } from '../../App';
-import { OpportunityTracking } from '../../models/opportunityTrackingModel';
+import { OpportunityTracking } from '../../models';
 
 interface WorkflowStatus {
   id: number;

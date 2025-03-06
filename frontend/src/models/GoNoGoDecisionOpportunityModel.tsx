@@ -1,4 +1,4 @@
-import { OpportunityTracking } from './opportunityTrackingModel';
+import { OpportunityTracking } from './index';
 
 export interface GoNoGoDecisionOpportunityModel {
     id: number;
@@ -62,5 +62,3 @@ export class GoNoGoDecisionOpportunityClass{
         this.scoringDescriptions = [];
     }
 }
-
-

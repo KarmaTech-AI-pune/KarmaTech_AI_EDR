@@ -18,10 +18,9 @@ import { Pagination } from '../components/Pagination';
 import { authApi } from '../services/authApi';
 import { UserWithRole } from '../types';
 
-import { PermissionType } from '../models';
+import { PermissionType, OpportunityTracking } from '../models';
 import { opportunityApi } from '../services/opportunityApi';
 import { HistoryLoggingService } from '../services/historyLoggingService';
-import { OpportunityTracking } from '../models/opportunityTrackingModel';
 
 const NAVBAR_HEIGHT = '64px';
 

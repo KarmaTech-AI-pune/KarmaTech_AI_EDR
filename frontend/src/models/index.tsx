@@ -1,4 +1,5 @@
 export type { GoNoGoDecision } from './goNoGoDecisionModel';
+export type { OpportunityTracking } from './opportunityTrackingModel';
 
 export {
     GoNoGoStatus,
@@ -65,43 +66,7 @@ export interface OpportunityHistory {
     assignedToId: string;
 }
 
-export interface OpportunityTracking {
-  currentHistory?: OpportunityHistory | OpportunityHistory[];
-    id: number;
-    stage?: string;
-    strategicRanking?: string;
-    bidFees?: number;
-    emd?: number;
-    formOfEMD?: string;
-    bidManagerId?: string;
-    reviewManagerId?: string;
-    approvalManagerId?: string;
-    contactPersonAtClient?: string;
-    dateOfSubmission?: string;
-    percentageChanceOfProjectHappening?: number;
-    percentageChanceOfNJSSuccess?: number;
-    likelyCompetition?: string;
-    grossRevenue?: number;
-    netNJSRevenue?: number;
-    followUpComments?: string;
-    notes?: string;
-    probableQualifyingCriteria?: string;
-    operation?: string;
-    workName?: string;
-    client?: string;
-    clientSector?: string;
-    likelyStartDate?: string;
-    status?: string;
-    currency?: string;
-    capitalValue?: number;
-    durationOfProject?: number;
-    fundingStream?: string;
-    contractType?: string;
-    createdAt?: string;
-    updatedAt?: string;
-    workflowId?: string;
-    projectId?: string;
-}
+// OpportunityTracking is now imported from './opportunityTrackingModel'
 
 export enum PermissionType {
     VIEW_PROJECT = 'VIEW_PROJECT',

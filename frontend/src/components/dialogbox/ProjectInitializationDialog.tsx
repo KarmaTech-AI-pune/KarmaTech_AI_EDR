@@ -108,7 +108,9 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
       typeOfClient: opportunity.clientSector ?? '',
       estimatedCost: opportunity.capitalValue ?? 0,
       feeType: opportunity.contractType === 'Lump Sum' ? 'Lumpsum' : opportunity.contractType ?? '',
-      startDate: opportunity.likelyStartDate ?? '',
+      startDate: opportunity.likelyStartDate instanceof Date 
+        ? opportunity.likelyStartDate.toISOString().split('T')[0] 
+        : opportunity.likelyStartDate ?? '',
       endDate: '', // Can be calculated based on durationOfProject if needed
       currency: opportunity.currency ?? '',
       budget: opportunity.capitalValue ?? 0, // Using capitalValue as initial budget

@@ -86,7 +86,7 @@ export const getWorkflowStatusById = (id: number) => {
     return workflowStatuses.find(status => status.id === id);
 };
 
-export function getWorkflowStatusByName({ status }: { status: string; }): WorkflowStatus {
+export function getWorkflowStatusByName({ status }: { status: string; }): WorkflowStatus | undefined {
     return workflowStatuses.find(s => s.status === status);
 }
 

@@ -2,7 +2,7 @@ import workflowData from './database/dummyOpporunityWorkflow';
 import type { WorkflowEntry } from '../models/workflowEntryModel';
 import { opportunityApi } from './opportunityApi';
 import { getOpportunityById } from './database/dummyopportunityTracking';
-import { OpportunityTracking } from '../models/opportunityTrackingModel';
+import { OpportunityTracking } from '../models';
 
 // Mutable array to store workflow data
 const mutableWorkflowData: WorkflowEntry[] = [...workflowData];

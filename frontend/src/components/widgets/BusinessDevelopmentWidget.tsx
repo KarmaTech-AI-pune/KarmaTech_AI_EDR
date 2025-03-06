@@ -1,4 +1,4 @@
-import { OpportunityTracking } from '../../models/opportunityTrackingModel'
+import { OpportunityTracking } from '../../models'
 import { Card, CardContent, Typography, Grid, Chip, Divider, Box } from '@mui/material';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { getUserById } from '../../services/userApi';

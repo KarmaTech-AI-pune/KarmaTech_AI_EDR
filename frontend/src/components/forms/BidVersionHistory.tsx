@@ -12,7 +12,6 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { 
   getBidVersionHistory, 
   sendToApprove,
-  BidVersion,
   BidVersionHistory as BidVersionHistoryType
 } from '../../dummyapi/bidVersionHistoryApi';
 
@@ -42,7 +41,7 @@ const BidVersionHistory: React.FC<BidVersionHistoryProps> = () => {
       await sendToApprove(versionHistory.currentChecklist, `${versionHistory.currentReviewer}1`);
       const history = await getBidVersionHistory();
       setVersionHistory(history);
-    } catch (err) {
+    } catch {
       setError('Failed to send for approval');
     }
   };
@@ -52,7 +51,7 @@ const BidVersionHistory: React.FC<BidVersionHistoryProps> = () => {
       await sendToApprove(versionHistory.currentChecklist, `${versionHistory.currentReviewer}1`);
       const history = await getBidVersionHistory();
       setVersionHistory(history);
-    } catch (err) {
+    } catch {
       setError('Failed to approve');
     }
   };

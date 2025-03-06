@@ -21,10 +21,10 @@ import {projectManagementAppContextType } from '../../types';
 
 import { AuthUser } from "../../models/userModel";
 import { getUsersByRole } from '../../services/userApi';
-import { OpportunityTracking } from '../../models/opportunityTrackingModel';
+import { OpportunityTracking } from '../../models';
 
 interface OpportunityFormProps {
-  onSubmit: (data: OpportunityTracking) => void;
+  onSubmit: (data: OpportunityTracking) => void | Promise<void>;
   project?: Partial<OpportunityTracking>;
   error?: string;
 }
