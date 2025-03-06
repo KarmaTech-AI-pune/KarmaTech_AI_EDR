@@ -22,7 +22,7 @@ export interface GoNoGoDecision {
   emdAmount: number;
   totalScore: number;
   status: GoNoGoStatus;
-  opprotunityId: number;
+  opprotunityId: number | null;
   projectId?: number;
 
   // Scoring fields

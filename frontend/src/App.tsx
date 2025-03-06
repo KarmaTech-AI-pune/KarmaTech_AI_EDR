@@ -127,10 +127,12 @@ function App() {
     "Bid Preparation Form" : <BidPreparationForm/>,
     "GoNoGo Form" : selectedProject ? (
       <GoNoGoForm 
-        projectId={selectedProject.id} 
-        initialDecision={currentGoNoGoDecision || undefined}
-        onSubmit={(decision) => {
-          setCurrentGoNoGoDecision(decision);
+        onDecisionStatusChange={(status) => {
+          // Update the current decision based on the status
+          if (currentGoNoGoDecision) {
+            const updatedDecision = { ...currentGoNoGoDecision, status: status === "GO" ? 1 : 0 };
+            setCurrentGoNoGoDecision(updatedDecision);
+          }
           setScreenState("Business Development Details");
         }}
       />

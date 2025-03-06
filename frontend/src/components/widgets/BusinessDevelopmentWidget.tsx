@@ -1,9 +1,8 @@
-
+import { OpportunityTracking } from '../../models/opportunityTrackingModel'
 import { Card, CardContent, Typography, Grid, Chip, Divider, Box } from '@mui/material';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { getUserById } from '../../services/userApi';
 import { useEffect, useState } from 'react';
-import { OpportunityTracking } from '../../models/opportunityTrackingModel';
 
 interface BusinessDevelopmentWidgetProps {
   opportunity: OpportunityTracking;
@@ -78,17 +77,6 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
     }
   };
 
-  const getManagerName = async (managerId: string | undefined) => {
-    if (!managerId) return 'Not assigned';
-    try {
-      const manager = await getUserById(managerId);
-      return manager ? manager.name : 'Unknown';
-    } catch (error) {
-      console.error('Error fetching manager:', error);
-      return 'Unknown';
-    }
-  };
-
   return (
     <Card sx={{ mb: 3, boxShadow: 3 }}>
       <CardContent>
@@ -115,8 +103,18 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
                 sx={{ mr: 1, mb: 1 }}
               />
               <Chip 
-                label={`Workflow: ${getWorkflowStatusById(opportunity.currentHistory.statusId)?.status || 'Not specified'}`}
-                color={getWorkflowColor(opportunity.currentHistory.statusId)}
+                label={`Workflow: ${
+                  opportunity.currentHistory
+                    ? Array.isArray(opportunity.currentHistory)
+                      ? getWorkflowStatusById(opportunity.currentHistory[0]?.statusId)?.status || 'Not specified'
+                      : getWorkflowStatusById(opportunity.currentHistory.statusId)?.status || 'Not specified'
+                    : 'Not specified'
+                }`}
+                color={
+                  Array.isArray(opportunity.currentHistory)
+                    ? getWorkflowColor(opportunity.currentHistory[0]?.statusId || 0) 
+                    : getWorkflowColor(opportunity.currentHistory?.statusId || 0) 
+                }
                 sx={{ mb: 1 }}
               />
             </Grid>

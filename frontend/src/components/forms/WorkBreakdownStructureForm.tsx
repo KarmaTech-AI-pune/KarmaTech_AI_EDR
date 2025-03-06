@@ -126,8 +126,8 @@ const WorkBreakdownStructureForm: React.FC = () => {
         }
 
         // Load existing WBS data if project is selected
-        if (context?.selectedProject?.id) {
-          await loadWBSData(context.selectedProject.id);
+if (context?.selectedProject?.id) {
+          await loadWBSData(context.selectedProject.id.toString());
         }
       } catch (err) {
         setError('Failed to load initial data');
@@ -355,7 +355,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
         return;
       }
 
-      const projectId = context.selectedProject.id;
+      const projectId = context.selectedProject.id.toString();
 
       // Save all WBS data using setProjectWBS
       await WBSStructureAPI.setProjectWBS(projectId, rows);

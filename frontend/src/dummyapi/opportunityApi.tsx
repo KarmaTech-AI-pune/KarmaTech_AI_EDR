@@ -179,10 +179,10 @@ export const opportunityApi = {
         followUpComments: preparedData.followUpComments,
         notes: preparedData.notes,
         probableQualifyingCriteria: preparedData.probableQualifyingCriteria,
-        currentHistory: preparedData.currentHistory 
-          ? Array.isArray(preparedData.currentHistory) 
-            ? preparedData.currentHistory 
-            : [preparedData.currentHistory]
+        currentHistory: preparedData.currentHistory
+          ? (Array.isArray(preparedData.currentHistory)
+            ? preparedData.currentHistory
+            : [preparedData.currentHistory]) as OpportunityHistory[]
           : undefined
       };
       
