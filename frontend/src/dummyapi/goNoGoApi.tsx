@@ -1,5 +1,5 @@
 import { axiosInstance as axios } from './axiosConfig';
-import { GoNoGoDecision } from '../models/goNoGoDecisionModel';
+import { GoNoGoDecisionPayload } from '../models/goNoGoDecisionModel';
 import { GoNoGoVersionDto, CreateGoNoGoVersionDto, ApproveGoNoGoVersionDto } from '../models/goNoGoVersionModel.tsx';
 
 export const goNoGoApi = {
@@ -23,17 +23,13 @@ export const goNoGoApi = {
         return response.data;
     },
 
-    create: async (decision: GoNoGoDecision) => {
-        const response = await axios.post(`/api/gonogodecision/createForm`, {
-            ...decision
-        });
+    create: async (decision: GoNoGoDecisionPayload) => {
+        const response = await axios.post(`/api/gonogodecision/createForm`, decision);
         return response.data;
     },
 
-    update: async (decision: GoNoGoDecision) => {
-        const response = await axios.post(`/api/gonogodecision/createForm`, {
-            ...decision
-        });
+    update: async (decision: GoNoGoDecisionPayload) => {
+        const response = await axios.post(`/api/gonogodecision/createForm`, decision);
         return response.data;
     },
 
@@ -55,7 +51,6 @@ export const goNoGoApi = {
 
     createVersion: async (headerId: number, dto: CreateGoNoGoVersionDto): Promise<GoNoGoVersionDto> => {
         const response = await axios.post(`/api/gonogodecision/${headerId}/versions/update`, dto);
-        debugger;
         return response.data;
     },
 

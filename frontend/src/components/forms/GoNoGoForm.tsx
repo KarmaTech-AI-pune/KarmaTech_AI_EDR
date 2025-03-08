@@ -32,45 +32,7 @@ import GoNoGoApprovalStatus from "./GoNoGoApprovalStatus";
 import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
 import { getScoringDescriptions } from '../../services/scoringDescriptionApi';
-import { GoNoGoDecision } from '../../models/goNoGoDecisionModel';
-
-interface GoNoGoDecisionPayload {
-  HeaderInfo: {
-    TypeOfBid: TypeOfBid;
-    Sector: string;
-    TenderFee: number;
-    Emd: number;
-    Office: string;
-    BdHead: string;
-  };
-  ScoringCriteria: {
-    MarketingPlan: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    ClientRelationship: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    ProjectKnowledge: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    TechnicalEligibility: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    FinancialEligibility: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    StaffAvailability: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    CompetitionAssessment: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    CompetitivePosition: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    FutureWorkPotential: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    Profitability: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    BidSchedule: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    ResourceAvailability: { Score: number; Comments: string; ScoringDescriptionId: number; };
-  };
-  Summary: {
-    TotalScore: number;
-    Status: GoNoGoStatus;
-    DecisionComments: string;
-    ActionPlan: string;
-  };
-  MetaData: {
-    OpprotunityId: number;
-    Id?: number;
-    CompletedDate: string;
-    CompletedBy: string;
-    CreatedBy: string;
-  };
-}
+import { GoNoGoDecisionPayload } from '../../models/goNoGoDecisionModel';
 
 interface ScoringCriteria {
   byWhom: string;
@@ -344,7 +306,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
   const handleApproveVersion = useCallback(async (version: GoNoGoVersionDto) => {
     try {
       await goNoGoApi.approveVersion(version.goNoGoDecisionHeaderId, version.versionNumber, {
-        approvedBy: context?.user?.userName || '',
+        approvedBy: context?.user?.name || '',
         comments: ''
       });
       if (version.goNoGoDecisionHeaderId) {
@@ -540,53 +502,8 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       }
       else {
         // For new decisions, start with version 1 and BDM_PENDING status
-        // Convert GoNoGoDecisionPayload to GoNoGoDecision
-        const goNoGoDecision: GoNoGoDecision = {
-          bidType: updatedFields.HeaderInfo.TypeOfBid,
-          sector: updatedFields.HeaderInfo.Sector,
-          bdHead: updatedFields.HeaderInfo.BdHead,
-          office: updatedFields.HeaderInfo.Office,
-          tenderFee: updatedFields.HeaderInfo.TenderFee,
-          emdAmount: updatedFields.HeaderInfo.Emd,
-          totalScore: updatedFields.Summary.TotalScore,
-          status: updatedFields.Summary.Status,
-          opportunityId: updatedFields.MetaData.OpprotunityId,
-          
-          // Scoring fields
-          marketingPlanScore: updatedFields.ScoringCriteria.MarketingPlan.Score,
-          marketingPlanComments: updatedFields.ScoringCriteria.MarketingPlan.Comments,
-          clientRelationshipScore: updatedFields.ScoringCriteria.ClientRelationship.Score,
-          clientRelationshipComments: updatedFields.ScoringCriteria.ClientRelationship.Comments,
-          projectKnowledgeScore: updatedFields.ScoringCriteria.ProjectKnowledge.Score,
-          projectKnowledgeComments: updatedFields.ScoringCriteria.ProjectKnowledge.Comments,
-          technicalEligibilityScore: updatedFields.ScoringCriteria.TechnicalEligibility.Score,
-          technicalEligibilityComments: updatedFields.ScoringCriteria.TechnicalEligibility.Comments,
-          financialEligibilityScore: updatedFields.ScoringCriteria.FinancialEligibility.Score,
-          financialEligibilityComments: updatedFields.ScoringCriteria.FinancialEligibility.Comments,
-          staffAvailabilityScore: updatedFields.ScoringCriteria.StaffAvailability.Score,
-          staffAvailabilityComments: updatedFields.ScoringCriteria.StaffAvailability.Comments,
-          competitionAssessmentScore: updatedFields.ScoringCriteria.CompetitionAssessment.Score,
-          competitionAssessmentComments: updatedFields.ScoringCriteria.CompetitionAssessment.Comments,
-          competitivePositionScore: updatedFields.ScoringCriteria.CompetitivePosition.Score,
-          competitivePositionComments: updatedFields.ScoringCriteria.CompetitivePosition.Comments,
-          futureWorkPotentialScore: updatedFields.ScoringCriteria.FutureWorkPotential.Score,
-          futureWorkPotentialComments: updatedFields.ScoringCriteria.FutureWorkPotential.Comments,
-          profitabilityScore: updatedFields.ScoringCriteria.Profitability.Score,
-          profitabilityComments: updatedFields.ScoringCriteria.Profitability.Comments,
-          bidScheduleScore: updatedFields.ScoringCriteria.BidSchedule.Score,
-          bidScheduleComments: updatedFields.ScoringCriteria.BidSchedule.Comments,
-          resourceAvailabilityScore: updatedFields.ScoringCriteria.ResourceAvailability.Score,
-          resourceAvailabilityComments: updatedFields.ScoringCriteria.ResourceAvailability.Comments,
-          
-          // Metadata
-          completedDate: updatedFields.MetaData.CompletedDate,
-          completedBy: updatedFields.MetaData.CompletedBy,
-          createdBy: updatedFields.MetaData.CreatedBy,
-          decisionComments: updatedFields.Summary.DecisionComments,
-          actionPlan: updatedFields.Summary.ActionPlan
-        };
-        
-        const response = await goNoGoApi.create(goNoGoDecision);
+        // Send the structured payload directly
+        const response = await goNoGoApi.create(updatedFields);
         if (response.headerId) {
           await loadVersions(response.headerId);
         }
