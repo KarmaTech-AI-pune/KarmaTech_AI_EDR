@@ -155,6 +155,9 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
   };
   const [versions, setVersions] = useState<GoNoGoVersionDto[]>([]);
   const [currentVersion, setCurrentVersion] = useState<GoNoGoVersionDto | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isVersionSelected, setIsVersionSelected] = useState(false);
   const [totalScore, setTotalScore] = useState<number | null>(null);
   const [decisionId, setDecisionId] = useState<number | null>(null);
   const [headerInfo, setHeaderInfo] = useState<HeaderInfo>({
@@ -256,6 +259,9 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
   };
 
   const handleVersionSelect = useCallback((version: GoNoGoVersionDto) => {
+    setIsEditing(true);
+    setCurrentVersion(version);
+    setIsVersionSelected(true);
     const formData = JSON.parse(version.formData);
 
     // Update decision status when selecting RD-approved version
@@ -285,6 +291,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
 
   const loadVersions = useCallback(async (headerId: number) => {
     try {
+      setIsLoading(true);
       const fetchedVersions = await goNoGoApi.getVersions(headerId);
 
       // Sort versions by version number in ascending order
@@ -298,13 +305,25 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       // Set the versions in the correct order (RD -> RM -> BDM)
       const orderedVersions = [rdVersion, rmVersion, bdmVersion].filter((v): v is GoNoGoVersionDto => v !== undefined);
       setVersions(orderedVersions);
+      
+      // Set the current version to the RD version if it exists
+      if (rdVersion) {
+        setCurrentVersion(rdVersion);
+        setIsVersionSelected(true);
+      } else if (orderedVersions.length > 0) {
+        setCurrentVersion(orderedVersions[0]);
+        setIsVersionSelected(true);
+      }
     } catch (error) {
       console.error('Error loading versions:', error);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   const handleApproveVersion = useCallback(async (version: GoNoGoVersionDto) => {
     try {
+      setIsLoading(true);
       await goNoGoApi.approveVersion(version.goNoGoDecisionHeaderId, version.versionNumber, {
         approvedBy: context?.user?.name || '',
         comments: ''
@@ -321,37 +340,53 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       }
     } catch (error) {
       console.error('Error approving version:', error);
+    } finally {
+      setIsLoading(false);
     }
   }, [context?.user?.name, onDecisionStatusChange, calculateTotalScore, loadVersions]);
 
 
-  const canEditForm = useCallback((): boolean => {
-    if (!currentVersion) return true;
+const canEditForm = useCallback((): boolean => {
+  if (!currentVersion) return true;
 
-    const status = currentVersion.status as GoNoGoVersionStatus;
-    const userRole = context?.user?.roles?.[0].name;
+  const status = currentVersion.status as GoNoGoVersionStatus;
+  const userRole = context?.user?.roles?.[0].name;
 
-    // Allow editing if it's the user's turn to approve or if they are the creator
-    switch (status) {
-      case GoNoGoVersionStatus.BDM_PENDING:
-        return userRole === 'Business Development Manager';
-      case GoNoGoVersionStatus.RM_PENDING:
-        return userRole === 'Regional Manager';
-      case GoNoGoVersionStatus.RD_PENDING:
-        return userRole === 'Regional Director';
-      case GoNoGoVersionStatus.BDM_APPROVED:
-        return userRole === 'Regional Manager';
-      case GoNoGoVersionStatus.RM_APPROVED:
-        return userRole === 'Regional Director';
-      case GoNoGoVersionStatus.RD_APPROVED:
-        return userRole === 'Regional Director';
-      default:
-        return false;
-    }
-  }, [currentVersion, context?.user?.roles]);
+  // Allow editing if it's the user's turn to approve or if they are the creator
+  switch (status) {
+    case GoNoGoVersionStatus.BDM_PENDING:
+      return userRole === 'Business Development Manager';
+    case GoNoGoVersionStatus.RM_PENDING:
+      return userRole === 'Regional Manager';
+    case GoNoGoVersionStatus.RD_PENDING:
+      return userRole === 'Regional Director';
+    case GoNoGoVersionStatus.BDM_APPROVED:
+      return userRole === 'Regional Manager';
+    case GoNoGoVersionStatus.RM_APPROVED:
+      return userRole === 'Regional Director';
+    case GoNoGoVersionStatus.RD_APPROVED:
+      return userRole === 'Regional Director';
+    default:
+      return false;
+  }
+}, [currentVersion, context?.user?.roles]);
+
+const isHeaderReadOnly = useCallback((): boolean => {
+  // Header is read-only if:
+  // 1. There is a current version (form has been submitted)
+  // 2. The current version's status is not BDM_PENDING (BDM has submitted it)
+  return !!(currentVersion && 
+    currentVersion.status !== GoNoGoVersionStatus.BDM_PENDING);
+}, [currentVersion]);
 
 
   const handleHeaderChange = (field: keyof HeaderInfo, value: string | TypeOfBid) => {
+    // If header is read-only, don't allow changes
+    if (isHeaderReadOnly()) {
+      console.log('Header information is read-only after submission');
+      return;
+    }
+    
     setHeaderInfo(prev => {
       if (field === 'typeOfBid') {
         // Convert string to TypeOfBid enum
@@ -498,6 +533,12 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
               currentVersion.versionNumber
             );
           }
+          
+          // Scroll to top to make version visible to user
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
         }
       }
       else {
@@ -506,6 +547,12 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
         const response = await goNoGoApi.create(updatedFields);
         if (response.headerId) {
           await loadVersions(response.headerId);
+          
+          // Scroll to top to make version visible to user
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
         }
       }
     } catch (error) {
@@ -568,12 +615,18 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
 
   return (
     <Box sx={{ p: 3, pt: 8, maxWidth: 1200, margin: 'auto' }}>
-      {currentVersion && (
+      {isLoading && (
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          Loading...
+        </Typography>
+      )}
+      
+      {currentVersion && isVersionSelected && (
         <GoNoGoApprovalStatus
           status={currentVersion.status as GoNoGoVersionStatus}
           onApprove={() => handleApproveVersion(currentVersion)}
           userRole={String(context?.user?.roles?.[0].name || '')}
-          isEditable={canEditForm()}
+          isEditable={canEditForm() && isEditing}
           score={calculateTotalScore()}
         />
       )}
@@ -601,7 +654,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
         <AccordionDetails>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
+              <FormControl fullWidth disabled={isHeaderReadOnly()}>
                 <InputLabel>Type of Bid</InputLabel>
                 <Select
                   value={headerInfo.typeOfBid.toString()}
@@ -619,6 +672,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                 label="Sector"
                 value={headerInfo.sector}
                 onChange={(e) => handleHeaderChange('sector', e.target.value)}
+                disabled={isHeaderReadOnly()}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -627,6 +681,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                 label="BD Head"
                 value={headerInfo.bdHead}
                 onChange={(e) => handleHeaderChange('bdHead', e.target.value)}
+                disabled={isHeaderReadOnly()}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -635,8 +690,16 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                 label="Office"
                 value={headerInfo.office}
                 onChange={(e) => handleHeaderChange('office', e.target.value)}
+                disabled={isHeaderReadOnly()}
               />
             </Grid>
+            {isHeaderReadOnly() && (
+              <Grid item xs={12}>
+                <Typography variant="caption" color="text.secondary">
+                  Header information is read-only after submission
+                </Typography>
+              </Grid>
+            )}
           </Grid>
         </AccordionDetails>
       </Accordion>
@@ -753,7 +816,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
             onClick={handleSubmit}
             disabled={!canEditForm()}
           >
-            {(currentVersion?.versionNumber) ? 'Update Decision' : 'Submit Decision'}
+            {(currentVersion?.versionNumber || decisionId) ? 'Update Decision' : 'Submit Decision'}
           </Button>
         </Box>
       </Paper>
