@@ -30,6 +30,7 @@ import { format } from 'date-fns';
 import { bidPreparationApi, DocumentCategory } from '../../dummyapi/bidPreparationApi';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
+import { getBidVersionHistory, BidVersionHistory as BidVersionHistoryType ,BidPreparationStatus} from '../../dummyapi/bidVersionHistoryApi';
 
 
 
@@ -256,12 +257,14 @@ const BidPreparationForm: React.FC = () => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [categories, setCategories] = useState<DocumentCategory[]>(initializeCategories());
   const [editMode, setEditMode] = useState(false);
-  const [error, setError] = useState<string>('');
   const [currentRole, setCurrentRole] = useState<'Business Development Manager' | 'Regional Manager' | 'Regional Director'>('Business Development Manager');
-  const [status, setStatus] = useState<'Draft' | 'PendingApproval' | 'Approved' | 'Rejected'>('Draft');
+  //const [status, setStatus] = useState<BidPreparationStatus>();
   const [comments, setComments] = useState('');
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [approvalAction, setApprovalAction] = useState<'approve' | 'reject' | null>(null);
+  const [versionHistory, setVersionHistory] = useState<BidVersionHistoryType[]>([]);
+  const [currentVersion, setCurrentVersion] = useState<BidVersionHistoryType | undefined>();
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     loadBidPreparationData();
@@ -291,6 +294,7 @@ const BidPreparationForm: React.FC = () => {
     } catch (err) {
       setError('Failed to load bid preparation data');
     }
+    loadVersionHistory();
   };
 
   const handleAddCategory = (parentId?: string) => {
@@ -367,13 +371,14 @@ const BidPreparationForm: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      if (currentRole === 'Regional Director') {
+      if ((currentRole === 'Regional Director' || currentRole === 'Regional Manager')) {
+        debugger;
         await bidPreparationApi.approveOrReject(
           context.selectedProject?.id,
-          approvalAction === 'approve',
-          comments
+           approvalAction === 'approve'? true:false,
+           comments
         );
-        setStatus(approvalAction === 'approve' ? 'Approved' : 'Rejected');
+       // setStatus(approvalAction === 'approve' ? BidPreparationStatus.Approved : BidPreparationStatus.Rejected);
       } else {
         await bidPreparationApi.updateBidPreparationData(
           categories,
@@ -392,7 +397,8 @@ const BidPreparationForm: React.FC = () => {
   const handleSubmitForApproval = async () => {
     try {
       await bidPreparationApi.submitForApproval(context.selectedProject?.id);
-      setStatus('PendingApproval');
+     // setStatus(BidPreparationStatus.PendingApproval);
+      loadVersionHistory();
       setError('');
     } catch (err) {
       setError('Failed to submit for approval');
@@ -403,7 +409,25 @@ const BidPreparationForm: React.FC = () => {
     setApprovalAction(action);
     setShowApprovalDialog(true);
   };
+  const loadVersionHistory = async () => {
+    try {
+      const history = await getBidVersionHistory(context.selectedProject?.id);
+      setVersionHistory(history);
+      
+      if (history && history.length > 0) {
 
+        const latestVersion = history[0];
+       debugger;
+        setCurrentVersion(latestVersion)
+        //console.log("Bid latestVersion",currentVersion);
+
+      }
+
+      setError('');
+    } catch (err) {
+      setError('Failed to load version history');
+    }
+  };
 
   const renderCategoryRow = (category: DocumentCategory, depth: number = 0) => {
     const isParentCategory = category.children.length > 0;
@@ -500,18 +524,30 @@ const BidPreparationForm: React.FC = () => {
     );
   };
 
-
+const getStatusLabel = (status:any) => {
+    switch (status) {
+      case BidPreparationStatus.Approved:
+        return 'Approved';
+      case BidPreparationStatus.Rejected:
+        return 'Rejected';
+      case BidPreparationStatus.PendingApproval:
+        return 'Pending Approval';
+      case BidPreparationStatus.Draft:
+      default:
+        return 'Draft';
+    }
+  };
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <BidVersionHistory opportunityId={context.selectedProject?.id} />
+      <BidVersionHistory versionHistory={versionHistory} />
       <Container maxWidth="xl" sx={{ py: 2 }}>
         <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6">
-            Status: {status} {currentRole === 'Regional Director' ? '(Reviewer)' : '(Editor)'}
+            Status: {getStatusLabel(currentVersion?.status)} {currentRole === 'Regional Director' ? '(Reviewer)' : '(Editor)'}
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
-            {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') && status === 'Draft' && (
+            {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') && currentVersion?.status === BidPreparationStatus.Draft && (
               <>
                 {editMode && (
                   <Button
@@ -533,17 +569,17 @@ const BidPreparationForm: React.FC = () => {
                   }
                   label="Edit Mode"
                 />
-                <Button
+                {editMode && (<Button
                   variant="contained"
                   color="primary"
                   onClick={handleSubmitForApproval}
                 >
                   Submit for Approval
-                </Button>
+                </Button>)}
               </>
             )}
 
-            {currentRole === 'Regional Director' && status === 'PendingApproval' && (
+            {(currentRole === 'Regional Director' || currentRole === 'Regional Manager') && currentVersion?.status === BidPreparationStatus.PendingApproval && (
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
                   variant="contained"
@@ -588,7 +624,7 @@ const BidPreparationForm: React.FC = () => {
           </Table>
         </Paper>
 
-        {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') && status === 'Draft' && (
+        {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') && currentVersion?.status === BidPreparationStatus.Draft && (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"

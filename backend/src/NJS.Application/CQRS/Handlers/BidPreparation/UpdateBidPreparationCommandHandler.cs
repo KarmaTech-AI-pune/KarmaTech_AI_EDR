@@ -24,7 +24,10 @@ namespace NJS.Application.CQRS.Handlers.BidPreparation
                     .Include(b => b.VersionHistory)
                     .OrderByDescending(b => b.CreatedAt)
                     .FirstOrDefaultAsync(b => b.OpportunityId == request.OpportunityId
-                    && b.UserId == request.UserId, cancellationToken);
+                    && (b.UserId == request.UserId
+                      || b.RegionalMangerId == request.UserId
+                      || b.RegionalDirectorId==request.UserId), cancellationToken);
+                     
 
 
                 var now = DateTime.UtcNow;

@@ -88,7 +88,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost("{opportunityId}/approve")]
-        [Authorize(Roles = "Regional Director")]
+        [Authorize(Roles = "Regional Director, Regional Manager")]
         public async Task<ActionResult<bool>> ApproveOrReject(int opportunityId, [FromBody] BidPreparationApprovalDto approvalDto)
         {
             var command = new ApproveBidPreparationCommand

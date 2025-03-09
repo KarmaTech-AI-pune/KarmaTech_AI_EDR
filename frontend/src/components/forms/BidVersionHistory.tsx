@@ -13,42 +13,16 @@ import {
   Alert
 } from '@mui/material';
 import { format } from 'date-fns';
-import { getBidVersionHistory, BidVersionHistory as BidVersionHistoryType, BidPreparationStatus } from '../../dummyapi/bidVersionHistoryApi';
+import {  BidVersionHistory as BidVersionHistoryType, BidPreparationStatus } from '../../dummyapi/bidVersionHistoryApi';
 
 interface BidVersionHistoryProps {
-  opportunityId: number | undefined;
+  versionHistory:BidVersionHistoryType[]
 }
 
-const BidVersionHistory: React.FC<BidVersionHistoryProps> = ({ opportunityId }) => {
-  const [versionHistory, setVersionHistory] = useState<BidVersionHistoryType[]>([]);
-  const [error, setError] = useState<string>('');
-
-  useEffect(() => {
-    debugger;
-    loadVersionHistory();
-  }, [opportunityId]);
+const BidVersionHistory: React.FC<BidVersionHistoryProps> = ({ versionHistory }) => {
+ 
 
 
-  const loadVersionHistory = useCallback(async () => {
-    try {
-      const history = await getBidVersionHistory(opportunityId);
-      setVersionHistory(history);
-      setError('');
-    } catch (err) {
-      setError('Failed to load version history');
-    }
-  }, [opportunityId]);
-
-  const loadVersionHistory1 = async () => {
-    try {
-      const history = await getBidVersionHistory(opportunityId);
-      setVersionHistory(history);
-      setError('');
-    } catch (err) {
-      setError('Failed to load version history');
-    }
-  };
-  
   const getStatusLabel = (status:any) => {
     switch (status) {
       case BidPreparationStatus.Approved:
@@ -104,9 +78,9 @@ const BidVersionHistory: React.FC<BidVersionHistoryProps> = ({ opportunityId }) 
             ))}
           </TableBody>
         </Table>
-        {error && (
+        {versionHistory.length ==0 && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
+           No Data Found
           </Alert>
         )}
       </Paper>

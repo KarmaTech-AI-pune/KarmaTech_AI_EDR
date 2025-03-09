@@ -52,12 +52,10 @@ const submitForApproval = async (opportunityId: number | undefined): Promise<boo
 };
 
 const approveOrReject = async (
-  opportunityId: number | undefined, 
-  approved: boolean,
-  comments: string
-): Promise<boolean> => {
+opportunityId: number | undefined | undefined, isApproved: boolean, comments: string): Promise<boolean> => {
   const response = await axiosInstance.post(`/api/BidPreparation/${opportunityId}/approve`, {
-    approved,
+    opportunityId,
+    isApproved,
     comments
   });
   return response.data;
