@@ -1,25 +1,33 @@
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.Queries.BidPreparation;
 using NJS.Application.Dtos;
-using NJS.Repositories.Interfaces;
-using NJS.Domain.Entities;
+using NJS.Domain.Database;
 
 namespace NJS.Application.CQRS.Handlers.BidPreparation
 {
     public class GetBidPreparationQueryHandler : IRequestHandler<GetBidPreparationQuery, BidPreparationDto>
     {
-        private readonly IBidPreparationRepository _bidPreparationRepository;
+        private readonly ProjectManagementContext _context;
 
-        public GetBidPreparationQueryHandler(IBidPreparationRepository bidPreparationRepository)
+        public GetBidPreparationQueryHandler(ProjectManagementContext context)
         {
-            _bidPreparationRepository = bidPreparationRepository;
+            _context = context;
         }
 
         public async Task<BidPreparationDto> Handle(GetBidPreparationQuery request, CancellationToken cancellationToken)
         {
-            var bidPreparation = await _bidPreparationRepository.GetByUserIdAsync(request.UserId);
+            var bidPreparation = await _context.BidPreparations
+                 .Where(b => b.UserId == request.UserId
+                  || b.RegionalMangerId == request.UserId
+                  || b.RegionalDirectorId == request.UserId
+                 && b.OpportunityId == request.OpportunityId)
+                 .OrderByDescending(b => b.CreatedAt)
+                 .Include(b => b.VersionHistory)
+                 .FirstOrDefaultAsync(cancellationToken);
 
             if (bidPreparation == null)
             {
@@ -32,12 +40,29 @@ namespace NJS.Application.CQRS.Handlers.BidPreparation
                 DocumentCategoriesJson = bidPreparation.DocumentCategoriesJson,
                 OpportunityId = bidPreparation.OpportunityId,
                 UserId = bidPreparation.UserId,
+                Version = bidPreparation.Version,
+                Status = bidPreparation.Status,
+                Comments = bidPreparation.Comments,
                 CreatedDate = bidPreparation.CreatedDate,
                 ModifiedDate = bidPreparation.ModifiedDate,
                 CreatedAt = bidPreparation.CreatedAt,
                 UpdatedAt = bidPreparation.UpdatedAt,
                 CreatedBy = bidPreparation.CreatedBy,
-                UpdatedBy = bidPreparation.UpdatedBy
+                UpdatedBy = bidPreparation.UpdatedBy,
+                VersionHistory = bidPreparation.VersionHistory
+                    .OrderByDescending(v => v.Version)
+                    .Select(v => new BidVersionHistoryDto
+                    {
+                        Id = v.Id,
+                        BidPreparationId = v.BidPreparationId,
+                        Version = v.Version,
+                        DocumentCategoriesJson = v.DocumentCategoriesJson,
+                        Status = v.Status,
+                        Comments = v.Comments,
+                        ModifiedBy = v.ModifiedBy,
+                        ModifiedDate = v.ModifiedDate
+                    })
+                    .ToList()
             };
         }
     }

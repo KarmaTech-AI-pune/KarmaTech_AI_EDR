@@ -14,6 +14,7 @@ namespace NJS.Domain.Database
         }
 
         public DbSet<BidPreparation> BidPreparations { get; set; }
+        public DbSet<BidVersionHistory> BidVersionHistories { get; set; }
         public DbSet<Project> Projects { get; set; }
         public new DbSet<User> Users { get; set; }
         public new DbSet<Role> Roles { get; set; }
@@ -67,6 +68,7 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
                 entity.Property(e => e.CreatedBy).IsRequired(false);
                 entity.Property(e => e.UpdatedBy).IsRequired(false);
+                entity.Property(e => e.Comments).IsRequired(false);
                 
                 // Create index on UserId for faster lookups
                 entity.HasIndex(e => e.UserId);
@@ -76,6 +78,24 @@ namespace NJS.Domain.Database
                     .WithMany()
                     .HasForeignKey(b => b.OpportunityId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure relationship with BidVersionHistory
+                entity.HasMany(b => b.VersionHistory)
+                    .WithOne(v => v.BidPreparation)
+                    .HasForeignKey(v => v.BidPreparationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure BidVersionHistory entity
+            modelBuilder.Entity<BidVersionHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Comments).IsRequired(false);
+                entity.Property(e => e.ModifiedBy).IsRequired();
+                
+                // Create index on BidPreparationId for faster lookups
+                entity.HasIndex(e => e.BidPreparationId);
             });
 
             // Configure Role-Permission relationship

@@ -1,4 +1,5 @@
 using MediatR;
+using NJS.Domain.Entities;
 
 namespace NJS.Application.CQRS.Commands.BidPreparation
 {
@@ -6,6 +7,8 @@ namespace NJS.Application.CQRS.Commands.BidPreparation
     {
         public string DocumentCategoriesJson { get; set; }
         public int OpportunityId { get; set; }
-        public string UserId { get; set; }
+        public string UserId { get; set; }       
+        public string CreatedBy { get; set; }       
+        public string Comments { get; set; }
     }
 }

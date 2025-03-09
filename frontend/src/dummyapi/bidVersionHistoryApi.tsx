@@ -1,15 +1,25 @@
 import { axiosInstance } from './axiosConfig';
 
+export enum BidPreparationStatus
+{
+    Draft=0,
+    PendingApproval=1,
+    Approved=2,
+    Rejected=3
+}
 export interface BidVersionHistory {
   id: number;
   version: number;
-  modifiedBy: string;
+  modifiedBy: string; 
   modifiedDate: Date;
-  comments: string;
+  comments: string;  
+  status: BidPreparationStatus;
 }
 
-export const getBidVersionHistory = async (): Promise<BidVersionHistory[]> => {
-  const response = await axiosInstance.get('/api/BidVersionHistory');
+export const getBidVersionHistory = async (opportunityId?: number): Promise<BidVersionHistory[]> => {
+  debugger;
+  const response = await axiosInstance.get(`/api/BidPreparation/versions?opportunityId=${opportunityId}`);
+ 
   return response.data;
 };
 
