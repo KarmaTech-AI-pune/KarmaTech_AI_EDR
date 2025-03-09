@@ -68,7 +68,7 @@ const initializeCategories = (): DocumentCategory[] => {
         },
         {
           id: '3-2',
-          name: 'Service tax registration certificate',
+          name: 'GST registration certificate',
           level: 1,
           parentId: '3',
           children: [],
