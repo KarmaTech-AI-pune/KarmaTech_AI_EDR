@@ -397,8 +397,9 @@ const BidPreparationForm: React.FC = () => {
   const handleSubmitForApproval = async () => {
     try {
       await bidPreparationApi.submitForApproval(context.selectedProject?.id);
-     // setStatus(BidPreparationStatus.PendingApproval);
+    //  setStatus(BidPreparationStatus.PendingApproval);
       loadVersionHistory();
+      setEditMode(false)
       setError('');
     } catch (err) {
       setError('Failed to submit for approval');
@@ -547,7 +548,7 @@ const getStatusLabel = (status:any) => {
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
-            {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') && currentVersion?.status === BidPreparationStatus.Draft && (
+            {currentRole === 'Business Development Manager' &&  (!currentVersion || currentVersion?.status === BidPreparationStatus.Draft) && (
               <>
                 {editMode && (
                   <Button
@@ -624,7 +625,7 @@ const getStatusLabel = (status:any) => {
           </Table>
         </Paper>
 
-        {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') && currentVersion?.status === BidPreparationStatus.Draft && (
+        {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') &&  (!currentVersion || currentVersion?.status === BidPreparationStatus.Draft) && (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
