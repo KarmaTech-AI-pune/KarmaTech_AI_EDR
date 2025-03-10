@@ -105,7 +105,8 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                 sector: formData.HeaderInfo.Sector || '',
                 tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
                 emd: formData.HeaderInfo.EmdAmount?.toString() || '',
-                office: formData.HeaderInfo.Office
+                office: formData.HeaderInfo.Office,
+                bdHead: formData.HeaderInfo.BdHead || ''
               }));
 
               // Update scoring criteria with RD version's data
@@ -278,7 +279,8 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       sector: formData.HeaderInfo.Sector || '',
       tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
       emd: formData.HeaderInfo.EmdAmount?.toString() || '',
-      office: formData.HeaderInfo.Office
+      office: formData.HeaderInfo.Office,
+      bdHead: formData.HeaderInfo.BdHead || ''
     }));
 
     // Update scoring criteria
