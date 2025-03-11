@@ -385,7 +385,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
   const handleHeaderChange = (field: keyof HeaderInfo, value: string | TypeOfBid) => {
     // If header is read-only, don't allow changes
     if (isHeaderReadOnly()) {
-      console.log('Header information is read-only after submission');
+      console.log('Header information cannot be modified after submission.');
       return;
     }
     
@@ -698,7 +698,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
             {isHeaderReadOnly() && (
               <Grid item xs={12}>
                 <Typography variant="caption" color="text.secondary">
-                  Header information is read-only after submission
+                Header information cannot be modified after submission.
                 </Typography>
               </Grid>
             )}
