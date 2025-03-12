@@ -12,7 +12,7 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20250210065434_InitialCreate")]
+    [Migration("20250312185045_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -419,6 +419,9 @@ namespace NJS.Domain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("CurrentVersion")
+                        .HasColumnType("int");
+
                     b.Property<double>("Emd")
                         .HasColumnType("float");
 
@@ -460,6 +463,9 @@ namespace NJS.Domain.Migrations
                     b.Property<string>("UpdatedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("VersionStatus")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -571,6 +577,52 @@ namespace NJS.Domain.Migrations
                     b.HasIndex("ScoringCriteriaId");
 
                     b.ToTable("GoNoGoDecisionTransactions");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.GoNoGoVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActonBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FormData")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("GoNoGoDecisionHeaderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoNoGoDecisionHeaderId");
+
+                    b.ToTable("GoNoGoVersions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityHistory", b =>
@@ -1419,6 +1471,17 @@ namespace NJS.Domain.Migrations
                     b.Navigation("ScoringCriterias");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.GoNoGoVersion", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.GoNoGoDecisionHeader", "GoNoGoDecisionHeader")
+                        .WithMany("Versions")
+                        .HasForeignKey("GoNoGoDecisionHeaderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GoNoGoDecisionHeader");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityHistory", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.User", "ActionUser")
@@ -1588,6 +1651,11 @@ namespace NJS.Domain.Migrations
                         .IsRequired();
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionHeader", b =>
+                {
+                    b.Navigation("Versions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityStatus", b =>

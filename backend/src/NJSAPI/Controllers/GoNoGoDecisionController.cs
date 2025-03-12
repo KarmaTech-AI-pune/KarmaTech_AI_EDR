@@ -8,10 +8,10 @@ using System.ComponentModel.DataAnnotations;
 using NJS.Application.Dtos;
 using MediatR;
 using System.Threading.Tasks;
-using NJS.Application.CQRS.Handlers.GoNoGoDecision;
 using NJS.Domain.Enums;
 using System.Text.Json;
 using NJS.Application.Services.IContract;
+using NJS.Application.CQRS.Commands.GoNoGoDecision;
 
 namespace NJSAPI.Controllers
 {

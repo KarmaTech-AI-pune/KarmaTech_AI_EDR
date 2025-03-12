@@ -5,66 +5,11 @@ using System.Collections.Generic;
 using MediatR;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
-using NJS.Domain.Enums;
 using NJS.Application.Services.IContract;
+using NJS.Application.CQRS.Commands.GoNoGoDecision;
 
 namespace NJS.Application.CQRS.Handlers.GoNoGoDecision
 {
-    public class ScoringCriteriaCommand
-    {
-        public class CriteriaItem
-        {
-            public string Comments { get; set; }
-            public int Score { get; set; }
-            public int ScoringDescriptionId { get; set; }
-        }
-
-        public CriteriaItem MarketingPlan { get; set; }
-        public CriteriaItem Profitability { get; set; }
-        public CriteriaItem ProjectKnowledge { get; set; }
-        public CriteriaItem ResourceAvailability { get; set; }
-        public CriteriaItem StaffAvailability { get; set; }
-        public CriteriaItem TechnicalEligibility { get; set; }
-        public CriteriaItem ClientRelationship { get; set; }
-        public CriteriaItem CompetitionAssessment { get; set; }
-        public CriteriaItem CompetitivePosition { get; set; }
-        public CriteriaItem FutureWorkPotential { get; set; }
-        public CriteriaItem BidSchedule { get; set; }
-        public CriteriaItem FinancialEligibility { get; set; }
-    }
-
-    public class HeaderInfoCommand
-    {
-        public TypeOfBid BidType { get; set; }
-        public string Sector { get; set; }
-        public string Office { get; set; }
-        public int TenderFee { get; set; }
-        public int EmdAmount { get; set; }
-        public string BdHead { get; set; }       
-    }
-
-    public class MetaDataCommand
-    {
-        public int OpprotunityId { get; set; }
-        public string CompletedDate { get; set; }
-        public string CompletedBy { get; set; }
-    }
-
-    public class SummaryCommand
-    {
-        public int TotalScore { get; set; }
-        public GoNoGoStatus Status { get; set; }
-        public string DecisionComments { get; set; }
-        public string ActionPlan { get; set; }
-    }
-
-    public class CreateGoNoGoDecisionHeaderCommand : IRequest<int>
-    {
-        public HeaderInfoCommand HeaderInfo { get; set; }
-        public MetaDataCommand MetaData { get; set; }
-        public ScoringCriteriaCommand ScoringCriteria { get; set; }
-        public SummaryCommand Summary { get; set; }
-    }
 
     public class CreateGoNoGoDecisionHeaderHandler : IRequestHandler<CreateGoNoGoDecisionHeaderCommand, int>
     {

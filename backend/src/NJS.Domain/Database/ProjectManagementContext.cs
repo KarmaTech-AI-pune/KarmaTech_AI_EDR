@@ -13,6 +13,8 @@ namespace NJS.Domain.Database
         {
         }
 
+        public DbSet<BidPreparation> BidPreparations { get; set; }
+        public DbSet<BidVersionHistory> BidVersionHistories { get; set; }
         public DbSet<Project> Projects { get; set; }
         public new DbSet<User> Users { get; set; }
         public new DbSet<Role> Roles { get; set; }
@@ -30,14 +32,10 @@ namespace NJS.Domain.Database
         public DbSet<Region> Regions { get; set; }
 
         public DbSet<GoNoGoDecisionOpportunity> GoNoGoDecisionOpportunities { get; set; }
-        // To:
         public DbSet<ScoringCriteria> ScoringCriteria { get; set; }
-
         public DbSet<ScoreRange> ScoreRange { get; set; }
         public DbSet<GoNoGoVersion> GoNoGoVersions { get; set; }
-
         public DbSet<ScoringDescriptions> ScoringDescription { get; set; }
-
         public DbSet<ScoringDescriptionSummarry> ScoringDescriptionSummarry { get; set; }
         public DbSet<GoNoGoDecisionHeader> GoNoGoDecisionHeaders { get; set; }
         public DbSet<GoNoGoDecisionTransaction> GoNoGoDecisionTransactions { get; set; }
@@ -62,6 +60,44 @@ namespace NJS.Domain.Database
                 entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name });
             });
 
+            // Configure BidPreparation entity
+            modelBuilder.Entity<BidPreparation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserId).IsRequired();
+                entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.CreatedBy).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).IsRequired(false);
+                entity.Property(e => e.Comments).IsRequired(false);
+                
+                // Create index on UserId for faster lookups
+                entity.HasIndex(e => e.UserId);
+
+                // Configure relationship with OpportunityTracking
+                entity.HasOne(b => b.OpportunityTracking)
+                    .WithMany()
+                    .HasForeignKey(b => b.OpportunityId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure relationship with BidVersionHistory
+                entity.HasMany(b => b.VersionHistory)
+                    .WithOne(v => v.BidPreparation)
+                    .HasForeignKey(v => v.BidPreparationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure BidVersionHistory entity
+            modelBuilder.Entity<BidVersionHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Comments).IsRequired(false);
+                entity.Property(e => e.ModifiedBy).IsRequired();
+                
+                // Create index on BidPreparationId for faster lookups
+                entity.HasIndex(e => e.BidPreparationId);
+            });
+
             // Configure Role-Permission relationship
             modelBuilder.Entity<RolePermission>()
                 .HasKey(rp => rp.Id);
@@ -82,6 +118,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<Project>().Property(f => f.EstimatedCost).HasPrecision(18, 2);
             modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
             modelBuilder.Entity<Role>().ToTable("AspNetRoles");
+
             // Configure OpportunityTracking decimal precisions
             modelBuilder.Entity<OpportunityTracking>()
                 .Property(o => o.BidFees)
@@ -106,8 +143,6 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OpportunityTracking>().Property(o => o.ApprovalManagerId).IsRequired(false);
             modelBuilder.Entity<OpportunityTracking>().Property(o => o.ReviewManagerId).IsRequired(false);
             modelBuilder.Entity<OpportunityHistory>().Property(o => o.Comments).IsRequired(false);
-            
-           
 
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId); 
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
@@ -136,8 +171,6 @@ namespace NJS.Domain.Database
 
             modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.TypeOfClient).IsRequired(false);
             modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.RegionalBDHead).IsRequired(false);
-          
         }
     }
-
 }
