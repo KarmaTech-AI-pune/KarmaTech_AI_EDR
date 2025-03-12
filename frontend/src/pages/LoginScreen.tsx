@@ -89,7 +89,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#666'
                     }}
                 >
-                    ISO 9000 Project Management Forms Application
+                    Version 1.2.1
                 </Typography>
             </Container>
 
