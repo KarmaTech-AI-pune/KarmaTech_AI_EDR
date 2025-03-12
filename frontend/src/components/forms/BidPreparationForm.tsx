@@ -1,9 +1,6 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-=======
+
 import React, { useState, useEffect, useContext } from 'react';
 import BidVersionHistory from './BidVersionHistory';
->>>>>>> BId-preparation-API
 import {
   Box,
   Table,

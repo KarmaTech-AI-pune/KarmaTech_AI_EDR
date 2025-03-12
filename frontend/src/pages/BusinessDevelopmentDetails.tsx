@@ -89,9 +89,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const [histories, setHistories] = useState<OpportunityHistory[]>([]);
   const [refreshed, setRefreshed] = useState(false);
-  const [goNoGoDecisionStatus, setGoNoGoDecisionStatus] = useState<string | null>(null);
-  const [goNoGoVersionNumber, setGoNoGoVersionNumber] = useState<number | null>(null);
   const context = useContext(projectManagementAppContext);
+  const { goNoGoDecisionStatus, goNoGoVersionNumber, setGoNoGoDecisionStatus, setGoNoGoVersionNumber } = context || {};
   const opportunity = context?.selectedProject as OpportunityTracking;
 
   useEffect(() => {
@@ -141,6 +140,13 @@ export const BusinessDevelopmentDetails: React.FC = () => {
     if (context?.setScreenState) {
       context.setScreenState("Bid Preparation Form");
     }
+    
+    // Log the current state for debugging
+    console.log("Bid Preparation Form clicked", {
+      goNoGoDecisionStatus,
+      goNoGoVersionNumber,
+      isEnabled: goNoGoDecisionStatus === "GO" && goNoGoVersionNumber === 3
+    });
   };
 
   const handleSectionClick = (section: string) => {
@@ -294,8 +300,10 @@ const isOpportunityApproved = Array.isArray(opportunity?.currentHistory)
             return (
               <GoNoGoForm 
                 onDecisionStatusChange={(status, versionNumber) => {
-                  setGoNoGoDecisionStatus(status);
-                  setGoNoGoVersionNumber(versionNumber);
+                  if (setGoNoGoDecisionStatus && setGoNoGoVersionNumber) {
+                    setGoNoGoDecisionStatus(status);
+                    setGoNoGoVersionNumber(versionNumber);
+                  }
                 }}
               />
             );

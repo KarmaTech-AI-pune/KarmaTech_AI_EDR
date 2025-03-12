@@ -246,7 +246,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
           scoringDescriptionId: dbValue.ScoringDescriptionId
         };
       }
-    }
+    });
 
     return newCriteria;
   };
@@ -327,9 +327,24 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
 
         // Update decision status when RD approves
         if (onDecisionStatusChange && version.versionNumber === 3) {
-          const totalScore = calculateTotalScore();
-          const decisionStatus = totalScore >= 50 ? "GO" : "NO GO";
-          onDecisionStatusChange(decisionStatus, version.versionNumber);
+          // Get the updated version data after approval
+          const updatedVersions = await goNoGoApi.getVersions(version.goNoGoDecisionHeaderId);
+          const rdVersion = updatedVersions.find(v => v.versionNumber === 3);
+          
+          if (rdVersion) {
+            // Parse the form data to get the actual score
+            const formData = JSON.parse(rdVersion.formData);
+            const totalScore = formData.Summary.TotalScore;
+            const decisionStatus = totalScore >= 50 ? "GO" : "NO GO";
+            
+            // Call the callback with the correct status and version number
+            onDecisionStatusChange(decisionStatus, version.versionNumber);
+            
+            // Automatically open Bid Preparation form if RD approves with GO status
+            if (decisionStatus === "GO" && context?.setScreenState) {
+              context.setScreenState("Bid Preparation Form");
+            }
+          }
         }
       }
     } catch (error) {
@@ -337,7 +352,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     } finally {
       setIsLoading(false);
     }
-  }, [context?.user?.name, onDecisionStatusChange, calculateTotalScore, loadVersions]);
+  }, [context?.user?.name, context?.setScreenState, onDecisionStatusChange, loadVersions]);
 
 
 const canEditForm = useCallback((): boolean => {
