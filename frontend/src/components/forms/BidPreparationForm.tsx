@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useContext } from 'react';
 import BidVersionHistory from './BidVersionHistory';
 import {
@@ -31,9 +30,8 @@ import { format } from 'date-fns';
 import { bidPreparationApi, DocumentCategory } from '../../dummyapi/bidPreparationApi';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
-import { getBidVersionHistory, BidVersionHistory as BidVersionHistoryType ,BidPreparationStatus} from '../../dummyapi/bidVersionHistoryApi';
-
-
+import { getBidVersionHistory, BidVersionHistory as BidVersionHistoryType, BidPreparationStatus } from '../../dummyapi/bidVersionHistoryApi';
+import { getStatusLabel } from '../../utils/statusUtils';
 
 const initializeCategories = (): DocumentCategory[] => {
   return [
@@ -259,17 +257,18 @@ const BidPreparationForm: React.FC = () => {
   const [categories, setCategories] = useState<DocumentCategory[]>(initializeCategories());
   const [editMode, setEditMode] = useState(false);
   const [currentRole, setCurrentRole] = useState<'Business Development Manager' | 'Regional Manager' | 'Regional Director'>('Business Development Manager');
-  //const [status, setStatus] = useState<BidPreparationStatus>();
+  const [status, setStatus] = useState<BidPreparationStatus>(BidPreparationStatus.Draft);
   const [comments, setComments] = useState('');
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [approvalAction, setApprovalAction] = useState<'approve' | 'reject' | null>(null);
   const [versionHistory, setVersionHistory] = useState<BidVersionHistoryType[]>([]);
+  // This state is used to track the latest version from history
   const [currentVersion, setCurrentVersion] = useState<BidVersionHistoryType | undefined>();
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
     loadBidPreparationData();
-    setEditMode(false)
+    setEditMode(false);
   }, []);
 
   useEffect(() => {
@@ -283,17 +282,25 @@ const BidPreparationForm: React.FC = () => {
 
   const loadBidPreparationData = async () => {
     try {
-      const data = await bidPreparationApi.getBidPreparationData(context.selectedProject?.id);
+      if (!context.selectedProject?.id) {
+        setError('No project selected');
+        return;
+      }
+      
+      // Ensure we're passing a number to the API
+      const projectId = Number(context.selectedProject.id);
+      const data = await bidPreparationApi.getBidPreparationData(projectId);
       if (data.documentCategoriesJson) {
         setCategories(JSON.parse(data.documentCategoriesJson));
-        setEditMode(false)
-      }
-      else {
+        setStatus(data.status);
+        setEditMode(false);
+      } else {
         setError('Bid preparation data not found');
       }
       setError('');
     } catch (err) {
       setError('Failed to load bid preparation data');
+      console.error('Error loading bid preparation data:', err);
     }
     loadVersionHistory();
   };
@@ -340,7 +347,7 @@ const BidPreparationForm: React.FC = () => {
     });
   };
 
-  const handleUpdateCategory = (id: string, field: keyof DocumentCategory, value: any) => {
+  const handleUpdateCategory = (id: string, field: keyof DocumentCategory, value: unknown) => {
     const updateCategory = (cats: DocumentCategory[]): DocumentCategory[] => {
       return cats.map(cat => {
         if (cat.id === id) {
@@ -372,18 +379,25 @@ const BidPreparationForm: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
+      if (!context.selectedProject?.id) {
+        setError('No project selected');
+        return;
+      }
+      
+      // Ensure we're passing a number to the API
+      const projectId = Number(context.selectedProject.id);
+      
       if ((currentRole === 'Regional Director' || currentRole === 'Regional Manager')) {
-        debugger;
         await bidPreparationApi.approveOrReject(
-          context.selectedProject?.id,
-           approvalAction === 'approve'? true:false,
-           comments
+          projectId,
+          approvalAction === 'approve' ? true : false,
+          comments
         );
-       // setStatus(approvalAction === 'approve' ? BidPreparationStatus.Approved : BidPreparationStatus.Rejected);
+        setStatus(approvalAction === 'approve' ? BidPreparationStatus.Approved : BidPreparationStatus.Rejected);
       } else {
         await bidPreparationApi.updateBidPreparationData(
           categories,
-          context.selectedProject?.id,
+          projectId,
           comments
         );
       }
@@ -392,18 +406,27 @@ const BidPreparationForm: React.FC = () => {
       loadBidPreparationData();
     } catch (err) {
       setError('Failed to save bid preparation data');
+      console.error('Error submitting bid preparation data:', err);
     }
   };
 
   const handleSubmitForApproval = async () => {
     try {
-      await bidPreparationApi.submitForApproval(context.selectedProject?.id);
-    //  setStatus(BidPreparationStatus.PendingApproval);
+      if (!context.selectedProject?.id) {
+        setError('No project selected');
+        return;
+      }
+      
+      // Ensure we're passing a number to the API
+      const projectId = Number(context.selectedProject.id);
+      await bidPreparationApi.submitForApproval(projectId);
+      setStatus(BidPreparationStatus.PendingApproval);
       loadVersionHistory();
-      setEditMode(false)
+      setEditMode(false);
       setError('');
     } catch (err) {
       setError('Failed to submit for approval');
+      console.error('Error submitting for approval:', err);
     }
   };
 
@@ -411,27 +434,33 @@ const BidPreparationForm: React.FC = () => {
     setApprovalAction(action);
     setShowApprovalDialog(true);
   };
+  
   const loadVersionHistory = async () => {
     try {
-      const history = await getBidVersionHistory(context.selectedProject?.id);
+      if (!context.selectedProject?.id) {
+        setError('No project selected');
+        return;
+      }
+      
+      // Ensure we're passing a number to the API
+      const projectId = Number(context.selectedProject.id);
+      const history = await getBidVersionHistory(projectId);
       setVersionHistory(history);
       
       if (history && history.length > 0) {
-
         const latestVersion = history[0];
-       debugger;
-        setCurrentVersion(latestVersion)
-        //console.log("Bid latestVersion",currentVersion);
-
+        setCurrentVersion(latestVersion);
+        setStatus(latestVersion.status);
       }
 
       setError('');
     } catch (err) {
       setError('Failed to load version history');
+      console.error('Error loading version history:', err);
     }
   };
 
-  const renderCategoryRow = (category: DocumentCategory, depth: number = 0) => {
+  const renderCategoryRow = (category: DocumentCategory, depth: number = 0): JSX.Element => {
     const isParentCategory = category.children.length > 0;
 
     return (
@@ -484,7 +513,7 @@ const BidPreparationForm: React.FC = () => {
             {editMode && !isParentCategory ? (
               <DatePicker
                 value={category.date || null}
-                onChange={(newValue) => handleUpdateCategory(category.id, 'date', newValue)}
+                onChange={(newValue) => handleUpdateCategory(category.id, 'date', newValue as Date | null)}
                 slotProps={{
                   textField: {
                     variant: 'standard',
@@ -526,30 +555,20 @@ const BidPreparationForm: React.FC = () => {
     );
   };
 
-const getStatusLabel = (status:any) => {
-    switch (status) {
-      case BidPreparationStatus.Approved:
-        return 'Approved';
-      case BidPreparationStatus.Rejected:
-        return 'Rejected';
-      case BidPreparationStatus.PendingApproval:
-        return 'Pending Approval';
-      case BidPreparationStatus.Draft:
-      default:
-        return 'Draft';
-    }
-  };
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <BidVersionHistory versionHistory={versionHistory} />
       <Container maxWidth="xl" sx={{ py: 2 }}>
         <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6">
-            Status: {getStatusLabel(currentVersion?.status)} {currentRole === 'Regional Director' ? '(Reviewer)' : '(Editor)'}
+            Status: {getStatusLabel(status)} {currentRole === 'Regional Director' ? '(Reviewer)' : '(Editor)'}
+            {currentVersion && <span style={{ fontSize: '0.8rem', marginLeft: '8px' }}>
+              (Version: {currentVersion.version})
+            </span>}
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
-            {currentRole === 'Business Development Manager' &&  (!currentVersion || currentVersion?.status === BidPreparationStatus.Draft) && (
+            {currentRole === 'Business Development Manager' && (status === BidPreparationStatus.Draft) && (
               <>
                 {editMode && (
                   <Button
@@ -581,7 +600,7 @@ const getStatusLabel = (status:any) => {
               </>
             )}
 
-            {(currentRole === 'Regional Director' || currentRole === 'Regional Manager') && currentVersion?.status === BidPreparationStatus.PendingApproval && (
+            {(currentRole === 'Regional Director' || currentRole === 'Regional Manager') && status === BidPreparationStatus.PendingApproval && (
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
                   variant="contained"
@@ -626,7 +645,7 @@ const getStatusLabel = (status:any) => {
           </Table>
         </Paper>
 
-        {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') &&  (!currentVersion || currentVersion?.status === BidPreparationStatus.Draft) && (
+        {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') && status === BidPreparationStatus.Draft && (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
