@@ -34,7 +34,7 @@ namespace NJS.Domain.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LastLogin = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -67,7 +67,7 @@ namespace NJS.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -95,12 +95,58 @@ namespace NJS.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Regions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ScoreRange",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    value = table.Column<int>(type: "int", nullable: false),
+                    label = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    range = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ScoreRange", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ScoringCriteria",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Label = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ByWhom = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ByDate = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Score = table.Column<int>(type: "int", nullable: false),
+                    ShowComments = table.Column<bool>(type: "bit", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ScoringCriteria", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ScoringDescription",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Label = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ScoringDescription", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -326,7 +372,7 @@ namespace NJS.Domain.Migrations
                     RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     PermissionId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -346,6 +392,98 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GoNoGoDecisionOpportunities",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TypeOfBid = table.Column<int>(type: "int", nullable: false),
+                    Sector = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BdHead = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Office = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RegionalBDHead = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Region = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TypeOfClient = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EnderFee = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Emd = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OpportunityId = table.Column<int>(type: "int", nullable: false),
+                    ScoringCriteriaId = table.Column<int>(type: "int", nullable: true),
+                    ScoreRangeId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GoNoGoDecisionOpportunities", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GoNoGoDecisionOpportunities_ScoreRange_ScoreRangeId",
+                        column: x => x.ScoreRangeId,
+                        principalTable: "ScoreRange",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_GoNoGoDecisionOpportunities_ScoringCriteria_ScoringCriteriaId",
+                        column: x => x.ScoringCriteriaId,
+                        principalTable: "ScoringCriteria",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ScoringDescriptionSummarry",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ScoringDescriptionID = table.Column<int>(type: "int", nullable: false),
+                    High = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Medium = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Low = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ScoringDescriptionSummarry", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ScoringDescriptionSummarry_ScoringDescription_ScoringDescriptionID",
+                        column: x => x.ScoringDescriptionID,
+                        principalTable: "ScoringDescription",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GoNoGoDecisionHeaders",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TypeOfBid = table.Column<int>(type: "int", nullable: false),
+                    Sector = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BdHead = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Office = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RegionalBDHead = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Region = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TypeOfClient = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TenderFee = table.Column<double>(type: "float", nullable: false),
+                    Emd = table.Column<double>(type: "float", nullable: false),
+                    TotalScore = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    OpportunityId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CurrentVersion = table.Column<int>(type: "int", nullable: true),
+                    VersionStatus = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GoNoGoDecisionHeaders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GoNoGoDecisionHeaders_OpportunityTrackings_OpportunityId",
+                        column: x => x.OpportunityId,
+                        principalTable: "OpportunityTrackings",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OpportunityHistories",
                 columns: table => new
                 {
@@ -353,10 +491,10 @@ namespace NJS.Domain.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     OpportunityId = table.Column<int>(type: "int", nullable: false),
                     StatusId = table.Column<int>(type: "int", nullable: false),
-                    Action = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ActionDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ActionBy = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    ActionBy = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     AssignedToId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
@@ -366,7 +504,8 @@ namespace NJS.Domain.Migrations
                         name: "FK_OpportunityHistories_AspNetUsers_ActionBy",
                         column: x => x.ActionBy,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_OpportunityHistories_AspNetUsers_AssignedToId",
                         column: x => x.AssignedToId,
@@ -393,15 +532,15 @@ namespace NJS.Domain.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProjectId = table.Column<int>(type: "int", nullable: false),
-                    ProjectDetails = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProjectDetails = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StrategicRanking = table.Column<int>(type: "int", nullable: false),
                     FinancialInformation = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     StudyDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ProbabilityAssessment = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    CompetitionAnalysis = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    FundingStream = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ContractType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    QualifyingCriteria = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    CompetitionAnalysis = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FundingStream = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ContractType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    QualifyingCriteria = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -487,7 +626,7 @@ namespace NJS.Domain.Migrations
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     AllocationPercentage = table.Column<double>(type: "float", nullable: false),
-                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -513,7 +652,7 @@ namespace NJS.Domain.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProjectId = table.Column<int>(type: "int", nullable: false),
-                    Structure = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Structure = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -527,13 +666,71 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GoNoGoDecisionTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Score = table.Column<int>(type: "int", nullable: false),
+                    Commits = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    GoNoGoDecisionHeaderId = table.Column<int>(type: "int", nullable: true),
+                    ScoringCriteriaId = table.Column<int>(type: "int", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GoNoGoDecisionTransactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GoNoGoDecisionTransactions_GoNoGoDecisionHeaders_GoNoGoDecisionHeaderId",
+                        column: x => x.GoNoGoDecisionHeaderId,
+                        principalTable: "GoNoGoDecisionHeaders",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_GoNoGoDecisionTransactions_ScoringCriteria_ScoringCriteriaId",
+                        column: x => x.ScoringCriteriaId,
+                        principalTable: "ScoringCriteria",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GoNoGoVersions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GoNoGoDecisionHeaderId = table.Column<int>(type: "int", nullable: false),
+                    VersionNumber = table.Column<int>(type: "int", nullable: false),
+                    FormData = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApprovedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ActonBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GoNoGoVersions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GoNoGoVersions_GoNoGoDecisionHeaders_GoNoGoDecisionHeaderId",
+                        column: x => x.GoNoGoDecisionHeaderId,
+                        principalTable: "GoNoGoDecisionHeaders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WBSTasks",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Level = table.Column<int>(type: "int", nullable: false),
                     ParentId = table.Column<int>(type: "int", nullable: true),
                     WorkBreakdownStructureId = table.Column<int>(type: "int", nullable: false),
@@ -563,7 +760,7 @@ namespace NJS.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     WBSTaskId = table.Column<int>(type: "int", nullable: false),
                     CostRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     ODC = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
@@ -579,7 +776,8 @@ namespace NJS.Domain.Migrations
                         name: "FK_UserWBSTasks_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_UserWBSTasks_WBSTasks_WBSTaskId",
                         column: x => x.WBSTaskId,
@@ -633,9 +831,39 @@ namespace NJS.Domain.Migrations
                 column: "ProjectId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_GoNoGoDecisionHeaders_OpportunityId",
+                table: "GoNoGoDecisionHeaders",
+                column: "OpportunityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GoNoGoDecisionOpportunities_ScoreRangeId",
+                table: "GoNoGoDecisionOpportunities",
+                column: "ScoreRangeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GoNoGoDecisionOpportunities_ScoringCriteriaId",
+                table: "GoNoGoDecisionOpportunities",
+                column: "ScoringCriteriaId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_GoNoGoDecisions_ProjectId",
                 table: "GoNoGoDecisions",
                 column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GoNoGoDecisionTransactions_GoNoGoDecisionHeaderId",
+                table: "GoNoGoDecisionTransactions",
+                column: "GoNoGoDecisionHeaderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GoNoGoDecisionTransactions_ScoringCriteriaId",
+                table: "GoNoGoDecisionTransactions",
+                column: "ScoringCriteriaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GoNoGoVersions_GoNoGoDecisionHeaderId",
+                table: "GoNoGoVersions",
+                column: "GoNoGoDecisionHeaderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OpportunityHistories_ActionBy",
@@ -708,6 +936,11 @@ namespace NJS.Domain.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ScoringDescriptionSummarry_ScoringDescriptionID",
+                table: "ScoringDescriptionSummarry",
+                column: "ScoringDescriptionID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserWBSTasks_UserId",
                 table: "UserWBSTasks",
                 column: "UserId");
@@ -755,7 +988,16 @@ namespace NJS.Domain.Migrations
                 name: "FeasibilityStudies");
 
             migrationBuilder.DropTable(
+                name: "GoNoGoDecisionOpportunities");
+
+            migrationBuilder.DropTable(
                 name: "GoNoGoDecisions");
+
+            migrationBuilder.DropTable(
+                name: "GoNoGoDecisionTransactions");
+
+            migrationBuilder.DropTable(
+                name: "GoNoGoVersions");
 
             migrationBuilder.DropTable(
                 name: "OpportunityHistories");
@@ -770,13 +1012,22 @@ namespace NJS.Domain.Migrations
                 name: "RolePermissions");
 
             migrationBuilder.DropTable(
+                name: "ScoringDescriptionSummarry");
+
+            migrationBuilder.DropTable(
                 name: "UserWBSTasks");
 
             migrationBuilder.DropTable(
-                name: "OpportunityStatuses");
+                name: "ScoreRange");
 
             migrationBuilder.DropTable(
-                name: "OpportunityTrackings");
+                name: "ScoringCriteria");
+
+            migrationBuilder.DropTable(
+                name: "GoNoGoDecisionHeaders");
+
+            migrationBuilder.DropTable(
+                name: "OpportunityStatuses");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
@@ -785,7 +1036,13 @@ namespace NJS.Domain.Migrations
                 name: "Permissions");
 
             migrationBuilder.DropTable(
+                name: "ScoringDescription");
+
+            migrationBuilder.DropTable(
                 name: "WBSTasks");
+
+            migrationBuilder.DropTable(
+                name: "OpportunityTrackings");
 
             migrationBuilder.DropTable(
                 name: "WorkBreakdownStructures");

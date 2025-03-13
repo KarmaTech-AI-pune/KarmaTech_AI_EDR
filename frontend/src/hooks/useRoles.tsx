@@ -7,6 +7,7 @@ interface UseRolesReturn {
   loading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
+  currentUserRole: string | null;
 }
 
 export const useRoles = (): UseRolesReturn => {
@@ -31,10 +32,21 @@ export const useRoles = (): UseRolesReturn => {
     fetchRoles();
   }, [fetchRoles]);
 
+  // Get current user role from localStorage
+  const getCurrentUserRole = useCallback(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      const userData = JSON.parse(user);
+      return userData.roles?.[0]?.name || null;
+    }
+    return null;
+  }, []);
+
   return {
     roles,
     loading,
     error,
     refetch: fetchRoles,
+    currentUserRole: getCurrentUserRole()
   };
 };

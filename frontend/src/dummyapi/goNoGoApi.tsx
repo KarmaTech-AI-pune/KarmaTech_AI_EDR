@@ -1,99 +1,68 @@
-import { GoNoGoDecision } from '../models';
-import { goNoGoDecisions, getGoNoGoByProjectId } from './database/dummygoNoGo';
+import { axiosInstance as axios } from './axiosConfig';
+import { GoNoGoDecisionPayload } from '../models/goNoGoDecisionModel';
+import { GoNoGoVersionDto, CreateGoNoGoVersionDto, ApproveGoNoGoVersionDto } from '../models/goNoGoVersionModel.tsx';
 
 export const goNoGoApi = {
-  getAll: async (): Promise<GoNoGoDecision[]> => {
-    try {
-      return goNoGoDecisions;
-    } catch (error) {
-      console.error('Error fetching Go/No-Go decisions:', error);
-      throw error;
-    }
-  },
+    getAll: async () => {
+        const response = await axios.get('/api/gonogodecision');
+        return response.data;
+    },
 
-  getById: async (id: string): Promise<GoNoGoDecision> => {
-    try {
-      const decision = goNoGoDecisions.find(d => d.projectId === id);
-      if (!decision) {
-        throw new Error(`Go/No-Go decision for project ${id} not found`);
-      }
-      return decision;
-    } catch (error) {
-      console.error(`Error fetching Go/No-Go decision ${id}:`, error);
-      throw error;
-    }
-  },
+    getById: async (id: string) => {
+        const response = await axios.get(`/api/gonogodecision/${id}`);
+        return response.data;
+    },
 
-  getByProjectId: async (projectId: string): Promise<GoNoGoDecision | null> => {
-    try {
-      const decision = getGoNoGoByProjectId(projectId);
-      return decision || null;
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        return null;
-      }
-      console.error(`Error fetching Go/No-Go decision for project ${projectId}:`, error);
-      throw error;
-    }
-  },
+    getByProjectId: async (projectId: string) => {
+        const response = await axios.get(`/api/gonogodecision/project/${projectId}`);
+        return response.data;
+    },
 
-  create: async (projectId: string, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
-    try {
-      const newDecision = {
-        ...data,
-        projectId,
-        createdAt: new Date().toISOString(),
-        createdBy: 'System'
-      };
-      goNoGoDecisions.push(newDecision);
-      return newDecision;
-    } catch (error: any) {
-      if (error.response?.status === 400) {
-        const validationErrors = error.response.data.errors;
-        console.error('Validation Errors:', validationErrors);
-        throw new Error(validationErrors.join(', '));
-      }
-      console.error(`Error creating go/no-go decision for project ${projectId}:`, error);
-      throw error;
-    }
-  },
+    getByOpportunityId: async (projectId: number) => {
+        const response = await axios.get(`/api/gonogodecision/opportunity/${projectId}`);
+        return response.data;
+    },
 
-  update: async (id: string, data: GoNoGoDecision): Promise<GoNoGoDecision> => {
-    try {
-      const index = goNoGoDecisions.findIndex(d => d.projectId === id);
-      if (index === -1) {
-        throw new Error(`Go/No-Go decision for project ${id} not found`);
-      }
-      const updatedDecision = {
-        ...data,
-        projectId: id,
-        updatedAt: new Date().toISOString(),
-        updatedBy: 'System'
-      };
-      goNoGoDecisions[index] = updatedDecision;
-      return updatedDecision;
-    } catch (error: any) {
-      if (error.response?.status === 400) {
-        const validationErrors = error.response.data.errors;
-        console.error('Validation Errors:', validationErrors);
-        throw new Error(validationErrors.join(', '));
-      }
-      console.error(`Error updating go/no-go decision ${id}:`, error);
-      throw error;
-    }
-  },
+    create: async (decision: GoNoGoDecisionPayload) => {
+        const response = await axios.post(`/api/gonogodecision/createForm`, decision);
+        return response.data;
+    },
 
-  delete: async (id: string): Promise<void> => {
-    try {
-      const index = goNoGoDecisions.findIndex(d => d.projectId === id);
-      if (index !== -1) {
-        goNoGoDecisions.splice(index, 1);
-      } else {
-        throw new Error(`Go/No-Go decision for project ${id} not found`);
-      }
-    } catch (error) {
-      console.error(`Error deleting Go/No-Go decision ${id}:`, error);
-      throw error;
+    update: async (decision: GoNoGoDecisionPayload) => {
+        const response = await axios.post(`/api/gonogodecision/createForm`, decision);
+        return response.data;
+    },
+
+    delete: async (id: string) => {
+        const response = await axios.delete(`/api/gonogodecision/${id}`);
+        return response.data;
+    },
+
+    // Version management endpoints
+    getVersions: async (headerId: number): Promise<GoNoGoVersionDto[]> => {
+        const response = await axios.get(`/api/gonogodecision/${headerId}/versions`);
+        return response.data;
+    },
+
+    getVersion: async (headerId: number, versionNumber: number): Promise<GoNoGoVersionDto> => {
+        const response = await axios.get(`/api/gonogodecision/${headerId}/versions/${versionNumber}`);
+        return response.data;
+    },
+
+    createVersion: async (headerId: number, dto: CreateGoNoGoVersionDto): Promise<GoNoGoVersionDto> => {
+        const response = await axios.post(`/api/gonogodecision/${headerId}/versions/update`, dto);
+        return response.data;
+    },
+
+    approveVersion: async (
+        headerId: number, 
+        versionNumber: number, 
+        data: ApproveGoNoGoVersionDto
+    ): Promise<GoNoGoVersionDto> => {
+        const response = await axios.post(
+            `/api/gonogodecision/${headerId}/versions/${versionNumber}/approve`,
+            data
+        );
+        return response.data;
     }
-  }
 };

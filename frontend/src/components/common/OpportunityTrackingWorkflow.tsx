@@ -1,10 +1,33 @@
 import {Button} from '@mui/material';
 import { Send} from '@mui/icons-material';
 import { DecideApproval, DecideReview, SendForReview, SendForApproval } from '../dialogbox';
-import { useState, useContext} from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { projectManagementAppContext } from '../../App';
-import { OpportunityTracking } from "../../models";
+import { OpportunityTracking } from '../../models';
+
+interface WorkflowStatus {
+  id: number;
+  name: string;
+  status: string;
+}
+
+// interface OpportunityHistory {
+//   statusId: number;
+// }
+
+// interface OpportunityTracking {
+//   id: number;
+//   currentHistory: OpportunityHistory;
+// }
+
+// Type guard to check if workflow status is valid
+const isValidWorkflowStatus = (status: unknown): status is WorkflowStatus => {
+  return status !== null && 
+         typeof status === 'object' && 
+         'status' in status && 
+         typeof (status as Record<string, unknown>).status === 'string';
+};
 
 type OTWProps = {
   onOpportunityUpdated?: (() => void) | undefined;
@@ -16,22 +39,49 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
   opportunity
 }) => {
   const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
+  const [localStatusId, setLocalStatusId] = useState<number>(
+    Array.isArray(opportunity.currentHistory)
+      ? opportunity.currentHistory[0]?.statusId || 0
+      : opportunity.currentHistory?.statusId || 0
+  );
   const context = useContext(projectManagementAppContext);
+
+  useEffect(() => {
+    // Handle both single object and array cases
+    const history = Array.isArray(opportunity.currentHistory) 
+      ? opportunity.currentHistory[0] 
+      : opportunity.currentHistory;
+    
+    setLocalStatusId(history?.statusId || 0);
+  }, [
+    // Use optional chaining in dependency array and handle array case
+    Array.isArray(opportunity.currentHistory)
+      ? opportunity.currentHistory[0]?.statusId
+      : opportunity.currentHistory?.statusId
+  ]);
 
   const handleWorkflowClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setWorkflowDialogOpen(true);
   };
 
-  const handleWorkflowClose = () => {
+  const handleWorkflowClose = async (success: boolean = false) => {
     setWorkflowDialogOpen(false);
-    if (onOpportunityUpdated) {
-      onOpportunityUpdated();
+    if (success) {
+      // Update status immediately for instant feedback
+      const nextStatusId = (Array.isArray(opportunity.currentHistory)
+        ? opportunity.currentHistory[0]?.statusId || 0
+        : opportunity.currentHistory?.statusId || 0) + 1;
+      setLocalStatusId(nextStatusId);
+      if (onOpportunityUpdated) {
+        await onOpportunityUpdated();
+      }
     }
   };
 
   const getWorkflowButtonText = (workflowId: number) => {
-    const status = getWorkflowStatusById(workflowId)?.status;
+    const workflowStatus = getWorkflowStatusById(workflowId);
+    const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
     switch (status) {
       case "Initial":
       case "Review Changes":
@@ -54,7 +104,8 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
   const canShowWorkflowButton = () => {
     if (!context) return false;
     
-    const status = getWorkflowStatusById(opportunity.currentHistory.statusId)?.status;
+    const workflowStatus = getWorkflowStatusById(localStatusId);
+    const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
     if (!status || status === "Approved") {
       return false;
     }
@@ -77,17 +128,19 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
   const getWorkflowDialog = () => {
     if (!context?.currentUser?.name) return null;
 
-    const status = getWorkflowStatusById(opportunity.currentHistory.statusId)?.status;
+    const workflowStatus = getWorkflowStatusById(localStatusId);
+    const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
     switch (status) {
       case "Initial":
       case "Review Changes":
         return (
           <SendForReview 
             open={workflowDialogOpen} 
-            onClose={handleWorkflowClose}
+            onClose={() => handleWorkflowClose(false)}
             currentUser={context.currentUser.name}
             opportunityId={opportunity.id}
-            onSubmit={onOpportunityUpdated}
+            onSubmit={async () => await handleWorkflowClose(true)}
+            onReviewSent={onOpportunityUpdated}
           />
         );
       case "Approval Changes":
@@ -96,20 +149,20 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
           return (
             <DecideApproval 
               open={workflowDialogOpen} 
-              onClose={handleWorkflowClose}
-              opportunityId={opportunity.id}
-              currentUser={context?.currentUser.name}
-              onSubmit={onOpportunityUpdated}
+            onClose={() => handleWorkflowClose(false)}
+            opportunityId={opportunity.id}
+            currentUser={context?.currentUser.name}
+            onSubmit={async () => await handleWorkflowClose(true)}
             />
           );
         } else if (context?.canSubmitForApproval) {
           return (
             <SendForApproval
               open={workflowDialogOpen}
-              onClose={handleWorkflowClose}
-              opportunityId={opportunity.id}
-              currentUser={context?.currentUser.name}
-              onSubmit={onOpportunityUpdated}
+            onClose={() => handleWorkflowClose(false)}
+            opportunityId={opportunity.id}
+            currentUser={context?.currentUser.name}
+            onSubmit={async () => await handleWorkflowClose(true)}
             />
           );
         }
@@ -118,10 +171,17 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
         return (
           <DecideReview 
             open={workflowDialogOpen} 
-            onClose={handleWorkflowClose}
+            onClose={() => handleWorkflowClose(false)}
             opportunityId={opportunity.id}
             currentUser={context.currentUser.name}
-            onDecisionMade={onOpportunityUpdated}
+            onDecisionMade={async () => {
+              // Update status immediately when decision is made
+              const nextStatusId = (Array.isArray(opportunity.currentHistory)
+                ? opportunity.currentHistory[0]?.statusId || 0
+                : opportunity.currentHistory?.statusId || 0) + 1;
+              setLocalStatusId(nextStatusId);
+              await handleWorkflowClose(true);
+            }}
           />
         );
       default:
@@ -138,10 +198,10 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
           color="primary"
           startIcon={<Send />}
         >
-          {getWorkflowButtonText(opportunity.currentHistory.statusId)}
+          {getWorkflowButtonText(localStatusId)}
         </Button>
       )}
-      {getWorkflowDialog()}
+      {workflowDialogOpen && getWorkflowDialog()}
     </>
   )
 }

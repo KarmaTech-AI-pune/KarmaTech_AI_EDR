@@ -6,7 +6,7 @@ namespace NJS.Application.Dtos
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public List<PermissionCategory> Permissions { get; set; } = new List<PermissionCategory>();
+        public List<PermissionCategoryGroup> Permissions { get; set; } = new List<PermissionCategoryGroup>();
     }
 
     public class PermissionCategory

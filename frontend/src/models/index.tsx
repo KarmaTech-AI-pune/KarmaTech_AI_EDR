@@ -1,23 +1,110 @@
-export type { WBSTask} from "./wbsTaskModel";
-export type {WBSTaskResourceAllocation} from "./wbsTaskResourceAllocationModel";
-export type {MonthlyHour} from "./monthlyHourModel"
-export type {resourceRole} from "./resourceRoleModel"
-export type {Employee} from "./employeeModel"
-export type {Project} from "./projectModel"
-export type {ProjectClosureComment} from "./projectClosureCommentModel"
-export type {ProjectClosureRow} from "./projectClosureRowModel"
-export type {WorkflowStatus} from "./workflowStatusModel"
-export type {WorkflowEntry} from "./workflowEntryModel"
-export type {OpportunityTracking} from "./opportunityTrackingModel"
-export type {OpportunityHistory} from "./opportunityHistoryModel"
-export type {InputRegisterRow} from "./inputRegisterRowModel"
-export type {GoNoGoDecision} from "./goNoGoDecisionModel"
-export {GoNoGoStatus} from "./goNoGoDecisionModel"
-export type {InwardRow} from "./inwardRowModel"
-export type {OutwardRow} from "./outwardRowModel"
-export type {CheckReviewRow} from "./checkReviewModel"
-export type {ChangeControl} from "./changeControlModel"
-export type {User, AuthUser} from "./userModel"
-export type { Role } from "./roleModel";
-export {PermissionType} from "./permissionTypeModel"
-export type {RoleDefinition} from "./roleDefinitionModel"
+export type { GoNoGoDecision } from './goNoGoDecisionModel';
+export type { OpportunityTracking } from './opportunityTrackingModel';
+
+export {
+    GoNoGoStatus,
+    TypeOfBid,
+    WorkflowStatus,
+    GoNoGoVersionStatus
+} from './types';
+
+export interface User {
+    id: string;
+    userName: string;
+    name: string;
+    email: string;
+    roles: Role[];
+    standardRate: number;
+    isConsultant: boolean;
+    createdAt: string;
+    avatar?:string;
+    lastLogin?: string | null;
+    password?: string;
+}
+
+export interface Role {
+    id: string;
+    name: string;
+    permissions: string[];
+}
+
+export interface Project {
+    id: string;
+    name: string;
+    description?: string;
+    status: string;
+    projectNo: string;
+    typeOfJob:string;
+    sector:string;
+    priority:string;
+    clientName:string;
+    typeOfClient:string;
+    region:string;
+    office:string;
+    currency: string;
+    budget: number;
+    feeType:string;
+    startDate?: string;
+    endDate?: string;
+    details:string;
+    createdAt: string;
+    updatedAt: string;
+    seniorProjectMangerId:string;
+    regionalManagerID:string;
+    projectMangerId:string;
+    estimatedCost:number;
+}
+
+export interface OpportunityHistory {
+    opportunityId:number;
+    date:string;
+    description:string;
+    id: number;
+    statusId: number;
+    status: string;
+    action: string;
+    assignedToId: string;
+}
+
+// OpportunityTracking is now imported from './opportunityTrackingModel'
+
+export enum PermissionType {
+    VIEW_PROJECT = 'VIEW_PROJECT',
+    CREATE_PROJECT = 'CREATE_PROJECT',
+    EDIT_PROJECT = 'EDIT_PROJECT',
+    DELETE_PROJECT = 'DELETE_PROJECT',
+    REVIEW_PROJECT = 'REVIEW_PROJECT',
+    APPROVE_PROJECT = 'APPROVE_PROJECT',
+    SUBMIT_PROJECT_FOR_REVIEW = 'SUBMIT_PROJECT_FOR_REVIEW',
+    SUBMIT_PROJECT_FOR_APPROVAL = 'SUBMIT_PROJECT_FOR_APPROVAL',
+
+    CREATE_BUSINESS_DEVELOPMENT = 'CREATE_BUSINESS_DEVELOPMENT',
+    EDIT_BUSINESS_DEVELOPMENT = 'EDIT_BUSINESS_DEVELOPMENT',
+    DELETE_BUSINESS_DEVELOPMENT = 'DELETE_BUSINESS_DEVELOPMENT',
+    VIEW_BUSINESS_DEVELOPMENT = 'VIEW_BUSINESS_DEVELOPMENT',
+    REVIEW_BUSINESS_DEVELOPMENT = 'REVIEW_BUSINESS_DEVELOPMENT',
+    APPROVE_BUSINESS_DEVELOPMENT = 'APPROVE_BUSINESS_DEVELOPMENT',
+    SUBMIT_FOR_REVIEW = 'SUBMIT_FOR_REVIEW',
+    SUBMIT_FOR_APPROVAL = 'SUBMIT_FOR_APPROVAL',
+
+    SYSTEM_ADMIN = 'SYSTEM_ADMIN'
+}
+
+export interface RoleDefinition {
+    id: string;
+    name: string;
+    permissions: PermissionType[];
+}
+
+export type { WBSTask } from './wbsTaskModel';
+export type { WBSTaskResourceAllocation } from './wbsTaskResourceAllocationModel';
+export type { MonthlyHour } from './monthlyHourModel';
+export type { resourceRole } from './resourceRoleModel';
+export type { Employee } from './employeeModel';
+export type { CheckReviewRow } from './checkReviewModel';
+export type { ChangeControl } from './changeControlModel';
+export type { InwardRow } from './inwardRowModel';
+export type { OutwardRow } from './outwardRowModel';
+export type { ProjectClosureRow } from './projectClosureRowModel';
+export type { ProjectClosureComment } from './projectClosureCommentModel';
+export type { InputRegisterRow } from './inputRegisterRowModel';

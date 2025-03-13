@@ -59,7 +59,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 DurationOfProject = request.DurationOfProject,
                 FundingStream = request.FundingStream,
                 ContractType = request.ContractType,
-
+                CreatedBy=_userContext.GetCurrentUserId(),
                 CreatedAt = currentDateTime,
                 UpdatedAt = currentDateTime
             };
@@ -70,6 +70,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                     StatusId = 1,
                     AssignedToId = entity.ReviewManagerId,
                     Action = "Submitted",
+                    Comments= "Submitted",
                     ActionDate = currentDateTime,
                     ActionBy= currentUser
                 });
@@ -81,6 +82,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                     StatusId = 1,
                     AssignedToId = entity.ApprovalManagerId,
                     Action = "Submitted",
+                    Comments = "Submitted",
                     ActionDate = currentDateTime,
                     ActionBy = currentUser
                 });
@@ -92,6 +94,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                     StatusId = 1,
                     AssignedToId = entity.BidManagerId,
                     Action = "Submitted",
+                    Comments = "Submitted",
                     ActionDate = currentDateTime,
                     ActionBy = currentUser
                 });

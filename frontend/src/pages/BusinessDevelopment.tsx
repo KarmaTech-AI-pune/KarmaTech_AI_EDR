@@ -6,7 +6,9 @@ import {
   Button,
   Divider,
   IconButton,
-  Alert
+  Alert,
+  Dialog,
+  DialogContent
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -15,9 +17,9 @@ import { OpportunityForm } from '../components/forms/OpportunityForm';
 import { Pagination } from '../components/Pagination';
 import { authApi } from '../services/authApi';
 import { UserWithRole } from '../types';
-import { OpportunityTracking } from '../models';
-import { PermissionType } from '../models';
-import { opportunityApi } from '../dummyapi/opportunityApi';
+
+import { PermissionType, OpportunityTracking } from '../models';
+import { opportunityApi } from '../services/opportunityApi';
 import { HistoryLoggingService } from '../services/historyLoggingService';
 
 const NAVBAR_HEIGHT = '64px';
@@ -48,14 +50,14 @@ export const BusinessDevelopment: React.FC = () => {
       let response: OpportunityTracking[] = [];
       
       if (currentUser.roles.some(role => role.name === "Business Development Manager")) {
-        response = await opportunityApi.getByUserId(currentUser.id);
+        response = (await opportunityApi.getByUserId(currentUser.id)) as OpportunityTracking[];
       } else if (currentUser.roles.some(role => role.name ===  "Regional Manager")) {
-        response = await opportunityApi.getByReviewManagerId(currentUser.id);
+        response = (await opportunityApi.getByReviewManagerId(currentUser.id)) as OpportunityTracking[];
       }  
       else if (currentUser.roles.some(role => role.name ===  "RegionalDirector")) {
-        response = await opportunityApi.getByApprovalManagerId(currentUser.id);
+        response = (await opportunityApi.getByApprovalManagerId(currentUser.id)) as OpportunityTracking[];
       } else {
-        response = await opportunityApi.getAll();
+        response = (await opportunityApi.getAll()) as OpportunityTracking[];
       }
       
       console.log('Fetched Opportunities:', response);
@@ -71,7 +73,7 @@ export const BusinessDevelopment: React.FC = () => {
   const initialOpportunityData: Partial<OpportunityTracking> = {
     client: '',
     status: 'Bid Under Preparation',
-    projectId: 0,
+    id: undefined,
     stage: 'A',
     strategicRanking: 'M',
     bidManagerId: '',
@@ -99,12 +101,25 @@ export const BusinessDevelopment: React.FC = () => {
         throw new Error('User not authenticated');
       }
 
+      // Construct a valid OpportunityHistory object
+      const currentHistory = {
+        id: 0, // Provide a default value
+        opportunityId: 0, // Provide a default value
+        action: 'Created', // Provide a default value
+        status: opportunityData.status || '', // Use the status from the form
+        statusId: 1, // Provide a default value
+        assignedToId: currentUser.id, // Provide a default value
+        date: new Date().toISOString(), // Provide a default value
+        description: 'Opportunity Created', // Provide a default value
+      };
+
       const submissionData = {
         ...opportunityData,
         createdBy: currentUser.name,
         createdAt: new Date().toISOString(),
         updatedBy: currentUser.name,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        currentHistory: currentHistory, // Assign the constructed OpportunityHistory object
       };
 
       const createdOpportunity = await opportunityApi.create(submissionData);
@@ -271,13 +286,22 @@ export const BusinessDevelopment: React.FC = () => {
           )}
         </Box>
 
-        <OpportunityForm
-          open={isCreatingOpportunity}
-          onSubmit={handleSubmitOpportunity}
-          onClose={handleCancelOpportunity}
-          project={initialOpportunityData}
-          error={formError}
-        />
+        {isCreatingOpportunity && (
+          <Dialog 
+            open={isCreatingOpportunity} 
+            onClose={handleCancelOpportunity}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogContent>
+              <OpportunityForm
+                onSubmit={handleSubmitOpportunity}
+                project={initialOpportunityData}
+                error={formError}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
 
         <Divider sx={{ mb: 3 }} />
 

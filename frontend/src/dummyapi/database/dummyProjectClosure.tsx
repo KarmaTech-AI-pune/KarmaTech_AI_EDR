@@ -1,4 +1,5 @@
-import { ProjectClosureComment, ProjectClosureRow } from "../../models";
+import { ProjectClosureComment } from "../../models/projectClosureCommentModel";
+import { ProjectClosureRow } from "../../models/projectClosureRowModel";
 export const projectClosureLabels = {
   // Section A
   clientFeedback: "What client feedback / performance certificate has been obtained ? – summarise",

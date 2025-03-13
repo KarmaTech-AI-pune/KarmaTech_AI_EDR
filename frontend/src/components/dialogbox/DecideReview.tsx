@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { SelectChangeEvent } from '@mui/material';
 import { 
   Dialog,
   DialogTitle,
@@ -14,9 +15,7 @@ import {
 } from '@mui/material';
 import { opportunityApi } from '../../services/opportunityApi';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
-
-import { getUsersByRole } from '../../services/userApi';
-import { AuthUser} from '../../models'
+import { getUserById } from '../../services/userApi';
 
 interface DecideReviewProps {
   open: boolean;
@@ -35,33 +34,14 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 }) => {
   const [decision, setDecision] = useState('');
   const [comments, setComments] = useState('');
-  const [selectedManager, setSelectedManager] = useState<string>('');
-  const [regionalDirectors, setRegionalDirectors] = useState<AuthUser[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Get all Regional Director users
-    getRoles()   
-  }, []);
-
-  const getRoles = async()=>{
-          const roles= await getUsersByRole('Regional Director');
-          setRegionalDirectors(roles);
-  }
-
-  const handleDecisionChange = (event: any) => {
+  const handleDecisionChange = (event: SelectChangeEvent<string>) => {
     event.stopPropagation();
-    setDecision(event.target.value);
+    setDecision(event.target.value as string);
     setError(null);
-    // Reset fields when decision changes
+    // Reset comments when decision changes
     setComments('');
-    setSelectedManager('');
-  };
-
-  const handleManagerChange = (event: any) => {
-    event.stopPropagation();
-    setSelectedManager(event.target.value);
-    setError(null);
   };
 
   const handleCommentsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +54,6 @@ const DecideReview: React.FC<DecideReviewProps> = ({
     event.stopPropagation();
     setDecision('');
     setComments('');
-    setSelectedManager('');
     setError(null);
     onClose();
   };
@@ -83,11 +62,6 @@ const DecideReview: React.FC<DecideReviewProps> = ({
     event.stopPropagation();
     if (!decision) {
       setError('Please select a decision');
-      return;
-    }
-
-    if (decision === 'approve' && !selectedManager) {
-      setError('Please select a Regional Director');
       return;
     }
 
@@ -103,40 +77,46 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 
     try {
       const newStatus = decision === 'approve' ? 'Pending Approval' : 'Review Rejected';
-      const workflowId = decision === 'approve' ? "4" : "3"; // "4" for "Sent for Approval", "3" for "Review Changes"
-      //c (data: {
-       // opportunityId: number;
-        //approvalManagerId: string;
-        //comments?: string;
+
+      // Notify parent immediately for optimistic update
+      if (onDecisionMade) {
+        onDecisionMade();
+      }
+
       // Update both workflow and opportunity in one atomic operation
       if(decision === 'approve'){
-      await opportunityApi.sendToApproval({
-              opportunityId: opportunityId,
-              approvalManagerId: selectedManager,
-              action:decision,
-              comments: comments
-            });
-          }
-          else{
-            await opportunityApi.RejectByRegionManagerSentToBidManager({
-              opportunityId: opportunityId,
-              approvalManagerId: selectedManager,
-              action:decision,
-              comments: `Rejected by ${currentUser}`
-            });
-          }
-          
+        // Get opportunity to get the RD
+        const opportunity = await opportunityApi.getById(opportunityId);
+        const regionalDirectorId = opportunity.approvalManagerId;
 
-      // Log the review decision
-      if (decision === 'approve') {
-        const selectedDirectorDetails = regionalDirectors.find(m => m.id === selectedManager);
+        if (!regionalDirectorId) {
+          setError('No Regional Director assigned to this opportunity');
+          return;
+        }
+
+        await opportunityApi.sendToApproval({
+          opportunityId: opportunityId,
+          approvalManagerId: regionalDirectorId,
+          action: decision,
+          comments: comments
+        });
+
+        // Get RD name for logging
+        const rdUser = await getUserById(regionalDirectorId);
         await HistoryLoggingService.logReviewDecision(
           opportunityId,
           'approved',
           currentUser,
-          `Sent for approval to ${selectedDirectorDetails?.name}`
+          `Sent for approval to ${rdUser?.name || 'Regional Director'}`
         );
       } else {
+        await opportunityApi.RejectByRegionManagerSentToBidManager({
+          opportunityId: opportunityId,
+          approvalManagerId: '', // Not needed for rejection
+          action: decision,
+          comments: comments || `Rejected by ${currentUser}`
+        });
+
         await HistoryLoggingService.logReviewDecision(
           opportunityId,
           'rejected',
@@ -156,16 +136,14 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       // Reset form and close dialog
       setDecision('');
       setComments('');
-      setSelectedManager('');
       setError(null);
       onClose();
-      
-      // Notify parent component to refresh the opportunities list
-      if (onDecisionMade) {
-        onDecisionMade();
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit review decision');
+    } catch (err: unknown) {
+      setError(
+        typeof err === 'object' && err !== null && 'message' in err
+          ? (err as { message: string }).message
+          : 'Failed to submit review decision'
+      );
     }
   };
 
@@ -214,34 +192,6 @@ const DecideReview: React.FC<DecideReviewProps> = ({
           </Select>
           {error && <FormHelperText>{error}</FormHelperText>}
         </FormControl>
-
-        {decision === 'approve' && (
-          <FormControl 
-            fullWidth 
-            margin="normal"
-            error={!!error && !selectedManager}
-            onClick={handleDialogClick}
-          >
-            <InputLabel>Regional Director</InputLabel>
-            <Select
-              value={selectedManager}
-              onChange={handleManagerChange}
-              label="Regional Director"
-              onClick={handleDialogClick}
-            >
-              {regionalDirectors.map((director) => (
-                <MenuItem 
-                  key={director.id} 
-                  value={director.id}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {director.name}
-                </MenuItem>
-              ))}
-            </Select>
-            {error && !selectedManager && <FormHelperText>{error}</FormHelperText>}
-          </FormControl>
-        )}
 
         {decision === 'reject' && (
           <TextField

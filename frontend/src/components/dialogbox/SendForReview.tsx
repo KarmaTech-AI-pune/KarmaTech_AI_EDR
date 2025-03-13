@@ -141,19 +141,17 @@ const SendForReview: React.FC<SendForReviewProps> = ({
         selectedReviewerDetails.name
       );
 
-      // Reset and close dialog
+      // Reset dialog state
       setSelectedReviewer('');
       setError(null);
       
+      // Call callbacks in correct order with await to ensure proper sequence
       if (onSubmit) {
-        onSubmit();
+        await onSubmit(); // Wait for status update in parent
       }
-
-      // Trigger page refresh
       if (onReviewSent) {
-        onReviewSent();
+        await onReviewSent(); // Wait for refresh to complete
       }
-
       onClose();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error 
@@ -161,6 +159,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
         : 'Failed to send for review';
       setError(errorMessage);
       console.error(err);
+      onClose(); // Close dialog even on error
     }
   };
 
@@ -211,7 +210,11 @@ const SendForReview: React.FC<SendForReviewProps> = ({
           error={!!error}
         >
           {manager ? (
-            <div>
+            <div style={{ 
+              fontSize: '16px',
+              padding: '8px 0',
+              textAlign: 'center'
+            }}>
               Send to {manager} for review?
             </div>
           ) : (
@@ -239,7 +242,11 @@ const SendForReview: React.FC<SendForReviewProps> = ({
             </>
           )}
           
-          {error && <FormHelperText>{error}</FormHelperText>}
+          {error && (
+            <FormHelperText error>
+              {error}
+            </FormHelperText>
+          )}
         </FormControl>
       </DialogContent>
       <DialogActions onClick={stopEventPropagation}>

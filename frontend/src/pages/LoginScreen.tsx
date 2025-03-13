@@ -44,9 +44,9 @@ export const LoginScreen: React.FC = () => {
             } else {
                 setError(result.message || 'Invalid username or password');
             }
-        } catch (err: any) {
+        } catch (err) {
             console.error('Login error:', err);
-            setError(err.message || 'An error occurred. Please try again.');
+            setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
         }
     };
 
@@ -80,7 +80,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#1976d2'
                     }}
                 >
-                    NJSEI Project Management
+                    NJSEI ISO 9000 Forms Project Management Application
                 </Typography>
                 <Typography 
                     variant="h6" 
@@ -89,7 +89,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#666'
                     }}
                 >
-                    ISO 9000 Project Management Forms Application
+                    Version 1.3.0
                 </Typography>
             </Container>
 

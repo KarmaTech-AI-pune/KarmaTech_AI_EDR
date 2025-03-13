@@ -19,7 +19,12 @@ const projectsData = {
     "startDate": "2023-01-01",
     "endDate": "2024-12-31",
     "currency": "INR",
-    "regionalManagerID": "usr6"
+    "regionalManagerID": "usr6",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 5000000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "2":{
     "id": "2",
@@ -39,7 +44,12 @@ const projectsData = {
     "startDate": "2023-03-15",
     "endDate": "2025-03-14",
     "currency": "INR",
-    "regionalManagerID": "usr7"
+    "regionalManagerID": "usr7",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 2000000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "3":{
     "id": "3",
@@ -59,7 +69,12 @@ const projectsData = {
     "startDate": "2022-07-01",
     "endDate": "2023-12-31",
     "currency": "INR",
-    "regionalManagerID": "usr6"
+    "regionalManagerID": "usr6",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 3500000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "4":{
     "id": "4",
@@ -79,7 +94,12 @@ const projectsData = {
     "startDate": "2023-11-01",
     "endDate": "2025-10-31",
     "currency": "INR",
-    "regionalManagerID": "usr7"
+    "regionalManagerID": "usr7",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 7500000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "5":{
     "id": "5",
@@ -99,7 +119,12 @@ const projectsData = {
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
     "currency": "INR",
-    "regionalManagerID": "usr6"
+    "regionalManagerID": "usr6",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 4500000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "6":{
     "id": "6",
@@ -119,7 +144,12 @@ const projectsData = {
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
     "currency": "INR",
-    "regionalManagerID": "usr7"
+    "regionalManagerID": "usr7",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 3200000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "7": {
     "id": "7",
@@ -139,7 +169,12 @@ const projectsData = {
     "startDate": "2023-01-01",
     "endDate": "2024-12-31",
     "currency": "INR",
-    "regionalManagerID": "usr6"
+    "regionalManagerID": "usr6",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 600000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "8": {
     "id": "8",
@@ -159,7 +194,12 @@ const projectsData = {
     "startDate": "2023-03-15",
     "endDate": "2025-03-14",
     "currency": "INR",
-    "regionalManagerID": "usr7"
+    "regionalManagerID": "usr7",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 2000000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "9": {
     "id": "9",
@@ -179,7 +219,12 @@ const projectsData = {
     "startDate": "2023-03-15",
     "endDate": "2025-03-14",
     "currency": "INR",
-    "regionalManagerID": "usr6"
+    "regionalManagerID": "usr6",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 3500000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "10": {
     "id": "10",
@@ -199,7 +244,12 @@ const projectsData = {
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
     "currency": "INR",
-    "regionalManagerID": "usr6"
+    "regionalManagerID": "usr6",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 7500000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "11": {
     "id": "11",
@@ -219,7 +269,12 @@ const projectsData = {
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
     "currency": "INR",
-    "regionalManagerID": "usr7"
+    "regionalManagerID": "usr7",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 4500000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "12": {
     "id": "12",
@@ -239,7 +294,12 @@ const projectsData = {
     "startDate": "2023-06-01",
     "endDate": "2025-05-31",
     "currency": "INR",
-    "regionalManagerID": "usr7"
+    "regionalManagerID": "usr7",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 3200000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "13": {
     "id": "13",
@@ -259,7 +319,12 @@ const projectsData = {
     "startDate": "2023-11-15",
     "endDate": "2025-11-14",
     "currency": "INR",
-    "regionalManagerID": "usr6"
+    "regionalManagerID": "usr6",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 3900000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "14": {
     "id": "14",
@@ -279,7 +344,12 @@ const projectsData = {
     "startDate": "2023-12-01",
     "endDate": "2026-11-30",
     "currency": "INR",
-    "regionalManagerID": "usr7"
+    "regionalManagerID": "usr7",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 12500000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   },
   "15": {
     "id": "15",
@@ -299,7 +369,12 @@ const projectsData = {
     "startDate": "2023-12-05",
     "endDate": "2025-12-04",
     "currency": "INR",
-    "regionalManagerID": "usr12"
+    "regionalManagerID": "usr12",
+    "status": "Active",
+    "priority": "Medium",
+    "budget": 7800000,
+    "createdAt": "2023-01-01",
+    "updatedAt": "2023-01-01"
   }
 } as const;
 

@@ -13,9 +13,11 @@ namespace NJS.Domain.Database
         {
         }
 
+        public DbSet<BidPreparation> BidPreparations { get; set; }
+        public DbSet<BidVersionHistory> BidVersionHistories { get; set; }
         public DbSet<Project> Projects { get; set; }
-        public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
+        public new DbSet<User> Users { get; set; }
+        public new DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<FeasibilityStudy> FeasibilityStudies { get; set; }
         public DbSet<GoNoGoDecision> GoNoGoDecisions { get; set; }
@@ -28,6 +30,15 @@ namespace NJS.Domain.Database
         public DbSet<OpportunityStatus> OpportunityStatuses { get; set; }
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
         public DbSet<Region> Regions { get; set; }
+
+        public DbSet<GoNoGoDecisionOpportunity> GoNoGoDecisionOpportunities { get; set; }
+        public DbSet<ScoringCriteria> ScoringCriteria { get; set; }
+        public DbSet<ScoreRange> ScoreRange { get; set; }
+        public DbSet<GoNoGoVersion> GoNoGoVersions { get; set; }
+        public DbSet<ScoringDescriptions> ScoringDescription { get; set; }
+        public DbSet<ScoringDescriptionSummarry> ScoringDescriptionSummarry { get; set; }
+        public DbSet<GoNoGoDecisionHeader> GoNoGoDecisionHeaders { get; set; }
+        public DbSet<GoNoGoDecisionTransaction> GoNoGoDecisionTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -47,6 +58,44 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<IdentityUserToken<string>>(entity =>
             {
                 entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name });
+            });
+
+            // Configure BidPreparation entity
+            modelBuilder.Entity<BidPreparation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserId).IsRequired();
+                entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.CreatedBy).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).IsRequired(false);
+                entity.Property(e => e.Comments).IsRequired(false);
+                
+                // Create index on UserId for faster lookups
+                entity.HasIndex(e => e.UserId);
+
+                // Configure relationship with OpportunityTracking
+                entity.HasOne(b => b.OpportunityTracking)
+                    .WithMany()
+                    .HasForeignKey(b => b.OpportunityId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure relationship with BidVersionHistory
+                entity.HasMany(b => b.VersionHistory)
+                    .WithOne(v => v.BidPreparation)
+                    .HasForeignKey(v => v.BidPreparationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure BidVersionHistory entity
+            modelBuilder.Entity<BidVersionHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Comments).IsRequired(false);
+                entity.Property(e => e.ModifiedBy).IsRequired();
+                
+                // Create index on BidPreparationId for faster lookups
+                entity.HasIndex(e => e.BidPreparationId);
             });
 
             // Configure Role-Permission relationship
@@ -69,6 +118,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<Project>().Property(f => f.EstimatedCost).HasPrecision(18, 2);
             modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
             modelBuilder.Entity<Role>().ToTable("AspNetRoles");
+
             // Configure OpportunityTracking decimal precisions
             modelBuilder.Entity<OpportunityTracking>()
                 .Property(o => o.BidFees)
@@ -88,11 +138,39 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OpportunityTracking>()
                 .Property(o => o.NetNJSRevenue)
                 .HasPrecision(18, 2);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.CreatedBy).IsRequired(false);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.UpdatedBy).IsRequired(false);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.ApprovalManagerId).IsRequired(false);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.ReviewManagerId).IsRequired(false);
+            modelBuilder.Entity<OpportunityHistory>().Property(o => o.Comments).IsRequired(false);
 
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId); 
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
+
+            modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoringCriterias).WithMany(s => s.GoNoGoDecisionOpportunities).HasForeignKey(oh => oh.ScoringCriteriaId);
+            modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoreRanges).WithMany(s => s.GoNoGoDecisionOpportunitiesScoring).HasForeignKey(oh => oh.ScoreRangeId);
+            modelBuilder.Entity<ScoringDescriptionSummarry>().HasOne(oh => oh.ScoringDescriptions).WithMany(s => s.ScoringDescriptionSummarry).HasForeignKey(oh => oh.ScoringDescriptionID);
+
+            // Configure GoNoGoDecisionTransaction relationships
+            modelBuilder.Entity<GoNoGoDecisionTransaction>()
+                .HasOne(t => t.GoNoGoDecisionHeader)
+                .WithMany()
+                .HasForeignKey(t => t.GoNoGoDecisionHeaderId);
+
+            modelBuilder.Entity<GoNoGoDecisionTransaction>()
+                .HasOne(t => t.ScoringCriterias)
+                .WithMany()
+                .HasForeignKey(t => t.ScoringCriteriaId);
+
+            // Configure GoNoGoDecisionHeader relationships
+            modelBuilder.Entity<GoNoGoDecisionHeader>()
+                .HasOne(h => h.OpportunityTracking)
+                .WithMany()
+                .HasForeignKey(h => h.OpportunityId);
+
+            modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.TypeOfClient).IsRequired(false);
+            modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.RegionalBDHead).IsRequired(false);
         }
     }
-
 }

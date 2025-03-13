@@ -1,9 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   TextField,
   Grid,
@@ -15,26 +11,25 @@ import {
   Alert,
   Typography,
   Divider,
+  Box,
 } from '@mui/material';
 import { DateField } from '@mui/x-date-pickers/DateField';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
 import {projectManagementAppContextType } from '../../types';
-import { AuthUser, OpportunityTracking } from "../../models";
+
+import { AuthUser } from "../../models/userModel";
 import { getUsersByRole } from '../../services/userApi';
+import { OpportunityTracking } from '../../models';
 
 interface OpportunityFormProps {
-  open: boolean;
-  onClose: () => void;
-  onSubmit: (data: OpportunityTracking) => void;
+  onSubmit: (data: OpportunityTracking) => void | Promise<void>;
   project?: Partial<OpportunityTracking>;
   error?: string;
 }
 
 export const OpportunityForm: React.FC<OpportunityFormProps> = ({
-  open,
-  onClose,
   onSubmit,
   project,
   error
@@ -44,7 +39,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   const [reviewManagers, setReviewManagers] = useState<{id: string, name: string}[]>([]);
   const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
   const [formData, setFormData] = useState<Partial<OpportunityTracking>>({    
-    stage: project?.stage || '',
+    stage: project?.stage || undefined,
     strategicRanking: project?.strategicRanking || '',
     bidFees: project?.bidFees || 0,
     emd: project?.emd || 0,
@@ -67,7 +62,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     client: project?.client || '',
     clientSector: project?.clientSector || '',
     likelyStartDate: project?.likelyStartDate || new Date().toISOString().split('T')[0],
-    status: project?.status || '',
+    status: project?.status || undefined,
     currency: project?.currency || 'INR',
     capitalValue: project?.capitalValue || 0,
     durationOfProject: project?.durationOfProject || 0,
@@ -146,11 +141,11 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: Number(value),
+      [name]: (value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0').toString(),
     }));
   };
 
-  const handleDateChange = (field: keyof Pick<OpportunityTracking, 'dateOfSubmission' | 'likelyStartDate'>) => (value: Date | null) => {
+  const handleDateChange = (field: 'dateOfSubmission' | 'likelyStartDate') => (value: Date | null) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value ? value.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -163,14 +158,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-          FB01 Opportunity Tracking
-        </Typography>
-      </DialogTitle>
+    <Box>
       <form onSubmit={handleSubmit}>
-        <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -304,7 +293,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="Bid Fees"
                     name="bidFees"
-                    type="number"
+                    type="text"
                     value={formData.bidFees || 0}
                     onChange={handleNumberChange}
                   />
@@ -314,7 +303,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="EMD"
                     name="emd"
-                    type="number"
+                    type="text"
                     value={formData.emd || 0}
                     onChange={handleNumberChange}
                   />
@@ -349,7 +338,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="Capital Value"
                     name="capitalValue"
-                    type="number"
+                    type="text"
                     value={formData.capitalValue || 0}
                     onChange={handleNumberChange}
                     required
@@ -379,7 +368,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       required
                     >
                       {bdManagers.map((manager) => (
-                        <MenuItem key={`bm_${manager.id}`} value={manager.id}>
+                        <MenuItem key={`bd_manager_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -397,7 +386,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     >
                       <MenuItem value="">None</MenuItem>
                       {reviewManagers.map((manager) => (
-                        <MenuItem key={`rm_${manager.id}`} value={manager.id}>
+                        <MenuItem key={`review_manager_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -415,7 +404,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     >
                       <MenuItem value="">None</MenuItem>
                       {approvalManagers.map((manager) => (
-                        <MenuItem key={`am_${manager.id}`} value={manager.id}>
+                        <MenuItem key={`approval_manager_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -462,7 +451,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="Duration of Project (Months)"
                     name="durationOfProject"
-                    type="number"
+                    type="text"
                     value={formData.durationOfProject || 0}
                     onChange={handleNumberChange}
                     required
@@ -528,7 +517,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="Chance of Project Happening (%)"
                     name="percentageChanceOfProjectHappening"
-                    type="number"
+                    type="text"
                     inputProps={{ min: 0, max: 100, step: 0.01 }}
                     value={formData.percentageChanceOfProjectHappening || 0}
                     onChange={handleNumberChange}
@@ -539,7 +528,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="Chance of NJS Success (%)"
                     name="percentageChanceOfNJSSuccess"
-                    type="number"
+                    type="text"
                     inputProps={{ min: 0, max: 100, step: 0.01 }}
                     value={formData.percentageChanceOfNJSSuccess || 0}
                     onChange={handleNumberChange}
@@ -605,14 +594,12 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
             </Grid>
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
           <Button type="submit" variant="contained" color="primary">
             {project?.id ? 'Update Opportunity' : 'Create Opportunity'}
           </Button>
-        </DialogActions>
+        </Box>
       </form>
-    </Dialog>
+    </Box>
   );
 };

@@ -1,6 +1,8 @@
-import { screensArrayType, projectManagementAppContextType, UserWithRole  } from './types'
+import { ReactElement } from 'react';
+import { projectManagementAppContextType, UserWithRole  } from './types'
 import { User} from './models'
-import { Project, GoNoGoDecision, OpportunityTracking,} from "./models"
+import { Project, OpportunityTracking } from "./models"
+import { GoNoGoDecision } from "./models/goNoGoDecisionModel"
 import { createContext, useState, useEffect } from 'react'
 import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails, AdminPanel } from './pages'
 import { Navbar } from './components/navigation/Navbar'
@@ -20,6 +22,8 @@ function App() {
   const [selectedProject, setSelectedProject] = useState<Project | OpportunityTracking | null>(null)
 
   const [currentGoNoGoDecision, setCurrentGoNoGoDecision] = useState<GoNoGoDecision | null>(null)
+  const [goNoGoDecisionStatus, setGoNoGoDecisionStatus] = useState<string | null>(null);
+  const [goNoGoVersionNumber, setGoNoGoVersionNumber] = useState<number | null>(null);
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
@@ -65,8 +69,8 @@ function App() {
             user.roleDetails.permissions.includes(PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
           );
         }
-      } catch (error) {
-        console.error('Error checking user permissions:', error);
+      } catch (err) {
+        console.error('Error checking user permissions:', err as Error);
         setCanEditOpportunity(false);
         setCanDeleteOpportunity(false);
         setCanSubmitForReview(false);
@@ -93,14 +97,14 @@ function App() {
             handleLogout();
           }
         }
-      } catch (error) {
+      } catch (err) {
+        console.error('Error checking auth:', err as Error);
         handleLogout();
       } finally {
         setIsLoading(false);
       }
     };
     
-
     checkAuth();
   }, []);
 
@@ -113,7 +117,7 @@ function App() {
     setCurrentGoNoGoDecision(null);
   };
 
-  const screenArray : screensArrayType = {
+  const screenArray: { [key: string]: ReactElement } = {
     "Login": <LoginScreen />,
     "Home": <Home />,
     "Dashboard": <Dashboard />,
@@ -123,7 +127,24 @@ function App() {
     "Project Details": <ProjectDetails />,
     "Business Development Details": <BusinessDevelopmentDetails />,
     "Bid Preparation Form" : <BidPreparationForm/>,
-    "GoNoGo Form" : <GoNoGoForm />,
+    "GoNoGo Form" : selectedProject ? (
+      <GoNoGoForm 
+        onDecisionStatusChange={(status, versionNumber) => {
+          // Update the current decision based on the status
+          if (currentGoNoGoDecision) {
+            const updatedDecision = { ...currentGoNoGoDecision, status: status === "GO" ? 1 : 0 };
+            setCurrentGoNoGoDecision(updatedDecision);
+          }
+          
+          // Update the Go/No Go decision status and version number
+          setGoNoGoDecisionStatus(status);
+          setGoNoGoVersionNumber(versionNumber);
+          
+          // Navigate back to Business Development Details
+          setScreenState("Business Development Details");
+        }}
+      />
+    ) : <div>No project selected</div>,
     "Admin Panel": <AdminPanel />,
   };
 
@@ -153,6 +174,10 @@ function App() {
       setSelectedProject,
       currentGoNoGoDecision,
       setCurrentGoNoGoDecision,
+      goNoGoDecisionStatus,
+      setGoNoGoDecisionStatus,
+      goNoGoVersionNumber,
+      setGoNoGoVersionNumber,
       currentUser,
       setCurrentUser,
       canEditOpportunity,

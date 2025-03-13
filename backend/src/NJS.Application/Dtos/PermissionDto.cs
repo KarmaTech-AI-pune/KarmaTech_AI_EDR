@@ -6,7 +6,7 @@ namespace NJS.Application.Dtos
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
         public string Category { get; set; }
         public ICollection<RolePermissionDto> Roles { get; set; } = new List<RolePermissionDto>();        
     }
@@ -15,7 +15,7 @@ namespace NJS.Application.Dtos
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 
     public class PermissionCategoryGroup
