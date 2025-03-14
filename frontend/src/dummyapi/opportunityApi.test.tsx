@@ -254,51 +254,53 @@ describe('opportunityApi', () => {
       )
     })
 
-    // it('updates an opportunity with correct data transformation', async () => {
-    //   // Setup mock response
-    //   vi.mocked(axiosInstance.put).mockResolvedValueOnce({
-    //     data: backendResponse
-    //   })
+    it('updates an opportunity with correct data transformation', async () => {
+      // Setup mock response
+      vi.mocked(axiosInstance.put).mockResolvedValueOnce({
+        data: backendResponse
+      })
 
-    //   // Call update method
-    //   const result = await opportunityApi.update(1, sampleOpportunity)
+      // Call update method
+      const result = await opportunityApi.update(1, sampleOpportunity)
 
-    //   // Check that the API was called with transformed data
-    //   expect(axiosInstance.put).toHaveBeenCalledWith(
-    //     'api/OpportunityTracking/1',
-    //     expect.objectContaining({
-    //       id: 1,
-    //       workName: sampleOpportunity.workName,
-    //       client: sampleOpportunity.client,
-    //       stage: 2, // B maps to 2
-    //       status: 0 // Bid Under Preparation maps to 0
-    //     })
-    //   )
+      // Check that the API was called with transformed data
+      expect(axiosInstance.put).toHaveBeenCalledWith(
+        'api/OpportunityTracking/1',
+        expect.objectContaining({
+          id: 1,
+          workName: sampleOpportunity.workName,
+          client: sampleOpportunity.client,
+          stage: 2, // B maps to 2
+          status: 0 // Bid Under Preparation maps to 0
+        })
+      )
 
-    //   // Check that the response was transformed back
-    //   expect(result).toEqual(expect.objectContaining({
-    //     id: 1,
-    //     workName: 'Test Project',
-    //     client: 'Test Client',
-    //     clientSector: 'Energy',
-    //     stage: 'B',
-    //     strategicRanking: 'H',
-    //     bidManagerId: 'bd1',
-    //     reviewManagerId: 'rm1',
-    //     approvalManagerId: 'am1',
-    //     operation: 'New Construction',
-    //     status: 'Bid Under Preparation',
-    //     currency: 'USD',
-    //     capitalValue: 1000000,
-    //     durationOfProject: 12,
-    //     fundingStream: 'Government Budget',
-    //     contractType: 'Lump Sum',
-    //     dateOfSubmission: typeof result.dateOfSubmission === 'string' ? result.dateOfSubmission : '2025-03-17',
-    //     likelyStartDate: typeof result.likelyStartDate === 'string' ? result.likelyStartDate : '2025-04-01',
-    //     createdAt: expect.any(Date), // Dates are normalized to Date objects
-    //     updatedAt: expect.any(Date)  // Dates are normalized to Date objects
-    //   }))
-    // })
+      // Check that the response was transformed back
+      expect(result).toEqual(expect.objectContaining({
+        id: 1,
+        workName: 'Test Project',
+        client: 'Test Client',
+        clientSector: 'Energy',
+        stage: 'B',
+        strategicRanking: 'H',
+        bidManagerId: 'bd1',
+        reviewManagerId: 'rm1',
+        approvalManagerId: 'am1',
+        operation: 'New Construction',
+        status: 'Bid Under Preparation',
+        currency: 'USD',
+        capitalValue: 1000000,
+        durationOfProject: 12,
+        fundingStream: 'Government Budget',
+        contractType: 'Lump Sum',
+        dateOfSubmission: new Date('2025-03-17'),
+        likelyStartDate: new Date('2025-04-01'),
+        createdAt: expect.any(Date), // Dates are normalized to Date objects
+        updatedAt: expect.any(Date),  // Dates are normalized to Date objects
+        createdBy: undefined,
+        updatedBy: undefined
+      }))
+    })
 
     it('gets all opportunities with correct data transformation', async () => {
       // Setup mock response

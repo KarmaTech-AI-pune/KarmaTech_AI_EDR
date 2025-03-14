@@ -200,47 +200,47 @@ describe('OpportunityTrackingWorkflow Component - Edge Cases and Error Handling'
   });
 
   // ERROR HANDLING: onOpportunityUpdated throws error
-  // it('handles error in onOpportunityUpdated', async () => {
-  //   // Mock Initial status
-  //   vi.mocked(getWorkflowStatusById).mockReturnValue({
-  //     id: 1,
-  //     status: 'Initial'
-  //   });
+  it('handles error in onOpportunityUpdated', async () => {
+    // Mock Initial status
+    vi.mocked(getWorkflowStatusById).mockReturnValue({
+      id: 1,
+      status: 'Initial'
+    });
 
-  //   // Mock onOpportunityUpdated to throw error
-  //   const onOpportunityUpdated = vi.fn().mockRejectedValue(new Error('Update failed'));
+    // Mock onOpportunityUpdated to throw error
+    const onOpportunityUpdated = vi.fn().mockRejectedValue(new Error('Update failed'));
 
-  //   // Spy on console.error to prevent test output pollution
-  //   const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    // Spy on console.error to prevent test output pollution
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  //   renderWithContext(sampleOpportunity, defaultContextValue, onOpportunityUpdated);
+    renderWithContext(sampleOpportunity, defaultContextValue, onOpportunityUpdated);
 
-  //   // Click button to open dialog
-  //   fireEvent.click(screen.getByText('Send for Review'));
+    // Click button to open dialog
+    fireEvent.click(screen.getByText('Send for Review'));
 
-  //   // Dialog should be rendered
-  //   expect(screen.getByTestId('send-for-review-dialog')).toBeInTheDocument();
+    // Dialog should be rendered
+    expect(screen.getByTestId('send-for-review-dialog')).toBeInTheDocument();
 
-  //   // Click submit button and handle potential errors
-  //   await fireEvent.click(screen.getByText('Submit'));
+    // Click submit button and handle potential errors
+    await fireEvent.click(screen.getByText('Submit'));
 
-  //   // Wait for async operations to complete with a longer timeout
-  //   await waitFor(() => {
-  //     expect(onOpportunityUpdated).toHaveBeenCalled();
-  //   }, { timeout: 3000 });
+    // Wait for async operations to complete with a longer timeout
+    await waitFor(() => {
+      expect(onOpportunityUpdated).toHaveBeenCalled();
+    }, { timeout: 3000 });
 
-  //   // Check if console.error was called with the error message
-  //   expect(consoleSpy).toHaveBeenCalledWith(new Error('Update failed'));
+    // Check if console.error was called with the error message
+    expect(consoleSpy).toHaveBeenCalledWith(new Error('Update failed'));
 
-  //   // Component should not crash and dialog should be closed
-  //   expect(screen.queryByTestId('send-for-review-dialog')).not.toBeInTheDocument();
+    // Component should not crash and dialog should be closed
+    expect(screen.queryByTestId('send-for-review-dialog')).not.toBeInTheDocument();
 
-  //   // Button should still be visible
-  //   expect(screen.getByText('Send for Review')).toBeInTheDocument();
+    // Button should still be visible
+    expect(screen.getByText('Send for Review')).toBeInTheDocument();
 
-  //   // Restore console.error
-  //   consoleSpy.mockRestore();
-  // });
+    // Restore console.error
+    consoleSpy.mockRestore();
+  });
 
   // EDGE CASE: Dialog cancellation
   it('handles dialog cancellation correctly', async () => {

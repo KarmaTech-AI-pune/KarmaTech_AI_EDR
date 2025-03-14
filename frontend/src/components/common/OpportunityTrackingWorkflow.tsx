@@ -74,7 +74,11 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
         : opportunity.currentHistory?.statusId || 0) + 1;
       setLocalStatusId(nextStatusId);
       if (onOpportunityUpdated) {
-        await onOpportunityUpdated();
+        try {
+          await onOpportunityUpdated();
+        } catch (error) {
+          console.error(error);
+        }
       }
     }
   };

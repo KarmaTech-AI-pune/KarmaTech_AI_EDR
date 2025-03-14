@@ -191,7 +191,6 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     onChange={handleChange}
                     required
                     inputProps={{ "data-testid": "client-input" }}
-                    id="client-field"
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>

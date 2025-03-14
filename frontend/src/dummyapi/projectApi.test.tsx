@@ -48,12 +48,12 @@ describe('projectApi', () => {
       const newProject: Omit<Project, 'id'> = {
         name: 'Test Project',
         clientName: 'Test Client',
-        projectMangerId: '1', // Note the typo in the field name - matches what validateRequiredFields expects
+        projectManagerId: '1',
         projectNo: 'TEST-001',
-        seniorProjectMangerId: '2', // Note the typo in the field name - matches what validateRequiredFields expects
+        seniorProjectManagerId: '2',
         estimatedCost: 100000,
         currency: 'USD',
-        regionalManagerID: '3', // Note the uppercase ID - matches what validateRequiredFields expects
+        regionalManagerId: '3',
         status: ProjectStatus.InProgress,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -133,12 +133,12 @@ describe('projectApi', () => {
         id: nonExistentId,
         name: 'Test',
         clientName: 'Test Client',
-        projectMangerId: '1', // Note the typo in the field name - matches what validateRequiredFields expects
+        projectManagerId: '1', 
         projectNo: 'TEST-001',
-        seniorProjectMangerId: '2', // Note the typo in the field name - matches what validateRequiredFields expects
+        seniorProjectManagerId: '2', 
         estimatedCost: 100000,
         currency: 'USD',
-        regionalManagerID: '3', // Note the uppercase ID - matches what validateRequiredFields expects
+        regionalManagerId: '3', 
         status: ProjectStatus.InProgress,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -199,12 +199,12 @@ describe('projectApi', () => {
       const completeProject: Omit<Project, 'id'> = {
         name: 'Test Project',
         clientName: 'Test Client',
-        projectMangerId: '1', // Note the typo in the field name - matches what validateRequiredFields expects
+        projectManagerId: '1',
         projectNo: 'TEST-001',
-        seniorProjectMangerId: '2', // Note the typo in the field name - matches what validateRequiredFields expects
+        seniorProjectManagerId: '2', 
         estimatedCost: 100000,
         currency: 'USD',
-        regionalManagerID: '3', // Note the uppercase ID - matches what validateRequiredFields expects
+        regionalManagerId: '3', 
         status: ProjectStatus.InProgress,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

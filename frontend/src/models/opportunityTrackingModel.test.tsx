@@ -1,4 +1,4 @@
-import { OpportunityTracking, normalizeOpportunityTracking, prepareOpportunityTrackingForSubmission } from './opportunityTrackingModel';
+import { normalizeOpportunityTracking, prepareOpportunityTrackingForSubmission } from './opportunityTrackingModel';
 
 describe('OpportunityTracking Model', () => {
   describe('Data Transformations', () => {

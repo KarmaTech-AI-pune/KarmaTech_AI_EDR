@@ -190,8 +190,8 @@ export const opportunityApi = {
         ...response.data,
         stage: mapStageFromBackend(Number(response.data.stage)),
         status: mapStatusFromBackend(Number(response.data.status)),
-        dateOfSubmission: '2025-03-17', // Hard-coded to match test expectations
-        likelyStartDate: '2025-04-01', // Hard-coded to match test expectations
+        dateOfSubmission: response.data.dateOfSubmission ? new Date(response.data.dateOfSubmission) : undefined,
+        likelyStartDate: response.data.likelyStartDate ? new Date(response.data.likelyStartDate) : undefined,
         createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
         updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined,
         createdBy: response.data.createdBy,
@@ -263,8 +263,8 @@ export const opportunityApi = {
         ...response.data,
         stage: mapStageFromBackend(Number(response.data.stage)),
         status: mapStatusFromBackend(Number(response.data.status)),
-        dateOfSubmission: typeof response.data.dateOfSubmission === 'string' ? response.data.dateOfSubmission.split('T')[0] : response.data.dateOfSubmission,
-        likelyStartDate: typeof response.data.likelyStartDate === 'string' ? response.data.likelyStartDate.split('T')[0] : response.data.likelyStartDate,
+        dateOfSubmission: response.data.dateOfSubmission ? new Date(response.data.dateOfSubmission) : undefined,
+        likelyStartDate: response.data.likelyStartDate ? new Date(response.data.likelyStartDate) : undefined,
         createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
         updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined,
         createdBy: response.data.createdBy,
@@ -287,7 +287,9 @@ export const opportunityApi = {
           stage: mapStageFromBackend(Number(opp.stage)),  // Mapping the stage
           status: mapStatusFromBackend(Number(opp.status)), // Mapping the status
           createdAt: opp.createdAt ? new Date(opp.createdAt) : undefined,
-          updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined
+          updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined,
+          createdBy: opp.createdBy,
+          updatedBy: opp.updatedBy
         }))
         .map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking); // Normalizing the data
     } catch (error) {
@@ -305,7 +307,9 @@ export const opportunityApi = {
           stage: mapStageFromBackend(Number(opp.stage)),  // Mapping the stage
           status: mapStatusFromBackend(Number(opp.status)), // Mapping the status
           createdAt: opp.createdAt ? new Date(opp.createdAt) : undefined,
-          updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined
+          updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined,
+          createdBy: opp.createdBy,
+          updatedBy: opp.updatedBy
         }))
         .map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking); // Normalizing the data
     }catch (error) {
@@ -323,7 +327,9 @@ export const opportunityApi = {
           stage: mapStageFromBackend(Number(opp.stage)),  // Mapping the stage
           status: mapStatusFromBackend(Number(opp.status)), // Mapping the status
           createdAt: opp.createdAt ? new Date(opp.createdAt) : undefined,
-          updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined
+          updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined,
+          createdBy: opp.createdBy,
+          updatedBy: opp.updatedBy
         }))
         .map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking); // Normalizing the data
     } catch (error) {
@@ -340,7 +346,9 @@ export const opportunityApi = {
         stage: mapStageFromBackend(Number(opp.stage)),
         status: mapStatusFromBackend(Number(opp.status)),
         createdAt: opp.createdAt ? new Date(opp.createdAt) : undefined,
-        updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined
+        updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined,
+        createdBy: opp.createdBy,
+        updatedBy: opp.updatedBy
       })).map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking);
     } catch (error) {
       console.error('Error fetching all opportunities:', error);
@@ -357,7 +365,9 @@ export const opportunityApi = {
         stage: mapStageFromBackend(Number(opp.stage)),
         status: mapStatusFromBackend(Number(opp.status)),
         createdAt: opp.createdAt ? new Date(opp.createdAt) : undefined,
-        updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined
+        updatedAt: opp.updatedAt ? new Date(opp.updatedAt) : undefined,
+        createdBy: opp.createdBy,
+        updatedBy: opp.updatedBy
       }) as OpportunityTracking;
     } catch (error) {
       console.error('Error fetching opportunity:', error);
@@ -384,7 +394,9 @@ export const opportunityApi = {
       const normalizedResponse = {
         ...response.data,
         createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
-        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined
+        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined,
+        createdBy: response.data.createdBy,
+        updatedBy: response.data.updatedBy
       };
       return normalizeOpportunityTracking(normalizedResponse) as OpportunityTracking;
     } catch (error) {
@@ -402,7 +414,9 @@ export const opportunityApi = {
       const normalizedResponse = {
         ...response.data,
         createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
-        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined
+        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined,
+        createdBy: response.data.createdBy,
+        updatedBy: response.data.updatedBy
       };
       return normalizeOpportunityTracking(normalizedResponse) as OpportunityTracking;
     } catch (error) {
@@ -420,7 +434,9 @@ export const opportunityApi = {
       const normalizedResponse = {
         ...response.data,
         createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
-        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined
+        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined,
+        createdBy: response.data.createdBy,
+        updatedBy: response.data.updatedBy
       };
       return normalizeOpportunityTracking(normalizedResponse) as OpportunityTracking;
     } catch (error) {
@@ -438,7 +454,9 @@ export const opportunityApi = {
       const normalizedResponse = {
         ...response.data,
         createdAt: response.data.createdAt ? new Date(response.data.createdAt) : undefined,
-        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined
+        updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : undefined,
+        createdBy: response.data.createdBy,
+        updatedBy: response.data.updatedBy
       };
       return normalizeOpportunityTracking(normalizedResponse) as OpportunityTracking;
     } catch (error) {
