@@ -408,8 +408,22 @@ const isHeaderReadOnly = useCallback((): boolean => {
   };
 
   const showName = (key: string) => {
-    return key[0].toUpperCase() + key.replace(/([A-Z])/g, ' $1').trim().slice(1);
-  };
+    const displayNames: { [key: string]: string } = {
+      marketingplan: 'Marketing Plan',
+      clientrelationship: 'Client Relationship',
+      projectknowledge: 'Project Knowledge',
+      technicaleligibility: 'Technical Eligibility',
+      financialeligibility: 'Financial Eligibility',
+      keystaffavailability: 'Key Staff Availability',
+      projectcompetition: 'Competition Assessment',
+      competitionposition: 'Competitive Position',
+      futureworkpotential: 'Future Work Potential',
+      projectprofitability: 'Project Profitability',
+      projectschedule: 'Project Schedule',
+      bidtimeandcosts: 'Bid Time and Costs'
+    };
+    return displayNames[key] || key;
+};
 
 
   const handleSubmit = async () => {
