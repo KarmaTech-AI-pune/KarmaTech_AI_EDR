@@ -137,7 +137,7 @@ const UsersManagement = () => {
 
   const { roles: availableRoles } = useRoles();
 
-  const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
+  const handleRoleChange1 = (event: SelectChangeEvent<string[]>) => {
     const selectedValues = event.target.value as string[];
     // Map selected role names to actual Role objects from the API
     const selectedRoles = selectedValues
@@ -154,6 +154,18 @@ const UsersManagement = () => {
     }));
   };
 
+  const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
+    const selectedValues = event.target.value as string[];
+    // Map selected role names to actual Role objects from the API
+    const selectedRoles = selectedValues
+      .map(value => availableRoles.find((role: RoleDefinition) => role.name === value))
+      .filter((role): role is RoleDefinition => role !== undefined);
+    setFormData(prev => ({
+      ...prev,
+      roles: selectedRoles,
+    }));
+  };
+  
   return (
     <Box sx={{ mb: 4 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
