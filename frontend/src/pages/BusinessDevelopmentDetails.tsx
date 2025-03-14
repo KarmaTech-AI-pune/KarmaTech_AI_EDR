@@ -41,7 +41,7 @@ import { OpportunityForm } from '../components/forms/OpportunityForm';
 import BidPreparationForm from '../components/forms/BidPreparationForm';
 import GoNoGoForm from "../components/forms/GoNoGoForm";
 import { BDChips } from '../components/common/BDChips';
-import { opportunityApi } from '../services/opportunityApi';
+import { opportunityApi } from '../dummyapi/opportunityApi';
 import { HistoryWidget } from '../components/widgets/HistoryWidget';
 import { getOpportunityHistoriesByOpportunityId } from '../dummyapi/dummyOpportunityHistoryApi';
 import { OpportunityHistory } from '../models';
@@ -213,8 +213,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
 
   const handleFormSubmit = async (data: OpportunityTracking) => {
     try {
-      // Use type assertion to match expected type
-      await opportunityApi.create(data as Partial<OpportunityTracking>);
+      // Use the update method with the opportunity ID
+      await opportunityApi.update(opportunity.id || 0, data as Partial<OpportunityTracking>);
       // Trigger refresh after form submission
       setRefreshed(true);
       handleOpportunityUpdate();
