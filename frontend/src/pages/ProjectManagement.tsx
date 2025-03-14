@@ -17,8 +17,9 @@ import { Pagination } from '../components/Pagination';
 import { authApi } from '../dummyapi/authApi';
 import { projectApi } from '../dummyapi/projectApi';
 import { UserWithRole } from '../types';
-import { Project} from '../models';
+import { Project } from '../models';
 import { PermissionType } from '../models';
+import ProjectStatusPieChart from '../components/dashboard/ProjectStatusPieChart';
 
 export const ProjectManagement: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
@@ -133,30 +134,15 @@ export const ProjectManagement: React.FC = () => {
       return true;
     }
 
-    // Check all roles the user has
-    console.log('Filtering project:', project.name);
-    console.log('Current user roles:', currentUser.roles);
-    
-    return currentUser.roles.some(role => {
-      console.log('Checking role:', role);
-      switch(role.name) {
-        case 'Regional Manager':
-          return project.regionalManagerID === currentUser.id;
-        case 'Senior Project Manager':
-          return project.seniorProjectMangerId === currentUser.id;
-        case 'Project Manager':
-          return project.projectMangerId === currentUser.id;
-        default:
-          return false;
-      }
-    });
+    // For now, show all projects to all users with view permission
+    return true;
   });
 
   // Then apply search filtering
   const searchFilteredProjects = roleFilteredProjects.filter((project: Project) => {
     const searchTermLower = searchTerm.toLowerCase();
     const name = project.name?.toLowerCase() || '';
-    const description = project.details?.toLowerCase() || '';
+    const description = project.description?.toLowerCase() || '';
     
     return name.includes(searchTermLower) ||
            description.includes(searchTermLower);
@@ -229,6 +215,17 @@ export const ProjectManagement: React.FC = () => {
         />
 
         <Divider sx={{ mb: 3 }} />
+
+        {/* Project Status Pie Chart */}
+        <Box sx={{ 
+          width: '100%', 
+          maxWidth: 400,
+          mx: 'auto',
+          mb: 4,
+          mt: 2
+        }}>
+          <ProjectStatusPieChart />
+        </Box>
 
         <Box sx={{ 
           display: 'flex', 
