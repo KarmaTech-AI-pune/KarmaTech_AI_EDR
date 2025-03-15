@@ -45,6 +45,8 @@ import { opportunityApi } from '../services/opportunityApi';
 import { HistoryWidget } from '../components/widgets/HistoryWidget';
 import { getOpportunityHistoriesByOpportunityId } from '../dummyapi/dummyOpportunityHistoryApi';
 import { OpportunityHistory } from '../models';
+import { getWorkflowStatusById } from '../dummyapi/database/dummyOpporunityWorkflow';
+
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
 const NAVBAR_HEIGHT = '64px';
@@ -223,9 +225,32 @@ export const BusinessDevelopmentDetails: React.FC = () => {
     }
   };
 
-const isOpportunityApproved = Array.isArray(opportunity?.currentHistory)
-  ? opportunity?.currentHistory.some((history) => history.statusId === 6)
-  : opportunity?.currentHistory?.statusId === 6;
+  const getWorkflowColor = (workflowId: number) => {
+    const status = getWorkflowStatusById(workflowId)?.status;
+
+    if (status) {
+      localStorage.setItem('workflowStatus', status);
+    }
+    switch (status) {
+      case "Initial":
+        return 'default';
+      case "Sent for Review":
+        return 'info';
+      case "Review Changes":
+        return 'warning';
+      case "Sent for Approval":
+        return 'primary';
+      case "Approval Changes":
+        return 'warning';
+      case "Approved":
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+  const isOpportunityApproved = Array.isArray(opportunity?.currentHistory)
+    ? opportunity?.currentHistory.some((history) => history.statusId === 6)
+    : opportunity?.currentHistory?.statusId === 6;
 
   const formSections = [
     {
@@ -403,7 +428,22 @@ const isOpportunityApproved = Array.isArray(opportunity?.currentHistory)
                   <InfoItem label="Client Sector" value={opportunity.clientSector} />
                   <InfoItem label="Operation" value={opportunity.operation} />
                   <InfoItem label="Status" value={opportunity.status} />
-                </InfoCard>
+               
+                <Chip
+                  label={`Workflow: ${opportunity.currentHistory
+                      ? Array.isArray(opportunity.currentHistory)
+                        ? getWorkflowStatusById(opportunity.currentHistory[0]?.statusId)?.status || 'Not specified'
+                        : getWorkflowStatusById(opportunity.currentHistory.statusId)?.status || 'Not specified'
+                      : 'Not specified'
+                    }`}
+                  color={
+                    Array.isArray(opportunity.currentHistory)
+                      ? getWorkflowColor(opportunity.currentHistory[0]?.statusId || 0)
+                      : getWorkflowColor(opportunity.currentHistory?.statusId || 0)
+                  }
+                  sx={{ mb: 1 }}
+                />
+                 </InfoCard>
               </Grid>
 
               {/* Project Details */}

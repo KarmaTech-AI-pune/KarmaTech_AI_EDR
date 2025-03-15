@@ -10,9 +10,9 @@ type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E';
 type OpportunityTrackingStatus = 
   'Bid Under Preparation' | 
   'Bid Submitted' | 
-  'Under Evaluation' | 
-  'Awarded' | 
-  'Not Awarded';
+  'Bid Rejected' | 
+  'Bid Accepted' 
+ 
 
 // Backend-specific model for sending data
 export interface BackendOpportunityTracking {
@@ -85,9 +85,8 @@ const mapStatusToBackend = (status: OpportunityTrackingStatus | undefined): numb
   switch (status) {
     case 'Bid Under Preparation': return 0;
     case 'Bid Submitted': return 1;
-    case 'Under Evaluation': return 2;
-    case 'Awarded': return 3;
-    case 'Not Awarded': return 4;
+    case 'Bid Rejected': return 2;
+    case 'Bid Accepted': return 3;   
     default: return 0;
   }
 };
@@ -96,9 +95,8 @@ const mapStatusFromBackend = (status: number): OpportunityTrackingStatus => {
   switch (status) {
     case 0: return 'Bid Under Preparation';
     case 1: return 'Bid Submitted';
-    case 2: return 'Under Evaluation';
-    case 3: return 'Awarded';
-    case 4: return 'Not Awarded';
+    case 2: return 'Bid Rejected';
+    case 3: return 'Bid Accepted';  
     default: return 'Bid Under Preparation';
   }
 };

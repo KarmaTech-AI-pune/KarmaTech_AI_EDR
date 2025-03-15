@@ -5,9 +5,8 @@ export type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E' | string;
 type OpportunityTrackingStatus =
   'Bid Under Preparation' | 
   'Bid Submitted' | 
-  'Under Evaluation' | 
-  'Awarded' | 
-  'Not Awarded';
+  'Bid Rejected' | 
+  'Bid Accepted'  
 
 export interface OpportunityTracking {
   id: number;

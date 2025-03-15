@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { PermissionType } from '../../models/index';
 import { Role } from '../../models/roleModel';
 import { AuthUser } from '../../models/userModel';
 import { RoleDefinition } from '../../models/roleDefinitionModel';
@@ -148,7 +147,7 @@ const UsersManagement = () => {
       roles: selectedRoles,
     }));
   };
-  
+
   return (
     <Box sx={{ mb: 4 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
