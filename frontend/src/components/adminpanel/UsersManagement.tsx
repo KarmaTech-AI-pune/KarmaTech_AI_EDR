@@ -137,24 +137,7 @@ const UsersManagement = () => {
 
   const { roles: availableRoles } = useRoles();
 
-  const handleRoleChange1 = (event: SelectChangeEvent<string[]>) => {
-    const selectedValues = event.target.value as string[];
-    // Map selected role names to actual Role objects from the API
-    const selectedRoles = selectedValues
-      .map(value => availableRoles.find((role: RoleDefinition) => role.name === value))
-      .filter((role): role is RoleDefinition => role !== undefined)
-      .map(roleDefinition => ({
-        id: roleDefinition.id,
-        name: roleDefinition.name,
-        permissions: roleDefinition.permissions.map(permission => permission as PermissionType),
-      }));
-    setFormData(prev => ({
-      ...prev,
-      roles: selectedRoles,
-    }));
-  };
-
-  const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
+    const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
     const selectedValues = event.target.value as string[];
     // Map selected role names to actual Role objects from the API
     const selectedRoles = selectedValues
