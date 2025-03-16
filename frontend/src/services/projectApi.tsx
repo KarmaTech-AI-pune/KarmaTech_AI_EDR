@@ -1,76 +1,30 @@
-import { Project } from '../models';
 import { axiosInstance } from './axiosConfig';
+import { ProjectFormData } from '../types/index.tsx';
 
 export const projectApi = {
-  getAll: async (): Promise<Project[]> => {
+  createProject: async (projectData: ProjectFormData) => {
     try {
-      const response = await axiosInstance.get('project');
+      const response = await axiosInstance.post(`api/project`, projectData);
       return response.data;
     } catch (error) {
-      console.error('Error fetching projects:', error);
       throw error;
     }
   },
 
-  getById: async (id: string): Promise<Project> => {
+  getAll: async () => {
     try {
-      const response = await axiosInstance.get(`project/${id}`);
+      const response = await axiosInstance.get(`api/project`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching project ${id}:`, error);
       throw error;
     }
   },
 
-  create: async (project: Omit<Project, 'id'>): Promise<Project> => {
+  delete: async (projectId: string) => {
     try {
-      const formattedProject = {
-        ...project,
-        startDate: undefined,
-        endDate: undefined,
-        estimatedCost: Number(project.estimatedCost)
-      };
-      
-      const response = await axiosInstance.post('project', formattedProject);
+      const response = await axiosInstance.delete(`api/project/${projectId}`);
       return response.data;
-    } catch (error: any) {
-      console.error('Project creation error:', {
-        requestData: project,
-        error: {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message
-        }
-      });
-      throw new Error(
-        error.response?.data?.message || 
-        error.response?.data?.title ||
-        'Failed to create project'
-      );
-    }
-  },
-
-  update: async (id: string, project: Project): Promise<void> => {
-    try {
-      const formattedProject = {
-        ...project,
-        startDate: project.startDate ? new Date(project.startDate).toISOString() : undefined,
-        endDate: project.endDate ? new Date(project.endDate).toISOString() : undefined,
-        estimatedCost: Number(project.estimatedCost)
-      };
-
-      await axiosInstance.put(`project/${id}`, formattedProject);
     } catch (error) {
-      console.error(`Error updating project ${id}:`, error);
-      throw error;
-    }
-  },
-
-  delete: async (id: string): Promise<void> => {
-    try {
-      await axiosInstance.delete(`project/${id}`);
-    } catch (error) {
-      console.error(`Error deleting project ${id}:`, error);
       throw error;
     }
   }

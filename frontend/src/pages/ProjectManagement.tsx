@@ -12,13 +12,15 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { ProjectManagementProjectList } from '../components/projects/ProjectManagementProjectList';
-import {ProjectInitializationDialog}  from '../components/dialogbox/ProjectInitializationDialog';
+import {ProjectInitializationDialog}  from '../components/projects/ProjectInitializationDialog';
 import { Pagination } from '../components/Pagination';
-import { authApi } from '../dummyapi/authApi';
-import { projectApi } from '../dummyapi/projectApi';
+//import { authApi } from '../dummyapi/authApi';
+import { projectApi } from '../services/projectApi';
 import { UserWithRole } from '../types';
 import { Project} from '../models';
 import { PermissionType } from '../models';
+import { authApi } from '../services/authApi';
+import { ProjectFormData } from '../types/index.tsx';
 
 export const ProjectManagement: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
@@ -95,9 +97,15 @@ export const ProjectManagement: React.FC = () => {
     }
   };
 
-  const handleProjectCreated = async () => {
-    await fetchProjects();
-    setSuccessMessage('Project created successfully');
+  const handleProjectCreated = async (data: ProjectFormData) => {
+    try {
+      await projectApi.createProject(data);
+      await fetchProjects();
+      setSuccessMessage('Project created successfully');
+    } catch (err) {
+      console.error('Error creating project:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create project');
+    }
   };
 
   const handleProjectUpdated = async () => {
@@ -141,11 +149,11 @@ export const ProjectManagement: React.FC = () => {
       console.log('Checking role:', role);
       switch(role.name) {
         case 'Regional Manager':
-          return project.regionalManagerID === currentUser.id;
+          return project.regionalManagerId === currentUser.id;
         case 'Senior Project Manager':
-          return project.seniorProjectMangerId === currentUser.id;
+          return project.seniorProjectManagerId === currentUser.id;
         case 'Project Manager':
-          return project.projectMangerId === currentUser.id;
+          return project.projectManagerId === currentUser.id;
         default:
           return false;
       }

@@ -30,14 +30,14 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(int), 201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> Create([FromBody] ProjectDto projectDto)
+        public async Task<IActionResult> Create([FromBody] ProjectDto projectData)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                var command = new CreateProjectCommand(projectDto);
+                var command = new CreateProjectCommand(projectData);
                 var projectId = await _mediator.Send(command);
                 return CreatedAtAction(nameof(GetById), new { id = projectId }, projectId);
             }
@@ -84,9 +84,9 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> Update(int id, [FromBody] ProjectDto projectDto)
+        public async Task<IActionResult> Update(int id, [FromBody] ProjectDto projectData)
         {
-            if (id != projectDto.Id)
+            if (id != projectData.Id)
                 return BadRequest("ID mismatch");
 
             if (!ModelState.IsValid)
@@ -97,7 +97,7 @@ namespace NJSAPI.Controllers
                 var command = new UpdateProjectCommand
                 {
                     Id = id,
-                    ProjectDto = projectDto
+                    ProjectDto = projectData
                 };
                 await _mediator.Send(command);
                 return NoContent();

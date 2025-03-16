@@ -27,7 +27,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             {
                 Name = dto.Name,
                 ClientName = dto.ClientName,
-                ClientSector = dto.ClientSector,
+                TypeOfClient = dto.TypeOfClient,
                 Sector = dto.Sector,
                 EstimatedCost = dto.EstimatedCost,
                 CapitalValue = dto.CapitalValue,
@@ -37,7 +37,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 Progress = 0, // Initial progress
                 DurationInMonths = dto.DurationInMonths,
                 FundingStream = dto.FundingStream,
-                ContractType = dto.ContractType ?? "Standard", // Default if not provided
+                ContractType = dto.ContractType,
                 Currency = dto.Currency,
                 ProjectManagerId = dto.ProjectManagerId,
                 RegionalManagerId = dto.RegionalManagerId,
@@ -45,7 +45,9 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 CreatedAt = DateTime.UtcNow,
                 LastModifiedAt = DateTime.UtcNow,
                 CreatedBy = dto.ProjectManagerId, // Using Project Manager as creator
-                LastModifiedBy = dto.ProjectManagerId
+                LastModifiedBy = dto.ProjectManagerId,
+                LetterOfAcceptance=dto.LetterOfAcceptance,
+                OpportunityTrackingId = dto.OpportunityTrackingId,
             };
 
             // Calculate duration in months if not provided and dates are available
