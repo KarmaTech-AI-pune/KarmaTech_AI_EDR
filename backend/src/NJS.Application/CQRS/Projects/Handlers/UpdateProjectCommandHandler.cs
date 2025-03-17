@@ -31,7 +31,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             // Update project properties
             existingProject.Name = dto.Name;
             existingProject.ClientName = dto.ClientName;
-            existingProject.ClientSector = dto.ClientSector;
+            existingProject.TypeOfClient = dto.TypeOfClient;
             existingProject.Sector = dto.Sector;
             existingProject.EstimatedCost = dto.EstimatedCost;
             existingProject.CapitalValue = dto.CapitalValue;

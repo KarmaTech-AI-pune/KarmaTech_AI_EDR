@@ -34,7 +34,7 @@ namespace NJSAPI.Controllers
                 worksheet.Cell(1, 5).Value = "Currencies";
 
                 // Get distinct values
-                var clientSectors = _context.Projects.Select(p => p.ClientSector).Distinct().ToList();
+                var clientSectors = _context.Projects.Select(p => p.TypeOfClient).Distinct().ToList();
                 var sectors = _context.Projects.Select(p => p.Sector).Distinct().ToList();
                 var contractTypes = _context.Projects.Select(p => p.ContractType).Distinct().ToList();
                 var currencies = _context.Projects.Select(p => p.Currency).Distinct().ToList();

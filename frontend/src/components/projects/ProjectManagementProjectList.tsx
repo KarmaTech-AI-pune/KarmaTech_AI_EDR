@@ -7,7 +7,7 @@ import {
 import { ProjectItem } from './ProjectItem';
 import { ProjectStatus } from '../../types/index';
 import { Project} from '../../models';
-import { ProjectInitializationDialog } from '../dialogbox/ProjectInitializationDialog';
+import { ProjectInitializationDialog } from './ProjectInitializationDialog';
 
 export interface ProjectManagementProjectListProps {
   projects: Project[];

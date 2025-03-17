@@ -112,10 +112,10 @@ export const authApi = {
         return JSON.parse(storedUser);
       }
 
-      const response = await axiosInstance.get('api/user/me');
-      const user = response.data.user;
-      localStorage.setItem('user', JSON.stringify(user));
-      return user;
+      ////const response = await axiosInstance.get('api/user/me');
+      //const user = response.data.user;
+      //localStorage.setItem('user', JSON.stringify(user));
+      return null;
     } catch (error) {
       return null;
     }

@@ -214,7 +214,7 @@ namespace NJS.Domain.Extensions
                     {
                         Name = "Sample Project",
                         ClientName = "Sample Client",
-                        ClientSector = "Technology",
+                        TypeOfClient = "Technology",
                         Sector = "Software",
                         EstimatedCost = 100000m,
                         CapitalValue = 150000m,

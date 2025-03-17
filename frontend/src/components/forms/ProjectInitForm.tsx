@@ -7,45 +7,53 @@ import {
   MenuItem,
   Paper
 } from '@mui/material';
-import { ProjectFormType, ProjectFormData } from '../../types/index.tsx';
-import { getUsersByRole } from '../../dummyapi/usersApi';
+import { ProjectFormData } from '../../types/index.tsx';
+
+interface ProjectFormType {
+  project?: ProjectFormData;
+  onSubmit: (data: ProjectFormData) => void;
+  onCancel?: () => void;
+  approvalManagers: Array<{ id: string; name: string }>;
+  projectManagers: Array<{ id: string; name: string }>;
+  seniorProjectManagers: Array<{ id: string; name: string }>;
+}
 
 export const ProjectInitForm: React.FC<ProjectFormType> = ({
   project,
   onSubmit,
-  onCancel
+  onCancel,
+  approvalManagers,
+  projectManagers,
+  seniorProjectManagers
 }) => {
   const [formData, setFormData] = useState<ProjectFormData>({
     name: project?.name || '',
     details: project?.details || '',
     clientName: project?.clientName || '',
-    projectMangerId: project?.projectMangerId || "0",
+    projectManagerId: project?.projectManagerId || "0",
     office: project?.office || '',
     projectNo: project?.projectNo || '',
     typeOfJob: project?.typeOfJob || '',
-    seniorProjectMangerId: project?.seniorProjectMangerId || "0",
+    seniorProjectManagerId: project?.seniorProjectManagerId || "0",
     sector: project?.sector || '',
     region: project?.region || '',
-    status: project?.status || '',
+    status: project?.status ||  0,
     createdAt: project?.createdAt || '',
     updatedAt: project?.updatedAt || '',
     typeOfClient: project?.typeOfClient || '',
     estimatedCost: project?.estimatedCost || 0,
-    feeType: project?.feeType || 'Lumpsum',
+    fundingStream: project?.fundingStream || 'Lumpsum',
     startDate: project?.startDate || '',
     endDate: project?.endDate || '',
     currency: project?.currency || 'INR',
     budget: project?.budget || 0,
     priority: project?.priority || '',
-    regionalManagerID: project?.regionalManagerID || "0"
-  });
-
-  const projectManagers = getUsersByRole('Projectc Manager');
-  const seniorProjectManagers = getUsersByRole('Senior Project Manager');
-  const regionalManagers = [
-    ...getUsersByRole('Regional Manager'),
-    ...getUsersByRole('Regional Director')
-  ];
+    regionalManagerId: project?.regionalManagerId || "0",
+    letterOfAcceptance:project?.letterOfAcceptance|| false,
+    opportunityTrackingId: project?.opportunityTrackingId || 0,
+    feeType: project?.feeType || ''
+  })
+ 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -61,9 +69,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
       ...formData,
       estimatedCost: Number(formData.estimatedCost),
       budget: Number(formData.budget),
-      projectMangerId: formData.projectMangerId,
-      seniorProjectMangerId: formData.seniorProjectMangerId,
-      regionalManagerID: formData.regionalManagerID
+      projectManagerId: formData.projectManagerId,
+      seniorProjectManagerId: formData.seniorProjectManagerId,
+      regionalManagerId: formData.regionalManagerId
     });
   };
 
@@ -130,8 +138,8 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               fullWidth
               select
               label="Project Manager"
-              name="projectMangerId"
-              value={formData.projectMangerId}
+              name="projectManagerId"
+              value={formData.projectManagerId}
               onChange={handleChange}
               required
             >
@@ -147,8 +155,8 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               fullWidth
               select
               label="Senior Project Manager"
-              name="seniorProjectMangerId"
-              value={formData.seniorProjectMangerId}
+              name="seniorProjectManagerId"
+              value={formData.seniorProjectManagerId}
               onChange={handleChange}
               required
             >
@@ -164,15 +172,14 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               fullWidth
               select
               label="Regional Manager/Director"
-              name="regionalManagerID"
-              value={formData.regionalManagerID}
+              name="regionalManagerId"
+              value={formData.regionalManagerId}
               onChange={handleChange}
               required
             >
-              {regionalManagers.map((rm) => (
-                <MenuItem key={rm.id} value={rm.id}>
-                  {rm.name} ({rm.roles[0].name})
-
+              {approvalManagers.map((manager) => (
+                <MenuItem key={manager.id} value={manager.id}>
+                  {manager.name}
                 </MenuItem>
               ))}
             </TextField>
@@ -225,8 +232,8 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               fullWidth
               select
               label="Fee Type"
-              name="feeType"
-              value={formData.feeType}
+              name="fundingStream"
+              value={formData.fundingStream}
               onChange={handleChange}
             >
               <MenuItem value="Lumpsum">Lumpsum</MenuItem>
