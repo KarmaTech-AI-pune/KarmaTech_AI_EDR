@@ -80,7 +80,7 @@ export const BusinessDevelopment: React.FC = () => {
     operation: '',
     workName: '',
     clientSector: '',
-    likelyStartDate: new Date().toISOString().split('T')[0],
+    likelyStartDate: undefined,
     currency: 'INR',
     capitalValue: 0,
     durationOfProject: 0,
