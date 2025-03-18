@@ -26,6 +26,8 @@ namespace NJS.Domain.Entities
         [Required]
         [StringLength(50)]
         public string? Sector { get; set; }
+        public string Region { get; set; }
+        public string FeeType { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal EstimatedCost { get; set; }

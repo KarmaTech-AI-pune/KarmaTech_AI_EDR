@@ -29,6 +29,8 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 ClientName = dto.ClientName,
                 TypeOfClient = dto.TypeOfClient,
                 Sector = dto.Sector,
+                Region=dto.Region,
+                FeeType = dto.FeeType,
                 EstimatedCost = dto.EstimatedCost,
                 CapitalValue = dto.CapitalValue,
                 StartDate = dto.StartDate,

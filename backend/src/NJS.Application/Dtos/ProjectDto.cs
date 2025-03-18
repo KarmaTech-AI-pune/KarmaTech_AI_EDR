@@ -11,6 +11,8 @@ namespace NJS.Application.Dtos
         public string ClientName { get; set; }
         public string? TypeOfClient { get; set; }
         public string Sector { get; set; }
+        public string FeeType { get; set; }
+        public string Region { get; set; }
         public decimal EstimatedCost { get; set; }
         public decimal? CapitalValue { get; set; }
         public DateTime? StartDate { get; set; }
