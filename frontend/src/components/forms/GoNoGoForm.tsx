@@ -340,10 +340,6 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
             // Call the callback with the correct status and version number
             onDecisionStatusChange(decisionStatus, version.versionNumber);
             
-            // Automatically open Bid Preparation form if RD approves with GO status
-            if (decisionStatus === "GO" && context?.setScreenState) {
-              context.setScreenState("Bid Preparation Form");
-            }
           }
         }
       }
