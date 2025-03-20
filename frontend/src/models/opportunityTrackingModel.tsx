@@ -98,11 +98,17 @@ export function prepareOpportunityTrackingForSubmission(opp: Partial<Opportunity
   const prepared: Partial<OpportunityTracking> = { ...opp };
 
   if (opp.likelyStartDate instanceof Date) {
-    prepared.likelyStartDate = opp.likelyStartDate.toISOString().split('T')[0];
+    const year = opp.likelyStartDate.getFullYear();
+    const month = String(opp.likelyStartDate.getMonth() + 1).padStart(2, '0');
+    const day = String(opp.likelyStartDate.getDate()).padStart(2, '0');
+    prepared.likelyStartDate = `${year}-${month}-${day}`;
   }
 
   if (opp.dateOfSubmission instanceof Date) {
-    prepared.dateOfSubmission = opp.dateOfSubmission.toISOString().split('T')[0];
+    const year = opp.dateOfSubmission.getFullYear();
+    const month = String(opp.dateOfSubmission.getMonth() + 1).padStart(2, '0');
+    const day = String(opp.dateOfSubmission.getDate()).padStart(2, '0');
+    prepared.dateOfSubmission = `${year}-${month}-${day}`;
   }
 
   if (opp.createdAt instanceof Date) {

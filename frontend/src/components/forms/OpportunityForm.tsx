@@ -190,6 +190,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     value={formData.client || ''}
                     onChange={handleChange}
                     required
+                    inputProps={{ "data-testid": "client-input" }}
+                    id="client-field"
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -227,13 +229,15 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Stage</InputLabel>
+                    <InputLabel htmlFor="stage-select">Stage</InputLabel>
                     <Select
+                      id="stage-select"
                       name="stage"
                       value={formData.stage || ''}
                       onChange={handleChange}
                       label="Stage"
                       required
+                      data-testid="stage-select"
                     >
                       <MenuItem value="A">A</MenuItem>
                       <MenuItem value="B">B</MenuItem>
@@ -244,13 +248,15 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Strategic Ranking</InputLabel>
+                    <InputLabel htmlFor="strategic-ranking-select">Strategic Ranking</InputLabel>
                     <Select
+                      id="strategic-ranking-select"
                       name="strategicRanking"
                       value={formData.strategicRanking || ''}
                       onChange={handleChange}
                       label="Strategic Ranking"
                       required
+                      data-testid="strategic-ranking-select"
                     >
                       <MenuItem value="H">High</MenuItem>
                       <MenuItem value="M">Medium</MenuItem>
@@ -260,13 +266,15 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Status</InputLabel>
+                    <InputLabel htmlFor="status-select">Status</InputLabel>
                     <Select
+                      id="status-select"
                       name="status"
                       value={formData.status || ''}
                       onChange={handleChange}
                       label="Status"
                       required
+                      data-testid="status-select"
                     >
                       <MenuItem value="Bid Under Preparation">Bid Under Preparation</MenuItem>
                       <MenuItem value="Bid Submitted">Bid Submitted</MenuItem>
@@ -319,13 +327,15 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Currency</InputLabel>
+                    <InputLabel htmlFor="currency-select">Currency</InputLabel>
                     <Select
+                      id="currency-select"
                       name="currency"
                       value={formData.currency || 'INR'}
                       onChange={handleChange}
                       label="Currency"
                       required
+                      data-testid="currency-select"
                     >
                       <MenuItem value="INR">INR</MenuItem>
                       <MenuItem value="USD">USD</MenuItem>
@@ -359,14 +369,16 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel>BD Manager</InputLabel>
-                    <Select
-                      name="bidManagerId"
-                      value={formData.bidManagerId || ''}
-                      onChange={handleChange}
-                      label="BD Manager"
-                      required
-                    >
+                    <InputLabel htmlFor="bd-manager-select">BD Manager</InputLabel>
+    <Select
+      id="bd-manager-select"
+      name="bidManagerId"
+      value={formData.bidManagerId || ''}
+      onChange={handleChange}
+      label="BD Manager"
+      required
+      data-testid="bd-manager-select"
+    >
                       {bdManagers.map((manager) => (
                         <MenuItem key={`bd_manager_${manager.id}`} value={manager.id}>
                           {manager.name}
@@ -377,12 +389,14 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Review Manager</InputLabel>
+                    <InputLabel htmlFor="review-manager-select">Review Manager</InputLabel>
                     <Select
+                      id="review-manager-select"
                       name="reviewManagerId"
                       value={formData.reviewManagerId || ''}
                       onChange={handleChange}
                       label="Review Manager"
+                      data-testid="review-manager-select"
                     >
                       <MenuItem value="">None</MenuItem>
                       {reviewManagers.map((manager) => (
@@ -395,12 +409,14 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Approval Manager</InputLabel>
+                    <InputLabel htmlFor="approval-manager-select">Approval Manager</InputLabel>
                     <Select
+                      id="approval-manager-select"
                       name="approvalManagerId"
                       value={formData.approvalManagerId || ''}
                       onChange={handleChange}
                       label="Approval Manager"
+                      data-testid="approval-manager-select"
                     >
                       <MenuItem value="">None</MenuItem>
                       {approvalManagers.map((manager) => (
@@ -483,13 +499,15 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Contract Type</InputLabel>
+                    <InputLabel htmlFor="contract-type-select">Contract Type</InputLabel>
                     <Select
+                      id="contract-type-select"
                       name="contractType"
                       value={formData.contractType || ''}
                       onChange={handleChange}
                       label="Contract Type"
                       required
+                      data-testid="contract-type-select"
                     >
                       <MenuItem value="EPC">EPC</MenuItem>
                       <MenuItem value="Item Rate">Item Rate</MenuItem>
@@ -499,13 +517,15 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Funding Stream</InputLabel>
+                    <InputLabel htmlFor="funding-stream-select">Funding Stream</InputLabel>
                     <Select
+                      id="funding-stream-select"
                       name="fundingStream"
                       value={formData.fundingStream || ''}
                       onChange={handleChange}
                       label="Funding Stream"
                       required
+                      data-testid="funding-stream-select"
                     >
                       <MenuItem value="Government Budget">Government Budget</MenuItem>
                       <MenuItem value="Government Grant">Government Grant</MenuItem>
