@@ -1,4 +1,8 @@
-export * from './goNoGoDecisionModel';
+import { ProjectStatus } from '../types/index';
+
+export type { GoNoGoDecision } from './goNoGoDecisionModel';
+export type { OpportunityTracking } from './opportunityTrackingModel';
+
 export {
     GoNoGoStatus,
     TypeOfBid,
@@ -15,69 +19,60 @@ export interface User {
     standardRate: number;
     isConsultant: boolean;
     createdAt: string;
-    lastLogin: string | null;
+    avatar?: string;
+    lastLogin?: string | null;
     password?: string;
 }
 
 export interface Role {
     id: string;
     name: string;
+    permissions: string[];
 }
 
 export interface Project {
-    id: number;
+    id: string;
     name: string;
     description?: string;
-    status: string;
+    status: ProjectStatus;
+    projectNo: string;
+    typeOfJob: string;
+    sector: string;
+    priority: string;
+    clientName: string;
+    typeOfClient: string;
+    region: string;
+    office: string;
+    currency: string;
+    budget: number;
+    fundingStream: string;
     startDate?: string;
     endDate?: string;
+    details: string;
     createdAt: string;
     updatedAt: string;
+    seniorProjectManagerId: string;
+    regionalManagerId: string;
+    projectManagerId: string;
+    estimatedCost: number;
+    letterOfAcceptance: boolean;
+    opportunityTrackingId: number;   
+    feeType:string; 
+
 }
 
 export interface OpportunityHistory {
-  statusId: number;
-  status: string;
-}
-
-export interface OpportunityTracking {
-  currentHistory?: {
+    opportunityId: number;
+    date: string;
+    description: string;
+    id: number;
     statusId: number;
     status: string;
-  };
-    id?: number;
-    stage?: string;
-    strategicRanking?: string;
-    bidFees?: number;
-    emd?: number;
-    formOfEMD?: string;
-    bidManagerId?: string;
-    reviewManagerId?: string;
-    approvalManagerId?: string;
-    contactPersonAtClient?: string;
-    dateOfSubmission?: string;
-    percentageChanceOfProjectHappening?: number;
-    percentageChanceOfNJSSuccess?: number;
-    likelyCompetition?: string;
-    grossRevenue?: number;
-    netNJSRevenue?: number;
-    followUpComments?: string;
-    notes?: string;
-    probableQualifyingCriteria?: string;
-    operation?: string;
-    workName?: string;
-    client?: string;
-    clientSector?: string;
-    likelyStartDate?: string;
-    status?: string;
-    currency?: string;
-    capitalValue?: number;
-    durationOfProject?: number;
-    fundingStream?: string;
-    contractType?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    action: string;
+    assignedToId: string;
 }
+
+// OpportunityTracking is now imported from './opportunityTrackingModel'
 
 export enum PermissionType {
     VIEW_PROJECT = 'VIEW_PROJECT',
@@ -106,3 +101,16 @@ export interface RoleDefinition {
     name: string;
     permissions: PermissionType[];
 }
+
+export type { WBSTask } from './wbsTaskModel';
+export type { WBSTaskResourceAllocation } from './wbsTaskResourceAllocationModel';
+export type { MonthlyHour } from './monthlyHourModel';
+export type { resourceRole } from './resourceRoleModel';
+export type { Employee } from './employeeModel';
+export type { CheckReviewRow } from './checkReviewModel';
+export type { ChangeControl } from './changeControlModel';
+export type { InwardRow } from './inwardRowModel';
+export type { OutwardRow } from './outwardRowModel';
+export type { ProjectClosureRow } from './projectClosureRowModel';
+export type { ProjectClosureComment } from './projectClosureCommentModel';
+export type { InputRegisterRow } from './inputRegisterRowModel';

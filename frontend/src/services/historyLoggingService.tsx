@@ -13,7 +13,11 @@ export class HistoryLoggingService {
         const historyEntry: Omit<OpportunityHistory, 'id'> = {
             opportunityId,
             date: this.formatDate(),
-            description
+            description,
+            statusId: 0, // Default value
+            status: 'Created', // Default status
+            action: 'Created', // Default action
+            assignedToId: '' // Default assignedToId
         };
 
         try {

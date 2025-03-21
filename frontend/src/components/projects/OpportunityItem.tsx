@@ -67,7 +67,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
       await opportunityApi.delete(opportunity.id);
       setDeleteDialogOpen(false);
       if (onOpportunityDeleted) {
-        onOpportunityDeleted(opportunity.id);
+        onOpportunityDeleted(opportunity.id.toString());
       }
     } catch (error) {
       console.error('Error deleting opportunity:', error);

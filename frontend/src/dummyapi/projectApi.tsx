@@ -70,14 +70,14 @@ export const projectApi = {
         startDate: project.startDate || undefined,
         endDate: project.endDate || undefined,
         estimatedCost: Number(project.estimatedCost),
-        projectMangerId: project.projectMangerId,
-        seniorProjectMangerId: project.seniorProjectMangerId,
-        regionalManagerID: project.regionalManagerID
+        projectManagerId: String(project.projectManagerId),
+        seniorProjectManagerId: String(project.seniorProjectManagerId),
+        regionalManagerId: String(project.regionalManagerId)
       };
 
       projects.push(formattedProject);
       return formattedProject;
-    } catch (error: any) {
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Project creation error:', {
         requestData: project,
         error: {
@@ -105,15 +105,15 @@ export const projectApi = {
         ...project,
         startDate: project.startDate ? new Date(project.startDate).toISOString() : undefined,
         endDate: project.endDate ? new Date(project.endDate).toISOString() : undefined,
-        estimatedCost: Number(project.estimatedCost),
-        projectMangerId: project.projectMangerId,
-        seniorProjectMangerId: project.seniorProjectMangerId,
-        regionalManagerID: project.regionalManagerID
+        estimatedCost:  Number(project.estimatedCost),
+        projectManagerId: String(project.projectManagerId),
+        seniorProjectMangerId: String(project.seniorProjectManagerId),
+        regionalManagerId: String(project.regionalManagerId)
       };
 
       projects[index] = formattedProject;
       return formattedProject;
-    } catch (error: any) {
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error(`Error updating project ${id}:`, error);
       throw new Error(
         error.message || 
@@ -127,7 +127,7 @@ export const projectApi = {
   delete: async (id: string): Promise<boolean> => {
     try {
       const initialLength = projects.length;
-      const filteredProjects = projects.filter(p => p.id !== id);
+      const filteredProjects = projects.filter(p => String(p.id) !== id);
       
       if (filteredProjects.length < initialLength) {
         projects.length = 0;

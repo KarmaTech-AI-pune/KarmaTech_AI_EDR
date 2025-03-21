@@ -17,12 +17,20 @@ export interface BidVersionHistory {
 }
 
 export const getBidVersionHistory = async (opportunityId?: number): Promise<BidVersionHistory[]> => {
-  debugger;
-  const response = await axiosInstance.get(`/api/BidPreparation/versions?opportunityId=${opportunityId}`);
- 
+  if (!opportunityId) {
+    return [];
+  }
+  const response = await axiosInstance.get(`/api/BidPreparation/versions?opportunityId=${Number(opportunityId)}`);
   return response.data;
 };
 
-export const updateCurrentChecklist = async (checklist: any): Promise<void> => {
+export interface ChecklistUpdate {
+  id?: number;
+  opportunityId: number;
+  documentCategoriesJson: string;
+  comments?: string;
+}
+
+export const updateCurrentChecklist = async (checklist: ChecklistUpdate): Promise<void> => {
   await axiosInstance.put('/api/BidVersionHistory/current', checklist);
 };

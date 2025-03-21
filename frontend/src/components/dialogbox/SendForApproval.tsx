@@ -16,7 +16,7 @@ import {
 import { getUsersByRole, getUserById } from '../../services/userApi'
 import { opportunityApi } from '../../services/opportunityApi';
 import { updateWorkflow } from '../../dummyapi/opportunityWorkflowApi';
-import { AuthUser} from '../../models'
+import { AuthUser } from '../../models/userModel'; 
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 
 interface SendForApprovalProps {

@@ -1,7 +1,7 @@
-import { ListItem,Typography, Dialog, DialogTitle, DialogContent, DialogActions, Box, Grid } from '@mui/material';
+import { ListItem, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Box, Grid } from '@mui/material';
 import { Button } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { ProjectItemProps, ProjectFormData } from '../../types';
+import { ProjectItemProps, ProjectFormData } from '../../types/index';
 import { useState, useContext, useEffect } from 'react';
 import { projectApi } from '../../dummyapi/api';
 import { ProjectInitForm } from '../forms/ProjectInitForm';
@@ -19,7 +19,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
   useEffect(() => {
     const checkUserPermissions = async () => {
       const user = await authApi.getCurrentUser();
-      
+
       if (!user) {
         setCanEditProject(false);
         setCanDeleteProject(false);
@@ -99,8 +99,8 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
 
   return (
     <>
-      <ListItem 
-        sx={{ 
+      <ListItem
+        sx={{
           bgcolor: 'background.paper',
           border: '1px solid',
           borderColor: 'divider',
@@ -119,7 +119,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
           <Typography variant="h6" sx={{ color: 'primary.main', mb: 1 }}>
             {project.name}
           </Typography>
-          
+
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">
@@ -139,17 +139,17 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
             </Grid>
           </Grid>
         </Box>
-        
-        <Box sx={{ 
-          display: 'flex', 
+
+        <Box sx={{
+          display: 'flex',
           gap: 1,
           ml: 2
         }}>
           {canEditProject && (
-            <Button 
+            <Button
               size="small"
               onClick={handleEditClick}
-              sx={{ 
+              sx={{
                 minWidth: 'auto',
                 p: 1,
                 color: 'primary.main'
@@ -159,10 +159,10 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
             </Button>
           )}
           {canDeleteProject && (
-            <Button 
+            <Button
               size="small"
               onClick={handleDeleteClick}
-              sx={{ 
+              sx={{
                 minWidth: 'auto',
                 p: 1,
                 color: 'error.main'
@@ -185,20 +185,21 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
         </DialogActions>
       </Dialog>
 
-      <Dialog 
-        open={editDialogOpen} 
+      <Dialog
+        open={editDialogOpen}
         onClose={handleEditClose}
         maxWidth="md"
         fullWidth
       >
         <DialogContent>
-          <ProjectInitForm 
+          <ProjectInitForm
             project={project}
             onSubmit={handleEditSubmit}
             onCancel={handleEditClose}
+            approvalManagers={[]} projectManagers={[]} seniorProjectManagers={[]}
           />
         </DialogContent>
-      </Dialog> 
+      </Dialog>
     </>
   );
 };

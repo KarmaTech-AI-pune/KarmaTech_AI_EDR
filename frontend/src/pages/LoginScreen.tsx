@@ -80,7 +80,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#1976d2'
                     }}
                 >
-                    NJSEI Project Management
+                    NJSEI ISO 9000 Forms Project Management Application
                 </Typography>
                 <Typography 
                     variant="h6" 
@@ -89,7 +89,8 @@ export const LoginScreen: React.FC = () => {
                         color: '#666'
                     }}
                 >
-                    Version 1.2.1
+                    Version 1.3.0
+
                 </Typography>
             </Container>
 

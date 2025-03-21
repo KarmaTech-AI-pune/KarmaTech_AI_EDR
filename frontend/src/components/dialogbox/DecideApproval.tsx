@@ -59,7 +59,6 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
   };
 
   const handleSubmit = async (event: React.MouseEvent) => {
-    debugger;
     event.stopPropagation();
     if (!decision) {
       setError('Please select a decision');
@@ -95,7 +94,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       }
       await updateWorkflow(opportunityId, workflowId, {
         status: newStatus,
-        approvalComments: comments
+        approvalComments: comments,
       });
 
       // Map decision to the correct format for history logging
@@ -126,9 +125,9 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
         onSubmit();
       }
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to submit approval decision:', err);
-      setError(err.message || 'Failed to submit approval decision');
+      setError((err as Error).message || 'Failed to submit approval decision');
     }
   };
 

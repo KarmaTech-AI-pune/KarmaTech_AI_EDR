@@ -1,13 +1,15 @@
+import { ProjectStatus } from "../types/index";
+
 export type Project = {
     id: string;
     name: string;
     details?: string;
     clientName: string;
-    projectMangerId: string;
+    projectManagerId: string;
     office?: string;
     projectNo: string;
     typeOfJob?: string;
-    seniorProjectMangerId: string;
+    seniorProjectManagerId: string;
     sector?: string;
     region?: string;
     typeOfClient?: string;
@@ -18,5 +20,10 @@ export type Project = {
     currency: string;
     budget?: number;
     priority?: string;
-    regionalManagerID: string;
+    regionalManagerId: string;
+    letterOfAcceptance: boolean;
+    opportunityId?: number;
+    createdAt: string;
+    updatedAt: string;
+    status: ProjectStatus;
 }

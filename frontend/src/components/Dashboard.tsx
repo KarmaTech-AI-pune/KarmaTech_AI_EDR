@@ -14,7 +14,7 @@ export const Dashboard = () => {
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
-    if (context?.currentUser?.roleDetails.permissions.includes(PermissionType.VIEW_PROJECT)) {
+    if (context?.currentUser?.roleDetails?.permissions.includes(PermissionType.VIEW_PROJECT)) {
       setProjectList(<ProjectManagement />);
     } else {
       setProjectList(<BusinessDevelopment />);

@@ -16,7 +16,9 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { AuthUser, Role, RoleDefinition } from '../../models';
+import { Role } from '../../models/roleModel';
+import { AuthUser } from '../../models/userModel';
+import { RoleDefinition } from '../../models/roleDefinitionModel';
 import * as usersApi from '../../services/userApi';
 import UserDialog from '../dialogbox/adminpage/UserDialog';
 import { useRoles } from '../../hooks/useRoles';
@@ -31,6 +33,9 @@ const UsersManagement = () => {
     email: '',
     password: '',
     roles: [] as Role[],
+    standardRate: 0,
+    isConsultant: false,
+    createdAt: new Date().toISOString(),
   });
 
   useEffect(() => {
@@ -56,6 +61,9 @@ const UsersManagement = () => {
       email: '',
       password: '',
       roles: [],
+      standardRate: 0,
+      isConsultant: false,
+      createdAt: new Date().toISOString(),
     });
   };
 
@@ -74,6 +82,9 @@ const UsersManagement = () => {
         email: userDetails.email,
         password: '', // Don't populate password for security
         roles: userDetails.roles,
+        standardRate: userDetails.standardRate,
+        isConsultant: userDetails.isConsultant,
+        createdAt: userDetails.createdAt,
       });
       setOpen(true);
     } catch (error) {
@@ -125,7 +136,7 @@ const UsersManagement = () => {
 
   const { roles: availableRoles } = useRoles();
 
-  const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
+    const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
     const selectedValues = event.target.value as string[];
     // Map selected role names to actual Role objects from the API
     const selectedRoles = selectedValues
@@ -164,7 +175,7 @@ const UsersManagement = () => {
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  {user.roles.map((role, index) => (
+{user.roles.map((role: Role, index) => (
                     <Chip
                       key={index}
                       label={role.name}

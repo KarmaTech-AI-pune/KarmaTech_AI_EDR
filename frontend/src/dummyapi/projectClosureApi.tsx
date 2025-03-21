@@ -1,9 +1,10 @@
 import { dummyProjectClosures, dummyProjectClosureComments,} from './database/dummyProjectClosure';
-import { ProjectClosureRow, ProjectClosureComment } from "../models";
+import { ProjectClosureRow } from "../models/projectClosureRowModel";
+import { ProjectClosureComment } from "../models/projectClosureCommentModel";
 import { v4 as uuidv4 } from 'uuid';
 
 // Mutable arrays to store project closure data
-let projectClosures = [...dummyProjectClosures];
+const projectClosures = [...dummyProjectClosures];
 let projectClosureComments = [...dummyProjectClosureComments];
 
 // Type for project closure with its comments

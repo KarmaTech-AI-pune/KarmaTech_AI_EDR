@@ -36,7 +36,7 @@ namespace NJS.Domain.Tests
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
                 Progress = 65,
-                ClientSector = "ClientSector",
+                TypeOfClient = "ClientSector",
                 ContractType = "ContractType",
                 CreatedBy = "Test",
                 Currency = "INR",

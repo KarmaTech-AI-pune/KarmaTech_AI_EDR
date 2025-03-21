@@ -1,4 +1,5 @@
 import { axiosInstance } from './axiosConfig';
+import { BidPreparationStatus } from './bidVersionHistoryApi';
 
 export interface DocumentCategory {
   id: string;
@@ -24,7 +25,7 @@ export interface BidPreparationData {
   createdBy: string;
   updatedBy: string;
   version: number;
-  status: 'Draft' | 'PendingApproval' | 'Approved' | 'Rejected'; 
+  status: BidPreparationStatus; 
   comments?: string;
 }
 
@@ -39,22 +40,31 @@ const updateBidPreparationData = async (
   comments?: string
 ): Promise<boolean> => {
   const response = await axiosInstance.put('/api/BidPreparation', {
-    documentCategoriesJson: JSON.stringify(documentCategories),    opportunityId,   
-    
+    documentCategoriesJson: JSON.stringify(documentCategories),
+    opportunityId: opportunityId ? Number(opportunityId) : undefined,
     comments
   });
   return response.data;
 };
 
 const submitForApproval = async (opportunityId: number | undefined): Promise<boolean> => {
-  const response = await axiosInstance.post(`/api/BidPreparation/${opportunityId}/submit`);
+  if (!opportunityId) {
+    throw new Error('Opportunity ID is required');
+  }
+  const response = await axiosInstance.post(`/api/BidPreparation/${Number(opportunityId)}/submit`);
   return response.data;
 };
 
 const approveOrReject = async (
-opportunityId: number | undefined | undefined, isApproved: boolean, comments: string): Promise<boolean> => {
-  const response = await axiosInstance.post(`/api/BidPreparation/${opportunityId}/approve`, {
-    opportunityId,
+  opportunityId: number | undefined, 
+  isApproved: boolean, 
+  comments: string
+): Promise<boolean> => {
+  if (!opportunityId) {
+    throw new Error('Opportunity ID is required');
+  }
+  const response = await axiosInstance.post(`/api/BidPreparation/${Number(opportunityId)}/approve`, {
+    opportunityId: Number(opportunityId),
     isApproved,
     comments
   });

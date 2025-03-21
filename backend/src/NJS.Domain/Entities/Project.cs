@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NJS.Domain.Entities
 {
     [Table("Projects")]
-    public class Project
+    public class Project : IAuditableEntity
     {
         [Key]
         public int Id { get; set; }
@@ -21,7 +21,7 @@ namespace NJS.Domain.Entities
 
         [Required]
         [StringLength(50)]
-        public string? ClientSector { get; set; }
+        public string? TypeOfClient { get; set; }
 
         [Required]
         [StringLength(50)]
@@ -47,7 +47,7 @@ namespace NJS.Domain.Entities
         [StringLength(100)]
         public string? FundingStream { get; set; }
 
-        [Required]
+        
         [StringLength(50)]
         public string? ContractType { get; set; }
 
@@ -55,26 +55,24 @@ namespace NJS.Domain.Entities
         [StringLength(3)]
         public string? Currency { get; set; }
 
-        // Project Manager relationship
         [ForeignKey("ProjectManager")]
         public string? ProjectManagerId { get; set; }
         public virtual User ProjectManager { get; set; }
 
-        // Regional Manager relationship
         [ForeignKey("RegionalManager")]
         public string? RegionalManagerId { get; set; }
         public virtual User RegionalManager { get; set; }
 
-        // Senior Project Manager relationship
         [ForeignKey("SeniorProjectManager")]
         public string? SeniorProjectManagerId { get; set; }
-        public virtual User SeniorProjectManager { get; set; }   
+        public virtual User SeniorProjectManager { get; set; }
 
-      
-        // Navigation property for ProjectResources
+        [ForeignKey("OpportunityTrackingId")]
+        public int? OpportunityTrackingId { get; set; }
+        public virtual OpportunityTracking OpportunityTracking { get; set; }
+
         public virtual ICollection<ProjectResource> ProjectResources { get; set; }
 
-        // Audit Fields
         [Required]
         public DateTime CreatedAt { get; set; }
 
@@ -86,11 +84,26 @@ namespace NJS.Domain.Entities
 
         [StringLength(100)]
         public string? LastModifiedBy { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string? UpdatedBy { get; set; }
+        public bool IsDeleted { get; set; } = false;
+        public bool LetterOfAcceptance { get; set; }
+
+        public void SoftDelete(string user)
+        {
+            IsDeleted = true;
+            UpdatedBy = user;
+            UpdatedAt = DateTime.Now;
+        }
 
         public Project()
         {
-           
-            ProjectResources = new List<ProjectResource>();
+
+            ProjectResources = [];
+            var dateTime = DateTime.Now;
+            UpdatedAt = dateTime;
+            CreatedAt = dateTime;
+
         }
     }
 

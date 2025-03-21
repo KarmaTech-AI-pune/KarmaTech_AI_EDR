@@ -32,98 +32,7 @@ import GoNoGoApprovalStatus from "./GoNoGoApprovalStatus";
 import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
 import { getScoringDescriptions } from '../../services/scoringDescriptionApi';
-
-interface ScoringCriteriaItem {
-  score: number;
-  comments: string;
-  scoringDescriptionId: number;
-}
-
-interface ScoringCriteriaPayload {
-  marketingPlan: ScoringCriteriaItem;
-  clientRelationship: ScoringCriteriaItem;
-  projectKnowledge: ScoringCriteriaItem;
-  technicalEligibility: ScoringCriteriaItem;
-  financialEligibility: ScoringCriteriaItem;
-  staffAvailability: ScoringCriteriaItem;
-  competitionAssessment: ScoringCriteriaItem;
-  competitivePosition: ScoringCriteriaItem;
-  futureWorkPotential: ScoringCriteriaItem;
-  profitability: ScoringCriteriaItem;
-  bidSchedule: ScoringCriteriaItem;
-  resourceAvailability: ScoringCriteriaItem;
-}
-
-interface HeaderInformation {
-  bidType: TypeOfBid;
-  sector: string;
-  tenderFee: number;
-  emdAmount: number;
-  office: string;
-  bdHead: string;
-}
-
-interface DecisionSummary {
-  totalScore: number;
-  status: GoNoGoStatus;
-  decisionComments: string;
-  actionPlan: string;
-}
-
-interface MetaData {
-  opprotunityId: number;
-  id?: number;
-  completedDate: string;
-  completedBy: string;
-  createdAt: string;
-  createdBy: string;
-  lastModifiedAt: string;
-  lastModifiedBy: string;
-}
-
-interface GoNoGoDecisionPayload {
-  HeaderInfo: {
-    TypeOfBid: TypeOfBid;
-    Sector: string;
-    TenderFee: number;
-    Emd: number;
-    Office: string;
-    BdHead: string;
-  };
-  ScoringCriteria: {
-    MarketingPlan: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    ClientRelationship: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    ProjectKnowledge: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    TechnicalEligibility: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    FinancialEligibility: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    StaffAvailability: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    CompetitionAssessment: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    CompetitivePosition: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    FutureWorkPotential: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    Profitability: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    BidSchedule: { Score: number; Comments: string; ScoringDescriptionId: number; };
-    ResourceAvailability: { Score: number; Comments: string; ScoringDescriptionId: number; };
-  };
-  Summary: {
-    TotalScore: number;
-    Status: GoNoGoStatus;
-    DecisionComments: string;
-    ActionPlan: string;
-  };
-  MetaData: {
-    OpprotunityId: number;
-    Id?: number;
-    CompletedDate: string;
-    CompletedBy: string;   
-    CreatedBy: string;   
-  };
-}
-
-interface GoNoGoFormProps {
-  goNoGoDecision?: GoNoGoDecisionPayload;
-  onSubmit?: (decision: GoNoGoDecisionPayload) => void;
-  onDecisionStatusChange?: (status: string, versionNumber: number) => void;
-}
+import { GoNoGoDecisionPayload } from '../../models/goNoGoDecisionModel';
 
 interface ScoringCriteria { 
   comments: string;
@@ -146,16 +55,16 @@ interface HeaderInfo {
   emd: string;
 }
 
-const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
+const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNumber: number) => void }> = ({ onDecisionStatusChange }) => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [descriptions, setDescriptions] = useState<ScoringDescriptionsResponse>({ descriptions: {} });
-  
+
   // Load initial Go/No Go decision data
-  useEffect(() => {  
+  useEffect(() => {
     const loadInitialData = async () => {
       if (context.selectedProject?.id) {
         try {
-          const response = await goNoGoApi.getByOpportunityId(context.selectedProject.id);
+          const response = await goNoGoApi.getByOpportunityId(Number(context.selectedProject.id));
           if (response && response.id) {
             setTotalScore(response.totalScore);
             setDecisionId(response.id);
@@ -175,28 +84,27 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
             const orderedVersions = [rdVersion, rmVersion, bdmVersion].filter((v): v is GoNoGoVersionDto => v !== undefined);
             setVersions(orderedVersions);
 
-          
             // Set the current version to the RD version if it exists
             if (rdVersion) {
               setCurrentVersion(rdVersion);
-              setIsVersionSelected(true);
-              
+
               // Parse and set the RD version's data
               const formData = JSON.parse(rdVersion.formData);
-              
+
               // Update decision status when loading RD version
               if (onDecisionStatusChange && rdVersion.status === GoNoGoVersionStatus.RD_APPROVED) {
                 const decisionStatus = formData.Summary.Status === GoNoGoStatus.Green ? "GO" : "NO GO";
                 onDecisionStatusChange(decisionStatus, rdVersion.versionNumber);
               }
-              
+
               setHeaderInfo(prev => ({
                 ...prev,
                 typeOfBid: formData.HeaderInfo.TypeOfBid,
                 sector: formData.HeaderInfo.Sector || '',
                 tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
                 emd: formData.HeaderInfo.EmdAmount?.toString() || '',
-                office: formData.HeaderInfo.Office
+                office: formData.HeaderInfo.Office,
+                bdHead: formData.HeaderInfo.BdHead || ''
               }));
 
               // Update scoring criteria with RD version's data
@@ -218,19 +126,19 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
 
   useEffect(() => {
     const getScoringDescription = async () => {
-      
-        try {
-          const response = await getScoringDescriptions();
-          
-          setDescriptions(response);
-        } catch (error) {
-          console.error('Error loading Go/No Go decision:', error);
-        }
-     
+
+      try {
+        const response = await getScoringDescriptions();
+
+        setDescriptions(response);
+      } catch (error) {
+        console.error('Error loading Go/No Go decision:', error);
+      }
+
     };
 
     getScoringDescription();
-  },[]);
+  }, []);
 
   const getDescriptionColor = (range: string) => {
     switch (range) {
@@ -298,7 +206,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
       ...prev,
       [criteriaKey]: {
         ...prev[criteriaKey],
-        [field]: field === 'score' 
+        [field]: field === 'score'
           ? Number(value)
           : value
       }
@@ -310,16 +218,16 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
     handleCriteriaChange(criteriaKey, 'score', numericValue);
   };
 
-  const mapScoringCriteria = (dbCriteria: any) => {
-    const mappings = {
+  const mapScoringCriteria = (dbCriteria: Record<string, { Score: number; Comments: string; ScoringDescriptionId: number }>) => {
+    const mappings: { [key: string]: string } = {
       MarketingPlan: 'marketingplan',
       ClientRelationship: 'clientrelationship',
       ProjectKnowledge: 'projectknowledge',
       TechnicalEligibility: 'technicaleligibility',
       FinancialEligibility: 'financialeligibility',
-      StaffAvailability: 'keyStaffavailability',
+      StaffAvailability: 'keystaffavailability',
       CompetitionAssessment: 'projectcompetition',
-      CompetitivePosition: 'Competitionposition',
+      CompetitivePosition: 'competitionposition',
       FutureWorkPotential: 'futureworkpotential',
       Profitability: 'projectprofitability',
       BidSchedule: 'projectschedule',
@@ -343,27 +251,28 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
     return newCriteria;
   };
 
-  const handleVersionSelect = useCallback((version: GoNoGoVersionDto) => {   
+  const handleVersionSelect = useCallback((version: GoNoGoVersionDto) => {
     setIsEditing(true);
     setCurrentVersion(version);
     setIsVersionSelected(true);
     const formData = JSON.parse(version.formData);
-    
+
     // Update decision status when selecting RD-approved version
-    if (onDecisionStatusChange && 
-        version.versionNumber === 3 && 
-        version.status === GoNoGoVersionStatus.RD_APPROVED) {
+    if (onDecisionStatusChange &&
+      version.versionNumber === 3 &&
+      version.status === GoNoGoVersionStatus.RD_APPROVED) {
       const decisionStatus = formData.Summary.Status === GoNoGoStatus.Green ? "GO" : "NO GO";
       onDecisionStatusChange(decisionStatus, version.versionNumber);
     }
-  
+
     setHeaderInfo(prev => ({
       ...prev,
       typeOfBid: formData.HeaderInfo.TypeOfBid,
       sector: formData.HeaderInfo.Sector || '',
       tenderFee: formData.HeaderInfo.TenderFee?.toString() || '',
       emd: formData.HeaderInfo.EmdAmount?.toString() || '',
-      office: formData.HeaderInfo.Office
+      office: formData.HeaderInfo.Office,
+      bdHead: formData.HeaderInfo.BdHead || ''
     }));
 
     // Update scoring criteria
@@ -390,7 +299,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
       // Set the versions in the correct order (RD -> RM -> BDM)
       const orderedVersions = [rdVersion, rmVersion, bdmVersion].filter((v): v is GoNoGoVersionDto => v !== undefined);
       setVersions(orderedVersions);
-
+      
       // Set the current version to the RD version if it exists
       if (rdVersion) {
         setCurrentVersion(rdVersion);
@@ -410,17 +319,32 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
     try {
       setIsLoading(true);
       await goNoGoApi.approveVersion(version.goNoGoDecisionHeaderId, version.versionNumber, {
-        approvedBy: context?.user?.userName || '',
+        approvedBy: context?.user?.name || '',
         comments: ''
       });
       if (version.goNoGoDecisionHeaderId) {
         await loadVersions(version.goNoGoDecisionHeaderId);
-        
+
         // Update decision status when RD approves
         if (onDecisionStatusChange && version.versionNumber === 3) {
-          const totalScore = calculateTotalScore();
-          const decisionStatus = totalScore >= 50 ? "GO" : "NO GO";
-          onDecisionStatusChange(decisionStatus, version.versionNumber);
+          // Get the updated version data after approval
+          const updatedVersions = await goNoGoApi.getVersions(version.goNoGoDecisionHeaderId);
+          const rdVersion = updatedVersions.find(v => v.versionNumber === 3);
+          
+          if (rdVersion) {
+            // Parse the form data to get the actual score
+            const formData = JSON.parse(rdVersion.formData);
+            const totalScore = formData.Summary.TotalScore;
+            const decisionStatus = totalScore >= 50 ? "GO" : "NO GO";
+            
+            // Call the callback with the correct status and version number
+            onDecisionStatusChange(decisionStatus, version.versionNumber);
+            
+            // Automatically open Bid Preparation form if RD approves with GO status
+            if (decisionStatus === "GO" && context?.setScreenState) {
+              context.setScreenState("Bid Preparation Form");
+            }
+          }
         }
       }
     } catch (error) {
@@ -428,37 +352,50 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [context?.user?.name, onDecisionStatusChange, calculateTotalScore, loadVersions]);
+  }, [context?.user?.name, context?.setScreenState, onDecisionStatusChange, loadVersions]);
 
 
-    const canEditForm = useCallback((): boolean => {
-        if (!currentVersion) return true;
+const canEditForm = useCallback((): boolean => {
+  if (!currentVersion) return true;
 
-        const status = currentVersion.status as GoNoGoVersionStatus;
-        const userRole = context?.user?.roles?.[0].name;
+  const status = currentVersion.status as GoNoGoVersionStatus;
+  const userRole = context?.user?.roles?.[0].name;
 
-        // Allow editing if it's the user's turn to approve or if they are the creator
-        switch (status) {
-            case GoNoGoVersionStatus.BDM_PENDING :
-                return userRole === 'Business Development Manager';
-            case GoNoGoVersionStatus.RM_PENDING:
-                return userRole === 'Regional Manager';
-            case GoNoGoVersionStatus.RD_PENDING:
-                return userRole === 'Regional Director';
-            case GoNoGoVersionStatus.BDM_APPROVED:
-              return userRole === 'Regional Manager';
-            case GoNoGoVersionStatus.RM_APPROVED:
-                return userRole === 'Regional Director';
-            case GoNoGoVersionStatus.RM_APPROVED:
-            case GoNoGoVersionStatus.RD_APPROVED:
-                return userRole === 'Regional Director';
-            default:
-                return false;
-        }
-    }, [currentVersion, context?.user?.roles]);
+  // Allow editing if it's the user's turn to approve or if they are the creator
+  switch (status) {
+    case GoNoGoVersionStatus.BDM_PENDING:
+      return userRole === 'Business Development Manager';
+    case GoNoGoVersionStatus.RM_PENDING:
+      return userRole === 'Regional Manager';
+    case GoNoGoVersionStatus.RD_PENDING:
+      return userRole === 'Regional Director';
+    case GoNoGoVersionStatus.BDM_APPROVED:
+      return userRole === 'Regional Manager';
+    case GoNoGoVersionStatus.RM_APPROVED:
+      return userRole === 'Regional Director';
+    case GoNoGoVersionStatus.RD_APPROVED:
+      return userRole === 'Regional Director';
+    default:
+      return false;
+  }
+}, [currentVersion, context?.user?.roles]);
+
+const isHeaderReadOnly = useCallback((): boolean => {
+  // Header is read-only if:
+  // 1. There is a current version (form has been submitted)
+  // 2. The current version's status is not BDM_PENDING (BDM has submitted it)
+  return !!(currentVersion && 
+    currentVersion.status !== GoNoGoVersionStatus.BDM_PENDING);
+}, [currentVersion]);
 
 
   const handleHeaderChange = (field: keyof HeaderInfo, value: string | TypeOfBid) => {
+    // If header is read-only, don't allow changes
+    if (isHeaderReadOnly()) {
+      console.log('Header information cannot be modified after submission.');
+      return;
+    }
+    
     setHeaderInfo(prev => {
       if (field === 'typeOfBid') {
         // Convert string to TypeOfBid enum
@@ -471,8 +408,22 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
   };
 
   const showName = (key: string) => {
-    return key[0].toUpperCase() + key.replace(/([A-Z])/g, ' $1').trim().slice(1);
-  };
+    const displayNames: { [key: string]: string } = {
+      marketingplan: 'Marketing Plan',
+      clientrelationship: 'Client Relationship',
+      projectknowledge: 'Project Knowledge',
+      technicaleligibility: 'Technical Eligibility',
+      financialeligibility: 'Financial Eligibility',
+      keystaffavailability: 'Key Staff Availability',
+      projectcompetition: 'Competition Assessment',
+      competitionposition: 'Competitive Position',
+      futureworkpotential: 'Future Work Potential',
+      projectprofitability: 'Project Profitability',
+      projectschedule: 'Project Schedule',
+      bidtimeandcosts: 'Bid Time and Costs'
+    };
+    return displayNames[key] || key;
+};
 
 
   const handleSubmit = async () => {
@@ -563,20 +514,19 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
           ActionPlan: ''
         },
         MetaData: {
-          OpprotunityId: context.selectedProject.id,
+          OpprotunityId: Number(context.selectedProject.id),
           Id: decisionId || 0,
           CompletedDate: new Date().toLocaleString(),
-          CompletedBy: context?.user?.name?.substring(0, 100) || '',         
+          CompletedBy: context?.user?.name?.substring(0, 100) || '',
           CreatedBy: context?.user?.name?.substring(0, 100) || '',
-         
         }
       };
 
-      if (decisionId && currentVersion!==null) { 
+      if (decisionId && currentVersion !== null) {
         // Get the next status based on current user's role
         const userRole = context?.user?.roles?.[0].name;
         let nextStatus = GoNoGoVersionStatus.BDM_PENDING;
-        
+
         if (userRole === 'Business Development Manager') {
           nextStatus = GoNoGoVersionStatus.RM_PENDING;
         } else if (userRole === 'Regional Manager') {
@@ -594,11 +544,11 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
           status: nextStatus,
           createdAt: new Date().toISOString()
         };
-        
+
         const response = await goNoGoApi.createVersion(decisionId, createGoNoAfterUpdate);
         if (response.goNoGoDecisionHeaderId) {
           await loadVersions(response.goNoGoDecisionHeaderId);
-          
+
           // Call onDecisionStatusChange with current status and version
           if (onDecisionStatusChange && nextStatus === GoNoGoVersionStatus.RD_APPROVED) {
             onDecisionStatusChange(
@@ -606,13 +556,26 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
               currentVersion.versionNumber
             );
           }
+          
+          // Scroll to top to make version visible to user
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
         }
       }
-       else {
+      else {
         // For new decisions, start with version 1 and BDM_PENDING status
-        const response = await goNoGoApi.create(context.selectedProject.id.toString(), updatedFields);
+        // Send the structured payload directly
+        const response = await goNoGoApi.create(updatedFields);
         if (response.headerId) {
           await loadVersions(response.headerId);
+          
+          // Scroll to top to make version visible to user
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
         }
       }
     } catch (error) {
@@ -637,7 +600,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
   const renderScoringDescriptions = (criteriaKey: string, currentScore: number) => {
     const key = criteriaKey.toLowerCase();
     const description = descriptions?.descriptions?.[key];
-    
+
     if (!description) {
       return (
         <Typography color="error">
@@ -675,24 +638,30 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
 
   return (
     <Box sx={{ p: 3, pt: 8, maxWidth: 1200, margin: 'auto' }}>
-      {currentVersion && (
+      {isLoading && (
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          Loading...
+        </Typography>
+      )}
+      
+      {currentVersion && isVersionSelected && (
         <GoNoGoApprovalStatus
           status={currentVersion.status as GoNoGoVersionStatus}
           onApprove={() => handleApproveVersion(currentVersion)}
           userRole={String(context?.user?.roles?.[0].name || '')}
-          isEditable={canEditForm()}
+          isEditable={canEditForm() && isEditing}
           score={calculateTotalScore()}
         />
       )}
 
-      {versions  && (
+      {versions && (
         <GoNoGoVersionHistory
-          versions={versions}         
+          versions={versions}
           currentVersion={currentVersion?.versionNumber || 1}
           onVersionSelect={handleVersionSelect}
           onApprove={handleApproveVersion}
           userRole={String(context?.user?.roles?.[0].name || '')}
-          score={totalScore||0}
+          score={totalScore || 0}
         />
       )}
 
@@ -708,7 +677,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
         <AccordionDetails>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
+              <FormControl fullWidth disabled={isHeaderReadOnly()}>
                 <InputLabel>Type of Bid</InputLabel>
                 <Select
                   value={headerInfo.typeOfBid.toString()}
@@ -726,6 +695,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
                 label="Sector"
                 value={headerInfo.sector}
                 onChange={(e) => handleHeaderChange('sector', e.target.value)}
+                disabled={isHeaderReadOnly()}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -734,6 +704,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
                 label="BD Head"
                 value={headerInfo.bdHead}
                 onChange={(e) => handleHeaderChange('bdHead', e.target.value)}
+                disabled={isHeaderReadOnly()}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -742,8 +713,16 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
                 label="Office"
                 value={headerInfo.office}
                 onChange={(e) => handleHeaderChange('office', e.target.value)}
+                disabled={isHeaderReadOnly()}
               />
             </Grid>
+            {isHeaderReadOnly() && (
+              <Grid item xs={12}>
+                <Typography variant="caption" color="text.secondary">
+                Header information cannot be modified after submission.
+                </Typography>
+              </Grid>
+            )}
           </Grid>
         </AccordionDetails>
       </Accordion>
@@ -825,8 +804,8 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography 
-              variant="body1" 
+            <Typography
+              variant="body1"
               sx={{ color: getDecisionStatus().color, fontWeight: 'bold' }}
             >
               Decision Status: {getDecisionStatus().text}
@@ -840,7 +819,7 @@ const GoNoGoForm: React.FC<GoNoGoFormProps> = ({ onDecisionStatusChange }) => {
             onClick={handleSubmit}
             disabled={!canEditForm()}
           >
-            {(currentVersion?.versionNumber)? 'Update Decision' : 'Submit Decision'}
+            {(currentVersion?.versionNumber || decisionId) ? 'Update Decision' : 'Submit Decision'}
           </Button>
         </Box>
       </Paper>

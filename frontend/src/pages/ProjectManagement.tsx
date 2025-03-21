@@ -12,14 +12,16 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { ProjectManagementProjectList } from '../components/projects/ProjectManagementProjectList';
-import {ProjectInitializationDialog}  from '../components/dialogbox/ProjectInitializationDialog';
+import {ProjectInitializationDialog}  from '../components/projects/ProjectInitializationDialog';
 import { Pagination } from '../components/Pagination';
-import { authApi } from '../dummyapi/authApi';
-import { projectApi } from '../dummyapi/projectApi';
+//import { authApi } from '../dummyapi/authApi';
+import { projectApi } from '../services/projectApi';
 import { UserWithRole } from '../types';
 import { Project } from '../models';
 import { PermissionType } from '../models';
 import ProjectStatusPieChart from '../components/dashboard/ProjectStatusPieChart';
+import { authApi } from '../services/authApi';
+import { ProjectFormData } from '../types/index.tsx';
 
 export const ProjectManagement: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
@@ -96,9 +98,15 @@ export const ProjectManagement: React.FC = () => {
     }
   };
 
-  const handleProjectCreated = async () => {
-    await fetchProjects();
-    setSuccessMessage('Project created successfully');
+  const handleProjectCreated = async (data: ProjectFormData) => {
+    try {
+      await projectApi.createProject(data);
+      await fetchProjects();
+      setSuccessMessage('Project created successfully');
+    } catch (err) {
+      console.error('Error creating project:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create project');
+    }
   };
 
   const handleProjectUpdated = async () => {
@@ -133,9 +141,24 @@ export const ProjectManagement: React.FC = () => {
     if (currentUser.roleDetails?.permissions.includes(PermissionType.SYSTEM_ADMIN)) {
       return true;
     }
-
-    // For now, show all projects to all users with view permission
-    return true;
+    
+    // Check all roles the user has
+    console.log('Filtering project:', project.name);
+    console.log('Current user roles:', currentUser.roles);
+    
+    return currentUser.roles.some(role => {
+      console.log('Checking role:', role);
+      switch(role.name) {
+        case 'Regional Manager':
+          return project.regionalManagerId === currentUser.id;
+        case 'Senior Project Manager':
+          return project.seniorProjectManagerId === currentUser.id;
+        case 'Project Manager':
+          return project.projectManagerId === currentUser.id;
+        default:
+          return false;
+      }
+    });
   });
 
   // Then apply search filtering

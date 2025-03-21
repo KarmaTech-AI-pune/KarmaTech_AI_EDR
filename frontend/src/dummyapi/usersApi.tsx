@@ -1,4 +1,5 @@
-import { AuthUser} from "../models";
+import { AuthUser} from "../models/userModel";
+import { Role } from "../models/roleModel";
 import { users, } from "./database/dummyusers";
 import { axiosInstance } from './axiosConfig';
 
@@ -53,7 +54,7 @@ export const getUserByUsername = (userName: string): AuthUser | undefined => {
 };
 
 export const getUsersByRole = (role: string): AuthUser[] => {
-  return mutableUsers.filter(user => user.roles.some(r => r.name === role));
+  return mutableUsers.filter(user => user.roles.some((r: Role) => r.name === role));
 };
 
 // Update user

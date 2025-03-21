@@ -21,10 +21,10 @@ import {projectManagementAppContextType } from '../../types';
 
 import { AuthUser } from "../../models/userModel";
 import { getUsersByRole } from '../../services/userApi';
-import { OpportunityTracking } from '../../models/opportunityTrackingModel';
+import { OpportunityTracking } from '../../models';
 
 interface OpportunityFormProps {
-  onSubmit: (data: OpportunityTracking) => void;
+  onSubmit: (data: OpportunityTracking) => void | Promise<void>;
   project?: Partial<OpportunityTracking>;
   error?: string;
 }
@@ -141,7 +141,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0',
+      [name]: (value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0').toString(),
     }));
   };
 
@@ -293,7 +293,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="Bid Fees"
                     name="bidFees"
-                    type="number"
+                    type="text"
                     value={formData.bidFees || 0}
                     onChange={handleNumberChange}
                   />
@@ -303,7 +303,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="EMD"
                     name="emd"
-                    type="number"
+                    type="text"
                     value={formData.emd || 0}
                     onChange={handleNumberChange}
                   />
@@ -338,7 +338,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="Capital Value"
                     name="capitalValue"
-                    type="number"
+                    type="text"
                     value={formData.capitalValue || 0}
                     onChange={handleNumberChange}
                     required
@@ -451,7 +451,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="Duration of Project (Months)"
                     name="durationOfProject"
-                    type="number"
+                    type="text"
                     value={formData.durationOfProject || 0}
                     onChange={handleNumberChange}
                     required
@@ -517,7 +517,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="Chance of Project Happening (%)"
                     name="percentageChanceOfProjectHappening"
-                    type="number"
+                    type="text"
                     inputProps={{ min: 0, max: 100, step: 0.01 }}
                     value={formData.percentageChanceOfProjectHappening || 0}
                     onChange={handleNumberChange}
@@ -528,7 +528,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     fullWidth
                     label="Chance of NJS Success (%)"
                     name="percentageChanceOfNJSSuccess"
-                    type="number"
+                    type="text"
                     inputProps={{ min: 0, max: 100, step: 0.01 }}
                     value={formData.percentageChanceOfNJSSuccess || 0}
                     onChange={handleNumberChange}

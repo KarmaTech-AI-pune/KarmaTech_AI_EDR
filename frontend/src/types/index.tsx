@@ -49,14 +49,14 @@ export type projectManagementAppContextType  = {
 }
 
 export enum ProjectStatus {
-  'Opportunity' = 0,
-  'Decision Pending' = 1,
-  'Cancelled' = 2,
-  'Bid Submitted' = 3,
-  'Bid Rejected' = 4,
-  'Bid Accepted' = 5,
-  'In Progress'  = 6,
-  'Completed' = 7
+  Opportunity = 0,
+  DecisionPending = 1,
+  Cancelled = 2,
+  BidSubmitted = 3,
+  BidRejected = 4,
+  BidAccepted = 5,
+  InProgress  = 6,
+  Completed = 7
 }
 
 

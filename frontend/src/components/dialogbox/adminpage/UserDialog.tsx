@@ -16,7 +16,8 @@ import {
   Checkbox,
   SelectChangeEvent,
 } from '@mui/material';
-import { AuthUser, Role } from '../../../models';
+import { AuthUser } from '../../../models/userModel';
+import { Role } from '../../../models/roleModel';
 import { useRoles } from '../../../hooks/useRoles';
 
 interface UserDialogProps {

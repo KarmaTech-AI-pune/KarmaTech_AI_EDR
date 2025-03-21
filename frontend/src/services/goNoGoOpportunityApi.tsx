@@ -1,6 +1,5 @@
 import { axiosInstance } from './axiosConfig';
 import { 
-  GoNoGoDecisionOpportunityClass, 
   ScoringDescription, 
   ScoreRange, 
   ScoringCriteria 

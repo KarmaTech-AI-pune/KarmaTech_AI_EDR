@@ -324,15 +324,15 @@ export const ProjectDetails: React.FC = () => {
                 <InfoCard title="Management" icon={<PersonIcon />}>
                   <InfoItem 
                     label="Project Manager" 
-                    value={getManagerName(project.projectMangerId)} 
+                    value={getManagerName(project.projectManagerId)} 
                   />
                   <InfoItem 
                     label="Senior Project Manager" 
-                    value={getManagerName(project.seniorProjectMangerId)} 
+                    value={getManagerName(project.seniorProjectManagerId)} 
                   />
                   <InfoItem 
                     label="Regional Manager" 
-                    value={getManagerName(project.regionalManagerID)} 
+                    value={getManagerName(project.regionalManagerId)} 
                   />
                 </InfoCard>
               </Grid>

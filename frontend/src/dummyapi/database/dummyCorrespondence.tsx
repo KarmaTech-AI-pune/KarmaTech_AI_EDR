@@ -1,4 +1,5 @@
-import { InwardRow, OutwardRow } from "../../models";
+import { InwardRow } from "../../models/inwardRowModel";
+import { OutwardRow } from "../../models/outwardRowModel";
 export const dummyInwardRows: InwardRow[] = [
     {
         id: "IN001",

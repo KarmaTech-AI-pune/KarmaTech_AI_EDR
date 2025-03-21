@@ -468,7 +468,9 @@ namespace NJS.Domain.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CurrentVersion = table.Column<int>(type: "int", nullable: true),
+                    VersionStatus = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -694,6 +696,34 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GoNoGoVersions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GoNoGoDecisionHeaderId = table.Column<int>(type: "int", nullable: false),
+                    VersionNumber = table.Column<int>(type: "int", nullable: false),
+                    FormData = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApprovedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ActonBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GoNoGoVersions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GoNoGoVersions_GoNoGoDecisionHeaders_GoNoGoDecisionHeaderId",
+                        column: x => x.GoNoGoDecisionHeaderId,
+                        principalTable: "GoNoGoDecisionHeaders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WBSTasks",
                 columns: table => new
                 {
@@ -831,6 +861,11 @@ namespace NJS.Domain.Migrations
                 column: "ScoringCriteriaId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_GoNoGoVersions_GoNoGoDecisionHeaderId",
+                table: "GoNoGoVersions",
+                column: "GoNoGoDecisionHeaderId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OpportunityHistories_ActionBy",
                 table: "OpportunityHistories",
                 column: "ActionBy");
@@ -962,6 +997,9 @@ namespace NJS.Domain.Migrations
                 name: "GoNoGoDecisionTransactions");
 
             migrationBuilder.DropTable(
+                name: "GoNoGoVersions");
+
+            migrationBuilder.DropTable(
                 name: "OpportunityHistories");
 
             migrationBuilder.DropTable(
@@ -983,10 +1021,10 @@ namespace NJS.Domain.Migrations
                 name: "ScoreRange");
 
             migrationBuilder.DropTable(
-                name: "GoNoGoDecisionHeaders");
+                name: "ScoringCriteria");
 
             migrationBuilder.DropTable(
-                name: "ScoringCriteria");
+                name: "GoNoGoDecisionHeaders");
 
             migrationBuilder.DropTable(
                 name: "OpportunityStatuses");

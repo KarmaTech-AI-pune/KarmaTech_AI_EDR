@@ -10,7 +10,7 @@ interface FormWrapperProps {
 
 export const FormWrapper: React.FC<FormWrapperProps> = ({ children }) => {
     const context = React.useContext(projectManagementAppContext);
-    const project = context?.selectedProject as Project;
+    const project = context?.selectedProject as unknown as Project;
 
     if (!project) {
         return <>{children}</>;

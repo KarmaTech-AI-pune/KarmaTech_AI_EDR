@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SelectChangeEvent } from '@mui/material';
 import { 
   Dialog,
   DialogTitle,
@@ -35,9 +36,9 @@ const DecideReview: React.FC<DecideReviewProps> = ({
   const [comments, setComments] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const handleDecisionChange = (event: any) => {
+  const handleDecisionChange = (event: SelectChangeEvent<string>) => {
     event.stopPropagation();
-    setDecision(event.target.value);
+    setDecision(event.target.value as string);
     setError(null);
     // Reset comments when decision changes
     setComments('');
@@ -76,7 +77,6 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 
     try {
       const newStatus = decision === 'approve' ? 'Pending Approval' : 'Review Rejected';
-      const workflowId = decision === 'approve' ? "4" : "3"; // "4" for "Sent for Approval", "3" for "Review Changes"
 
       // Notify parent immediately for optimistic update
       if (onDecisionMade) {
@@ -138,8 +138,12 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       setComments('');
       setError(null);
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit review decision');
+    } catch (err: unknown) {
+      setError(
+        typeof err === 'object' && err !== null && 'message' in err
+          ? (err as { message: string }).message
+          : 'Failed to submit review decision'
+      );
     }
   };
 

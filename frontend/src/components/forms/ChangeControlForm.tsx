@@ -58,7 +58,7 @@ const ChangeControlForm: React.FC = () => {
       const data = getChangeControlsByProjectId(context.selectedProject.id.toString());
       setRows(data);
       setError('');
-    } catch (err) {
+    } catch {
       setError('Failed to load change control data');
     }
   };
@@ -87,7 +87,7 @@ const ChangeControlForm: React.FC = () => {
         setRows([...rows, created]);
       }
       setError('');
-    } catch (err) {
+    } catch {
       setError('Failed to save change control');
     }
   };
@@ -104,7 +104,7 @@ const ChangeControlForm: React.FC = () => {
         setRows(rows.filter(row => row.id !== id));
       }
       setError('');
-    } catch (err) {
+    } catch {
       setError('Failed to delete change control');
     }
   };
