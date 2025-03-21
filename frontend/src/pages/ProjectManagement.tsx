@@ -17,8 +17,9 @@ import { Pagination } from '../components/Pagination';
 //import { authApi } from '../dummyapi/authApi';
 import { projectApi } from '../services/projectApi';
 import { UserWithRole } from '../types';
-import { Project} from '../models';
+import { Project } from '../models';
 import { PermissionType } from '../models';
+import ProjectStatusPieChart from '../components/dashboard/ProjectStatusPieChart';
 import { authApi } from '../services/authApi';
 import { ProjectFormData } from '../types/index.tsx';
 
@@ -140,7 +141,7 @@ export const ProjectManagement: React.FC = () => {
     if (currentUser.roleDetails?.permissions.includes(PermissionType.SYSTEM_ADMIN)) {
       return true;
     }
-
+    
     // Check all roles the user has
     console.log('Filtering project:', project.name);
     console.log('Current user roles:', currentUser.roles);
@@ -164,7 +165,7 @@ export const ProjectManagement: React.FC = () => {
   const searchFilteredProjects = roleFilteredProjects.filter((project: Project) => {
     const searchTermLower = searchTerm.toLowerCase();
     const name = project.name?.toLowerCase() || '';
-    const description = project.details?.toLowerCase() || '';
+    const description = project.description?.toLowerCase() || '';
     
     return name.includes(searchTermLower) ||
            description.includes(searchTermLower);
@@ -237,6 +238,17 @@ export const ProjectManagement: React.FC = () => {
         />
 
         <Divider sx={{ mb: 3 }} />
+
+        {/* Project Status Pie Chart */}
+        <Box sx={{ 
+          width: '100%', 
+          maxWidth: 400,
+          mx: 'auto',
+          mb: 4,
+          mt: 2
+        }}>
+          <ProjectStatusPieChart />
+        </Box>
 
         <Box sx={{ 
           display: 'flex', 
