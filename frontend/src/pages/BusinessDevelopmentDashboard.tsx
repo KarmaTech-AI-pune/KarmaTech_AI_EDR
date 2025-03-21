@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Grid, Typography } from '@mui/material';
-import OpportunityStackedBarChart from '../components/dashboard/BusinessDevelopmentCharts';
+import BusinessDevelopmentCharts from '../components/dashboard/BusinessDevelopmentCharts';
 
 const BusinessDevelopmentDashboard = () => {
   return (
@@ -11,7 +11,7 @@ const BusinessDevelopmentDashboard = () => {
       
       <Grid container spacing={3}>
         <Grid item xs={12}>
-          <OpportunityStackedBarChart />
+          <BusinessDevelopmentCharts />
         </Grid>
         
         {/* Additional dashboard components can be added here */}
