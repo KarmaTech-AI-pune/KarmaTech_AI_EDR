@@ -1,4 +1,3 @@
-import React from 'react';
 import { Container, Grid, Typography } from '@mui/material';
 import OpportunityStackedBarChart from '../components/dashboard/BusinessDevelopmentCharts';
 

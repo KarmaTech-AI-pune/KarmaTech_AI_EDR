@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   PieChart, 
   Pie, 
@@ -152,7 +152,7 @@ const ProjectStatusPieChart = () => {
                 fill="#8884d8"
                 dataKey="value"
                 nameKey="name"
-                label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                 onClick={handlePieClick}
                 cursor="pointer"
               >
