@@ -91,7 +91,8 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 Stage = opportunity.Stage,
                 CurrentHistory = new OpportunityHistoryDto
                 {
-                    Action = history.Id == 6 ? "Approved" : "Approval Changes",
+                    StatusId= history.StatusId,
+                    Action = history.StatusId == 6 ? "Approved" : "Approval Changes",
                     Comments = request.Comments,
                     ActionBy = currentUser,
                     ActionDate = DateTime.UtcNow

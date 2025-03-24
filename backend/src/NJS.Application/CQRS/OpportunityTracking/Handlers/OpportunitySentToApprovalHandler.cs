@@ -81,6 +81,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 Stage = opportunity.Stage,
                 CurrentHistory = new OpportunityHistoryDto
                 {
+                    StatusId = 4,
                     Action = "Sent for Approval",
                     Comments = request.Comments,
                     ActionBy = currentUser,

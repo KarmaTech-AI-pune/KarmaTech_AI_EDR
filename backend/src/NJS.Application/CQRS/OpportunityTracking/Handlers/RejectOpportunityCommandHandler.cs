@@ -60,7 +60,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 
             await _historyRepository.AddAsync(history).ConfigureAwait(false);
             await _historyRepository.SaveChangesAsync();
-          
+
             // Return updated opportunity
             return new OpportunityTrackingDto
             {
@@ -78,6 +78,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 Stage = opportunity.Stage,
                 CurrentHistory = new OpportunityHistoryDto
                 {
+                    StatusId = 3,
                     Action = "Review Changes",
                     Comments = request.Comments,
                     ActionBy = currentUser,

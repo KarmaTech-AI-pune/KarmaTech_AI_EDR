@@ -93,6 +93,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 Stage = opportunity.Stage,
                 CurrentHistory = new OpportunityHistoryDto
                 {
+                    StatusId = 2,
                     Action = "Sent to review",
                     Comments = request.Comments ?? string.Empty,
                     ActionBy = entity.ActionBy,
