@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
 using NJS.Application.CQRS.OpportunityTracking.Commands;
 using NJS.Application.Dtos;
@@ -6,6 +6,7 @@ using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using NJS.Domain.GenericRepository;
+using NJS.Application.CQRS.Email.Notifications;
 
 namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 {
@@ -20,13 +21,14 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
         private readonly IUserContext _userContext;
         private readonly RoleManager<Role> _roleManager;
         private readonly UserManager<User> _userManager;
-       
+        private readonly IMediator _mediator;
 
         public OpportunitySentToApprovalHandler(IOpportunityHistoryService opportunityHistoryService,
           IUserContext userContext,
           UserManager<User> userManager,
           RoleManager<Role> roleManager,       
-         IRepository<Domain.Entities.OpportunityTracking> opportunityRepository)
+         IRepository<Domain.Entities.OpportunityTracking> opportunityRepository,
+         IMediator mediator)
 
         {
             _opportunityHistoryService = opportunityHistoryService;
@@ -35,6 +37,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             _roleManager = roleManager;
            
             _opportunityRepository = opportunityRepository;
+            _mediator = mediator;
         }
         public async Task<OpportunityTrackingDto> Handle(SendToApprovalCommand request, CancellationToken cancellationToken)
         {
@@ -65,6 +68,20 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 Comments = request.Comments
             };
             await _opportunityHistoryService.AddHistoryAsync(opportunityHistory);
+
+            // Get the assigned Regional Director's email
+            var assignedDirector = await _userManager.FindByIdAsync(request.AssignedToId);
+            if (assignedDirector?.Email != null)
+            {
+                // Send email notification
+                await _mediator.Publish(new OpportunityStatusEmailNotification(
+                    opportunity,
+                     _userContext.GetCurrentUserName(),
+                    OpportunityWorkFlowStatus.Initial,
+                    request.Comments ?? "Opportunity sent for approval",
+                    assignedDirector.Email
+                ), cancellationToken);
+            }
             return new OpportunityTrackingDto
             {
                 Id = opportunity.Id,
@@ -94,4 +111,3 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 
     }
 }
-

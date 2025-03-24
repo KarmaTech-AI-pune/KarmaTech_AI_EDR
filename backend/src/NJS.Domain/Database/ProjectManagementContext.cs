@@ -30,6 +30,7 @@ namespace NJS.Domain.Database
         public DbSet<OpportunityStatus> OpportunityStatuses { get; set; }
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
         public DbSet<Region> Regions { get; set; }
+        public DbSet<FailedEmailLog> FailedEmailLogs { get; set; }
 
         public DbSet<GoNoGoDecisionOpportunity> GoNoGoDecisionOpportunities { get; set; }
         public DbSet<ScoringCriteria> ScoringCriteria { get; set; }

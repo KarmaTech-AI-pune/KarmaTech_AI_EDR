@@ -17,5 +17,10 @@ namespace NJS.Application.Services
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
+
+        public string GetCurrentUserName()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value;
+        }
     }
 }

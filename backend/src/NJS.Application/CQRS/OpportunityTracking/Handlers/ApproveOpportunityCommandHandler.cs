@@ -1,10 +1,12 @@
-﻿using MediatR;
+﻿﻿using MediatR;
 using NJS.Application.CQRS.OpportunityTracking.Commands;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using NJS.Domain.GenericRepository;
+using Microsoft.AspNetCore.Identity;
+using NJS.Application.CQRS.Email.Notifications;
 
 namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 {
@@ -17,20 +19,27 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
         private readonly IRepository<Domain.Entities.OpportunityTracking> _opportunityRepository;
         private readonly IRepository<OpportunityHistory> _historyRepository;
         private readonly IUserContext _userContext;
+        private readonly IMediator _mediator;
+        private readonly UserManager<User> _userManager;
 
 
         public ApproveOpportunityCommandHandler(
             IRepository<Domain.Entities.OpportunityTracking> opportunityRepository,
             IRepository<OpportunityHistory> historyRepository,
-            IUserContext userContext)
+            IUserContext userContext,
+            IMediator mediator,
+            UserManager<User> userManager)
         {
             _opportunityRepository = opportunityRepository;
             _historyRepository = historyRepository;
             _userContext = userContext;
+            _mediator = mediator;
+            _userManager = userManager;
         }
         public async Task<OpportunityTrackingDto> Handle(SendToApproveCommand request, CancellationToken cancellationToken)
         {
             var currentUser = _userContext.GetCurrentUserId();
+            var currentUsername = _userContext.GetCurrentUserName();
             var opportunity = await _opportunityRepository.GetByIdAsync(request.OpportunityId);
             if (opportunity == null)
                 throw new Exception($"Opportunity with ID {request.OpportunityId} not found");
@@ -73,6 +82,37 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 
             await _historyRepository.AddAsync(history);
             await _historyRepository.SaveChangesAsync();
+
+            if (request.Action.Equals("Reject"))
+            {
+                // Send email to Regional Manager
+                var regionalManager = await _userManager.FindByIdAsync(opportunity.ReviewManagerId);
+                if (regionalManager?.Email != null)
+                {
+                    await _mediator.Publish(new OpportunityStatusEmailNotification(
+                        opportunity,
+                        currentUsername,
+                        OpportunityWorkFlowStatus.ApprovalChanges,
+                        request.Comments ?? "Opportunity requires changes and has been sent back for review",
+                        regionalManager.Email
+                    ), cancellationToken);
+                }
+            }
+            else
+            {
+                // Send approval email to Bid Manager
+                var bidManager = await _userManager.FindByIdAsync(opportunity.BidManagerId);
+                if (bidManager?.Email != null)
+                {
+                    await _mediator.Publish(new OpportunityStatusEmailNotification(
+                        opportunity,
+                        currentUsername,
+                        OpportunityWorkFlowStatus.Approved,
+                        request.Comments ?? "Opportunity has been approved",
+                        bidManager.Email
+                    ), cancellationToken);
+                }
+            }
 
             // Return updated opportunity
             return new OpportunityTrackingDto
