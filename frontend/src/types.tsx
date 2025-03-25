@@ -62,5 +62,5 @@ export interface LoginResponse {
 export interface OpportunityItemProps {
     opportunity: OpportunityTracking;
     onOpportunityDeleted?: (id: string) => void;
-    onOpportunityUpdated?: () => void;
+    onOpportunityUpdated?: (updatedOpportunity?: OpportunityTracking) => void;
 }

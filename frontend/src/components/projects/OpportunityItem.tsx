@@ -17,6 +17,7 @@ import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWo
 import { OpportunityItemProps } from '../../types';
 import { useState, useContext, useEffect } from 'react';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
+import { OpportunityTracking } from '../../models';
 import { OpportunityForm } from '../forms/OpportunityForm';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
@@ -27,6 +28,8 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   onOpportunityDeleted, 
   onOpportunityUpdated 
 }) => {
+  // Add state to track the current opportunity
+  const [currentOpportunity, setCurrentOpportunity] = useState<OpportunityTracking>(opportunity);
   const getWorkflowColor = (workflowId: number) => {
     const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
@@ -51,6 +54,11 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
   const context = useContext(projectManagementAppContext);
+
+  // Update current opportunity when the prop changes
+  useEffect(() => {
+    setCurrentOpportunity(opportunity);
+  }, [opportunity]);
 
   useEffect(() => {
     const checkUserPermissions = async () => {
@@ -110,11 +118,34 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     setEditDialogOpen(false);
   };
 
-  const handleEditSubmit = async (formData: any) => {
+  // Enhanced handler for opportunity updates
+  const handleOpportunityUpdate = async (updatedOpp?: OpportunityTracking) => {
+    if (updatedOpp) {
+      // Use the provided updated opportunity
+      setCurrentOpportunity(updatedOpp);
+      if (onOpportunityUpdated) {
+        onOpportunityUpdated();
+      }
+    } else {
+      // Fallback to fetching from API
+      try {
+        const fetchedOpportunity = await opportunityApi.getById(opportunity.id);
+        setCurrentOpportunity(fetchedOpportunity);
+        if (onOpportunityUpdated) {
+          onOpportunityUpdated();
+        }
+      } catch (error) {
+        console.error('Error updating opportunity:', error);
+      }
+    }
+  };
+
+  const handleEditSubmit = async (formData: Partial<OpportunityTracking>) => {
     if (!canEditOpportunity) return;
     try {
       const updatedOpportunity = { ...formData, id: opportunity.id };
-      await opportunityApi.update(opportunity.id, updatedOpportunity);
+      const result = await opportunityApi.update(opportunity.id, updatedOpportunity);
+      setCurrentOpportunity(result);
       setEditDialogOpen(false);
       if (onOpportunityUpdated) {
         onOpportunityUpdated();
@@ -126,7 +157,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
 
   const handleOpportunityClick = () => {
     if (context?.setScreenState && context?.setSelectedProject) {
-      context.setSelectedProject(opportunity);
+      context.setSelectedProject(currentOpportunity);
       context.setScreenState("Business Development Details");
     }
   };
@@ -162,7 +193,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
               color: 'primary.main',
               fontWeight: 600
             }}>
-              {opportunity.workName || 'Unnamed Opportunity'}
+              {currentOpportunity.workName || 'Unnamed Opportunity'}
             </Typography>
             
             <Box sx={{ 
@@ -204,10 +235,10 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Typography variant="body2" color="text.secondary">
-                  <strong>Client:</strong> {opportunity.client || 'Not specified'} ({opportunity.clientSector || 'N/A'})
+                  <strong>Client:</strong> {currentOpportunity.client || 'Not specified'} ({currentOpportunity.clientSector || 'N/A'})
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  <strong>Operation:</strong> {opportunity.operation || 'Not specified'}
+                  <strong>Operation:</strong> {currentOpportunity.operation || 'Not specified'}
                 </Typography>
                 
               </Box>
@@ -217,10 +248,10 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Typography variant="body2" color="text.secondary">
-                  <strong>Stage:</strong> {opportunity.stage || 'Not specified'} | <strong>Status:</strong> {opportunity.status || 'Not specified'}
+                  <strong>Stage:</strong> {currentOpportunity.stage || 'Not specified'} | <strong>Status:</strong> {currentOpportunity.status || 'Not specified'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  <strong>Bid Fees:</strong> {opportunity.currency} {opportunity.bidFees?.toLocaleString() || 'Not specified'}
+                  <strong>Bid Fees:</strong> {currentOpportunity.currency} {currentOpportunity.bidFees?.toLocaleString() || 'Not specified'}
                 </Typography>
               </Box>
             </Grid>
@@ -230,16 +261,16 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             mt: 1,
           }}>
               <Chip
-                label={`Workflow: ${opportunity.currentHistory
-                    ? Array.isArray(opportunity.currentHistory)
-                      ? getWorkflowStatusById(opportunity.currentHistory[0]?.statusId)?.status || 'Not specified'
-                      : getWorkflowStatusById(opportunity.currentHistory.statusId)?.status || 'Not specified'
+                label={`Workflow: ${currentOpportunity.currentHistory
+                    ? Array.isArray(currentOpportunity.currentHistory)
+                      ? getWorkflowStatusById(currentOpportunity.currentHistory[0]?.statusId)?.status || 'Not specified'
+                      : getWorkflowStatusById(currentOpportunity.currentHistory.statusId)?.status || 'Not specified'
                     : 'Not specified'
                   }`}
                 color={
-                  Array.isArray(opportunity.currentHistory)
-                    ? getWorkflowColor(opportunity.currentHistory[0]?.statusId || 0)
-                    : getWorkflowColor(opportunity.currentHistory?.statusId || 0)
+                  Array.isArray(currentOpportunity.currentHistory)
+                    ? getWorkflowColor(currentOpportunity.currentHistory[0]?.statusId || 0)
+                    : getWorkflowColor(currentOpportunity.currentHistory?.statusId || 0)
                 }
                 sx={{ mb: 1 }}
               />
@@ -253,13 +284,13 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             alignItems: 'center'
           }}>
             <Box>
-              <BDChips opportunityId={opportunity.id} />
+              <BDChips opportunityId={currentOpportunity.id} />
             </Box>
 
             <Box>
               <OpportunityTrackingWorkflow 
-                opportunity={opportunity}
-                onOpportunityUpdated={onOpportunityUpdated}
+                opportunity={currentOpportunity}
+                onOpportunityUpdated={handleOpportunityUpdate}
               />
             </Box>
           </Box>
@@ -269,7 +300,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
-          Are you sure you want to delete opportunity "{opportunity.workName}"?
+        Are you sure you want to delete opportunity "{currentOpportunity.workName}"?
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteCancel}>Cancel</Button>
@@ -286,7 +317,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
         <DialogContent>
           <OpportunityForm 
             onSubmit={handleEditSubmit}
-            project={opportunity}
+            project={currentOpportunity}
           />
         </DialogContent>
       </Dialog>
