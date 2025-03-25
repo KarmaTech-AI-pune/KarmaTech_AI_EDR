@@ -42,7 +42,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     updatedAt: project?.updatedAt || '',
     typeOfClient: project?.typeOfClient || '',
     estimatedCost: project?.estimatedCost || 0,
-    fundingStream: project?.fundingStream || '' ,
+    fundingStream: project?.fundingStream || 'Lumpsum',
     startDate: project?.startDate || '',
     endDate: project?.endDate || '',
     currency: project?.currency || 'INR',
@@ -232,8 +232,8 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               fullWidth
               select
               label="Fee Type"
-              name="feeType"
-              value={formData.feeType}
+              name="fundingStream"
+              value={formData.fundingStream}
               onChange={handleChange}
             >
               <MenuItem value="Lumpsum">Lumpsum</MenuItem>
