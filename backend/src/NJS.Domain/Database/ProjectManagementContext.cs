@@ -24,6 +24,7 @@ namespace NJS.Domain.Database
         public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; }
         public DbSet<WBSTask> WBSTasks { get; set; }
         public DbSet<UserWBSTask> UserWBSTasks { get; set; }
+        public DbSet<WBSOption> WBSOptions { get; set; }
         public DbSet<OpportunityTracking> OpportunityTrackings { get; set; }
         public DbSet<ProjectResource> ProjectResources { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
@@ -171,6 +172,22 @@ namespace NJS.Domain.Database
 
             modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.TypeOfClient).IsRequired(false);
             modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.RegionalBDHead).IsRequired(false);
+
+            // Configure WBSOption entity
+            modelBuilder.Entity<WBSOption>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Value).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Label).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Level).IsRequired();
+                entity.Property(e => e.ParentValue).HasMaxLength(100);
+                
+                // Create index on Level for faster lookups
+                entity.HasIndex(e => e.Level);
+                
+                // Create index on ParentValue for faster hierarchical queries
+                entity.HasIndex(e => e.ParentValue);
+            });
         }
     }
 }

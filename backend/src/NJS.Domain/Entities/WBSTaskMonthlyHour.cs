@@ -1,31 +1,28 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    public class UserWBSTask
+    public class WBSTaskMonthlyHour
     {
         [Key]
         public int Id { get; set; }
 
         [Required]
-        [StringLength(450)]
-        public string UserId { get; set; }
-
-        [Required]
         public int WBSTaskId { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal CostRate { get; set; }
+        [Required]
+        [StringLength(4)]
+        public string Year { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal ODC { get; set; }
+        [Required]
+        [StringLength(20)]
+        public string Month { get; set; }
 
-        public double TotalHours { get; set; }
+        public double PlannedHours { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal TotalCost { get; set; }
+        public double? ActualHours { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
@@ -37,10 +34,7 @@ namespace NJS.Domain.Entities
         [StringLength(100)]
         public string UpdatedBy { get; set; }
 
-        // Navigation properties
-        [ForeignKey(nameof(UserId))]
-        public User User { get; set; }
-
+        // Navigation property
         [ForeignKey(nameof(WBSTaskId))]
         public WBSTask WBSTask { get; set; }
     }
