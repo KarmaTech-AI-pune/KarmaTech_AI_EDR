@@ -7,11 +7,13 @@ import {
   DialogActions,
   Box,
   Grid,
-  Button
+  Button,
+  Chip
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { BDChips } from '../common/BDChips';
 import { OpportunityTrackingWorkflow } from '../common/OpportunityTrackingWorkflow';
+import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { OpportunityItemProps } from '../../types';
 import { useState, useContext, useEffect } from 'react';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
@@ -25,6 +27,25 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   onOpportunityDeleted, 
   onOpportunityUpdated 
 }) => {
+  const getWorkflowColor = (workflowId: number) => {
+    const status = getWorkflowStatusById(workflowId)?.status;
+    switch (status) {
+      case "Initial":
+        return 'default';
+      case "Sent for Review":
+        return 'info';
+      case "Review Changes":
+        return 'warning';
+      case "Sent for Approval":
+        return 'primary';
+      case "Approval Changes":
+        return 'warning';
+      case "Approved":
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
@@ -205,9 +226,28 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             </Grid>
           </Grid>
 
+          <Box sx={{ 
+            mt: 1,
+          }}>
+              <Chip
+                label={`Workflow: ${opportunity.currentHistory
+                    ? Array.isArray(opportunity.currentHistory)
+                      ? getWorkflowStatusById(opportunity.currentHistory[0]?.statusId)?.status || 'Not specified'
+                      : getWorkflowStatusById(opportunity.currentHistory.statusId)?.status || 'Not specified'
+                    : 'Not specified'
+                  }`}
+                color={
+                  Array.isArray(opportunity.currentHistory)
+                    ? getWorkflowColor(opportunity.currentHistory[0]?.statusId || 0)
+                    : getWorkflowColor(opportunity.currentHistory?.statusId || 0)
+                }
+                sx={{ mb: 1 }}
+              />
+            </Box>
+
           {/* Workflow Section */}
           <Box sx={{ 
-            mt: 3,
+            mt: 1,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
@@ -215,6 +255,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             <Box>
               <BDChips opportunityId={opportunity.id} />
             </Box>
+
             <Box>
               <OpportunityTrackingWorkflow 
                 opportunity={opportunity}

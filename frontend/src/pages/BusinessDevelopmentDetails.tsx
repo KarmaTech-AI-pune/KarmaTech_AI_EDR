@@ -429,7 +429,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                   <InfoItem label="Operation" value={opportunity.operation} />
                   <InfoItem label="Status" value={opportunity.status} />
                
-                <Chip
+                {/* <Chip
                   label={`Workflow: ${opportunity.currentHistory
                       ? Array.isArray(opportunity.currentHistory)
                         ? getWorkflowStatusById(opportunity.currentHistory[0]?.statusId)?.status || 'Not specified'
@@ -442,7 +442,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                       : getWorkflowColor(opportunity.currentHistory?.statusId || 0)
                   }
                   sx={{ mb: 1 }}
-                />
+                /> */}
                  </InfoCard>
               </Grid>
 
