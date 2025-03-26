@@ -1,9 +1,10 @@
-﻿﻿﻿﻿﻿﻿﻿﻿using Microsoft.AspNetCore.Builder;
+﻿﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
+using NJS.Domain.Enums; // Add import for WBSTaskLevel
 using System.Security.Authentication;
 
 namespace NJS.Domain.Extensions

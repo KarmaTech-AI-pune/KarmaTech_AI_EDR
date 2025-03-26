@@ -4,6 +4,7 @@ using NJS.Application.CQRS.WorkBreakdownStructures.Commands;
 using NJS.Application.Dtos;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
+using NJS.Domain.Enums; // Add import for WBSTaskLevel
 using NJS.Domain.UnitWork;
 using System;
 using System.Collections.Generic;
@@ -53,7 +54,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             var taskDto = request.TaskDto;
             taskEntity.Title = taskDto.Title;
             taskEntity.Description = taskDto.Description;
-            taskEntity.Level = (NJS.Domain.Entities.WBSTaskLevel)(int)taskDto.Level; // Cast via int for cross-namespace enum
+            taskEntity.Level = taskDto.Level; // No cast needed now
             taskEntity.ParentId = taskDto.ParentId; // Consider validating ParentId exists within the same WBS
             taskEntity.DisplayOrder = taskDto.DisplayOrder;
             taskEntity.EstimatedBudget = taskDto.EstimatedBudget;

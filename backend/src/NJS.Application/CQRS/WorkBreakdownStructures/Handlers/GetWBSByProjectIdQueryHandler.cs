@@ -61,7 +61,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     Id = taskEntity.Id,
                     WorkBreakdownStructureId = taskEntity.WorkBreakdownStructureId,
                     ParentId = taskEntity.ParentId,
-                    Level = (NJS.Domain.Enums.WBSTaskLevel)taskEntity.Level, // Explicit cast to try and resolve analyzer error
+                    Level = taskEntity.Level, // No cast needed now
                     Title = taskEntity.Title,
                     Description = taskEntity.Description,
                     DisplayOrder = taskEntity.DisplayOrder,
