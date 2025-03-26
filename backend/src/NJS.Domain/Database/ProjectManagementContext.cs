@@ -157,7 +157,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<GoNoGoDecisionTransaction>()
                 .HasOne(t => t.GoNoGoDecisionHeader)
                 .WithMany()
-                .HasForeignKey(t => t.GoNoGoDecisionHeaderId);
+                .HasForeignKey(t => t.GoNoGoDecisionHeaderId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<GoNoGoDecisionTransaction>()
                 .HasOne(t => t.ScoringCriterias)
@@ -168,7 +169,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<GoNoGoDecisionHeader>()
                 .HasOne(h => h.OpportunityTracking)
                 .WithMany()
-                .HasForeignKey(h => h.OpportunityId);
+                .HasForeignKey(h => h.OpportunityId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.TypeOfClient).IsRequired(false);
             modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.RegionalBDHead).IsRequired(false);
