@@ -188,6 +188,39 @@ namespace NJS.Domain.Database
                 // Create index on ParentValue for faster hierarchical queries
                 entity.HasIndex(e => e.ParentValue);
             });
+
+            // Configure WBSTask entity
+            modelBuilder.Entity<WBSTask>(entity =>
+            {
+                entity.Property(t => t.EstimatedBudget).HasPrecision(18, 2);
+
+                // Configure self-referencing relationship for hierarchy
+                entity.HasOne(t => t.Parent)
+                      .WithMany(t => t.Children)
+                      .HasForeignKey(t => t.ParentId)
+                      .OnDelete(DeleteBehavior.Restrict); // Prevent deleting a task if it has children
+
+                // Configure relationship with WorkBreakdownStructure
+                entity.HasOne(t => t.WorkBreakdownStructure)
+                      .WithMany(w => w.Tasks)
+                      .HasForeignKey(t => t.WorkBreakdownStructureId)
+                      .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+            });
+
+             // Configure UserWBSTask entity decimal properties
+            modelBuilder.Entity<UserWBSTask>(entity =>
+            {
+                entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
+                entity.Property(ut => ut.ODC).HasPrecision(18, 2);
+                entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
+            });
+
+            // Configure WorkBreakdownStructure entity
+            modelBuilder.Entity<WorkBreakdownStructure>(entity =>
+            {
+                 // Optional: Add index on ProjectId if frequent lookups by project are expected
+                 entity.HasIndex(w => w.ProjectId);
+            });
         }
     }
 }

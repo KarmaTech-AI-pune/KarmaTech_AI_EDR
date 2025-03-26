@@ -1,9 +1,8 @@
-﻿﻿﻿﻿﻿﻿using System;
-using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using NJS.Domain.Enums;
+using NJS.Domain.Enums;  // Already correct - just verifying
 
 namespace NJS.Domain.Entities
 {
@@ -40,6 +39,13 @@ namespace NJS.Domain.Entities
 
         [StringLength(100)]
         public string UpdatedBy { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal EstimatedBudget { get; set; }
+
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+
 
         // Navigation properties
         [ForeignKey(nameof(WorkBreakdownStructureId))]

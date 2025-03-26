@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿using Microsoft.AspNetCore.Builder;
+﻿﻿﻿﻿﻿﻿﻿﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -252,24 +252,24 @@ namespace NJS.Domain.Extensions
                             Title = "Project Planning",
                             Description = "Initial project planning phase",
                             Level = WBSTaskLevel.Level1,
-                            WorkBreakdownStructureId = wbs.Id,
-                            ResourceAllocation = 100
+                            WorkBreakdownStructureId = wbs.Id
+                            // ResourceAllocation = 100 // Commented out - Property does not exist
                         },
                         new WBSTask
                         {
                             Title = "Design",
                             Description = "Design phase activities",
                             Level = WBSTaskLevel.Level2,
-                            WorkBreakdownStructureId = wbs.Id,
-                            ResourceAllocation = 150
+                            WorkBreakdownStructureId = wbs.Id
+                            // ResourceAllocation = 150 // Commented out - Property does not exist
                         },
                         new WBSTask
                         {
                             Title = "Development",
                             Description = "Development phase activities",
                             Level = WBSTaskLevel.Level3,
-                            WorkBreakdownStructureId = wbs.Id,
-                            ResourceAllocation = 200
+                            WorkBreakdownStructureId = wbs.Id
+                            // ResourceAllocation = 200 // Commented out - Property does not exist
                         }
                     };
 
