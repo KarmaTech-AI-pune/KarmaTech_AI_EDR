@@ -12,6 +12,8 @@ import { authApi } from './services/authApi'
 import { PermissionType } from './models'
 import GoNoGoForm from './components/forms/GoNoGoForm'
 import BidPreparationForm from './components/forms/BidPreparationForm'
+import { LoadingProvider } from './context/LoadingContext';
+import LoadingSpinner from './components/LoadingSpinner';
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
 function App() {
@@ -193,8 +195,11 @@ function App() {
       canSubmitForApproval,
       setCanSubmitForApproval
     }}>
-      {isAuthenticated && <Navbar />}
-      {screenArray[screenState]}
+      <LoadingProvider>
+        <LoadingSpinner />
+        {isAuthenticated && <Navbar />}
+        {screenArray[screenState]}
+      </LoadingProvider>
     </projectManagementAppContext.Provider>
   );
 }
