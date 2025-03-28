@@ -1,14 +1,12 @@
 ﻿﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
+using NJS.Application.CQRS.Email.Notifications;
 using NJS.Application.CQRS.OpportunityTracking.Commands;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using NJS.Domain.GenericRepository;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 {
@@ -18,17 +16,20 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
         private readonly IUserContext _userContext;
         private readonly UserManager<User> _userManager;
         private readonly IRepository<Domain.Entities.OpportunityTracking> _opportunityRepository;
+        private readonly IMediator _mediator;
 
         public OpportunitySentToReviewHandler(
             IOpportunityHistoryService opportunityHistoryService,
             IUserContext userContext,
             UserManager<User> userManager,
-            IRepository<Domain.Entities.OpportunityTracking> opportunityRepository)
+            IRepository<Domain.Entities.OpportunityTracking> opportunityRepository,
+            IMediator mediator)
         {
             _opportunityHistoryService = opportunityHistoryService;
             _userContext = userContext;
             _userManager = userManager;
             _opportunityRepository = opportunityRepository;
+            _mediator = mediator;
         }
 
         public async Task<OpportunityTrackingDto> Handle(SendToReviewCommand request, CancellationToken cancellationToken)
@@ -76,6 +77,15 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 
             await _opportunityHistoryService.AddHistoryAsync(entity);
 
+            // Send email notification to the regional manager
+            await _mediator.Publish(notification: new OpportunityStatusEmailNotification(
+                opportunity,
+                _userContext.GetCurrentUserName(),
+                OpportunityWorkFlowStatus.SentForReview,
+                request.Comments ?? "Opportunity sent for review",
+                assignedManager.Email
+            ), cancellationToken);
+
             // Return updated opportunity details
             return new OpportunityTrackingDto
             {
@@ -93,6 +103,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 Stage = opportunity.Stage,
                 CurrentHistory = new OpportunityHistoryDto
                 {
+                    StatusId = 2,
                     Action = "Sent to review",
                     Comments = request.Comments ?? string.Empty,
                     ActionBy = entity.ActionBy,
