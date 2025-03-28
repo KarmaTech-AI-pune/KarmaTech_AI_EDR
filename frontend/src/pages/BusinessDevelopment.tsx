@@ -337,12 +337,12 @@ export const BusinessDevelopment: React.FC = () => {
           />
         </Box>
 
-        <OpportunityList
-          opportunities={currentOpportunities}
-          emptyMessage="No business development opportunities found"
-          onOpportunityDeleted={() => fetchOpportunities()}
-          onOpportunityUpdated={() => fetchOpportunities()}
-        />
+<OpportunityList
+  opportunities={currentOpportunities}
+  emptyMessage="No business development opportunities found"
+  onOpportunityDeleted={fetchOpportunities}
+  onOpportunityUpdated={fetchOpportunities}
+/>
 
         <Box sx={{ 
           display: 'flex', 
