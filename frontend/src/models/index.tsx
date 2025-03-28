@@ -1,3 +1,5 @@
+import { ProjectStatus } from '../types/index';
+
 export type { GoNoGoDecision } from './goNoGoDecisionModel';
 export type { OpportunityTracking } from './opportunityTrackingModel';
 
@@ -17,7 +19,7 @@ export interface User {
     standardRate: number;
     isConsultant: boolean;
     createdAt: string;
-    avatar?:string;
+    avatar?: string;
     lastLogin?: string | null;
     password?: string;
 }
@@ -32,33 +34,37 @@ export interface Project {
     id: string;
     name: string;
     description?: string;
-    status: string;
+    status: ProjectStatus;
     projectNo: string;
-    typeOfJob:string;
-    sector:string;
-    priority:string;
-    clientName:string;
-    typeOfClient:string;
-    region:string;
-    office:string;
+    typeOfJob: string;
+    sector: string;
+    priority: string;
+    clientName: string;
+    typeOfClient: string;
+    region: string;
+    office: string;
     currency: string;
     budget: number;
-    feeType:string;
+    fundingStream: string;
     startDate?: string;
     endDate?: string;
-    details:string;
+    details: string;
     createdAt: string;
     updatedAt: string;
-    seniorProjectMangerId:string;
-    regionalManagerID:string;
-    projectMangerId:string;
-    estimatedCost:number;
+    seniorProjectManagerId: string;
+    regionalManagerId: string;
+    projectManagerId: string;
+    estimatedCost: number;
+    letterOfAcceptance: boolean;
+    opportunityTrackingId: number;   
+    feeType:string; 
+
 }
 
 export interface OpportunityHistory {
-    opportunityId:number;
-    date:string;
-    description:string;
+    opportunityId: number;
+    date: string;
+    description: string;
     id: number;
     statusId: number;
     status: string;

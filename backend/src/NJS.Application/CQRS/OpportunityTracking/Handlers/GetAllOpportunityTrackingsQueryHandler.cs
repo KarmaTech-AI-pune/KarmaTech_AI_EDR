@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using MediatR;
 using NJS.Application.CQRS.OpportunityTracking.Queries;
 using NJS.Application.Dtos;
@@ -55,9 +49,12 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             }
 
             // Apply pagination
-            filteredEntities = filteredEntities
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize);
+            if (request.PageNumber is not null && request.PageSize is not null)
+            {
+                filteredEntities = filteredEntities
+                    .Skip((int)((request.PageNumber - 1) * request.PageSize))
+                    .Take((int)request.PageSize);
+            }
 
             // Map to DTOs
            var result= filteredEntities.Select(entity => new OpportunityTrackingDto
@@ -96,8 +93,14 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 .Select(history => new OpportunityHistoryDto
                 {
                     Id = history.Id,
+                    OpportunityId = history.OpportunityId,
+                    ActionDate = history.ActionDate,
+                    Comments = history.Comments,
                     Status = history.Status.Status,
-                    StatusId= history.Status.Id
+                    StatusId = history.StatusId,
+                    Action = history.Action,
+                    ActionBy = history.ActionBy,
+                    AssignedToId = history.AssignedToId
 
                 })
                 .FirstOrDefault()

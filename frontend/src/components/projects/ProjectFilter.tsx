@@ -32,12 +32,12 @@ export const ProjectFilter: React.FC<ProjectFilterProps> = ({
   // Mapping to convert enum values to readable strings
   const statusLabels: Record<ProjectStatus, string> = {
     [ProjectStatus.Opportunity]: 'Opportunity',
-    [ProjectStatus['Decision Pending']]: 'Decision Pending',
+    [ProjectStatus.DecisionPending]: 'Decision Pending',
     [ProjectStatus.Cancelled]: 'Cancelled',
-    [ProjectStatus['Bid Submitted']]: 'Bid Submitted',
-    [ProjectStatus['Bid Rejected']]: 'Bid Rejected',
-    [ProjectStatus['Bid Accepted']]: 'Bid Accepted',
-    [ProjectStatus['In Progress']]: 'In Progress',
+    [ProjectStatus.BidSubmitted]: 'Bid Submitted',
+    [ProjectStatus.BidRejected]: 'Bid Rejected',
+    [ProjectStatus.BidAccepted]: 'Bid Accepted',
+    [ProjectStatus.InProgress]: 'In Progress',
     [ProjectStatus.Completed]: 'Completed'
   };
 

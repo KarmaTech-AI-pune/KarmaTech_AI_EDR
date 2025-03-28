@@ -34,6 +34,8 @@ namespace NJS.Application.Extensions
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
             services.AddScoped<IGoNoGoDecisionService, GoNoGoDecisionService>();
             services.AddScoped<IUserContext, UserContext>();
+            services.AddScoped<IEmailService, EmailService>();
+            
             
             return services;
         }

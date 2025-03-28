@@ -14,6 +14,17 @@ namespace NJS.Domain.Enums
         BID_REJECTED,
 
         [Description("Bid Accepted")]
-        BID_ACCEPTED
+        BID_ACCEPTED,
+        SentForReview
+    }
+
+    public enum OpportunityWorkFlowStatus
+    {
+        Initial =0,      
+        SentForReview=1,
+        ReviewChanges=2,
+        SentForApproval=3,
+        ApprovalChanges=4,
+        Approved=5
     }
 }

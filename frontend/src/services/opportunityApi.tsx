@@ -1,18 +1,18 @@
 import { axiosInstance } from './axiosConfig';
-import { 
-  OpportunityTracking, 
-  normalizeOpportunityTracking, 
-  prepareOpportunityTrackingForSubmission 
+import {
+  OpportunityTracking,
+  normalizeOpportunityTracking,
+  prepareOpportunityTrackingForSubmission
 } from '../models/opportunityTrackingModel';
 import { OpportunityHistory } from '../models/opportunityHistoryModel';
 
 type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E';
-type OpportunityTrackingStatus = 
-  'Bid Under Preparation' | 
-  'Bid Submitted' | 
-  'Under Evaluation' | 
-  'Awarded' | 
-  'Not Awarded';
+type OpportunityTrackingStatus =
+  'Bid Under Preparation' |
+  'Bid Submitted' |
+  'Bid Rejected' |
+  'Bid Accepted'
+
 
 // Backend-specific model for sending data
 export interface BackendOpportunityTracking {
@@ -85,9 +85,8 @@ const mapStatusToBackend = (status: OpportunityTrackingStatus | undefined): numb
   switch (status) {
     case 'Bid Under Preparation': return 0;
     case 'Bid Submitted': return 1;
-    case 'Under Evaluation': return 2;
-    case 'Awarded': return 3;
-    case 'Not Awarded': return 4;
+    case 'Bid Rejected': return 2;
+    case 'Bid Accepted': return 3;
     default: return 0;
   }
 };
@@ -96,15 +95,14 @@ const mapStatusFromBackend = (status: number): OpportunityTrackingStatus => {
   switch (status) {
     case 0: return 'Bid Under Preparation';
     case 1: return 'Bid Submitted';
-    case 2: return 'Under Evaluation';
-    case 3: return 'Awarded';
-    case 4: return 'Not Awarded';
+    case 2: return 'Bid Rejected';
+    case 3: return 'Bid Accepted';
     default: return 'Bid Under Preparation';
   }
 };
 
 export const opportunityApi = {
-  convertStringToNumberId: (id: string | number): number => 
+  convertStringToNumberId: (id: string | number): number =>
     typeof id === 'string' ? parseInt(id, 10) : id,
 
   create: async (opportunityData: Partial<OpportunityTracking>): Promise<OpportunityTracking> => {
@@ -112,7 +110,7 @@ export const opportunityApi = {
       if (!opportunityData.bidManagerId) {
         throw new Error('Bid Manager ID is required');
       }
-  
+
       const normalizedData = normalizeOpportunityTracking(opportunityData);
       const preparedData = prepareOpportunityTrackingForSubmission(normalizedData);
 
@@ -150,21 +148,21 @@ export const opportunityApi = {
         followUpComments: preparedData.followUpComments,
         notes: preparedData.notes,
         probableQualifyingCriteria: preparedData.probableQualifyingCriteria,
-        currentHistory: Array.isArray(preparedData.currentHistory) 
-          ? preparedData.currentHistory 
+        currentHistory: Array.isArray(preparedData.currentHistory)
+          ? preparedData.currentHistory
           : preparedData.currentHistory ? [preparedData.currentHistory] : undefined,
-        createdAt: preparedData.createdAt instanceof Date 
-          ? preparedData.createdAt.toISOString() 
+        createdAt: preparedData.createdAt instanceof Date
+          ? preparedData.createdAt.toISOString()
           : preparedData.createdAt,
-        updatedAt: preparedData.updatedAt instanceof Date 
-          ? preparedData.updatedAt.toISOString() 
+        updatedAt: preparedData.updatedAt instanceof Date
+          ? preparedData.updatedAt.toISOString()
           : preparedData.updatedAt,
         createdBy: preparedData.createdBy,
         updatedBy: preparedData.updatedBy
       };
-      
+
       const response = await axiosInstance.post<OpportunityTracking>('api/OpportunityTracking', command);
-      
+
       return normalizeOpportunityTracking(response.data) as OpportunityTracking;
     } catch (error) {
       console.error('Error creating opportunity:', error);
@@ -183,7 +181,7 @@ export const opportunityApi = {
         opportunityId: data.opportunityId,
         assignedToId: data.approvalManagerId,
         comments: data.comments,
-        action: data.action 
+        action: data.action
       });
 
       return normalizeOpportunityTracking({
@@ -208,7 +206,7 @@ export const opportunityApi = {
         opportunityId: data.opportunityId,
         assignedToId: data.approvalManagerId,
         comments: data.comments,
-        action: data.action 
+        action: data.action
       });
 
       return normalizeOpportunityTracking({
@@ -257,7 +255,7 @@ export const opportunityApi = {
         opportunityId: data.opportunityId,
         assignedToId: data.approvalRegionalDirectorId,
         comments: data.comments,
-        action: data.action 
+        action: data.action
       });
 
       return normalizeOpportunityTracking({
@@ -282,7 +280,7 @@ export const opportunityApi = {
         opportunityId: data.opportunityId,
         assignedToId: data.approvalRegionalDirectorId,
         comments: data.comments,
-        action: data.action 
+        action: data.action
       });
 
       return normalizeOpportunityTracking({
@@ -380,5 +378,23 @@ export const opportunityApi = {
       console.error('Error deleting opportunity:', error);
       throw error;
     }
-  }
+  },
+
+  getOpportunityByStatus: async (status: number | 0): Promise<OpportunityTracking[]> => {
+    try {
+      const response = await axiosInstance.get<BackendOpportunityTracking[]>(`api/OpportunityTracking?status=${status}`);
+      return response.data
+      .map(opp => ({
+        ...opp,
+        stage: mapStageFromBackend(Number(opp.stage)),
+        status: mapStatusFromBackend(Number(opp.status))
+      }))
+      .map(opp => normalizeOpportunityTracking(opp) as OpportunityTracking);
+    } catch (error) {
+      console.error('Error fetching opportunity:', error);
+      throw error;
+    }
+  },
+
+
 };

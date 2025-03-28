@@ -17,6 +17,7 @@ import { OpportunityForm } from '../components/forms/OpportunityForm';
 import { Pagination } from '../components/Pagination';
 import { authApi } from '../services/authApi';
 import { UserWithRole } from '../types';
+import OpportunityStackedBarChart from '../components/dashboard/BusinessDevelopmentCharts';
 
 import { PermissionType, OpportunityTracking } from '../models';
 import { opportunityApi } from '../services/opportunityApi';
@@ -303,6 +304,8 @@ export const BusinessDevelopment: React.FC = () => {
           </Dialog>
         )}
 
+        <OpportunityStackedBarChart />
+        
         <Divider sx={{ mb: 3 }} />
 
         <Box sx={{ 
@@ -337,8 +340,8 @@ export const BusinessDevelopment: React.FC = () => {
         <OpportunityList
           opportunities={currentOpportunities}
           emptyMessage="No business development opportunities found"
-          onOpportunityDeleted={() => {}}
-          onOpportunityUpdated={() => {}}
+          onOpportunityDeleted={() => fetchOpportunities()}
+          onOpportunityUpdated={() => fetchOpportunities()}
         />
 
         <Box sx={{ 

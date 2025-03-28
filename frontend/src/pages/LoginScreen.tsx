@@ -90,6 +90,7 @@ export const LoginScreen: React.FC = () => {
                     }}
                 >
                     Version 1.3.0
+
                 </Typography>
             </Container>
 

@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.GenericRepository;
+using NJS.Domain.Models;
 using NJS.Domain.UnitWork;
 
 namespace NJS.Domain.Extensions
@@ -33,6 +34,12 @@ namespace NJS.Domain.Extensions
 
             // Register generic repository
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+            services.Configure<EmailSettings>(options =>
+            {
+                configuration.GetSection(EmailSettings.SectionName).Bind(options);
+
+            });
             return services;
         }       
     }

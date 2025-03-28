@@ -72,6 +72,7 @@ namespace NJSAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] GetAllUsersQuery query)
         {
+            query.PageSize = 10000;
             var result = await _mediator.Send(query);
             return Ok(result);
         }

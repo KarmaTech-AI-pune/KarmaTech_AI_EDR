@@ -70,9 +70,9 @@ export const projectApi = {
         startDate: project.startDate || undefined,
         endDate: project.endDate || undefined,
         estimatedCost: Number(project.estimatedCost),
-        projectMangerId: String(project.projectMangerId),
-        seniorProjectMangerId: String(project.seniorProjectMangerId),
-        regionalManagerID: String(project.regionalManagerID)
+        projectManagerId: String(project.projectManagerId),
+        seniorProjectManagerId: String(project.seniorProjectManagerId),
+        regionalManagerId: String(project.regionalManagerId)
       };
 
       projects.push(formattedProject);
@@ -106,9 +106,9 @@ export const projectApi = {
         startDate: project.startDate ? new Date(project.startDate).toISOString() : undefined,
         endDate: project.endDate ? new Date(project.endDate).toISOString() : undefined,
         estimatedCost:  Number(project.estimatedCost),
-        projectMangerId: String(project.projectMangerId),
-        seniorProjectMangerId: String(project.seniorProjectMangerId),
-        regionalManagerID: String(project.regionalManagerID)
+        projectManagerId: String(project.projectManagerId),
+        seniorProjectMangerId: String(project.seniorProjectManagerId),
+        regionalManagerId: String(project.regionalManagerId)
       };
 
       projects[index] = formattedProject;

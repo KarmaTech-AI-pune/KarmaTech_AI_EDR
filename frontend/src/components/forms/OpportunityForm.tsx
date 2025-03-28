@@ -367,8 +367,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       label="BD Manager"
                       required
                     >
-                      {bdManagers.map((manager) => (
-                        <MenuItem key={`bd_manager_${manager.id}`} value={manager.id}>
+                      {bdManagers.map((manager, index) => (
+                        <MenuItem key={`bd_list_${index}_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -385,8 +385,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       label="Review Manager"
                     >
                       <MenuItem value="">None</MenuItem>
-                      {reviewManagers.map((manager) => (
-                        <MenuItem key={`review_manager_${manager.id}`} value={manager.id}>
+                      {reviewManagers.map((manager, index) => (
+                        <MenuItem key={`review_list_${index}_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -403,8 +403,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       label="Approval Manager"
                     >
                       <MenuItem value="">None</MenuItem>
-                      {approvalManagers.map((manager) => (
-                        <MenuItem key={`approval_manager_${manager.id}`} value={manager.id}>
+                      {approvalManagers.map((manager, index) => (
+                        <MenuItem key={`approval_list_${index}_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}

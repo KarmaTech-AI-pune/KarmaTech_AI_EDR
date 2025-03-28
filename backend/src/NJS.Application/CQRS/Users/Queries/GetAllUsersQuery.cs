@@ -8,8 +8,8 @@ namespace NJS.Application.CQRS.Users.Queries
     {
         public string? RoleFilter { get; set; }
         public bool? IsConsultantFilter { get; set; }
-        public int PageNumber { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
+        public int? PageNumber { get; set; } = 1;
+        public int? PageSize { get; set; } = 10;
         public string? SearchTerm { get; set; }
         public string? SortBy { get; set; }
         public bool IsAscending { get; set; } = true;
@@ -21,8 +21,8 @@ namespace NJS.Application.CQRS.Users.Queries
         public GetAllUsersQuery(
             string? roleFilter = null,
             bool? isConsultantFilter = null,
-            int pageNumber = 1,
-            int pageSize = 10,
+            int? pageNumber = null,
+            int? pageSize = null,
             string? searchTerm = null,
             string? sortBy = null,
             bool isAscending = true)

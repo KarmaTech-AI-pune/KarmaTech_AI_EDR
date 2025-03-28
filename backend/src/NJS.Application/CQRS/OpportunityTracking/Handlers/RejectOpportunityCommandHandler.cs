@@ -5,6 +5,8 @@ using NJS.Domain.Enums;
 using NJS.Domain.GenericRepository;
 using NJS.Application.CQRS.OpportunityTracking.Commands;
 using NJS.Application.Services.IContract;
+using Microsoft.AspNetCore.Identity;
+using NJS.Application.CQRS.Email.Notifications;
 
 namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 {
@@ -18,18 +20,24 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
         private readonly IRepository<OpportunityHistory> _historyRepository;
         private readonly IUserContext _userContext;
         private readonly IOpportunityHistoryService _opportunityHistoryService;
+        private readonly IMediator _mediator;
+        private readonly UserManager<User> _userManager;
 
 
         public RejectOpportunityCommandHandler(
             IRepository<Domain.Entities.OpportunityTracking> opportunityRepository,
             IRepository<OpportunityHistory> historyRepository,
             IUserContext userContext,
-            IOpportunityHistoryService opportunityHistoryService)
+            IOpportunityHistoryService opportunityHistoryService,
+            IMediator mediator,
+            UserManager<User> userManager)
         {
             _opportunityRepository = opportunityRepository;
             _historyRepository = historyRepository;
             _userContext = userContext;
             _opportunityHistoryService = opportunityHistoryService;
+            _mediator = mediator;
+            _userManager = userManager;
         }
 
         public async Task<OpportunityTrackingDto> Handle(RejectOpportunityCommand request, CancellationToken cancellationToken)
@@ -60,7 +68,20 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
 
             await _historyRepository.AddAsync(history).ConfigureAwait(false);
             await _historyRepository.SaveChangesAsync();
-          
+
+            // Get the Bid Manager's email and send notification
+            var bidManager = await _userManager.FindByIdAsync(opportunity.BidManagerId);
+            if (bidManager?.Email != null)
+            {
+                await _mediator.Publish(new OpportunityStatusEmailNotification(
+                    opportunity,
+                    _userContext.GetCurrentUserName(),
+                    OpportunityWorkFlowStatus.ReviewChanges,
+                    request.Comments ?? "Opportunity has been rejected and requires review",
+                    bidManager.Email
+                ), cancellationToken);
+            }
+
             // Return updated opportunity
             return new OpportunityTrackingDto
             {
@@ -78,6 +99,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
                 Stage = opportunity.Stage,
                 CurrentHistory = new OpportunityHistoryDto
                 {
+                    StatusId = 3,
                     Action = "Review Changes",
                     Comments = request.Comments,
                     ActionBy = currentUser,
