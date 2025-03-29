@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Paper, Alert, Container } from '@mui/material';
+import { Paper, Alert, Container, CircularProgress, Box } from '@mui/material';
 import { projectManagementAppContext } from '../../App';
-import { WBSStructureAPI, ResourceAPI, WBSOptionsAPI } from '../../dummyapi/wbsApi';
+import { WBSStructureAPI, WBSOptionsAPI } from '../../services/wbsApi';
+import { ResourceAPI } from '../../services/resourceApi';
 import DeleteWBSDialog from '../dialogbox/DeleteWBSDialog';
 import WBSHeader from './WBSformcomponents/WBSHeader';
 import WBSTable from './WBSformcomponents/WBSTable';
 import WBSSummary from './WBSformcomponents/WBSSummary';
-import { WBSOption, WBSRowData} from '../../types/wbs';
+import { WBSOption, WBSRowData } from '../../types/wbs';
+import { resourceRole } from '../../models/resourceRoleModel';
+import { Employee } from '../../models/employeeModel';
 import { FormWrapper } from './FormWrapper';
 
 interface DeleteDialog {
@@ -25,9 +28,10 @@ const WorkBreakdownStructureForm: React.FC = () => {
   const context = useContext(projectManagementAppContext);
   const [rows, setRows] = useState<WBSRowData[]>([]);
   const [months, setMonths] = useState<string[]>([]);
-  const [roles, setRoles] = useState<any[]>([]);
-  const [allEmployees, setAllEmployees] = useState<any[]>([]);
+  const [roles, setRoles] = useState<resourceRole[]>([]);
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
   const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const [editMode, setEditMode] = useState<boolean>(true);
   const [deleteDialog, setDeleteDialog] = useState<DeleteDialog>({
     open: false,
@@ -40,8 +44,9 @@ const WorkBreakdownStructureForm: React.FC = () => {
 
   const loadWBSData = async (projectId: string) => {
     try {
+      setLoading(true);
       const wbsData = await WBSStructureAPI.getProjectWBS(projectId);
-      const transformedRows = wbsData.map((task: any) => ({
+      const transformedRows = wbsData.map((task) => ({
         id: task.id,
         level: task.level,
         title: task.title,
@@ -83,33 +88,53 @@ const WorkBreakdownStructureForm: React.FC = () => {
         });
         setMonths(sortedMonths);
       }
-    } catch (err) {
-      console.error('Error loading WBS data:', err);
+    } catch (error) {
+      console.error('Error loading WBS data:', error);
       setError('Failed to load WBS data');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        // Load WBS options
-        const [l1Options, l2Options, allOptions] = await Promise.all([
-          WBSOptionsAPI.getLevel1Options(),
-          WBSOptionsAPI.getLevel2Options(),
-          WBSOptionsAPI.getAllOptions()
-        ]);
+        setLoading(true);
+        
+        // Load WBS options with better error handling
+        try {
+          const [l1Options, l2Options, allOptions] = await Promise.all([
+            WBSOptionsAPI.getLevel1Options(),
+            WBSOptionsAPI.getLevel2Options(),
+            WBSOptionsAPI.getAllOptions()
+          ]);
 
-        setLevel1Options(l1Options);
-        setLevel2Options(l2Options);
-        setLevel3OptionsMap(allOptions.level3);
+          setLevel1Options(l1Options);
+          setLevel2Options(l2Options);
+          setLevel3OptionsMap(allOptions.level3 || {});
+        } catch (error) {
+          console.error('Error loading WBS options:', error);
+          setError('Failed to load work description options. Please ensure the backend service is running and database is properly configured with WBS options.');
+          // Set empty arrays to prevent null reference errors
+          setLevel1Options([]);
+          setLevel2Options([]);
+          setLevel3OptionsMap({});
+        }
 
         // Load roles and employees
-        const [allRoles, employees] = await Promise.all([
-          ResourceAPI.getAllRoles(),
-          ResourceAPI.getAllEmployees()
-        ]);
-        setRoles(allRoles);
-        setAllEmployees(employees);
+        try {
+          const [allRoles, employees] = await Promise.all([
+            ResourceAPI.getAllRoles(),
+            ResourceAPI.getAllEmployees()
+          ]);
+          setRoles(allRoles);
+          setAllEmployees(employees);
+        } catch (error) {
+          console.error('Error loading roles and employees:', error);
+          setError(prev => prev || 'Failed to load resource roles and employees.');
+          setRoles([]);
+          setAllEmployees([]);
+        }
 
         // Set up initial months only if no data is loaded yet
         const startDate = getProjectStartDate();
@@ -126,15 +151,18 @@ const WorkBreakdownStructureForm: React.FC = () => {
         }
 
         // Load existing WBS data if project is selected
-if (context?.selectedProject?.id) {
+        if (context?.selectedProject?.id) {
           await loadWBSData(context.selectedProject.id.toString());
         }
-      } catch (err) {
-        setError('Failed to load initial data');
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        setError(prev => prev || 'Failed to load initial data');
+      } finally {
+        setLoading(false);
       }
     };
     loadInitialData();
-  }, [context?.selectedProject?.id, lastUpdateTime]);
+  }, [context?.selectedProject?.id, lastUpdateTime, months.length]);
 
   const getProjectStartDate = () => {
     if (!context?.selectedProject) return null;
@@ -222,7 +250,8 @@ if (context?.selectedProject?.id) {
     if (deleteDialog.rowId && context?.selectedProject?.id) {
       try {
         setRows(rows.filter(row => row.id !== deleteDialog.rowId));
-      } catch (err) {
+      } catch (error) {
+        console.error('Error deleting WBS task:', error);
         setError('Failed to delete WBS task');
       }
     }
@@ -258,7 +287,8 @@ if (context?.selectedProject?.id) {
           return row;
         }));
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Error getting employee details:', error);
       setError('Failed to get employee details');
     }
   };
@@ -350,8 +380,16 @@ if (context?.selectedProject?.id) {
 
   const handleSubmit = async () => {
     try {
+      setLoading(true);
       if (!context?.selectedProject?.id) {
         setError('No project selected. Please select a project first.');
+        return;
+      }
+
+      // Validate that all tasks have titles
+      const emptyTitleTasks = rows.filter(row => !row.title);
+      if (emptyTitleTasks.length > 0) {
+        setError('All tasks must have a work description selected. Please select a value for each task.');
         return;
       }
 
@@ -364,10 +402,17 @@ if (context?.selectedProject?.id) {
       setLastUpdateTime(Date.now());
       alert('WBS data saved successfully!');
       setError('');
-    } catch (err) {
-      console.error('Complete Submit Error:', err);
-      setError('Failed to save WBS data');
-    } 
+    } catch (error: unknown) {
+      console.error('Complete Submit Error:', error);
+      // Display more specific error message if available
+      if (error instanceof Error) {
+        setError(`Failed to save WBS data: ${error.message}`);
+      } else {
+        setError('Failed to save WBS data. Please check that all required fields are filled correctly.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const calculateOverallTotals = () => {
@@ -377,6 +422,17 @@ if (context?.selectedProject?.id) {
       totalCost: level3Rows.reduce((sum, row) => sum + row.totalCost, 0)
     };
   };
+  // Loading indicator
+  if (loading) {
+    return (
+      <FormWrapper>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      </FormWrapper>
+    );
+  }
+
   const formContent = (
     <Container 
       maxWidth={false}
