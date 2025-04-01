@@ -167,7 +167,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
       }
     };
     loadInitialData();
-  }, [context?.selectedProject?.id, lastUpdateTime, months.length]);
+  }, [context?.selectedProject?.id, lastUpdateTime]);
 
   const getProjectStartDate = () => {
     if (!context?.selectedProject) return null;
