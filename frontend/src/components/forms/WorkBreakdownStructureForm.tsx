@@ -64,13 +64,18 @@ const WorkBreakdownStructureForm: React.FC = () => {
       
       // Calculate the number of months from the data
       const allMonths = new Set<string>();
-      transformedRows.forEach(row => {
-        const monthlyHours = row.monthlyHours as MonthlyHours;
-        Object.entries(monthlyHours).forEach(([year, monthData]) => {
-          Object.keys(monthData).forEach(month => {
-            allMonths.add(`${month} ${year.slice(2)}`);
+      transformedRows.forEach((row) => {
+        // Check if monthlyHours exists and is an array
+        if (row.monthlyHours && Array.isArray(row.monthlyHours)) {
+          row.monthlyHours.forEach((monthData) => {
+            // Each monthData has year, month, and plannedHours
+            if (monthData.year && monthData.month) {
+              // Format as "Month YY" (e.g., "March 25")
+              const yearStr = monthData.year.toString().slice(2); // Get last 2 digits
+              allMonths.add(`${monthData.month} ${yearStr}`);
+            }
           });
-        });
+        }
       });
 
       if (allMonths.size > 0) {
