@@ -75,10 +75,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 // otherwise, manually handle UserWBSTasks and MonthlyHours if needed.
             }
 
-            // --- 3. Handle Additions and Updates ---
-            // Dictionary to map temporary frontend IDs (if any) to newly created task entities
-            // For now, assuming Id=0 means new, so no complex mapping needed yet.
+            // --- 3. Handle Additions and Updates (Two-Pass Save Logic) ---
+            var tempIdToNewEntityMap = new Dictionary<string, WBSTask>();
+            var newChildToTempParentIdMap = new Dictionary<WBSTask, string>();
+            var allProcessedEntities = new List<WBSTask>(); // Keep track of entities processed in pass 1
 
+            // --- Pass 1: Create/Update Entities, Identify Relationships for New Tasks ---
             foreach (var taskDto in incomingTasksDto)
             {
                 WBSTask taskEntity;
@@ -92,8 +94,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     // Map basic properties
                     taskEntity.Title = taskDto.Title;
                     taskEntity.Description = taskDto.Description;
-                    taskEntity.Level = taskDto.Level; // No cast needed now
-                    taskEntity.ParentId = taskDto.ParentId; // Assuming ParentId from DTO is correct DB ID
+                    taskEntity.Level = taskDto.Level;
+                    // ParentId from DTO should be correct if parent already exists
+                    taskEntity.ParentId = taskDto.ParentId;
                     taskEntity.DisplayOrder = taskDto.DisplayOrder;
                     taskEntity.EstimatedBudget = taskDto.EstimatedBudget;
                     taskEntity.StartDate = taskDto.StartDate;
@@ -107,8 +110,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                     // Update Monthly Hours
                     UpdateMonthlyHours(taskEntity, taskDto);
+
+                    allProcessedEntities.Add(taskEntity); // Track processed entity
                 }
-                else
+                else // Id == 0, means new task
                 {
                     // --- Add New Task ---
                     taskEntity = new WBSTask
@@ -116,8 +121,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         WorkBreakdownStructure = wbs, // Associate with the WBS
                         Title = taskDto.Title,
                         Description = taskDto.Description,
-                        Level = taskDto.Level, // No cast needed now
-                        ParentId = taskDto.ParentId, // Assuming ParentId from DTO is correct DB ID
+                        Level = taskDto.Level,
+                        // ParentId might be null if parent is also new, or set if parent exists
+                        ParentId = taskDto.ParentId,
                         DisplayOrder = taskDto.DisplayOrder,
                         EstimatedBudget = taskDto.EstimatedBudget,
                         StartDate = taskDto.StartDate,
@@ -136,16 +142,65 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     UpdateMonthlyHours(taskEntity, taskDto); // Use the same logic
 
                     _context.WBSTasks.Add(taskEntity);
-                    // Add to the WBS collection manually if EF Core doesn't do it automatically
-                    if (!wbs.Tasks.Contains(taskEntity))
+                    if (!wbs.Tasks.Contains(taskEntity)) // Ensure association
                     {
                         wbs.Tasks.Add(taskEntity);
+                    }
+                    allProcessedEntities.Add(taskEntity); // Track processed entity
+
+                    // Store mapping for new tasks using their temporary frontend ID
+                    if (!string.IsNullOrEmpty(taskDto.FrontendTempId))
+                    {
+                        tempIdToNewEntityMap[taskDto.FrontendTempId] = taskEntity;
+                    }
+
+                    // If the parent is also new (indicated by ParentFrontendTempId), store for Pass 2
+                    if (!string.IsNullOrEmpty(taskDto.ParentFrontendTempId))
+                    {
+                        newChildToTempParentIdMap[taskEntity] = taskDto.ParentFrontendTempId;
+                        taskEntity.ParentId = null; // Ensure ParentId is null for the first save
                     }
                 }
             }
 
-            // --- 4. Save Changes ---
-            await _unitOfWork.SaveChangesAsync(); // Use correct method name
+            // --- 4. Save Changes (Pass 1) ---
+            // This save generates real IDs for all newly added entities
+            await _unitOfWork.SaveChangesAsync();
+
+            // --- 5. Pass 2: Link New Children to New Parents ---
+            bool requiresSecondSave = false;
+            foreach (var kvp in newChildToTempParentIdMap)
+            {
+                var childEntity = kvp.Key;
+                var tempParentId = kvp.Value;
+
+                if (tempIdToNewEntityMap.TryGetValue(tempParentId, out var parentEntity))
+                {
+                    // Check if parentEntity has a valid ID (should have after Save 1)
+                    if (parentEntity.Id > 0)
+                    {
+                        childEntity.ParentId = parentEntity.Id;
+                        requiresSecondSave = true;
+                    }
+                    else
+                    {
+                        // Log or handle error: Parent entity was found but has no valid ID after first save
+                        Console.Error.WriteLine($"Error: Parent entity for temp ID {tempParentId} did not get a valid DB ID.");
+                    }
+                }
+                else
+                {
+                    // Log or handle error: Parent entity not found for temp ID
+                     Console.Error.WriteLine($"Error: Parent entity not found for temp ID {tempParentId}. Cannot link child {childEntity.Title}.");
+                }
+            }
+
+            // --- 6. Save Changes (Pass 2) ---
+            // This save persists the ParentId links established in Pass 2
+            if (requiresSecondSave)
+            {
+                await _unitOfWork.SaveChangesAsync();
+            }
 
             return Unit.Value;
         }

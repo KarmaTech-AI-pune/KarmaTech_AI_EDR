@@ -31,6 +31,11 @@ namespace NJS.Application.Dtos
         public double TotalHours { get; set; }
         public decimal TotalCost { get; set; }
 
+        // Used to map parent/child relationships for newly created tasks
+        public string? FrontendTempId { get; set; }
+        // If the parent task is also new, this holds the parent's temporary frontend ID
+        public string? ParentFrontendTempId { get; set; }
+
         // Flag to indicate if this DTO represents a new task (frontend might not send Id=0)
         // public bool IsNew { get; set; } // Optional: Could help backend diffing logic
     }
