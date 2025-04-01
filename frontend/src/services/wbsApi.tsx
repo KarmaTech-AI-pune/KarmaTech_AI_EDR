@@ -27,10 +27,11 @@ export const WBSStructureAPI = {
   setProjectWBS: async (projectId: string, wbsData: WBSRowData[]): Promise<void> => {
     try {
       // Sort the data by level to ensure we process parent items first
-      const sortedData = [...wbsData].sort((a, b) => a.level - b.level);
-      
+      // Create a map of temporary IDs for quick lookup
+      const tempIdMap = new Map(wbsData.map(row => [row.id, row]));
+
       // Helper function to convert WBSRowData to backend format
-      const transformRowToBackendFormat = (row: WBSRowData, realParentId: number | null = null) => {
+      const transformRowToBackendFormat = (row: WBSRowData) => {
         // Convert monthly hours from object to array format
         const monthlyHours: Array<{Year: number, Month: string, PlannedHours: number}> = [];
         Object.entries(row.monthlyHours).forEach(([year, months]) => {
@@ -43,13 +44,40 @@ export const WBSStructureAPI = {
           });
         });
 
-        // Check if ID is a large number (likely a frontend-generated timestamp)
-        const isTemporaryId = !row.id || row.id.length > 10; // Simple check for large IDs or empty IDs
-        
+        // Check if the current row's ID is temporary
+        const isTemporaryId = !row.id || isNaN(parseInt(row.id)) || row.id.length > 10; // More robust check
+
+        let realParentId: number | null = null;
+        let parentFrontendTempId: string | null = null;
+
+        if (row.parentId) {
+          const parentRow = tempIdMap.get(row.parentId);
+          if (parentRow) {
+            // Check if the parent's ID is also temporary
+            const isParentTemporaryId = !parentRow.id || isNaN(parseInt(parentRow.id)) || parentRow.id.length > 10;
+            if (isParentTemporaryId) {
+              // Parent is new, send its temporary ID
+              parentFrontendTempId = row.parentId;
+              realParentId = null; // Set real ParentId to null
+            } else {
+              // Parent exists, send its real ID
+              realParentId = parseInt(row.parentId);
+              parentFrontendTempId = null;
+            }
+          } else {
+             // Parent ID exists but not found in current data (should ideally not happen if data is consistent)
+             // Attempt to parse it as a real ID, otherwise nullify
+             realParentId = !isNaN(parseInt(row.parentId)) ? parseInt(row.parentId) : null;
+             parentFrontendTempId = null;
+          }
+        }
+
         // Transform the row data to match WBSTaskDto
         return {
-          Id: isTemporaryId ? 0 : parseInt(row.id) || 0, // Use 0 for new tasks with temporary IDs
-          ParentId: realParentId, // Use the provided real parent ID
+          Id: isTemporaryId ? 0 : parseInt(row.id), // Use 0 for new tasks
+          FrontendTempId: isTemporaryId ? row.id : null, // Send temp ID if new
+          ParentId: realParentId,
+          ParentFrontendTempId: parentFrontendTempId,
           Level: row.level,
           Title: row.title,
           AssignedUserId: row.name,
@@ -67,36 +95,8 @@ export const WBSStructureAPI = {
         };
       };
 
-      // Group tasks by level
-      const level1Tasks = sortedData.filter(row => row.level === 1);
-      const level2Tasks = sortedData.filter(row => row.level === 2);
-      const level3Tasks = sortedData.filter(row => row.level === 3);
-      
-      // Process all tasks in a single request, but ensure proper parent-child relationships
-      const transformedData = [];
-      
-      // Process level 1 tasks first (these have no parents)
-      for (const task of level1Tasks) {
-        transformedData.push(transformRowToBackendFormat(task, null));
-      }
-      
-      // Process level 2 tasks - all level 2 tasks will have the first level 1 task as parent
-      if (level1Tasks.length > 0) {
-        // For level 2 tasks, we'll set all their ParentId to null
-        // The backend will handle the parent-child relationship based on the task level
-        for (const task of level2Tasks) {
-          transformedData.push(transformRowToBackendFormat(task, null));
-        }
-      }
-      
-      // Process level 3 tasks - all level 3 tasks will have the first level 2 task as parent
-      if (level2Tasks.length > 0) {
-        // For level 3 tasks, we'll set all their ParentId to null
-        // The backend will handle the parent-child relationship based on the task level
-        for (const task of level3Tasks) {
-          transformedData.push(transformRowToBackendFormat(task, null));
-        }
-      }
+      // Process all tasks using the updated transform function
+      const transformedData = wbsData.map(task => transformRowToBackendFormat(task));
 
       console.log("Sending transformed WBS data:", JSON.stringify(transformedData, null, 2));
       
