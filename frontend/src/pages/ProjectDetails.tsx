@@ -150,21 +150,6 @@ export const ProjectDetails: React.FC = () => {
 
   const formSections = [
     {
-      id: 'feasibilityStudy',
-      title: 'PMD0. Feasibility Study',
-      icon: <AssessmentOutlinedIcon />,
-      component: <FeasibilityStudyForm 
-        projectId={typeof context.selectedProject?.id === 'string' 
-          ? parseInt(context.selectedProject.id, 10) 
-          : context.selectedProject?.id || 0
-        }
-        onSubmitSuccess={() => {
-          // Placeholder for future implementation
-          console.log('Feasibility study submitted');
-        }} 
-      />
-    },
-    {
       id: 'wbs',
       title: 'PMD2. Work Breakdown Structure',
       icon: <TaskIcon />,
