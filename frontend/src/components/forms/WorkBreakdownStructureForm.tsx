@@ -24,7 +24,7 @@ interface MonthlyHours {
   };
 }
 
-const WorkBreakdownStructureForm: React.FC = () => {
+const WorkBreakdownStructureForm: React.FC<{}> = () => {
   const context = useContext(projectManagementAppContext);
   const [rows, setRows] = useState<WBSRowData[]>([]);
   const [months, setMonths] = useState<string[]>([]);
@@ -46,31 +46,75 @@ const WorkBreakdownStructureForm: React.FC = () => {
     try {
       setLoading(true);
       const wbsData = await WBSStructureAPI.getProjectWBS(projectId);
-      const transformedRows = wbsData.map((task) => ({
+      const transformedRows = wbsData.map((task) => {
+        // Transform monthlyHours from potential array to nested object
+        const transformedMonthlyHours: MonthlyHours = {};
+        if (task.monthlyHours && Array.isArray(task.monthlyHours)) {
+          task.monthlyHours.forEach((monthEntry: any) => {
+            if (monthEntry && typeof monthEntry === 'object' && monthEntry.year && monthEntry.month && typeof monthEntry.plannedHours === 'number') {
+              const yearStr = monthEntry.year.toString();
+              const monthName = monthEntry.month;
+              if (!transformedMonthlyHours[yearStr]) {
+                transformedMonthlyHours[yearStr] = {};
+              }
+              transformedMonthlyHours[yearStr][monthName] = monthEntry.plannedHours;
+            }
+          });
+        } else if (task.monthlyHours && typeof task.monthlyHours === 'object') {
+          // Assume it's already in the correct format or handle other potential formats
+          Object.assign(transformedMonthlyHours, task.monthlyHours);
+      }
+
+      return {
         id: task.id,
         level: task.level,
         title: task.title,
-        role: task.role?.toString() || null,
-        name: task.name?.toString() || null,
+          role: task.assignedUserId || null,
+          name: task.assignedUserId?.toString() || null,
         costRate: task.costRate || 0,
-        monthlyHours: (task.monthlyHours || {}) as MonthlyHours,
+          monthlyHours: transformedMonthlyHours,
         odc: task.odc || 0,
         totalHours: task.totalHours || 0,
         totalCost: task.totalCost || 0,
-        parentId: task.parentId
-      }));
+        parentId: task.parentId,
+      };
+      });
 
-      setRows(transformedRows);
-      
-      // Calculate the number of months from the data
+      const fetchRoles = async () => {
+        const rowsWithRoles = await Promise.all(
+          transformedRows.map(async (row) => {
+            if (row.role) {
+              try {
+                const employee = await ResourceAPI.getEmployeeById(row.role);
+                return {
+                  ...row,
+                  role: employee?.role_id || null,
+                };
+              } catch (error) {
+                console.error("Error fetching employee details:", error);
+                return row;
+              }
+            }
+            return row;
+          })
+        );
+        setRows(rowsWithRoles);
+      };
+
+      fetchRoles();
+
+      // Calculate the number of months from the *transformed* data
       const allMonths = new Set<string>();
-      transformedRows.forEach(row => {
-        const monthlyHours = row.monthlyHours as MonthlyHours;
-        Object.entries(monthlyHours).forEach(([year, monthData]) => {
-          Object.keys(monthData).forEach(month => {
-            allMonths.add(`${month} ${year.slice(2)}`);
+      transformedRows.forEach((row) => {
+        // Now iterate through the nested object structure
+        if (row.monthlyHours) {
+          Object.keys(row.monthlyHours).forEach(year => {
+            const yearStr = year.slice(2); // Get last 2 digits
+            Object.keys(row.monthlyHours[year]).forEach(monthName => {
+              allMonths.add(`${monthName} ${yearStr}`);
+            });
           });
-        });
+        }
       });
 
       if (allMonths.size > 0) {
@@ -162,7 +206,7 @@ const WorkBreakdownStructureForm: React.FC = () => {
       }
     };
     loadInitialData();
-  }, [context?.selectedProject?.id, lastUpdateTime, months.length]);
+  }, [context?.selectedProject?.id, lastUpdateTime]);
 
   const getProjectStartDate = () => {
     if (!context?.selectedProject) return null;
