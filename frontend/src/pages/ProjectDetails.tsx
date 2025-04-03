@@ -127,16 +127,12 @@ export const ProjectDetails: React.FC = () => {
     }
   };
 
-  const handleFormClick = (formId: string) => {
+ const handleFormClick = (formId: string) => {
     const form = formSections.find(f => f.id === formId);
-    
+
     if (form?.subItems) {
       // If the form has sub-items, toggle its expanded state
       setExpandedForm(expandedForm === formId ? null : formId);
-      // Only set as selected form if it was already expanded (meaning we're collapsing it now)
-      if (expandedForm === formId) {
-        setSelectedForm(formId);
-      }
     } else {
       // If it's a regular form without sub-items, select it directly
       setSelectedForm(formId);
@@ -166,9 +162,8 @@ export const ProjectDetails: React.FC = () => {
   const formSections = [
     {
       id: 'wbs',
-      title: 'PMD2. Work Breakdown Structure',
+      title: 'PMD1. Work Breakdown Structure',
       icon: <TaskIcon />,
-      component: <WorkBreakdownStructureForm />,
       subItems: [
         {
           id: 'labourForm',
@@ -186,7 +181,7 @@ export const ProjectDetails: React.FC = () => {
     },
     {
       id: 'jobStart',
-      title: 'PMD1. Job Start Form',
+      title: 'PMD2. Job Start Form',
       icon: <AssignmentIcon />,
       component: <JobStartForm />
     },

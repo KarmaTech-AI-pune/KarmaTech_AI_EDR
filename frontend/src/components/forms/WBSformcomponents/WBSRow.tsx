@@ -64,6 +64,7 @@ interface WBSRowProps {
   roles: Role[];
   employees: Employee[];
   editMode: boolean;
+  formType?: 'labour' | 'odc';
   levelOptions: WBSOption[];
   childTotals: WBSChildTotals | null;
   sequenceNumber: string;
@@ -83,6 +84,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
   roles,
   employees,
   editMode,
+  formType,
   levelOptions,
   childTotals,
   sequenceNumber,
@@ -256,77 +258,136 @@ const WBSRow: React.FC<WBSRowProps> = ({
           )}
         </TableCell>
       ))}
-      <TableCell>
-        {row.level === 3 ? (
-          <NumberInput
-            type="number"
-            value={row.odc || ''}
-            onChange={(e) => onODCChange(row.id, e.target.value)}
-            min="0"
-            style={{
-              backgroundColor: editMode ? '#f5f5f5' : 'white'
-            }}
-            disabled={editMode}
-          />
-        ) : childTotals ? (
-          <NumberInput
-            type="number"
-            value={childTotals.odc || ''}
-            readOnly
-            style={{
-              backgroundColor: '#f5f5f5'
-            }}
-          />
-        ) : (
-          <Box sx={{ height: '40px' }} />
-        )}
-      </TableCell>
-      <TableCell>
-        {row.level === 3 ? (
-          <NumberInput
-            type="number"
-            value={row.totalHours}
-            readOnly
-            style={{
-              backgroundColor: '#f5f5f5'
-            }}
-          />
-        ) : childTotals ? (
-          <NumberInput
-            type="number"
-            value={childTotals.totalHours || ''}
-            readOnly
-            style={{
-              backgroundColor: '#f5f5f5'
-            }}
-          />
-        ) : (
-          <Box sx={{ height: '40px' }} />
-        )}
-      </TableCell>
-      <TableCell>
-        {row.level === 3 ? (
-          <NumberInput
-            type="number"
-            value={row.totalCost}
-            readOnly
-            style={{
-              backgroundColor: '#f5f5f5'
-            }}
-          />
-        ) : childTotals ? (
-          <NumberInput
-            type="number"
-            value={childTotals.totalCost || ''}
-            readOnly
-            style={{
-              backgroundColor: '#f5f5f5'
-            }}
-          />
-        ) : (
-          <Box sx={{ height: '40px' }} />
-        )}
-      </TableCell>
+      {formType === 'odc' ? (
+        <>
+          <TableCell>
+            {row.level === 3 ? (
+              <NumberInput
+                type="number"
+                value={row.odcHours || ''}
+                onChange={(e) => onHoursChange(row.id, 'odcHours', e.target.value)}
+                min="0"
+                style={{
+                  backgroundColor: editMode ? '#f5f5f5' : 'white'
+                }}
+                disabled={editMode}
+              />
+            ) : childTotals ? (
+              <NumberInput
+                type="number"
+                value={childTotals.odcHours || ''}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : (
+              <Box sx={{ height: '40px' }} />
+            )}
+          </TableCell>
+          <TableCell>
+            {row.level === 3 ? (
+              <NumberInput
+                type="number"
+                value={row.odc || ''}
+                onChange={(e) => onODCChange(row.id, e.target.value)}
+                min="0"
+                style={{
+                  backgroundColor: editMode ? '#f5f5f5' : 'white'
+                }}
+                disabled={editMode}
+              />
+            ) : childTotals ? (
+              <NumberInput
+                type="number"
+                value={childTotals.odc || ''}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : (
+              <Box sx={{ height: '40px' }} />
+            )}
+          </TableCell>
+        </>
+      ) : (
+        <>
+          {formType !== 'labour' && (
+            <TableCell>
+              {row.level === 3 ? (
+                <NumberInput
+                  type="number"
+                  value={row.odc || ''}
+                  onChange={(e) => onODCChange(row.id, e.target.value)}
+                  min="0"
+                  style={{
+                    backgroundColor: editMode ? '#f5f5f5' : 'white'
+                  }}
+                  disabled={editMode}
+                />
+              ) : childTotals ? (
+                <NumberInput
+                  type="number"
+                  value={childTotals.odc || ''}
+                  readOnly
+                  style={{
+                    backgroundColor: '#f5f5f5'
+                  }}
+                />
+              ) : (
+                <Box sx={{ height: '40px' }} />
+              )}
+            </TableCell>
+          )}
+          <TableCell>
+            {row.level === 3 ? (
+              <NumberInput
+                type="number"
+                value={row.totalHours}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : childTotals ? (
+              <NumberInput
+                type="number"
+                value={childTotals.totalHours || ''}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : (
+              <Box sx={{ height: '40px' }} />
+            )}
+          </TableCell>
+          <TableCell>
+            {row.level === 3 ? (
+              <NumberInput
+                type="number"
+                value={row.totalCost}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : childTotals ? (
+              <NumberInput
+                type="number"
+                value={childTotals.totalCost || ''}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : (
+              <Box sx={{ height: '40px' }} />
+            )}
+          </TableCell>
+        </>
+      )}
     </TableRow>
   );
 };

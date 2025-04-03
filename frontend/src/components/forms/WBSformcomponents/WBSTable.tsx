@@ -59,6 +59,7 @@ interface WBSTableProps {
   roles: ResourceRole[];
   employees: Employee[];
   editMode: boolean;
+  formType?: 'labour' | 'odc';
   levelOptions: {
     level1: WBSOption[];
     level2: WBSOption[];
@@ -80,6 +81,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
   roles,
   employees,
   editMode,
+  formType,
   levelOptions,
   onAddRow,
   onDeleteRow,
@@ -106,6 +108,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
       monthlyHours: {} as { [key: string]: { [key: string]: number } },
       totalHours: 0,
       odc: 0,
+      odcHours: 0,
       totalCost: 0
     };
 
@@ -123,6 +126,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
       
       totals.totalHours += child.totalHours;
       totals.odc += child.odc;
+      totals.odcHours += child.odcHours || 0;
       totals.totalCost += child.totalCost;
     });
 
@@ -143,12 +147,27 @@ const WBSTable: React.FC<WBSTableProps> = ({
   };
 
   const renderAddButton = (level: 1 | 2 | 3, parentId?: string): JSX.Element => {
+    // Calculate colspan based on formType
+    let colspan = 5 + months.length; // Base columns: Work Description, Role, Name, Rate, months
+    
+    if (!editMode) {
+      colspan += 1; // Add 1 for the delete button column
+    }
+    
+    if (formType === 'odc') {
+      colspan += 2; // Add 2 for ODC Hours and ODC Cost
+    } else if (formType === 'labour') {
+      colspan += 2; // Add 2 for Total Hours and Total Cost
+    } else {
+      colspan += 3; // Add 3 for ODCs, Total Hours, and Total Cost
+    }
+    
     return (
       <AddButtonRow
         key={`add-button-level-${level}${parentId ? `-parent-${parentId}` : ''}`}
       >
         <TableCell 
-          colSpan={editMode ? 8 + months.length : 9 + months.length}
+          colSpan={colspan}
           sx={{ bgcolor: getLevelColor(level) }}
         >
           <Button
@@ -226,6 +245,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
           roles={roles}
           employees={employees}
           editMode={editMode}
+          formType={formType}
           levelOptions={getLevelOptions(level1Row)}
           childTotals={calculateChildTotals(level1Row)}
           sequenceNumber={getSequenceNumber(level1Row)}
@@ -250,6 +270,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             roles={roles}
             employees={employees}
             editMode={editMode}
+            formType={formType}
             levelOptions={getLevelOptions(level2Row)}
             childTotals={calculateChildTotals(level2Row)}
             sequenceNumber={getSequenceNumber(level2Row)}
@@ -274,6 +295,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
               roles={roles}
               employees={employees}
               editMode={editMode}
+              formType={formType}
               levelOptions={getLevelOptions(level3Row)}
               childTotals={null}
               sequenceNumber={getSequenceNumber(level3Row)}
@@ -330,9 +352,20 @@ const WBSTable: React.FC<WBSTableProps> = ({
             {months.map(month => (
               <HeaderCell key={month} sx={{ minWidth: 100 }}>{month}</HeaderCell>
             ))}
-            <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODCs</SummaryHeaderCell>
-            <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Hours</SummaryHeaderCell>
-            <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Cost</SummaryHeaderCell>
+            {formType === 'odc' ? (
+              <>
+                <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODC Hours</SummaryHeaderCell>
+                <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODC Cost</SummaryHeaderCell>
+              </>
+            ) : (
+              <>
+                {formType !== 'labour' && (
+                  <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODCs</SummaryHeaderCell>
+                )}
+                <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Hours</SummaryHeaderCell>
+                <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Cost</SummaryHeaderCell>
+              </>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>

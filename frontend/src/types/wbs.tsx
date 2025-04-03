@@ -12,6 +12,7 @@ export interface WBSRowData {
   costRate: number;
   monthlyHours: { [key: string]: { [key: string]: number } };
   odc: number;
+  odcHours?: number;
   totalHours: number;
   totalCost: number;
   parentId?: string | null;
@@ -22,5 +23,6 @@ export interface WBSChildTotals {
   monthlyHours: { [key: string]: { [key: string]: number } };
   totalHours: number;
   odc: number;
+  odcHours?: number;
   totalCost: number;
 }

@@ -12,6 +12,10 @@ import { resourceRole } from '../../models/resourceRoleModel';
 import { Employee } from '../../models/employeeModel';
 import { FormWrapper } from './FormWrapper';
 
+interface WorkBreakdownStructureFormProps {
+  formType?: 'labour' | 'odc';
+}
+
 interface DeleteDialog {
   open: boolean;
   rowId?: string;
@@ -24,7 +28,7 @@ interface MonthlyHours {
   };
 }
 
-const WorkBreakdownStructureForm: React.FC<{}> = () => {
+const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({ formType }) => {
   const context = useContext(projectManagementAppContext);
   const [rows, setRows] = useState<WBSRowData[]>([]);
   const [months, setMonths] = useState<string[]>([]);
@@ -263,6 +267,7 @@ const WorkBreakdownStructureForm: React.FC<{}> = () => {
       costRate: 0,
       monthlyHours: {},
       odc: 0,
+      odcHours: 0,
       totalHours: 0,
       totalCost: 0,
       parentId: parentId || null
@@ -371,6 +376,23 @@ const WorkBreakdownStructureForm: React.FC<{}> = () => {
   };
 
   const handleHoursChange = (rowId: string, month: string, value: string) => {
+    // Special case for odcHours
+    if (month === 'odcHours') {
+      const hours = value === '' ? 0 : Math.max(parseInt(value) || 0, 0);
+      
+      setRows(rows.map(row => {
+        if (row.id === rowId) {
+          return {
+            ...row,
+            odcHours: hours
+          };
+        }
+        return row;
+      }));
+      return;
+    }
+    
+    // Regular monthly hours
     const hours = value === '' ? 0 : Math.min(Math.max(parseInt(value) || 0, 0), 160);
     
     setRows(rows.map(row => {
@@ -507,6 +529,7 @@ const WorkBreakdownStructureForm: React.FC<{}> = () => {
           roles={roles}
           employees={allEmployees}
           editMode={editMode}
+          formType={formType}
           levelOptions={{
             level1: level1Options,
             level2: level2Options,
