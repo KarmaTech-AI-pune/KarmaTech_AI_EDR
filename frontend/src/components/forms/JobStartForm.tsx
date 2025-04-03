@@ -14,7 +14,10 @@ import {
   Container,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Button,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
@@ -103,6 +106,10 @@ const JobStartForm: React.FC = () => {
   const [employeeAllocations, setEmployeeAllocations] = useState<EmployeeAllocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
   const [timeContingency, setTimeContingency] = useState<TimeContingencyEntry>({
     rate: '',
@@ -333,6 +340,59 @@ const JobStartForm: React.FC = () => {
     const fees = Number(projectFees) || 0;
     const tax = calculateServiceTax();
     return fees + tax;
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setSubmitting(true);
+      
+      // Collect all form data
+      const formData = {
+        projectId: context?.selectedProject?.id,
+        time: {
+          employeeAllocations,
+          timeContingency,
+          totalTimeCost: calculateTotalTimeCost()
+        },
+        expenses: {
+          regularExpenses: expenses,
+          surveyWorks,
+          outsideAgency,
+          projectSpecific,
+          totalExpenses: calculateExpensesTotal()
+        },
+        grandTotal: calculateGrandTotal(),
+        projectFees: Number(projectFees),
+        serviceTax: {
+          percentage: Number(serviceTax.percentage),
+          amount: calculateServiceTax()
+        },
+        totalProjectFees: calculateTotalProjectFees(),
+        profit: calculateProfit()
+      };
+      
+      // For demonstration purposes, log the data to console
+      console.log('Job Start Form Data:', formData);
+      
+      // Simulate API call with timeout
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Show success message
+      setSnackbarMessage('Job Start Form submitted successfully');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSnackbarMessage('Failed to submit Job Start Form');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   if (loading) {
@@ -1003,6 +1063,33 @@ fullWidth
               </Table>
             </TableContainer>
           </Box>
+
+          {/* Submit Button */}
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              onClick={handleSubmit}
+              disabled={submitting}
+              sx={{
+                px: 4,
+                py: 1.5,
+                borderRadius: 1,
+                fontWeight: 'bold',
+                boxShadow: 2
+              }}
+            >
+              {submitting ? (
+                <>
+                  <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
+                  Submitting...
+                </>
+              ) : (
+                'Submit'
+              )}
+            </Button>
+          </Box>
         </Paper>
       </Box>
     </Container>
@@ -1010,9 +1097,26 @@ fullWidth
 
   return (
     <FormWrapper>
-        {formContent}
+      {formContent}
+      
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </FormWrapper>
-);
+  );
 };
 
 export default JobStartForm;
