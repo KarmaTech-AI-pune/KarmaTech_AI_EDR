@@ -98,7 +98,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
   const roleId = row.role ? row.role : null;
   const selectedRole = roleId !== null ? roles.find(r => r.id === roleId) : undefined;
   const rateTooltip = selectedRole ? `Min Rate: ${selectedRole.min_rate}` : '';
-  const employeesForRole = roleId !== null ? employees.filter(emp => emp.role_id === roleId) : [];
+  const employeesForRole = employees;
 
   const getMonthlyHours = (month: string): string => {
     const [monthName, yearStr] = month.split(' ');
