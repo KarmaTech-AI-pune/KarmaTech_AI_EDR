@@ -24,12 +24,12 @@ namespace NJS.Application.Extensions
             services.AddScoped<IFeasibilityStudyRepository, FeasibilityStudyRepository>();
             services.AddScoped<IWorkBreakdownStructureRepository, WorkBreakdownStructureRepository>();
             services.AddScoped<IWBSOptionRepository, WBSOptionRepository>();
+            services.AddScoped<IJobStartFormRepository, JobStartFormRepository>();
             services.AddScoped<IGoNoGoDecisionRepository, GoNoGoDecisionRepository>();
             services.AddScoped<IOpportunityTrackingRepository, OpportunityTrackingRepository>();
             services.AddScoped<IPermissionRepository, PermissionRepository>();
             services.AddScoped<IOpportunityHistoryRepository, OpportunityHistoryRepository>();
             services.AddScoped<IBidPreparationRepository, BidPreparationRepository>();
-
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();

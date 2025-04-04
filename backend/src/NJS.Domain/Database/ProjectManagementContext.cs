@@ -40,6 +40,8 @@ namespace NJS.Domain.Database
         public DbSet<ScoringDescriptionSummarry> ScoringDescriptionSummarry { get; set; }
         public DbSet<GoNoGoDecisionHeader> GoNoGoDecisionHeaders { get; set; }
         public DbSet<GoNoGoDecisionTransaction> GoNoGoDecisionTransactions { get; set; }
+        public DbSet<JobStartForm> JobStartForms { get; set; }
+        public DbSet<JobStartFormSelection> JobStartFormSelections { get; set; } // Add DbSet for Selections
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -203,8 +205,40 @@ namespace NJS.Domain.Database
                 // Configure relationship with WorkBreakdownStructure
                 entity.HasOne(t => t.WorkBreakdownStructure)
                       .WithMany(w => w.Tasks)
-                      .HasForeignKey(t => t.WorkBreakdownStructureId)
-                      .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+                  .HasForeignKey(t => t.WorkBreakdownStructureId)
+                  .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+            });
+
+            // Configure JobStartForm entity
+            modelBuilder.Entity<JobStartForm>(entity =>
+            {
+                entity.HasKey(e => e.FormId);
+
+                entity.HasOne(jsf => jsf.Project)
+                      .WithMany() // Assuming Project doesn't have a direct collection of JobStartForms
+                      .HasForeignKey(jsf => jsf.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade); // Or Restrict depending on requirements
+
+                entity.HasOne(jsf => jsf.WorkBreakdownStructure)
+                      .WithMany() // Assuming WBS doesn't have a direct collection of JobStartForms
+                      .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
+                      .IsRequired(false) // Make the WBS link optional
+                      .OnDelete(DeleteBehavior.SetNull); // Or Restrict/Cascade
+
+                entity.HasMany(jsf => jsf.Selections)
+                      .WithOne(s => s.JobStartForm)
+                      .HasForeignKey(s => s.FormId)
+                      .OnDelete(DeleteBehavior.Cascade); // Deleting form deletes its selections
+
+                entity.HasIndex(jsf => jsf.ProjectId); // Index for faster lookup by project
+            });
+
+            // Configure JobStartFormSelection entity
+            modelBuilder.Entity<JobStartFormSelection>(entity =>
+            {
+                entity.HasKey(e => e.SelectionId);
+                // No complex relationships needed here as it's primarily linked via JobStartForm
+                entity.HasIndex(s => s.FormId); // Index for faster lookup by form
             });
 
              // Configure UserWBSTask entity decimal properties
