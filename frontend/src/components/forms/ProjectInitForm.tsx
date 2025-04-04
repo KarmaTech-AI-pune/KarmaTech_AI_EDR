@@ -63,6 +63,14 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     }));
   };
 
+const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: (value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0').toString(),
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
@@ -245,9 +253,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               fullWidth
               label="Estimated Cost"
               name="estimatedCost"
-              type="number"
+              type="text"
               value={formData.estimatedCost}
-              onChange={handleChange}
+              onChange={handleNumberChange}
               required
             />
           </Grid>
@@ -256,9 +264,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               fullWidth
               label="Budget"
               name="budget"
-              type="number"
+              type="text"
               value={formData.budget}
-              onChange={handleChange}
+              onChange={handleNumberChange}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -294,6 +302,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               value={formData.startDate}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}
+              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -305,6 +314,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               value={formData.endDate}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}
+              required
             />
           </Grid>
           <Grid item xs={12}>
