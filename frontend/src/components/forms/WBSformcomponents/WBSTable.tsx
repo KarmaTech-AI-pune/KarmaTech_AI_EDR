@@ -206,27 +206,26 @@ const WBSTable: React.FC<WBSTableProps> = ({
   const getSequenceNumber = (row: WBSRowData): string => {
     if (row.level === 1) {
       const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
-      return level1Index.toString();
+      // If formType is 'odc', add 5 to the index to start from 6
+      const adjustedIndex = formType === 'odc' ? level1Index + 5 : level1Index;
+      return adjustedIndex.toString();
     } else if (row.level === 2) {
       const parentRow = rows.find(r => r.id === row.parentId);
       if (parentRow) {
-        const parentIndex = rows.filter(r => r.level === 1).findIndex(r => r.id === parentRow.id) + 1;
+        // Get the parent's sequence number which already has the form type adjustment
+        const parentSequence = getSequenceNumber(parentRow);
         const level2Index = rows.filter(r => r.level === 2 && r.parentId === parentRow.id)
           .findIndex(r => r.id === row.id) + 1;
-        return `${parentIndex}.${level2Index}`;
+        return `${parentSequence}.${level2Index}`;
       }
     } else if (row.level === 3) {
       const level2Parent = rows.find(r => r.id === row.parentId);
       if (level2Parent) {
-        const level1Parent = rows.find(r => r.id === level2Parent.parentId);
-        if (level1Parent) {
-          const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === level1Parent.id) + 1;
-          const level2Index = rows.filter(r => r.level === 2 && r.parentId === level1Parent.id)
-            .findIndex(r => r.id === level2Parent.id) + 1;
-          const level3Index = rows.filter(r => r.level === 3 && r.parentId === level2Parent.id)
-            .findIndex(r => r.id === row.id) + 1;
-          return `${level1Index}.${level2Index}.${level3Index}`;
-        }
+        // Get the parent's sequence number which already has the form type adjustment
+        const parentSequence = getSequenceNumber(level2Parent);
+        const level3Index = rows.filter(r => r.level === 3 && r.parentId === level2Parent.id)
+          .findIndex(r => r.id === row.id) + 1;
+        return `${parentSequence}.${level3Index}`;
       }
     }
     return '';

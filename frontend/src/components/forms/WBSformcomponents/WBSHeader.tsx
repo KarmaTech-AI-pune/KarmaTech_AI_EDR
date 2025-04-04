@@ -20,6 +20,7 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
 }));
 
 interface WBSHeaderProps {
+  title: string;
   editMode: boolean;
   error: string;
   onEditModeToggle: () => void;
@@ -27,6 +28,7 @@ interface WBSHeaderProps {
 }
 
 const WBSHeader: React.FC<WBSHeaderProps> = ({
+  title,
   editMode,
   error,
   onEditModeToggle,
@@ -43,7 +45,7 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
             mb: 0
           }}
         >
-          PMD2. Work Breakdown Structure
+          {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button

@@ -49,8 +49,10 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const loadWBSData = async (projectId: string) => {
     try {
       setLoading(true);
-      const wbsData = await WBSStructureAPI.getProjectWBS(projectId);
-      const transformedRows = wbsData.map((task) => {
+      let wbsData = await WBSStructureAPI.getProjectWBS(projectId);
+
+      // Transform all WBS data first
+      const allTransformedRows = wbsData.map((task) => {
         // Transform monthlyHours from potential array to nested object
         const transformedMonthlyHours: MonthlyHours = {};
         if (task.monthlyHours && Array.isArray(task.monthlyHours)) {
@@ -67,26 +69,68 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         } else if (task.monthlyHours && typeof task.monthlyHours === 'object') {
           // Assume it's already in the correct format or handle other potential formats
           Object.assign(transformedMonthlyHours, task.monthlyHours);
-      }
+        }
 
-      return {
-        id: task.id,
-        level: task.level,
-        title: task.title,
+        return {
+          id: task.id,
+          level: task.level,
+          title: task.title,
           role: task.assignedUserId || null,
           name: task.assignedUserId?.toString() || null,
-        costRate: task.costRate || 0,
+          costRate: task.costRate || 0,
           monthlyHours: transformedMonthlyHours,
-        odc: task.odc || 0,
-        totalHours: task.totalHours || 0,
-        totalCost: task.totalCost || 0,
-        parentId: task.parentId,
-      };
+          odc: task.odc || 0,
+          totalHours: task.totalHours || 0,
+          totalCost: task.totalCost || 0,
+          parentId: task.parentId,
+        };
       });
+
+      // Helper function to get sequence number for a row
+      const getSequenceNumber = (row: WBSRowData, allRows: WBSRowData[]): string => {
+        if (row.level === 1) {
+          const level1Index = allRows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
+          // If formType is 'odc', add 5 to the index to start from 6
+          const adjustedIndex = formType === 'odc' ? level1Index + 5 : level1Index;
+          return adjustedIndex.toString();
+        } else if (row.level === 2) {
+          const parentRow = allRows.find(r => r.id === row.parentId);
+          if (parentRow) {
+            const parentSequence = getSequenceNumber(parentRow, allRows);
+            const level2Index = allRows.filter(r => r.level === 2 && r.parentId === parentRow.id)
+              .findIndex(r => r.id === row.id) + 1;
+            return `${parentSequence}.${level2Index}`;
+          }
+        } else if (row.level === 3) {
+          const level2Parent = allRows.find(r => r.id === row.parentId);
+          if (level2Parent) {
+            const parentSequence = getSequenceNumber(level2Parent, allRows);
+            const level3Index = allRows.filter(r => r.level === 3 && r.parentId === level2Parent.id)
+              .findIndex(r => r.id === row.id) + 1;
+            return `${parentSequence}.${level3Index}`;
+          }
+        }
+        return '';
+      };
+
+      // Filter rows based on sequence number
+      let filteredRows = allTransformedRows;
+      if (formType === 'labour' || formType === 'odc') {
+        filteredRows = allTransformedRows.filter(row => {
+          const sequenceNumber = getSequenceNumber(row, allTransformedRows);
+          const firstDigit = parseInt(sequenceNumber.split('.')[0]);
+          
+          if (formType === 'labour') {
+            return firstDigit >= 1 && firstDigit <= 5;
+          } else { // 'odc'
+            return firstDigit >= 6;
+          }
+        });
+      }
 
       const fetchRoles = async () => {
         const rowsWithRoles = await Promise.all(
-          transformedRows.map(async (row) => {
+          filteredRows.map(async (row) => {
             if (row.role) {
               try {
                 const employee = await ResourceAPI.getEmployeeById(row.role);
@@ -107,9 +151,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
       fetchRoles();
 
-      // Calculate the number of months from the *transformed* data
+      // Calculate the number of months from the filtered data
       const allMonths = new Set<string>();
-      transformedRows.forEach((row) => {
+      filteredRows.forEach((row) => {
         // Now iterate through the nested object structure
         if (row.monthlyHours) {
           Object.keys(row.monthlyHours).forEach(year => {
@@ -258,6 +302,19 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const addNewRow = (level: 1 | 2 | 3, parentId?: string) => {
+    // For level 1 rows, we need to check if we've reached the limit based on form type
+    if (level === 1) {
+      const level1Rows = rows.filter(row => row.level === 1);
+      
+      if (formType === 'labour') {
+        // For Labour Form, we can only have up to 5 level 1 rows
+        if (level1Rows.length >= 5) {
+          setError('Labour Form can only have up to 5 level 1 rows.');
+          return;
+        }
+      }
+    }
+    
     const newRow: WBSRowData = {
       id: Date.now().toString(),
       level,
@@ -515,6 +572,13 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     >
       <Paper>
         <WBSHeader
+          title={
+            formType === 'labour'
+              ? 'Labour Form'
+              : formType === 'odc'
+              ? 'ODC Form'
+              : 'Work Breakdown Structure'
+          }
           editMode={editMode}
           error={error}
           onEditModeToggle={() => setEditMode(!editMode)}
