@@ -15,6 +15,7 @@ import {
   FormHelperText,
   Checkbox,
   SelectChangeEvent,
+  FormControlLabel,
 } from '@mui/material';
 import { AuthUser } from '../../../models/userModel';
 import { Role } from '../../../models/roleModel';
@@ -31,9 +32,12 @@ interface UserDialogProps {
     email: string;
     password: string;
     roles: Role[];
+    standardRate: number,
+    isConsultant: boolean,
   };
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleRoleChange: (event: SelectChangeEvent<string[]>) => void;
+  handleCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const UserDialog: React.FC<UserDialogProps> = ({
@@ -44,6 +48,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
   formData,
   handleInputChange,
   handleRoleChange,
+  handleCheckboxChange
 }) => {
   const { roles, loading, error } = useRoles();
   const selectedRoleNames = formData.roles;
@@ -101,6 +106,27 @@ const UserDialog: React.FC<UserDialogProps> = ({
                 onChange={handleInputChange}
                 fullWidth
               />
+              <TextField
+                name="standardRate"
+                label="Standard Rate"
+                type="number"
+                required={!editingUser}
+                value={formData.standardRate}
+                onChange={handleInputChange}
+                fullWidth
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.isConsultant}
+                    onChange={handleCheckboxChange}
+                    name="isConsultant"
+                  />
+                }
+                label="IsConsultant"
+              />
+
               <FormControl fullWidth required>
                 <InputLabel>Roles</InputLabel>
                 <Select
