@@ -23,8 +23,8 @@ namespace NJS.Application.CQRS.Roles.Handlers
                 var role = new Role
                 {
                     Name = request.RoleDefination.Name,
-                    MinRate = 0,
-                    IsResourceRole = false,
+                    MinRate = request.RoleDefination.MinRate,
+                    IsResourceRole = request.RoleDefination.IsResourceRole,
                     RolePermissions = new List<RolePermission>()
 
                 };
