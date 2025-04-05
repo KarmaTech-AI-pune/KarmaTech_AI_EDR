@@ -38,7 +38,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const [editMode, setEditMode] = useState<boolean>(true);
+  const [isLabourEditing, setIsLabourEditing] = useState<boolean>(true); // State for Labour form edit mode
+  const [isOdcEditing, setIsOdcEditing] = useState<boolean>(true); // State for ODC form edit mode
   const [deleteDialog, setDeleteDialog] = useState<DeleteDialog>({
     open: false,
     childCount: 0
@@ -93,9 +94,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       const getSequenceNumber = (row: WBSRowData, allRows: WBSRowData[]): string => {
         if (row.level === 1) {
           const level1Index = allRows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
-          // If formType is 'odc', add 5 to the index to start from 6
-          const adjustedIndex = formType === 'odc' ? level1Index + 5 : level1Index;
-          return adjustedIndex.toString();
+          // Sequence number is now calculated purely based on position, independent of formType
+          return level1Index.toString();
         } else if (row.level === 2) {
           const parentRow = allRows.find(r => r.id === row.parentId);
           if (parentRow) {
@@ -631,25 +631,25 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
               ? 'Labour Form'
               : formType === 'odc'
               ? 'ODC Form'
-              : 'Work Breakdown Structure'
-          }
-          editMode={editMode}
-          error={error}
-          onEditModeToggle={() => setEditMode(!editMode)}
-          onAddMonth={addNewMonth}
-        />
+               : 'Work Breakdown Structure'
+           }
+           editMode={formType === 'labour' ? isLabourEditing : isOdcEditing} // Use form-specific state
+           error={error}
+           onEditModeToggle={() => formType === 'labour' ? setIsLabourEditing(!isLabourEditing) : setIsOdcEditing(!isOdcEditing)} // Toggle form-specific state
+           onAddMonth={addNewMonth}
+         />
       </Paper>
 
       <Paper>
         <WBSTable
-          rows={formType === 'labour' ? labourRows : odcRows} // Pass the correct rows based on formType
-          months={months}
-          roles={roles}
-          employees={allEmployees}
-          editMode={editMode}
-          formType={formType}
-          levelOptions={{
-            level1: level1Options,
+           rows={formType === 'labour' ? labourRows : odcRows} // Pass the correct rows based on formType
+           months={months}
+           roles={roles}
+           employees={allEmployees}
+           editMode={formType === 'labour' ? isLabourEditing : isOdcEditing} // Use form-specific state
+           formType={formType}
+           levelOptions={{
+             level1: level1Options,
             level2: level2Options,
             level3: level3OptionsMap
           }}
