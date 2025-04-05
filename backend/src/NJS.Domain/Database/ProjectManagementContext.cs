@@ -220,10 +220,10 @@ namespace NJS.Domain.Database
                       .OnDelete(DeleteBehavior.Cascade); // Or Restrict depending on requirements
 
                 entity.HasOne(jsf => jsf.WorkBreakdownStructure)
-                      .WithMany() // Assuming WBS doesn't have a direct collection of JobStartForms
+                      .WithMany(wbs => wbs.JobStartForms) // Add navigation property to WorkBreakdownStructure
                       .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
                       .IsRequired(false) // Make the WBS link optional
-                      .OnDelete(DeleteBehavior.SetNull); // Or Restrict/Cascade
+                      .OnDelete(DeleteBehavior.NoAction); // Change to NoAction to avoid cycles
 
                 entity.HasMany(jsf => jsf.Selections)
                       .WithOne(s => s.JobStartForm)

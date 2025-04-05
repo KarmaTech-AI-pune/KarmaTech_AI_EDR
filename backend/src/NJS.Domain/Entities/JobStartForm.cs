@@ -21,8 +21,9 @@ namespace NJS.Domain.Entities
         // Assuming a JobStartForm might be linked to a specific WBS entry
         public int? WorkBreakdownStructureId { get; set; }
 
-        [ForeignKey("WorkBreakdownStructureId")]
-        public virtual WorkBreakdownStructure WorkBreakdownStructure { get; set; }
+[ForeignKey("WorkBreakdownStructureId")]
+[InverseProperty("JobStartForms")]
+public virtual WorkBreakdownStructure WorkBreakdownStructure { get; set; }
 
         // Example properties for the Job Start Form
         public string FormTitle { get; set; }
