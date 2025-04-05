@@ -20,12 +20,14 @@ import {
   Alert
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
+// Removed dummy API imports: import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
 import { projectManagementAppContext } from '../../App';
-import { projectManagementAppContextType } from '../../types';
+import { projectManagementAppContextType, JobStartFormData } from '../../types'; // Added JobStartFormData
 import { WBSTaskResourceAllocation } from "../../models";;
 import { WBSRowData } from '../../types/wbs';
 import { FormWrapper } from './FormWrapper';
+import { submitJobStartForm } from '../../services/jobStartFormApi'; // Added service import
+import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi'; // Keep for fetching initial data for now
 
 interface TaskAllocation {
   taskId: string;
@@ -343,12 +345,19 @@ const JobStartForm: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!context?.selectedProject?.id) {
+      setSnackbarMessage('No project selected. Cannot submit.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
     try {
       setSubmitting(true);
-      
+
       // Collect all form data
-      const formData = {
-        projectId: context?.selectedProject?.id,
+      const formData: JobStartFormData = { // Added type annotation
+        projectId: context.selectedProject.id, // Already checked for null/undefined
         time: {
           employeeAllocations,
           timeContingency,
@@ -370,13 +379,10 @@ const JobStartForm: React.FC = () => {
         totalProjectFees: calculateTotalProjectFees(),
         profit: calculateProfit()
       };
-      
-      // For demonstration purposes, log the data to console
-      console.log('Job Start Form Data:', formData);
-      
-      // Simulate API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
+      // Call the real API service
+      await submitJobStartForm(context.selectedProject.id, formData);
+
       // Show success message
       setSnackbarMessage('Job Start Form submitted successfully');
       setSnackbarSeverity('success');
