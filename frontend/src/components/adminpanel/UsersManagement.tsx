@@ -148,8 +148,10 @@ const UsersManagement = () => {
     const selectedValues = event.target.value as string[];
     // Map selected role names to actual Role objects from the API
     const selectedRoles = selectedValues
-      .map(value => availableRoles.find((role: RoleDefinition) => role.name === value))
-      .filter((role): role is RoleDefinition => role !== undefined);
+      .map(value => availableRoles.find(role => role.name === value))
+      .filter((role): role is RoleDefinition | Role => role !== undefined);
+
+
     setFormData(prev => ({
       ...prev,
       roles: selectedRoles,
