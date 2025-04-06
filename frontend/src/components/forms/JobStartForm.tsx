@@ -16,8 +16,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   Button,
-  Snackbar,
-  Alert
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
@@ -26,6 +24,7 @@ import { projectManagementAppContextType } from '../../types';
 import { WBSTaskResourceAllocation } from "../../models";;
 import { WBSRowData } from '../../types/wbs';
 import { FormWrapper } from './FormWrapper';
+import NotificationSnackbar from '../widgets/NotificationSnackbar';
 
 interface TaskAllocation {
   taskId: string;
@@ -110,6 +109,7 @@ const JobStartForm: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
 
   const [timeContingency, setTimeContingency] = useState<TimeContingencyEntry>({
     rate: '',
@@ -391,9 +391,6 @@ const JobStartForm: React.FC = () => {
     }
   };
 
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
 
   if (loading) {
     return (
@@ -411,8 +408,8 @@ const JobStartForm: React.FC = () => {
         <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
           <Typography color="error">{error}</Typography>
         </Paper>
-        </FormWrapper>
-      );
+      </FormWrapper>
+    );
   }
 
   const textFieldStyle = {
@@ -1092,29 +1089,18 @@ fullWidth
           </Box>
         </Paper>
       </Box>
+      <NotificationSnackbar
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={() => setSnackbarOpen(false)}
+      />
     </Container>
   );
 
   return (
     <FormWrapper>
       {formContent}
-      
-      {/* Success/Error Snackbar */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={handleSnackbarClose} 
-          severity={snackbarSeverity}
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </FormWrapper>
   );
 };

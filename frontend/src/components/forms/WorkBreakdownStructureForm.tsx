@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Paper, Alert, Container, CircularProgress, Box } from '@mui/material';
 import { projectManagementAppContext } from '../../App';
+import NotificationSnackbar from '../widgets/NotificationSnackbar';
 import { WBSStructureAPI, WBSOptionsAPI } from '../../services/wbsApi';
 import { ResourceAPI } from '../../services/resourceApi';
 import DeleteWBSDialog from '../dialogbox/DeleteWBSDialog';
@@ -36,9 +37,11 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const [months, setMonths] = useState<string[]>([]);
   const [roles, setRoles] = useState<resourceRole[]>([]);
   const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
-  const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [isLabourEditing, setIsLabourEditing] = useState<boolean>(true); // State for Labour form edit mode
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const [isOdcEditing, setIsOdcEditing] = useState<boolean>(true); // State for ODC form edit mode
   const [deleteDialog, setDeleteDialog] = useState<DeleteDialog>({
     open: false,
@@ -164,7 +167,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
     } catch (error) {
       console.error('Error loading WBS data:', error);
-      setError('Failed to load WBS data');
+      setSnackbarMessage('Failed to load WBS data');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     } finally {
       setLoading(false);
     }
@@ -240,7 +245,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           setLevel3OptionsMap(allOptions.level3 || {});
         } catch (error) {
           console.error('Error loading WBS options:', error);
-          setError('Failed to load work description options. Please ensure the backend service is running and database is properly configured with WBS options.');
+          setSnackbarMessage('Failed to load work description options. Please ensure the backend service is running and database is properly configured with WBS options.');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
           // Set empty arrays to prevent null reference errors
           setLevel1Options([]);
           setLevel2Options([]);
@@ -257,7 +264,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           setAllEmployees(employees);
         } catch (error) {
           console.error('Error loading roles and employees:', error);
-          setError(prev => prev || 'Failed to load resource roles and employees.');
+          setSnackbarMessage('Failed to load resource roles and employees.');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
           setRoles([]);
           setAllEmployees([]);
         }
@@ -275,7 +284,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         }
       } catch (error) {
         console.error('Error loading initial data:', error);
-        setError(prev => prev || 'Failed to load initial data');
+        setSnackbarMessage('Failed to load initial data');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
       } finally {
         setLoading(false);
       }
@@ -336,7 +347,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     if (level === 1) {
       const level1Rows = currentRows.filter(row => row.level === 1);
       if (formType === 'labour' && level1Rows.length >= 5) {
-        setError('Labour Form can only have up to 5 level 1 rows.');
+        setSnackbarMessage('Labour Form can only have up to 5 level 1 rows.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
         return;
       }
       // Add similar check for ODC if needed, e.g., if ODC starts at 6 and has a limit
@@ -397,7 +410,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         setRowsFunc(prevRows => prevRows.filter(row => row.id !== deleteDialog.rowId));
       } catch (error) {
         console.error(`Error deleting WBS task from ${formType} form:`, error);
-        setError('Failed to delete WBS task');
+        setSnackbarMessage('Failed to delete WBS task');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
       }
     }
     handleDeleteCancel();
@@ -436,7 +451,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       }
     } catch (error) {
       console.error('Error getting employee details:', error);
-      setError('Failed to get employee details');
+      setSnackbarMessage('Failed to get employee details');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
   };
 
@@ -552,7 +569,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     try {
       setLoading(true);
       if (!context?.selectedProject?.id) {
-        setError('No project selected. Please select a project first.');
+        setSnackbarMessage('No project selected. Please select a project first.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
         setLoading(false); // Ensure loading is stopped
         return;
       }
@@ -563,7 +582,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       // Validate that all tasks in the combined data have titles
       const emptyTitleTasks = combinedWbsData.filter(row => !row.title);
       if (emptyTitleTasks.length > 0) {
-        setError('All tasks must have a work description selected. Please select a value for each task.');
+        setSnackbarMessage('All tasks must have a work description selected. Please select a value for each task.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
         setLoading(false); // Ensure loading is stopped
         return;
       }
@@ -575,16 +596,20 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
       // Update lastUpdateTime to trigger the useEffect to reload data
       setLastUpdateTime(Date.now()); // This will call loadWBSData again
-      alert('WBS data saved successfully!');
-      setError('');
+      setSnackbarMessage('WBS data saved successfully!');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      setIsLabourEditing(false);
+      setIsOdcEditing(false);
     } catch (error: unknown) {
       console.error('Complete Submit Error:', error);
       // Display more specific error message if available
-      if (error instanceof Error) {
-        setError(`Failed to save WBS data: ${error.message}`);
-      } else {
-        setError('Failed to save WBS data. Please check that all required fields are filled correctly.');
-      }
+      const errorMessage = error instanceof Error 
+        ? `Failed to save WBS data: ${error.message}`
+        : 'Failed to save WBS data. Please check that all required fields are filled correctly.';
+      setSnackbarMessage(errorMessage);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     } finally {
       setLoading(false);
     }
@@ -634,7 +659,6 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
                : 'Work Breakdown Structure'
            }
            editMode={formType === 'labour' ? isLabourEditing : isOdcEditing} // Use form-specific state
-           error={error}
            onEditModeToggle={() => formType === 'labour' ? setIsLabourEditing(!isLabourEditing) : setIsOdcEditing(!isOdcEditing)} // Toggle form-specific state
            onAddMonth={addNewMonth}
          />
@@ -699,6 +723,12 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   return (
     <FormWrapper>
       {formContent}
+      <NotificationSnackbar
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={() => setSnackbarOpen(false)}
+      />
     </FormWrapper>
   );
 };
