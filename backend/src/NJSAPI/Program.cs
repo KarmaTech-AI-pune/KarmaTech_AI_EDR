@@ -29,7 +29,8 @@ builder.Services.AddHttpContextAccessor();
                 builder => builder
                     .WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
-                    .AllowAnyMethod());
+                    .AllowAnyMethod()
+                    .AllowCredentials());
         });
 
         builder.Services.AddAuthentication(options =>
@@ -76,12 +77,10 @@ builder.Services.AddHttpContextAccessor();
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
+      
             app.UseSwagger();
             app.UseSwaggerUI();
-        }
+      
 
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");

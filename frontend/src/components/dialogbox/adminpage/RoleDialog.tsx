@@ -28,6 +28,8 @@ import * as rolesApi from '../../../services/rolesApi';
 interface FormData {
   id: string;
   name: string;
+  minRate: number,
+  isResourceRole: boolean,
   permissions: PermissionCategoryGroup[];
 }
 
@@ -45,7 +47,7 @@ const formatPermissionLabel = (permission: string) => {
   if (permission === 'SYSTEM_ADMIN') {
     return 'System administrator';
   }
-  
+
   if (permission.includes('BUSINESS_DEVELOPMENT')) {
     return permission
       .replace('BUSINESS_DEVELOPMENT', '')
@@ -54,7 +56,7 @@ const formatPermissionLabel = (permission: string) => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ') + ' business development';
   }
-  
+
   if (permission.includes('PROJECT')) {
     return permission
       .replace('PROJECT', '')
@@ -63,7 +65,7 @@ const formatPermissionLabel = (permission: string) => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ') + ' project';
   }
-  
+
   return permission
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -104,7 +106,7 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
   const handleExistingRoleChange = (event: SelectChangeEvent<string>) => {
     const selectedRole = event.target.value;
     setSelectedExistingRole(selectedRole);
-    
+
     if (selectedRole) {
       const role = roles.find(r => r.name === selectedRole);
       if (role) {
@@ -118,6 +120,8 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
       setFormData({
         id: '',
         name: '',
+        minRate: 0,
+        isResourceRole: false,
         permissions: [],
       });
     }
@@ -131,11 +135,19 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
     }));
   };
 
+   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, checked } = e.target;  // `checked` for checkbox
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: checked,  // Update state with checked value (true/false)
+      }));
+    };
+
   const handlePermissionChange = (permission: PermissionDto) => {
     setFormData(prev => {
       const category = permission.category;
       const existingGroupIndex = prev.permissions.findIndex(g => g.category === category);
-      
+
       if (existingGroupIndex === -1) {
         // Add new permission group
         return {
@@ -152,7 +164,7 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
 
       const existingGroup = prev.permissions[existingGroupIndex];
       const permissionExists = existingGroup.permissions.some(p => p.id === permission.id);
-      
+
       const updatedPermissions = [...prev.permissions];
       if (permissionExists) {
         // Remove permission
@@ -188,6 +200,8 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
     const roleData: RoleWithPermissionsDto = {
       id: editingRole?.id || '',
       name: formData.name,
+      minRate: formData.minRate,
+      isResourceRole: formData.isResourceRole,
       permissions: formData.permissions,
     };
 
@@ -213,7 +227,7 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
     }
 
     return availablePermissions.map((group) => (
-      
+
       <Accordion key={group.category}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography variant="subtitle1">
@@ -280,6 +294,25 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
             onChange={handleInputChange}
             fullWidth
             helperText="Enter a unique name for this role"
+          />
+          <TextField
+            name="minRate"
+            label="Min Rate"
+            type='number'
+            value={formData.minRate}
+            onChange={handleInputChange}
+            fullWidth
+            helperText="Enter Min Rate"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={formData.isResourceRole}
+                onChange={handleCheckboxChange}
+                name="isResourceRole"
+              />
+            }
+            label="Is ResourceRole"
           />
           <Typography variant="h6" sx={{ mt: 2 }}>
             Role Permissions

@@ -48,7 +48,7 @@ export interface projectManagementAppContextType {
 }
 
 export interface Credentials {
-    username: string;
+    email: string;
     password: string;
 }
 
@@ -62,5 +62,5 @@ export interface LoginResponse {
 export interface OpportunityItemProps {
     opportunity: OpportunityTracking;
     onOpportunityDeleted?: (id: string) => void;
-    onOpportunityUpdated?: () => void;
+    onOpportunityUpdated?: (updatedOpportunity?: OpportunityTracking) => void;
 }
