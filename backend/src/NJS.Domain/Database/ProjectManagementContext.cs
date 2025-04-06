@@ -24,6 +24,7 @@ namespace NJS.Domain.Database
         public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; }
         public DbSet<WBSTask> WBSTasks { get; set; }
         public DbSet<UserWBSTask> UserWBSTasks { get; set; }
+        public DbSet<WBSOption> WBSOptions { get; set; }
         public DbSet<OpportunityTracking> OpportunityTrackings { get; set; }
         public DbSet<ProjectResource> ProjectResources { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
@@ -174,6 +175,55 @@ namespace NJS.Domain.Database
 
             modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.TypeOfClient).IsRequired(false);
             modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.RegionalBDHead).IsRequired(false);
+
+            // Configure WBSOption entity
+            modelBuilder.Entity<WBSOption>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Value).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Label).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Level).IsRequired();
+                entity.Property(e => e.ParentValue).HasMaxLength(100);
+                
+                // Create index on Level for faster lookups
+                entity.HasIndex(e => e.Level);
+                
+                // Create index on ParentValue for faster hierarchical queries
+                entity.HasIndex(e => e.ParentValue);
+            });
+
+            // Configure WBSTask entity
+            modelBuilder.Entity<WBSTask>(entity =>
+            {
+                entity.Property(t => t.EstimatedBudget).HasPrecision(18, 2);
+
+                // Configure self-referencing relationship for hierarchy
+                entity.HasOne(t => t.Parent)
+                      .WithMany(t => t.Children)
+                      .HasForeignKey(t => t.ParentId)
+                      .OnDelete(DeleteBehavior.Restrict); // Prevent deleting a task if it has children
+
+                // Configure relationship with WorkBreakdownStructure
+                entity.HasOne(t => t.WorkBreakdownStructure)
+                      .WithMany(w => w.Tasks)
+                      .HasForeignKey(t => t.WorkBreakdownStructureId)
+                      .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+            });
+
+             // Configure UserWBSTask entity decimal properties
+            modelBuilder.Entity<UserWBSTask>(entity =>
+            {
+                entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
+                entity.Property(ut => ut.ODC).HasPrecision(18, 2);
+                entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
+            });
+
+            // Configure WorkBreakdownStructure entity
+            modelBuilder.Entity<WorkBreakdownStructure>(entity =>
+            {
+                 // Optional: Add index on ProjectId if frequent lookups by project are expected
+                 entity.HasIndex(w => w.ProjectId);
+            });
         }
     }
 }

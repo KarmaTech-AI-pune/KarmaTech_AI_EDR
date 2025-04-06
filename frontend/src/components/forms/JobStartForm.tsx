@@ -14,7 +14,8 @@ import {
   Container,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Button,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
@@ -23,6 +24,7 @@ import { projectManagementAppContextType } from '../../types';
 import { WBSTaskResourceAllocation } from "../../models";;
 import { WBSRowData } from '../../types/wbs';
 import { FormWrapper } from './FormWrapper';
+import NotificationSnackbar from '../widgets/NotificationSnackbar';
 
 interface TaskAllocation {
   taskId: string;
@@ -103,6 +105,11 @@ const JobStartForm: React.FC = () => {
   const [employeeAllocations, setEmployeeAllocations] = useState<EmployeeAllocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
 
   const [timeContingency, setTimeContingency] = useState<TimeContingencyEntry>({
     rate: '',
@@ -335,6 +342,56 @@ const JobStartForm: React.FC = () => {
     return fees + tax;
   };
 
+  const handleSubmit = async () => {
+    try {
+      setSubmitting(true);
+      
+      // Collect all form data
+      const formData = {
+        projectId: context?.selectedProject?.id,
+        time: {
+          employeeAllocations,
+          timeContingency,
+          totalTimeCost: calculateTotalTimeCost()
+        },
+        expenses: {
+          regularExpenses: expenses,
+          surveyWorks,
+          outsideAgency,
+          projectSpecific,
+          totalExpenses: calculateExpensesTotal()
+        },
+        grandTotal: calculateGrandTotal(),
+        projectFees: Number(projectFees),
+        serviceTax: {
+          percentage: Number(serviceTax.percentage),
+          amount: calculateServiceTax()
+        },
+        totalProjectFees: calculateTotalProjectFees(),
+        profit: calculateProfit()
+      };
+      
+      // For demonstration purposes, log the data to console
+      console.log('Job Start Form Data:', formData);
+      
+      // Simulate API call with timeout
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Show success message
+      setSnackbarMessage('Job Start Form submitted successfully');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSnackbarMessage('Failed to submit Job Start Form');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+
   if (loading) {
     return (
       <FormWrapper>
@@ -351,8 +408,8 @@ const JobStartForm: React.FC = () => {
         <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
           <Typography color="error">{error}</Typography>
         </Paper>
-        </FormWrapper>
-      );
+      </FormWrapper>
+    );
   }
 
   const textFieldStyle = {
@@ -1003,16 +1060,49 @@ fullWidth
               </Table>
             </TableContainer>
           </Box>
+
+          {/* Submit Button */}
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              onClick={handleSubmit}
+              disabled={submitting}
+              sx={{
+                px: 4,
+                py: 1.5,
+                borderRadius: 1,
+                fontWeight: 'bold',
+                boxShadow: 2
+              }}
+            >
+              {submitting ? (
+                <>
+                  <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
+                  Submitting...
+                </>
+              ) : (
+                'Submit'
+              )}
+            </Button>
+          </Box>
         </Paper>
       </Box>
+      <NotificationSnackbar
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={() => setSnackbarOpen(false)}
+      />
     </Container>
   );
 
   return (
     <FormWrapper>
-        {formContent}
+      {formContent}
     </FormWrapper>
-);
+  );
 };
 
 export default JobStartForm;

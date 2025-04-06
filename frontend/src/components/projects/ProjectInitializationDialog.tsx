@@ -145,7 +145,6 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
   };
 
   const handleImportProject = () => {
-       debugger;
     const opportunity = accountedOpportunities?.find(x=>x.id==parseInt(selectedOpportunityId.toString()));
     if (!opportunity) {
       setError('Failed to load opportunity data');
@@ -157,11 +156,11 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
       name: opportunity.workName ?? '',
       details: opportunity.notes ?? '',
       clientName: opportunity.client ?? '',
-      projectManagerId: "0", // Default value, needs to be selected
+      projectManagerId: "", // Default value, needs to be selected
       office: opportunity.operation ?? '',
       projectNo: '', // Needs to be entered manually
       typeOfJob: opportunity.clientSector ?? '', // Using clientSector as type of job
-      seniorProjectManagerId: "0", // Default value, needs to be selected
+      seniorProjectManagerId: "", // Default value, needs to be selected
       sector: opportunity.clientSector ?? '',
       region: '', // Needs to be selected
       typeOfClient: '',
@@ -174,7 +173,7 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
       currency: opportunity.currency ?? '',
       budget: opportunity.capitalValue ?? 0, // Using capitalValue as initial budget
       priority: '', // Needs to be selected
-      regionalManagerId: opportunity.approvalManagerId || "0",
+      regionalManagerId: opportunity.approvalManagerId || "",
       status: 0,
       letterOfAcceptance: isAcceptanceChecked,
       opportunityTrackingId: parseInt(selectedOpportunityId),
@@ -188,7 +187,6 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
 
   const handleProjectSubmit = (data: ProjectFormData) => {
     try {
-      debugger;
       if (onProjectCreated) {
         const updatedData = {
           ...data,          
@@ -199,7 +197,6 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
         if (selectedOpportunityId) {
           updatedData.opportunityTrackingId = parseInt(selectedOpportunityId);
         }
-        debugger;
         onProjectCreated(updatedData);
       }
       handleClose();

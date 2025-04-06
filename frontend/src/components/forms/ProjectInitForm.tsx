@@ -30,11 +30,11 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     name: project?.name || '',
     details: project?.details || '',
     clientName: project?.clientName || '',
-    projectManagerId: project?.projectManagerId || "0",
+    projectManagerId: project?.projectManagerId || "",
     office: project?.office || '',
     projectNo: project?.projectNo || '',
     typeOfJob: project?.typeOfJob || '',
-    seniorProjectManagerId: project?.seniorProjectManagerId || "0",
+    seniorProjectManagerId: project?.seniorProjectManagerId || "",
     sector: project?.sector || '',
     region: project?.region || '',
     status: project?.status ||  0,
@@ -48,7 +48,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     currency: project?.currency || 'INR',
     budget: project?.budget || 0,
     priority: project?.priority || '',
-    regionalManagerId: project?.regionalManagerId || "0",
+    regionalManagerId: project?.regionalManagerId || "",
     letterOfAcceptance:project?.letterOfAcceptance|| false,
     opportunityTrackingId: project?.opportunityTrackingId || 0,
     feeType: project?.feeType || ''
@@ -60,6 +60,14 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: (value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0').toString(),
     }));
   };
 
@@ -245,9 +253,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               fullWidth
               label="Estimated Cost"
               name="estimatedCost"
-              type="number"
+              type="text"
               value={formData.estimatedCost}
-              onChange={handleChange}
+              onChange={handleNumberChange}
               required
             />
           </Grid>
@@ -256,9 +264,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               fullWidth
               label="Budget"
               name="budget"
-              type="number"
+              type="text"
               value={formData.budget}
-              onChange={handleChange}
+              onChange={handleNumberChange}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -294,6 +302,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               value={formData.startDate}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}
+              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -305,6 +314,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               value={formData.endDate}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}
+              required
             />
           </Grid>
           <Grid item xs={12}>
