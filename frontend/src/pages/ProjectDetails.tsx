@@ -40,6 +40,8 @@ import PersonIcon from '@mui/icons-material/Person';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
+import EngineeringIcon from '@mui/icons-material/Engineering';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { Project, OpportunityTracking } from '../models';
 import { projectManagementAppContext } from '../App';
 import { getUserById } from '../dummyapi/database/dummyusers';
@@ -99,6 +101,7 @@ export const ProjectDetails: React.FC = () => {
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
   const [formsOpen, setFormsOpen] = useState(false);
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
+  const [expandedForm, setExpandedForm] = useState<string | null>(null);
 
   useEffect(() => {
     setIsLoading(false);
@@ -124,8 +127,16 @@ export const ProjectDetails: React.FC = () => {
     }
   };
 
-  const handleFormClick = (formId: string) => {
-    setSelectedForm(formId);
+ const handleFormClick = (formId: string) => {
+    const form = formSections.find(f => f.id === formId);
+
+    if (form?.subItems) {
+      // If the form has sub-items, toggle its expanded state
+      setExpandedForm(expandedForm === formId ? null : formId);
+    } else {
+      // If it's a regular form without sub-items, select it directly
+      setSelectedForm(formId);
+    }
     setSelectedSection('forms');
   };
 
@@ -150,29 +161,27 @@ export const ProjectDetails: React.FC = () => {
 
   const formSections = [
     {
-      id: 'feasibilityStudy',
-      title: 'PMD0. Feasibility Study',
-      icon: <AssessmentOutlinedIcon />,
-      component: <FeasibilityStudyForm 
-        projectId={typeof context.selectedProject?.id === 'string' 
-          ? parseInt(context.selectedProject.id, 10) 
-          : context.selectedProject?.id || 0
-        }
-        onSubmitSuccess={() => {
-          // Placeholder for future implementation
-          console.log('Feasibility study submitted');
-        }} 
-      />
-    },
-    {
       id: 'wbs',
-      title: 'PMD2. Work Breakdown Structure',
+      title: 'PMD1. Work Breakdown Structure',
       icon: <TaskIcon />,
-      component: <WorkBreakdownStructureForm />
+      subItems: [
+        {
+          id: 'labourForm',
+          title: 'Labour Form',
+          icon: <EngineeringIcon />,
+          component: <WorkBreakdownStructureForm formType="labour" />
+        },
+        {
+          id: 'odcForm',
+          title: 'ODC Form',
+          icon: <ReceiptLongIcon />,
+          component: <WorkBreakdownStructureForm formType="odc" />
+        }
+      ]
     },
     {
       id: 'jobStart',
-      title: 'PMD1. Job Start Form',
+      title: 'PMD2. Job Start Form',
       icon: <AssignmentIcon />,
       component: <JobStartForm />
     },
@@ -278,8 +287,24 @@ export const ProjectDetails: React.FC = () => {
   const renderContent = () => {
     if (selectedSection === 'forms') {
       if (selectedForm) {
+        // First check if it's a direct form
         const form = formSections.find(f => f.id === selectedForm);
-        return form?.component || <FormsOverview onFormSelect={handleFormClick} />;
+        if (form) {
+          return form.component;
+        }
+        
+        // If not found, check if it's a sub-item
+        for (const formSection of formSections) {
+          if (formSection.subItems) {
+            const subItem = formSection.subItems.find(s => s.id === selectedForm);
+            if (subItem) {
+              return subItem.component;
+            }
+          }
+        }
+        
+        // If still not found, show the forms overview
+        return <FormsOverview onFormSelect={handleFormClick} />;
       }
       return <FormsOverview onFormSelect={handleFormClick} />;
     }
@@ -466,28 +491,64 @@ export const ProjectDetails: React.FC = () => {
                 <Collapse in={formsOpen} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {section.subItems.map((item) => (
-                      <ListItemButton
-                        key={item.id}
-                        sx={{
-                          pl: 4,
-                          bgcolor: selectedForm === item.id ? 'action.selected' : 'transparent',
-                          '&:hover': {
-                            bgcolor: 'action.hover',
-                          },
-                        }}
-                        onClick={() => handleFormClick(item.id)}
-                      >
-                        <ListItemIcon>
-                          {item.icon}
-                        </ListItemIcon>
-                        <ListItemText 
-                          primary={item.title}
-                          primaryTypographyProps={{
-                            variant: 'body2',
-                            sx: { fontWeight: selectedForm === item.id ? 600 : 400 }
+                      <React.Fragment key={item.id}>
+                        <ListItemButton
+                          sx={{
+                            pl: 4,
+                            bgcolor: selectedForm === item.id ? 'action.selected' : 'transparent',
+                            '&:hover': {
+                              bgcolor: 'action.hover',
+                            },
                           }}
-                        />
-                      </ListItemButton>
+                          onClick={() => handleFormClick(item.id)}
+                        >
+                          <ListItemIcon>
+                            {item.icon}
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={item.title}
+                            primaryTypographyProps={{
+                              variant: 'body2',
+                              sx: { fontWeight: selectedForm === item.id ? 600 : 400 }
+                            }}
+                          />
+                          {item.subItems && (
+                            expandedForm === item.id ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
+                          )}
+                        </ListItemButton>
+                        
+                        {/* Render sub-items if this form has them */}
+                        {item.subItems && (
+                          <Collapse in={expandedForm === item.id} timeout="auto" unmountOnExit>
+                            <List component="div" disablePadding>
+                              {item.subItems.map((subItem) => (
+                                <ListItemButton
+                                  key={subItem.id}
+                                  sx={{
+                                    pl: 8,
+                                    bgcolor: selectedForm === subItem.id ? 'action.selected' : 'transparent',
+                                    '&:hover': {
+                                      bgcolor: 'action.hover',
+                                    },
+                                  }}
+                                  onClick={() => setSelectedForm(subItem.id)}
+                                >
+                                  <ListItemIcon sx={{ minWidth: '40px' }}>
+                                    {subItem.icon}
+                                  </ListItemIcon>
+                                  <ListItemText
+                                    primary={subItem.title}
+                                    primaryTypographyProps={{
+                                      variant: 'body2',
+                                      sx: { fontWeight: selectedForm === subItem.id ? 600 : 400 }
+                                    }}
+                                  />
+                                </ListItemButton>
+                              ))}
+                            </List>
+                          </Collapse>
+                        )}
+                      </React.Fragment>
                     ))}
                   </List>
                 </Collapse>

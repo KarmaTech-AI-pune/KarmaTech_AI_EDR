@@ -59,6 +59,7 @@ interface WBSTableProps {
   roles: ResourceRole[];
   employees: Employee[];
   editMode: boolean;
+  formType?: 'labour' | 'odc';
   levelOptions: {
     level1: WBSOption[];
     level2: WBSOption[];
@@ -80,6 +81,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
   roles,
   employees,
   editMode,
+  formType,
   levelOptions,
   onAddRow,
   onDeleteRow,
@@ -106,6 +108,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
       monthlyHours: {} as { [key: string]: { [key: string]: number } },
       totalHours: 0,
       odc: 0,
+      odcHours: 0,
       totalCost: 0
     };
 
@@ -123,6 +126,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
       
       totals.totalHours += child.totalHours;
       totals.odc += child.odc;
+      totals.odcHours += child.odcHours || 0;
       totals.totalCost += child.totalCost;
     });
 
@@ -143,12 +147,27 @@ const WBSTable: React.FC<WBSTableProps> = ({
   };
 
   const renderAddButton = (level: 1 | 2 | 3, parentId?: string): JSX.Element => {
+    // Calculate colspan based on formType
+    let colspan = 5 + months.length; // Base columns: Work Description, Role, Name, Rate, months
+    
+    if (!editMode) {
+      colspan += 1; // Add 1 for the delete button column
+    }
+    
+    if (formType === 'odc') {
+      colspan += 2; // Add 2 for ODC Hours and ODC Cost
+    } else if (formType === 'labour') {
+      colspan += 2; // Add 2 for Total Hours and Total Cost
+    } else {
+      colspan += 3; // Add 3 for ODCs, Total Hours, and Total Cost
+    }
+    
     return (
       <AddButtonRow
         key={`add-button-level-${level}${parentId ? `-parent-${parentId}` : ''}`}
       >
         <TableCell 
-          colSpan={editMode ? 8 + months.length : 9 + months.length}
+          colSpan={colspan}
           sx={{ bgcolor: getLevelColor(level) }}
         >
           <Button
@@ -187,27 +206,26 @@ const WBSTable: React.FC<WBSTableProps> = ({
   const getSequenceNumber = (row: WBSRowData): string => {
     if (row.level === 1) {
       const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
-      return level1Index.toString();
+      // If formType is 'odc', add 5 to the index to start from 6
+      const adjustedIndex = formType === 'odc' ? level1Index + 5 : level1Index;
+      return adjustedIndex.toString();
     } else if (row.level === 2) {
       const parentRow = rows.find(r => r.id === row.parentId);
       if (parentRow) {
-        const parentIndex = rows.filter(r => r.level === 1).findIndex(r => r.id === parentRow.id) + 1;
+        // Get the parent's sequence number which already has the form type adjustment
+        const parentSequence = getSequenceNumber(parentRow);
         const level2Index = rows.filter(r => r.level === 2 && r.parentId === parentRow.id)
           .findIndex(r => r.id === row.id) + 1;
-        return `${parentIndex}.${level2Index}`;
+        return `${parentSequence}.${level2Index}`;
       }
     } else if (row.level === 3) {
       const level2Parent = rows.find(r => r.id === row.parentId);
       if (level2Parent) {
-        const level1Parent = rows.find(r => r.id === level2Parent.parentId);
-        if (level1Parent) {
-          const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === level1Parent.id) + 1;
-          const level2Index = rows.filter(r => r.level === 2 && r.parentId === level1Parent.id)
-            .findIndex(r => r.id === level2Parent.id) + 1;
-          const level3Index = rows.filter(r => r.level === 3 && r.parentId === level2Parent.id)
-            .findIndex(r => r.id === row.id) + 1;
-          return `${level1Index}.${level2Index}.${level3Index}`;
-        }
+        // Get the parent's sequence number which already has the form type adjustment
+        const parentSequence = getSequenceNumber(level2Parent);
+        const level3Index = rows.filter(r => r.level === 3 && r.parentId === level2Parent.id)
+          .findIndex(r => r.id === row.id) + 1;
+        return `${parentSequence}.${level3Index}`;
       }
     }
     return '';
@@ -226,6 +244,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
           roles={roles}
           employees={employees}
           editMode={editMode}
+          formType={formType}
           levelOptions={getLevelOptions(level1Row)}
           childTotals={calculateChildTotals(level1Row)}
           sequenceNumber={getSequenceNumber(level1Row)}
@@ -250,6 +269,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             roles={roles}
             employees={employees}
             editMode={editMode}
+            formType={formType}
             levelOptions={getLevelOptions(level2Row)}
             childTotals={calculateChildTotals(level2Row)}
             sequenceNumber={getSequenceNumber(level2Row)}
@@ -274,6 +294,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
               roles={roles}
               employees={employees}
               editMode={editMode}
+              formType={formType}
               levelOptions={getLevelOptions(level3Row)}
               childTotals={null}
               sequenceNumber={getSequenceNumber(level3Row)}
@@ -330,9 +351,20 @@ const WBSTable: React.FC<WBSTableProps> = ({
             {months.map(month => (
               <HeaderCell key={month} sx={{ minWidth: 100 }}>{month}</HeaderCell>
             ))}
-            <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODCs</SummaryHeaderCell>
-            <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Hours</SummaryHeaderCell>
-            <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Cost</SummaryHeaderCell>
+            {formType === 'odc' ? (
+              <>
+                <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODC Hours</SummaryHeaderCell>
+                <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODC Cost</SummaryHeaderCell>
+              </>
+            ) : (
+              <>
+                {formType !== 'labour' && (
+                  <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODCs</SummaryHeaderCell>
+                )}
+                <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Hours</SummaryHeaderCell>
+                <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Cost</SummaryHeaderCell>
+              </>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>
