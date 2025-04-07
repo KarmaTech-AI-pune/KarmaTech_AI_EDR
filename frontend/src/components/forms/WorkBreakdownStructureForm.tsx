@@ -38,6 +38,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const [roles, setRoles] = useState<resourceRole[]>([]);
   const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [saveLoading, setSaveLoading] = useState<boolean>(false);
   const [isLabourEditing, setIsLabourEditing] = useState<boolean>(true); // State for Labour form edit mode
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -292,7 +293,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       }
     };
     loadInitialData();
-  }, [context?.selectedProject?.id, lastUpdateTime]);
+  }, [context?.selectedProject?.id]);
 
   const getProjectStartDate = () => {
     if (!context?.selectedProject) return null;
@@ -567,12 +568,11 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleSubmit = async () => {
     try {
-      setLoading(true);
+      setSaveLoading(true);
       if (!context?.selectedProject?.id) {
         setSnackbarMessage('No project selected. Please select a project first.');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
-        setLoading(false); // Ensure loading is stopped
         return;
       }
 
@@ -585,7 +585,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         setSnackbarMessage('All tasks must have a work description selected. Please select a value for each task.');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
-        setLoading(false); // Ensure loading is stopped
+        setSaveLoading(false); // Ensure loading is stopped
         return;
       }
 
@@ -596,11 +596,15 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
       // Update lastUpdateTime to trigger the useEffect to reload data
       setLastUpdateTime(Date.now()); // This will call loadWBSData again
+      // Toggle edit mode after successful save
+      if (formType === 'labour') {
+        setIsLabourEditing(!isLabourEditing);
+      } else {
+        setIsOdcEditing(!isOdcEditing);
+      }
       setSnackbarMessage('WBS data saved successfully!');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-      setIsLabourEditing(false);
-      setIsOdcEditing(false);
     } catch (error: unknown) {
       console.error('Complete Submit Error:', error);
       // Display more specific error message if available
@@ -611,7 +615,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     } finally {
-      setLoading(false);
+      setSaveLoading(false);
     }
   };
 
@@ -659,7 +663,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
                : 'Work Breakdown Structure'
            }
            editMode={formType === 'labour' ? isLabourEditing : isOdcEditing} // Use form-specific state
-           onEditModeToggle={() => formType === 'labour' ? setIsLabourEditing(!isLabourEditing) : setIsOdcEditing(!isOdcEditing)} // Toggle form-specific state
+           onEditModeToggle={() => formType === 'labour' ? setIsLabourEditing(!isLabourEditing) : setIsOdcEditing(!isOdcEditing)}
            onAddMonth={addNewMonth}
          />
       </Paper>
@@ -693,9 +697,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           totalHours={calculateOverallTotals().totalHours}
           totalCost={calculateOverallTotals().totalCost}
           currency={context?.selectedProject?.currency || ''}
-          // Disable save if the *currently visible* form has no rows
-          disabled={(formType === 'labour' ? labourRows : odcRows).length === 0}
+          disabled={(formType === 'labour' ? isLabourEditing : isOdcEditing)}
           onSave={handleSubmit}
+          loading={saveLoading}
         />
       </Paper>
 
