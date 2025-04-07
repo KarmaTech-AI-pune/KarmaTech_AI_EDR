@@ -24,4 +24,32 @@ export const submitJobStartForm = async (projectId: number | string, formData: J
   }
 };
 
+/**
+ * Fetches a specific Job Start Form by its ID for a given project.
+ *
+ * @param projectId The ID of the project.
+ * @param formId The ID of the Job Start Form to fetch.
+ * @returns A promise that resolves with the Job Start Form data.
+ */
+export const getJobStartFormByProjectId = async (projectId: number | string): Promise<JobStartFormData> => {
+  try {
+    const response = await axiosInstance.get(`${API_URL}/${projectId}/jobstartforms`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching Job Start Forms for project ${projectId}:`, error);
+    throw error;
+  }
+};
+
+export const getJobStartFormById = async (projectId: number | string, formId: number | string): Promise<JobStartFormData> => {
+  try {
+    const response = await axiosInstance.get(`${API_URL}/${projectId}/jobstartforms/${formId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching Job Start Form with ID ${formId} for project ${projectId}:`, error);
+    // Re-throw the error to be caught by the calling component
+    throw error;
+  }
+};
+
 // Add other Job Start Form related API functions here if needed (e.g., fetching data)
