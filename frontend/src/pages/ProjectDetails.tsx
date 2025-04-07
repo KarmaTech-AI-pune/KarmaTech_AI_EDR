@@ -162,7 +162,7 @@ export const ProjectDetails: React.FC = () => {
   const formSections = [
     {
       id: 'wbs',
-      title: 'PMD1. Work Breakdown Structure',
+      title: 'PMD2. Work Breakdown Structure',
       icon: <TaskIcon />,
       subItems: [
         {
@@ -181,7 +181,7 @@ export const ProjectDetails: React.FC = () => {
     },
     {
       id: 'jobStart',
-      title: 'PMD2. Job Start Form',
+      title: 'PMD1. Job Start Form',
       icon: <AssignmentIcon />,
       component: <JobStartForm />
     },
