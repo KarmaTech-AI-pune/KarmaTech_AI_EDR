@@ -52,32 +52,32 @@ namespace NJSAPI.Controllers
             return Ok(result);
         }
 
-        // POST: api/projects/{projectId}/jobstartforms
-        [HttpPost]
-        [ProducesResponseType(typeof(JobStartFormDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<JobStartFormDto>> CreateJobStartForm(int projectId, [FromBody] JobStartFormDto createDto)
-        {
-            if (createDto == null)
-            {
-                return BadRequest("Job Start Form data is required.");
-            }
+// POST: api/projects/{projectId}/jobstartforms
+[HttpPost]
+[ProducesResponseType(typeof(JobStartFormDto), StatusCodes.Status201Created)]
+[ProducesResponseType(StatusCodes.Status400BadRequest)]
+public async Task<ActionResult<JobStartFormDto>> CreateJobStartForm(int projectId, [FromBody] JobStartFormDto createDto)
+{
+    if (createDto == null)
+    {
+        return BadRequest("Job Start Form data is required.");
+    }
 
-            // Ensure the ProjectId in the DTO matches the route parameter
-            if (createDto.ProjectId != projectId)
-            {
-                 return BadRequest("ProjectId mismatch between route and body.");
-            }
+    // Ensure the ProjectId in the DTO matches the route parameter
+    if (createDto.ProjectId != projectId)
+    {
+         return BadRequest("ProjectId mismatch between route and body.");
+    }
 
-            var command = new AddJobStartFormCommand(createDto);
-            var newId = await _mediator.Send(command);
+    var command = new CreateJobStartFormCommand(createDto);
+    var newId = await _mediator.Send(command);
 
-            // Fetch the created entity to return it
-            var query = new GetJobStartFormByIdQuery(newId);
-            var createdDto = await _mediator.Send(query);
+    // Fetch the created entity to return it
+    var query = new GetJobStartFormByIdQuery(newId);
+    var createdDto = await _mediator.Send(query);
 
-            return CreatedAtAction(nameof(GetJobStartFormById), new { projectId = projectId, id = newId }, createdDto);
-        }
+    return CreatedAtAction(nameof(GetJobStartFormById), new { projectId = projectId, id = newId }, createdDto);
+}
 
         // PUT: api/projects/{projectId}/jobstartforms/{id}
         [HttpPut("{id}")]
