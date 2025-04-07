@@ -15,8 +15,8 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Button,
 } from '@mui/material';
+import LoadingButton from '../common/LoadingButton';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
 import { projectManagementAppContext } from '../../App';
@@ -1063,29 +1063,14 @@ fullWidth
 
           {/* Submit Button */}
           <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
+            <LoadingButton
               onClick={handleSubmit}
-              disabled={submitting}
-              sx={{
-                px: 4,
-                py: 1.5,
-                borderRadius: 1,
-                fontWeight: 'bold',
-                boxShadow: 2
-              }}
-            >
-              {submitting ? (
-                <>
-                  <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
-                  Submitting...
-                </>
-              ) : (
-                'Submit'
-              )}
-            </Button>
+              loading={submitting}
+              text="Submit"
+              loadingText="Submitting..."
+              fontWeight={"bold"}
+              size='large'
+            />
           </Box>
         </Paper>
       </Box>
