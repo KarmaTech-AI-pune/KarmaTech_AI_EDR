@@ -1,6 +1,8 @@
 ﻿//File: backend/src/NJS.Domain/UnitWork/UnitOfWork.cs
 using NJS.Domain.Database;
 using NJS.Domain.GenericRepository;
+using System;
+using System.Threading.Tasks;
 
 namespace NJS.Domain.UnitWork
 {
@@ -8,15 +10,20 @@ namespace NJS.Domain.UnitWork
     {
         private readonly ProjectManagementContext _context;
         private bool _disposed = false;
+       
+
         public UnitOfWork(ProjectManagementContext context)
         {
             _context = context;
+           
         }
 
         public IRepository<T> GetRepository<T>() where T : class
         {
             return new Repository<T>(_context);
         }
+
+        
 
         public async Task<int> SaveChangesAsync()
         {
