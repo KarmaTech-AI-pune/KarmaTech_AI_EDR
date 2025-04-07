@@ -14,6 +14,7 @@ import {
   FormHelperText
 } from '@mui/material';
 import { opportunityApi } from '../../services/opportunityApi';
+import { OpportunityTracking } from '../../models';
 import { HistoryLoggingService } from '../../services/historyLoggingService';
 import { getUserById } from '../../services/userApi';
 
@@ -22,7 +23,7 @@ interface DecideReviewProps {
   onClose: () => void;
   opportunityId?: number;
   currentUser: string;
-  onDecisionMade?: () => void;
+  onDecisionMade?: (updatedOpportunity?: OpportunityTracking) => void;
 }
 
 const DecideReview: React.FC<DecideReviewProps> = ({ 
@@ -77,11 +78,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
 
     try {
       const newStatus = decision === 'approve' ? 'Pending Approval' : 'Review Rejected';
-
-      // Notify parent immediately for optimistic update
-      if (onDecisionMade) {
-        onDecisionMade();
-      }
+      let updatedOpportunity;
 
       // Update both workflow and opportunity in one atomic operation
       if(decision === 'approve'){
@@ -94,7 +91,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
           return;
         }
 
-        await opportunityApi.sendToApproval({
+        updatedOpportunity = await opportunityApi.sendToApproval({
           opportunityId: opportunityId,
           approvalManagerId: regionalDirectorId,
           action: decision,
@@ -110,7 +107,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
           `Sent for approval to ${rdUser?.name || 'Regional Director'}`
         );
       } else {
-        await opportunityApi.RejectByRegionManagerSentToBidManager({
+        updatedOpportunity = await opportunityApi.RejectByRegionManagerSentToBidManager({
           opportunityId: opportunityId,
           approvalManagerId: '', // Not needed for rejection
           action: decision,
@@ -132,6 +129,11 @@ const DecideReview: React.FC<DecideReviewProps> = ({
         newStatus,
         currentUser
       );
+      
+      // Notify parent with the updated opportunity
+      if (onDecisionMade && updatedOpportunity) {
+        onDecisionMade(updatedOpportunity);
+      }
       
       // Reset form and close dialog
       setDecision('');

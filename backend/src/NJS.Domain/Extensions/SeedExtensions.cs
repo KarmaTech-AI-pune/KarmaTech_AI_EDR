@@ -126,7 +126,7 @@ namespace NJS.Domain.Extensions
                 }
 
                 // Seed Admin User with all roles
-                var adminEmail = "admin@example.com";
+                var adminEmail = "admin@test.com";
                 var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
                 if (adminUser == null)

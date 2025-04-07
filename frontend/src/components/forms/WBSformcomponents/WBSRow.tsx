@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   TableRow,
   TableCell,
@@ -7,7 +7,9 @@ import {
   Select,
   MenuItem,
   styled,
-  Typography
+  Typography,
+  Autocomplete,
+  TextField
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
@@ -64,6 +66,7 @@ interface WBSRowProps {
   roles: Role[];
   employees: Employee[];
   editMode: boolean;
+  formType?: 'labour' | 'odc';
   levelOptions: WBSOption[];
   childTotals: WBSChildTotals | null;
   sequenceNumber: string;
@@ -83,6 +86,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
   roles,
   employees,
   editMode,
+  formType,
   levelOptions,
   childTotals,
   sequenceNumber,
@@ -95,10 +99,11 @@ const WBSRow: React.FC<WBSRowProps> = ({
   onHoursChange,
   onODCChange,
 }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown visibility
   const roleId = row.role ? row.role : null;
   const selectedRole = roleId !== null ? roles.find(r => r.id === roleId) : undefined;
   const rateTooltip = selectedRole ? `Min Rate: ${selectedRole.min_rate}` : '';
-  const employeesForRole = roleId !== null ? employees.filter(emp => emp.role_id === roleId) : [];
+  const employeesForRole = employees;
 
   const getMonthlyHours = (month: string): string => {
     const [monthName, yearStr] = month.split(' ');
@@ -194,20 +199,48 @@ const WBSRow: React.FC<WBSRowProps> = ({
       </TableCell>
       <TableCell>
         {row.level === 3 ? (
-          <StyledSelect
-            value={row.name || ''}
-            onChange={(e) => onEmployeeChange(row.id, e.target.value as string)}
-            size="small"
+          <Autocomplete
+            options={employeesForRole}
+            getOptionLabel={(option) => option.name}
+            value={employeesForRole.find(emp => emp.id === row.name) || null}
+            open={isDropdownOpen} // Control open state
+            onInputChange={(_event, value, reason) => {
+              // Open only on actual input, not on focus/clear/reset
+              if (reason === 'input') {
+                setIsDropdownOpen(!!value); // Open if there's text, close if empty
+              }
+            }}
+            onChange={(_event, newValue) => {
+              onEmployeeChange(row.id, newValue ? newValue.id : '');
+              setIsDropdownOpen(false); // Close after selection
+            }}
+            onClose={() => setIsDropdownOpen(false)} // Close when clicking away
             disabled={!row.role || editMode}
-            sx={{ bgcolor: 'background.paper' }}
-          >
-            <MenuItem value="">Select Name</MenuItem>
-            {employeesForRole.map(employee => (
-              <MenuItem key={employee.id} value={employee.id}>
-                {employee.name}
-              </MenuItem>
-            ))}
-          </StyledSelect>
+            size="small"
+            ListboxProps={{
+              sx: {
+                // Hide scrollbar for Webkit browsers
+                '&::-webkit-scrollbar': {
+                  display: 'none',
+                },
+                // Hide scrollbar for Firefox
+                scrollbarWidth: 'none',
+                // Hide scrollbar for IE/Edge (older versions)
+                msOverflowStyle: 'none',
+              } 
+            }}
+            sx={{ bgcolor: 'background.paper', width: '100%' }}
+            renderInput={(params) => (
+              <TextField 
+                {...params} 
+                placeholder="Select Name" 
+                sx={{ 
+                  '& .MuiInputBase-root': { height: '40px', padding: '0 4px 0 6px' },
+                  '& .MuiAutocomplete-input': { padding: '7.5px 4px 7.5px 6px !important' } // Adjust padding if needed
+                }} 
+              />
+            )}
+          />
         ) : (
           <Box sx={{ height: '40px' }} />
         )}
@@ -256,77 +289,136 @@ const WBSRow: React.FC<WBSRowProps> = ({
           )}
         </TableCell>
       ))}
-      <TableCell>
-        {row.level === 3 ? (
-          <NumberInput
-            type="number"
-            value={row.odc || ''}
-            onChange={(e) => onODCChange(row.id, e.target.value)}
-            min="0"
-            style={{
-              backgroundColor: editMode ? '#f5f5f5' : 'white'
-            }}
-            disabled={editMode}
-          />
-        ) : childTotals ? (
-          <NumberInput
-            type="number"
-            value={childTotals.odc || ''}
-            readOnly
-            style={{
-              backgroundColor: '#f5f5f5'
-            }}
-          />
-        ) : (
-          <Box sx={{ height: '40px' }} />
-        )}
-      </TableCell>
-      <TableCell>
-        {row.level === 3 ? (
-          <NumberInput
-            type="number"
-            value={row.totalHours}
-            readOnly
-            style={{
-              backgroundColor: '#f5f5f5'
-            }}
-          />
-        ) : childTotals ? (
-          <NumberInput
-            type="number"
-            value={childTotals.totalHours || ''}
-            readOnly
-            style={{
-              backgroundColor: '#f5f5f5'
-            }}
-          />
-        ) : (
-          <Box sx={{ height: '40px' }} />
-        )}
-      </TableCell>
-      <TableCell>
-        {row.level === 3 ? (
-          <NumberInput
-            type="number"
-            value={row.totalCost}
-            readOnly
-            style={{
-              backgroundColor: '#f5f5f5'
-            }}
-          />
-        ) : childTotals ? (
-          <NumberInput
-            type="number"
-            value={childTotals.totalCost || ''}
-            readOnly
-            style={{
-              backgroundColor: '#f5f5f5'
-            }}
-          />
-        ) : (
-          <Box sx={{ height: '40px' }} />
-        )}
-      </TableCell>
+      {formType === 'odc' ? (
+        <>
+          <TableCell>
+            {row.level === 3 ? (
+              <NumberInput
+                type="number"
+                value={row.odcHours || ''}
+                onChange={(e) => onHoursChange(row.id, 'odcHours', e.target.value)}
+                min="0"
+                style={{
+                  backgroundColor: editMode ? '#f5f5f5' : 'white'
+                }}
+                disabled={editMode}
+              />
+            ) : childTotals ? (
+              <NumberInput
+                type="number"
+                value={childTotals.odcHours || ''}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : (
+              <Box sx={{ height: '40px' }} />
+            )}
+          </TableCell>
+          <TableCell>
+            {row.level === 3 ? (
+              <NumberInput
+                type="number"
+                value={row.odc || ''}
+                onChange={(e) => onODCChange(row.id, e.target.value)}
+                min="0"
+                style={{
+                  backgroundColor: editMode ? '#f5f5f5' : 'white'
+                }}
+                disabled={editMode}
+              />
+            ) : childTotals ? (
+              <NumberInput
+                type="number"
+                value={childTotals.odc || ''}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : (
+              <Box sx={{ height: '40px' }} />
+            )}
+          </TableCell>
+        </>
+      ) : (
+        <>
+          {formType !== 'labour' && (
+            <TableCell>
+              {row.level === 3 ? (
+                <NumberInput
+                  type="number"
+                  value={row.odc || ''}
+                  onChange={(e) => onODCChange(row.id, e.target.value)}
+                  min="0"
+                  style={{
+                    backgroundColor: editMode ? '#f5f5f5' : 'white'
+                  }}
+                  disabled={editMode}
+                />
+              ) : childTotals ? (
+                <NumberInput
+                  type="number"
+                  value={childTotals.odc || ''}
+                  readOnly
+                  style={{
+                    backgroundColor: '#f5f5f5'
+                  }}
+                />
+              ) : (
+                <Box sx={{ height: '40px' }} />
+              )}
+            </TableCell>
+          )}
+          <TableCell>
+            {row.level === 3 ? (
+              <NumberInput
+                type="number"
+                value={row.totalHours}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : childTotals ? (
+              <NumberInput
+                type="number"
+                value={childTotals.totalHours || ''}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : (
+              <Box sx={{ height: '40px' }} />
+            )}
+          </TableCell>
+          <TableCell>
+            {row.level === 3 ? (
+              <NumberInput
+                type="number"
+                value={row.totalCost}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : childTotals ? (
+              <NumberInput
+                type="number"
+                value={childTotals.totalCost || ''}
+                readOnly
+                style={{
+                  backgroundColor: '#f5f5f5'
+                }}
+              />
+            ) : (
+              <Box sx={{ height: '40px' }} />
+            )}
+          </TableCell>
+        </>
+      )}
     </TableRow>
   );
 };

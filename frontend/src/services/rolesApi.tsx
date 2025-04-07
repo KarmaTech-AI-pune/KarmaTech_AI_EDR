@@ -24,6 +24,8 @@ export interface PermissionCategoryGroup {
 export interface RoleWithPermissionsDto {
   id: string;
   name: string;
+  minRate: number,
+  isResourceRole: boolean,
   permissions: PermissionCategoryGroup[];
 }
 
@@ -133,6 +135,8 @@ export const updateRolePermissions = async (roleId: string, permissions: Permiss
 export const toRoleDefinition = (role: RoleWithPermissionsDto): RoleDefinition => ({
   id: role.id,
   name: role.name,
+  minRate: role.minRate,
+  isResourceRole: role.isResourceRole,
   permissions: role.permissions.flatMap(group => 
     group.permissions.map(p => PermissionType[p.name as keyof typeof PermissionType])
   ).filter((p): p is PermissionType => p !== undefined)
@@ -162,6 +166,8 @@ export const fromRoleDefinition = (role: RoleDefinition, permissions: Permission
   return {
     id: role.id,
     name: role.name,
+    minRate: role.minRate,
+    isResourceRole: role.isResourceRole,
     permissions: permissionGroups
   };
 };

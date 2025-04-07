@@ -13,7 +13,7 @@ import {
   Divider,
   Box,
 } from '@mui/material';
-import { DateField } from '@mui/x-date-pickers/DateField';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { projectManagementAppContext } from '../../App';
@@ -48,7 +48,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     reviewManagerId: project?.reviewManagerId,
     approvalManagerId: project?.approvalManagerId,
     contactPersonAtClient: project?.contactPersonAtClient || '',
-    dateOfSubmission: project?.dateOfSubmission || new Date().toISOString().split('T')[0],
+    dateOfSubmission: project?.dateOfSubmission || undefined,
     percentageChanceOfProjectHappening: project?.percentageChanceOfProjectHappening || 0,
     percentageChanceOfNJSSuccess: project?.percentageChanceOfNJSSuccess || 0,
     likelyCompetition: project?.likelyCompetition || '',
@@ -61,7 +61,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     workName: project?.workName || '',
     client: project?.client || '',
     clientSector: project?.clientSector || '',
-    likelyStartDate: project?.likelyStartDate || new Date().toISOString().split('T')[0],
+    likelyStartDate: project?.likelyStartDate || undefined,
     status: project?.status || undefined,
     currency: project?.currency || 'INR',
     capitalValue: project?.capitalValue || 0,
@@ -122,8 +122,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         bidManagerId: project.bidManagerId || '',
         reviewManagerId: project.reviewManagerId,
         approvalManagerId: project.approvalManagerId,
-        dateOfSubmission: project.dateOfSubmission || new Date().toISOString().split('T')[0],
-        likelyStartDate: project.likelyStartDate || new Date().toISOString().split('T')[0],
+        dateOfSubmission: project.dateOfSubmission || undefined,
+        likelyStartDate: project.likelyStartDate || undefined,
        
       });
     }
@@ -148,7 +148,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   const handleDateChange = (field: 'dateOfSubmission' | 'likelyStartDate') => (value: Date | null) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value ? value.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      [field]: value ? value.toISOString().split('T')[0] : null,
     }));
   };
 
@@ -367,8 +367,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       label="BD Manager"
                       required
                     >
-                      {bdManagers.map((manager) => (
-                        <MenuItem key={`bd_manager_${manager.id}`} value={manager.id}>
+                      {bdManagers.map((manager, index) => (
+                        <MenuItem key={`bd_list_${index}_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -385,8 +385,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       label="Review Manager"
                     >
                       <MenuItem value="">None</MenuItem>
-                      {reviewManagers.map((manager) => (
-                        <MenuItem key={`review_manager_${manager.id}`} value={manager.id}>
+                      {reviewManagers.map((manager, index) => (
+                        <MenuItem key={`review_list_${index}_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -403,8 +403,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       label="Approval Manager"
                     >
                       <MenuItem value="">None</MenuItem>
-                      {approvalManagers.map((manager) => (
-                        <MenuItem key={`approval_manager_${manager.id}`} value={manager.id}>
+                      {approvalManagers.map((manager, index) => (
+                        <MenuItem key={`approval_list_${index}_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -426,23 +426,25 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DateField
+                    <DatePicker
                       label="Date of Submission"
-                      value={formData.dateOfSubmission ? new Date(formData.dateOfSubmission) : null}
+                      value={formData.dateOfSubmission && formData.dateOfSubmission !== "" ? new Date(formData.dateOfSubmission) : null}
                       onChange={handleDateChange('dateOfSubmission')}
                       format="dd/MM/yyyy"
-                      fullWidth
+                      // maxDate={new Date()}
+                      slotProps={{ textField: { fullWidth: true } }}
                     />
                   </LocalizationProvider>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DateField
+                    <DatePicker
                       label="Likely Start Date"
-                      value={formData.likelyStartDate ? new Date(formData.likelyStartDate) : null}
+                      value={formData.likelyStartDate && formData.likelyStartDate !== "" ? new Date(formData.likelyStartDate) : null}
                       onChange={handleDateChange('likelyStartDate')}
                       format="dd/MM/yyyy"
-                      fullWidth
+                      // maxDate={new Date()}
+                      slotProps={{ textField: { fullWidth: true } }}
                     />
                   </LocalizationProvider>
                 </Grid>

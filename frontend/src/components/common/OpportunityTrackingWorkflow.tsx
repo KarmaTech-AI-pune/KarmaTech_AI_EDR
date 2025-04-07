@@ -30,7 +30,7 @@ const isValidWorkflowStatus = (status: unknown): status is WorkflowStatus => {
 };
 
 type OTWProps = {
-  onOpportunityUpdated?: (() => void) | undefined;
+  onOpportunityUpdated?: ((updatedOpportunity?: OpportunityTracking) => void) | undefined;
   opportunity: OpportunityTracking;
 }
 
@@ -65,16 +65,35 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
     setWorkflowDialogOpen(true);
   };
 
-  const handleWorkflowClose = async (success: boolean = false) => {
+  const handleWorkflowClose = async (success: boolean = false, updatedOpp?: OpportunityTracking) => {
     setWorkflowDialogOpen(false);
     if (success) {
-      // Update status immediately for instant feedback
-      const nextStatusId = (Array.isArray(opportunity.currentHistory)
-        ? opportunity.currentHistory[0]?.statusId || 0
-        : opportunity.currentHistory?.statusId || 0) + 1;
-      setLocalStatusId(nextStatusId);
-      if (onOpportunityUpdated) {
-        await onOpportunityUpdated();
+      if (updatedOpp) {
+        // Use the updated opportunity if provided
+        // Update the local status ID from the updated opportunity
+        const nextStatusId = (Array.isArray(updatedOpp.currentHistory)
+          ? updatedOpp.currentHistory[0]?.statusId || 0
+          : updatedOpp.currentHistory?.statusId || 0);
+        setLocalStatusId(nextStatusId);
+        
+        // Update the context with the new opportunity data if available
+        if (context?.setSelectedProject) {
+          context.setSelectedProject(updatedOpp);
+        }
+        
+        // Call the callback with the updated opportunity
+        if (onOpportunityUpdated) {
+          await onOpportunityUpdated(updatedOpp);
+        }
+      } else {
+        // Fallback to original behavior if no updated opportunity is provided
+        const nextStatusId = (Array.isArray(opportunity.currentHistory)
+          ? opportunity.currentHistory[0]?.statusId || 0
+          : opportunity.currentHistory?.statusId || 0) + 1;
+        setLocalStatusId(nextStatusId);
+        if (onOpportunityUpdated) {
+          await onOpportunityUpdated();
+        }
       }
     }
   };
@@ -174,13 +193,18 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
             onClose={() => handleWorkflowClose(false)}
             opportunityId={opportunity.id}
             currentUser={context.currentUser.name}
-            onDecisionMade={async () => {
-              // Update status immediately when decision is made
-              const nextStatusId = (Array.isArray(opportunity.currentHistory)
-                ? opportunity.currentHistory[0]?.statusId || 0
-                : opportunity.currentHistory?.statusId || 0) + 1;
-              setLocalStatusId(nextStatusId);
-              await handleWorkflowClose(true);
+            onDecisionMade={async (updatedOpportunity) => {
+              // If we have the updated opportunity, use it
+              if (updatedOpportunity) {
+                await handleWorkflowClose(true, updatedOpportunity);
+              } else {
+                // Fallback to original behavior
+                const nextStatusId = (Array.isArray(opportunity.currentHistory)
+                  ? opportunity.currentHistory[0]?.statusId || 0
+                  : opportunity.currentHistory?.statusId || 0) + 1;
+                setLocalStatusId(nextStatusId);
+                await handleWorkflowClose(true);
+              }
             }}
           />
         );

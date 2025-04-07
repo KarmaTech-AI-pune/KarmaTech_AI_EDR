@@ -54,8 +54,11 @@ namespace NJS.Application.CQRS.Users.Handlers
             }
 
             // Apply pagination
-            query = query.Skip((request.PageNumber - 1) * request.PageSize)
-                        .Take(request.PageSize);
+            if (request.PageSize is not null)
+            {
+                query = query.Skip((request.PageNumber.Value - 1) * request.PageSize.Value)
+                            .Take(request.PageSize.Value);
+            }
 
             var users = await query.ToListAsync(cancellationToken);
             var userDtos = new List<UserDto>();
