@@ -214,7 +214,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<UserWBSTask>(entity =>
             {
                 entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
-                entity.Property(ut => ut.ODC).HasPrecision(18, 2);
+                entity.Property(ut => ut.ODCCost).HasPrecision(18, 2);
                 entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
             });
 

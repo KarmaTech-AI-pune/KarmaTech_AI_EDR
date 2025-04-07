@@ -216,11 +216,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     // Update existing assignment
                     existingUserTask.UserId = taskDto.AssignedUserId;
                     existingUserTask.CostRate = taskDto.CostRate;
-                    existingUserTask.ODC = taskDto.ODC;
+                    existingUserTask.ODCCost = taskDto.ODCCost;
+                    existingUserTask.ODCHours = taskDto.ODCHours; // Added ODCHours mapping
                     // TotalHours and TotalCost are calculated fields in DTO, UserWBSTask might store raw hours? Check entity.
                     // Assuming UserWBSTask.TotalHours should be updated based on WBSTask.MonthlyHours sum
                     existingUserTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
-                    existingUserTask.TotalCost = (decimal)existingUserTask.TotalHours * existingUserTask.CostRate + existingUserTask.ODC;
+                    existingUserTask.TotalCost = (decimal)existingUserTask.TotalHours * existingUserTask.CostRate + existingUserTask.ODCCost;
                     existingUserTask.UpdatedAt = DateTime.UtcNow;
                     existingUserTask.UpdatedBy = _currentUser;
                 }
@@ -232,9 +233,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         WBSTask = taskEntity,
                         UserId = taskDto.AssignedUserId,
                         CostRate = taskDto.CostRate,
-                        ODC = taskDto.ODC,
+                        ODCCost = taskDto.ODCCost,
+                        ODCHours = taskDto.ODCHours, // Added ODCHours mapping
                         TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours), // Calculate based on current monthly hours
-                        TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate + taskDto.ODC,
+                        TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate + taskDto.ODCCost,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser
                     };
@@ -285,7 +287,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
              var userTask = taskEntity.UserWBSTasks.FirstOrDefault();
              if(userTask != null) {
                  userTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
-                 userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate + userTask.ODC;
+                 userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate + userTask.ODCCost;
              }
         }
 
