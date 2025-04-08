@@ -31,7 +31,7 @@ namespace NJS.Application.CQRS.JobStartForm.Queries
 
         public async Task<IEnumerable<JobStartFormDto>> Handle(GetAllJobStartFormByProjectIdQuery request, CancellationToken cancellationToken)
         {
-            var jobStartForms = await _jobStartFormRepository.GetByProjectIdAsync(request.ProjectId);
+            var jobStartForms = await _jobStartFormRepository.GetAllByProjectIdAsync(request.ProjectId);
 
             return jobStartForms.Select(jobStartForm => new JobStartFormDto
             {
