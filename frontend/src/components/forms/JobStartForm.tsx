@@ -28,7 +28,7 @@ import { WBSRowData } from '../../types/wbs';
 import { FormWrapper } from './FormWrapper';
 import { 
   submitJobStartForm,
-  getJobStartFormById,
+  // Removed unused: getJobStartFormById,
   getJobStartFormByProjectId 
 } from '../../services/jobStartFormApi';
 import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi'; // Keep for fetching initial data for now
@@ -86,13 +86,6 @@ type ExpensesType = {
   '4': ExpenseEntry;
   '5': ExpenseEntry;
   '7': ExpenseEntry;
-}
-
-interface ExpensesData {
-  regularExpenses: ExpensesType;
-  surveyWorks: ExpenseEntry;
-  outsideAgency: OutsideAgencyType;
-  projectSpecific: ProjectSpecificType;
 }
 
 type OutsideAgencyType = {
@@ -171,31 +164,9 @@ const JobStartForm: React.FC = () => {
     percentage: '15'
   });
 
-  const [formLoaded, setFormLoaded] = useState(false);
+  // Removed unused state: const [formLoaded, setFormLoaded] = useState(false);
 
   useEffect(() => {
-    const fetchFormData = async () => {
-      if (!context?.selectedProject?.id || formLoaded) return;
-      
-      try {
-        setLoading(true);
-        const formData = await getJobStartFormById(context.selectedProject.id.toString(), 'current');
-        
-        // Update all form state with fetched data
-        setEmployeeAllocations(formData.time.employeeAllocations);
-        setTimeContingency(formData.time.timeContingency);
-        setExpenses(formData.expenses.regularExpenses);
-        setSurveyWorks(formData.expenses.surveyWorks);
-        setOutsideAgency(formData.expenses.outsideAgency);
-        setProjectSpecific(formData.expenses.projectSpecific);
-        setProjectFees(formData.projectFees?.toString() ?? '');
-        setServiceTax({ percentage: formData.serviceTax.percentage?.toString() ?? '15' });
-        setFormLoaded(true);
-      } catch (error) {
-        console.log('No existing form data found, starting fresh');
-      }
-    };
-
     const fetchAllocations = async () => {
       if (!context?.selectedProject?.id) {
         setError('No project selected');

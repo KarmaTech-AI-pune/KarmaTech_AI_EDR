@@ -9,7 +9,7 @@ import { rolesApi } from './rolesApi';
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
-      const user = validateUser(credentials.username, credentials.password);
+      const user = validateUser(credentials.email, credentials.password);
       
       if (user) {
         // Simulate token generation

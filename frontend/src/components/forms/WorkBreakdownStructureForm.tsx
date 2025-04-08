@@ -51,7 +51,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const [level2Options, setLevel2Options] = useState<WBSOption[]>([]);
   const [level3OptionsMap, setLevel3OptionsMap] = useState<{ [key: string]: WBSOption[] }>({});
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
-  const [allWbsData, setAllWbsData] = useState<WBSRowData[]>([]); // State for all fetched data
+  // Removed unused state: const [allWbsData, setAllWbsData] = useState<WBSRowData[]>([]);
 
   const loadWBSData = async (projectId: string) => {
     try {
@@ -140,7 +140,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
             return row; // Return row if no role ID
           })
         );
-        setAllWbsData(dataWithRoles); // Store the complete data
+        // Removed unused state update: setAllWbsData(dataWithRoles);
 
         // Filter into separate states
         const currentLabourRows = dataWithRoles.filter(row => {
@@ -279,7 +279,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           // If no project selected, reset states
           setLabourRows([]);
           setOdcRows([]);
-          setAllWbsData([]);
+          // setAllWbsData([]);
           setMonths([]); // Reset months if no project
         }
       } catch (error) {
