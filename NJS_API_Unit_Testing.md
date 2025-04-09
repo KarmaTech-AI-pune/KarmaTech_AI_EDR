@@ -224,8 +224,52 @@ The comprehensive testing approach ensures that all layers of the NJS backend AP
 2. **Application Layer (CQRS Handlers)** - Verifies business logic and command/query processing
 3. **Data Access Layer (Repositories)** - Confirms database operations work as expected
 4. **Service Layer** - Tests business logic in service classes
+5. **Middleware Layer** - Tests HTTP request pipeline components
 
 This multi-layered testing strategy provides confidence in the reliability and correctness of the backend API, making it ready for deployment to production.
+
+## Phase 5: Middleware Tests
+
+### Components Tested
+
+1. **CORS Middleware**
+   - Tests that CORS headers are correctly applied for allowed origins
+   - Tests that CORS headers are not applied for disallowed origins
+   - Tests that preflight requests are handled correctly
+
+2. **Authentication Middleware**
+   - Tests that public endpoints are accessible without authentication
+   - Tests that protected endpoints require authentication
+   - Tests that valid JWT tokens grant access to protected endpoints
+   - Tests that expired tokens are rejected
+   - Tests that tokens with invalid signatures are rejected
+
+3. **Authorization Middleware**
+   - Tests that role-based authorization works correctly
+   - Tests that endpoints with specific role requirements enforce those requirements
+   - Tests that users with appropriate roles can access protected endpoints
+   - Tests that users without appropriate roles are denied access
+
+4. **Exception Handling Middleware**
+   - Tests that exceptions are caught and handled gracefully
+   - Tests that appropriate error responses are returned
+   - Tests that normal requests are not affected
+
+### Test Results
+
+- All middleware tests are passing successfully
+- The middleware components correctly process HTTP requests and responses
+- Authentication and authorization are working as expected
+- Error handling is robust and provides appropriate responses
+
+### Testing Approach
+
+The middleware tests use the TestServer class from Microsoft.AspNetCore.TestHost to:
+
+1. Create an isolated test environment for each middleware component
+2. Simulate HTTP requests and examine responses
+3. Test various scenarios including success cases and error cases
+4. Verify that middleware correctly modifies the request/response pipeline
 
 ## Future Testing Improvements
 
