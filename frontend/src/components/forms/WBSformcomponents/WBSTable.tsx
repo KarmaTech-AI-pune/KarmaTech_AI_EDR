@@ -92,7 +92,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
   onHoursChange,
   onODCChange,
 }) => {
-  
+
   const calculateChildTotals = (parentRow: WBSRowData) => {
     let childRows: WBSRowData[] = [];
     if (parentRow.level === 1) {
@@ -117,13 +117,13 @@ const WBSTable: React.FC<WBSTableProps> = ({
         const [monthName, yearStr] = month.split(' ');
         const year = `20${yearStr}`;
         const monthlyHours = child.monthlyHours[year]?.[monthName] || 0;
-        
+
         if (!totals.monthlyHours[year]) {
           totals.monthlyHours[year] = {};
         }
         totals.monthlyHours[year][monthName] = (totals.monthlyHours[year][monthName] || 0) + monthlyHours;
       });
-      
+
       totals.totalHours += child.totalHours;
       totals.odc += child.odc;
       totals.odcHours += child.odcHours || 0;
@@ -149,11 +149,11 @@ const WBSTable: React.FC<WBSTableProps> = ({
   const renderAddButton = (level: 1 | 2 | 3, parentId?: string): JSX.Element => {
     // Calculate colspan based on formType
     let colspan = 5 + months.length; // Base columns: Work Description, Role, Name, Rate, months
-    
+
     if (!editMode) {
       colspan += 1; // Add 1 for the delete button column
     }
-    
+
     if (formType === 'odc') {
       colspan += 2; // Add 2 for ODC Hours and ODC Cost
     } else if (formType === 'labour') {
@@ -161,12 +161,12 @@ const WBSTable: React.FC<WBSTableProps> = ({
     } else {
       colspan += 3; // Add 3 for ODCs, Total Hours, and Total Cost
     }
-    
+
     return (
       <AddButtonRow
         key={`add-button-level-${level}${parentId ? `-parent-${parentId}` : ''}`}
       >
-        <TableCell 
+        <TableCell
           colSpan={colspan}
           sx={{ bgcolor: getLevelColor(level) }}
         >
@@ -196,7 +196,8 @@ const WBSTable: React.FC<WBSTableProps> = ({
     if (row.level === 2) return levelOptions.level2;
     if (row.level === 3) {
       const parentRow = rows.find(r => r.id === row.parentId);
-      if (parentRow) {
+      if (parentRow && parentRow.title) {
+        // Use the parent row's title as the key to look up level 3 options
         return levelOptions.level3[parentRow.title] || [];
       }
     }
@@ -328,7 +329,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
   };
 
   return (
-    <TableContainer sx={{ 
+    <TableContainer sx={{
       overflowX: 'auto',
       '& .MuiTableCell-root': {
         px: 1.5,
@@ -341,7 +342,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
           <TableRow>
             {!editMode && (
               <HeaderCell sx={{ width: '48px', backgroundColor: '#FFFFFF' }}>
-                
+
               </HeaderCell>
             )}
             <StickyHeaderCell sx={{ minWidth: '300px', backgroundColor: '#FFFFFF' }}>Work Description</StickyHeaderCell>

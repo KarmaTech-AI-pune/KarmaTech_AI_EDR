@@ -71,7 +71,7 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.CreatedBy).IsRequired(false);
                 entity.Property(e => e.UpdatedBy).IsRequired(false);
                 entity.Property(e => e.Comments).IsRequired(false);
-                
+
                 // Create index on UserId for faster lookups
                 entity.HasIndex(e => e.UserId);
 
@@ -95,7 +95,7 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
                 entity.Property(e => e.Comments).IsRequired(false);
                 entity.Property(e => e.ModifiedBy).IsRequired();
-                
+
                 // Create index on BidPreparationId for faster lookups
                 entity.HasIndex(e => e.BidPreparationId);
             });
@@ -146,7 +146,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OpportunityTracking>().Property(o => o.ReviewManagerId).IsRequired(false);
             modelBuilder.Entity<OpportunityHistory>().Property(o => o.Comments).IsRequired(false);
 
-            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId); 
+            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
 
@@ -184,12 +184,16 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.Label).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Level).IsRequired();
                 entity.Property(e => e.ParentValue).HasMaxLength(100);
-                
+                entity.Property(e => e.FormType).IsRequired();
+
                 // Create index on Level for faster lookups
                 entity.HasIndex(e => e.Level);
-                
+
                 // Create index on ParentValue for faster hierarchical queries
                 entity.HasIndex(e => e.ParentValue);
+
+                // Create index on FormType for faster filtering
+                entity.HasIndex(e => e.FormType);
             });
 
             // Configure WBSTask entity

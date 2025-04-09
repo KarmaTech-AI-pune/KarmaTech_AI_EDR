@@ -148,11 +148,13 @@ export const WBSOptionsAPI = {
 
   /**
    * Get all WBS options for all levels
+   * @param formType Optional form type (0 = Manpower, 1 = ODC)
    * @returns Promise with WBS options
    */
-  getAllOptions: async () => {
+  getAllOptions: async (formType?: number) => {
     try {
-      const response = await axiosInstance.get('/api/wbsoptions');
+      const url = formType !== undefined ? `/api/wbsoptions?formType=${formType}` : '/api/wbsoptions';
+      const response = await axiosInstance.get(url);
       console.log('WBS options API response:', response.data);
       return response.data;
     } catch (error) {
@@ -167,11 +169,13 @@ export const WBSOptionsAPI = {
 
   /**
    * Get level 1 WBS options
+   * @param formType Optional form type (0 = Manpower, 1 = ODC)
    * @returns Promise with level 1 options
    */
-  getLevel1Options: async (): Promise<WBSOption[]> => {
+  getLevel1Options: async (formType?: number): Promise<WBSOption[]> => {
     try {
-      const response = await axiosInstance.get('/api/wbsoptions/level1');
+      const url = formType !== undefined ? `/api/wbsoptions/level1?formType=${formType}` : '/api/wbsoptions/level1';
+      const response = await axiosInstance.get(url);
       console.log('WBS level 1 options API response:', response.data);
       return response.data;
     } catch (error) {
@@ -182,11 +186,13 @@ export const WBSOptionsAPI = {
 
   /**
    * Get level 2 WBS options
+   * @param formType Optional form type (0 = Manpower, 1 = ODC)
    * @returns Promise with level 2 options
    */
-  getLevel2Options: async (): Promise<WBSOption[]> => {
+  getLevel2Options: async (formType?: number): Promise<WBSOption[]> => {
     try {
-      const response = await axiosInstance.get('/api/wbsoptions/level2');
+      const url = formType !== undefined ? `/api/wbsoptions/level2?formType=${formType}` : '/api/wbsoptions/level2';
+      const response = await axiosInstance.get(url);
       console.log('WBS level 2 options API response:', response.data);
       return response.data;
     } catch (error) {
@@ -198,11 +204,15 @@ export const WBSOptionsAPI = {
   /**
    * Get level 3 WBS options for a specific level 2 value
    * @param level2Value Level 2 value
+   * @param formType Optional form type (0 = Manpower, 1 = ODC)
    * @returns Promise with level 3 options
    */
-  getLevel3Options: async (level2Value: string): Promise<WBSOption[]> => {
+  getLevel3Options: async (level2Value: string, formType?: number): Promise<WBSOption[]> => {
     try {
-      const response = await axiosInstance.get(`/api/wbsoptions/level3/${level2Value}`);
+      const url = formType !== undefined
+        ? `/api/wbsoptions/level3/${level2Value}?formType=${formType}`
+        : `/api/wbsoptions/level3/${level2Value}`;
+      const response = await axiosInstance.get(url);
       console.log(`WBS level 3 options for ${level2Value} API response:`, response.data);
       return response.data;
     } catch (error) {

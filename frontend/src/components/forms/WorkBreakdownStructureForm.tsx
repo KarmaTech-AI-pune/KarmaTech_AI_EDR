@@ -232,13 +232,16 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     const loadInitialData = async () => {
       try {
         setLoading(true);
-        
+
         // Load WBS options with better error handling
         try {
+          // Convert formType to numeric value for API
+          const formTypeValue = formType === 'odc' ? 1 : 0; // 0 = Manpower, 1 = ODC
+
           const [l1Options, l2Options, allOptions] = await Promise.all([
-            WBSOptionsAPI.getLevel1Options(),
-            WBSOptionsAPI.getLevel2Options(),
-            WBSOptionsAPI.getAllOptions()
+            WBSOptionsAPI.getLevel1Options(formTypeValue),
+            WBSOptionsAPI.getLevel2Options(formTypeValue),
+            WBSOptionsAPI.getAllOptions(formTypeValue)
           ]);
 
           setLevel1Options(l1Options);
@@ -293,7 +296,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       }
     };
     loadInitialData();
-  }, [context?.selectedProject?.id]);
+  }, [context?.selectedProject?.id, formType]);
 
   const getProjectStartDate = () => {
     if (!context?.selectedProject) return null;
@@ -324,18 +327,18 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const addNewMonth = () => {
     const lastMonth = months[months.length - 1];
     const [monthName, yearStr] = lastMonth.split(' ');
-    
+
     // Get the month index (0-11) for the last month
     const monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
     const monthIndex = monthNames.indexOf(monthName);
-    
+
     // Create date from the last month and year
     const lastDate = new Date(2000 + parseInt(yearStr), monthIndex);
     lastDate.setMonth(lastDate.getMonth() + 1);
-    
+
     const newMonth = `${lastDate.toLocaleString('default', { month: 'long' })} ${lastDate.getFullYear().toString().slice(2)}`;
     setMonths([...months, newMonth]);
   };
@@ -519,7 +522,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       if (row.id === rowId) {
         const [monthName, yearStr] = month.split(' ');
         const year = `20${yearStr}`; // Assuming yearStr is 'YY'
-        const newMonthlyHours = { 
+        const newMonthlyHours = {
           ...row.monthlyHours,
           [year]: {
             ...(row.monthlyHours[year] || {}),
@@ -556,14 +559,37 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     }));
   };
 
-  const handleLevelChange = (rowId: string, value: string) => {
+  const handleLevelChange = async (rowId: string, value: string) => {
     const setRowsFunc = formType === 'labour' ? setLabourRows : setOdcRows;
+    const currentRows = formType === 'labour' ? labourRows : odcRows;
+
+    // Update the row with the new value
     setRowsFunc(prevRows => prevRows.map(r => {
       if (r.id === rowId) {
         return { ...r, title: value };
       }
       return r;
     }));
+
+    // Check if this is a level 2 row and fetch level 3 options if needed
+    const changedRow = currentRows.find(r => r.id === rowId);
+    if (changedRow && changedRow.level === 2 && value) {
+      try {
+        // Convert formType to numeric value for API
+        const formTypeValue = formType === 'odc' ? 1 : 0; // 0 = Manpower, 1 = ODC
+
+        // Fetch level 3 options for this level 2 value
+        const level3Options = await WBSOptionsAPI.getLevel3Options(value, formTypeValue);
+
+        // Update the level3OptionsMap with the new options
+        setLevel3OptionsMap(prevMap => ({
+          ...prevMap,
+          [value]: level3Options
+        }));
+      } catch (error) {
+        console.error(`Error loading level 3 options for ${value}:`, error);
+      }
+    }
   };
 
   const handleSubmit = async () => {
@@ -608,7 +634,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     } catch (error: unknown) {
       console.error('Complete Submit Error:', error);
       // Display more specific error message if available
-      const errorMessage = error instanceof Error 
+      const errorMessage = error instanceof Error
         ? `Failed to save WBS data: ${error.message}`
         : 'Failed to save WBS data. Please check that all required fields are filled correctly.';
       setSnackbarMessage(errorMessage);
@@ -640,10 +666,10 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   }
 
   const formContent = (
-    <Container 
+    <Container
       maxWidth={false}
       disableGutters
-      sx={{ 
+      sx={{
         px: 0.5, // Minimal horizontal padding
         '& .MuiPaper-root': {
           boxShadow: 'none',
