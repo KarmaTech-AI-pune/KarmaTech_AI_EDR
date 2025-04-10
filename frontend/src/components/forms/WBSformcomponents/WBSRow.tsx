@@ -66,7 +66,7 @@ interface WBSRowProps {
   roles: Role[];
   employees: Employee[];
   editMode: boolean;
-  formType?: 'labour' | 'odc';
+  formType?: 'manpower' | 'odc';
   levelOptions: WBSOption[];
   childTotals: WBSChildTotals | null;
   sequenceNumber: string;
@@ -125,8 +125,8 @@ const WBSRow: React.FC<WBSRowProps> = ({
                          '#FFFFFF'; // Solid white
 
   return (
-    <TableRow 
-      sx={{ 
+    <TableRow
+      sx={{
         height: '56px',
         '& > td': {
           borderBottom: '1px solid rgba(224, 224, 224, 1)',
@@ -137,8 +137,8 @@ const WBSRow: React.FC<WBSRowProps> = ({
     >
       {!editMode && (
         <TableCell sx={{ width: '48px', bgcolor: backgroundColor }}>
-          <IconButton 
-            size="small" 
+          <IconButton
+            size="small"
             onClick={() => onDelete(row.id)}
             sx={{
               p: 0.5,
@@ -152,7 +152,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
         </TableCell>
       )}
       <WorkDescriptionCell sx={{ bgcolor: backgroundColor }}>
-        <Box sx={{ 
+        <Box sx={{
           height: '40px',
           display: 'flex',
           alignItems: 'center',
@@ -227,17 +227,17 @@ const WBSRow: React.FC<WBSRowProps> = ({
                 scrollbarWidth: 'none',
                 // Hide scrollbar for IE/Edge (older versions)
                 msOverflowStyle: 'none',
-              } 
+              }
             }}
             sx={{ bgcolor: 'background.paper', width: '100%' }}
             renderInput={(params) => (
-              <TextField 
-                {...params} 
-                placeholder="Select Name" 
-                sx={{ 
+              <TextField
+                {...params}
+                placeholder="Select Name"
+                sx={{
                   '& .MuiInputBase-root': { height: '40px', padding: '0 4px 0 6px' },
                   '& .MuiAutocomplete-input': { padding: '7.5px 4px 7.5px 6px !important' } // Adjust padding if needed
-                }} 
+                }}
               />
             )}
           />
@@ -344,7 +344,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
         </>
       ) : (
         <>
-          {formType !== 'labour' && (
+          {formType !== 'manpower' && (
             <TableCell>
               {row.level === 3 ? (
                 <NumberInput

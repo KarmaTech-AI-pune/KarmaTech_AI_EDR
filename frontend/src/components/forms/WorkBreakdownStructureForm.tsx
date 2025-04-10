@@ -14,7 +14,7 @@ import { Employee } from '../../models/employeeModel';
 import { FormWrapper } from './FormWrapper';
 
 interface WorkBreakdownStructureFormProps {
-  formType?: 'labour' | 'odc';
+  formType?: 'manpower' | 'odc';
 }
 
 interface DeleteDialog {
@@ -29,17 +29,17 @@ interface MonthlyHours {
   };
 }
 
-const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({ formType = 'labour' }) => { // Default to 'labour' if undefined
+const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({ formType = 'manpower' }) => { // Default to 'manpower' if undefined
   const context = useContext(projectManagementAppContext);
   // const [rows, setRows] = useState<WBSRowData[]>([]); // Keep original 'rows' for reference during refactor, remove later if unused
-  const [labourRows, setLabourRows] = useState<WBSRowData[]>([]);
+  const [manpowerRows, setManpowerRows] = useState<WBSRowData[]>([]);
   const [odcRows, setOdcRows] = useState<WBSRowData[]>([]);
   const [months, setMonths] = useState<string[]>([]);
   const [roles, setRoles] = useState<resourceRole[]>([]);
   const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [saveLoading, setSaveLoading] = useState<boolean>(false);
-  const [isLabourEditing, setIsLabourEditing] = useState<boolean>(true); // State for Labour form edit mode
+  const [isManpowerEditing, setIsManpowerEditing] = useState<boolean>(true); // State for Manpower form edit mode
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
@@ -144,7 +144,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         setAllWbsData(dataWithRoles); // Store the complete data
 
         // Filter into separate states
-        const currentLabourRows = dataWithRoles.filter(row => {
+        const currentManpowerRows = dataWithRoles.filter(row => {
           const sequenceNumber = getSequenceNumber(row, dataWithRoles);
           if (!sequenceNumber) return false;
           const firstDigit = parseInt(sequenceNumber.split('.')[0]);
@@ -157,11 +157,11 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           return firstDigit >= 6;
         });
 
-        setLabourRows(currentLabourRows);
+        setManpowerRows(currentManpowerRows);
         setOdcRows(currentOdcRows);
 
         // Calculate months based on the currently visible form type's data
-        calculateAndSetMonths(formType === 'labour' ? currentLabourRows : currentOdcRows);
+        calculateAndSetMonths(formType === 'manpower' ? currentManpowerRows : currentOdcRows);
       };
 
       await fetchRolesAndUpdateAllData(allTransformedRows); // Process all transformed rows
@@ -281,7 +281,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           await loadWBSData(context.selectedProject.id.toString());
         } else {
           // If no project selected, reset states
-          setLabourRows([]);
+          setManpowerRows([]);
           setOdcRows([]);
           setAllWbsData([]);
           setMonths([]); // Reset months if no project
@@ -344,14 +344,14 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const addNewRow = (level: 1 | 2 | 3, parentId?: string) => {
-    const currentRows = formType === 'labour' ? labourRows : odcRows;
-    const setRowsFunc = formType === 'labour' ? setLabourRows : setOdcRows;
+    const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
+    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
 
     // For level 1 rows, check limits based on form type
     if (level === 1) {
       const level1Rows = currentRows.filter(row => row.level === 1);
-      if (formType === 'labour' && level1Rows.length >= 5) {
-        setSnackbarMessage('Labour Form can only have up to 5 level 1 rows.');
+      if (formType === 'manpower' && level1Rows.length >= 5) {
+        setSnackbarMessage('Manpower Form can only have up to 5 level 1 rows.');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
         return;
@@ -378,7 +378,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const handleDeleteClick = (rowId: string) => {
-    const currentRows = formType === 'labour' ? labourRows : odcRows;
+    const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
     // Find the row to be deleted to determine its level
     const rowToDelete = currentRows.find(r => r.id === rowId);
     if (!rowToDelete) return; // Row not found
@@ -408,7 +408,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleDeleteConfirm = async () => {
     if (deleteDialog.rowId && context?.selectedProject?.id) {
-      const setRowsFunc = formType === 'labour' ? setLabourRows : setOdcRows;
+      const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
       try {
         // Filter the correct state based on formType
         setRowsFunc(prevRows => prevRows.filter(row => row.id !== deleteDialog.rowId));
@@ -423,7 +423,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const handleRoleChange = (rowId: string, roleId: string) => {
-    const setRowsFunc = formType === 'labour' ? setLabourRows : setOdcRows;
+    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
     setRowsFunc(prevRows => prevRows.map(row => {
       if (row.id === rowId) {
         return {
@@ -438,7 +438,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const handleEmployeeChange = async (rowId: string, employeeId: string) => {
-    const setRowsFunc = formType === 'labour' ? setLabourRows : setOdcRows;
+    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
     try {
       const employee = await ResourceAPI.getEmployeeById(employeeId);
       if (employee) {
@@ -462,8 +462,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const handleCostRateChange = (rowId: string, value: string) => {
-    const setRowsFunc = formType === 'labour' ? setLabourRows : setOdcRows;
-    const currentRows = formType === 'labour' ? labourRows : odcRows;
+    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+    const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
     const row = currentRows.find(r => r.id === rowId);
     if (!row || !row.role) return; // Ensure row exists and has a role assigned
 
@@ -497,7 +497,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const handleHoursChange = (rowId: string, month: string, value: string) => {
-    const setRowsFunc = formType === 'labour' ? setLabourRows : setOdcRows;
+    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
     // Special case for odcHours - Assuming odcHours might be specific to ODC form?
     // If odcHours can appear in both, this logic is fine. If only ODC, add check: if (formType === 'odc' && month === 'odcHours')
     if (month === 'odcHours') {
@@ -544,7 +544,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const handleODCChange = (rowId: string, value: string) => {
-    const setRowsFunc = formType === 'labour' ? setLabourRows : setOdcRows;
+    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
     const odc = value === '' ? 0 : Math.max(parseFloat(value) || 0, 0);
 
     setRowsFunc(prevRows => prevRows.map(row => {
@@ -560,8 +560,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const handleLevelChange = async (rowId: string, value: string) => {
-    const setRowsFunc = formType === 'labour' ? setLabourRows : setOdcRows;
-    const currentRows = formType === 'labour' ? labourRows : odcRows;
+    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+    const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
 
     // Update the row with the new value
     setRowsFunc(prevRows => prevRows.map(r => {
@@ -602,8 +602,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         return;
       }
 
-      // Combine the latest data from both labour and ODC states
-      const combinedWbsData = [...labourRows, ...odcRows];
+      // Combine the latest data from both manpower and ODC states
+      const combinedWbsData = [...manpowerRows, ...odcRows];
 
       // Validate that all tasks in the combined data have titles
       const emptyTitleTasks = combinedWbsData.filter(row => !row.title);
@@ -623,8 +623,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       // Update lastUpdateTime to trigger the useEffect to reload data
       setLastUpdateTime(Date.now()); // This will call loadWBSData again
       // Toggle edit mode after successful save
-      if (formType === 'labour') {
-        setIsLabourEditing(!isLabourEditing);
+      if (formType === 'manpower') {
+        setIsManpowerEditing(!isManpowerEditing);
       } else {
         setIsOdcEditing(!isOdcEditing);
       }
@@ -647,7 +647,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const calculateOverallTotals = () => {
     // Calculate totals based on the currently visible form
-    const currentRows = formType === 'labour' ? labourRows : odcRows;
+    const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
     const level3Rows = currentRows.filter(row => row.level === 3);
     return {
       totalHours: level3Rows.reduce((sum, row) => sum + (row.totalHours || 0), 0), // Add fallback for potentially undefined totalHours
@@ -682,25 +682,25 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       <Paper>
         <WBSHeader
           title={
-            formType === 'labour'
-              ? 'Labour Form'
+            formType === 'manpower'
+              ? 'Manpower Form'
               : formType === 'odc'
               ? 'ODC Form'
                : 'Work Breakdown Structure'
            }
-           editMode={formType === 'labour' ? isLabourEditing : isOdcEditing} // Use form-specific state
-           onEditModeToggle={() => formType === 'labour' ? setIsLabourEditing(!isLabourEditing) : setIsOdcEditing(!isOdcEditing)}
+           editMode={formType === 'manpower' ? isManpowerEditing : isOdcEditing} // Use form-specific state
+           onEditModeToggle={() => formType === 'manpower' ? setIsManpowerEditing(!isManpowerEditing) : setIsOdcEditing(!isOdcEditing)}
            onAddMonth={addNewMonth}
          />
       </Paper>
 
       <Paper>
         <WBSTable
-           rows={formType === 'labour' ? labourRows : odcRows} // Pass the correct rows based on formType
+           rows={formType === 'manpower' ? manpowerRows : odcRows} // Pass the correct rows based on formType
            months={months}
            roles={roles}
            employees={allEmployees}
-           editMode={formType === 'labour' ? isLabourEditing : isOdcEditing} // Use form-specific state
+           editMode={formType === 'manpower' ? isManpowerEditing : isOdcEditing} // Use form-specific state
            formType={formType}
            levelOptions={{
              level1: level1Options,
@@ -723,7 +723,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           totalHours={calculateOverallTotals().totalHours}
           totalCost={calculateOverallTotals().totalCost}
           currency={context?.selectedProject?.currency || ''}
-          disabled={(formType === 'labour' ? isLabourEditing : isOdcEditing)}
+          disabled={(formType === 'manpower' ? isManpowerEditing : isOdcEditing)}
           onSave={handleSubmit}
           loading={saveLoading}
         />

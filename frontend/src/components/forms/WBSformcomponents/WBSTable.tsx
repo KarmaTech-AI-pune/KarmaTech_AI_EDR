@@ -59,7 +59,7 @@ interface WBSTableProps {
   roles: ResourceRole[];
   employees: Employee[];
   editMode: boolean;
-  formType?: 'labour' | 'odc';
+  formType?: 'manpower' | 'odc';
   levelOptions: {
     level1: WBSOption[];
     level2: WBSOption[];
@@ -156,7 +156,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
     if (formType === 'odc') {
       colspan += 2; // Add 2 for ODC Hours and ODC Cost
-    } else if (formType === 'labour') {
+    } else if (formType === 'manpower') {
       colspan += 2; // Add 2 for Total Hours and Total Cost
     } else {
       colspan += 3; // Add 3 for ODCs, Total Hours, and Total Cost
@@ -359,7 +359,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
               </>
             ) : (
               <>
-                {formType !== 'labour' && (
+                {formType !== 'manpower' && (
                   <SummaryHeaderCell sx={{ minWidth: '100px' }}>ODCs</SummaryHeaderCell>
                 )}
                 <SummaryHeaderCell sx={{ minWidth: '100px' }}>Total Hours</SummaryHeaderCell>

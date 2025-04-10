@@ -166,10 +166,10 @@ export const ProjectDetails: React.FC = () => {
       icon: <TaskIcon />,
       subItems: [
         {
-          id: 'labourForm',
-          title: 'Labour Form',
+          id: 'manpowerForm',
+          title: 'Manpower Form',
           icon: <EngineeringIcon />,
-          component: <WorkBreakdownStructureForm formType="labour" />
+          component: <WorkBreakdownStructureForm formType="manpower" />
         },
         {
           id: 'odcForm',
@@ -292,7 +292,7 @@ export const ProjectDetails: React.FC = () => {
         if (form) {
           return form.component;
         }
-        
+
         // If not found, check if it's a sub-item
         for (const formSection of formSections) {
           if (formSection.subItems) {
@@ -302,7 +302,7 @@ export const ProjectDetails: React.FC = () => {
             }
           }
         }
-        
+
         // If still not found, show the forms overview
         return <FormsOverview onFormSelect={handleFormClick} />;
       }
@@ -347,17 +347,17 @@ export const ProjectDetails: React.FC = () => {
               {/* Management Info */}
               <Grid item xs={12} md={4}>
                 <InfoCard title="Management" icon={<PersonIcon />}>
-                  <InfoItem 
-                    label="Project Manager" 
-                    value={getManagerName(project.projectManagerId)} 
+                  <InfoItem
+                    label="Project Manager"
+                    value={getManagerName(project.projectManagerId)}
                   />
-                  <InfoItem 
-                    label="Senior Project Manager" 
-                    value={getManagerName(project.seniorProjectManagerId)} 
+                  <InfoItem
+                    label="Senior Project Manager"
+                    value={getManagerName(project.seniorProjectManagerId)}
                   />
-                  <InfoItem 
-                    label="Regional Manager" 
-                    value={getManagerName(project.regionalManagerId)} 
+                  <InfoItem
+                    label="Regional Manager"
+                    value={getManagerName(project.regionalManagerId)}
                   />
                 </InfoCard>
               </Grid>
@@ -365,18 +365,18 @@ export const ProjectDetails: React.FC = () => {
               {/* Financial Info */}
               <Grid item xs={12} md={4}>
                 <InfoCard title="Financial Details" icon={<AttachMoneyIcon />}>
-                  <InfoItem 
-                    label="Estimated Cost" 
-                    value={formatCurrency(project.estimatedCost, project.currency)} 
+                  <InfoItem
+                    label="Estimated Cost"
+                    value={formatCurrency(project.estimatedCost, project.currency)}
                   />
                   {project.budget && (
-                    <InfoItem 
-                      label="Budget" 
-                      value={formatCurrency(project.budget, project.currency)} 
+                    <InfoItem
+                      label="Budget"
+                      value={formatCurrency(project.budget, project.currency)}
                     />
                   )}
                   <InfoItem label="Fee Type" value={project.feeType} />
-                  <Chip 
+                  <Chip
                     label={project.currency}
                     size="small"
                     color="primary"
@@ -419,8 +419,8 @@ export const ProjectDetails: React.FC = () => {
   };
 
   return (
-    <Box 
-      sx={{ 
+    <Box
+      sx={{
         display: 'flex',
         minHeight: `calc(100vh - ${NAVBAR_HEIGHT})`,
         pt: `${NAVBAR_HEIGHT}`,
@@ -505,7 +505,7 @@ export const ProjectDetails: React.FC = () => {
                           <ListItemIcon>
                             {item.icon}
                           </ListItemIcon>
-                          <ListItemText 
+                          <ListItemText
                             primary={item.title}
                             primaryTypographyProps={{
                               variant: 'body2',
@@ -516,7 +516,7 @@ export const ProjectDetails: React.FC = () => {
                             expandedForm === item.id ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
                           )}
                         </ListItemButton>
-                        
+
                         {/* Render sub-items if this form has them */}
                         {item.subItems && (
                           <Collapse in={expandedForm === item.id} timeout="auto" unmountOnExit>
