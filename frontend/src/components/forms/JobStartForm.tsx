@@ -26,10 +26,11 @@ import { projectManagementAppContextType, JobStartFormData } from '../../types';
 import { WBSTaskResourceAllocation } from "../../models";;
 import { WBSRowData } from '../../types/wbs';
 import { FormWrapper } from './FormWrapper';
-import { 
+import {
   submitJobStartForm,
   getJobStartFormById,
-  getJobStartFormByProjectId 
+  getJobStartFormByProjectId,
+  updateJobStartForm // Import the new update function
 } from '../../services/jobStartFormApi';
 import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi'; // Keep for fetching initial data for now
 
@@ -123,6 +124,8 @@ const JobStartForm: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [isUpdating, setIsUpdating] = useState(false); // State to track if updating
+  const [currentFormId, setCurrentFormId] = useState<number | string | null>(null); // State to store the ID of the form being updated
 
   const [timeContingency, setTimeContingency] = useState<TimeContingencyEntry>({
     rate: '',
@@ -171,31 +174,10 @@ const JobStartForm: React.FC = () => {
     percentage: '15'
   });
 
-  const [formLoaded, setFormLoaded] = useState(false);
+  // Removed formLoaded state as loading logic is handled differently now
 
+  // Effect for fetching initial WBS/Resource data (only runs once or when project changes)
   useEffect(() => {
-    const fetchFormData = async () => {
-      if (!context?.selectedProject?.id || formLoaded) return;
-      
-      try {
-        setLoading(true);
-        const formData = await getJobStartFormById(context.selectedProject.id.toString(), 'current');
-        
-        // Update all form state with fetched data
-        setEmployeeAllocations(formData.time.employeeAllocations);
-        setTimeContingency(formData.time.timeContingency);
-        setExpenses(formData.expenses.regularExpenses);
-        setSurveyWorks(formData.expenses.surveyWorks);
-        setOutsideAgency(formData.expenses.outsideAgency);
-        setProjectSpecific(formData.expenses.projectSpecific);
-        setProjectFees(formData.projectFees?.toString() ?? '');
-        setServiceTax({ percentage: formData.serviceTax.percentage?.toString() ?? '15' });
-        setFormLoaded(true);
-      } catch (error) {
-        console.log('No existing form data found, starting fresh');
-      }
-    };
-
     const fetchAllocations = async () => {
       if (!context?.selectedProject?.id) {
         setError('No project selected');
@@ -204,7 +186,7 @@ const JobStartForm: React.FC = () => {
       }
 
       try {
-        setLoading(true);
+        setLoading(true); // Start loading for WBS/Resource data
         setError(null);
 
         const [allocations, wbsTasks] = await Promise.all([
@@ -226,7 +208,7 @@ const JobStartForm: React.FC = () => {
               allocations: [],
               totalHours: 0,
               totalCost: 0,
-              remarks: ''
+              remarks: '' // Initialize remarks here
             });
           }
 
@@ -245,16 +227,108 @@ const JobStartForm: React.FC = () => {
           emp.totalCost += taskCost;
         });
 
+        // Set initial employee allocations based on WBS/Resource data
+        // This will be overwritten if existing form data is found later
         setEmployeeAllocations(Array.from(employeeMap.values()));
+
       } catch (error) {
-        console.error('Error fetching allocations:', error);
-        setError('Failed to load allocation data');
+        console.error('Error fetching initial WBS/Resource data:', error);
+        setError('Failed to load initial project data');
       } finally {
-        setLoading(false);
+        setLoading(false); // Finish loading for WBS/Resource data
       }
     };
 
     fetchAllocations();
+  }, [context?.selectedProject?.id]);
+
+
+  // Effect for loading existing Job Start Form data or falling back to local storage
+  useEffect(() => {
+    const loadFormData = async () => {
+      const projectId = context?.selectedProject?.id?.toString();
+      if (!projectId) return;
+
+      setLoading(true); // Start loading for form data
+      setIsUpdating(false); // Reset update status
+      setCurrentFormId(null); // Reset form ID
+
+      try {
+        // Try to fetch the latest form data from the backend
+        // Assuming getJobStartFormByProjectId fetches the most relevant/latest form if multiple exist
+        // Or adjust to use getJobStartFormById if a specific ID is known/needed
+        const response = await getJobStartFormByProjectId(projectId); // Using ByProjectId for simplicity, adjust if needed
+
+        if (response && response.formId) { // Check if data and formId exist
+          console.log('Existing form data loaded from backend:', response);
+          // Populate state with backend data
+          setEmployeeAllocations(response.time.employeeAllocations);
+          setTimeContingency(response.time.timeContingency);
+          setExpenses(response.expenses.regularExpenses);
+          setSurveyWorks(response.expenses.surveyWorks);
+          setOutsideAgency(response.expenses.outsideAgency);
+          setProjectSpecific(response.expenses.projectSpecific);
+          setProjectFees(response.projectFees?.toString() ?? '');
+          setServiceTax({ percentage: response.serviceTax.percentage?.toString() ?? '18' });
+
+          // Mark as updating and store the form ID
+          setIsUpdating(true);
+          setCurrentFormId(response.formId); // Assuming formId is part of the response
+
+          // Optional: Update localStorage with fresh backend data
+          localStorage.setItem(`jobStartFormData_${projectId}`, JSON.stringify(response));
+          setLoading(false); // Finish loading
+          return; // Exit after successful backend load
+        } else {
+           console.log('No existing form data found on backend for this project.');
+        }
+
+      } catch (error) {
+        console.warn('Failed to fetch form data from backend, checking local storage.', error);
+      }
+
+      // Fallback to localStorage if backend fetch fails or returns no data
+      try {
+        const savedFormData = localStorage.getItem(`jobStartFormData_${projectId}`);
+        if (savedFormData) {
+          console.log('Loading form data from local storage.');
+          const parsedData = JSON.parse(savedFormData);
+          // Populate state with local storage data
+          setEmployeeAllocations(parsedData.time.employeeAllocations);
+          setTimeContingency(parsedData.time.timeContingency);
+          setExpenses(parsedData.expenses.regularExpenses);
+          setSurveyWorks(parsedData.expenses.surveyWorks);
+          setOutsideAgency(parsedData.expenses.outsideAgency);
+          setProjectSpecific(parsedData.expenses.projectSpecific);
+          setProjectFees(parsedData.projectFees?.toString() ?? '');
+          setServiceTax({ percentage: parsedData.serviceTax.percentage?.toString() ?? '18' });
+
+          // If local storage data has an ID, assume we are updating it
+          if (parsedData.formId) {
+            setIsUpdating(true);
+            setCurrentFormId(parsedData.formId);
+          } else {
+            // Data from local storage without an ID implies it was saved before first submission
+            setIsUpdating(false);
+            setCurrentFormId(null);
+          }
+        } else {
+          console.log('No form data found in local storage either. Starting fresh.');
+          // Reset form fields if needed, or rely on initial state values
+           setIsUpdating(false);
+           setCurrentFormId(null);
+        }
+      } catch (e) {
+        console.error("Error reading or parsing local storage data:", e);
+        setIsUpdating(false);
+        setCurrentFormId(null);
+      } finally {
+         setLoading(false); // Finish loading attempt
+      }
+    };
+
+    loadFormData();
+    // Dependency array includes project ID to reload when project changes
   }, [context?.selectedProject?.id]);
 
   const calculateTotalCost = (employees: EmployeeAllocation[], isConsultant: boolean) => {
@@ -379,88 +453,29 @@ const JobStartForm: React.FC = () => {
     return fees + tax;
   };
 
-  // Load form data - try backend first, then localStorage
-  useEffect(() => {
-    const loadFormData = async () => {
-      const projectId = context?.selectedProject?.id?.toString();
-      if (!projectId) return;
-
-      try {
-        // Try to fetch from backend first
-        const response = await getJobStartFormByProjectId(projectId);
-        if (response) {
-          setEmployeeAllocations(response.time.employeeAllocations);
-          setTimeContingency(response.time.timeContingency);
-          setExpenses(response.expenses.regularExpenses);
-          setSurveyWorks(response.expenses.surveyWorks);
-          setOutsideAgency(response.expenses.outsideAgency);
-          setProjectSpecific(response.expenses.projectSpecific);
-          setProjectFees(response.projectFees?.toString() ?? '');
-          setServiceTax({ percentage: response.serviceTax.percentage?.toString() ?? '15' });
-          // Update localStorage with fresh backend data
-          localStorage.setItem('jobStartFormData', JSON.stringify({
-            employeeAllocations: response.time.employeeAllocations,
-            timeContingency: response.time.timeContingency,
-            expenses: response.expenses.regularExpenses,
-            surveyWorks: response.expenses.surveyWorks,
-            outsideAgency: response.expenses.outsideAgency,
-            projectSpecific: response.expenses.projectSpecific,
-            projectFees: response.projectFees,
-            serviceTax: response.serviceTax
-          }));
-          return;
-        }
-      } catch (error) {
-        console.log('Falling back to locally stored form data');
-      }
-
-      // Fallback to localStorage if backend fetch fails
-      const savedFormData = localStorage.getItem('jobStartFormData');
-      if (savedFormData) {
-        const parsedData = JSON.parse(savedFormData);
-        setEmployeeAllocations(parsedData.employeeAllocations);
-        setTimeContingency(parsedData.timeContingency);
-        setExpenses(parsedData.expenses);
-        setSurveyWorks(parsedData.surveyWorks);
-        setOutsideAgency(parsedData.outsideAgency);
-        setProjectSpecific(parsedData.projectSpecific);
-        setProjectFees(parsedData.projectFees);
-        setServiceTax(parsedData.serviceTax);
-      }
-    };
-
-    if (context?.selectedProject?.id) {
-      loadFormData();
-    }
-  }, [context?.selectedProject?.id]);
+  // Removed the separate useEffect for loading form data as it's combined above.
 
   const handleSubmit = async () => {
-    if (!context?.selectedProject?.id) {
+    const projectId = context?.selectedProject?.id;
+    if (!projectId) {
       setSnackbarMessage('No project selected. Cannot submit.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
       return;
     }
 
-    // Save form state to localStorage
-    const formState = {
-      employeeAllocations,
-      timeContingency,
-      expenses,
-      surveyWorks,
-      outsideAgency,
-      projectSpecific,
-      projectFees,
-      serviceTax
-    };
-    localStorage.setItem('jobStartFormData', JSON.stringify(formState));
+    // It might be better to save to local storage periodically on field changes,
+    // rather than only on submit, to prevent data loss if submission fails.
+    // For now, we remove the automatic save on submit and clear it on success.
+    // const formState = { ... }; // Data collection moved below
+    // localStorage.setItem(`jobStartFormData_${projectId}`, JSON.stringify(formState));
 
+    setSubmitting(true);
     try {
-      setSubmitting(true);
-
-      // Collect all form data
-      const formData: JobStartFormData = { // Added type annotation
-        projectId: context.selectedProject.id, // Already checked for null/undefined
+      // Collect all form data into the structure expected by the API
+      const formData: JobStartFormData = {
+        projectId: projectId,
+        formId: isUpdating ? Number(currentFormId) : undefined, // Include formId only if updating
         time: {
           employeeAllocations,
           timeContingency,
@@ -481,20 +496,44 @@ const JobStartForm: React.FC = () => {
         },
         totalProjectFees: calculateTotalProjectFees(),
         profit: calculateProfit()
+        // Add any other fields from the form that need to be sent
       };
 
-      // Call the real API service
-      await submitJobStartForm(context.selectedProject.id, formData);
+      let response;
+      if (isUpdating && currentFormId) {
+        // Call the update API function
+        console.log(`Attempting to update form ID: ${currentFormId} for project: ${projectId}`);
+        response = await updateJobStartForm(projectId, currentFormId, formData);
+        setSnackbarMessage('Job Start Form updated successfully');
+      } else {
+        // Call the create API function
+        console.log(`Attempting to create new form for project: ${projectId}`);
+        response = await submitJobStartForm(projectId, formData);
+        // If creation is successful, we might get the new formId back
+        // If so, update the state to reflect we are now "updating" this new form
+        if (response && response.formId) {
+             setIsUpdating(true);
+             setCurrentFormId(response.formId);
+             console.log(`New form created with ID: ${response.formId}. Switched to update mode.`);
+        }
+        setSnackbarMessage('Job Start Form submitted successfully');
+      }
 
-      // Show success message
-      setSnackbarMessage('Job Start Form submitted successfully');
+      // Clear local storage on successful submission/update
+      localStorage.removeItem(`jobStartFormData_${projectId}`);
+      console.log('Cleared local storage for project:', projectId);
+
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
+
     } catch (error) {
-      console.error('Error submitting form:', error);
-      setSnackbarMessage('Failed to submit Job Start Form');
+      console.error('Error submitting/updating form:', error);
+      setSnackbarMessage(`Failed to ${isUpdating ? 'update' : 'submit'} Job Start Form`);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
+      // Consider saving the current state to local storage here on failure
+      // to allow the user to retry without losing data.
+      // localStorage.setItem(`jobStartFormData_${projectId}_failed`, JSON.stringify(formData));
     } finally {
       setSubmitting(false);
     }
@@ -1192,10 +1231,10 @@ fullWidth
               {submitting ? (
                 <>
                   <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
-                  Submitting...
+                  {isUpdating ? 'Updating...' : 'Submitting...'}
                 </>
               ) : (
-                'Submit'
+                isUpdating ? 'Update Form' : 'Submit Form' // Change button text based on mode
               )}
             </Button>
           </Box>

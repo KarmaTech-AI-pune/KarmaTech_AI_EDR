@@ -143,6 +143,7 @@ export interface ExpensesData {
 }
 
 export interface JobStartFormData {
+    formId?: number | string; // Added optional formId for updates
     projectId: number | string | undefined; // Match context type
     time: TimeData;
     expenses: ExpensesData;
