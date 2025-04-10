@@ -35,41 +35,13 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
             // Validate required fields
             if (request.JobStartForm.ProjectId <= 0)
                 throw new ArgumentException("Invalid ProjectId", nameof(request.JobStartForm.ProjectId));
-
-            // Check for existing form
-            var existingForm = (await _jobStartFormRepository.GetAllByProjectIdAsync(request.JobStartForm.ProjectId)).FirstOrDefault();
             
-            if (existingForm != null)
-            {
-                // Update existing form
-                existingForm.WorkBreakdownStructureId = request.JobStartForm.WorkBreakdownStructureId;
-                existingForm.FormTitle = request.JobStartForm.FormTitle ?? string.Empty;
-                existingForm.Description = request.JobStartForm.Description ?? string.Empty;
-                existingForm.StartDate = request.JobStartForm.StartDate;
-                existingForm.PreparedBy = request.JobStartForm.PreparedBy ?? string.Empty;
-                existingForm.UpdatedDate = DateTime.UtcNow;
+            // Prevent creating with existing FormID
+            if (request.JobStartForm.FormId != 0)
+                throw new ArgumentException("FormID must not be provided for new entries. Use update instead.");
 
-                // Update serialized data
-                existingForm.TimeDataJson = request.JobStartForm.Time != null 
-                    ? JsonSerializer.Serialize(request.JobStartForm.Time) 
-                    : null;
-                existingForm.ExpensesDataJson = request.JobStartForm.Expenses != null 
-                    ? JsonSerializer.Serialize(request.JobStartForm.Expenses) 
-                    : null;
-                existingForm.ServiceTaxJson = request.JobStartForm.ServiceTax != null 
-                    ? JsonSerializer.Serialize(request.JobStartForm.ServiceTax) 
-                    : null;
-
-                // Update financial fields
-                existingForm.GrandTotal = request.JobStartForm.GrandTotal;
-                existingForm.ProjectFees = request.JobStartForm.ProjectFees;
-                existingForm.TotalProjectFees = request.JobStartForm.TotalProjectFees;
-                existingForm.Profit = request.JobStartForm.Profit;
-
-                await _jobStartFormRepository.UpdateAsync(existingForm);
-                await _unitOfWork.SaveChangesAsync();
-                return existingForm.FormId;
-            }
+            // Removed check for existing form and update logic. This handler only creates.
+            // If an existing form needs update, a separate Update command/handler should be used.
 
             // Create new form
             var jobStartForm = new NJS.Domain.Entities.JobStartForm
@@ -81,21 +53,14 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                 StartDate = request.JobStartForm.StartDate,
                 PreparedBy = request.JobStartForm.PreparedBy ?? string.Empty,
                 CreatedDate = DateTime.UtcNow,
-                
-                // Serialize complex objects to JSON, handling null cases
-                TimeDataJson = request.JobStartForm.Time != null 
-                    ? JsonSerializer.Serialize(request.JobStartForm.Time) 
-                    : null,
-                
-                ExpensesDataJson = request.JobStartForm.Expenses != null 
-                    ? JsonSerializer.Serialize(request.JobStartForm.Expenses) 
-                    : null,
-                
-                ServiceTaxJson = request.JobStartForm.ServiceTax != null 
-                    ? JsonSerializer.Serialize(request.JobStartForm.ServiceTax) 
-                    : null,
 
-                // Financial fields with null checks
+                // Map calculated summary fields directly (Manual Mapping)
+                TotalTimeCost = request.JobStartForm.TotalTimeCost,
+                TotalExpenses = request.JobStartForm.TotalExpenses,
+                ServiceTaxAmount = request.JobStartForm.ServiceTaxAmount,
+                ServiceTaxPercentage = request.JobStartForm.ServiceTaxPercentage,
+
+                // Map other financial fields
                 GrandTotal = request.JobStartForm.GrandTotal,
                 ProjectFees = request.JobStartForm.ProjectFees,
                 TotalProjectFees = request.JobStartForm.TotalProjectFees,

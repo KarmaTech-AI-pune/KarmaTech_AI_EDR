@@ -217,23 +217,32 @@ namespace NJS.Domain.Database
             {
                 entity.HasKey(e => e.FormId);
 
+                entity.Property(e => e.GrandTotal).HasPrecision(18, 2);
+                entity.Property(e => e.Profit).HasPrecision(18, 2);
+                entity.Property(e => e.ProjectFees).HasPrecision(18, 2);
+                entity.Property(e => e.ServiceTaxAmount).HasPrecision(18, 2);
+                entity.Property(e => e.ServiceTaxPercentage).HasPrecision(5, 2);
+                entity.Property(e => e.TotalExpenses).HasPrecision(18, 2);
+                entity.Property(e => e.TotalProjectFees).HasPrecision(18, 2);
+                entity.Property(e => e.TotalTimeCost).HasPrecision(18, 2);
+
                 entity.HasOne(jsf => jsf.Project)
-                      .WithMany() // Assuming Project doesn't have a direct collection of JobStartForms
+                      .WithMany()
                       .HasForeignKey(jsf => jsf.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade); // Or Restrict depending on requirements
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(jsf => jsf.WorkBreakdownStructure)
-                      .WithMany(wbs => wbs.JobStartForms) // Add navigation property to WorkBreakdownStructure
+                      .WithMany(wbs => wbs.JobStartForms)
                       .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
-                      .IsRequired(false) // Make the WBS link optional
-                      .OnDelete(DeleteBehavior.NoAction); // Change to NoAction to avoid cycles
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasMany(jsf => jsf.Selections)
                       .WithOne(s => s.JobStartForm)
                       .HasForeignKey(s => s.FormId)
-                      .OnDelete(DeleteBehavior.Cascade); // Deleting form deletes its selections
+                      .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasIndex(jsf => jsf.ProjectId); // Index for faster lookup by project
+                entity.HasIndex(jsf => jsf.ProjectId);
             });
 
             // Configure JobStartFormSelection entity

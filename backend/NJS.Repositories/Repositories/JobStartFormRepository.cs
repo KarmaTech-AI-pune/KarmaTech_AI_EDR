@@ -50,20 +50,21 @@ namespace NJS.Repositories.Repositories
             // SaveChanges is handled by UnitOfWork
         }
 
-        public async Task UpdateAsync(JobStartForm jobStartForm)
+        public Task UpdateAsync(JobStartForm jobStartForm)
         {
-            _context.Entry(jobStartForm).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            _context.JobStartForms.Update(jobStartForm);
+            return Task.CompletedTask;
         }
 
-        public async Task DeleteAsync(JobStartForm jobStartForm)
+        public Task DeleteAsync(JobStartForm jobStartForm) // Changed to Task, no longer async
         {
             if (jobStartForm != null)
             {
-                jobStartForm.IsDeleted = true;
+                jobStartForm.IsDeleted = true; // Soft delete
                 _context.Entry(jobStartForm).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
+                // Removed SaveChangesAsync - Handled by UnitOfWork
             }
+            return Task.CompletedTask; // Return completed task
         }
     }
 }

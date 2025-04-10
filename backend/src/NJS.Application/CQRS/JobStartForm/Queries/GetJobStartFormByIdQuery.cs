@@ -49,17 +49,10 @@ namespace NJS.Application.CQRS.JobStartForm.Queries
                 UpdatedDate = jobStartForm.UpdatedDate,
 
                 // Deserialize complex objects from JSON
-                Time = string.IsNullOrEmpty(jobStartForm.TimeDataJson) 
-                    ? null 
-                    : JsonSerializer.Deserialize<TimeDataDto>(jobStartForm.TimeDataJson),
-
-                Expenses = string.IsNullOrEmpty(jobStartForm.ExpensesDataJson) 
-                    ? null 
-                    : JsonSerializer.Deserialize<ExpensesDataDto>(jobStartForm.ExpensesDataJson),
-
-                ServiceTax = string.IsNullOrEmpty(jobStartForm.ServiceTaxJson) 
-                    ? null 
-                    : JsonSerializer.Deserialize<ServiceTaxDataDto>(jobStartForm.ServiceTaxJson),
+                TotalTimeCost = jobStartForm.TotalTimeCost,
+                TotalExpenses = jobStartForm.TotalExpenses,
+                ServiceTaxPercentage = jobStartForm.ServiceTaxPercentage,
+                ServiceTaxAmount = jobStartForm.ServiceTaxAmount,
 
                 // Financial fields
                 GrandTotal = jobStartForm.GrandTotal,
