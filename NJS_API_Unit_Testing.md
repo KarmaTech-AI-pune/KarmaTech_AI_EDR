@@ -271,6 +271,92 @@ The middleware tests use the TestServer class from Microsoft.AspNetCore.TestHost
 3. Test various scenarios including success cases and error cases
 4. Verify that middleware correctly modifies the request/response pipeline
 
+## Phase 6: Validation Tests
+
+### Components Tested
+
+1. **Entity Validation**
+   - Tests for data annotations on entity classes
+   - Validation of required fields
+   - Validation of range constraints
+   - Validation of string length constraints
+
+2. **Command Validation**
+   - Tests for validation in command handlers
+   - Validation of required parameters
+   - Validation of business rules
+   - Error handling for invalid inputs
+
+3. **Controller Validation**
+   - Tests for model state validation in controllers
+   - Validation of request parameters
+   - Proper error responses for invalid inputs
+
+4. **Model Validation**
+   - Tests for validation of DTOs and request models
+   - Validation of required fields
+   - Validation of data types and formats
+   - Validation of business rules
+
+### Test Results
+
+The validation tests revealed several important aspects of the application's validation approach:
+
+1. **Multiple Validation Layers**: The application uses validation at multiple layers:
+   - Data annotations on entity classes
+   - Manual validation in command handlers
+   - Model state validation in controllers
+   - Business rule validation in services
+
+2. **Validation Error Handling**: The application returns appropriate error responses for invalid inputs:
+   - 400 Bad Request for invalid model state
+   - 404 Not Found for non-existent resources
+   - 500 Internal Server Error for unexpected errors
+
+3. **Descriptive Error Messages**: Validation error messages are descriptive and helpful for users:
+   - Clear indication of which field failed validation
+   - Specific information about validation requirements
+   - Guidance on how to fix the issue
+
+### Test Score for Phase 6
+
+- **Tests Run**: 9
+- **Tests Passed**: 9
+- **Tests Failed**: 0
+- **Test Duration**: 93 ms
+
+### Validation Examples
+
+#### Example 1: Required Field Validation
+```csharp
+// Entity validation using data annotations
+[Required]
+[StringLength(100)]
+public string? Name { get; set; }
+
+// Command handler validation
+if (string.IsNullOrEmpty(command.Name))
+    throw new ArgumentException("Name is required", nameof(command.Name));
+```
+
+#### Example 2: Range Validation
+```csharp
+// Entity validation using data annotations
+[Range(0, 10)]
+public int MarketingPlanScore { get; set; }
+
+// Command handler validation
+if (command.Score < 0 || command.Score > 10)
+    throw new ArgumentOutOfRangeException(nameof(command.Score), "Score must be between 0 and 10");
+```
+
+#### Example 3: Business Rule Validation
+```csharp
+// Command handler validation
+if (command.EndDate <= command.StartDate)
+    throw new ArgumentException("End date must be later than start date");
+```
+
 ## Future Testing Improvements
 
 While the current test suite provides good coverage, future improvements could include:
