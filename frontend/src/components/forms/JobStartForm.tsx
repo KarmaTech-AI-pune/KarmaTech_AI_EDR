@@ -257,30 +257,32 @@ const JobStartForm: React.FC = () => {
         // Try to fetch the latest form data from the backend
         // Assuming getJobStartFormByProjectId fetches the most relevant/latest form if multiple exist
         // Or adjust to use getJobStartFormById if a specific ID is known/needed
-        const response = await getJobStartFormByProjectId(projectId); // Using ByProjectId for simplicity, adjust if needed
+        // Fetch the array of forms for the project
+        const responseArray = await getJobStartFormByProjectId(projectId);
 
-        if (response && response.formId) { // Check if data and formId exist
-          console.log('Existing form data loaded from backend:', response);
-          // Populate state with backend data
-          setEmployeeAllocations(response.time.employeeAllocations);
-          setTimeContingency(response.time.timeContingency);
-          setExpenses(response.expenses.regularExpenses);
-          setSurveyWorks(response.expenses.surveyWorks);
-          setOutsideAgency(response.expenses.outsideAgency);
-          setProjectSpecific(response.expenses.projectSpecific);
-          setProjectFees(response.projectFees?.toString() ?? '');
-          setServiceTax({ percentage: response.serviceTax.percentage?.toString() ?? '18' });
+        // Check if the array is valid and contains at least one form
+        if (responseArray && Array.isArray(responseArray) && responseArray.length > 0) {
+          // Assume we use the first form found (backend might need sorting logic later)
+          const backendDto = responseArray[0];
+          console.log('Flat DTO loaded from backend:', backendDto);
+
+          // Populate ONLY the state fields that exist in the flat DTO
+          setProjectFees(backendDto.projectFees?.toString() ?? '');
+          setServiceTax({ percentage: backendDto.serviceTaxPercentage?.toString() ?? '18' });
+          // NOTE: We CANNOT populate employeeAllocations, expenses, timeContingency etc.
+          // from the flat DTO as the detail is not stored there.
+          // These rely on the initial WBS fetch, default values, and user input.
 
           // Mark as updating and store the form ID
           setIsUpdating(true);
-          setCurrentFormId(response.formId); // Assuming formId is part of the response
+          setCurrentFormId(backendDto.formId);
 
-          // Optional: Update localStorage with fresh backend data
-          localStorage.setItem(`jobStartFormData_${projectId}`, JSON.stringify(response));
+          // We don't save the flat DTO to local storage here, as local storage
+          // should hold the full nested structure if needed for fallback.
           setLoading(false); // Finish loading
-          return; // Exit after successful backend load
+          return; // Exit after successful backend load (using flat DTO info)
         } else {
-           console.log('No existing form data found on backend for this project.');
+           console.log('No existing form data DTO found on backend for this project.');
         }
 
       } catch (error) {

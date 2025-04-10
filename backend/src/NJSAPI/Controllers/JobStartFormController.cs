@@ -24,6 +24,7 @@ namespace NJSAPI.Controllers
 
         // GET: api/projects/{projectId}/jobstartforms
         [HttpGet]
+        [AllowAnonymous] // Allow access without authentication for this specific endpoint
         [ProducesResponseType(typeof(IEnumerable<JobStartFormDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<JobStartFormDto>>> GetAllJobStartForms(int projectId)
         {
@@ -34,6 +35,7 @@ namespace NJSAPI.Controllers
 
         // GET: api/projects/{projectId}/jobstartforms/{id}
         [HttpGet("{id}")]
+        [AllowAnonymous] // Allow access without authentication for this specific endpoint
         [ProducesResponseType(typeof(JobStartFormDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<JobStartFormDto>> GetJobStartFormById(int projectId, int id) // projectId might be needed for authorization/context
