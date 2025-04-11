@@ -15,7 +15,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Button,
   Snackbar,
   Alert
 } from '@mui/material';
@@ -24,12 +23,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // Removed dummy API imports: import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType, JobStartFormData } from '../../types'; // Added JobStartFormData
-import { WBSTaskResourceAllocation } from "../../models";
-import { WBSRowData } from '../../types/wbs';
 import { FormWrapper } from './FormWrapper';
 import {
   submitJobStartForm,
-  getJobStartFormById,
   getJobStartFormByProjectId,
   updateJobStartForm, // Import the new update function
   getWBSResourceData // Import the new function to get WBS resource data
@@ -90,12 +86,7 @@ type ExpensesType = {
   '7': ExpenseEntry;
 }
 
-interface ExpensesData {
-  regularExpenses: ExpensesType;
-  surveyWorks: ExpenseEntry;
-  outsideAgency: OutsideAgencyType;
-  projectSpecific: ProjectSpecificType;
-}
+// ExpensesData interface is defined in types.ts
 
 type OutsideAgencyType = {
   'a': OutsideAgencyEntry;
@@ -185,7 +176,7 @@ const JobStartForm: React.FC = () => {
         setError(null);
 
         // Use the new API to get WBS resource data
-        const wbsResourceData = await getWBSResourceData(context.selectedProject.id.toString());
+        const wbsResourceData = await getWBSResourceData(context.selectedProject?.id?.toString() || '');
 
         const employeeMap = new Map<string, EmployeeAllocation>();
 
@@ -1210,6 +1201,9 @@ fullWidth
             <LoadingButton
               onClick={handleSubmit}
               disabled={submitting}
+              loading={submitting}
+              text={isUpdating ? 'Update Form' : 'Submit Form'}
+              loadingText={isUpdating ? 'Updating...' : 'Submitting...'}
               sx={{
                 px: 4,
                 py: 1.5,
@@ -1217,16 +1211,7 @@ fullWidth
                 fontWeight: 'bold',
                 boxShadow: 2
               }}
-            >
-              {submitting ? (
-                <>
-                  <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
-                  {isUpdating ? 'Updating...' : 'Submitting...'}
-                </>
-              ) : (
-                isUpdating ? 'Update Form' : 'Submit Form' // Change button text based on mode
-              )}
-            </LoadingButton>
+            />
           </Box>
         </Paper>
       </Box>
