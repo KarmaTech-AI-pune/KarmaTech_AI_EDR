@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  CircularProgress, 
-  TextField, 
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  CircularProgress,
+  TextField,
   Container,
   Accordion,
   AccordionSummary,
@@ -24,16 +24,16 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // Removed dummy API imports: import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType, JobStartFormData } from '../../types'; // Added JobStartFormData
-import { WBSTaskResourceAllocation } from "../../models";;
+import { WBSTaskResourceAllocation } from "../../models";
 import { WBSRowData } from '../../types/wbs';
 import { FormWrapper } from './FormWrapper';
 import {
   submitJobStartForm,
   getJobStartFormById,
   getJobStartFormByProjectId,
-  updateJobStartForm // Import the new update function
+  updateJobStartForm, // Import the new update function
+  getWBSResourceData // Import the new function to get WBS resource data
 } from '../../services/jobStartFormApi';
-import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi'; // Keep for fetching initial data for now
 
 interface TaskAllocation {
   taskId: string;
@@ -175,37 +175,28 @@ const JobStartForm: React.FC = () => {
     percentage: '15'
   });
 
-  // Removed formLoaded state as loading logic is handled differently now
-
-  // Effect for fetching initial WBS/Resource data (only runs once or when project changes)
+    // Effect for loading WBS and Resource data
   useEffect(() => {
-    const fetchAllocations = async () => {
-      if (!context?.selectedProject?.id) {
-        setError('No project selected');
-        setLoading(false);
-        return;
-      }
+    if (!context?.selectedProject?.id) return;
 
+    const fetchWBSResourceData = async () => {
       try {
         setLoading(true); // Start loading for WBS/Resource data
         setError(null);
 
-        const [allocations, wbsTasks] = await Promise.all([
-          ResourceAPI.getResourceAllocations(context.selectedProject.id.toString()),
-          WBSStructureAPI.getProjectWBS(context.selectedProject.id.toString())
-        ]);
+        // Use the new API to get WBS resource data
+        const wbsResourceData = await getWBSResourceData(context.selectedProject.id.toString());
 
         const employeeMap = new Map<string, EmployeeAllocation>();
 
-        allocations.forEach((allocation: WBSTaskResourceAllocation) => {
-          if (!allocation.employee) return;
-
-          const employeeId = allocation.employee.id;
+        // Process the resource allocations from the backend
+        wbsResourceData.resourceAllocations.forEach((allocation: any) => {
+          const employeeId = allocation.employeeId;
           if (!employeeMap.has(employeeId)) {
             employeeMap.set(employeeId, {
               id: employeeId,
-              name: allocation.employee.name,
-              is_consultant: allocation.employee.is_consultant,
+              name: allocation.employeeName,
+              is_consultant: allocation.isConsultant,
               allocations: [],
               totalHours: 0,
               totalCost: 0,
@@ -214,17 +205,16 @@ const JobStartForm: React.FC = () => {
           }
 
           const emp = employeeMap.get(employeeId)!;
-          const task = wbsTasks.find((t: WBSRowData) => t.id === allocation.wbs_task_id);
-          const taskCost = allocation.cost_rate * (allocation.total_hours || 0);
+          const taskCost = allocation.costRate * allocation.totalHours;
 
           emp.allocations.push({
-            taskId: allocation.wbs_task_id,
-            title: task?.title || `Task ${allocation.wbs_task_id}`,
-            rate: allocation.cost_rate,
-            hours: allocation.total_hours || 0,
+            taskId: allocation.taskId,
+            title: allocation.taskTitle || `Task ${allocation.taskId}`,
+            rate: allocation.costRate,
+            hours: allocation.totalHours,
             cost: taskCost
           });
-          emp.totalHours += allocation.total_hours || 0;
+          emp.totalHours += allocation.totalHours;
           emp.totalCost += taskCost;
         });
 
@@ -233,14 +223,14 @@ const JobStartForm: React.FC = () => {
         setEmployeeAllocations(Array.from(employeeMap.values()));
 
       } catch (error) {
-        console.error('Error fetching initial WBS/Resource data:', error);
-        setError('Failed to load initial project data');
+        console.error('Error fetching WBS resource data:', error);
+        setError('Failed to load WBS resource data. Please ensure you have submitted a WBS form for this project.');
       } finally {
         setLoading(false); // Finish loading for WBS/Resource data
       }
     };
 
-    fetchAllocations();
+    fetchWBSResourceData();
   }, [context?.selectedProject?.id]);
 
 
@@ -341,8 +331,8 @@ const JobStartForm: React.FC = () => {
   };
 
   const handleRemarksChange = (employeeId: string, value: string) => {
-    setEmployeeAllocations(prevAllocations => 
-      prevAllocations.map(emp => 
+    setEmployeeAllocations(prevAllocations =>
+      prevAllocations.map(emp =>
         emp.id === employeeId ? { ...emp, remarks: value } : emp
       )
     );
@@ -567,7 +557,7 @@ const JobStartForm: React.FC = () => {
   }
 
   const textFieldStyle = {
-    '& .MuiOutlinedInput-root': { 
+    '& .MuiOutlinedInput-root': {
       borderRadius: 1,
       backgroundColor: '#fff',
       '&:hover fieldset': {
@@ -652,27 +642,27 @@ const JobStartForm: React.FC = () => {
 
   const formContent = (
     <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Box sx={{ 
-        width: '100%', 
+      <Box sx={{
+        width: '100%',
         maxHeight: 'calc(100vh - 200px)',
         overflowY: 'auto',
         overflowX: 'hidden',
         pr: 1,
         pb: 4
       }}>
-        <Paper 
+        <Paper
           elevation={0}
-          sx={{ 
+          sx={{
             p: 3,
             border: '1px solid #e0e0e0',
             borderRadius: 1
           }}
         >
-          <Typography 
-            variant="h5" 
-            gutterBottom 
-            sx={{ 
-              color: '#1976d2', 
+          <Typography
+            variant="h5"
+            gutterBottom
+            sx={{
+              color: '#1976d2',
               fontWeight: 500,
               mb: 3
             }}
@@ -682,7 +672,7 @@ const JobStartForm: React.FC = () => {
 
           {/* Time Section */}
           <Box sx={{ ...sectionStyle, mb: 3 }}>
-            <Accordion 
+            <Accordion
               expanded={expanded.includes('time')}
               onChange={() => handleAccordionChange('time')}
               elevation={0}
@@ -857,7 +847,7 @@ const JobStartForm: React.FC = () => {
 
           {/* Expenses Section */}
           <Box sx={{ ...sectionStyle, mb: 3 }}>
-            <Accordion 
+            <Accordion
               expanded={expanded.includes('expenses')}
               onChange={() => handleAccordionChange('expenses')}
               elevation={0}
@@ -1096,7 +1086,7 @@ fullWidth
           </Box>
 
           {/* Summary Section */}
-          <Box sx={{ 
+          <Box sx={{
             ...sectionStyle,
             '& .MuiTableRow-root:not(:last-child)': {
               '& .MuiTableCell-root': {
@@ -1117,8 +1107,8 @@ fullWidth
                     }
                   }}>
                     <TableCell colSpan={4} sx={tableCellStyle}>Profit</TableCell>
-                    <TableCell 
-                      align="right" 
+                    <TableCell
+                      align="right"
                       sx={{
                         ...tableCellStyle,
                         color: calculateProfit() >= 0 ? '#2e7d32' : '#d32f2f',
@@ -1152,10 +1142,10 @@ fullWidth
 
                   {/* Service Tax Row */}
                   <TableRow sx={{ bgcolor: '#fafafa' }}>
-                    <TableCell 
-                      colSpan={4} 
-                      sx={{ 
-                        ...tableCellStyle, 
+                    <TableCell
+                      colSpan={4}
+                      sx={{
+                        ...tableCellStyle,
                         fontWeight: 'bold',
                         '& .MuiBox-root': {
                           display: 'flex',
@@ -1184,10 +1174,10 @@ fullWidth
                         <Box component="span" sx={{ ml: 1 }}>%</Box>
                       </Box>
                     </TableCell>
-                    <TableCell 
-                      align="right" 
-                      sx={{ 
-                        ...tableCellStyle, 
+                    <TableCell
+                      align="right"
+                      sx={{
+                        ...tableCellStyle,
                         fontWeight: 'bold',
                         color: '#1976d2'
                       }}
@@ -1236,7 +1226,7 @@ fullWidth
               ) : (
                 isUpdating ? 'Update Form' : 'Submit Form' // Change button text based on mode
               )}
-            </Button>
+            </LoadingButton>
           </Box>
         </Paper>
       </Box>
@@ -1246,7 +1236,7 @@ fullWidth
   return (
     <FormWrapper>
       {formContent}
-      
+
       {/* Success/Error Snackbar */}
       <Snackbar
         open={snackbarOpen}
@@ -1254,8 +1244,8 @@ fullWidth
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert 
-          onClose={handleSnackbarClose} 
+        <Alert
+          onClose={handleSnackbarClose}
           severity={snackbarSeverity}
           variant="filled"
           sx={{ width: '100%' }}

@@ -114,4 +114,20 @@ export const updateJobStartForm = async (projectId: number | string, formId: num
   }
 };
 
-// Add other Job Start Form related API functions here if needed (e.g., fetching data)
+/**
+ * Fetches WBS resource data for a specific project to be used in JobStartForm.
+ * This data comes from the WBS form and includes resource allocations.
+ *
+ * @param projectId The ID of the project.
+ * @returns A promise that resolves with the WBS resource data.
+ */
+export const getWBSResourceData = async (projectId: number | string): Promise<any> => {
+  try {
+    const response = await axiosInstance.get(`${API_URL}/${projectId}/jobstartforms/wbsresources`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching WBS resource data for project ${projectId}:`, error);
+    // Re-throw the error to be caught by the calling component
+    throw error;
+  }
+};
