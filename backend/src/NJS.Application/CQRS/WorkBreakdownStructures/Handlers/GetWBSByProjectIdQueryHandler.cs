@@ -70,7 +70,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     EndDate = taskEntity.EndDate,
                     MonthlyHours = new List<MonthlyHourDto>()
                     // Initialize resource/cost fields
-                    , CostRate = 0, ODC = 0, TotalHours = 0, TotalCost = 0
+                    , CostRate = 0, ODCCost = 0, TotalHours = 0, TotalCost = 0
                 };
 
                 // Map Monthly Hours
@@ -94,11 +94,11 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     taskDto.AssignedUserId = userTaskEntity.UserId;
                     taskDto.AssignedUserName = userTaskEntity.User?.Name; // User should be included
                     taskDto.CostRate = userTaskEntity.CostRate;
-                    taskDto.ODC = userTaskEntity.ODC;
+                    taskDto.ODCCost = userTaskEntity.ODCCost;
                 }
 
                 // Calculate Total Cost
-                taskDto.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate + taskDto.ODC;
+                taskDto.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate + taskDto.ODCCost;
 
                 wbsDto.Tasks.Add(taskDto);
             }

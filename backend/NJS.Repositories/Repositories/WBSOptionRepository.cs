@@ -39,5 +39,29 @@ namespace NJS.Repositories.Repositories
                 .AsNoTracking()
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<WBSOption>> GetByFormTypeAsync(FormType formType)
+        {
+            return await _context.WBSOptions
+                .Where(o => o.FormType == formType)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<WBSOption>> GetByLevelAndFormTypeAsync(int level, FormType formType)
+        {
+            return await _context.WBSOptions
+                .Where(o => o.Level == level && o.FormType == formType)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<WBSOption>> GetByLevelParentAndFormTypeAsync(int level, string parentValue, FormType formType)
+        {
+            return await _context.WBSOptions
+                .Where(o => o.Level == level && o.ParentValue == parentValue && o.FormType == formType)
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }

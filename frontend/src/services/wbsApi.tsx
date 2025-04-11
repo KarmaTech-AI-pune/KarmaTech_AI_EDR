@@ -99,7 +99,7 @@ export const WBSStructureAPI = {
       const transformedData = wbsData.map(task => transformRowToBackendFormat(task));
 
       console.log("Sending transformed WBS data:", JSON.stringify(transformedData, null, 2));
-      
+
       // Send all tasks to the backend in a single request
       await axiosInstance.put(`/api/projects/${projectId}/wbs`, transformedData);
     } catch (error) {
@@ -148,19 +148,15 @@ export const WBSOptionsAPI = {
 
   /**
    * Get all WBS options for all levels
+   * @param formType Optional form type (0 = Manpower, 1 = ODC)
    * @returns Promise with WBS options
    */
-  getAllOptions: async () => {
+  getAllOptions: async (formType?: number) => {
     try {
-      // const response = await axiosInstance.get('/api/wbsoptions');
-      // return response.data;
-
-      return {
-        level1: WBSOptionsAPI.fallbackData.level1,
-        level2: WBSOptionsAPI.fallbackData.level2,
-        level3: WBSOptionsAPI.fallbackData.level3
-      };
-
+      const url = formType !== undefined ? `/api/wbsoptions?formType=${formType}` : '/api/wbsoptions';
+      const response = await axiosInstance.get(url);
+      console.log('WBS options API response:', response.data);
+      return response.data;
     } catch (error) {
       console.warn('Using fallback data for WBS options due to API error:', error);
       return {
@@ -173,13 +169,15 @@ export const WBSOptionsAPI = {
 
   /**
    * Get level 1 WBS options
+   * @param formType Optional form type (0 = Manpower, 1 = ODC)
    * @returns Promise with level 1 options
    */
-  getLevel1Options: async (): Promise<WBSOption[]> => {
+  getLevel1Options: async (formType?: number): Promise<WBSOption[]> => {
     try {
-      // const response = await axiosInstance.get('/api/wbsoptions/level1');
-      // return response.data;
-      return WBSOptionsAPI.fallbackData.level1;
+      const url = formType !== undefined ? `/api/wbsoptions/level1?formType=${formType}` : '/api/wbsoptions/level1';
+      const response = await axiosInstance.get(url);
+      console.log('WBS level 1 options API response:', response.data);
+      return response.data;
     } catch (error) {
       console.warn('Using fallback data for level 1 WBS options due to API error:', error);
       return WBSOptionsAPI.fallbackData.level1;
@@ -188,13 +186,15 @@ export const WBSOptionsAPI = {
 
   /**
    * Get level 2 WBS options
+   * @param formType Optional form type (0 = Manpower, 1 = ODC)
    * @returns Promise with level 2 options
    */
-  getLevel2Options: async (): Promise<WBSOption[]> => {
+  getLevel2Options: async (formType?: number): Promise<WBSOption[]> => {
     try {
-      // const response = await axiosInstance.get('/api/wbsoptions/level2');
-      // return response.data;
-      return WBSOptionsAPI.fallbackData.level2;
+      const url = formType !== undefined ? `/api/wbsoptions/level2?formType=${formType}` : '/api/wbsoptions/level2';
+      const response = await axiosInstance.get(url);
+      console.log('WBS level 2 options API response:', response.data);
+      return response.data;
     } catch (error) {
       console.warn('Using fallback data for level 2 WBS options due to API error:', error);
       return WBSOptionsAPI.fallbackData.level2;
@@ -204,13 +204,17 @@ export const WBSOptionsAPI = {
   /**
    * Get level 3 WBS options for a specific level 2 value
    * @param level2Value Level 2 value
+   * @param formType Optional form type (0 = Manpower, 1 = ODC)
    * @returns Promise with level 3 options
    */
-  getLevel3Options: async (level2Value: string): Promise<WBSOption[]> => {
+  getLevel3Options: async (level2Value: string, formType?: number): Promise<WBSOption[]> => {
     try {
-      // const response = await axiosInstance.get(`/api/wbsoptions/level3/${level2Value}`);
-      // return response.data;
-      return WBSOptionsAPI.fallbackData.level3[level2Value] || [];
+      const url = formType !== undefined
+        ? `/api/wbsoptions/level3/${level2Value}?formType=${formType}`
+        : `/api/wbsoptions/level3/${level2Value}`;
+      const response = await axiosInstance.get(url);
+      console.log(`WBS level 3 options for ${level2Value} API response:`, response.data);
+      return response.data;
     } catch (error) {
       console.warn(`Using fallback data for level 3 WBS options for ${level2Value} due to API error:`, error);
       return WBSOptionsAPI.fallbackData.level3[level2Value] || [];
@@ -244,7 +248,7 @@ export const MonthlyHoursAPI = {
   updateMonthlyHours: async (projectId: string, taskId: string, data: { monthly_hours: Partial<MonthlyHour>[] }) => {
     try {
       const response = await axiosInstance.put(
-        `/api/projects/${projectId}/wbs/tasks/${taskId}/monthlyhours`, 
+        `/api/projects/${projectId}/wbs/tasks/${taskId}/monthlyhours`,
         data
       );
       return response.data;

@@ -20,12 +20,13 @@ namespace NJS.Domain.Entities
         public decimal CostRate { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal ODC { get; set; }
-
+        public decimal ODCCost { get; set; }
         public double TotalHours { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalCost { get; set; }
+
+        public double ODCHours { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
