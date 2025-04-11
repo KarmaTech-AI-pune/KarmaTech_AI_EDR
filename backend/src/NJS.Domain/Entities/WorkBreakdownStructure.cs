@@ -1,4 +1,4 @@
-﻿﻿//File: backend/src/NJS.Domain/Entities/WorkBreakdownStructure.cs
+﻿﻿﻿﻿//File: backend/src/NJS.Domain/Entities/WorkBreakdownStructure.cs
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,5 +19,6 @@ namespace NJS.Domain.Entities
 
         public Project Project { get; set; }
         public ICollection<WBSTask> Tasks { get; set; }
+        public ICollection<JobStartForm> JobStartForms { get; set; } = new List<JobStartForm>();
     }
 }

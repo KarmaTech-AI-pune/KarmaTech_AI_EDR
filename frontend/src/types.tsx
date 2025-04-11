@@ -64,3 +64,92 @@ export interface OpportunityItemProps {
     onOpportunityDeleted?: (id: string) => void;
     onOpportunityUpdated?: (updatedOpportunity?: OpportunityTracking) => void;
 }
+
+// Types for JobStartForm Data Structure
+export interface TaskAllocation {
+    taskId: string;
+    title: string;
+    rate: number;
+    hours: number;
+    cost: number;
+}
+
+export interface EmployeeAllocation {
+    id: string;
+    name: string;
+    is_consultant: boolean;
+    allocations: TaskAllocation[];
+    totalHours: number;
+    totalCost: number;
+    remarks: string;
+}
+
+export interface ExpenseEntry {
+    number: string; // Can be number or string depending on input, handle conversion
+    remarks: string;
+}
+
+export interface OutsideAgencyEntry {
+    description: string;
+    rate: string; // Can be number or string
+    units: string; // Can be number or string
+    remarks: string;
+}
+
+export interface ProjectSpecificEntry {
+    name: string;
+    number: string; // Can be number or string
+    remarks: string;
+}
+
+export interface TimeContingencyEntry {
+    rate: string; // Can be number or string
+    units: string; // Can be number or string
+    remarks: string;
+}
+
+export interface ServiceTaxData {
+    percentage: number;
+    amount: number;
+}
+
+export interface TimeData {
+    employeeAllocations: EmployeeAllocation[];
+    timeContingency: TimeContingencyEntry;
+    totalTimeCost: number;
+}
+
+export interface ExpensesData {
+    regularExpenses: { // Matches ExpensesType structure
+        '2a': ExpenseEntry;
+        '2b': ExpenseEntry;
+        '3': ExpenseEntry;
+        '4': ExpenseEntry;
+        '5': ExpenseEntry;
+        '7': ExpenseEntry;
+    };
+    surveyWorks: ExpenseEntry;
+    outsideAgency: { // Matches OutsideAgencyType structure
+        'a': OutsideAgencyEntry;
+        'b': OutsideAgencyEntry;
+        'c': OutsideAgencyEntry;
+    };
+    projectSpecific: { // Matches ProjectSpecificType structure
+        '6c': ProjectSpecificEntry;
+        '6d': ProjectSpecificEntry;
+        '6e': ProjectSpecificEntry;
+    };
+    totalExpenses: number;
+}
+
+export interface JobStartFormData {
+    formId?: number | string; // Added optional formId for updates
+    projectId: number | string | undefined; // Match context type
+    time: TimeData;
+    expenses: ExpensesData;
+    grandTotal: number;
+    projectFees: number;
+    serviceTax: ServiceTaxData;
+    totalProjectFees: number;
+    profit: number;
+}

@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿﻿using MediatR;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;

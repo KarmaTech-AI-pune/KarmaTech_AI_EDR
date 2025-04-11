@@ -41,6 +41,8 @@ namespace NJS.Domain.Database
         public DbSet<ScoringDescriptionSummarry> ScoringDescriptionSummarry { get; set; }
         public DbSet<GoNoGoDecisionHeader> GoNoGoDecisionHeaders { get; set; }
         public DbSet<GoNoGoDecisionTransaction> GoNoGoDecisionTransactions { get; set; }
+        public DbSet<JobStartForm> JobStartForms { get; set; }
+        public DbSet<JobStartFormSelection> JobStartFormSelections { get; set; } // Add DbSet for Selections
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -210,8 +212,49 @@ namespace NJS.Domain.Database
                 // Configure relationship with WorkBreakdownStructure
                 entity.HasOne(t => t.WorkBreakdownStructure)
                       .WithMany(w => w.Tasks)
-                      .HasForeignKey(t => t.WorkBreakdownStructureId)
-                      .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+                  .HasForeignKey(t => t.WorkBreakdownStructureId)
+                  .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+            });
+
+            // Configure JobStartForm entity
+            modelBuilder.Entity<JobStartForm>(entity =>
+            {
+                entity.HasKey(e => e.FormId);
+
+                entity.Property(e => e.GrandTotal).HasPrecision(18, 2);
+                entity.Property(e => e.Profit).HasPrecision(18, 2);
+                entity.Property(e => e.ProjectFees).HasPrecision(18, 2);
+                entity.Property(e => e.ServiceTaxAmount).HasPrecision(18, 2);
+                entity.Property(e => e.ServiceTaxPercentage).HasPrecision(5, 2);
+                entity.Property(e => e.TotalExpenses).HasPrecision(18, 2);
+                entity.Property(e => e.TotalProjectFees).HasPrecision(18, 2);
+                entity.Property(e => e.TotalTimeCost).HasPrecision(18, 2);
+
+                entity.HasOne(jsf => jsf.Project)
+                      .WithMany()
+                      .HasForeignKey(jsf => jsf.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(jsf => jsf.WorkBreakdownStructure)
+                      .WithMany(wbs => wbs.JobStartForms)
+                      .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(jsf => jsf.Selections)
+                      .WithOne(s => s.JobStartForm)
+                      .HasForeignKey(s => s.FormId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(jsf => jsf.ProjectId);
+            });
+
+            // Configure JobStartFormSelection entity
+            modelBuilder.Entity<JobStartFormSelection>(entity =>
+            {
+                entity.HasKey(e => e.SelectionId);
+                // No complex relationships needed here as it's primarily linked via JobStartForm
+                entity.HasIndex(s => s.FormId); // Index for faster lookup by form
             });
 
              // Configure UserWBSTask entity decimal properties
