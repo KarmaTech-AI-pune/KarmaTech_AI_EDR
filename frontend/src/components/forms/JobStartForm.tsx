@@ -15,16 +15,24 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Button,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import LoadingButton from '../common/LoadingButton';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
+// Removed dummy API imports: import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
 import { projectManagementAppContext } from '../../App';
-import { projectManagementAppContextType } from '../../types';
+import { projectManagementAppContextType, JobStartFormData } from '../../types'; // Added JobStartFormData
 import { WBSTaskResourceAllocation } from "../../models";;
 import { WBSRowData } from '../../types/wbs';
 import { FormWrapper } from './FormWrapper';
-import NotificationSnackbar from '../widgets/NotificationSnackbar';
+import { 
+  submitJobStartForm,
+  getJobStartFormById,
+  getJobStartFormByProjectId 
+} from '../../services/jobStartFormApi';
+import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi'; // Keep for fetching initial data for now
 
 interface TaskAllocation {
   taskId: string;
@@ -81,6 +89,13 @@ type ExpensesType = {
   '7': ExpenseEntry;
 }
 
+interface ExpensesData {
+  regularExpenses: ExpensesType;
+  surveyWorks: ExpenseEntry;
+  outsideAgency: OutsideAgencyType;
+  projectSpecific: ProjectSpecificType;
+}
+
 type OutsideAgencyType = {
   'a': OutsideAgencyEntry;
   'b': OutsideAgencyEntry;
@@ -109,7 +124,6 @@ const JobStartForm: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
-
 
   const [timeContingency, setTimeContingency] = useState<TimeContingencyEntry>({
     rate: '',
@@ -158,7 +172,31 @@ const JobStartForm: React.FC = () => {
     percentage: '15'
   });
 
+  const [formLoaded, setFormLoaded] = useState(false);
+
   useEffect(() => {
+    const fetchFormData = async () => {
+      if (!context?.selectedProject?.id || formLoaded) return;
+      
+      try {
+        setLoading(true);
+        const formData = await getJobStartFormById(context.selectedProject.id.toString(), 'current');
+        
+        // Update all form state with fetched data
+        setEmployeeAllocations(formData.time.employeeAllocations);
+        setTimeContingency(formData.time.timeContingency);
+        setExpenses(formData.expenses.regularExpenses);
+        setSurveyWorks(formData.expenses.surveyWorks);
+        setOutsideAgency(formData.expenses.outsideAgency);
+        setProjectSpecific(formData.expenses.projectSpecific);
+        setProjectFees(formData.projectFees?.toString() ?? '');
+        setServiceTax({ percentage: formData.serviceTax.percentage?.toString() ?? '15' });
+        setFormLoaded(true);
+      } catch (error) {
+        console.log('No existing form data found, starting fresh');
+      }
+    };
+
     const fetchAllocations = async () => {
       if (!context?.selectedProject?.id) {
         setError('No project selected');
@@ -342,13 +380,88 @@ const JobStartForm: React.FC = () => {
     return fees + tax;
   };
 
+  // Load form data - try backend first, then localStorage
+  useEffect(() => {
+    const loadFormData = async () => {
+      const projectId = context?.selectedProject?.id?.toString();
+      if (!projectId) return;
+
+      try {
+        // Try to fetch from backend first
+        const response = await getJobStartFormByProjectId(projectId);
+        if (response) {
+          setEmployeeAllocations(response.time.employeeAllocations);
+          setTimeContingency(response.time.timeContingency);
+          setExpenses(response.expenses.regularExpenses);
+          setSurveyWorks(response.expenses.surveyWorks);
+          setOutsideAgency(response.expenses.outsideAgency);
+          setProjectSpecific(response.expenses.projectSpecific);
+          setProjectFees(response.projectFees?.toString() ?? '');
+          setServiceTax({ percentage: response.serviceTax.percentage?.toString() ?? '15' });
+          // Update localStorage with fresh backend data
+          localStorage.setItem('jobStartFormData', JSON.stringify({
+            employeeAllocations: response.time.employeeAllocations,
+            timeContingency: response.time.timeContingency,
+            expenses: response.expenses.regularExpenses,
+            surveyWorks: response.expenses.surveyWorks,
+            outsideAgency: response.expenses.outsideAgency,
+            projectSpecific: response.expenses.projectSpecific,
+            projectFees: response.projectFees,
+            serviceTax: response.serviceTax
+          }));
+          return;
+        }
+      } catch (error) {
+        console.log('Falling back to locally stored form data');
+      }
+
+      // Fallback to localStorage if backend fetch fails
+      const savedFormData = localStorage.getItem('jobStartFormData');
+      if (savedFormData) {
+        const parsedData = JSON.parse(savedFormData);
+        setEmployeeAllocations(parsedData.employeeAllocations);
+        setTimeContingency(parsedData.timeContingency);
+        setExpenses(parsedData.expenses);
+        setSurveyWorks(parsedData.surveyWorks);
+        setOutsideAgency(parsedData.outsideAgency);
+        setProjectSpecific(parsedData.projectSpecific);
+        setProjectFees(parsedData.projectFees);
+        setServiceTax(parsedData.serviceTax);
+      }
+    };
+
+    if (context?.selectedProject?.id) {
+      loadFormData();
+    }
+  }, [context?.selectedProject?.id]);
+
   const handleSubmit = async () => {
+    if (!context?.selectedProject?.id) {
+      setSnackbarMessage('No project selected. Cannot submit.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    // Save form state to localStorage
+    const formState = {
+      employeeAllocations,
+      timeContingency,
+      expenses,
+      surveyWorks,
+      outsideAgency,
+      projectSpecific,
+      projectFees,
+      serviceTax
+    };
+    localStorage.setItem('jobStartFormData', JSON.stringify(formState));
+
     try {
       setSubmitting(true);
-      
+
       // Collect all form data
-      const formData = {
-        projectId: context?.selectedProject?.id,
+      const formData: JobStartFormData = { // Added type annotation
+        projectId: context.selectedProject.id, // Already checked for null/undefined
         time: {
           employeeAllocations,
           timeContingency,
@@ -370,13 +483,10 @@ const JobStartForm: React.FC = () => {
         totalProjectFees: calculateTotalProjectFees(),
         profit: calculateProfit()
       };
-      
-      // For demonstration purposes, log the data to console
-      console.log('Job Start Form Data:', formData);
-      
-      // Simulate API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
+      // Call the real API service
+      await submitJobStartForm(context.selectedProject.id, formData);
+
       // Show success message
       setSnackbarMessage('Job Start Form submitted successfully');
       setSnackbarSeverity('success');
@@ -391,6 +501,9 @@ const JobStartForm: React.FC = () => {
     }
   };
 
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
   if (loading) {
     return (
@@ -408,8 +521,8 @@ const JobStartForm: React.FC = () => {
         <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
           <Typography color="error">{error}</Typography>
         </Paper>
-      </FormWrapper>
-    );
+        </FormWrapper>
+      );
   }
 
   const textFieldStyle = {
@@ -727,7 +840,7 @@ const JobStartForm: React.FC = () => {
                     </TableHead>
                     <TableBody>
                       {/* Regular Expenses */}
-                    {(['2a', '2b', '3', '4', '5'] as (keyof ExpensesType)[]).map((id) => (
+                    {(['2a', '2b', '3', '4', '5'] as (keyof ExpensesType)[]).map((id: keyof ExpensesType) => (
                       <TableRow key={id}>
                         <TableCell sx={{ pl: 3 }}>{id}</TableCell>
                         <TableCell>
@@ -1074,18 +1187,29 @@ fullWidth
           </Box>
         </Paper>
       </Box>
-      <NotificationSnackbar
-        open={snackbarOpen}
-        message={snackbarMessage}
-        severity={snackbarSeverity}
-        onClose={() => setSnackbarOpen(false)}
-      />
     </Container>
   );
 
   return (
     <FormWrapper>
       {formContent}
+      
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </FormWrapper>
   );
 };
