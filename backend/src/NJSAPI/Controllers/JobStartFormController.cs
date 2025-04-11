@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NJS.Application.Dtos;
 using NJS.Application.CQRS.JobStartForm.Commands;
 using NJS.Application.CQRS.JobStartForm.Queries;
+using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http; // Added for StatusCodes
@@ -132,6 +133,17 @@ public async Task<ActionResult<JobStartFormDto>> CreateJobStartForm(int projectI
             await _mediator.Send(command); // Assuming handler handles NotFound case if necessary
 
             return NoContent();
+        }
+
+        // GET: api/projects/{projectId}/jobstartforms/wbsresources
+        [HttpGet("wbsresources")]
+        [AllowAnonymous] // Allow access without authentication for this specific endpoint
+        [ProducesResponseType(typeof(WBSResourceDataDto), StatusCodes.Status200OK)]
+        public async Task<ActionResult<WBSResourceDataDto>> GetWBSResourceData(int projectId)
+        {
+            var query = new GetWBSResourceDataQuery(projectId);
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }
