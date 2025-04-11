@@ -31,22 +31,15 @@ namespace NJS.Domain.Entities
         public DateTime StartDate { get; set; }
         public string? PreparedBy { get; set; }
 
-        // JSON serialized complex objects to match frontend structure
-        [Column(TypeName = "nvarchar(max)")]
-        public string TimeDataJson { get; set; }
-
-        [Column(TypeName = "nvarchar(max)")]
-        public string ExpensesDataJson { get; set; }
-
-        // Calculated and financial fields
-        public decimal GrandTotal { get; set; }
-        public decimal ProjectFees { get; set; }
-
-        [Column(TypeName = "nvarchar(max)")]
-        public string ServiceTaxJson { get; set; }
-
-        public decimal TotalProjectFees { get; set; }
-        public decimal Profit { get; set; }
+        // Calculated and financial fields - Stored directly
+        public decimal TotalTimeCost { get; set; }      // From TimeDataDto
+        public decimal TotalExpenses { get; set; }      // From ExpensesDataDto
+        public decimal GrandTotal { get; set; }         // Calculated on frontend
+        public decimal ProjectFees { get; set; }        // Input on frontend
+        public decimal ServiceTaxPercentage { get; set; } // From ServiceTaxDataDto
+        public decimal ServiceTaxAmount { get; set; }   // From ServiceTaxDataDto
+        public decimal TotalProjectFees { get; set; }   // Calculated on frontend
+        public decimal Profit { get; set; }             // Calculated on frontend
 
         // Navigation property for related selections/options
         public virtual ICollection<JobStartFormSelection> Selections { get; set; } = new List<JobStartFormSelection>();
@@ -56,38 +49,6 @@ namespace NJS.Domain.Entities
         public DateTime? UpdatedDate { get; set; }
         public bool IsDeleted { get; set; } = false;
 
-        // Helper methods for serialization/deserialization
-        [NotMapped]
-        public object TimeData
-        {
-            get => string.IsNullOrEmpty(TimeDataJson) 
-                ? null 
-                : JsonSerializer.Deserialize<object>(TimeDataJson);
-            set => TimeDataJson = value == null 
-                ? null 
-                : JsonSerializer.Serialize(value);
-        }
-
-        [NotMapped]
-        public object ExpensesData
-        {
-            get => string.IsNullOrEmpty(ExpensesDataJson) 
-                ? null 
-                : JsonSerializer.Deserialize<object>(ExpensesDataJson);
-            set => ExpensesDataJson = value == null 
-                ? null 
-                : JsonSerializer.Serialize(value);
-        }
-
-        [NotMapped]
-        public object ServiceTax
-        {
-            get => string.IsNullOrEmpty(ServiceTaxJson) 
-                ? null 
-                : JsonSerializer.Deserialize<object>(ServiceTaxJson);
-            set => ServiceTaxJson = value == null 
-                ? null 
-                : JsonSerializer.Serialize(value);
-        }
+        // JSON properties and helpers removed
     }
 }

@@ -1,10 +1,11 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿using Microsoft.Extensions.DependencyInjection;
+﻿﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
 using NJS.Repositories.Interfaces;
-using NJS.Repositories.Repositories;
+using NJS.Repositories.Repositories; // Already here, but good to confirm
 using System.Reflection;
+using NJS.Repositories.Repositories; // Ensure this namespace is included
 
 namespace NJS.Application.Extensions
 {
@@ -23,6 +24,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IScoringDescriptionService, ScoringDescriptionService>();
             services.AddScoped<IFeasibilityStudyRepository, FeasibilityStudyRepository>();
             services.AddScoped<IWorkBreakdownStructureRepository, WorkBreakdownStructureRepository>();
+            services.AddScoped<IWBSTaskRepository, WBSTaskRepository>(); // Add this line
             services.AddScoped<IWBSOptionRepository, WBSOptionRepository>();
             services.AddScoped<IJobStartFormRepository, JobStartFormRepository>();
             services.AddScoped<IGoNoGoDecisionRepository, GoNoGoDecisionRepository>();

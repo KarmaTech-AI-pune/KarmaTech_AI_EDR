@@ -51,8 +51,10 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const [level1Options, setLevel1Options] = useState<WBSOption[]>([]);
   const [level2Options, setLevel2Options] = useState<WBSOption[]>([]);
   const [level3OptionsMap, setLevel3OptionsMap] = useState<{ [key: string]: WBSOption[] }>({});
-  const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
-  const [allWbsData, setAllWbsData] = useState<WBSRowData[]>([]); // State for all fetched data
+  // We only use the setter function, not the value itself
+  const [, setLastUpdateTime] = useState<number>(Date.now());
+  // We only use the setter function, not the value itself
+  const [, setAllWbsData] = useState<WBSRowData[]>([]); // State for all fetched data
 
   const loadWBSData = async (projectId: string) => {
     try {
