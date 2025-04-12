@@ -63,6 +63,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 EstimatedBudget = taskDto.EstimatedBudget,
                 StartDate = taskDto.StartDate,
                 EndDate = taskDto.EndDate,
+                TaskType = taskDto.TaskType, // Set TaskType
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = _currentUser,
                 IsDeleted = false,

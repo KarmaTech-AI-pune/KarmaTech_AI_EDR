@@ -68,6 +68,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     EstimatedBudget = taskEntity.EstimatedBudget,
                     StartDate = taskEntity.StartDate,
                     EndDate = taskEntity.EndDate,
+                    TaskType = taskEntity.TaskType, // Include TaskType
                     MonthlyHours = new List<MonthlyHourDto>()
                     // Initialize resource/cost fields
                     , CostRate = 0, ODCCost = 0, TotalHours = 0, TotalCost = 0

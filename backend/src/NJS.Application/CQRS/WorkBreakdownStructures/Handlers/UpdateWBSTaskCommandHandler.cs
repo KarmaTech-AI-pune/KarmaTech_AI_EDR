@@ -60,6 +60,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             taskEntity.EstimatedBudget = taskDto.EstimatedBudget;
             taskEntity.StartDate = taskDto.StartDate;
             taskEntity.EndDate = taskDto.EndDate;
+            taskEntity.TaskType = taskDto.TaskType; // Update TaskType
             taskEntity.UpdatedAt = DateTime.UtcNow;
             taskEntity.UpdatedBy = _currentUser;
             // IsDeleted should not be updated here; use a separate Delete command

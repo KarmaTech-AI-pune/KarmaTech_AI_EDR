@@ -8,7 +8,7 @@ import DeleteWBSDialog from '../dialogbox/DeleteWBSDialog';
 import WBSHeader from './WBSformcomponents/WBSHeader';
 import WBSTable from './WBSformcomponents/WBSTable';
 import WBSSummary from './WBSformcomponents/WBSSummary';
-import { WBSOption, WBSRowData } from '../../types/wbs';
+import { WBSOption, WBSRowData, TaskType } from '../../types/wbs';
 import { resourceRole } from '../../models/resourceRoleModel';
 import { Employee } from '../../models/employeeModel';
 import { FormWrapper } from './FormWrapper';
@@ -93,6 +93,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           totalHours: task.totalHours || 0,
           totalCost: task.totalCost || 0,
           parentId: task.parentId,
+          taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
         };
       });
 
@@ -146,46 +147,63 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         );
         setAllWbsData(dataWithRoles); // Store the complete data
 
-        // Filter into separate states based on a different approach
-        // First, get all level 1 rows
-        const allLevel1Rows = dataWithRoles.filter(row => row.level === 1);
-
-        // Determine how many are manpower vs ODC based on the total count
-        // We'll use the first 'manpowerCount' rows as manpower and the rest as ODC
-        const manpowerCount = Math.min(allLevel1Rows.length, 5); // Default to 5 for backward compatibility
-
-        // Get the IDs of level 1 rows for each type
-        const manpowerLevel1Ids = allLevel1Rows.slice(0, manpowerCount).map(row => row.id);
-        const odcLevel1Ids = allLevel1Rows.slice(manpowerCount).map(row => row.id);
-
-        // Filter rows based on their hierarchy
+        // Filter rows based on TaskType
+        // If taskType is not set (for backward compatibility), we'll infer it from the title
         const currentManpowerRows = dataWithRoles.filter(row => {
-          if (row.level === 1) {
-            return manpowerLevel1Ids.includes(row.id);
-          } else if (row.level === 2) {
-            const parent = dataWithRoles.find(r => r.id === row.parentId);
-            return parent && manpowerLevel1Ids.includes(parent.id);
-          } else if (row.level === 3) {
+          // If taskType is explicitly set, use it
+          if (row.taskType !== undefined) {
+            return row.taskType === TaskType.Manpower;
+          }
+
+          // For backward compatibility: check if this row is part of a hierarchy
+          if (row.level === 2 || row.level === 3) {
+            // For child rows, check the parent's taskType
             const parent = dataWithRoles.find(r => r.id === row.parentId);
             if (!parent) return false;
-            const grandparent = dataWithRoles.find(r => r.id === parent.parentId);
-            return grandparent && manpowerLevel1Ids.includes(grandparent.id);
+
+            if (parent.taskType !== undefined) {
+              return parent.taskType === TaskType.Manpower;
+            }
+
+            // If parent doesn't have taskType, check grandparent for level 3
+            if (row.level === 3) {
+              const grandparent = dataWithRoles.find(r => r.id === parent.parentId);
+              if (grandparent?.taskType !== undefined) {
+                return grandparent.taskType === TaskType.Manpower;
+              }
+            }
           }
-          return false;
+
+          // Default to Manpower for backward compatibility if we can't determine
+          return true;
         });
 
         const currentOdcRows = dataWithRoles.filter(row => {
-          if (row.level === 1) {
-            return odcLevel1Ids.includes(row.id);
-          } else if (row.level === 2) {
-            const parent = dataWithRoles.find(r => r.id === row.parentId);
-            return parent && odcLevel1Ids.includes(parent.id);
-          } else if (row.level === 3) {
+          // If taskType is explicitly set, use it
+          if (row.taskType !== undefined) {
+            return row.taskType === TaskType.ODC;
+          }
+
+          // For backward compatibility: check if this row is part of a hierarchy
+          if (row.level === 2 || row.level === 3) {
+            // For child rows, check the parent's taskType
             const parent = dataWithRoles.find(r => r.id === row.parentId);
             if (!parent) return false;
-            const grandparent = dataWithRoles.find(r => r.id === parent.parentId);
-            return grandparent && odcLevel1Ids.includes(grandparent.id);
+
+            if (parent.taskType !== undefined) {
+              return parent.taskType === TaskType.ODC;
+            }
+
+            // If parent doesn't have taskType, check grandparent for level 3
+            if (row.level === 3) {
+              const grandparent = dataWithRoles.find(r => r.id === parent.parentId);
+              if (grandparent?.taskType !== undefined) {
+                return grandparent.taskType === TaskType.ODC;
+              }
+            }
           }
+
+          // Default to not showing in ODC form if we can't determine
           return false;
         });
 
@@ -393,7 +411,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       odcHours: 0,
       totalHours: 0,
       totalCost: 0,
-      parentId: parentId || null
+      parentId: parentId || null,
+      taskType: formType === 'manpower' ? TaskType.Manpower : TaskType.ODC // Set taskType based on formType
     };
     setRowsFunc([...currentRows, newRow]);
   };
@@ -623,8 +642,19 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         return;
       }
 
+      // Ensure all rows have the correct taskType set
+      const updatedManpowerRows = manpowerRows.map(row => ({
+        ...row,
+        taskType: TaskType.Manpower
+      }));
+
+      const updatedOdcRows = odcRows.map(row => ({
+        ...row,
+        taskType: TaskType.ODC
+      }));
+
       // Combine the latest data from both manpower and ODC states
-      const combinedWbsData = [...manpowerRows, ...odcRows];
+      const combinedWbsData = [...updatedManpowerRows, ...updatedOdcRows];
 
       // Validate that all tasks in the combined data have titles
       const emptyTitleTasks = combinedWbsData.filter(row => !row.title);

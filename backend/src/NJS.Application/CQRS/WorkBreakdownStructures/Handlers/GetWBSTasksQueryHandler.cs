@@ -50,6 +50,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 ParentId = t.ParentId,
                 StartDate = t.StartDate,
                 EndDate = t.EndDate,
+                TaskType = t.TaskType,
                 AssignedUserId = t.UserWBSTasks?.FirstOrDefault()?.UserId,
                 AssignedUserName = t.UserWBSTasks?.FirstOrDefault()?.User?.Name,
                 CostRate = t.UserWBSTasks?.FirstOrDefault()?.CostRate ?? 0,

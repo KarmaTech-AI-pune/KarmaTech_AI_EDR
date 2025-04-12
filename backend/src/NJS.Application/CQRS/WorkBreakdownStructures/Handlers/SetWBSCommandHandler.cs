@@ -101,6 +101,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     taskEntity.EstimatedBudget = taskDto.EstimatedBudget;
                     taskEntity.StartDate = taskDto.StartDate;
                     taskEntity.EndDate = taskDto.EndDate;
+                    taskEntity.TaskType = taskDto.TaskType; // Update TaskType
                     taskEntity.UpdatedAt = DateTime.UtcNow;
                     taskEntity.UpdatedBy = _currentUser;
                     taskEntity.IsDeleted = false; // Ensure it's not marked deleted if it's being updated
@@ -128,6 +129,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         EstimatedBudget = taskDto.EstimatedBudget,
                         StartDate = taskDto.StartDate,
                         EndDate = taskDto.EndDate,
+                        TaskType = taskDto.TaskType, // Set TaskType
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser,
                         IsDeleted = false,
