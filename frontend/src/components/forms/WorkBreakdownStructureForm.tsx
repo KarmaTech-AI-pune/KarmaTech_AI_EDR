@@ -100,7 +100,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       const getSequenceNumber = (row: WBSRowData, allRows: WBSRowData[]): string => {
         if (row.level === 1) {
           const level1Index = allRows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
-          // Sequence number is now calculated purely based on position, independent of formType
+          // Sequence number is calculated based on position
+          // Note: This is only used for initial data loading. The actual display numbering is handled in WBSTable.tsx
           return level1Index.toString();
         } else if (row.level === 2) {
           const parentRow = allRows.find(r => r.id === row.parentId);
@@ -145,18 +146,47 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         );
         setAllWbsData(dataWithRoles); // Store the complete data
 
-        // Filter into separate states
+        // Filter into separate states based on a different approach
+        // First, get all level 1 rows
+        const allLevel1Rows = dataWithRoles.filter(row => row.level === 1);
+
+        // Determine how many are manpower vs ODC based on the total count
+        // We'll use the first 'manpowerCount' rows as manpower and the rest as ODC
+        const manpowerCount = Math.min(allLevel1Rows.length, 5); // Default to 5 for backward compatibility
+
+        // Get the IDs of level 1 rows for each type
+        const manpowerLevel1Ids = allLevel1Rows.slice(0, manpowerCount).map(row => row.id);
+        const odcLevel1Ids = allLevel1Rows.slice(manpowerCount).map(row => row.id);
+
+        // Filter rows based on their hierarchy
         const currentManpowerRows = dataWithRoles.filter(row => {
-          const sequenceNumber = getSequenceNumber(row, dataWithRoles);
-          if (!sequenceNumber) return false;
-          const firstDigit = parseInt(sequenceNumber.split('.')[0]);
-          return firstDigit >= 1 && firstDigit <= 5;
+          if (row.level === 1) {
+            return manpowerLevel1Ids.includes(row.id);
+          } else if (row.level === 2) {
+            const parent = dataWithRoles.find(r => r.id === row.parentId);
+            return parent && manpowerLevel1Ids.includes(parent.id);
+          } else if (row.level === 3) {
+            const parent = dataWithRoles.find(r => r.id === row.parentId);
+            if (!parent) return false;
+            const grandparent = dataWithRoles.find(r => r.id === parent.parentId);
+            return grandparent && manpowerLevel1Ids.includes(grandparent.id);
+          }
+          return false;
         });
+
         const currentOdcRows = dataWithRoles.filter(row => {
-          const sequenceNumber = getSequenceNumber(row, dataWithRoles);
-          if (!sequenceNumber) return false;
-          const firstDigit = parseInt(sequenceNumber.split('.')[0]);
-          return firstDigit >= 6;
+          if (row.level === 1) {
+            return odcLevel1Ids.includes(row.id);
+          } else if (row.level === 2) {
+            const parent = dataWithRoles.find(r => r.id === row.parentId);
+            return parent && odcLevel1Ids.includes(parent.id);
+          } else if (row.level === 3) {
+            const parent = dataWithRoles.find(r => r.id === row.parentId);
+            if (!parent) return false;
+            const grandparent = dataWithRoles.find(r => r.id === parent.parentId);
+            return grandparent && odcLevel1Ids.includes(grandparent.id);
+          }
+          return false;
         });
 
         setManpowerRows(currentManpowerRows);
@@ -349,18 +379,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
 
-    // For level 1 rows, check limits based on form type
-    if (level === 1) {
-      const level1Rows = currentRows.filter(row => row.level === 1);
-      if (formType === 'manpower' && level1Rows.length >= 5) {
-        setSnackbarMessage('Manpower Form can only have up to 5 level 1 rows.');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-        return;
-      }
-      // Add similar check for ODC if needed, e.g., if ODC starts at 6 and has a limit
-      // if (formType === 'odc' && level1Rows.length >= X) { ... }
-    }
+    // No restriction on the number of level 1 rows for manpower anymore
 
     const newRow: WBSRowData = {
       id: Date.now().toString(),
@@ -696,7 +715,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
          />
       </Paper>
 
-      <Paper>
+      <Paper data-manpower-count={manpowerRows.filter(row => row.level === 1).length}>
         <WBSTable
            rows={formType === 'manpower' ? manpowerRows : odcRows} // Pass the correct rows based on formType
            months={months}

@@ -206,9 +206,17 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
   const getSequenceNumber = (row: WBSRowData): string => {
     if (row.level === 1) {
+      // For ODC form, we need to get the count of manpower level 1 tasks from the parent component
+      // This is done by checking the data-manpower-count attribute on the container
+      let manpowerCount = 0;
+      const container = document.querySelector('[data-manpower-count]');
+      if (container) {
+        manpowerCount = parseInt(container.getAttribute('data-manpower-count') || '0', 10);
+      }
+
       const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
-      // If formType is 'odc', add 5 to the index to start from 6
-      const adjustedIndex = formType === 'odc' ? level1Index + 5 : level1Index;
+      // If formType is 'odc', add the manpower count to continue numbering
+      const adjustedIndex = formType === 'odc' ? level1Index + manpowerCount : level1Index;
       return adjustedIndex.toString();
     } else if (row.level === 2) {
       const parentRow = rows.find(r => r.id === row.parentId);
