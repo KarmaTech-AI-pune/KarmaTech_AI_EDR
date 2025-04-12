@@ -745,7 +745,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
          />
       </Paper>
 
-      <Paper data-manpower-count={manpowerRows.filter(row => row.level === 1).length}>
+      <Paper>
         <WBSTable
            rows={formType === 'manpower' ? manpowerRows : odcRows} // Pass the correct rows based on formType
            months={months}
@@ -753,6 +753,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
            employees={allEmployees}
            editMode={formType === 'manpower' ? isManpowerEditing : isOdcEditing} // Use form-specific state
            formType={formType}
+           manpowerCount={manpowerRows.filter(row => row.level === 1).length} // Pass manpower count as prop
            levelOptions={{
              level1: level1Options,
             level2: level2Options,

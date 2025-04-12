@@ -60,6 +60,7 @@ interface WBSTableProps {
   employees: Employee[];
   editMode: boolean;
   formType?: 'manpower' | 'odc';
+  manpowerCount?: number; // Add explicit prop for manpower count
   levelOptions: {
     level1: WBSOption[];
     level2: WBSOption[];
@@ -82,6 +83,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
   employees,
   editMode,
   formType,
+  manpowerCount = 0, // Default to 0 if not provided
   levelOptions,
   onAddRow,
   onDeleteRow,
@@ -206,16 +208,11 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
   const getSequenceNumber = (row: WBSRowData): string => {
     if (row.level === 1) {
-      // For ODC form, we need to get the count of manpower level 1 tasks from the parent component
-      // This is done by checking the data-manpower-count attribute on the container
-      let manpowerCount = 0;
-      const container = document.querySelector('[data-manpower-count]');
-      if (container) {
-        manpowerCount = parseInt(container.getAttribute('data-manpower-count') || '0', 10);
-      }
-
+      // Calculate the index of this row among level 1 rows
       const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
+
       // If formType is 'odc', add the manpower count to continue numbering
+      // Use the manpowerCount prop directly instead of reading from DOM
       const adjustedIndex = formType === 'odc' ? level1Index + manpowerCount : level1Index;
       return adjustedIndex.toString();
     } else if (row.level === 2) {
