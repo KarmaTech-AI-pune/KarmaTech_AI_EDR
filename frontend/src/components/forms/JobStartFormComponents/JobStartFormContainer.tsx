@@ -8,28 +8,27 @@ import {
   Snackbar,
   Alert
 } from '@mui/material';
-import LoadingButton from '../common/LoadingButton'; // Corrected path
-import { projectManagementAppContext } from '../../App';
-import { projectManagementAppContextType, JobStartFormData } from '../../types';
-import { FormWrapper } from './FormWrapper';
+import LoadingButton from '../../common/LoadingButton';
+import { projectManagementAppContext } from '../../../App';
+import { projectManagementAppContextType, JobStartFormData } from '../../../types';
+import { FormWrapper } from '../FormWrapper';
 import {
   submitJobStartForm,
   getJobStartFormByProjectId,
   updateJobStartForm,
   getWBSResourceData
-} from '../../services/jobStartFormApi';
+} from '../../../services/jobStartFormApi';
 import {
   EmployeeAllocation,
   TimeContingencyEntry,
   ExpensesType,
   OutsideAgencyType,
   ProjectSpecificType,
-      ExpenseEntry,
-      ServiceTaxEntry,
-      OutsideAgencyEntry,
-      ProjectSpecificEntry // Added missing import
-    } from '../../types/jobStartForm';
-import { formatTitle } from '../../utils/jobStartFormUtils';
+  ExpenseEntry,
+  ServiceTaxEntry,
+  OutsideAgencyEntry
+} from '../../../types/jobStartForm';
+import { formatTitle } from '../../../utils/jobStartFormUtils';
 import {
   textFieldStyle,
   tableHeaderStyle,
@@ -37,12 +36,12 @@ import {
   accordionStyle,
   sectionStyle,
   summaryRowStyle
-} from '../../utils/jobStartFormStyles';
-import TimeSection from './JobStartFormComponents/TimeSection';
-import ExpensesSection from './JobStartFormComponents/ExpensesSection';
-import SummarySection from './JobStartFormComponents/SummarySection';
+} from '../../../utils/jobStartFormStyles';
+import TimeSection from './TimeSection';
+import ExpensesSection from './ExpensesSection';
+import SummarySection from './SummarySection';
 
-const JobStartForm: React.FC = () => {
+const JobStartFormContainer: React.FC = () => {
   const context = useContext<projectManagementAppContextType | null>(projectManagementAppContext);
   const [employeeAllocations, setEmployeeAllocations] = useState<EmployeeAllocation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +69,7 @@ const JobStartForm: React.FC = () => {
       }
     });
   };
-
+  
   const [expenses, setExpenses] = useState<ExpensesType>({
     '2a': { number: '10000', remarks: '' },
     '2b': { number: '10000', remarks: '' },
@@ -196,7 +195,7 @@ const JobStartForm: React.FC = () => {
         if (savedFormData) {
           console.log('Loading form data from local storage.');
           const parsedData = JSON.parse(savedFormData);
-
+          
           setEmployeeAllocations(parsedData.time.employeeAllocations);
           setTimeContingency(parsedData.time.timeContingency);
           setExpenses(parsedData.expenses.regularExpenses);
@@ -232,7 +231,7 @@ const JobStartForm: React.FC = () => {
 
   // Handler functions
   const handleRemarksChange = (employeeId: string, value: string) => {
-    setEmployeeAllocations((prevAllocations: EmployeeAllocation[]) =>
+    setEmployeeAllocations(prevAllocations =>
       prevAllocations.map(emp =>
         emp.id === employeeId ? { ...emp, remarks: value } : emp
       )
@@ -240,35 +239,35 @@ const JobStartForm: React.FC = () => {
   };
 
   const handleTimeContingencyChange = (field: keyof TimeContingencyEntry, value: string) => {
-    setTimeContingency((prev: TimeContingencyEntry) => ({
+    setTimeContingency(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
   const handleExpenseChange = (id: keyof ExpensesType, field: keyof ExpenseEntry, value: string) => {
-    setExpenses((prev: ExpensesType) => ({
+    setExpenses(prev => ({
       ...prev,
       [id]: { ...prev[id], [field]: value }
     }));
   };
 
   const handleSurveyWorksChange = (field: keyof ExpenseEntry, value: string) => {
-    setSurveyWorks((prev: ExpenseEntry) => ({
+    setSurveyWorks(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
   const handleOutsideAgencyChange = (id: keyof OutsideAgencyType, field: keyof OutsideAgencyEntry, value: string) => {
-    setOutsideAgency((prev: OutsideAgencyType) => ({
+    setOutsideAgency(prev => ({
       ...prev,
       [id]: { ...prev[id], [field]: value }
     }));
   };
 
   const handleProjectSpecificChange = (id: keyof ProjectSpecificType, field: keyof ProjectSpecificEntry, value: string) => {
-    setProjectSpecific((prev: ProjectSpecificType) => ({
+    setProjectSpecific(prev => ({
       ...prev,
       [id]: { ...prev[id], [field]: value }
     }));
@@ -279,7 +278,7 @@ const JobStartForm: React.FC = () => {
   };
 
   const handleServiceTaxChange = (value: string) => {
-    setServiceTax((prev: ServiceTaxEntry) => ({
+    setServiceTax(prev => ({
       ...prev,
       percentage: value
     }));
@@ -314,17 +313,17 @@ const JobStartForm: React.FC = () => {
   const calculateExpensesTotal = () => {
     let total = 0;
     // Add up all expense entries
-    Object.values(expenses).forEach((entry: ExpenseEntry) => {
+    Object.values(expenses).forEach(entry => {
       total += Number(entry.number) || 0;
     });
     // Add survey works
     total += Number(surveyWorks.number) || 0;
     // Add up outside agency entries (rate * units)
-    Object.values(outsideAgency).forEach((entry: OutsideAgencyEntry) => {
+    Object.values(outsideAgency).forEach(entry => {
       total += calculateOutsideAgencyCost(entry);
     });
     // Add up project specific entries
-    Object.values(projectSpecific).forEach((entry: ProjectSpecificEntry) => {
+    Object.values(projectSpecific).forEach(entry => {
       total += Number(entry.number) || 0;
     });
     return total;
@@ -581,4 +580,4 @@ const JobStartForm: React.FC = () => {
   );
 };
 
-export default JobStartForm;
+export default JobStartFormContainer;
