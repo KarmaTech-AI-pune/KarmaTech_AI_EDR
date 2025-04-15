@@ -150,7 +150,15 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
   const renderAddButton = (level: 1 | 2 | 3, parentId?: string): JSX.Element => {
     // Calculate colspan based on formType
-    let colspan = 5 + months.length; // Base columns: Work Description, Role, Name, Rate, months
+    let colspan = 3 + months.length; // Base columns: Work Description, Rate, months
+
+    // Add columns for Resource Role and Resource Name if not ODC form
+    // For ODC form, add 2 for Name and Unit columns
+    if (formType !== 'odc') {
+      colspan += 2; // Add 2 for Resource Role and Resource Name
+    } else {
+      colspan += 2; // Add 2 for Name and Unit columns in ODC form
+    }
 
     if (!editMode) {
       colspan += 1; // Add 1 for the delete button column
@@ -351,9 +359,18 @@ const WBSTable: React.FC<WBSTableProps> = ({
               </HeaderCell>
             )}
             <StickyHeaderCell sx={{ minWidth: '300px', backgroundColor: '#FFFFFF' }}>Work Description</StickyHeaderCell>
-            <HeaderCell sx={{ minWidth: '150px' }}>Resource Role</HeaderCell>
-            <HeaderCell sx={{ minWidth: '150px' }}>Resource Name</HeaderCell>
+            {formType === 'odc' ? (
+              <HeaderCell sx={{ minWidth: '150px' }}>Name</HeaderCell>
+            ) : (
+              <>
+                <HeaderCell sx={{ minWidth: '150px' }}>Resource Role</HeaderCell>
+                <HeaderCell sx={{ minWidth: '150px' }}>Resource Name</HeaderCell>
+              </>
+            )}
             <HeaderCell sx={{ minWidth: 100 }}>Rate</HeaderCell>
+            {formType === 'odc' && (
+              <HeaderCell sx={{ minWidth: '150px' }}>Unit</HeaderCell>
+            )}
             {months.map(month => (
               <HeaderCell key={month} sx={{ minWidth: 100 }}>{month}</HeaderCell>
             ))}

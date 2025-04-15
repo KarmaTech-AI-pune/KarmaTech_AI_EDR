@@ -462,13 +462,29 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     handleDeleteCancel();
   };
 
-  const handleRoleChange = (rowId: string, roleId: string) => {
+  const handleRoleChange = (rowId: string, roleIdOrUnit: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+
+    // For ODC form, we're using the role field to store the unit
+    if (formType === 'odc') {
+      setRowsFunc(prevRows => prevRows.map(row => {
+        if (row.id === rowId) {
+          return {
+            ...row,
+            role: roleIdOrUnit
+          };
+        }
+        return row;
+      }));
+      return;
+    }
+
+    // For Manpower form, continue with role selection logic
     setRowsFunc(prevRows => prevRows.map(row => {
       if (row.id === rowId) {
         return {
           ...row,
-          role: roleId,
+          role: roleIdOrUnit,
           name: null,
           costRate: 0
         };
@@ -477,16 +493,32 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     }));
   };
 
-  const handleEmployeeChange = async (rowId: string, employeeId: string) => {
+  const handleEmployeeChange = async (rowId: string, employeeIdOrName: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+
+    // For ODC form, we just store the name as text
+    if (formType === 'odc') {
+      setRowsFunc(prevRows => prevRows.map(row => {
+        if (row.id === rowId) {
+          return {
+            ...row,
+            name: employeeIdOrName
+          };
+        }
+        return row;
+      }));
+      return;
+    }
+
+    // For Manpower form, continue with employee lookup
     try {
-      const employee = await ResourceAPI.getEmployeeById(employeeId);
+      const employee = await ResourceAPI.getEmployeeById(employeeIdOrName);
       if (employee) {
         setRowsFunc(prevRows => prevRows.map(row => {
           if (row.id === rowId) {
             return {
               ...row,
-              name: employeeId,
+              name: employeeIdOrName,
               costRate: employee.standard_rate
             };
           }
@@ -505,7 +537,10 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
     const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
     const row = currentRows.find(r => r.id === rowId);
-    if (!row || !row.role) return; // Ensure row exists and has a role assigned
+
+    // For ODC form, we don't require a role to be assigned
+    // For Manpower form, we still require a role
+    if (!row || (formType !== 'odc' && !row.role)) return;
 
     if (value === '') {
       setRowsFunc(prevRows => prevRows.map(r => {
@@ -521,6 +556,41 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       return;
     }
 
+    // For ODC form, allow any text input
+    if (formType === 'odc') {
+      // Try to parse as number first
+      const numericValue = parseFloat(value);
+      if (!isNaN(numericValue)) {
+        // If it's a valid number, use it
+        setRowsFunc(prevRows => prevRows.map(r => {
+          if (r.id === rowId) {
+            return {
+              ...r,
+              costRate: numericValue,
+              totalCost: (r.totalHours * numericValue) + r.odc
+            };
+          }
+          return r;
+        }));
+      } else {
+        // If it's not a valid number, store it as is in costRate
+        // This allows for text input in the Rate field for ODC form
+        setRowsFunc(prevRows => prevRows.map(r => {
+          if (r.id === rowId) {
+            return {
+              ...r,
+              costRate: value as any, // Store as any type to allow text
+              // Keep the totalCost calculation as is
+              totalCost: r.odc // Since we can't multiply by text, just use ODC cost
+            };
+          }
+          return r;
+        }));
+      }
+      return;
+    }
+
+    // For Manpower form, continue with numeric validation
     const newRate = parseFloat(value);
     if (isNaN(newRate)) return; // Ignore invalid numbers
 
