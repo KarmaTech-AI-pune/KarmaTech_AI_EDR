@@ -15,7 +15,7 @@ import {
   styled,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { createInputRegister, updateInputRegister } from '../../../dummyapi/inputRegisterApi';
+import { createInputRegister, updateInputRegister } from '../../../api/inputRegisterApi';
 import { InputRegisterRow } from '../../../models';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
@@ -45,6 +45,16 @@ interface InputRegisterDialogProps {
   initialData?: InputRegisterRow;
   projectId: string;
 }
+
+// Helper function to ensure boolean values are properly formatted
+const formatBooleanValue = (value: any): boolean => {
+  // Convert string 'true'/'false' to actual boolean
+  if (typeof value === 'string') {
+    return value.toLowerCase() === 'true';
+  }
+  // Ensure it's a boolean
+  return Boolean(value);
+};
 
 const emptyRow = (projectId: string): Omit<InputRegisterRow, 'id'> => ({
   projectId,
@@ -79,23 +89,47 @@ const InputRegisterDialog: React.FC<InputRegisterDialogProps> = ({
   }, [open, initialData, projectId]);
 
   const handleChange = (field: keyof Omit<InputRegisterRow, 'id'>, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+    // Special handling for boolean values
+    if (field === 'fitForPurpose' || field === 'check') {
+      // Ensure boolean values are properly handled using our helper function
+      const boolValue = formatBooleanValue(value);
+
+      console.log(`Setting ${field} to:`, boolValue);
+
+      setFormData(prev => ({
+        ...prev,
+        [field]: boolValue,
+      }));
+    } else {
+      // Normal handling for other fields
+      setFormData(prev => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
   };
 
-  const handleSubmit = () => {
-    if (initialData) {
-      const updatedData = updateInputRegister(initialData.id, formData);
-      if (updatedData) {
-        onSave(updatedData);
+  const handleSubmit = async () => {
+    try {
+      if (initialData) {
+        // For updates, keep the same ID
+        const updatedData = await updateInputRegister(initialData.id, formData);
+        if (updatedData) {
+          console.log(`Successfully updated input register entry (Database ID: ${updatedData.id})`);
+          onSave(updatedData);
+        }
+      } else {
+        // For new entries, the backend will assign the next sequential ID
+        // The ID is automatically assigned by SQL Server identity column
+        const newData = await createInputRegister(formData);
+        console.log(`Successfully created new input register entry (Database ID: ${newData.id})`);
+        onSave(newData);
       }
-    } else {
-      const newData = createInputRegister(formData);
-      onSave(newData);
+      onClose();
+    } catch (error) {
+      console.error('Error saving input register:', error);
+      // You could add error handling UI here
     }
-    onClose();
   };
 
   const handleDialogClose = () => {
@@ -231,7 +265,7 @@ const InputRegisterDialog: React.FC<InputRegisterDialogProps> = ({
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={formData.fitForPurpose}
+                    checked={Boolean(formData.fitForPurpose)}
                     onChange={(e) => handleChange('fitForPurpose', e.target.checked)}
                     sx={{ '&.Mui-checked': { color: '#1976d2' } }}
                   />
@@ -243,7 +277,7 @@ const InputRegisterDialog: React.FC<InputRegisterDialogProps> = ({
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={formData.check}
+                    checked={Boolean(formData.check)}
                     onChange={(e) => handleChange('check', e.target.checked)}
                     sx={{ '&.Mui-checked': { color: '#1976d2' } }}
                   />
@@ -312,9 +346,9 @@ const InputRegisterDialog: React.FC<InputRegisterDialogProps> = ({
       </DialogContent>
 
       <DialogActions>
-        <Button 
+        <Button
           onClick={handleDialogClose}
-          sx={{ 
+          sx={{
             color: 'text.secondary',
             '&:hover': {
               backgroundColor: 'rgba(0, 0, 0, 0.04)'
@@ -323,7 +357,7 @@ const InputRegisterDialog: React.FC<InputRegisterDialogProps> = ({
         >
           Cancel
         </Button>
-        <Button 
+        <Button
           onClick={handleSubmit}
           variant="contained"
           sx={{

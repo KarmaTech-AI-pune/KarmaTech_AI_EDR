@@ -14,6 +14,7 @@ import {
   Container,
   Alert,
   styled,
+  Snackbar,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -22,7 +23,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import InputRegisterDialog from './InputRegisterformcomponents/InputRegisterDialog';
-import { deleteInputRegister, getInputRegisterByProject } from '../../dummyapi/inputRegisterApi';
+import { deleteInputRegister, getInputRegisterByProject } from '../../api/inputRegisterApi';
 import { projectManagementAppContext } from '../../App';
 import { FormWrapper } from './FormWrapper';
 import { InputRegisterRow } from '../../models';
@@ -44,6 +45,7 @@ const InputRegisterForm: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<InputRegisterRow | undefined>(undefined);
   const [error, setError] = useState<string>('');
+  const [notification, setNotification] = useState<{message: string, open: boolean}>({message: '', open: false});
 
   useEffect(() => {
     if (!context?.selectedProject?.id) {
@@ -51,13 +53,18 @@ const InputRegisterForm: React.FC = () => {
       return;
     }
 
-    try {
-      const data = getInputRegisterByProject(context.selectedProject.id.toString());
-      setRows(data);
-      setError('');
-    } catch (err) {
-      setError('Failed to load input register data');
-    }
+    const fetchData = async () => {
+      try {
+        const data = await getInputRegisterByProject(context.selectedProject.id.toString());
+        setRows(data);
+        setError('');
+      } catch (err) {
+        setError('Failed to load input register data');
+        console.error('Error loading input register data:', err);
+      }
+    };
+
+    fetchData();
   }, [context?.selectedProject?.id]);
 
   if (!context?.selectedProject?.id) {
@@ -83,9 +90,14 @@ const InputRegisterForm: React.FC = () => {
   const handleSave = (data: InputRegisterRow) => {
     try {
       if (selectedRow) {
+        // For updates, keep the same ID and update the row
         setRows(rows.map(row => row.id === selectedRow.id ? data : row));
+        setNotification({message: `Successfully updated input register entry (Database ID: ${data.id})`, open: true});
       } else {
+        // For new entries, add to the rows array
+        // The ID is already assigned by the backend (SQL Server identity column)
         setRows([...rows, data]);
+        setNotification({message: `Successfully created new input register entry (Database ID: ${data.id})`, open: true});
       }
       setError('');
     } catch (err) {
@@ -93,14 +105,22 @@ const InputRegisterForm: React.FC = () => {
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleCloseNotification = () => {
+    setNotification({...notification, open: false});
+  };
+
+  const handleDelete = async (id: string) => {
     try {
-      if (deleteInputRegister(id)) {
+      const success = await deleteInputRegister(id);
+      if (success) {
+        // Remove the deleted row from the rows array
         setRows(rows.filter(row => row.id !== id));
+        setNotification({message: `Successfully deleted input register entry (Database ID: ${id})`, open: true});
         setError('');
       }
     } catch (err) {
       setError('Failed to delete entry');
+      console.error('Error deleting entry:', err);
     }
   };
 
@@ -121,26 +141,26 @@ const InputRegisterForm: React.FC = () => {
 
   const formContent = (
     <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Box sx={{ 
-        width: '100%', 
+      <Box sx={{
+        width: '100%',
         maxHeight: 'calc(100vh - 200px)',
         overflowY: 'auto',
         overflowX: 'hidden',
         pr: 1,
         pb: 4
       }}>
-        <Paper 
+        <Paper
           elevation={0}
-          sx={{ 
+          sx={{
             border: '1px solid #e0e0e0',
             borderRadius: 1,
             backgroundColor: '#fff'
           }}
         >
           <StyledHeaderBox>
-            <Typography 
-              variant="h5" 
-              sx={{ 
+            <Typography
+              variant="h5"
+              sx={{
                 color: '#1976d2',
                 fontWeight: 500,
                 mb: 0
@@ -164,10 +184,15 @@ const InputRegisterForm: React.FC = () => {
               </Alert>
             </Box>
           )}
-      
+
+          {/*
+            Display entries with sequential numbering (index + 1) for user-friendly display
+            while also showing the actual database ID in parentheses.
+            Database IDs are assigned by SQL Server and may not be sequential if entries were deleted.
+          */}
           <Box>
             {rows.map((row, index) => (
-              <Accordion 
+              <Accordion
                 key={row.id}
                 sx={{
                   '&:before': { display: 'none' },
@@ -215,7 +240,7 @@ const InputRegisterForm: React.FC = () => {
                     </Grid>
                     <Grid item xs={1}>
                       <Box sx={{ display: 'flex', gap: 1 }}>
-                        <IconButton 
+                        <IconButton
                           onClick={(e) => {
                             e.stopPropagation();
                             handleOpenDialog(row);
@@ -225,7 +250,7 @@ const InputRegisterForm: React.FC = () => {
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
-                        <IconButton 
+                        <IconButton
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(row.id);
@@ -306,6 +331,18 @@ const InputRegisterForm: React.FC = () => {
   return (
     <FormWrapper>
       {formContent}
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%' }}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </FormWrapper>
   );
 };
