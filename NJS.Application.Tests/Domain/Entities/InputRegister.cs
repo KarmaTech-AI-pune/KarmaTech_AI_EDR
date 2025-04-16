@@ -7,50 +7,50 @@ namespace NJS.Domain.Entities
     {
         [Key]
         public int Id { get; set; }
-        
+
         public int ProjectId { get; set; }
-        
+
         [Required]
         [StringLength(255)]
         public string DataReceived { get; set; }
-        
+
         [Required]
         public DateTime ReceiptDate { get; set; }
-        
+
         [Required]
         [StringLength(255)]
         public string ReceivedFrom { get; set; }
-        
+
         [Required]
         [StringLength(100)]
         public string FilesFormat { get; set; }
-        
+
         [Required]
         public int NoOfFiles { get; set; }
-        
+
         [Required]
         public bool FitForPurpose { get; set; }
-        
+
         [Required]
         public bool Check { get; set; }
-        
+
         [StringLength(255)]
-        public string CheckedBy { get; set; }
-        
+        public string? CheckedBy { get; set; } = null;
+
         public DateTime? CheckedDate { get; set; }
-        
+
         [StringLength(255)]
-        public string Custodian { get; set; }
-        
+        public string? Custodian { get; set; } = null;
+
         [StringLength(500)]
-        public string StoragePath { get; set; }
-        
+        public string? StoragePath { get; set; } = null;
+
         [StringLength(1000)]
-        public string Remarks { get; set; }
-        
+        public string? Remarks { get; set; } = null;
+
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string CreatedBy { get; set; }
-        public string UpdatedBy { get; set; }
+        public string? UpdatedBy { get; set; } = null;
     }
 }
