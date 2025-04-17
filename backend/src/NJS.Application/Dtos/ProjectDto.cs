@@ -14,14 +14,14 @@ namespace NJS.Application.Dtos
 		public string ProjectManagerId { get; set; }
 		public string? SeniorProjectManagerId { get; set; }
 		public string RegionalManagerId { get; set; }
-		public string Office { get; set; }
-		public string Region { get; set; }
-		public string TypeOfJob { get; set; }
+		public string Office { get; set; } = string.Empty;
+		public string Region { get; set; } = string.Empty;
+		public string TypeOfJob { get; set; } = string.Empty;
 		public string Sector { get; set; }
-        public string FeeType { get; set; }
+        public string FeeType { get; set; } = string.Empty;
         public decimal EstimatedCost { get; set; }
         public decimal Budget {  get; set; }
-		public string Priority { get; set; }
+		public string Priority { get; set; } = string.Empty;
 		public string Currency { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -32,7 +32,7 @@ namespace NJS.Application.Dtos
         public string? FundingStream { get; set; }
         public string? ContractType { get; set; }
         public bool LetterOfAcceptance { get; set; }
-        public int OpportunityTrackingId { get; set; }       
+        public int OpportunityTrackingId { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? LastModifiedAt { get; set; }

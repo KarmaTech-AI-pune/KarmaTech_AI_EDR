@@ -3,17 +3,22 @@ import { Button } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { ProjectItemProps, ProjectFormData } from '../../types/index';
 import { useState, useContext, useEffect } from 'react';
-import { projectApi } from '../../dummyapi/api';
+import { projectApi } from '../../services/projectApi';
 import { ProjectInitForm } from '../forms/ProjectInitForm';
 import { projectManagementAppContext } from '../../App';
-import { authApi } from '../../dummyapi/authApi';
+import { authApi } from '../../services/authApi';
+import { getUsersByRole } from '../../services/userApi';
 import { PermissionType } from '../../models';
+import { AuthUser } from '../../models/userModel';
 
 export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDeleted, onProjectUpdated }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [canEditProject, setCanEditProject] = useState(false);
   const [canDeleteProject, setCanDeleteProject] = useState(false);
+  const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
+  const [projectManagers, setProjectManagers] = useState<{id: string, name: string}[]>([]);
+  const [seniorProjectManagers, setSeniorProjectManagers] = useState<{id: string, name: string}[]>([]);
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
@@ -56,8 +61,14 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
       if (onProjectDeleted) {
         onProjectDeleted(project.id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting project:', error);
+      // Close the dialog even if there's an error
+      setDeleteDialogOpen(false);
+      // Let the parent component handle the error
+      if (onProjectDeleted) {
+        onProjectDeleted(project.id);
+      }
     }
   };
 
@@ -65,9 +76,53 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
     setDeleteDialogOpen(false);
   };
 
+  const fetchManagers = async () => {
+    // Helper function to convert users to unique manager objects and sort by name
+    const getUniqueManagers = (users: AuthUser[]) => {
+      // Create a Map with user ID as key to ensure uniqueness
+      const uniqueManagersMap = new Map<string, { id: string; name: string }>();
+
+      // Add each user to the map, overwriting any duplicates
+      users.forEach(user => {
+        // Ensure we have valid data
+        if(user.name && user.id) {
+          uniqueManagersMap.set(user.id, {id: user.id, name: user.name});
+        }
+      });
+
+      // Convert to array and sort by name
+      return Array.from(uniqueManagersMap.values())
+        .sort((a, b) => a.name.localeCompare(b.name));
+    };
+
+    try {
+      const projectManagerUsers = await getUsersByRole('Project Manager');
+      const uniqueProjectManagers = getUniqueManagers(projectManagerUsers);
+      setProjectManagers(uniqueProjectManagers);
+
+      const seniorProjectManagerUsers = await getUsersByRole('Senior Project Manager');
+      const uniqueSeniorProjectManagers = getUniqueManagers(seniorProjectManagerUsers);
+      setSeniorProjectManagers(uniqueSeniorProjectManagers);
+
+      // Fetch and set Regional Managers/Directors
+      const regionalManagerUsers = await getUsersByRole('Regional Manager');
+      const regionalDirectorUsers = await getUsersByRole('Regional Director');
+
+      // Combine both arrays and get unique managers
+      const allApproverUsers = [...regionalManagerUsers, ...regionalDirectorUsers];
+      const uniqueApprovers = getUniqueManagers(allApproverUsers);
+
+      setApprovalManagers(uniqueApprovers);
+    } catch (error) {
+      console.error('Error fetching managers:', error);
+    }
+  };
+
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (canEditProject) {
+      // Load manager data before opening the dialog
+      fetchManagers();
       setEditDialogOpen(true);
     }
   };
@@ -79,14 +134,48 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
   const handleEditSubmit = async (formData: ProjectFormData) => {
     if (!canEditProject) return;
     try {
-      const updatedProject = { ...formData, id: project.id };
+      // Create a clean object with just the fields we need
+      const updatedProject = {
+        ...project, // Start with existing project data
+        // Update with form data
+        name: formData.name,
+        clientName: formData.clientName,
+        projectNo: formData.projectNo,
+        typeOfClient: formData.typeOfClient,
+        projectManagerId: formData.projectManagerId,
+        seniorProjectManagerId: formData.seniorProjectManagerId,
+        regionalManagerId: formData.regionalManagerId,
+        office: formData.office,
+        region: formData.region,
+        typeOfJob: formData.typeOfJob,
+        sector: formData.sector,
+        feeType: formData.feeType,
+        estimatedCost: Number(formData.estimatedCost),
+        budget: Number(formData.budget || 0),
+        priority: formData.priority,
+        currency: formData.currency,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        status: formData.status,
+        letterOfAcceptance: formData.letterOfAcceptance,
+        details: formData.details,
+        fundingStream: formData.fundingStream
+      };
+
+      console.log('Sending update with data:', updatedProject);
       await projectApi.update(project.id, updatedProject);
       setEditDialogOpen(false);
       if (onProjectUpdated) {
         onProjectUpdated();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating project:', error);
+      // Close the dialog even if there's an error
+      setEditDialogOpen(false);
+      // Let the parent component handle the refresh
+      if (onProjectUpdated) {
+        onProjectUpdated();
+      }
     }
   };
 
@@ -196,7 +285,9 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
             project={project}
             onSubmit={handleEditSubmit}
             onCancel={handleEditClose}
-            approvalManagers={[]} projectManagers={[]} seniorProjectManagers={[]}
+            approvalManagers={approvalManagers}
+            projectManagers={projectManagers}
+            seniorProjectManagers={seniorProjectManagers}
           />
         </DialogContent>
       </Dialog>
