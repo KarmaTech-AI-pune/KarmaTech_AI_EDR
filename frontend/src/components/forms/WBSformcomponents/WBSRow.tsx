@@ -364,12 +364,10 @@ const WBSRow: React.FC<WBSRowProps> = ({
               <NumberInput
                 type="text"
                 value={row.odcHours || ''}
-                onChange={(e) => onHoursChange(row.id, 'odcHours', e.target.value)}
-                min="0"
+                readOnly
                 style={{
-                  backgroundColor: editMode ? '#f5f5f5' : 'white'
+                  backgroundColor: '#f5f5f5'
                 }}
-                disabled={editMode}
               />
             ) : childTotals ? (
               <NumberInput
@@ -389,12 +387,10 @@ const WBSRow: React.FC<WBSRowProps> = ({
               <NumberInput
                 type="text"
                 value={row.odc || ''}
-                onChange={(e) => onODCChange(row.id, e.target.value)}
-                min="0"
+                readOnly
                 style={{
-                  backgroundColor: editMode ? '#f5f5f5' : 'white'
+                  backgroundColor: '#f5f5f5'
                 }}
-                disabled={editMode}
               />
             ) : childTotals ? (
               <NumberInput

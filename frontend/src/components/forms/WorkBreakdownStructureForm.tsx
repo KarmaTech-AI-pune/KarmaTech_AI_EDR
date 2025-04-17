@@ -414,6 +414,12 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       parentId: parentId || null,
       taskType: formType === 'manpower' ? TaskType.Manpower : TaskType.ODC // Set taskType based on formType
     };
+
+    // For ODC form, ensure odcHours and odc are initialized to 0
+    if (formType === 'odc') {
+      newRow.odcHours = 0;
+      newRow.odc = 0;
+    }
     setRowsFunc([...currentRows, newRow]);
   };
 
@@ -564,10 +570,13 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         // If it's a valid number, use it
         setRowsFunc(prevRows => prevRows.map(r => {
           if (r.id === rowId) {
+            // Calculate ODC cost based on total hours and new rate
+            const odcCost = r.totalHours * numericValue;
             return {
               ...r,
               costRate: numericValue,
-              totalCost: (r.totalHours * numericValue) + r.odc
+              odc: odcCost, // Update ODC cost
+              totalCost: odcCost // For ODC form, totalCost is the same as odc
             };
           }
           return r;
@@ -581,7 +590,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
               ...r,
               costRate: value as any, // Store as any type to allow text
               // Keep the totalCost calculation as is
-              totalCost: r.odc // Since we can't multiply by text, just use ODC cost
+              odc: 0, // Reset ODC cost since we can't calculate with text
+              totalCost: 0 // Reset total cost since we can't calculate with text
             };
           }
           return r;
@@ -608,20 +618,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleHoursChange = (rowId: string, month: string, value: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
-    // Special case for odcHours - Assuming odcHours might be specific to ODC form?
-    // If odcHours can appear in both, this logic is fine. If only ODC, add check: if (formType === 'odc' && month === 'odcHours')
+    // Skip processing for odcHours since it's now calculated automatically
     if (month === 'odcHours') {
-      const hours = value === '' ? 0 : Math.max(parseInt(value) || 0, 0);
-
-      setRowsFunc(prevRows => prevRows.map(row => {
-        if (row.id === rowId) {
-          return {
-            ...row,
-            odcHours: hours
-          };
-        }
-        return row;
-      }));
       return;
     }
 
@@ -642,6 +640,20 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         const totalHours = Object.values(newMonthlyHours)
           .flatMap(yearHours => Object.values(yearHours))
           .reduce((sum, h) => sum + h, 0);
+
+        // For ODC form, update odcHours to match totalHours
+        if (formType === 'odc') {
+          return {
+            ...row,
+            monthlyHours: newMonthlyHours,
+            totalHours,
+            odcHours: totalHours,
+            odc: totalHours * row.costRate, // Calculate ODC cost based on total hours and rate
+            totalCost: totalHours * row.costRate // For ODC form, totalCost is the same as odc
+          };
+        }
+
+        // For Manpower form, keep the original logic
         return {
           ...row,
           monthlyHours: newMonthlyHours,
@@ -654,7 +666,12 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const handleODCChange = (rowId: string, value: string) => {
-    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+    // Skip processing for ODC form since ODC cost is now calculated automatically
+    if (formType === 'odc') {
+      return;
+    }
+
+    const setRowsFunc = setManpowerRows; // Only for Manpower form now
     const odc = value === '' ? 0 : Math.max(parseFloat(value) || 0, 0);
 
     setRowsFunc(prevRows => prevRows.map(row => {
