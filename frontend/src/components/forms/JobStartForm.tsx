@@ -87,7 +87,7 @@ type ExpensesType = {
 }
 
 // ExpensesData interface is defined in types.ts
-
+        
 type OutsideAgencyType = {
   'a': OutsideAgencyEntry;
   'b': OutsideAgencyEntry;
