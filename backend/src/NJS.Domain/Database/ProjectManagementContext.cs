@@ -73,7 +73,7 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.CreatedBy).IsRequired(false);
                 entity.Property(e => e.UpdatedBy).IsRequired(false);
                 entity.Property(e => e.Comments).IsRequired(false);
-                
+
                 // Create index on UserId for faster lookups
                 entity.HasIndex(e => e.UserId);
 
@@ -97,7 +97,7 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
                 entity.Property(e => e.Comments).IsRequired(false);
                 entity.Property(e => e.ModifiedBy).IsRequired();
-                
+
                 // Create index on BidPreparationId for faster lookups
                 entity.HasIndex(e => e.BidPreparationId);
             });
@@ -148,7 +148,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OpportunityTracking>().Property(o => o.ReviewManagerId).IsRequired(false);
             modelBuilder.Entity<OpportunityHistory>().Property(o => o.Comments).IsRequired(false);
 
-            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId); 
+            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
 
@@ -186,12 +186,16 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.Label).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Level).IsRequired();
                 entity.Property(e => e.ParentValue).HasMaxLength(100);
-                
+                entity.Property(e => e.FormType).IsRequired();
+
                 // Create index on Level for faster lookups
                 entity.HasIndex(e => e.Level);
-                
+
                 // Create index on ParentValue for faster hierarchical queries
                 entity.HasIndex(e => e.ParentValue);
+
+                // Create index on FormType for faster filtering
+                entity.HasIndex(e => e.FormType);
             });
 
             // Configure WBSTask entity
@@ -217,23 +221,32 @@ namespace NJS.Domain.Database
             {
                 entity.HasKey(e => e.FormId);
 
+                entity.Property(e => e.GrandTotal).HasPrecision(18, 2);
+                entity.Property(e => e.Profit).HasPrecision(18, 2);
+                entity.Property(e => e.ProjectFees).HasPrecision(18, 2);
+                entity.Property(e => e.ServiceTaxAmount).HasPrecision(18, 2);
+                entity.Property(e => e.ServiceTaxPercentage).HasPrecision(5, 2);
+                entity.Property(e => e.TotalExpenses).HasPrecision(18, 2);
+                entity.Property(e => e.TotalProjectFees).HasPrecision(18, 2);
+                entity.Property(e => e.TotalTimeCost).HasPrecision(18, 2);
+
                 entity.HasOne(jsf => jsf.Project)
-                      .WithMany() // Assuming Project doesn't have a direct collection of JobStartForms
+                      .WithMany()
                       .HasForeignKey(jsf => jsf.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade); // Or Restrict depending on requirements
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(jsf => jsf.WorkBreakdownStructure)
-                      .WithMany(wbs => wbs.JobStartForms) // Add navigation property to WorkBreakdownStructure
+                      .WithMany(wbs => wbs.JobStartForms)
                       .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
-                      .IsRequired(false) // Make the WBS link optional
-                      .OnDelete(DeleteBehavior.NoAction); // Change to NoAction to avoid cycles
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasMany(jsf => jsf.Selections)
                       .WithOne(s => s.JobStartForm)
                       .HasForeignKey(s => s.FormId)
-                      .OnDelete(DeleteBehavior.Cascade); // Deleting form deletes its selections
+                      .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasIndex(jsf => jsf.ProjectId); // Index for faster lookup by project
+                entity.HasIndex(jsf => jsf.ProjectId);
             });
 
             // Configure JobStartFormSelection entity
@@ -248,7 +261,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<UserWBSTask>(entity =>
             {
                 entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
-                entity.Property(ut => ut.ODC).HasPrecision(18, 2);
+                entity.Property(ut => ut.ODCCost).HasPrecision(18, 2);
                 entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
             });
 

@@ -3,6 +3,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
+    public enum FormType
+    {
+        Manpower = 0,
+        ODC = 1
+    }
+
     public class WBSOption
     {
         [Key]
@@ -21,5 +27,7 @@ namespace NJS.Domain.Entities
 
         [StringLength(100)]
         public string ParentValue { get; set; }
+
+        public FormType FormType { get; set; } = FormType.Manpower; // Default to Manpower for backward compatibility
     }
 }

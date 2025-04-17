@@ -21,26 +21,34 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         public async Task<WBSLevelOptionsDto> Handle(GetWBSOptionsQuery request, CancellationToken cancellationToken)
         {
-            // Fetch all WBS options
-            var allOptions = await _wbsOptionRepository.GetAllAsync();
+            // Fetch WBS options based on form type if specified
+            IEnumerable<WBSOption> allOptions;
+            if (request.FormType.HasValue)
+            {
+                allOptions = await _wbsOptionRepository.GetByFormTypeAsync(request.FormType.Value);
+            }
+            else
+            {
+                allOptions = await _wbsOptionRepository.GetAllAsync();
+            }
 
             var result = new WBSLevelOptionsDto
             {
                 Level1 = allOptions
                     .Where(o => o.Level == 1)
-                    .Select(o => new WBSOptionDto 
-                    { 
+                    .Select(o => new WBSOptionDto
+                    {
                         Value = o.Value,
-                        Label = o.Label 
+                        Label = o.Label
                     })
                     .ToList(),
 
                 Level2 = allOptions
                     .Where(o => o.Level == 2)
-                    .Select(o => new WBSOptionDto 
-                    { 
-                        Value = o.Value, 
-                        Label = o.Label 
+                    .Select(o => new WBSOptionDto
+                    {
+                        Value = o.Value,
+                        Label = o.Label
                     })
                     .ToList(),
 
@@ -48,11 +56,11 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     .Where(o => o.Level == 3)
                     .GroupBy(o => o.ParentValue)
                     .ToDictionary(
-                        g => g.Key ?? string.Empty, 
-                        g => g.Select(o => new WBSOptionDto 
-                        { 
-                            Value = o.Value, 
-                            Label = o.Label 
+                        g => g.Key ?? string.Empty,
+                        g => g.Select(o => new WBSOptionDto
+                        {
+                            Value = o.Value,
+                            Label = o.Label
                         }).ToList()
                     )
             };

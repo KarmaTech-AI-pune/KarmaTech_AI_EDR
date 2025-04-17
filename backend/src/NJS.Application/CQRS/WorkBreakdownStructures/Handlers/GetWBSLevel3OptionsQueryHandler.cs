@@ -26,14 +26,22 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 return new List<WBSOptionDto>();
             }
 
-            var allOptions = await _wbsOptionRepository.GetAllAsync();
-            
-            return allOptions
-                .Where(o => o.Level == 3 && o.ParentValue == request.Level2Value)
-                .Select(o => new WBSOptionDto 
-                { 
+            IEnumerable<NJS.Domain.Entities.WBSOption> options;
+
+            if (request.FormType.HasValue)
+            {
+                options = await _wbsOptionRepository.GetByLevelParentAndFormTypeAsync(3, request.Level2Value, request.FormType.Value);
+            }
+            else
+            {
+                options = await _wbsOptionRepository.GetByLevelAndParentAsync(3, request.Level2Value);
+            }
+
+            return options
+                .Select(o => new WBSOptionDto
+                {
                     Value = o.Value,
-                    Label = o.Label 
+                    Label = o.Label
                 })
                 .ToList();
         }

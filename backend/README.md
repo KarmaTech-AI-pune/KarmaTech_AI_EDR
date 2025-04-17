@@ -23,8 +23,13 @@ NJS Project Management Backend is a robust, scalable .NET Core application desig
 
 - 🚀 Modern Architecture
   - Clean architecture
-  - Dependency injection
+  - CQRS (Command Query Responsibility Segregation)
+  - MediatR for implementing the mediator pattern
   - Repository pattern
+  - Unit of Work pattern
+  - Dependency injection
+  - MVC framework
+  - Code First approach
   - Entity Framework Core
 
 ## Technology Stack

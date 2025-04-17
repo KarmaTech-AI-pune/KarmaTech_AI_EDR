@@ -15,12 +15,13 @@ namespace NJS.Application.Dtos
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
 
-        // New properties to match frontend interface
-        public TimeDataDto Time { get; set; }
-        public ExpensesDataDto Expenses { get; set; }
+        // Financial data fields
+        public decimal TotalTimeCost { get; set; }
+        public decimal TotalExpenses { get; set; }
+        public decimal ServiceTaxPercentage { get; set; }
+        public decimal ServiceTaxAmount { get; set; }
         public decimal GrandTotal { get; set; }
         public decimal ProjectFees { get; set; }
-        public ServiceTaxDataDto ServiceTax { get; set; }
         public decimal TotalProjectFees { get; set; }
         public decimal Profit { get; set; }
 

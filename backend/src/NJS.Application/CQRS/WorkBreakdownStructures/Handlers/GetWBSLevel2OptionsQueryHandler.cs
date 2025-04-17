@@ -21,14 +21,22 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         public async Task<List<WBSOptionDto>> Handle(GetWBSLevel2OptionsQuery request, CancellationToken cancellationToken)
         {
-            var allOptions = await _wbsOptionRepository.GetAllAsync();
-            
-            return allOptions
-                .Where(o => o.Level == 2)
-                .Select(o => new WBSOptionDto 
-                { 
+            IEnumerable<NJS.Domain.Entities.WBSOption> options;
+
+            if (request.FormType.HasValue)
+            {
+                options = await _wbsOptionRepository.GetByLevelAndFormTypeAsync(2, request.FormType.Value);
+            }
+            else
+            {
+                options = await _wbsOptionRepository.GetByLevelAsync(2);
+            }
+
+            return options
+                .Select(o => new WBSOptionDto
+                {
                     Value = o.Value,
-                    Label = o.Label 
+                    Label = o.Label
                 })
                 .ToList();
         }

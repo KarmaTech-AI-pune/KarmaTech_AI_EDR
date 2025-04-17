@@ -22,7 +22,8 @@ namespace NJS.Application.Dtos
         public string? AssignedUserId { get; set; }
         public string? AssignedUserName { get; set; } // For display, populated in query
         public decimal CostRate { get; set; }
-        public decimal ODC { get; set; }
+        public decimal ODCCost { get; set; }
+        public double ODCHours { get; set; } // Added ODCHours
 
         // Monthly Hours
         public List<MonthlyHourDto> MonthlyHours { get; set; } = new();

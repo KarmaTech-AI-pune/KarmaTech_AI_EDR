@@ -37,36 +37,34 @@ namespace NJS.Repositories.Repositories
             return await _context.JobStartForms.FindAsync(id);
         }
 
-        public async Task<IEnumerable<JobStartForm>> GetByProjectIdAsync(int projectId)
+        public async Task<IEnumerable<JobStartForm>> GetAllByProjectIdAsync(int projectId)
         {
             return await _context.JobStartForms
-                .Where(j => j.ProjectId == projectId)
+                .Where(j => j.ProjectId == projectId && !j.IsDeleted)
                 .ToListAsync();
         }
-
-        // Removed redundant GetAllByProjectIdAsync
 
         public async Task AddAsync(JobStartForm jobStartForm)
         {
             await _context.JobStartForms.AddAsync(jobStartForm);
-            // SaveChangesAsync is typically handled by UnitOfWork, removed from here
+            // SaveChanges is handled by UnitOfWork
         }
 
-        // Changed UpdateAsync to Update (non-async) to match interface
-        public void Update(JobStartForm jobStartForm)
+        public Task UpdateAsync(JobStartForm jobStartForm)
         {
             _context.JobStartForms.Update(jobStartForm);
-            // SaveChangesAsync is typically handled by UnitOfWork, removed from here
+            return Task.CompletedTask;
         }
 
-        // Changed DeleteAsync(int id) to Delete(JobStartForm jobStartForm) (non-async) to match interface
-        public void Delete(JobStartForm jobStartForm)
+        public Task DeleteAsync(JobStartForm jobStartForm) // Changed to Task, no longer async
         {
-             if (jobStartForm != null)
+            if (jobStartForm != null)
             {
-                 _context.JobStartForms.Remove(jobStartForm);
-                 // SaveChangesAsync is typically handled by UnitOfWork, removed from here
+                jobStartForm.IsDeleted = true; // Soft delete
+                _context.Entry(jobStartForm).State = EntityState.Modified;
+                // Removed SaveChangesAsync - Handled by UnitOfWork
             }
+            return Task.CompletedTask; // Return completed task
         }
     }
 }

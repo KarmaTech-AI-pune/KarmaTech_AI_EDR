@@ -108,7 +108,7 @@ namespace NJSAPI.Controllers
             if (userTask != null)
             {
                 userTask.TotalHours = totalHours;
-                userTask.TotalCost = (decimal)totalHours * userTask.CostRate + userTask.ODC;
+                userTask.TotalCost = (decimal)totalHours * userTask.CostRate + userTask.ODCCost;
                 userTask.UpdatedAt = DateTime.UtcNow;
                 userTask.UpdatedBy = "System"; // Replace with current user
             }
