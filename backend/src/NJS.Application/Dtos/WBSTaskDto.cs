@@ -26,6 +26,8 @@ namespace NJS.Application.Dtos
         public decimal CostRate { get; set; }
         public decimal ODCCost { get; set; }
         public double ODCHours { get; set; } // Added ODCHours
+        public string? ResourceName { get; set; } // Added Resource Name
+        public string? ResourceUnit { get; set; } // Added Resource Unit
 
         // Monthly Hours
         public List<MonthlyHourDto> MonthlyHours { get; set; } = new();

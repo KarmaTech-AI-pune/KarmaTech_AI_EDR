@@ -222,6 +222,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     existingUserTask.ODCHours = taskDto.ODCHours; // Added ODCHours mapping
                     // TotalHours and TotalCost are calculated fields in DTO, UserWBSTask might store raw hours? Check entity.
                     // Assuming UserWBSTask.TotalHours should be updated based on WBSTask.MonthlyHours sum
+                    existingUserTask.Name = taskDto.ResourceName; // Map Name
+                    existingUserTask.Unit = taskDto.ResourceUnit; // Map Unit
                     existingUserTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
                     existingUserTask.TotalCost = (decimal)existingUserTask.TotalHours * existingUserTask.CostRate + existingUserTask.ODCCost;
                     existingUserTask.UpdatedAt = DateTime.UtcNow;
@@ -237,6 +239,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         CostRate = taskDto.CostRate,
                         ODCCost = taskDto.ODCCost,
                         ODCHours = taskDto.ODCHours, // Added ODCHours mapping
+                        Name = taskDto.ResourceName, // Map Name
+                        Unit = taskDto.ResourceUnit, // Map Unit
                         TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours), // Calculate based on current monthly hours
                         TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate + taskDto.ODCCost,
                         CreatedAt = DateTime.UtcNow,

@@ -10,14 +10,20 @@ namespace NJS.Domain.Entities
         public int Id { get; set; }
 
         [Required]
+        public int WBSTaskId { get; set; }
+
+        [Required]
         [StringLength(450)]
         public string UserId { get; set; }
 
-        [Required]
-        public int WBSTaskId { get; set; }
+        
+        public string? Name { get; set; }
+
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal CostRate { get; set; }
+
+        public string? Unit { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal ODCCost { get; set; }
