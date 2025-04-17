@@ -13,6 +13,16 @@ import { resourceRole } from '../../models/resourceRoleModel';
 import { Employee } from '../../models/employeeModel';
 import { FormWrapper } from './FormWrapper';
 
+// Define unit options for both forms
+const unitOptions = [
+  { value: 'nos', label: 'Nos' },
+  { value: 'ls', label: 'LS' },
+  { value: 'km', label: 'Km' },
+  { value: 'day', label: 'Day' },
+  { value: 'month', label: 'Month' },
+  { value: 'year', label: 'Year' }
+];
+
 interface WorkBreakdownStructureFormProps {
   formType?: 'manpower' | 'odc';
 }
@@ -412,7 +422,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       totalHours: 0,
       totalCost: 0,
       parentId: parentId || null,
-      taskType: formType === 'manpower' ? TaskType.Manpower : TaskType.ODC // Set taskType based on formType
+      taskType: formType === 'manpower' ? TaskType.Manpower : TaskType.ODC, // Set taskType based on formType
+      unit: '' // Initialize unit field
     };
 
     // For ODC form, ensure odcHours and odc are initialized to 0
@@ -470,32 +481,40 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleRoleChange = (rowId: string, roleIdOrUnit: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+    const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
+    const row = currentRows.find(r => r.id === rowId);
 
-    // For ODC form, we're using the role field to store the unit
-    if (formType === 'odc') {
-      setRowsFunc(prevRows => prevRows.map(row => {
-        if (row.id === rowId) {
+    // Check if this is a unit selection (both forms can now have units)
+    // For ODC form, the role field is used for unit
+    // For Manpower form, we need to check if the row already has a role assigned
+    const isUnitSelection = formType === 'odc' || (row && row.role && unitOptions.some(unit => unit.value === roleIdOrUnit));
+
+    if (isUnitSelection) {
+      // Handle unit selection for both forms
+      setRowsFunc(prevRows => prevRows.map(r => {
+        if (r.id === rowId) {
           return {
-            ...row,
-            role: roleIdOrUnit
+            ...r,
+            role: formType === 'odc' ? roleIdOrUnit : r.role, // For ODC, update role field with unit; for Manpower, keep existing role
+            unit: formType === 'manpower' ? roleIdOrUnit : undefined // For Manpower, store unit in a separate property
           };
         }
-        return row;
+        return r;
       }));
       return;
     }
 
-    // For Manpower form, continue with role selection logic
-    setRowsFunc(prevRows => prevRows.map(row => {
-      if (row.id === rowId) {
+    // For Manpower form, handle role selection logic
+    setRowsFunc(prevRows => prevRows.map(r => {
+      if (r.id === rowId) {
         return {
-          ...row,
+          ...r,
           role: roleIdOrUnit,
           name: null,
           costRate: 0
         };
       }
-      return row;
+      return r;
     }));
   };
 

@@ -306,28 +306,26 @@ const WBSRow: React.FC<WBSRowProps> = ({
           <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
-      {formType === 'odc' && (
-        <TableCell>
-          {row.level === 3 ? (
-            <StyledSelect
-              value={row.role || ''}
-              onChange={(e) => onRoleChange(row.id, e.target.value as string)}
-              size="small"
-              sx={{ bgcolor: 'background.paper' }}
-              disabled={editMode}
-            >
-              <MenuItem value="">Select Unit</MenuItem>
-              {unitOptions.map(unit => (
-                <MenuItem key={unit.value} value={unit.value}>
-                  {unit.label}
-                </MenuItem>
-              ))}
-            </StyledSelect>
-          ) : (
-            <Box sx={{ height: '40px' }} />
-          )}
-        </TableCell>
-      )}
+      <TableCell>
+        {row.level === 3 ? (
+          <StyledSelect
+            value={formType === 'odc' ? (row.role || '') : (row.unit || '')}
+            onChange={(e) => onRoleChange(row.id, e.target.value as string)}
+            size="small"
+            sx={{ bgcolor: 'background.paper' }}
+            disabled={editMode || (formType !== 'odc' && !row.role)}
+          >
+            <MenuItem value="">Select Unit</MenuItem>
+            {unitOptions.map(unit => (
+              <MenuItem key={unit.value} value={unit.value}>
+                {unit.label}
+              </MenuItem>
+            ))}
+          </StyledSelect>
+        ) : (
+          <Box sx={{ height: '40px' }} />
+        )}
+      </TableCell>
       {months.map(month => (
         <TableCell key={month}>
           {row.level === 3 ? (

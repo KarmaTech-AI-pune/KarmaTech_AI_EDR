@@ -23,6 +23,7 @@ export interface WBSRowData {
   parentId?: string | null;
   assignedUserId?: string | null;
   taskType?: TaskType; // Added TaskType field
+  unit?: string; // Added unit field for both Manpower and ODC forms
 }
 
 export interface WBSChildTotals {

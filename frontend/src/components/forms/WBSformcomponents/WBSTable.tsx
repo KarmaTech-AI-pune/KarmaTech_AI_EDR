@@ -150,14 +150,14 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
   const renderAddButton = (level: 1 | 2 | 3, parentId?: string): JSX.Element => {
     // Calculate colspan based on formType
-    let colspan = 3 + months.length; // Base columns: Work Description, Rate, months
+    let colspan = 4 + months.length; // Base columns: Work Description, Rate, Unit, months
 
     // Add columns for Resource Role and Resource Name if not ODC form
-    // For ODC form, add 2 for Name and Unit columns
+    // For ODC form, add 1 for Name column
     if (formType !== 'odc') {
       colspan += 2; // Add 2 for Resource Role and Resource Name
     } else {
-      colspan += 2; // Add 2 for Name and Unit columns in ODC form
+      colspan += 1; // Add 1 for Name column in ODC form (Unit is already counted in base)
     }
 
     if (!editMode) {
@@ -368,9 +368,8 @@ const WBSTable: React.FC<WBSTableProps> = ({
               </>
             )}
             <HeaderCell sx={{ minWidth: 100 }}>Rate</HeaderCell>
-            {formType === 'odc' && (
-              <HeaderCell sx={{ minWidth: '150px' }}>Unit</HeaderCell>
-            )}
+            {/* Add Unit column for both ODC and Manpower forms */}
+            <HeaderCell sx={{ minWidth: '150px' }}>Unit</HeaderCell>
             {months.map(month => (
               <HeaderCell key={month} sx={{ minWidth: 100 }}>{month}</HeaderCell>
             ))}
