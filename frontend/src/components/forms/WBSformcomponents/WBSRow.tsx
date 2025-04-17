@@ -280,15 +280,14 @@ const WBSRow: React.FC<WBSRowProps> = ({
       <TableCell>
         {row.level === 3 ? (
           formType === 'odc' ? (
-            <TextField
-              fullWidth
-              size="small"
+            <NumberInput
+              type="text"
               value={row.costRate || ''}
               onChange={(e) => onCostRateChange(row.id, e.target.value)}
+              min="0"
               disabled={editMode}
-              sx={{
-                bgcolor: 'background.paper',
-                '& .MuiInputBase-root': { height: '40px' }
+              style={{
+                backgroundColor: editMode ? '#f5f5f5' : 'white'
               }}
             />
           ) : (

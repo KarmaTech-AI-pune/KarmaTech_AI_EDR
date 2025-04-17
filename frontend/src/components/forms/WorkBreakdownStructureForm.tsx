@@ -562,41 +562,29 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       return;
     }
 
-    // For ODC form, allow any text input
+    // For ODC form, only allow numeric input
     if (formType === 'odc') {
-      // Try to parse as number first
+      // Parse as number
       const numericValue = parseFloat(value);
-      if (!isNaN(numericValue)) {
-        // If it's a valid number, use it
-        setRowsFunc(prevRows => prevRows.map(r => {
-          if (r.id === rowId) {
-            // Calculate ODC cost based on total hours and new rate
-            const odcCost = r.totalHours * numericValue;
-            return {
-              ...r,
-              costRate: numericValue,
-              odc: odcCost, // Update ODC cost
-              totalCost: odcCost // For ODC form, totalCost is the same as odc
-            };
-          }
-          return r;
-        }));
-      } else {
-        // If it's not a valid number, store it as is in costRate
-        // This allows for text input in the Rate field for ODC form
-        setRowsFunc(prevRows => prevRows.map(r => {
-          if (r.id === rowId) {
-            return {
-              ...r,
-              costRate: value as any, // Store as any type to allow text
-              // Keep the totalCost calculation as is
-              odc: 0, // Reset ODC cost since we can't calculate with text
-              totalCost: 0 // Reset total cost since we can't calculate with text
-            };
-          }
-          return r;
-        }));
+      if (isNaN(numericValue)) {
+        // If it's not a valid number, ignore the input
+        return;
       }
+
+      // Update with the numeric value
+      setRowsFunc(prevRows => prevRows.map(r => {
+        if (r.id === rowId) {
+          // Calculate ODC cost based on total hours and new rate
+          const odcCost = r.totalHours * numericValue;
+          return {
+            ...r,
+            costRate: numericValue,
+            odc: odcCost, // Update ODC cost
+            totalCost: odcCost // For ODC form, totalCost is the same as odc
+          };
+        }
+        return r;
+      }));
       return;
     }
 
