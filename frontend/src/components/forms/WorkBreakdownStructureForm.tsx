@@ -415,6 +415,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       title: '',
       role: null,
       name: null,
+      assignedUserId: null, // Initialize assignedUserId field
       costRate: 0,
       monthlyHours: {},
       odc: 0,
@@ -543,7 +544,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           if (row.id === rowId) {
             return {
               ...row,
-              name: employeeIdOrName,
+              name: employee.name, // Store employee name for display
+              assignedUserId: employeeIdOrName, // Store the actual employee ID for backend
               costRate: employee.standard_rate
             };
           }

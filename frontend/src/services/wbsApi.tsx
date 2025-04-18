@@ -80,7 +80,7 @@ export const WBSStructureAPI = {
           ParentFrontendTempId: parentFrontendTempId,
           Level: row.level,
           Title: row.title,
-          AssignedUserId: row.name,
+          AssignedUserId: row.assignedUserId || row.name, // Use assignedUserId if available, fall back to name for backward compatibility
           CostRate: row.costRate,
           ODC: row.odc,
           TotalHours: row.totalHours,
