@@ -82,6 +82,16 @@ export const projectApi = {
   delete: async (projectId: string) => {
     try {
       console.log(`Deleting project with ID: ${projectId}`);
+      // First check if the project exists
+      try {
+        await axiosInstance.get(`api/Project/${projectId}`);
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          throw new Error(`Project with ID ${projectId} not found`);
+        }
+      }
+
+      // If we get here, the project exists, so try to delete it
       const response = await axiosInstance.delete(`api/Project/${projectId}`);
       return response.data;
     } catch (error) {

@@ -63,12 +63,15 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
       }
     } catch (error: any) {
       console.error('Error deleting project:', error);
-      // Close the dialog even if there's an error
+      // Close the dialog
       setDeleteDialogOpen(false);
-      // Let the parent component handle the error
-      if (onProjectDeleted) {
-        onProjectDeleted(project.id);
-      }
+
+      // Show an alert with the error message
+      const errorMessage = error.message || 'Failed to delete project';
+      alert(errorMessage);
+
+      // Don't call onProjectDeleted if there was an error
+      // This prevents the UI from removing the project when it wasn't actually deleted
     }
   };
 

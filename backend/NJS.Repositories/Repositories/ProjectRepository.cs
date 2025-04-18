@@ -62,7 +62,7 @@ namespace NJS.Repositories.Repositories
             }
         }
 
-        public void Delete(int id)
+        public bool Delete(int id)
         {
             try
             {
@@ -73,12 +73,13 @@ namespace NJS.Repositories.Repositories
                     _repository.RemoveAsync(project).GetAwaiter().GetResult();
                     _repository.SaveChangesAsync().GetAwaiter().GetResult();
                     Console.WriteLine($"Successfully deleted project with ID {id}");
+                    return true; // Project found and deleted
                 }
                 else
                 {
-                    // If project doesn't exist, just log it but don't throw an exception
-                    // This allows the DELETE API to return success even if the project doesn't exist
-                    Console.WriteLine($"Project with ID {id} not found, but continuing as if deleted");
+                    // If project doesn't exist, log it and return false
+                    Console.WriteLine($"Project with ID {id} not found, cannot delete");
+                    return false; // Project not found
                 }
             }
             catch (Exception ex)
@@ -87,6 +88,12 @@ namespace NJS.Repositories.Repositories
                 Console.WriteLine($"Error deleting project with ID {id}: {ex.Message}");
                 throw; // Rethrow to be handled by the caller
             }
+        }
+
+        public async Task<bool> ExistsAsync(int id)
+        {
+            var project = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+            return project != null;
         }
     }
 }

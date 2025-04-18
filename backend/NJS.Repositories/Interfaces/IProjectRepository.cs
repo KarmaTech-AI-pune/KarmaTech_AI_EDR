@@ -8,6 +8,7 @@ namespace NJS.Repositories.Interfaces
         Project GetById(int id);
         Task Add(Project project);
         void Update(Project project);
-        void Delete(int id);
+        bool Delete(int id);
+        Task<bool> ExistsAsync(int id);
     }
 }
