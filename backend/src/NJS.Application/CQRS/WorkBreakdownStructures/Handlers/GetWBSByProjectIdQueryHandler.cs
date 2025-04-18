@@ -71,7 +71,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     TaskType = taskEntity.TaskType, // Include TaskType
                     MonthlyHours = new List<MonthlyHourDto>()
                     // Initialize resource/cost fields
-                    , CostRate = 0, ODCCost = 0, TotalHours = 0, TotalCost = 0
+                    , CostRate = 0, TotalHours = 0, TotalCost = 0
                 };
 
                 // Map Monthly Hours
@@ -95,11 +95,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     taskDto.AssignedUserId = userTaskEntity.UserId;
                     taskDto.AssignedUserName = userTaskEntity.User?.Name; // User should be included
                     taskDto.CostRate = userTaskEntity.CostRate;
-                    taskDto.ODCCost = userTaskEntity.ODCCost;
                 }
 
                 // Calculate Total Cost
-                taskDto.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate + taskDto.ODCCost;
+                taskDto.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate;
 
                 wbsDto.Tasks.Add(taskDto);
             }

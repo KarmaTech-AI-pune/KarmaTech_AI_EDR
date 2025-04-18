@@ -54,8 +54,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 AssignedUserId = t.UserWBSTasks?.FirstOrDefault()?.UserId,
                 AssignedUserName = t.UserWBSTasks?.FirstOrDefault()?.User?.Name,
                 CostRate = t.UserWBSTasks?.FirstOrDefault()?.CostRate ?? 0,
-                ODCCost = t.UserWBSTasks?.FirstOrDefault()?.ODCCost ?? 0,
-                ODCHours = t.UserWBSTasks?.FirstOrDefault()?.ODCHours ?? 0, // Added ODCHours mapping
+
                 TotalHours = t.UserWBSTasks?.FirstOrDefault()?.TotalHours ?? 0,
                 TotalCost = t.UserWBSTasks?.FirstOrDefault()?.TotalCost ?? 0,
                 MonthlyHours = t.MonthlyHours?.Select(mh => new MonthlyHourDto

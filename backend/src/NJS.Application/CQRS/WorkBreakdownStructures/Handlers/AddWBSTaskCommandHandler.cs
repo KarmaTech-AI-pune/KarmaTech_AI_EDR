@@ -100,10 +100,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     WBSTask = taskEntity, // EF Core should link this via navigation property
                     UserId = taskDto.AssignedUserId,
                     CostRate = taskDto.CostRate,
-                    ODCCost = taskDto.ODCCost,
                     // Calculate based on current monthly hours (which should be added by UpdateMonthlyHours)
                     TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
-                    TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate + taskDto.ODCCost,
+                    TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = _currentUser
                 };
@@ -139,7 +138,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             if (userTask != null)
             {
                 userTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
-                userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate + userTask.ODCCost;
+                userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate;
             }
         }
     }
