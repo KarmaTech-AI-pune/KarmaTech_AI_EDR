@@ -40,35 +40,36 @@ export const projectApi = {
         id: parseInt(projectId),
         name: projectData.name,
         clientName: projectData.clientName,
-        projectNo: projectData.projectNo,
-        typeOfClient: projectData.typeOfClient,
+        projectNo: parseInt(projectData.projectNo), // Convert to integer as backend expects int
+        typeOfClient: projectData.typeOfClient || '',
         projectManagerId: projectData.projectManagerId,
-        seniorProjectManagerId: projectData.seniorProjectManagerId,
+        seniorProjectManagerId: projectData.seniorProjectManagerId || '',
         regionalManagerId: projectData.regionalManagerId,
         office: projectData.office || '',  // Ensure office is never null
         region: projectData.region || '',   // Ensure region is never null
         typeOfJob: projectData.typeOfJob || '',  // Ensure typeOfJob is never null
-        sector: projectData.sector,
+        sector: projectData.sector || '',
         feeType: projectData.feeType || '',  // Ensure feeType is never null
         estimatedCost: Number(projectData.estimatedCost),
         budget: Number(projectData.budget || 0),  // Ensure budget is never null
         priority: projectData.priority || '',  // Ensure priority is never null
-        currency: projectData.currency,
-        startDate: projectData.startDate,
-        endDate: projectData.endDate,
+        currency: projectData.currency || 'INR',
+        startDate: projectData.startDate ? new Date(projectData.startDate) : null, // Convert to proper date format
+        endDate: projectData.endDate ? new Date(projectData.endDate) : null, // Convert to proper date format
         status: projectData.status,
+        progress: 0, // Add missing required field
         letterOfAcceptance: projectData.letterOfAcceptance,
-        opportunityTrackingId: projectData.opportunityTrackingId,
-        details: projectData.details,
-        fundingStream: projectData.fundingStream
+        opportunityTrackingId: projectData.opportunityTrackingId || 0, // Ensure it's not null
+        fundingStream: projectData.fundingStream || '',
+        // Add missing fields with default values
+        createdAt: new Date(),
+        lastModifiedAt: new Date(),
+        createdBy: projectData.projectManagerId,
+        lastModifiedBy: projectData.projectManagerId
       };
 
-      // Log the problematic fields
-      console.log('Sending update data with specific focus on:');
-      console.log('Office:', formattedData.office);
-      console.log('TypeOfJob:', formattedData.typeOfJob);
-      console.log('Budget:', formattedData.budget);
-      console.log('Priority:', formattedData.priority);
+      // Log the data being sent
+      console.log('Sending update data:', JSON.stringify(formattedData, null, 2));
 
       const response = await axiosInstance.put(`api/Project/${projectId}`, formattedData);
       return response.data;
