@@ -10,5 +10,7 @@ namespace NJS.Repositories.Interfaces
         void Update(Project project);
         bool Delete(int id);
         Task<bool> ExistsAsync(int id);
+        Task<int> GetNextAvailableIdAsync();
+        Task ResetIdentitySeedAsync();
     }
 }

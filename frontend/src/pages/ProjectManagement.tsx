@@ -117,14 +117,16 @@ export const ProjectManagement: React.FC = () => {
   const handleProjectDeleted = async (projectId: string) => {
     try {
       console.log(`Attempting to delete project with ID: ${projectId}`);
-      await projectApi.delete(projectId);
-      console.log('Delete API call successful');
+      const result = await projectApi.delete(projectId);
+      console.log('Delete API call successful:', result);
       setSuccessMessage('Project deleted successfully');
       // Refresh the project list after successful deletion
       await fetchProjects();
     } catch (err: any) {
       console.error('Error deleting project:', err);
+      // Get a user-friendly error message
       const errorMessage = err.response?.data?.message || err.message || 'Failed to delete project';
+      // Show the error message
       setError(errorMessage);
       // Refresh the project list anyway to ensure UI is in sync with backend
       await fetchProjects();

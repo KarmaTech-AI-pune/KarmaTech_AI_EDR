@@ -34,6 +34,8 @@ namespace NJS.Domain.GenericRepository
 
         public IQueryable<T> Query() => _dbSet;
 
+        public object GetDbContext() => _context;
+
 
         public async Task RemoveAsync(T entity)
         {

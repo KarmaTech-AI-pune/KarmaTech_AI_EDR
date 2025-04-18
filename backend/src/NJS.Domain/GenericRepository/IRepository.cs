@@ -9,6 +9,7 @@ namespace NJS.Domain.GenericRepository
         Task UpdateAsync(T entity);
         Task RemoveAsync(T entity);
         IQueryable<T> Query();
+        object GetDbContext();
 
         Task<int> SaveChangesAsync();
     }
