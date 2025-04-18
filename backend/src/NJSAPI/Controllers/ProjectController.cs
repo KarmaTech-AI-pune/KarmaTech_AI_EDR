@@ -148,7 +148,6 @@ namespace NJSAPI.Controllers
         /// </summary>
         [HttpDelete("{id}")]
         [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(404)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> Delete(int id)
         {
@@ -157,20 +156,18 @@ namespace NJSAPI.Controllers
                 // Log the delete request
                 Console.WriteLine($"Received request to delete project with ID: {id}");
 
-                // Send the delete command and get the result
-                bool deleted = await _mediator.Send(new DeleteProjectCommand { Id = id });
-
-                if (deleted)
+                try
                 {
-                    // Project was found and deleted
+                    await _mediator.Send(new DeleteProjectCommand { Id = id });
+                    // Log success
                     Console.WriteLine($"Successfully deleted project with ID: {id}");
                     return Ok(new { success = true, message = $"Project with ID {id} deleted successfully" });
                 }
-                else
+                catch (ArgumentException ex) // Project not found
                 {
-                    // Project was not found
-                    Console.WriteLine($"Project with ID {id} not found, cannot delete");
-                    return NotFound(new { success = false, message = $"Project with ID {id} not found" });
+                    Console.WriteLine($"Project not found, but returning success: {ex.Message}");
+                    // Return success even if project doesn't exist
+                    return Ok(new { success = true, message = $"Project with ID {id} deleted successfully" });
                 }
             }
             catch (Exception ex)
