@@ -11,6 +11,7 @@ namespace NJS.Domain.Database
     {
         public ProjectManagementContext(DbContextOptions<ProjectManagementContext> options) : base(options)
         {
+            
         }
 
         public DbSet<BidPreparation> BidPreparations { get; set; }
@@ -32,6 +33,7 @@ namespace NJS.Domain.Database
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
         public DbSet<Region> Regions { get; set; }
         public DbSet<FailedEmailLog> FailedEmailLogs { get; set; }
+        public DbSet<Settings> Settings { get; set; }
 
         public DbSet<GoNoGoDecisionOpportunity> GoNoGoDecisionOpportunities { get; set; }
         public DbSet<ScoringCriteria> ScoringCriteria { get; set; }
@@ -122,6 +124,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<Project>().Property(f => f.EstimatedCost).HasPrecision(18, 2);
             modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
             modelBuilder.Entity<Role>().ToTable("AspNetRoles");
+            modelBuilder.Entity<Permission>();
 
             // Configure OpportunityTracking decimal precisions
             modelBuilder.Entity<OpportunityTracking>()

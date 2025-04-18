@@ -253,6 +253,9 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                 <Typography variant="body2" color="text.secondary">
                   <strong>Bid Fees:</strong> {currentOpportunity.currency} {currentOpportunity.bidFees?.toLocaleString() || 'Not specified'}
                 </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Bid Number:</strong> {currentOpportunity.bidNumber || 'Not specified'}
+                </Typography>
               </Box>
             </Grid>
           </Grid>

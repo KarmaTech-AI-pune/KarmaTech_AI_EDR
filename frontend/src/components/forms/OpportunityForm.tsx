@@ -38,7 +38,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   const [bdManagers, setBdManagers] = useState<{id: string, name: string}[]>([]);
   const [reviewManagers, setReviewManagers] = useState<{id: string, name: string}[]>([]);
   const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
-  const [formData, setFormData] = useState<Partial<OpportunityTracking>>({    
+  const [formData, setFormData] = useState<Partial<OpportunityTracking>>({
+    bidNumber: project?.bidNumber,
     stage: project?.stage || undefined,
     strategicRanking: project?.strategicRanking || '',
     bidFees: project?.bidFees || 0,
@@ -172,6 +173,20 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 Key Project Information
               </Typography>
               <Grid container spacing={2}>
+                {project?.bidNumber && (
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Bid Number"
+                      name="bidNumber"
+                      value={formData.bidNumber || ''}
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                      disabled
+                    />
+                  </Grid>
+                )}
                 <Grid item xs={12}>
                   <TextField
                     fullWidth

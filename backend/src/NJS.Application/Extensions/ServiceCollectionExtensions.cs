@@ -32,6 +32,8 @@ namespace NJS.Application.Extensions
             services.AddScoped<IPermissionRepository, PermissionRepository>();
             services.AddScoped<IOpportunityHistoryRepository, OpportunityHistoryRepository>();
             services.AddScoped<IBidPreparationRepository, BidPreparationRepository>();
+            services.AddScoped<ISettingsRepository, SettingsRepository>();
+
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
