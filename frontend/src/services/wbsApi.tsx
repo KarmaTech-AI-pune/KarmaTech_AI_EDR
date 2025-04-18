@@ -80,14 +80,13 @@ export const WBSStructureAPI = {
           ParentFrontendTempId: parentFrontendTempId,
           Level: row.level,
           Title: row.title,
-          AssignedUserId: row.assignedUserId || row.name, // Use assignedUserId if available, fall back to name for backward compatibility
+          AssignedUserId: row.name, // Use assignedUserId if available, fall back to name for backward compatibility
           CostRate: row.costRate,
           ODC: row.odc,
           TotalHours: row.totalHours,
           TotalCost: row.totalCost,
           MonthlyHours: monthlyHours,
           TaskType: row.taskType !== undefined ? row.taskType : (row.title.toLowerCase().includes('odc') ? TaskType.ODC : TaskType.Manpower), // Use taskType if set, otherwise infer from title
-          // Add any missing required fields with default values
           Description: "",
           DisplayOrder: 0,
           EstimatedBudget: 0,

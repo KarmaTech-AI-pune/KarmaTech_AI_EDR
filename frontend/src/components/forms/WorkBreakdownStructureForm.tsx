@@ -544,8 +544,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           if (row.id === rowId) {
             return {
               ...row,
-              name: employee.name, // Store employee name for display
-              assignedUserId: employeeIdOrName, // Store the actual employee ID for backend
+              name: employeeIdOrName,
               costRate: employee.standard_rate
             };
           }
