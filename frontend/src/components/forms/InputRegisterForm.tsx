@@ -46,6 +46,7 @@ const InputRegisterForm: React.FC = () => {
   const [selectedRow, setSelectedRow] = useState<InputRegisterRow | undefined>(undefined);
   const [error, setError] = useState<string>('');
   const [notification, setNotification] = useState<{message: string, open: boolean}>({message: '', open: false});
+  const [isDialogOpening, setIsDialogOpening] = useState(false);
 
   useEffect(() => {
     if (!context?.selectedProject?.id) {
@@ -78,8 +79,17 @@ const InputRegisterForm: React.FC = () => {
   }
 
   const handleOpenDialog = (row?: InputRegisterRow) => {
+    // Prevent multiple dialog opens if button is clicked rapidly
+    if (isDialogOpening || dialogOpen) return;
+
+    setIsDialogOpening(true);
     setSelectedRow(row);
     setDialogOpen(true);
+
+    // Reset the dialog opening state after a short delay
+    setTimeout(() => {
+      setIsDialogOpening(false);
+    }, 300);
   };
 
   const handleCloseDialog = () => {
@@ -172,6 +182,7 @@ const InputRegisterForm: React.FC = () => {
               variant="outlined"
               startIcon={<AddIcon />}
               onClick={() => handleOpenDialog()}
+              disabled={isDialogOpening || dialogOpen}
             >
               Add Entry
             </Button>
@@ -246,6 +257,7 @@ const InputRegisterForm: React.FC = () => {
                             handleOpenDialog(row);
                           }}
                           size="small"
+                          disabled={isDialogOpening || dialogOpen}
                           sx={{ color: theme.palette.primary.main }}
                         >
                           <EditIcon fontSize="small" />
@@ -256,6 +268,7 @@ const InputRegisterForm: React.FC = () => {
                             handleDelete(row.id);
                           }}
                           size="small"
+                          disabled={isDialogOpening || dialogOpen}
                           color="error"
                         >
                           <DeleteIcon fontSize="small" />
