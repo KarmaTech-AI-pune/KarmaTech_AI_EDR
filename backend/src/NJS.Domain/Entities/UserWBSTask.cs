@@ -12,9 +12,8 @@ namespace NJS.Domain.Entities
         [Required]
         public int WBSTaskId { get; set; }
 
-        [Required]
         [StringLength(450)]
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
 
         public string? Name { get; set; }
