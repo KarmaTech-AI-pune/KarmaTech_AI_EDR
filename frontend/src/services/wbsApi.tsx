@@ -72,6 +72,9 @@ export const WBSStructureAPI = {
           }
         }
 
+        
+        const isOdcTask = row.taskType === TaskType.ODC;
+
         // Transform the row data to match WBSTaskDto
         return {
           Id: isTemporaryId ? 0 : parseInt(row.id), // Use 0 for new tasks
@@ -80,9 +83,10 @@ export const WBSStructureAPI = {
           ParentFrontendTempId: parentFrontendTempId,
           Level: row.level,
           Title: row.title,
-          AssignedUserId: row.name, // Use assignedUserId if available, fall back to name for backward compatibility
+          AssignedUserId: isOdcTask ? null : row.name,
+          ResourceName: isOdcTask ? row.name : null,
           CostRate: row.costRate,
-          ODC: row.odc,
+          ResourceUnit: isOdcTask ? (row.unit || "") : (row.unit || ""),
           TotalHours: row.totalHours,
           TotalCost: row.totalCost,
           MonthlyHours: monthlyHours,

@@ -70,6 +70,7 @@ interface WBSTableProps {
   onDeleteRow: (id: string) => void;
   onLevelChange: (id: string, value: string) => void;
   onRoleChange: (id: string, roleId: string) => void;
+  onUnitChange: (id: string, unitValue: string) => void;
   onEmployeeChange: (id: string, employeeId: string) => void;
   onCostRateChange: (id: string, value: string) => void;
   onHoursChange: (id: string, month: string, value: string) => void;
@@ -89,6 +90,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
   onDeleteRow,
   onLevelChange,
   onRoleChange,
+  onUnitChange,
   onEmployeeChange,
   onCostRateChange,
   onHoursChange,
@@ -265,6 +267,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
           onDelete={onDeleteRow}
           onLevelChange={onLevelChange}
           onRoleChange={onRoleChange}
+          onUnitChange={onUnitChange}
           onEmployeeChange={onEmployeeChange}
           onCostRateChange={onCostRateChange}
           onHoursChange={onHoursChange}
@@ -290,6 +293,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             onDelete={onDeleteRow}
             onLevelChange={onLevelChange}
             onRoleChange={onRoleChange}
+            onUnitChange={onUnitChange}
             onEmployeeChange={onEmployeeChange}
             onCostRateChange={onCostRateChange}
             onHoursChange={onHoursChange}
@@ -315,6 +319,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
               onDelete={onDeleteRow}
               onLevelChange={onLevelChange}
               onRoleChange={onRoleChange}
+              onUnitChange={onUnitChange}
               onEmployeeChange={onEmployeeChange}
               onCostRateChange={onCostRateChange}
               onHoursChange={onHoursChange}

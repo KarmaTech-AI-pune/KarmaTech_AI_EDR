@@ -13,15 +13,7 @@ import { resourceRole } from '../../models/resourceRoleModel';
 import { Employee } from '../../models/employeeModel';
 import { FormWrapper } from './FormWrapper';
 
-// Define unit options for both forms
-const unitOptions = [
-  { value: 'nos', label: 'Nos' },
-  { value: 'ls', label: 'LS' },
-  { value: 'km', label: 'Km' },
-  { value: 'day', label: 'Day' },
-  { value: 'month', label: 'Month' },
-  { value: 'year', label: 'Year' }
-];
+// Unit options are defined in WBSRow.tsx
 
 interface WorkBreakdownStructureFormProps {
   formType?: 'manpower' | 'odc';
@@ -480,39 +472,37 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     handleDeleteCancel();
   };
 
-  const handleRoleChange = (rowId: string, roleIdOrUnit: string) => {
+  const handleRoleChange = (rowId: string, roleId: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
-    const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
-    const row = currentRows.find(r => r.id === rowId);
-
-    // Check if this is a unit selection (both forms can now have units)
-    // For ODC form, the role field is used for unit
-    // For Manpower form, we need to check if the row already has a role assigned
-    const isUnitSelection = formType === 'odc' || (row && row.role && unitOptions.some(unit => unit.value === roleIdOrUnit));
-
-    if (isUnitSelection) {
-      // Handle unit selection for both forms
-      setRowsFunc(prevRows => prevRows.map(r => {
-        if (r.id === rowId) {
-          return {
-            ...r,
-            role: formType === 'odc' ? roleIdOrUnit : r.role, // For ODC, update role field with unit; for Manpower, keep existing role
-            unit: formType === 'manpower' ? roleIdOrUnit : undefined // For Manpower, store unit in a separate property
-          };
-        }
-        return r;
-      }));
-      return;
-    }
 
     // For Manpower form, handle role selection logic
     setRowsFunc(prevRows => prevRows.map(r => {
       if (r.id === rowId) {
         return {
           ...r,
-          role: roleIdOrUnit,
+          role: roleId,
           name: null,
           costRate: 0
+        };
+      }
+      return r;
+    }));
+  };
+
+  const handleUnitChange = (rowId: string, unitValue: string) => {
+    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+    const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
+    const row = currentRows.find(r => r.id === rowId);
+
+    if (!row) return;
+
+    // Handle unit selection for both forms
+    setRowsFunc(prevRows => prevRows.map(r => {
+      if (r.id === rowId) {
+        return {
+          ...r,
+          role: formType === 'odc' ? unitValue : r.role, // For ODC, update role field with unit; for Manpower, keep existing role
+          unit: unitValue // Store unit value for both form types
         };
       }
       return r;
@@ -858,6 +848,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           onDeleteRow={handleDeleteClick}
           onLevelChange={handleLevelChange}
           onRoleChange={handleRoleChange}
+          onUnitChange={handleUnitChange}
           onEmployeeChange={handleEmployeeChange}
           onCostRateChange={handleCostRateChange}
           onHoursChange={handleHoursChange}

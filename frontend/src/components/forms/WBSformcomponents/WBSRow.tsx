@@ -84,6 +84,7 @@ interface WBSRowProps {
   onDelete: (id: string) => void;
   onLevelChange: (id: string, value: string) => void;
   onRoleChange: (id: string, roleId: string) => void;
+  onUnitChange: (id: string, unitValue: string) => void;
   onEmployeeChange: (id: string, employeeId: string) => void;
   onCostRateChange: (id: string, value: string) => void;
   onHoursChange: (id: string, month: string, value: string) => void;
@@ -104,6 +105,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
   onDelete,
   onLevelChange,
   onRoleChange,
+  onUnitChange,
   onEmployeeChange,
   onCostRateChange,
   onHoursChange,
@@ -310,7 +312,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
         {row.level === 3 ? (
           <StyledSelect
             value={formType === 'odc' ? (row.role || '') : (row.unit || '')}
-            onChange={(e) => onRoleChange(row.id, e.target.value as string)}
+            onChange={(e) => onUnitChange(row.id, e.target.value as string)}
             size="small"
             sx={{ bgcolor: 'background.paper' }}
             disabled={editMode || (formType !== 'odc' && !row.role)}
