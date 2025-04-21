@@ -32,14 +32,15 @@ namespace NJS.Application.Extensions
             services.AddScoped<IPermissionRepository, PermissionRepository>();
             services.AddScoped<IOpportunityHistoryRepository, OpportunityHistoryRepository>();
             services.AddScoped<IBidPreparationRepository, BidPreparationRepository>();
+            services.AddScoped<IInputRegisterRepository, InputRegisterRepository>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
             services.AddScoped<IGoNoGoDecisionService, GoNoGoDecisionService>();
             services.AddScoped<IUserContext, UserContext>();
             services.AddScoped<IEmailService, EmailService>();
-            
-            
+
+
             return services;
         }
     }
