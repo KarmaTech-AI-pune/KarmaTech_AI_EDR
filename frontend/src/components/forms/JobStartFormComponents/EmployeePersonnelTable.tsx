@@ -56,16 +56,6 @@ const EmployeePersonnelTable: React.FC<EmployeePersonnelTableProps> = ({
               />
             </TableCell>
           </TableRow>
-          {emp.allocations.length > 1 && emp.allocations.map((alloc) => (
-            <TableRow key={`${emp.id}-${alloc.taskId}`}>
-              <TableCell></TableCell>
-              <TableCell sx={{ pl: 4 }}>{formatTitle(alloc.title)}</TableCell>
-              <TableCell align="right">{alloc.rate}</TableCell>
-              <TableCell align="right">{alloc.hours}</TableCell>
-              <TableCell align="right">{alloc.cost}</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          ))}
         </React.Fragment>
       ))}
     </>
