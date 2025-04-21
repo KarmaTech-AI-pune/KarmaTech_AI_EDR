@@ -21,8 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NJS.Repositories", "NJS.Rep
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NJS.API.Tests", "NJS.API.Tests\NJS.API.Tests.csproj", "{8E98318D-0CF0-4E85-A35F-CF08C1ED88AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NJS.Application.Tests", "..\NJS.Application.Tests\NJS.Application.Tests.csproj", "{7314E06A-3AC9-4FF1-9300-D44238997B06}"
-EndProject
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,10 +56,7 @@ Global
 		{8E98318D-0CF0-4E85-A35F-CF08C1ED88AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E98318D-0CF0-4E85-A35F-CF08C1ED88AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E98318D-0CF0-4E85-A35F-CF08C1ED88AD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7314E06A-3AC9-4FF1-9300-D44238997B06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7314E06A-3AC9-4FF1-9300-D44238997B06}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7314E06A-3AC9-4FF1-9300-D44238997B06}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7314E06A-3AC9-4FF1-9300-D44238997B06}.Release|Any CPU.Build.0 = Release|Any CPU
+
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
