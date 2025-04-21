@@ -51,10 +51,17 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 StartDate = t.StartDate,
                 EndDate = t.EndDate,
                 TaskType = t.TaskType,
-                AssignedUserId = t.UserWBSTasks?.FirstOrDefault()?.UserId,
-                AssignedUserName = t.UserWBSTasks?.FirstOrDefault()?.User?.Name,
-                CostRate = t.UserWBSTasks?.FirstOrDefault()?.CostRate ?? 0,
+                // For Manpower tasks
+                AssignedUserId = t.TaskType == TaskType.Manpower ? t.UserWBSTasks?.FirstOrDefault()?.UserId : null,
+                AssignedUserName = t.TaskType == TaskType.Manpower ? t.UserWBSTasks?.FirstOrDefault()?.User?.Name : null,
 
+                // For ODC tasks
+                ResourceName = t.TaskType == TaskType.ODC ? t.UserWBSTasks?.FirstOrDefault()?.Name : null,
+                // Map ResourceUnit for both Manpower and ODC tasks
+                ResourceUnit = t.UserWBSTasks?.FirstOrDefault()?.Unit,
+
+                // Common for both types
+                CostRate = t.UserWBSTasks?.FirstOrDefault()?.CostRate ?? 0,
                 TotalHours = t.UserWBSTasks?.FirstOrDefault()?.TotalHours ?? 0,
                 TotalCost = t.UserWBSTasks?.FirstOrDefault()?.TotalCost ?? 0,
                 MonthlyHours = t.MonthlyHours?.Select(mh => new MonthlyHourDto

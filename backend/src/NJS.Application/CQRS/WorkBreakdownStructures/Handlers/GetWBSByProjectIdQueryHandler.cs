@@ -92,13 +92,33 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 var userTaskEntity = taskEntity.UserWBSTasks.FirstOrDefault();
                 if (userTaskEntity != null)
                 {
-                    taskDto.AssignedUserId = userTaskEntity.UserId;
-                    taskDto.AssignedUserName = userTaskEntity.User?.Name; // User should be included
-                    taskDto.CostRate = userTaskEntity.CostRate;
+                    // For Manpower tasks
+                    if (taskEntity.TaskType == TaskType.Manpower)
+                    {
+                        taskDto.AssignedUserId = userTaskEntity.UserId;
+                        taskDto.AssignedUserName = userTaskEntity.User?.Name; // User should be included
+                        taskDto.CostRate = userTaskEntity.CostRate;
+                        // Map ResourceUnit for Manpower tasks as well
+                        taskDto.ResourceUnit = userTaskEntity.Unit;
+                        // Calculate Total Cost for Manpower
+                        taskDto.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate;
+                    }
+                    // For ODC tasks
+                    else if (taskEntity.TaskType == TaskType.ODC)
+                    {
+                        taskDto.ResourceName = userTaskEntity.Name; // Map Name for ODC
+                        taskDto.ResourceUnit = userTaskEntity.Unit; // Map Unit for ODC
+                        taskDto.CostRate = userTaskEntity.CostRate;
+                        // Use the actual values from UserWBSTask for ODC
+                        taskDto.TotalHours = userTaskEntity.TotalHours;
+                        taskDto.TotalCost = userTaskEntity.TotalCost;
+                    }
                 }
-
-                // Calculate Total Cost
-                taskDto.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate;
+                else
+                {
+                    // If no UserWBSTask, calculate cost based on hours and rate
+                    taskDto.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate;
+                }
 
                 wbsDto.Tasks.Add(taskDto);
             }

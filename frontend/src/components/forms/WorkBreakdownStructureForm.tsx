@@ -83,19 +83,28 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           Object.assign(transformedMonthlyHours, task.monthlyHours);
         }
 
+        // Determine if this is an ODC task
+        const isOdcTask = task.taskType === TaskType.ODC;
+
         return {
           id: task.id,
           level: task.level,
           title: task.title,
-          role: task.assignedUserId || null,
-          name: task.assignedUserId?.toString() || null,
+          role: isOdcTask ? null : (task.assignedUserId || null),
+          // For ODC tasks, use ResourceName; for Manpower tasks, use AssignedUserId
+          name: isOdcTask ? task.resourceName : (task.assignedUserId?.toString() || null),
           costRate: task.costRate || 0,
           monthlyHours: transformedMonthlyHours,
-          odc: task.odc || 0,
+          // For ODC tasks, use TotalCost as odc value
+          odc: isOdcTask ? task.totalCost : (task.odc || 0),
+          // For ODC tasks, set odcHours to TotalHours
+          odcHours: isOdcTask ? task.totalHours : 0,
           totalHours: task.totalHours || 0,
           totalCost: task.totalCost || 0,
           parentId: task.parentId,
           taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
+          // Map ResourceUnit to unit field
+          unit: task.resourceUnit || ''
         };
       });
 
@@ -501,7 +510,6 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       if (r.id === rowId) {
         return {
           ...r,
-          role: formType === 'odc' ? unitValue : r.role, // For ODC, update role field with unit; for Manpower, keep existing role
           unit: unitValue // Store unit value for both form types
         };
       }

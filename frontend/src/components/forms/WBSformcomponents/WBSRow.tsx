@@ -311,11 +311,11 @@ const WBSRow: React.FC<WBSRowProps> = ({
       <TableCell>
         {row.level === 3 ? (
           <StyledSelect
-            value={formType === 'odc' ? (row.role || '') : (row.unit || '')}
+            value={row.unit || ''}
             onChange={(e) => onUnitChange(row.id, e.target.value as string)}
             size="small"
             sx={{ bgcolor: 'background.paper' }}
-            disabled={editMode || (formType !== 'odc' && !row.role)}
+            disabled={editMode} // Only disable in edit mode, allow for both ODC and Manpower
           >
             <MenuItem value="">Select Unit</MenuItem>
             {unitOptions.map(unit => (
