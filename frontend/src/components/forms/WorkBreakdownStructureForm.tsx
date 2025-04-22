@@ -62,7 +62,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const loadWBSData = async (projectId: string) => {
     try {
       setLoading(true);
-      let wbsData = await WBSStructureAPI.getProjectWBS(projectId);
+      // Type the API response data using the updated WBSRowData interface
+      let wbsData: WBSRowData[] = await WBSStructureAPI.getProjectWBS(projectId);
 
       // Transform all WBS data first
       const allTransformedRows = wbsData.map((task) => {
@@ -93,7 +94,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           title: task.title,
           role: isOdcTask ? null : (task.assignedUserId || null),
           // For ODC tasks, use ResourceName; for Manpower tasks, use AssignedUserId
-          name: isOdcTask ? task.resourceName : (task.assignedUserId?.toString() || null),
+          // Use optional chaining and nullish coalescing for safe access
+          name: isOdcTask ? (task.resourceName ?? null) : (task.assignedUserId?.toString() || null),
           costRate: task.costRate || 0,
           monthlyHours: transformedMonthlyHours,
           // For ODC tasks, use TotalCost as odc value
@@ -105,7 +107,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           parentId: task.parentId,
           taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
           // Map ResourceUnit to unit field
-          unit: task.resourceUnit || ''
+          // Use optional chaining and nullish coalescing for safe access
+          unit: task.resourceUnit ?? ''
         };
       });
 

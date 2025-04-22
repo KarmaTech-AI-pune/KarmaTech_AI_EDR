@@ -11,9 +11,7 @@ const EmployeePersonnelTable: React.FC<EmployeePersonnelTableProps> = ({
   isConsultant,
   onRemarksChange,
   calculateTotalCost,
-  textFieldStyle,
-  tableCellStyle,
-  formatTitle
+  textFieldStyle
 }) => {
   const filteredEmployees = employeeAllocations.filter(emp => emp.is_consultant === isConsultant);
   

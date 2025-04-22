@@ -9,8 +9,7 @@ import { SurveyWorksRowProps } from '../../../types/jobStartForm';
 const SurveyWorksRow: React.FC<SurveyWorksRowProps> = ({
   surveyWorks,
   onSurveyWorksChange,
-  textFieldStyle,
-  tableCellStyle
+  textFieldStyle
 }) => {
   return (
     <TableRow>

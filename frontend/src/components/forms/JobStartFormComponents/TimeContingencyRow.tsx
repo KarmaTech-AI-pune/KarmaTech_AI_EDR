@@ -10,8 +10,7 @@ const TimeContingencyRow: React.FC<TimeContingencyRowProps> = ({
   timeContingency,
   onTimeContingencyChange,
   calculateTimeContingencyCost,
-  textFieldStyle,
-  tableCellStyle
+  textFieldStyle
 }) => {
   return (
     <TableRow>

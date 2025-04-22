@@ -22,8 +22,10 @@ export interface WBSRowData {
   totalCost: number;
   parentId?: string | null;
   assignedUserId?: string | null;
-  taskType?: TaskType; // Added TaskType field
-  unit?: string; // Added unit field for both Manpower and ODC forms
+  taskType?: TaskType;
+  unit?: string;
+  resourceName?: string | null;
+  resourceUnit?: string | null;
 }
 
 export interface WBSChildTotals {

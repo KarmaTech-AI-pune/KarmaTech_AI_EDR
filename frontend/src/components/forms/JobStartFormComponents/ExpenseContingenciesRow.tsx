@@ -9,8 +9,7 @@ import { ExpenseContingenciesRowProps } from '../../../types/jobStartForm';
 const ExpenseContingenciesRow: React.FC<ExpenseContingenciesRowProps> = ({
   expenses,
   onExpenseChange,
-  textFieldStyle,
-  tableCellStyle
+  textFieldStyle
 }) => {
   return (
     <TableRow>

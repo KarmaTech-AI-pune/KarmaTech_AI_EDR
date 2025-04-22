@@ -9,8 +9,7 @@ import { RegularExpensesTableProps, ExpensesType } from '../../../types/jobStart
 const RegularExpensesTable: React.FC<RegularExpensesTableProps> = ({
   expenses,
   onExpenseChange,
-  textFieldStyle,
-  tableCellStyle
+  textFieldStyle
 }) => {
   // Map of expense IDs to their descriptions
   const expenseDescriptions: Record<keyof ExpensesType, string> = {

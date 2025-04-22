@@ -9,8 +9,7 @@ import { ProjectSpecificTableProps, ProjectSpecificType } from '../../../types/j
 const ProjectSpecificTable: React.FC<ProjectSpecificTableProps> = ({
   projectSpecific,
   onProjectSpecificChange,
-  textFieldStyle,
-  tableCellStyle
+  textFieldStyle
 }) => {
   return (
     <>

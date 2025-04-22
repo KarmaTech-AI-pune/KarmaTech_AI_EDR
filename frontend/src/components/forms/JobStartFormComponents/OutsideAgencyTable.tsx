@@ -10,8 +10,7 @@ const OutsideAgencyTable: React.FC<OutsideAgencyTableProps> = ({
   outsideAgency,
   onOutsideAgencyChange,
   calculateOutsideAgencyCost,
-  textFieldStyle,
-  tableCellStyle
+  textFieldStyle
 }) => {
   return (
     <>
