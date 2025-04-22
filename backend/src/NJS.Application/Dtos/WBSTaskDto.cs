@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NJS.Domain.Enums; // Required for WBSTaskLevel
+using NJS.Domain.Entities; // Required for TaskType
 
 namespace NJS.Application.Dtos
 {
@@ -17,13 +18,14 @@ namespace NJS.Application.Dtos
         public decimal EstimatedBudget { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public TaskType TaskType { get; set; } = TaskType.Manpower; // Default to Manpower for backward compatibility
 
         // Resource/Cost Info (Primarily for Level 3)
         public string? AssignedUserId { get; set; }
         public string? AssignedUserName { get; set; } // For display, populated in query
         public decimal CostRate { get; set; }
-        public decimal ODCCost { get; set; }
-        public double ODCHours { get; set; } // Added ODCHours
+        public string? ResourceName { get; set; } // Added Resource Name
+        public string? ResourceUnit { get; set; } // Added Resource Unit
 
         // Monthly Hours
         public List<MonthlyHourDto> MonthlyHours { get; set; } = new();
