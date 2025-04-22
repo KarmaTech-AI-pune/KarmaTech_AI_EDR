@@ -236,7 +236,8 @@ const WBSRow: React.FC<WBSRowProps> = ({
                 getOptionLabel={(option) => option.name}
                 value={employeesForRole.find(emp => emp.id === row.name) || null}
                 open={isDropdownOpen} // Control open state
-                onInputChange={(_event, value, reason) => {
+                popupIcon={null} // Remove the dropdown arrow icon
+            onInputChange={(_event, value, reason) => {
                   // Open only on actual input, not on focus/clear/reset
                   if (reason === 'input') {
                     setIsDropdownOpen(!!value); // Open if there's text, close if empty
@@ -249,26 +250,44 @@ const WBSRow: React.FC<WBSRowProps> = ({
                 onClose={() => setIsDropdownOpen(false)} // Close when clicking away
                 disabled={!row.role || editMode}
                 size="small"
-                ListboxProps={{
-                  sx: {
-                    // Hide scrollbar for Webkit browsers
-                    '&::-webkit-scrollbar': {
-                      display: 'none',
-                    },
-                    // Hide scrollbar for Firefox
-                    scrollbarWidth: 'none',
-                    // Hide scrollbar for IE/Edge (older versions)
-                    msOverflowStyle: 'none',
-                  }
+                slotProps={{
+                  listbox: {
+                sx: {
+                      // Hide scrollbar for Webkit browsers
+                      '&::-webkit-scrollbar': {
+                        display: 'none',
+                      },
+                      // Hide scrollbar for Firefox
+                      scrollbarWidth: 'none',
+                      // Hide scrollbar for IE/Edge (older versions)
+                      msOverflowStyle: 'none',
+                    }
+              }
                 }}
-                sx={{ bgcolor: 'background.paper', width: '100%' }}
+                sx={{
+              bgcolor: 'background.paper',
+              width: '100%',
+              '& .MuiAutocomplete-inputRoot': {
+                paddingRight: '0 !important' // Remove any right padding from the input root
+              }
+            }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     placeholder="Select Name"
                     sx={{
-                      '& .MuiInputBase-root': { height: '40px', padding: '0 4px 0 6px' },
-                      '& .MuiAutocomplete-input': { padding: '7.5px 4px 7.5px 6px !important' } // Adjust padding if needed
+                      '& .MuiInputBase-root': {
+                    height: '40px',
+                    padding: '0 0 0 6px', // Removed right padding
+                    width: '100%' // Ensure full width is used
+                  },
+                      '& .MuiAutocomplete-input': {
+                    padding: '7.5px 0 7.5px 6px !important', // Removed right padding
+                    textOverflow: 'initial', // Prevent text truncation
+                    whiteSpace: 'normal', // Allow text to wrap if needed
+                    width: '100%', // Use full width
+                    fontSize: '0.875rem' // Slightly smaller font to fit more text
+                  }
                     }}
                   />
                 )}

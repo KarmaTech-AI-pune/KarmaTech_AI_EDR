@@ -369,7 +369,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             ) : (
               <>
                 <HeaderCell sx={{ minWidth: '150px' }}>Resource Role</HeaderCell>
-                <HeaderCell sx={{ minWidth: '150px' }}>Resource Name</HeaderCell>
+                <HeaderCell sx={{ minWidth: '170px' }}>Resource Name</HeaderCell>
               </>
             )}
             <HeaderCell sx={{ minWidth: 100 }}>Rate</HeaderCell>
