@@ -13,5 +13,7 @@ namespace NJS.Repositories.Interfaces
         Task UpdateAsync(CorrespondenceInward correspondenceInward);
         Task DeleteAsync(int id);
         Task<bool> ExistsAsync(int id);
+        Task<int> GetNextIdAsync();
+        Task ResetIdentitySeedAsync();
     }
 }

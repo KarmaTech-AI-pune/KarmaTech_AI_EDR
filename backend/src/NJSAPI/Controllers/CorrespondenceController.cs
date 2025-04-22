@@ -14,7 +14,7 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize] // Require authentication for all endpoints
     public class CorrespondenceController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -29,6 +29,7 @@ namespace NJSAPI.Controllers
         #region Inward Correspondence
 
         [HttpGet("inward")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<IEnumerable<CorrespondenceInwardDto>>> GetAllInward()
         {
             try
@@ -45,6 +46,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("inward/{id}")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<CorrespondenceInwardDto>> GetInwardById(int id)
         {
             try
@@ -67,6 +69,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("inward/project/{projectId}")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<IEnumerable<CorrespondenceInwardDto>>> GetInwardByProject(int projectId)
         {
             try
@@ -83,6 +86,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost("inward")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<CorrespondenceInwardDto>> CreateInward([FromBody] CreateCorrespondenceInwardCommand command)
         {
             try
@@ -92,7 +96,10 @@ namespace NJSAPI.Controllers
                     return BadRequest("Inward correspondence data is null.");
                 }
 
-                command.CreatedBy = User.FindFirstValue(ClaimTypes.Name) ?? "System";
+                // Get the username from the authenticated user or use "System" as fallback
+                command.CreatedBy = User.Identity?.IsAuthenticated == true ?
+                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
+                    "System";
                 var result = await _mediator.Send(command);
                 return CreatedAtAction(nameof(GetInwardById), new { id = result.Id }, result);
             }
@@ -104,6 +111,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPut("inward/{id}")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<CorrespondenceInwardDto>> UpdateInward(int id, [FromBody] UpdateCorrespondenceInwardCommand command)
         {
             try
@@ -118,7 +126,10 @@ namespace NJSAPI.Controllers
                     return BadRequest("Mismatched inward correspondence ID.");
                 }
 
-                command.UpdatedBy = User.FindFirstValue(ClaimTypes.Name) ?? "System";
+                // Get the username from the authenticated user or use "System" as fallback
+                command.UpdatedBy = User.Identity?.IsAuthenticated == true ?
+                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
+                    "System";
                 var result = await _mediator.Send(command);
                 return Ok(result);
             }
@@ -130,6 +141,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpDelete("inward/{id}")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult> DeleteInward(int id)
         {
             try
@@ -156,6 +168,7 @@ namespace NJSAPI.Controllers
         #region Outward Correspondence
 
         [HttpGet("outward")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<IEnumerable<CorrespondenceOutwardDto>>> GetAllOutward()
         {
             try
@@ -172,6 +185,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("outward/{id}")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<CorrespondenceOutwardDto>> GetOutwardById(int id)
         {
             try
@@ -194,6 +208,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("outward/project/{projectId}")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<IEnumerable<CorrespondenceOutwardDto>>> GetOutwardByProject(int projectId)
         {
             try
@@ -210,6 +225,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost("outward")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<CorrespondenceOutwardDto>> CreateOutward([FromBody] CreateCorrespondenceOutwardCommand command)
         {
             try
@@ -219,7 +235,10 @@ namespace NJSAPI.Controllers
                     return BadRequest("Outward correspondence data is null.");
                 }
 
-                command.CreatedBy = User.FindFirstValue(ClaimTypes.Name) ?? "System";
+                // Get the username from the authenticated user or use "System" as fallback
+                command.CreatedBy = User.Identity?.IsAuthenticated == true ?
+                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
+                    "System";
                 var result = await _mediator.Send(command);
                 return CreatedAtAction(nameof(GetOutwardById), new { id = result.Id }, result);
             }
@@ -231,6 +250,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPut("outward/{id}")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<CorrespondenceOutwardDto>> UpdateOutward(int id, [FromBody] UpdateCorrespondenceOutwardCommand command)
         {
             try
@@ -245,7 +265,10 @@ namespace NJSAPI.Controllers
                     return BadRequest("Mismatched outward correspondence ID.");
                 }
 
-                command.UpdatedBy = User.FindFirstValue(ClaimTypes.Name) ?? "System";
+                // Get the username from the authenticated user or use "System" as fallback
+                command.UpdatedBy = User.Identity?.IsAuthenticated == true ?
+                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
+                    "System";
                 var result = await _mediator.Send(command);
                 return Ok(result);
             }
@@ -257,6 +280,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpDelete("outward/{id}")]
+        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult> DeleteOutward(int id)
         {
             try

@@ -40,6 +40,9 @@ namespace NJS.Repositories.Repositories
         {
             if (correspondenceInward == null) throw new ArgumentNullException(nameof(correspondenceInward));
 
+            // Check if we need to reset the identity seed before adding a new entry
+            await ResetIdentitySeedAsync();
+
             correspondenceInward.CreatedAt = DateTime.UtcNow;
 
             _context.CorrespondenceInwards.Add(correspondenceInward);
@@ -65,12 +68,56 @@ namespace NJS.Repositories.Repositories
             {
                 _context.CorrespondenceInwards.Remove(correspondenceInward);
                 await _context.SaveChangesAsync();
+
+                // Reset the identity seed after deleting an entry
+                await ResetIdentitySeedAsync();
             }
         }
 
         public async Task<bool> ExistsAsync(int id)
         {
             return await _context.CorrespondenceInwards.AnyAsync(e => e.Id == id);
+        }
+
+        public async Task<int> GetNextIdAsync()
+        {
+            // If there are no records, the next ID will be 1
+            if (!await _context.CorrespondenceInwards.AnyAsync())
+            {
+                return 1;
+            }
+
+            // Otherwise, get the maximum ID and add 1
+            var maxId = await _context.CorrespondenceInwards.MaxAsync(i => i.Id);
+            return maxId + 1;
+        }
+
+        public async Task ResetIdentitySeedAsync()
+        {
+            // Check if there are any records left
+            if (!await _context.CorrespondenceInwards.AnyAsync())
+            {
+                // Reset the identity seed to 1
+                await _context.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT ('CorrespondenceInwards', RESEED, 0)");
+            }
+            else
+            {
+                // Find the next available ID (look for gaps)
+                var allIds = await _context.CorrespondenceInwards.Select(i => i.Id).OrderBy(id => id).ToListAsync();
+                int nextId = 1;
+
+                foreach (var id in allIds)
+                {
+                    if (id != nextId)
+                    {
+                        break;
+                    }
+                    nextId++;
+                }
+
+                // Reset the identity seed to the next available ID - 1
+                await _context.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT ('CorrespondenceInwards', RESEED, {nextId - 1})");
+            }
         }
     }
 }
