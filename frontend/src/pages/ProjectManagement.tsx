@@ -151,18 +151,27 @@ export const ProjectManagement: React.FC = () => {
 
     // Check all roles the user has
     console.log('Filtering project:', project.name);
+    console.log('Project details:', {
+      regionalManagerId: project.regionalManagerId,
+      seniorProjectManagerId: project.seniorProjectManagerId,
+      projectManagerId: project.projectManagerId
+    });
+    console.log('Current user ID:', currentUser.id);
     console.log('Current user roles:', currentUser.roles);
 
     return currentUser.roles.some(role => {
-      console.log('Checking role:', role);
+      console.log('Checking role:', role.name);
       switch(role.name) {
         case 'Regional Manager':
-          return project.regionalManagerId === currentUser.id;
+          return true;
+        case 'Regional Director':
+          return true;
         case 'Senior Project Manager':
           return project.seniorProjectManagerId === currentUser.id;
         case 'Project Manager':
           return project.projectManagerId === currentUser.id;
         default:
+          console.log('Unknown role:', role.name);
           return false;
       }
     });

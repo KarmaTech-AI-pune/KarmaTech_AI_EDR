@@ -8,10 +8,12 @@ import DeleteWBSDialog from '../dialogbox/DeleteWBSDialog';
 import WBSHeader from './WBSformcomponents/WBSHeader';
 import WBSTable from './WBSformcomponents/WBSTable';
 import WBSSummary from './WBSformcomponents/WBSSummary';
-import { WBSOption, WBSRowData } from '../../types/wbs';
+import { WBSOption, WBSRowData, TaskType } from '../../types/wbs';
 import { resourceRole } from '../../models/resourceRoleModel';
 import { Employee } from '../../models/employeeModel';
 import { FormWrapper } from './FormWrapper';
+
+// Unit options are defined in WBSRow.tsx
 
 interface WorkBreakdownStructureFormProps {
   formType?: 'manpower' | 'odc';
@@ -60,7 +62,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const loadWBSData = async (projectId: string) => {
     try {
       setLoading(true);
-      let wbsData = await WBSStructureAPI.getProjectWBS(projectId);
+      // Type the API response data using the updated WBSRowData interface
+      let wbsData: WBSRowData[] = await WBSStructureAPI.getProjectWBS(projectId);
 
       // Transform all WBS data first
       const allTransformedRows = wbsData.map((task) => {
@@ -82,18 +85,30 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           Object.assign(transformedMonthlyHours, task.monthlyHours);
         }
 
+        // Determine if this is an ODC task
+        const isOdcTask = task.taskType === TaskType.ODC;
+
         return {
           id: task.id,
           level: task.level,
           title: task.title,
-          role: task.assignedUserId || null,
-          name: task.assignedUserId?.toString() || null,
+          role: isOdcTask ? null : (task.assignedUserId || null),
+          // For ODC tasks, use ResourceName; for Manpower tasks, use AssignedUserId
+          // Use optional chaining and nullish coalescing for safe access
+          name: isOdcTask ? (task.resourceName ?? null) : (task.assignedUserId?.toString() || null),
           costRate: task.costRate || 0,
           monthlyHours: transformedMonthlyHours,
-          odc: task.odc || 0,
+          // For ODC tasks, use TotalCost as odc value
+          odc: isOdcTask ? task.totalCost : (task.odc || 0),
+          // For ODC tasks, set odcHours to TotalHours
+          odcHours: isOdcTask ? task.totalHours : 0,
           totalHours: task.totalHours || 0,
           totalCost: task.totalCost || 0,
           parentId: task.parentId,
+          taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
+          // Map ResourceUnit to unit field
+          // Use optional chaining and nullish coalescing for safe access
+          unit: task.resourceUnit ?? ''
         };
       });
 
@@ -101,7 +116,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       const getSequenceNumber = (row: WBSRowData, allRows: WBSRowData[]): string => {
         if (row.level === 1) {
           const level1Index = allRows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
-          // Sequence number is now calculated purely based on position, independent of formType
+          // Sequence number is calculated based on position
+          // Note: This is only used for initial data loading. The actual display numbering is handled in WBSTable.tsx
           return level1Index.toString();
         } else if (row.level === 2) {
           const parentRow = allRows.find(r => r.id === row.parentId);
@@ -146,18 +162,64 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         );
         // Removed unused state update: setAllWbsData(dataWithRoles);
 
-        // Filter into separate states
+        // Filter rows based on TaskType
+        // If taskType is not set (for backward compatibility), we'll infer it from the title
         const currentManpowerRows = dataWithRoles.filter(row => {
-          const sequenceNumber = getSequenceNumber(row, dataWithRoles);
-          if (!sequenceNumber) return false;
-          const firstDigit = parseInt(sequenceNumber.split('.')[0]);
-          return firstDigit >= 1 && firstDigit <= 5;
+          // If taskType is explicitly set, use it
+          if (row.taskType !== undefined) {
+            return row.taskType === TaskType.Manpower;
+          }
+
+          // For backward compatibility: check if this row is part of a hierarchy
+          if (row.level === 2 || row.level === 3) {
+            // For child rows, check the parent's taskType
+            const parent = dataWithRoles.find(r => r.id === row.parentId);
+            if (!parent) return false;
+
+            if (parent.taskType !== undefined) {
+              return parent.taskType === TaskType.Manpower;
+            }
+
+            // If parent doesn't have taskType, check grandparent for level 3
+            if (row.level === 3) {
+              const grandparent = dataWithRoles.find(r => r.id === parent.parentId);
+              if (grandparent?.taskType !== undefined) {
+                return grandparent.taskType === TaskType.Manpower;
+              }
+            }
+          }
+
+          // Default to Manpower for backward compatibility if we can't determine
+          return true;
         });
+
         const currentOdcRows = dataWithRoles.filter(row => {
-          const sequenceNumber = getSequenceNumber(row, dataWithRoles);
-          if (!sequenceNumber) return false;
-          const firstDigit = parseInt(sequenceNumber.split('.')[0]);
-          return firstDigit >= 6;
+          // If taskType is explicitly set, use it
+          if (row.taskType !== undefined) {
+            return row.taskType === TaskType.ODC;
+          }
+
+          // For backward compatibility: check if this row is part of a hierarchy
+          if (row.level === 2 || row.level === 3) {
+            // For child rows, check the parent's taskType
+            const parent = dataWithRoles.find(r => r.id === row.parentId);
+            if (!parent) return false;
+
+            if (parent.taskType !== undefined) {
+              return parent.taskType === TaskType.ODC;
+            }
+
+            // If parent doesn't have taskType, check grandparent for level 3
+            if (row.level === 3) {
+              const grandparent = dataWithRoles.find(r => r.id === parent.parentId);
+              if (grandparent?.taskType !== undefined) {
+                return grandparent.taskType === TaskType.ODC;
+              }
+            }
+          }
+
+          // Default to not showing in ODC form if we can't determine
+          return false;
         });
 
         setManpowerRows(currentManpowerRows);
@@ -350,18 +412,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
 
-    // For level 1 rows, check limits based on form type
-    if (level === 1) {
-      const level1Rows = currentRows.filter(row => row.level === 1);
-      if (formType === 'manpower' && level1Rows.length >= 5) {
-        setSnackbarMessage('Manpower Form can only have up to 5 level 1 rows.');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-        return;
-      }
-      // Add similar check for ODC if needed, e.g., if ODC starts at 6 and has a limit
-      // if (formType === 'odc' && level1Rows.length >= X) { ... }
-    }
+    // No restriction on the number of level 1 rows for manpower anymore
 
     const newRow: WBSRowData = {
       id: Date.now().toString(),
@@ -369,14 +420,23 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       title: '',
       role: null,
       name: null,
+      assignedUserId: null, // Initialize assignedUserId field
       costRate: 0,
       monthlyHours: {},
       odc: 0,
       odcHours: 0,
       totalHours: 0,
       totalCost: 0,
-      parentId: parentId || null
+      parentId: parentId || null,
+      taskType: formType === 'manpower' ? TaskType.Manpower : TaskType.ODC, // Set taskType based on formType
+      unit: '' // Initialize unit field
     };
+
+    // For ODC form, ensure odcHours and odc are initialized to 0
+    if (formType === 'odc') {
+      newRow.odcHours = 0;
+      newRow.odc = 0;
+    }
     setRowsFunc([...currentRows, newRow]);
   };
 
@@ -427,29 +487,66 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleRoleChange = (rowId: string, roleId: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
-    setRowsFunc(prevRows => prevRows.map(row => {
-      if (row.id === rowId) {
+
+    // For Manpower form, handle role selection logic
+    setRowsFunc(prevRows => prevRows.map(r => {
+      if (r.id === rowId) {
         return {
-          ...row,
+          ...r,
           role: roleId,
           name: null,
           costRate: 0
         };
       }
-      return row;
+      return r;
     }));
   };
 
-  const handleEmployeeChange = async (rowId: string, employeeId: string) => {
+  const handleUnitChange = (rowId: string, unitValue: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+    const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
+    const row = currentRows.find(r => r.id === rowId);
+
+    if (!row) return;
+
+    // Handle unit selection for both forms
+    setRowsFunc(prevRows => prevRows.map(r => {
+      if (r.id === rowId) {
+        return {
+          ...r,
+          unit: unitValue // Store unit value for both form types
+        };
+      }
+      return r;
+    }));
+  };
+
+  const handleEmployeeChange = async (rowId: string, employeeIdOrName: string) => {
+    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+
+    // For ODC form, we just store the name as text
+    if (formType === 'odc') {
+      setRowsFunc(prevRows => prevRows.map(row => {
+        if (row.id === rowId) {
+          return {
+            ...row,
+            name: employeeIdOrName
+          };
+        }
+        return row;
+      }));
+      return;
+    }
+
+    // For Manpower form, continue with employee lookup
     try {
-      const employee = await ResourceAPI.getEmployeeById(employeeId);
+      const employee = await ResourceAPI.getEmployeeById(employeeIdOrName);
       if (employee) {
         setRowsFunc(prevRows => prevRows.map(row => {
           if (row.id === rowId) {
             return {
               ...row,
-              name: employeeId,
+              name: employeeIdOrName,
               costRate: employee.standard_rate
             };
           }
@@ -468,7 +565,10 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
     const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
     const row = currentRows.find(r => r.id === rowId);
-    if (!row || !row.role) return; // Ensure row exists and has a role assigned
+
+    // For ODC form, we don't require a role to be assigned
+    // For Manpower form, we still require a role
+    if (!row || (formType !== 'odc' && !row.role)) return;
 
     if (value === '') {
       setRowsFunc(prevRows => prevRows.map(r => {
@@ -484,6 +584,33 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       return;
     }
 
+    // For ODC form, only allow numeric input
+    if (formType === 'odc') {
+      // Parse as number
+      const numericValue = parseFloat(value);
+      if (isNaN(numericValue)) {
+        // If it's not a valid number, ignore the input
+        return;
+      }
+
+      // Update with the numeric value
+      setRowsFunc(prevRows => prevRows.map(r => {
+        if (r.id === rowId) {
+          // Calculate ODC cost based on total hours and new rate
+          const odcCost = r.totalHours * numericValue;
+          return {
+            ...r,
+            costRate: numericValue,
+            odc: odcCost, // Update ODC cost
+            totalCost: odcCost // For ODC form, totalCost is the same as odc
+          };
+        }
+        return r;
+      }));
+      return;
+    }
+
+    // For Manpower form, continue with numeric validation
     const newRate = parseFloat(value);
     if (isNaN(newRate)) return; // Ignore invalid numbers
 
@@ -501,20 +628,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleHoursChange = (rowId: string, month: string, value: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
-    // Special case for odcHours - Assuming odcHours might be specific to ODC form?
-    // If odcHours can appear in both, this logic is fine. If only ODC, add check: if (formType === 'odc' && month === 'odcHours')
+    // Skip processing for odcHours since it's now calculated automatically
     if (month === 'odcHours') {
-      const hours = value === '' ? 0 : Math.max(parseInt(value) || 0, 0);
-
-      setRowsFunc(prevRows => prevRows.map(row => {
-        if (row.id === rowId) {
-          return {
-            ...row,
-            odcHours: hours
-          };
-        }
-        return row;
-      }));
       return;
     }
 
@@ -535,6 +650,20 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         const totalHours = Object.values(newMonthlyHours)
           .flatMap(yearHours => Object.values(yearHours))
           .reduce((sum, h) => sum + h, 0);
+
+        // For ODC form, update odcHours to match totalHours
+        if (formType === 'odc') {
+          return {
+            ...row,
+            monthlyHours: newMonthlyHours,
+            totalHours,
+            odcHours: totalHours,
+            odc: totalHours * row.costRate, // Calculate ODC cost based on total hours and rate
+            totalCost: totalHours * row.costRate // For ODC form, totalCost is the same as odc
+          };
+        }
+
+        // For Manpower form, keep the original logic
         return {
           ...row,
           monthlyHours: newMonthlyHours,
@@ -547,7 +676,12 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const handleODCChange = (rowId: string, value: string) => {
-    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+    // Skip processing for ODC form since ODC cost is now calculated automatically
+    if (formType === 'odc') {
+      return;
+    }
+
+    const setRowsFunc = setManpowerRows; // Only for Manpower form now
     const odc = value === '' ? 0 : Math.max(parseFloat(value) || 0, 0);
 
     setRowsFunc(prevRows => prevRows.map(row => {
@@ -605,8 +739,19 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         return;
       }
 
+      // Ensure all rows have the correct taskType set
+      const updatedManpowerRows = manpowerRows.map(row => ({
+        ...row,
+        taskType: TaskType.Manpower
+      }));
+
+      const updatedOdcRows = odcRows.map(row => ({
+        ...row,
+        taskType: TaskType.ODC
+      }));
+
       // Combine the latest data from both manpower and ODC states
-      const combinedWbsData = [...manpowerRows, ...odcRows];
+      const combinedWbsData = [...updatedManpowerRows, ...updatedOdcRows];
 
       // Validate that all tasks in the combined data have titles
       const emptyTitleTasks = combinedWbsData.filter(row => !row.title);
@@ -705,6 +850,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
            employees={allEmployees}
            editMode={formType === 'manpower' ? isManpowerEditing : isOdcEditing} // Use form-specific state
            formType={formType}
+           manpowerCount={manpowerRows.filter(row => row.level === 1).length} // Pass manpower count as prop
            levelOptions={{
              level1: level1Options,
             level2: level2Options,
@@ -714,6 +860,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           onDeleteRow={handleDeleteClick}
           onLevelChange={handleLevelChange}
           onRoleChange={handleRoleChange}
+          onUnitChange={handleUnitChange}
           onEmployeeChange={handleEmployeeChange}
           onCostRateChange={handleCostRateChange}
           onHoursChange={handleHoursChange}
