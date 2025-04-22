@@ -17,7 +17,7 @@ import { OpportunityForm } from '../components/forms/OpportunityForm';
 import { Pagination } from '../components/Pagination';
 import { authApi } from '../services/authApi';
 import { UserWithRole } from '../types';
-import BusinessDevelopmentCharts from '../components/dashboard/BusinessDevelopmentCharts';
+import OpportunityStackedBarChart from '../components/dashboard/BusinessDevelopmentCharts';
 
 import { PermissionType, OpportunityTracking } from '../models';
 import { opportunityApi } from '../services/opportunityApi';
@@ -304,7 +304,7 @@ export const BusinessDevelopment: React.FC = () => {
           </Dialog>
         )}
 
-        <BusinessDevelopmentCharts />
+        <OpportunityStackedBarChart />
         
         <Divider sx={{ mb: 3 }} />
 
