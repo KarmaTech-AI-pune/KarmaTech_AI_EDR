@@ -73,7 +73,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         CostRate = userTask.CostRate,
                         TotalHours = (decimal)userTask.TotalHours,
                         TotalCost = userTask.TotalCost,
-                        ODC = 0
+                        ODC = userTask.ODCCost
                     };
 
                     result.ResourceAllocations.Add(allocation);

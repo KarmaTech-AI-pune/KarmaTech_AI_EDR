@@ -68,10 +68,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     EstimatedBudget = taskEntity.EstimatedBudget,
                     StartDate = taskEntity.StartDate,
                     EndDate = taskEntity.EndDate,
-                    TaskType = taskEntity.TaskType, // Include TaskType
                     MonthlyHours = new List<MonthlyHourDto>()
                     // Initialize resource/cost fields
-                    , CostRate = 0, TotalHours = 0, TotalCost = 0
+                    , CostRate = 0, ODCCost = 0, TotalHours = 0, TotalCost = 0
                 };
 
                 // Map Monthly Hours
@@ -92,33 +91,14 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 var userTaskEntity = taskEntity.UserWBSTasks.FirstOrDefault();
                 if (userTaskEntity != null)
                 {
-                    // For Manpower tasks
-                    if (taskEntity.TaskType == TaskType.Manpower)
-                    {
-                        taskDto.AssignedUserId = userTaskEntity.UserId;
-                        taskDto.AssignedUserName = userTaskEntity.User?.Name; // User should be included
-                        taskDto.CostRate = userTaskEntity.CostRate;
-                        // Map ResourceUnit for Manpower tasks as well
-                        taskDto.ResourceUnit = userTaskEntity.Unit;
-                        // Calculate Total Cost for Manpower
-                        taskDto.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate;
-                    }
-                    // For ODC tasks
-                    else if (taskEntity.TaskType == TaskType.ODC)
-                    {
-                        taskDto.ResourceName = userTaskEntity.Name; // Map Name for ODC
-                        taskDto.ResourceUnit = userTaskEntity.Unit; // Map Unit for ODC
-                        taskDto.CostRate = userTaskEntity.CostRate;
-                        // Use the actual values from UserWBSTask for ODC
-                        taskDto.TotalHours = userTaskEntity.TotalHours;
-                        taskDto.TotalCost = userTaskEntity.TotalCost;
-                    }
+                    taskDto.AssignedUserId = userTaskEntity.UserId;
+                    taskDto.AssignedUserName = userTaskEntity.User?.Name; // User should be included
+                    taskDto.CostRate = userTaskEntity.CostRate;
+                    taskDto.ODCCost = userTaskEntity.ODCCost;
                 }
-                else
-                {
-                    // If no UserWBSTask, calculate cost based on hours and rate
-                    taskDto.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate;
-                }
+
+                // Calculate Total Cost
+                taskDto.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate + taskDto.ODCCost;
 
                 wbsDto.Tasks.Add(taskDto);
             }

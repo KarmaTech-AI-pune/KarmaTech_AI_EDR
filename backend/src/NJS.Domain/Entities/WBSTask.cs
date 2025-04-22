@@ -6,12 +6,6 @@ using NJS.Domain.Enums;  // Already correct - just verifying
 
 namespace NJS.Domain.Entities
 {
-    public enum TaskType
-    {
-        Manpower = 0,
-        ODC = 1
-    }
-
     public class WBSTask
     {
         [Key]
@@ -52,7 +46,6 @@ namespace NJS.Domain.Entities
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
 
-        public TaskType TaskType { get; set; } = TaskType.Manpower; // Default to Manpower for backward compatibility
 
         // Navigation properties
         [ForeignKey(nameof(WorkBreakdownStructureId))]

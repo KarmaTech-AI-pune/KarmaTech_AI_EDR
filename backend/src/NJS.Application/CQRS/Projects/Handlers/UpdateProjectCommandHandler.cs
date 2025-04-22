@@ -28,13 +28,6 @@ namespace NJS.Application.CQRS.Projects.Handlers
 
             var dto = request.ProjectDto;
 
-            // Log the incoming data for the problematic fields
-            Console.WriteLine($"Updating project {request.Id} with the following data:");
-            Console.WriteLine($"Office: '{dto.Office}'");
-            Console.WriteLine($"TypeOfJob: '{dto.TypeOfJob}'");
-            Console.WriteLine($"Budget: {dto.Budget}");
-            Console.WriteLine($"Priority: '{dto.Priority}'");
-
             // Update project properties
             existingProject.Name = dto.Name;
             existingProject.ClientName = dto.ClientName;
@@ -51,25 +44,10 @@ namespace NJS.Application.CQRS.Projects.Handlers
             existingProject.ProjectManagerId = dto.ProjectManagerId;
             existingProject.RegionalManagerId = dto.RegionalManagerId;
             existingProject.SeniorProjectManagerId = dto.SeniorProjectManagerId;
-            existingProject.ProjectNo = dto.ProjectNo;
-
-            // Explicitly set the problematic fields with direct assignment
-            existingProject.Office = !string.IsNullOrWhiteSpace(dto.Office) ? dto.Office : existingProject.Office;
-            existingProject.Region = !string.IsNullOrWhiteSpace(dto.Region) ? dto.Region : existingProject.Region;
-            existingProject.TypeOfJob = !string.IsNullOrWhiteSpace(dto.TypeOfJob) ? dto.TypeOfJob : existingProject.TypeOfJob;
-            existingProject.FeeType = !string.IsNullOrWhiteSpace(dto.FeeType) ? dto.FeeType : existingProject.FeeType;
-            existingProject.Budget = dto.Budget;
-            existingProject.Priority = !string.IsNullOrWhiteSpace(dto.Priority) ? dto.Priority : existingProject.Priority;
-
-            existingProject.Status = dto.Status;
-            existingProject.Progress = dto.Progress;
-            existingProject.LetterOfAcceptance = dto.LetterOfAcceptance;
 
             // Update audit fields
             existingProject.LastModifiedAt = DateTime.UtcNow;
             existingProject.LastModifiedBy = dto.ProjectManagerId;
-            existingProject.UpdatedAt = DateTime.UtcNow;
-            existingProject.UpdatedBy = dto.ProjectManagerId;
 
             // Calculate duration in months if not provided and dates are available
             if (!dto.DurationInMonths.HasValue && dto.StartDate.HasValue && dto.EndDate.HasValue)
@@ -81,28 +59,11 @@ namespace NJS.Application.CQRS.Projects.Handlers
 
             try
             {
-                // Log the project state before update
-                Console.WriteLine($"Project state before update:");
-                Console.WriteLine($"Office: '{existingProject.Office}'");
-                Console.WriteLine($"TypeOfJob: '{existingProject.TypeOfJob}'");
-                Console.WriteLine($"Budget: {existingProject.Budget}");
-                Console.WriteLine($"Priority: '{existingProject.Priority}'");
-
                 _repository.Update(existingProject);
-
-                // Log the project state after update
-                var updatedProject = _repository.GetById(request.Id);
-                Console.WriteLine($"Project state after update:");
-                Console.WriteLine($"Office: '{updatedProject.Office}'");
-                Console.WriteLine($"TypeOfJob: '{updatedProject.TypeOfJob}'");
-                Console.WriteLine($"Budget: {updatedProject.Budget}");
-                Console.WriteLine($"Priority: '{updatedProject.Priority}'");
-
                 return Unit.Value;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating project: {ex.Message}");
                 throw new ApplicationException("Error updating project", ex);
             }
         }
