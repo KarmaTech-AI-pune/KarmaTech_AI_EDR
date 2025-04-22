@@ -1,11 +1,10 @@
-﻿﻿using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums; // Add import for WBSTaskLevel
-using System.Security.Authentication;
 
 namespace NJS.Domain.Extensions
 {
@@ -24,9 +23,9 @@ namespace NJS.Domain.Extensions
                 using var scope = app.ApplicationServices.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
-
-                await context.Database.MigrateAsync();
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();              
+            
+                await context.Database.MigrateAsync();              
 
                 // Seed Permissions
                 var permissions = new[]

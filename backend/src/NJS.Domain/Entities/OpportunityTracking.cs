@@ -8,7 +8,9 @@ namespace NJS.Domain.Entities
 public class OpportunityTracking : IAuditableEntity
     {
         [Key]
-        public int Id { get; set; }       
+        public int Id { get; set; }
+        
+        public string? BidNumber { get; set; }
         
         [Required]
         public string StrategicRanking { get; set; }
