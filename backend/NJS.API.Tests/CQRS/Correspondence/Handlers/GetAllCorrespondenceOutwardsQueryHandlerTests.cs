@@ -1,0 +1,126 @@
+using Moq;
+using NJS.Application.CQRS.Correspondence.Handlers;
+using NJS.Application.CQRS.Correspondence.Queries;
+using NJS.Application.DTOs;
+using NJS.Domain.Entities;
+using NJS.Repositories.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
+
+namespace NJS.API.Tests.CQRS.Correspondence.Handlers
+{
+    public class GetAllCorrespondenceOutwardsQueryHandlerTests
+    {
+        private readonly Mock<ICorrespondenceOutwardRepository> _mockRepository;
+        private readonly GetAllCorrespondenceOutwardsQueryHandler _handler;
+
+        public GetAllCorrespondenceOutwardsQueryHandlerTests()
+        {
+            _mockRepository = new Mock<ICorrespondenceOutwardRepository>();
+            _handler = new GetAllCorrespondenceOutwardsQueryHandler(_mockRepository.Object);
+        }
+
+        [Fact]
+        public async Task Handle_ReturnsAllCorrespondenceOutwards()
+        {
+            // Arrange
+            var correspondenceOutwards = new List<CorrespondenceOutward>
+            {
+                new CorrespondenceOutward
+                {
+                    Id = 1,
+                    ProjectId = 1,
+                    LetterNo = "NJS/OUT/2024/001",
+                    LetterDate = new DateTime(2024, 1, 15),
+                    To = "Public Health Engineering Department",
+                    Subject = "Response to Population Projections for STP Design",
+                    AttachmentDetails = "STP_Design_Review.pdf",
+                    ActionTaken = "Sent via email and hard copy",
+                    StoragePath = "/documents/outward/2024/001",
+                    Remarks = "Urgent review completed",
+                    Acknowledgement = "Received on 2024-01-15",
+                    CreatedBy = "Test Creator",
+                    CreatedAt = new DateTime(2024, 1, 15)
+                },
+                new CorrespondenceOutward
+                {
+                    Id = 2,
+                    ProjectId = 1,
+                    LetterNo = "NJS/OUT/2024/002",
+                    LetterDate = new DateTime(2024, 1, 24),
+                    To = "Public Health Engineering Department",
+                    Subject = "Advanced Oxidation Process Integration Plan",
+                    AttachmentDetails = "AOP_Integration_Plan.pdf",
+                    ActionTaken = "Sent via email and hard copy",
+                    StoragePath = "/documents/outward/2024/002",
+                    Remarks = "Awaiting technical approval",
+                    Acknowledgement = "Received on 2024-01-24",
+                    CreatedBy = "Test Creator",
+                    CreatedAt = new DateTime(2024, 1, 24)
+                }
+            };
+
+            _mockRepository.Setup(r => r.GetAllAsync())
+                .ReturnsAsync(correspondenceOutwards);
+
+            // Act
+            var result = await _handler.Handle(new GetAllCorrespondenceOutwardsQuery(), CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.IsAssignableFrom<IEnumerable<CorrespondenceOutwardDto>>(result);
+            Assert.Equal(correspondenceOutwards.Count, result.Count());
+
+            // Verify first item
+            var firstItem = result.First();
+            var expectedFirstItem = correspondenceOutwards.First();
+            Assert.Equal(expectedFirstItem.Id, firstItem.Id);
+            Assert.Equal(expectedFirstItem.ProjectId, firstItem.ProjectId);
+            Assert.Equal(expectedFirstItem.LetterNo, firstItem.LetterNo);
+            Assert.Equal(expectedFirstItem.LetterDate, firstItem.LetterDate);
+            Assert.Equal(expectedFirstItem.To, firstItem.To);
+            Assert.Equal(expectedFirstItem.Subject, firstItem.Subject);
+            Assert.Equal(expectedFirstItem.AttachmentDetails, firstItem.AttachmentDetails);
+            Assert.Equal(expectedFirstItem.ActionTaken, firstItem.ActionTaken);
+            Assert.Equal(expectedFirstItem.StoragePath, firstItem.StoragePath);
+            Assert.Equal(expectedFirstItem.Remarks, firstItem.Remarks);
+            Assert.Equal(expectedFirstItem.Acknowledgement, firstItem.Acknowledgement);
+            Assert.Equal(expectedFirstItem.CreatedBy, firstItem.CreatedBy);
+            Assert.Equal(expectedFirstItem.CreatedAt, firstItem.CreatedAt);
+        }
+
+        [Fact]
+        public async Task Handle_EmptyRepository_ReturnsEmptyList()
+        {
+            // Arrange
+            _mockRepository.Setup(r => r.GetAllAsync())
+                .ReturnsAsync(new List<CorrespondenceOutward>());
+
+            // Act
+            var result = await _handler.Handle(new GetAllCorrespondenceOutwardsQuery(), CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.IsAssignableFrom<IEnumerable<CorrespondenceOutwardDto>>(result);
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public async Task Handle_RepositoryThrowsException_ThrowsException()
+        {
+            // Arrange
+            var expectedException = new Exception("Database error");
+            _mockRepository.Setup(r => r.GetAllAsync())
+                .ThrowsAsync(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<Exception>(() => 
+                _handler.Handle(new GetAllCorrespondenceOutwardsQuery(), CancellationToken.None));
+            Assert.Same(expectedException, exception);
+        }
+    }
+}
