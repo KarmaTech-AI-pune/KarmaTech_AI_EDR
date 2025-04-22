@@ -17,6 +17,8 @@ export interface PermissionGroup {
 export interface RoleDefinition {
   id: string;
   name: string;
+  minRate: number,
+  isResourceRole: boolean,
   permissions: PermissionType[]; // Array of permission types
 }
 
@@ -24,6 +26,8 @@ export interface RoleDefinition {
 export interface RoleWithPermissions {
   id: string;
   name: string;
+  minRate: number
+  isResourceRole: boolean,
   permissions: PermissionGroup[];
 }
 
@@ -45,6 +49,8 @@ export const convertToGroupedPermissions = (
   return {
     id: role.id,
     name: role.name,
+    minRate: role.minRate,
+    isResourceRole: role.isResourceRole,
     permissions: Object.entries(groupedPermissions).map(([category, permissions]) => ({
       category,
       permissions
@@ -55,7 +61,9 @@ export const convertToGroupedPermissions = (
 export const convertToSimplePermissions = (role: RoleWithPermissions): RoleDefinition => ({
   id: role.id,
   name: role.name,
-  permissions: role.permissions.flatMap(group => 
+  minRate: role.minRate,
+  isResourceRole: role.isResourceRole,
+  permissions: role.permissions.flatMap(group =>
     group.permissions.map(p => p.name as unknown as PermissionType)
   )
 });

@@ -1,5 +1,43 @@
 import { GoNoGoStatus, TypeOfBid } from "./types";
 
+export interface GoNoGoDecisionPayload {
+  HeaderInfo: {
+    TypeOfBid: TypeOfBid;
+    Sector: string;
+    TenderFee: number;
+    Emd: number;
+    Office: string;
+    BdHead: string;
+  };
+  ScoringCriteria: {
+    MarketingPlan: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    ClientRelationship: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    ProjectKnowledge: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    TechnicalEligibility: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    FinancialEligibility: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    StaffAvailability: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    CompetitionAssessment: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    CompetitivePosition: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    FutureWorkPotential: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    Profitability: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    BidSchedule: { Score: number; Comments: string; ScoringDescriptionId: number; };
+    ResourceAvailability: { Score: number; Comments: string; ScoringDescriptionId: number; };
+  };
+  Summary: {
+    TotalScore: number;
+    Status: GoNoGoStatus;
+    DecisionComments: string;
+    ActionPlan: string;
+  };
+  MetaData: {
+    OpprotunityId: number;
+    Id?: number;
+    CompletedDate: string;
+    CompletedBy: string;
+    CreatedBy: string;
+  };
+}
+
 export interface HeaderInformation {
   bidType: TypeOfBid;
   sector: string;
@@ -22,7 +60,7 @@ export interface GoNoGoDecision {
   emdAmount: number;
   totalScore: number;
   status: GoNoGoStatus;
-  opprotunityId: number;
+  opportunityId: number | null;
   projectId?: number;
 
   // Scoring fields

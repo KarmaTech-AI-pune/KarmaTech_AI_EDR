@@ -80,7 +80,7 @@ export const ProjectHeaderWidget: React.FC<ProjectHeaderWidgetProps> = ({ projec
                     }}>
                         <Grid container spacing={2} alignItems="center">
                             <Grid item xs={3}>
-                                <Typography sx={{ color: '#2c3e50' }}>{project.clientName}</Typography>
+                                <Typography sx={{ color: '#2c3e50' }}>{`${project.clientName}-${project.projectNo}`}</Typography>
                             </Grid>
                             <Grid item xs={3}>
                                 <Typography sx={{ color: '#1976d2', fontWeight: 500 }}>

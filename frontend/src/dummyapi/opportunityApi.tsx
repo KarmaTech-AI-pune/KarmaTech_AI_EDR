@@ -10,9 +10,9 @@ type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E';
 type OpportunityTrackingStatus = 
   'Bid Under Preparation' | 
   'Bid Submitted' | 
-  'Under Evaluation' | 
-  'Awarded' | 
-  'Not Awarded';
+  'Bid Rejected' | 
+  'Bid Accepted'
+ 
 
 // Backend-specific model for sending data
 export interface BackendOpportunityTracking {
@@ -99,12 +99,10 @@ const mapStatusToBackend = (status: OpportunityTrackingStatus | undefined): numb
       return 0;
     case 'Bid Submitted':
       return 1;
-    case 'Under Evaluation':
+    case 'Bid Rejected':
       return 2;
-    case 'Awarded':
-      return 3;
-    case 'Not Awarded':
-      return 4;
+    case 'Bid Accepted':
+      return 3;  
     default:
       return 0; // Default to Bid Under Preparation
   }
@@ -117,11 +115,9 @@ const mapStatusFromBackend = (status: number): OpportunityTrackingStatus => {
     case 1:
       return 'Bid Submitted';
     case 2:
-      return 'Under Evaluation';
+      return 'Bid Rejected';
     case 3:
-      return 'Awarded';
-    case 4:
-      return 'Not Awarded';
+      return 'Bid Accepted';   
     default:
       return 'Bid Under Preparation'; // Default to Bid Under Preparation
   }
@@ -179,10 +175,10 @@ export const opportunityApi = {
         followUpComments: preparedData.followUpComments,
         notes: preparedData.notes,
         probableQualifyingCriteria: preparedData.probableQualifyingCriteria,
-        currentHistory: preparedData.currentHistory 
-          ? Array.isArray(preparedData.currentHistory) 
-            ? preparedData.currentHistory 
-            : [preparedData.currentHistory]
+        currentHistory: preparedData.currentHistory
+          ? (Array.isArray(preparedData.currentHistory)
+            ? preparedData.currentHistory
+            : [preparedData.currentHistory]) as OpportunityHistory[]
           : undefined
       };
       
@@ -256,7 +252,7 @@ export const opportunityApi = {
       };
       
       // Make API call to backend
-      const response = await axiosInstance.put<OpportunityTracking>(`api/OpportunityTracking/${opportunityId}`, command);
+      const response = await axiosInstance.put<OpportunityTracking>(`api/OpportunityTracking/UpdateOpportunityTracking/${opportunityId}`, command);
       
       // Normalize the response data, including audit fields
       const updatedData = {
@@ -330,6 +326,7 @@ export const opportunityApi = {
 
   getAll: async (): Promise<OpportunityTracking[]> => {
     try {
+      debugger;
       const response = await axiosInstance.get<BackendOpportunityTracking[]>('api/OpportunityTracking');
       console.log(response)
       return response.data.map(opp => ({

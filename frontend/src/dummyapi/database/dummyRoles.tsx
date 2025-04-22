@@ -125,9 +125,10 @@ export const getRoleDefinition = (role: string): RoleDefinition => {
 };
 
 export const getRole = (role:string) : Role => {
-  let r : RoleDefinition = ROLES[role]
+  const r : RoleDefinition = ROLES[role]
   return {
     id: r.id,
-    name : r.name
+    name : r.name,
+    permissions: r.permissions
   }
 }

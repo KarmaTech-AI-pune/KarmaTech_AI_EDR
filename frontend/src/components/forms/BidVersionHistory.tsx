@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import {
-  Box,
   Table,
   TableBody,
   TableCell,
@@ -13,29 +12,14 @@ import {
   Alert
 } from '@mui/material';
 import { format } from 'date-fns';
-import {  BidVersionHistory as BidVersionHistoryType, BidPreparationStatus } from '../../dummyapi/bidVersionHistoryApi';
+import { BidVersionHistory as BidVersionHistoryType, BidPreparationStatus } from '../../dummyapi/bidVersionHistoryApi';
+import { getStatusLabel } from '../../utils/statusUtils';
 
 interface BidVersionHistoryProps {
   versionHistory:BidVersionHistoryType[]
 }
 
 const BidVersionHistory: React.FC<BidVersionHistoryProps> = ({ versionHistory }) => {
- 
-
-
-  const getStatusLabel = (status:any) => {
-    switch (status) {
-      case BidPreparationStatus.Approved:
-        return 'Approved';
-      case BidPreparationStatus.Rejected:
-        return 'Rejected';
-      case BidPreparationStatus.PendingApproval:
-        return 'Pending Approval';
-      case BidPreparationStatus.Draft:
-      default:
-        return 'Draft';
-    }
-  };
 
   return (
     <Container maxWidth="xl" sx={{ py: 2 }}>
@@ -78,7 +62,7 @@ const BidVersionHistory: React.FC<BidVersionHistoryProps> = ({ versionHistory })
             ))}
           </TableBody>
         </Table>
-        {versionHistory.length ==0 && (
+        {versionHistory.length === 0 && (
           <Alert severity="error" sx={{ mb: 2 }}>
            No Data Found
           </Alert>

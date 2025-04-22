@@ -84,8 +84,8 @@ export const createUser = async (user: Omit<AuthUser, 'id'>): Promise<AuthUser> 
       email: user.email,
       avatar: user.avatar,
       roles: roles,
-      IsConsultant: false,
-      StandardRate: 0
+      IsConsultant: user.isConsultant,
+      StandardRate: user.standardRate
       // Note: Password is set to "Admin@123" by backend
     };
     
@@ -99,7 +99,6 @@ export const createUser = async (user: Omit<AuthUser, 'id'>): Promise<AuthUser> 
 
 export const updateUser = async (id: string, user: Partial<AuthUser>): Promise<AuthUser> => {
   try {
-    // Convert Role[] to RoleDto[]
     const roles = user.roles || [];
     
     const updateUserData = {
@@ -109,8 +108,8 @@ export const updateUser = async (id: string, user: Partial<AuthUser>): Promise<A
       email: user.email,
       avatar: user.avatar,
       roles: roles,
-      IsConsultant: false,
-      StandardRate: 0
+      isConsultant: false,
+      standardRate: 0
     };
     
     const response = await axiosInstance.put(`/api/user/${id}`, updateUserData);

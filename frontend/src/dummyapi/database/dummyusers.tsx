@@ -1,5 +1,7 @@
-import { AuthUser } from "../../models";
+import { AuthUser } from "../../models/userModel";
 import { getRole } from "./dummyRoles";
+import { Role } from "../../models/roleModel";
+import { PermissionType } from "../../models/index";
 
 const usersRawData = {
   "usr1" : {
@@ -123,7 +125,13 @@ export const users: AuthUser[] = Object.entries(usersRawData).map(([id, user]) =
   email: `${user.userName}@example.com`,
   userName: user.userName,
   password: user.password,
-  roles: (Array.isArray(user.roles) ? user.roles : [user.roles]).map(role => getRole(role)),
+  roles: (Array.isArray(user.roles) ? user.roles : [user.roles]).map(role => {
+    const r = getRole(role);
+    return {
+      ...r,
+      permissions: r.permissions.map(p => p as PermissionType)
+    };
+  }),
   standardRate: user.standardRate,
   isConsultant: user.isConsultant,
   createdAt: new Date().toISOString(),
@@ -136,5 +144,5 @@ export const getUserById = (id: string): AuthUser | undefined => {
 };
 
 export const isAdmin = (user: AuthUser): boolean => {
-  return user.roles.some(role => role.name === "Admin");
+  return user.roles.some((role: Role) => role.name === "Admin");
 };

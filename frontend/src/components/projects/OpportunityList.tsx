@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Typography, 
   List,
@@ -10,8 +10,8 @@ import { OpportunityTracking } from '../../models';
 interface OpportunityListProps {
   opportunities: OpportunityTracking[];
   emptyMessage?: string;
-  onOpportunityDeleted?: (opportunityId: number) => void;
-  onOpportunityUpdated?: () => void;
+  onOpportunityDeleted?: (opportunityId: string) => void;
+  onOpportunityUpdated?: (updatedOpportunity?: OpportunityTracking) => void;
 }
 
 export const OpportunityList: React.FC<OpportunityListProps> = ({ 

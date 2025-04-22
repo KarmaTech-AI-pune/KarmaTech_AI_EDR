@@ -14,7 +14,7 @@ import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
 
 export const LoginScreen: React.FC = () => {
-    const [username, setUsername] = useState('');
+    const [email, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const { setScreenState, setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
@@ -24,7 +24,7 @@ export const LoginScreen: React.FC = () => {
         setError('');
         
         const credentials: Credentials = {
-            username,
+            email,
             password
         };
 
@@ -80,7 +80,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#1976d2'
                     }}
                 >
-                    NJSEI Project Management
+                    NJSEI ISO 9000 Forms Project Management Application
                 </Typography>
                 <Typography 
                     variant="h6" 
@@ -89,7 +89,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#666'
                     }}
                 >
-                    Version 1.2.1
+                    Version 1.5.1
                 </Typography>
             </Container>
 
@@ -108,10 +108,10 @@ export const LoginScreen: React.FC = () => {
                     <form onSubmit={handleLogin}>
                         <TextField
                             fullWidth
-                            label="Username"
+                            label="Email"
                             variant="outlined"
                             margin="normal"
-                            value={username}
+                            value={email}
                             onChange={(e) => setUsername(e.target.value)}
                             sx={{ 
                                 mb: 2,

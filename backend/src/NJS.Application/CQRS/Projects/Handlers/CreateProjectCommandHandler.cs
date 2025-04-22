@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿﻿using MediatR;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
@@ -27,25 +27,34 @@ namespace NJS.Application.CQRS.Projects.Handlers
             {
                 Name = dto.Name,
                 ClientName = dto.ClientName,
-                ClientSector = dto.ClientSector,
-                Sector = dto.Sector,
+                ProjectNo = dto.ProjectNo,
+                TypeOfClient = dto.TypeOfClient,
+				ProjectManagerId = dto.ProjectManagerId,
+				SeniorProjectManagerId = dto.SeniorProjectManagerId,
+				RegionalManagerId = dto.RegionalManagerId,
+                Office=dto.Office,
+				Region = dto.Region,
+                TypeOfJob = dto.TypeOfJob,
+				Sector = dto.Sector,
+                FeeType = dto.FeeType,
                 EstimatedCost = dto.EstimatedCost,
+                Budget=dto.Budget,
                 CapitalValue = dto.CapitalValue,
-                StartDate = dto.StartDate,
+                Priority = dto.Priority,
+				Currency = dto.Currency,
+				StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 Status = ProjectStatus.Opportunity, // Default status for new projects
                 Progress = 0, // Initial progress
                 DurationInMonths = dto.DurationInMonths,
                 FundingStream = dto.FundingStream,
-                ContractType = dto.ContractType ?? "Standard", // Default if not provided
-                Currency = dto.Currency,
-                ProjectManagerId = dto.ProjectManagerId,
-                RegionalManagerId = dto.RegionalManagerId,
-                SeniorProjectManagerId = dto.SeniorProjectManagerId,
+                ContractType = dto.ContractType,               
                 CreatedAt = DateTime.UtcNow,
                 LastModifiedAt = DateTime.UtcNow,
                 CreatedBy = dto.ProjectManagerId, // Using Project Manager as creator
-                LastModifiedBy = dto.ProjectManagerId
+                LastModifiedBy = dto.ProjectManagerId,
+                LetterOfAcceptance = dto.LetterOfAcceptance,
+                OpportunityTrackingId = dto.OpportunityTrackingId == 0 ? null : dto.OpportunityTrackingId,
             };
 
             // Calculate duration in months if not provided and dates are available

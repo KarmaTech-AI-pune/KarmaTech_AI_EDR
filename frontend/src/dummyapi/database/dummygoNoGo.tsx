@@ -1,4 +1,4 @@
-import { GoNoGoDecision, GoNoGoStatus } from "../../models"
+import { GoNoGoDecision, GoNoGoStatus, TypeOfBid } from "../../models"
 
 // Raw Go/No-Go data
 const goNoGoRawData = {
@@ -114,8 +114,8 @@ const goNoGoRawData = {
 
 // Transform into typed array
 export const goNoGoDecisions: GoNoGoDecision[] = Object.values(goNoGoRawData).map(decision => ({
-  projectId: decision.projectId,
-  bidType: decision.bidType,
+  projectId: Number(decision.projectId),
+  bidType: decision.bidType === "Lumpsum" ? TypeOfBid.Lumpsum : TypeOfBid.ItemRate,
   sector: decision.sector,
   tenderFee: decision.tenderFee,
   emdAmount: decision.emdAmount,
@@ -151,12 +151,15 @@ export const goNoGoDecisions: GoNoGoDecision[] = Object.values(goNoGoRawData).ma
   completedDate: decision.completedDate,
   completedBy: decision.completedBy,
   createdAt: decision.completedDate,
-  createdBy: decision.completedBy
+  createdBy: decision.completedBy,
+  bdHead: "",
+  office: "",
+  opportunityId: null
 }));
 
 // Utility functions
 export const getGoNoGoByProjectId = (projectId: string): GoNoGoDecision | undefined => {
-  return goNoGoDecisions.find(decision => decision.projectId === projectId);
+  return goNoGoDecisions.find(decision => decision.projectId?.toString() === projectId);
 };
 
 export const getGoNoGoByStatus = (status: GoNoGoStatus): GoNoGoDecision[] => {

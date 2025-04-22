@@ -1,0 +1,119 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  DOTNET_VERSION: '7.0.x'
+  SOLUTION_PATH: './backend/NJS_backend.sln'
+  PROJECT_PATH: './backend/src/NJSAPI/NJSAPI.csproj'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
+    
+    - name: Build
+      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+    
+    - name: Test
+      run: dotnet test ${{ env.SOLUTION_PATH }} --no-build --verbosity normal
+      
+    - name: Publish
+      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ./publish
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-artifact
+        path: ./publish
+
+  database:
+    needs: build
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Install EF Tool
+      run: dotnet tool install --global dotnet-ef
+    
+    - name: Generate SQL Script
+      run: |
+        cd backend/src/NJSAPI
+        dotnet ef migrations script --output ./migrations.sql --idempotent
+      env:
+        ConnectionStrings__DefaultConnection: ${{ secrets.SQL_CONNECTION_STRING }}
+    
+    - name: Upload SQL Script
+      uses: actions/upload-artifact@v3
+      with:
+        name: sql-scripts
+        path: backend/src/NJSAPI/migrations.sql
+
+  deploy:
+    needs: [build, database]
+    runs-on: windows-latest
+    
+    steps:
+    - name: Download app artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: app-artifact
+        path: ./publish
+    
+    - name: Download SQL Scripts
+      uses: actions/download-artifact@v3
+      with:
+        name: sql-scripts
+        path: ./sql
+    
+    - name: Deploy to IIS
+      shell: powershell
+      run: |
+        $session = New-PSSession -ComputerName ${{ secrets.SERVER_HOST }} -Credential (New-Object PSCredential(${{ secrets.DEPLOY_USERNAME }}, (ConvertTo-SecureString ${{ secrets.DEPLOY_PASSWORD }} -AsPlainText -Force)))
+        
+        # Stop the application pool
+        Invoke-Command -Session $session -ScriptBlock {
+          Import-Module WebAdministration
+          Stop-WebAppPool -Name "NJSProjectManagementApp"
+        }
+        
+        # Copy files
+        Copy-Item -Path "./publish/*" -Destination "\\${{ secrets.SERVER_HOST }}\c$\inetpub\wwwroot\NJSProjectManagementApp" -ToSession $session -Recurse -Force
+        
+        # Apply database migrations
+        Invoke-Command -Session $session -ScriptBlock {
+          $env:ConnectionString = "${{ secrets.SQL_CONNECTION_STRING }}"
+          # Backup database
+          Invoke-Sqlcmd -Query "BACKUP DATABASE [NJSProjectManagement] TO DISK='C:\Backups\NJSProjectManagement_$(Get-Date -Format 'yyyyMMddHHmmss').bak'"
+          # Apply migrations
+          Invoke-Sqlcmd -InputFile "C:\inetpub\wwwroot\NJSProjectManagementApp\sql\migrations.sql" -ConnectionString $env:ConnectionString
+        }
+        
+        # Start the application pool
+        Invoke-Command -Session $session -ScriptBlock {
+          Start-WebAppPool -Name "NJSProjectManagementApp"
+        }
+        
+        Remove-PSSession $session
+      env:
+        ASPNETCORE_ENVIRONMENT: Production

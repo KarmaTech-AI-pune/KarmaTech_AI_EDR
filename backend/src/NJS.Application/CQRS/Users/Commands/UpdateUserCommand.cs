@@ -13,6 +13,6 @@ namespace NJS.Application.CQRS.Users.Commands
         public decimal StandardRate { get; set; }
         public bool IsConsultant { get; set; }
         public List<RoleDto> Roles { get; set; } = [];
-        public string Avatar { get; set; }
+        public string? Avatar { get; set; }
     }
 }

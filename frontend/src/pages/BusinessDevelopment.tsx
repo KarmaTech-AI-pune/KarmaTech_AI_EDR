@@ -19,10 +19,9 @@ import { authApi } from '../services/authApi';
 import { UserWithRole } from '../types';
 import BusinessDevelopmentCharts from '../components/dashboard/BusinessDevelopmentCharts';
 
-import { PermissionType } from '../models';
+import { PermissionType, OpportunityTracking } from '../models';
 import { opportunityApi } from '../services/opportunityApi';
 import { HistoryLoggingService } from '../services/historyLoggingService';
-import { OpportunityTracking } from '../models/opportunityTrackingModel';
 
 const NAVBAR_HEIGHT = '64px';
 
@@ -52,14 +51,14 @@ export const BusinessDevelopment: React.FC = () => {
       let response: OpportunityTracking[] = [];
       
       if (currentUser.roles.some(role => role.name === "Business Development Manager")) {
-        response = await opportunityApi.getByUserId(currentUser.id);
+        response = (await opportunityApi.getByUserId(currentUser.id)) as OpportunityTracking[];
       } else if (currentUser.roles.some(role => role.name ===  "Regional Manager")) {
-        response = await opportunityApi.getByReviewManagerId(currentUser.id);
+        response = (await opportunityApi.getByReviewManagerId(currentUser.id)) as OpportunityTracking[];
       }  
       else if (currentUser.roles.some(role => role.name ===  "RegionalDirector")) {
-        response = await opportunityApi.getByApprovalManagerId(currentUser.id);
+        response = (await opportunityApi.getByApprovalManagerId(currentUser.id)) as OpportunityTracking[];
       } else {
-        response = await opportunityApi.getAll();
+        response = (await opportunityApi.getAll()) as OpportunityTracking[];
       }
       
       console.log('Fetched Opportunities:', response);
@@ -75,14 +74,14 @@ export const BusinessDevelopment: React.FC = () => {
   const initialOpportunityData: Partial<OpportunityTracking> = {
     client: '',
     status: 'Bid Under Preparation',
-    projectId: 0,
+    id: undefined,
     stage: 'A',
     strategicRanking: 'M',
     bidManagerId: '',
     operation: '',
     workName: '',
     clientSector: '',
-    likelyStartDate: new Date().toISOString().split('T')[0],
+    likelyStartDate: undefined,
     currency: 'INR',
     capitalValue: 0,
     durationOfProject: 0,
@@ -103,12 +102,25 @@ export const BusinessDevelopment: React.FC = () => {
         throw new Error('User not authenticated');
       }
 
+      // Construct a valid OpportunityHistory object
+      const currentHistory = {
+        id: 0, // Provide a default value
+        opportunityId: 0, // Provide a default value
+        action: 'Created', // Provide a default value
+        status: opportunityData.status || '', // Use the status from the form
+        statusId: 1, // Provide a default value
+        assignedToId: currentUser.id, // Provide a default value
+        date: new Date().toISOString(), // Provide a default value
+        description: 'Opportunity Created', // Provide a default value
+      };
+
       const submissionData = {
         ...opportunityData,
         createdBy: currentUser.name,
         createdAt: new Date().toISOString(),
         updatedBy: currentUser.name,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        currentHistory: currentHistory, // Assign the constructed OpportunityHistory object
       };
 
       const createdOpportunity = await opportunityApi.create(submissionData);
@@ -325,12 +337,12 @@ export const BusinessDevelopment: React.FC = () => {
           />
         </Box>
 
-        <OpportunityList
-          opportunities={currentOpportunities}
-          emptyMessage="No business development opportunities found"
-          onOpportunityDeleted={() => {}}
-          onOpportunityUpdated={() => {}}
-        />
+<OpportunityList
+  opportunities={currentOpportunities}
+  emptyMessage="No business development opportunities found"
+  onOpportunityDeleted={fetchOpportunities}
+  onOpportunityUpdated={fetchOpportunities}
+/>
 
         <Box sx={{ 
           display: 'flex', 

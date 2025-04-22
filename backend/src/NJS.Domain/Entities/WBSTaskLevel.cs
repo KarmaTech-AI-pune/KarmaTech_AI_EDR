@@ -1,9 +1,2 @@
-namespace NJS.Domain.Entities
-{
-    public enum WBSTaskLevel
-    {
-        Level1 = 1,
-        Level2 = 2,
-        Level3 = 3
-    }
-}
+// This file has been removed to resolve the Swagger schema conflict.
+// Use NJS.Domain.Enums.WBSTaskLevel instead.

@@ -1,10 +1,10 @@
-import { workflowData } from './database/dummyOpporunityWorkflow';
-import type { WorkflowEntry } from '../models';
-import { opportunityApi } from './opportunityApi';
+import workflowData from './database/dummyOpporunityWorkflow';
+import type { WorkflowEntry } from '../models/workflowEntryModel';
 import { getOpportunityById } from './database/dummyopportunityTracking';
+import { OpportunityTracking } from '../models';
 
 // Mutable array to store workflow data
-let mutableWorkflowData: WorkflowEntry[] = [...workflowData];
+const mutableWorkflowData: WorkflowEntry[] = [...workflowData];
 
 // Create new workflow entry
 export const createWorkflow = async (data: Omit<WorkflowEntry, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -20,12 +20,12 @@ export const createWorkflow = async (data: Omit<WorkflowEntry, 'id' | 'createdAt
 };
 
 // Get workflow entry by opportunity ID
-export const getWorkflowByOpportunityId = async (opportunityId: number) => {
-    return mutableWorkflowData.find(w => w.opportunityId === opportunityId);
+export const getWorkflowByOpportunityId = async (opportunityId: string | number) => {
+    return mutableWorkflowData.find(w => w.opportunityId === Number(opportunityId));
 };
 
 // Update workflow entry and opportunity atomically
-export const updateWorkflow = async (opportunityId: number, workflowId: string, opportunityData?: any) => {
+export const updateWorkflow = async (opportunityId: number, workflowId: string, opportunityData?: Partial<OpportunityTracking>) => {
     try {
         // First update the workflow
         const index = mutableWorkflowData.findIndex(w => w.opportunityId === opportunityId);
@@ -49,14 +49,17 @@ export const updateWorkflow = async (opportunityId: number, workflowId: string, 
 
         // Then update the opportunity if opportunityData is provided
         if (opportunityData) {
-            const opportunity = await opportunityApi.getById(opportunityId);
-            if (opportunity) {
-                await opportunityApi.update(opportunityId,{
-                    ...opportunity,
-                    ...opportunityData,
-                    workflowId: workflowId // Ensure workflow ID is updated in opportunity as well
-                });
-            }
+            
+                updatedWorkflow.opportunityId
+           
+         // const opportunity = await opportunityApi.getById(opportunityId);
+         /* if (opportunity) {
+            await opportunityApi.update(opportunityId, {
+              ...opportunity,
+              ...opportunityData,
+              workflowId: workflowId, // Ensure workflow ID is updated in opportunity as well
+            });
+          }*/
         }
 
         return updatedWorkflow;

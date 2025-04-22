@@ -20,7 +20,6 @@ import {
   CardContent,
   Chip,
   Button,
-  TextField
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -42,10 +41,12 @@ import { OpportunityForm } from '../components/forms/OpportunityForm';
 import BidPreparationForm from '../components/forms/BidPreparationForm';
 import GoNoGoForm from "../components/forms/GoNoGoForm";
 import { BDChips } from '../components/common/BDChips';
-import { opportunityApi } from '../services/opportunityApi';
+import { opportunityApi } from '../dummyapi/opportunityApi';
 import { HistoryWidget } from '../components/widgets/HistoryWidget';
 import { getOpportunityHistoriesByOpportunityId } from '../dummyapi/dummyOpportunityHistoryApi';
 import { OpportunityHistory } from '../models';
+// import { getWorkflowStatusById } from '../dummyapi/database/dummyOpporunityWorkflow';
+
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
 const NAVBAR_HEIGHT = '64px';
@@ -90,9 +91,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const [histories, setHistories] = useState<OpportunityHistory[]>([]);
   const [refreshed, setRefreshed] = useState(false);
-  const [goNoGoDecisionStatus, setGoNoGoDecisionStatus] = useState<string | null>(null);
-  const [goNoGoVersionNumber, setGoNoGoVersionNumber] = useState<number | null>(null);
   const context = useContext(projectManagementAppContext);
+  const { goNoGoDecisionStatus, goNoGoVersionNumber, setGoNoGoDecisionStatus, setGoNoGoVersionNumber } = context || {};
   const opportunity = context?.selectedProject as OpportunityTracking;
 
   useEffect(() => {
@@ -100,7 +100,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
       try {
         setIsLoading(true);
         if (opportunity) {
-          const historyData = await getOpportunityHistoriesByOpportunityId(opportunity.id?.toString() || '0');
+          const historyData = await getOpportunityHistoriesByOpportunityId(opportunity.id ?? 0);
           setHistories(historyData);
           // Reset the refresh trigger after data is fetched
           setRefreshed(false);
@@ -122,7 +122,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
         const updatedOpportunity = await opportunityApi.getById(opportunity.id || 0);
         if (updatedOpportunity) {
           // Use type assertion to match expected type
-          context.setSelectedProject(updatedOpportunity as any);
+          context.setSelectedProject(updatedOpportunity as OpportunityTracking); // Line 124
           // Trigger refresh after opportunity is updated
           setRefreshed(true);
         }
@@ -142,6 +142,13 @@ export const BusinessDevelopmentDetails: React.FC = () => {
     if (context?.setScreenState) {
       context.setScreenState("Bid Preparation Form");
     }
+    
+    // Log the current state for debugging
+    console.log("Bid Preparation Form clicked", {
+      goNoGoDecisionStatus,
+      goNoGoVersionNumber,
+      isEnabled: goNoGoDecisionStatus === "GO" && goNoGoVersionNumber === 3
+    });
   };
 
   const handleSectionClick = (section: string) => {
@@ -208,8 +215,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
 
   const handleFormSubmit = async (data: OpportunityTracking) => {
     try {
-      // Use type assertion to match expected type
-      await opportunityApi.create(data as any);
+      // Use the update method with the opportunity ID
+      await opportunityApi.update(opportunity.id || 0, data as Partial<OpportunityTracking>);
       // Trigger refresh after form submission
       setRefreshed(true);
       handleOpportunityUpdate();
@@ -218,7 +225,32 @@ export const BusinessDevelopmentDetails: React.FC = () => {
     }
   };
 
-  const isOpportunityApproved = opportunity?.currentHistory?.statusId === 6;
+  // const getWorkflowColor = (workflowId: number) => {
+  //   const status = getWorkflowStatusById(workflowId)?.status;
+
+  //   if (status) {
+  //     localStorage.setItem('workflowStatus', status);
+  //   }
+  //   switch (status) {
+  //     case "Initial":
+  //       return 'default';
+  //     case "Sent for Review":
+  //       return 'info';
+  //     case "Review Changes":
+  //       return 'warning';
+  //     case "Sent for Approval":
+  //       return 'primary';
+  //     case "Approval Changes":
+  //       return 'warning';
+  //     case "Approved":
+  //       return 'success';
+  //     default:
+  //       return 'default';
+  //   }
+  // };
+  const isOpportunityApproved = Array.isArray(opportunity?.currentHistory)
+    ? opportunity?.currentHistory.some((history) => history.statusId === 6)
+    : opportunity?.currentHistory?.statusId === 6;
 
   const formSections = [
     {
@@ -293,8 +325,10 @@ export const BusinessDevelopmentDetails: React.FC = () => {
             return (
               <GoNoGoForm 
                 onDecisionStatusChange={(status, versionNumber) => {
-                  setGoNoGoDecisionStatus(status);
-                  setGoNoGoVersionNumber(versionNumber);
+                  if (setGoNoGoDecisionStatus && setGoNoGoVersionNumber) {
+                    setGoNoGoDecisionStatus(status);
+                    setGoNoGoVersionNumber(versionNumber);
+                  }
                 }}
               />
             );
@@ -394,7 +428,22 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                   <InfoItem label="Client Sector" value={opportunity.clientSector} />
                   <InfoItem label="Operation" value={opportunity.operation} />
                   <InfoItem label="Status" value={opportunity.status} />
-                </InfoCard>
+               
+                {/* <Chip
+                  label={`Workflow: ${opportunity.currentHistory
+                      ? Array.isArray(opportunity.currentHistory)
+                        ? getWorkflowStatusById(opportunity.currentHistory[0]?.statusId)?.status || 'Not specified'
+                        : getWorkflowStatusById(opportunity.currentHistory.statusId)?.status || 'Not specified'
+                      : 'Not specified'
+                    }`}
+                  color={
+                    Array.isArray(opportunity.currentHistory)
+                      ? getWorkflowColor(opportunity.currentHistory[0]?.statusId || 0)
+                      : getWorkflowColor(opportunity.currentHistory?.statusId || 0)
+                  }
+                  sx={{ mb: 1 }}
+                /> */}
+                 </InfoCard>
               </Grid>
 
               {/* Project Details */}

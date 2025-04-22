@@ -16,7 +16,9 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { AuthUser, Role, RoleDefinition } from '../../models';
+import { Role } from '../../models/roleModel';
+import { AuthUser } from '../../models/userModel';
+import { RoleDefinition } from '../../models/roleDefinitionModel';
 import * as usersApi from '../../services/userApi';
 import UserDialog from '../dialogbox/adminpage/UserDialog';
 import { useRoles } from '../../hooks/useRoles';
@@ -31,6 +33,9 @@ const UsersManagement = () => {
     email: '',
     password: '',
     roles: [] as Role[],
+    standardRate: 0,
+    isConsultant: false,
+    createdAt: new Date().toISOString(),
   });
 
   useEffect(() => {
@@ -39,7 +44,7 @@ const UsersManagement = () => {
 
   const loadUsers = async () => {
     try {
-      const fetchedUsers = await usersApi.getAllUsers();
+      const fetchedUsers = await usersApi.getAllUsers();      
       setUsers(fetchedUsers);
       console.log(fetchedUsers)
     } catch (error) {
@@ -56,6 +61,9 @@ const UsersManagement = () => {
       email: '',
       password: '',
       roles: [],
+      standardRate: 0,
+      isConsultant: false,
+      createdAt: new Date().toISOString(),
     });
   };
 
@@ -74,6 +82,9 @@ const UsersManagement = () => {
         email: userDetails.email,
         password: '', // Don't populate password for security
         roles: userDetails.roles,
+        standardRate: userDetails.standardRate,
+        isConsultant: userDetails.isConsultant,
+        createdAt: userDetails.createdAt,
       });
       setOpen(true);
     } catch (error) {
@@ -101,7 +112,7 @@ const UsersManagement = () => {
           ...formData,
           password: formData.password || undefined,
         });
-      } else {
+      } else {        
         if (!formData.userName || !formData.password || !formData.email || !formData.name) {
           alert('Please fill in all required fields');
           return;
@@ -115,11 +126,19 @@ const UsersManagement = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;  // `checked` for checkbox
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: checked,  // Update state with checked value (true/false)
     }));
   };
 
@@ -129,8 +148,10 @@ const UsersManagement = () => {
     const selectedValues = event.target.value as string[];
     // Map selected role names to actual Role objects from the API
     const selectedRoles = selectedValues
-      .map(value => availableRoles.find((role: RoleDefinition) => role.name === value))
-      .filter((role): role is RoleDefinition => role !== undefined);
+      .map(value => availableRoles.find(role => role.name === value))
+      .filter((role): role is RoleDefinition | Role => role !== undefined);
+
+
     setFormData(prev => ({
       ...prev,
       roles: selectedRoles,
@@ -147,14 +168,16 @@ const UsersManagement = () => {
       </Box>
 
       <TableContainer component={Paper} sx={{ mb: 4 }}>
-        <Table>
+        <Table sx={{ '& td, th': { padding: '4px 8px', fontSize: '0.875rem' } }}>
           <TableHead>
             <TableRow>
-              <TableCell>Username</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Roles</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Username</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Standard Rate</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Is Consultant</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Roles</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -163,8 +186,10 @@ const UsersManagement = () => {
                 <TableCell>{user.userName}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
+                <TableCell>{user.standardRate}</TableCell>
+                <TableCell>{user.isConsultant ? 'Yes' : 'No'}</TableCell>
                 <TableCell>
-                  {user.roles.map((role, index) => (
+                  {user.roles.map((role: Role, index) => (
                     <Chip
                       key={index}
                       label={role.name}
@@ -196,6 +221,7 @@ const UsersManagement = () => {
         formData={formData}
         handleInputChange={handleInputChange}
         handleRoleChange={handleRoleChange}
+        handleCheckboxChange={handleCheckboxChange}
       />
     </Box>
   );

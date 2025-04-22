@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import { ResourceManagement } from './ResourceManagement';
+import { AlertsPanel } from './AlertsPanel'; // Import the new component
 import { BusinessDevelopment, ProjectManagement } from '../pages';
 import { ReportsList } from './ReportsList';
 import { NotificationCenter } from './navigation/NotificationCenter';
@@ -14,7 +15,7 @@ export const Dashboard = () => {
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
-    if (context?.currentUser?.roleDetails.permissions.includes(PermissionType.VIEW_PROJECT)) {
+    if (context?.currentUser?.roleDetails?.permissions.includes(PermissionType.VIEW_PROJECT)) {
       setProjectList(<ProjectManagement />);
     } else {
       setProjectList(<BusinessDevelopment />);
@@ -61,13 +62,18 @@ export const Dashboard = () => {
             }
           }}
         >
-          {/* Left Column - Projects Only */}
+          {/* Left Column - Alerts and Projects */}
           <Box
             sx={{
+              display: 'flex',        // Use flexbox for column layout
+              flexDirection: 'column', // Stack items vertically
+              gap: 3,                 // Add gap between items
               width: '100%',
               overflow: 'hidden'
             }}
           >
+            {/* Add the AlertsPanel here */}
+            <AlertsPanel /> 
             {projectList && projectList}
           </Box>
 
@@ -80,6 +86,7 @@ export const Dashboard = () => {
               width: '100%'
             }}
           >
+            {/* AlertsPanel was moved to the left column */}
             <Box
               sx={{
                 width: '100%',

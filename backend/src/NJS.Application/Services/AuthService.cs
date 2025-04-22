@@ -33,11 +33,11 @@ namespace NJS.Application.Services
             _permissionRepository = permissionRepository;
         }
 
-        public async Task<(bool success, User user, string token)> ValidateUserAsync(string username, string password)
+        public async Task<(bool success, User user, string token)> ValidateUserAsync(string email, string password)
         {
             try
             {
-                var user = await _userManager.FindByNameAsync(username);
+                var user = await _userManager.FindByEmailAsync(email);
                 if (user == null)
                 {
                     return (false, null, null);

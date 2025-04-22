@@ -1,108 +1,58 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  CircularProgress, 
-  TextField, 
+import {
+  Box,
+  Typography,
+  Paper,
+  CircularProgress,
   Container,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails
+  Snackbar,
+  Alert
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
+import LoadingButton from '../common/LoadingButton'; // Corrected path
 import { projectManagementAppContext } from '../../App';
-import { projectManagementAppContextType } from '../../types';
-import { WBSTaskResourceAllocation } from "../../models";;
-import { WBSRowData } from '../../types/wbs';
+import { projectManagementAppContextType, JobStartFormData } from '../../types';
 import { FormWrapper } from './FormWrapper';
-
-interface TaskAllocation {
-  taskId: string;
-  title: string;
-  rate: number;
-  hours: number;
-  cost: number;
-}
-
-interface EmployeeAllocation {
-  id: string;
-  name: string;
-  is_consultant: boolean;
-  allocations: TaskAllocation[];
-  totalHours: number;
-  totalCost: number;
-  remarks: string;
-}
-
-interface ExpenseEntry {
-  number: string;
-  remarks: string;
-}
-
-interface OutsideAgencyEntry {
-  description: string;
-  rate: string;
-  units: string;
-  remarks: string;
-}
-
-interface ProjectSpecificEntry {
-  name: string;
-  number: string;
-  remarks: string;
-}
-
-interface TimeContingencyEntry {
-  rate: string;
-  units: string;
-  remarks: string;
-}
-
-interface ServiceTaxEntry {
-  percentage: string;
-}
-
-type ExpensesType = {
-  '2a': ExpenseEntry;
-  '2b': ExpenseEntry;
-  '3': ExpenseEntry;
-  '4': ExpenseEntry;
-  '5': ExpenseEntry;
-  '7': ExpenseEntry;
-}
-
-type OutsideAgencyType = {
-  'a': OutsideAgencyEntry;
-  'b': OutsideAgencyEntry;
-  'c': OutsideAgencyEntry;
-}
-
-type ProjectSpecificType = {
-  '6c': ProjectSpecificEntry;
-  '6d': ProjectSpecificEntry;
-  '6e': ProjectSpecificEntry;
-}
-
-const formatTitle = (title: string): string => {
-  return title
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-};
+import {
+  submitJobStartForm,
+  getJobStartFormByProjectId,
+  updateJobStartForm,
+  getWBSResourceData
+} from '../../services/jobStartFormApi';
+import {
+  EmployeeAllocation,
+  TimeContingencyEntry,
+  ExpensesType,
+  OutsideAgencyType,
+  ProjectSpecificType,
+      ExpenseEntry,
+      ServiceTaxEntry,
+      OutsideAgencyEntry,
+      ProjectSpecificEntry // Added missing import
+    } from '../../types/jobStartForm';
+import { formatTitle } from '../../utils/jobStartFormUtils';
+import {
+  textFieldStyle,
+  tableHeaderStyle,
+  tableCellStyle,
+  accordionStyle,
+  sectionStyle,
+  summaryRowStyle
+} from '../../utils/jobStartFormStyles';
+import TimeSection from './JobStartFormComponents/TimeSection';
+import ExpensesSection from './JobStartFormComponents/ExpensesSection';
+import SummarySection from './JobStartFormComponents/SummarySection';
 
 const JobStartForm: React.FC = () => {
   const context = useContext<projectManagementAppContextType | null>(projectManagementAppContext);
   const [employeeAllocations, setEmployeeAllocations] = useState<EmployeeAllocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [currentFormId, setCurrentFormId] = useState<number | string | null>(null);
 
   const [timeContingency, setTimeContingency] = useState<TimeContingencyEntry>({
     rate: '',
@@ -120,6 +70,7 @@ const JobStartForm: React.FC = () => {
       }
     });
   };
+
   const [expenses, setExpenses] = useState<ExpensesType>({
     '2a': { number: '10000', remarks: '' },
     '2b': { number: '10000', remarks: '' },
@@ -151,34 +102,27 @@ const JobStartForm: React.FC = () => {
     percentage: '15'
   });
 
+  // Effect for loading WBS and Resource data
   useEffect(() => {
-    const fetchAllocations = async () => {
-      if (!context?.selectedProject?.id) {
-        setError('No project selected');
-        setLoading(false);
-        return;
-      }
+    if (!context?.selectedProject?.id) return;
 
+    const fetchWBSResourceData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const [allocations, wbsTasks] = await Promise.all([
-          ResourceAPI.getResourceAllocations(context.selectedProject.id),
-          WBSStructureAPI.getProjectWBS(context.selectedProject.id)
-        ]);
+        const wbsResourceData = await getWBSResourceData(context.selectedProject?.id?.toString() || '');
 
         const employeeMap = new Map<string, EmployeeAllocation>();
 
-        allocations.forEach((allocation: WBSTaskResourceAllocation) => {
-          if (!allocation.employee) return;
-
-          const employeeId = allocation.employee.id;
+        // Process the resource allocations from the backend
+        wbsResourceData.resourceAllocations.forEach((allocation: any) => {
+          const employeeId = allocation.employeeId;
           if (!employeeMap.has(employeeId)) {
             employeeMap.set(employeeId, {
               id: employeeId,
-              name: allocation.employee.name,
-              is_consultant: allocation.employee.is_consultant,
+              name: allocation.employeeName,
+              is_consultant: allocation.isConsultant,
               allocations: [],
               totalHours: 0,
               totalCost: 0,
@@ -187,76 +131,144 @@ const JobStartForm: React.FC = () => {
           }
 
           const emp = employeeMap.get(employeeId)!;
-          const task = wbsTasks.find((t: WBSRowData) => t.id === allocation.wbs_task_id);
-          const taskCost = allocation.cost_rate * (allocation.total_hours || 0);
+          const taskCost = allocation.costRate * allocation.totalHours;
 
           emp.allocations.push({
-            taskId: allocation.wbs_task_id,
-            title: task?.title || `Task ${allocation.wbs_task_id}`,
-            rate: allocation.cost_rate,
-            hours: allocation.total_hours || 0,
+            taskId: allocation.taskId,
+            title: allocation.taskTitle || `Task ${allocation.taskId}`,
+            rate: allocation.costRate,
+            hours: allocation.totalHours,
             cost: taskCost
           });
-          emp.totalHours += allocation.total_hours || 0;
+          emp.totalHours += allocation.totalHours;
           emp.totalCost += taskCost;
         });
 
         setEmployeeAllocations(Array.from(employeeMap.values()));
+
       } catch (error) {
-        console.error('Error fetching allocations:', error);
-        setError('Failed to load allocation data');
+        console.error('Error fetching WBS resource data:', error);
+        setError('Failed to load WBS resource data. Please ensure you have submitted a WBS form for this project.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAllocations();
+    fetchWBSResourceData();
   }, [context?.selectedProject?.id]);
 
-  const calculateTotalCost = (employees: EmployeeAllocation[], isConsultant: boolean) => {
-    return employees
-      .filter(emp => emp.is_consultant === isConsultant)
-      .reduce((total, emp) => total + emp.totalCost, 0);
-  };
+  // Effect for loading existing Job Start Form data or falling back to local storage
+  useEffect(() => {
+    const loadFormData = async () => {
+      const projectId = context?.selectedProject?.id?.toString();
+      if (!projectId) return;
 
+      setLoading(true);
+      setIsUpdating(false);
+      setCurrentFormId(null);
+
+      try {
+        const responseArray = await getJobStartFormByProjectId(projectId);
+
+        if (responseArray && Array.isArray(responseArray) && responseArray.length > 0) {
+          const backendDto = responseArray[0];
+          console.log('Flat DTO loaded from backend:', backendDto);
+
+          setProjectFees(backendDto.projectFees?.toString() ?? '');
+          setServiceTax({ percentage: backendDto.serviceTaxPercentage?.toString() ?? '18' });
+
+          setIsUpdating(true);
+          setCurrentFormId(backendDto.formId);
+
+          setLoading(false);
+          return;
+        } else {
+           console.log('No existing form data DTO found on backend for this project.');
+        }
+
+      } catch (error) {
+        console.warn('Failed to fetch form data from backend, checking local storage.', error);
+      }
+
+      // Fallback to localStorage if backend fetch fails or returns no data
+      try {
+        const savedFormData = localStorage.getItem(`jobStartFormData_${projectId}`);
+        if (savedFormData) {
+          console.log('Loading form data from local storage.');
+          const parsedData = JSON.parse(savedFormData);
+
+          setEmployeeAllocations(parsedData.time.employeeAllocations);
+          setTimeContingency(parsedData.time.timeContingency);
+          setExpenses(parsedData.expenses.regularExpenses);
+          setSurveyWorks(parsedData.expenses.surveyWorks);
+          setOutsideAgency(parsedData.expenses.outsideAgency);
+          setProjectSpecific(parsedData.expenses.projectSpecific);
+          setProjectFees(parsedData.projectFees?.toString() ?? '');
+          setServiceTax({ percentage: parsedData.serviceTax.percentage?.toString() ?? '18' });
+
+          if (parsedData.formId) {
+            setIsUpdating(true);
+            setCurrentFormId(parsedData.formId);
+          } else {
+            setIsUpdating(false);
+            setCurrentFormId(null);
+          }
+        } else {
+          console.log('No form data found in local storage either. Starting fresh.');
+          setIsUpdating(false);
+          setCurrentFormId(null);
+        }
+      } catch (e) {
+        console.error("Error reading or parsing local storage data:", e);
+        setIsUpdating(false);
+        setCurrentFormId(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFormData();
+  }, [context?.selectedProject?.id]);
+
+  // Handler functions
   const handleRemarksChange = (employeeId: string, value: string) => {
-    setEmployeeAllocations(prevAllocations => 
-      prevAllocations.map(emp => 
+    setEmployeeAllocations((prevAllocations: EmployeeAllocation[]) =>
+      prevAllocations.map(emp =>
         emp.id === employeeId ? { ...emp, remarks: value } : emp
       )
     );
   };
 
   const handleTimeContingencyChange = (field: keyof TimeContingencyEntry, value: string) => {
-    setTimeContingency(prev => ({
+    setTimeContingency((prev: TimeContingencyEntry) => ({
       ...prev,
       [field]: value
     }));
   };
 
   const handleExpenseChange = (id: keyof ExpensesType, field: keyof ExpenseEntry, value: string) => {
-    setExpenses(prev => ({
+    setExpenses((prev: ExpensesType) => ({
       ...prev,
       [id]: { ...prev[id], [field]: value }
     }));
   };
 
   const handleSurveyWorksChange = (field: keyof ExpenseEntry, value: string) => {
-    setSurveyWorks(prev => ({
+    setSurveyWorks((prev: ExpenseEntry) => ({
       ...prev,
       [field]: value
     }));
   };
 
   const handleOutsideAgencyChange = (id: keyof OutsideAgencyType, field: keyof OutsideAgencyEntry, value: string) => {
-    setOutsideAgency(prev => ({
+    setOutsideAgency((prev: OutsideAgencyType) => ({
       ...prev,
       [id]: { ...prev[id], [field]: value }
     }));
   };
 
   const handleProjectSpecificChange = (id: keyof ProjectSpecificType, field: keyof ProjectSpecificEntry, value: string) => {
-    setProjectSpecific(prev => ({
+    setProjectSpecific((prev: ProjectSpecificType) => ({
       ...prev,
       [id]: { ...prev[id], [field]: value }
     }));
@@ -267,10 +279,17 @@ const JobStartForm: React.FC = () => {
   };
 
   const handleServiceTaxChange = (value: string) => {
-    setServiceTax(prev => ({
+    setServiceTax((prev: ServiceTaxEntry) => ({
       ...prev,
       percentage: value
     }));
+  };
+
+  // Calculation functions
+  const calculateTotalCost = (employees: EmployeeAllocation[], isConsultant: boolean) => {
+    return employees
+      .filter(emp => emp.is_consultant === isConsultant)
+      .reduce((total, emp) => total + emp.totalCost, 0);
   };
 
   const calculateTimeContingencyCost = () => {
@@ -295,17 +314,17 @@ const JobStartForm: React.FC = () => {
   const calculateExpensesTotal = () => {
     let total = 0;
     // Add up all expense entries
-    Object.values(expenses).forEach(entry => {
+    Object.values(expenses).forEach((entry: ExpenseEntry) => {
       total += Number(entry.number) || 0;
     });
     // Add survey works
     total += Number(surveyWorks.number) || 0;
     // Add up outside agency entries (rate * units)
-    Object.values(outsideAgency).forEach(entry => {
+    Object.values(outsideAgency).forEach((entry: OutsideAgencyEntry) => {
       total += calculateOutsideAgencyCost(entry);
     });
     // Add up project specific entries
-    Object.values(projectSpecific).forEach(entry => {
+    Object.values(projectSpecific).forEach((entry: ProjectSpecificEntry) => {
       total += Number(entry.number) || 0;
     });
     return total;
@@ -335,6 +354,80 @@ const JobStartForm: React.FC = () => {
     return fees + tax;
   };
 
+  const handleSubmit = async () => {
+    const projectId = context?.selectedProject?.id;
+    if (!projectId) {
+      setSnackbarMessage('No project selected. Cannot submit.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Collect all form data into the structure expected by the API
+      const formData: JobStartFormData = {
+        projectId: projectId,
+        formId: isUpdating ? Number(currentFormId) : undefined,
+        time: {
+          employeeAllocations,
+          timeContingency,
+          totalTimeCost: calculateTotalTimeCost()
+        },
+        expenses: {
+          regularExpenses: expenses,
+          surveyWorks,
+          outsideAgency,
+          projectSpecific,
+          totalExpenses: calculateExpensesTotal()
+        },
+        grandTotal: calculateGrandTotal(),
+        projectFees: Number(projectFees),
+        serviceTax: {
+          percentage: Number(serviceTax.percentage),
+          amount: calculateServiceTax()
+        },
+        totalProjectFees: calculateTotalProjectFees(),
+        profit: calculateProfit()
+      };
+
+      let response;
+      if (isUpdating && currentFormId) {
+        console.log(`Attempting to update form ID: ${currentFormId} for project: ${projectId}`);
+        response = await updateJobStartForm(projectId, currentFormId, formData);
+        setSnackbarMessage('Job Start Form updated successfully');
+      } else {
+        console.log(`Attempting to create new form for project: ${projectId}`);
+        response = await submitJobStartForm(projectId, formData);
+        if (response && response.formId) {
+          setIsUpdating(true);
+          setCurrentFormId(response.formId);
+          console.log(`New form created with ID: ${response.formId}. Switched to update mode.`);
+        }
+        setSnackbarMessage('Job Start Form submitted successfully');
+      }
+
+      // Clear local storage on successful submission/update
+      localStorage.removeItem(`jobStartFormData_${projectId}`);
+      console.log('Cleared local storage for project:', projectId);
+
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+
+    } catch (error) {
+      console.error('Error submitting/updating form:', error);
+      setSnackbarMessage(`Failed to ${isUpdating ? 'update' : 'submit'} Job Start Form`);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
   if (loading) {
     return (
       <FormWrapper>
@@ -351,117 +444,33 @@ const JobStartForm: React.FC = () => {
         <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
           <Typography color="error">{error}</Typography>
         </Paper>
-        </FormWrapper>
-      );
-  }
-
-  const textFieldStyle = {
-    '& .MuiOutlinedInput-root': { 
-      borderRadius: 1,
-      backgroundColor: '#fff',
-      '&:hover fieldset': {
-        borderColor: '#1976d2',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#1976d2',
-      }
-    }
-  };
-
-  const tableHeaderStyle = {
-    '& .MuiTableCell-head': {
-      fontWeight: 600,
-      backgroundColor: '#f5f5f5',
-      borderBottom: '2px solid #e0e0e0'
-    }
-  };
-
-  const tableCellStyle = {
-    borderBottom: '1px solid #e0e0e0',
-    padding: '12px 16px'
-  };
-
-  const accordionStyle = {
-    '& .MuiAccordionSummary-root': {
-      backgroundColor: '#f8f9fa',
-      borderLeft: '3px solid #1976d2',
-      minHeight: '48px',
-      '&.Mui-expanded': {
-        borderBottom: '1px solid #e0e0e0'
-      }
-    },
-    '& .MuiAccordionSummary-content': {
-      margin: '12px 0',
-      '&.Mui-expanded': {
-        margin: '12px 0'
-      }
-    },
-    '& .MuiAccordionDetails-root': {
-      padding: 0,
-      backgroundColor: '#fff'
-    }
-  };
-
-  const sectionStyle = {
-    border: '1px solid #e0e0e0',
-    borderRadius: '4px',
-    overflow: 'hidden',
-    '& .MuiAccordion-root': {
-      borderRadius: '4px 4px 0 0 !important',
-      borderBottom: 'none'
-    },
-    '& .MuiTableContainer-root': {
-      borderRadius: '0 0 4px 4px',
-      borderTop: 'none'
-    }
-  };
-
-  const summaryRowStyle = {
-    bgcolor: '#f8f9fa',
-    '& .MuiTableCell-root': {
-      fontWeight: 'bold'
-    }
-  };
-
-  if (loading) {
-  return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
-        <Typography color="error">{error}</Typography>
-      </Paper>
+      </FormWrapper>
     );
   }
 
   const formContent = (
     <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Box sx={{ 
-        width: '100%', 
+      <Box sx={{
+        width: '100%',
         maxHeight: 'calc(100vh - 200px)',
         overflowY: 'auto',
         overflowX: 'hidden',
         pr: 1,
         pb: 4
       }}>
-        <Paper 
+        <Paper
           elevation={0}
-          sx={{ 
+          sx={{
             p: 3,
             border: '1px solid #e0e0e0',
             borderRadius: 1
           }}
         >
-          <Typography 
-            variant="h5" 
-            gutterBottom 
-            sx={{ 
-              color: '#1976d2', 
+          <Typography
+            variant="h5"
+            gutterBottom
+            sx={{
+              color: '#1976d2',
               fontWeight: 500,
               mb: 3
             }}
@@ -470,538 +479,78 @@ const JobStartForm: React.FC = () => {
           </Typography>
 
           {/* Time Section */}
-          <Box sx={{ ...sectionStyle, mb: 3 }}>
-            <Accordion 
-              expanded={expanded.includes('time')}
-              onChange={() => handleAccordionChange('time')}
-              elevation={0}
-              sx={accordionStyle}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography sx={{ fontWeight: 'bold' }}>1.0 TIME</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow sx={tableHeaderStyle}>
-                        <TableCell sx={tableCellStyle}>Sr. No.</TableCell>
-                        <TableCell sx={tableCellStyle}>Description</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Rate (Rs)</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Units</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Budgeted Cost (Rs.)</TableCell>
-                        <TableCell sx={tableCellStyle}>Remarks</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {/* Employee Personnel Section */}
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', pl: 3 }}>1a</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Employee Personnel</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell align="right">{calculateTotalCost(employeeAllocations, false)}</TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-
-                    {/* Employee Allocations */}
-                    {employeeAllocations
-                      .filter(emp => !emp.is_consultant)
-                      .map((emp) => (
-                        <React.Fragment key={emp.id}>
-                          <TableRow>
-                            <TableCell></TableCell>
-                            <TableCell sx={{ pl: 4 }}>{emp.name}</TableCell>
-                            <TableCell align="right">
-                              {emp.allocations.length === 1 ? emp.allocations[0].rate : ''}
-                            </TableCell>
-                            <TableCell align="right">
-                              {emp.allocations.length === 1 ? emp.allocations[0].hours : emp.totalHours}
-                            </TableCell>
-                            <TableCell align="right">{emp.totalCost}</TableCell>
-                            <TableCell>
-                              <TextField
-                                size="small"
-                                fullWidth
-                                value={emp.remarks}
-                                onChange={(e) => handleRemarksChange(emp.id, e.target.value)}
-                                sx={textFieldStyle}
-                              />
-                            </TableCell>
-                          </TableRow>
-                          {emp.allocations.length > 1 && emp.allocations.map((alloc) => (
-                            <TableRow key={`${emp.id}-${alloc.taskId}`}>
-                              <TableCell></TableCell>
-                              <TableCell sx={{ pl: 4 }}>{formatTitle(alloc.title)}</TableCell>
-                              <TableCell align="right">{alloc.rate}</TableCell>
-                              <TableCell align="right">{alloc.hours}</TableCell>
-                              <TableCell align="right">{alloc.cost}</TableCell>
-                              <TableCell></TableCell>
-                            </TableRow>
-                          ))}
-                        </React.Fragment>
-                      ))}
-
-                    {/* Contract Employee Section */}
-                    <TableRow>
-                      <TableCell></TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', pl: 3 }}>Contract Employee</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell align="right">{calculateTotalCost(employeeAllocations, true)}</TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-
-                    {/* Contract Employee Allocations */}
-                    {employeeAllocations
-                      .filter(emp => emp.is_consultant)
-                      .map((emp) => (
-                        <React.Fragment key={emp.id}>
-                          <TableRow>
-                            <TableCell></TableCell>
-                            <TableCell sx={{ pl: 4 }}>{emp.name}</TableCell>
-                            <TableCell align="right">
-                              {emp.allocations.length === 1 ? emp.allocations[0].rate : ''}
-                            </TableCell>
-                            <TableCell align="right">
-                              {emp.allocations.length === 1 ? emp.allocations[0].hours : emp.totalHours}
-                            </TableCell>
-                            <TableCell align="right">{emp.totalCost}</TableCell>
-                            <TableCell>
-                              <TextField
-                                size="small"
-                                fullWidth
-                                value={emp.remarks}
-                                onChange={(e) => handleRemarksChange(emp.id, e.target.value)}
-                                sx={textFieldStyle}
-                              />
-                            </TableCell>
-                          </TableRow>
-                          {emp.allocations.length > 1 && emp.allocations.map((alloc) => (
-                            <TableRow key={`${emp.id}-${alloc.taskId}`}>
-                              <TableCell></TableCell>
-                              <TableCell sx={{ pl: 4 }}>{formatTitle(alloc.title)}</TableCell>
-                              <TableCell align="right">{alloc.rate}</TableCell>
-                              <TableCell align="right">{alloc.hours}</TableCell>
-                              <TableCell align="right">{alloc.cost}</TableCell>
-                              <TableCell></TableCell>
-                            </TableRow>
-                          ))}
-                        </React.Fragment>
-                      ))}
-
-                    {/* Time Contingencies Row */}
-                    <TableRow>
-                      <TableCell sx={{ pl: 3 }}>1b</TableCell>
-                      <TableCell>Time Contingencies</TableCell>
-                      <TableCell>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={timeContingency.rate}
-                          onChange={(e) => handleTimeContingencyChange('rate', e.target.value)}
-                          placeholder="Rate"
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={timeContingency.units}
-                          onChange={(e) => handleTimeContingencyChange('units', e.target.value)}
-                          placeholder="Units"
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                      <TableCell align="right">{calculateTimeContingencyCost()}</TableCell>
-                      <TableCell>
-                        <TextField
-                          size="small"
-                          fullWidth
-                          value={timeContingency.remarks}
-                          onChange={(e) => handleTimeContingencyChange('remarks', e.target.value)}
-                          placeholder="Remarks"
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                    </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </AccordionDetails>
-            </Accordion>
-            <TableContainer>
-              <Table>
-                <TableBody>
-                  <TableRow sx={summaryRowStyle}>
-                    <TableCell colSpan={4} sx={tableCellStyle}>TOTAL TIME COST</TableCell>
-                    <TableCell align="right" sx={tableCellStyle}>{calculateTotalTimeCost()}</TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
+          <TimeSection
+            employeeAllocations={employeeAllocations}
+            timeContingency={timeContingency}
+            onRemarksChange={handleRemarksChange}
+            onTimeContingencyChange={handleTimeContingencyChange}
+            calculateTotalCost={calculateTotalCost}
+            calculateTimeContingencyCost={calculateTimeContingencyCost}
+            calculateTotalTimeCost={calculateTotalTimeCost}
+            expanded={expanded}
+            handleAccordionChange={handleAccordionChange}
+            textFieldStyle={textFieldStyle}
+            tableHeaderStyle={tableHeaderStyle}
+            tableCellStyle={tableCellStyle}
+            accordionStyle={accordionStyle}
+            sectionStyle={sectionStyle}
+            summaryRowStyle={summaryRowStyle}
+            formatTitle={formatTitle}
+          />
 
           {/* Expenses Section */}
-          <Box sx={{ ...sectionStyle, mb: 3 }}>
-            <Accordion 
-              expanded={expanded.includes('expenses')}
-              onChange={() => handleAccordionChange('expenses')}
-              elevation={0}
-              sx={accordionStyle}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography sx={{ fontWeight: 'bold' }}>2.0 ESTIMATED EXPENSES</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow sx={tableHeaderStyle}>
-                        <TableCell sx={tableCellStyle}>Sr. No.</TableCell>
-                        <TableCell sx={tableCellStyle}>Description</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Rate (Rs)</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Units</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Budgeted Cost (Rs.)</TableCell>
-                        <TableCell sx={tableCellStyle}>Remarks</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {/* Regular Expenses */}
-                    {(['2a', '2b', '3', '4', '5'] as (keyof ExpensesType)[]).map((id) => (
-                      <TableRow key={id}>
-                        <TableCell sx={{ pl: 3 }}>{id}</TableCell>
-                        <TableCell>
-                          {id === '2a' && 'Travel'}
-                          {id === '2b' && 'Subsistence'}
-                          {id === '3' && 'Local conveyance'}
-                          {id === '4' && 'Communications'}
-                          {id === '5' && 'Stationery and printing'}
-                        </TableCell>
-                        <TableCell align="right">
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={expenses[id].number}
-                            onChange={(e) => handleExpenseChange(id, 'number', e.target.value)}
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell></TableCell>
-                        <TableCell align="right">{expenses[id].number}</TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={expenses[id].remarks}
-                            onChange={(e) => handleExpenseChange(id, 'remarks', e.target.value)}
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {/* Outside Agency Section */}
-                    <TableRow>
-                      <TableCell sx={{ pl: 3 }}>6a</TableCell>
-                      <TableCell colSpan={5}>Outside Agency</TableCell>
-                    </TableRow>
-
-                    {(Object.entries(outsideAgency) as [keyof OutsideAgencyType, OutsideAgencyEntry][]).map(([id, entry]) => (
-                      <TableRow key={id}>
-                        <TableCell></TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={entry.description}
-                            onChange={(e) => handleOutsideAgencyChange(id, 'description', e.target.value)}
-                            placeholder="Enter description"
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={entry.rate}
-                            onChange={(e) => handleOutsideAgencyChange(id, 'rate', e.target.value)}
-                            placeholder="Rate"
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={entry.units}
-                            onChange={(e) => handleOutsideAgencyChange(id, 'units', e.target.value)}
-                            placeholder="Units"
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell align="right">
-                          {calculateOutsideAgencyCost(entry)}
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={entry.remarks}
-                            onChange={(e) => handleOutsideAgencyChange(id, 'remarks', e.target.value)}
-                            placeholder="Remarks"
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {/* Survey Works Section */}
-                    <TableRow>
-                      <TableCell sx={{ pl: 3 }}>6b</TableCell>
-                      <TableCell>Survey works</TableCell>
-                      <TableCell align="right">
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={surveyWorks.number}
-                          onChange={(e) => handleSurveyWorksChange('number', e.target.value)}
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                      <TableCell></TableCell>
-                      <TableCell align="right">{surveyWorks.number}</TableCell>
-                      <TableCell>
-                        <TextField
-                          size="small"
-                          fullWidth
-                          value={surveyWorks.remarks}
-                          onChange={(e) => handleSurveyWorksChange('remarks', e.target.value)}
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                    </TableRow>
-
-                    {/* Project Specific Items */}
-                    {(Object.entries(projectSpecific) as [keyof ProjectSpecificType, ProjectSpecificEntry][]).map(([id, entry]) => (
-                      <TableRow key={id}>
-                        <TableCell sx={{ pl: 3 }}>{id}</TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={entry.name}
-                            onChange={(e) => handleProjectSpecificChange(id, 'name', e.target.value)}
-                            placeholder="Project specific item name"
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
-                        <TableCell align="right">
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={entry.number}
-                            onChange={(e) => handleProjectSpecificChange(id, 'number', e.target.value)}
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={entry.remarks}
-                            onChange={(e) => handleProjectSpecificChange(id, 'remarks', e.target.value)}
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {/* Expense Contingencies */}
-                    <TableRow>
-                      <TableCell sx={{ pl: 3 }}>7</TableCell>
-                      <TableCell>Expense Contingencies</TableCell>
-                      <TableCell align="right">
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={expenses['7'].number}
-                          onChange={(e) => handleExpenseChange('7', 'number', e.target.value)}
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                      <TableCell></TableCell>
-                      <TableCell align="right">{expenses['7'].number}</TableCell>
-                      <TableCell>
-                        <TextField
-                          size="small"
-fullWidth
-                          value={expenses['7'].remarks}
-                          onChange={(e) => handleExpenseChange('7', 'remarks', e.target.value)}
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                    </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </AccordionDetails>
-            </Accordion>
-            <TableContainer>
-              <Table>
-                <TableBody>
-                  <TableRow sx={summaryRowStyle}>
-                    <TableCell colSpan={4} sx={tableCellStyle}>TOTAL EXPENSES (ODC)</TableCell>
-                    <TableCell align="right" sx={tableCellStyle}>{calculateExpensesTotal()}</TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-
-          <Box sx={{ ...sectionStyle, mb: 3 }}>
-          <TableContainer>
-              <Table>
-                <TableBody>
-                  <TableRow sx={{
-                    ...summaryRowStyle,
-                    '& .MuiTableCell-root': {
-                      borderBottom: 'none',
-                      fontSize: '1.1em'
-                    }
-                  }}>
-                    <TableCell colSpan={4} sx={tableCellStyle}>GRAND TOTAL</TableCell>
-                    <TableCell align="right" sx={tableCellStyle}>{calculateGrandTotal()}</TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
+          <ExpensesSection
+            expenses={expenses}
+            surveyWorks={surveyWorks}
+            outsideAgency={outsideAgency}
+            projectSpecific={projectSpecific}
+            onExpenseChange={handleExpenseChange}
+            onSurveyWorksChange={handleSurveyWorksChange}
+            onOutsideAgencyChange={handleOutsideAgencyChange}
+            onProjectSpecificChange={handleProjectSpecificChange}
+            calculateOutsideAgencyCost={calculateOutsideAgencyCost}
+            calculateExpensesTotal={calculateExpensesTotal}
+            expanded={expanded}
+            handleAccordionChange={handleAccordionChange}
+            textFieldStyle={textFieldStyle}
+            tableHeaderStyle={tableHeaderStyle}
+            tableCellStyle={tableCellStyle}
+            accordionStyle={accordionStyle}
+            sectionStyle={sectionStyle}
+            summaryRowStyle={summaryRowStyle}
+          />
 
           {/* Summary Section */}
-          <Box sx={{ 
-            ...sectionStyle,
-            '& .MuiTableRow-root:not(:last-child)': {
-              '& .MuiTableCell-root': {
-                borderBottom: '1px solid #e0e0e0'
-              }
-            }
-          }}>
-            <TableContainer>
-              <Table>
-                <TableBody>
-                  {/* Profit Row */}
-                  <TableRow sx={{
-                    bgcolor: '#e3f2fd',
-                    '& .MuiTableCell-root': {
-                      py: 2,
-                      fontSize: '1.1em',
-                      fontWeight: 'bold'
-                    }
-                  }}>
-                    <TableCell colSpan={4} sx={tableCellStyle}>Profit</TableCell>
-                    <TableCell 
-                      align="right" 
-                      sx={{
-                        ...tableCellStyle,
-                        color: calculateProfit() >= 0 ? '#2e7d32' : '#d32f2f',
-                        fontSize: '1.2em'
-                      }}
-                    >
-                      {calculateProfit()}
-                    </TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
+          <SummarySection
+            projectFees={projectFees}
+            serviceTax={serviceTax}
+            onProjectFeesChange={handleProjectFeesChange}
+            onServiceTaxChange={handleServiceTaxChange}
+            calculateGrandTotal={calculateGrandTotal}
+            calculateProfit={calculateProfit}
+            calculateServiceTax={calculateServiceTax}
+            calculateTotalProjectFees={calculateTotalProjectFees}
+            textFieldStyle={textFieldStyle}
+            tableCellStyle={tableCellStyle}
+            sectionStyle={sectionStyle}
+          />
 
-                  {/* Project Fees Section */}
-                  <TableRow sx={{ bgcolor: '#fafafa' }}>
-                    <TableCell colSpan={4} sx={{ ...tableCellStyle, fontWeight: 'bold' }}>PROJECT FEES</TableCell>
-                    <TableCell align="right" sx={tableCellStyle}>
-                      <TextField
-                        size="small"
-                        type="number"
-                        value={projectFees}
-                        onChange={(e) => handleProjectFeesChange(e.target.value)}
-                        sx={{
-                          ...textFieldStyle,
-                          '& .MuiOutlinedInput-root': {
-                            backgroundColor: '#fff'
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
-
-                  {/* Service Tax Row */}
-                  <TableRow sx={{ bgcolor: '#fafafa' }}>
-                    <TableCell 
-                      colSpan={4} 
-                      sx={{ 
-                        ...tableCellStyle, 
-                        fontWeight: 'bold',
-                        '& .MuiBox-root': {
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1
-                        }
-                      }}
-                    >
-                      <Box>
-                        Service Tax (GST)
-                        <Box component="span" sx={{ mx: 1 }}>@</Box>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={serviceTax.percentage}
-                          onChange={(e) => handleServiceTaxChange(e.target.value)}
-                          sx={{
-                            width: '80px',
-                            ...textFieldStyle,
-                            '& .MuiOutlinedInput-root': {
-                              backgroundColor: '#fff',
-                              height: '36px'
-                            }
-                          }}
-                        />
-                        <Box component="span" sx={{ ml: 1 }}>%</Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell 
-                      align="right" 
-                      sx={{ 
-                        ...tableCellStyle, 
-                        fontWeight: 'bold',
-                        color: '#1976d2'
-                      }}
-                    >
-                      {calculateServiceTax()}
-                    </TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
-
-                  {/* Total Project Fees Row */}
-                  <TableRow sx={{
-                    bgcolor: '#f5f5f5',
-                    '& .MuiTableCell-root': {
-                      borderBottom: 'none',
-                      fontWeight: 'bold',
-                      fontSize: '1.1em'
-                    }
-                  }}>
-                    <TableCell colSpan={4} sx={tableCellStyle}>TOTAL PROJECT FEES</TableCell>
-                    <TableCell align="right" sx={tableCellStyle}>{calculateTotalProjectFees()}</TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
+          {/* Submit Button */}
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+            <LoadingButton
+              onClick={handleSubmit}
+              disabled={submitting}
+              loading={submitting}
+              text={isUpdating ? 'Update Form' : 'Submit Form'}
+              loadingText={isUpdating ? 'Updating...' : 'Submitting...'}
+              sx={{
+                px: 4,
+                py: 1.5,
+                borderRadius: 1,
+                fontWeight: 'bold',
+                boxShadow: 2
+              }}
+            />
           </Box>
         </Paper>
       </Box>
@@ -1010,9 +559,26 @@ fullWidth
 
   return (
     <FormWrapper>
-        {formContent}
+      {formContent}
+
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </FormWrapper>
-);
+  );
 };
 
 export default JobStartForm;

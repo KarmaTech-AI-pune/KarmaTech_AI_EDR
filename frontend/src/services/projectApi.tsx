@@ -1,76 +1,91 @@
-import { Project } from '../models';
 import { axiosInstance } from './axiosConfig';
+import { ProjectFormData } from '../types/index.tsx';
+import { Project } from '../models';
 
 export const projectApi = {
-  getAll: async (): Promise<Project[]> => {
+  createProject: async (projectData: ProjectFormData) => {
     try {
-      const response = await axiosInstance.get('project');
+      const response = await axiosInstance.post(`api/Project`, projectData);
       return response.data;
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      console.error('Error creating project:', error);
       throw error;
     }
   },
 
-  getById: async (id: string): Promise<Project> => {
+  getAll: async () => {
     try {
-      const response = await axiosInstance.get(`project/${id}`);
+      const response = await axiosInstance.get(`api/Project`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching project ${id}:`, error);
+      console.error('Error getting all projects:', error);
       throw error;
     }
   },
 
-  create: async (project: Omit<Project, 'id'>): Promise<Project> => {
+  getById: async (projectId: string) => {
     try {
-      const formattedProject = {
-        ...project,
-        startDate: undefined,
-        endDate: undefined,
-        estimatedCost: Number(project.estimatedCost)
+      const response = await axiosInstance.get(`api/Project/${projectId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error getting project ${projectId}:`, error);
+      throw error;
+    }
+  },
+
+  update: async (projectId: string, projectData: Project) => {
+    try {
+      // Make sure we're sending the correct data format to the backend
+      const formattedData = {
+        id: parseInt(projectId),
+        name: projectData.name,
+        clientName: projectData.clientName,
+        projectNo: parseInt(projectData.projectNo), // Convert to integer as backend expects int
+        typeOfClient: projectData.typeOfClient || '',
+        projectManagerId: projectData.projectManagerId,
+        seniorProjectManagerId: projectData.seniorProjectManagerId || '',
+        regionalManagerId: projectData.regionalManagerId,
+        office: projectData.office || '',  // Ensure office is never null
+        region: projectData.region || '',   // Ensure region is never null
+        typeOfJob: projectData.typeOfJob || '',  // Ensure typeOfJob is never null
+        sector: projectData.sector || '',
+        feeType: projectData.feeType || '',  // Ensure feeType is never null
+        estimatedCost: Number(projectData.estimatedCost),
+        budget: Number(projectData.budget || 0),  // Ensure budget is never null
+        priority: projectData.priority || '',  // Ensure priority is never null
+        currency: projectData.currency || 'INR',
+        startDate: projectData.startDate ? new Date(projectData.startDate) : null, // Convert to proper date format
+        endDate: projectData.endDate ? new Date(projectData.endDate) : null, // Convert to proper date format
+        status: projectData.status,
+        progress: 0, // Add missing required field
+        letterOfAcceptance: projectData.letterOfAcceptance,
+        opportunityTrackingId: projectData.opportunityTrackingId || 0, // Ensure it's not null
+        fundingStream: projectData.fundingStream || '',
+        // Add missing fields with default values
+        createdAt: new Date(),
+        lastModifiedAt: new Date(),
+        createdBy: projectData.projectManagerId,
+        lastModifiedBy: projectData.projectManagerId
       };
-      
-      const response = await axiosInstance.post('project', formattedProject);
+
+      // Log the data being sent
+      console.log('Sending update data:', JSON.stringify(formattedData, null, 2));
+
+      const response = await axiosInstance.put(`api/Project/${projectId}`, formattedData);
       return response.data;
-    } catch (error: any) {
-      console.error('Project creation error:', {
-        requestData: project,
-        error: {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message
-        }
-      });
-      throw new Error(
-        error.response?.data?.message || 
-        error.response?.data?.title ||
-        'Failed to create project'
-      );
-    }
-  },
-
-  update: async (id: string, project: Project): Promise<void> => {
-    try {
-      const formattedProject = {
-        ...project,
-        startDate: project.startDate ? new Date(project.startDate).toISOString() : undefined,
-        endDate: project.endDate ? new Date(project.endDate).toISOString() : undefined,
-        estimatedCost: Number(project.estimatedCost)
-      };
-
-      await axiosInstance.put(`project/${id}`, formattedProject);
     } catch (error) {
-      console.error(`Error updating project ${id}:`, error);
+      console.error(`Error updating project ${projectId}:`, error);
       throw error;
     }
   },
 
-  delete: async (id: string): Promise<void> => {
+  delete: async (projectId: string) => {
     try {
-      await axiosInstance.delete(`project/${id}`);
+      console.log(`Deleting project with ID: ${projectId}`);
+      const response = await axiosInstance.delete(`api/Project/${projectId}`);
+      return response.data;
     } catch (error) {
-      console.error(`Error deleting project ${id}:`, error);
+      console.error(`Error deleting project ${projectId}:`, error);
       throw error;
     }
   }

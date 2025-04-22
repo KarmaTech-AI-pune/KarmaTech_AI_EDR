@@ -35,12 +35,12 @@ namespace NJSAPI.Controllers
         {
             try
             {
-                if (model == null || string.IsNullOrEmpty(model.Username) || string.IsNullOrEmpty(model.Password))
+                if (model == null || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
                 {
                     return BadRequest(new { success = false, message = "Invalid login data" });
                 }
 
-                var (success, user, token) = await _authService.ValidateUserAsync(model.Username, model.Password);
+                var (success, user, token) = await _authService.ValidateUserAsync(model.Email, model.Password);
 
                 if (success)
                 {
@@ -72,6 +72,7 @@ namespace NJSAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] GetAllUsersQuery query)
         {
+            query.PageSize = 10000;
             var result = await _mediator.Send(query);
             return Ok(result);
         }

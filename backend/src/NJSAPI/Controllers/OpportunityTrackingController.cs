@@ -4,6 +4,7 @@ using NJS.Application.CQRS.OpportunityTracking.Commands;
 using NJS.Application.CQRS.OpportunityTracking.Queries;
 using NJS.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 
 namespace NJSAPI.Controllers
 {
@@ -25,8 +26,8 @@ namespace NJSAPI.Controllers
             [FromQuery] OpportunityStage? stage = null,
             [FromQuery] string? bidManagerId = null,
             [FromQuery] string? clientSector = null,
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10,
+            [FromQuery] int? pageNumber = null,
+            [FromQuery] int? pageSize = null,
             [FromQuery] string? sortBy = null,
             [FromQuery] bool isAscending = true)
         {
@@ -176,7 +177,8 @@ namespace NJSAPI.Controllers
             }
         }
 
-        [HttpPut("{id}")]
+        [EnableCors("AllowSpecificOrigin")]
+        [HttpPut("UpdateOpportunityTracking/{id}")]
         public async Task<IActionResult> UpdateOpportunityTracking(int id, [FromBody] UpdateOpportunityTrackingCommand command)
         {
             try
@@ -200,6 +202,10 @@ namespace NJSAPI.Controllers
             }
         }
 
+
+        
+      
+        [EnableCors("AllowSpecificOrigin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOpportunityTracking(int id)
         {

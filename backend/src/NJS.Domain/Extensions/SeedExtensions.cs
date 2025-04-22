@@ -1,9 +1,10 @@
-﻿﻿﻿﻿﻿﻿using Microsoft.AspNetCore.Builder;
+﻿﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
+using NJS.Domain.Enums; // Add import for WBSTaskLevel
 using System.Security.Authentication;
 
 namespace NJS.Domain.Extensions
@@ -125,7 +126,7 @@ namespace NJS.Domain.Extensions
                 }
 
                 // Seed Admin User with all roles
-                var adminEmail = "admin@example.com";
+                var adminEmail = "admin@test.com";
                 var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
                 if (adminUser == null)
@@ -214,7 +215,7 @@ namespace NJS.Domain.Extensions
                     {
                         Name = "Sample Project",
                         ClientName = "Sample Client",
-                        ClientSector = "Technology",
+                        TypeOfClient = "Technology",
                         Sector = "Software",
                         EstimatedCost = 100000m,
                         CapitalValue = 150000m,
@@ -252,24 +253,24 @@ namespace NJS.Domain.Extensions
                             Title = "Project Planning",
                             Description = "Initial project planning phase",
                             Level = WBSTaskLevel.Level1,
-                            WorkBreakdownStructureId = wbs.Id,
-                            ResourceAllocation = 100
+                            WorkBreakdownStructureId = wbs.Id
+                            // ResourceAllocation = 100 // Commented out - Property does not exist
                         },
                         new WBSTask
                         {
                             Title = "Design",
                             Description = "Design phase activities",
                             Level = WBSTaskLevel.Level2,
-                            WorkBreakdownStructureId = wbs.Id,
-                            ResourceAllocation = 150
+                            WorkBreakdownStructureId = wbs.Id
+                            // ResourceAllocation = 150 // Commented out - Property does not exist
                         },
                         new WBSTask
                         {
                             Title = "Development",
                             Description = "Development phase activities",
                             Level = WBSTaskLevel.Level3,
-                            WorkBreakdownStructureId = wbs.Id,
-                            ResourceAllocation = 200
+                            WorkBreakdownStructureId = wbs.Id
+                            // ResourceAllocation = 200 // Commented out - Property does not exist
                         }
                     };
 

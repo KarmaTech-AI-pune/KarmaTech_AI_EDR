@@ -12,6 +12,8 @@ import { authApi } from './services/authApi'
 import { PermissionType } from './models'
 import GoNoGoForm from './components/forms/GoNoGoForm'
 import BidPreparationForm from './components/forms/BidPreparationForm'
+import { LoadingProvider } from './context/LoadingContext';
+import LoadingSpinner from './components/LoadingSpinner';
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
   const [selectedProject, setSelectedProject] = useState<Project | OpportunityTracking | null>(null)
 
   const [currentGoNoGoDecision, setCurrentGoNoGoDecision] = useState<GoNoGoDecision | null>(null)
+  const [goNoGoDecisionStatus, setGoNoGoDecisionStatus] = useState<string | null>(null);
+  const [goNoGoVersionNumber, setGoNoGoVersionNumber] = useState<number | null>(null);
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
@@ -126,7 +130,22 @@ function App() {
     "Business Development Details": <BusinessDevelopmentDetails />,
     "Bid Preparation Form" : <BidPreparationForm/>,
     "GoNoGo Form" : selectedProject ? (
-      <GoNoGoForm />
+      <GoNoGoForm 
+        onDecisionStatusChange={(status, versionNumber) => {
+          // Update the current decision based on the status
+          if (currentGoNoGoDecision) {
+            const updatedDecision = { ...currentGoNoGoDecision, status: status === "GO" ? 1 : 0 };
+            setCurrentGoNoGoDecision(updatedDecision);
+          }
+          
+          // Update the Go/No Go decision status and version number
+          setGoNoGoDecisionStatus(status);
+          setGoNoGoVersionNumber(versionNumber);
+          
+          // Navigate back to Business Development Details
+          setScreenState("Business Development Details");
+        }}
+      />
     ) : <div>No project selected</div>,
     "Admin Panel": <AdminPanel />,
   };
@@ -157,6 +176,10 @@ function App() {
       setSelectedProject,
       currentGoNoGoDecision,
       setCurrentGoNoGoDecision,
+      goNoGoDecisionStatus,
+      setGoNoGoDecisionStatus,
+      goNoGoVersionNumber,
+      setGoNoGoVersionNumber,
       currentUser,
       setCurrentUser,
       canEditOpportunity,
@@ -172,8 +195,11 @@ function App() {
       canSubmitForApproval,
       setCanSubmitForApproval
     }}>
-      {isAuthenticated && <Navbar />}
-      {screenArray[screenState]}
+      <LoadingProvider>
+        <LoadingSpinner />
+        {isAuthenticated && <Navbar />}
+        {screenArray[screenState]}
+      </LoadingProvider>
     </projectManagementAppContext.Provider>
   );
 }
