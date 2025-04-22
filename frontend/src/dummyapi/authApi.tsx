@@ -10,6 +10,7 @@ import { rolesApi } from './rolesApi';
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
+
       // Use username from the Credentials type
       const user = validateUser(credentials.username, credentials.password);
 

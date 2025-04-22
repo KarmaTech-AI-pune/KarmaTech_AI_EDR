@@ -54,14 +54,14 @@ export const ProjectManagement: React.FC = () => {
     const checkUserPermissions = async () => {
       try {
         const user = await authApi.getCurrentUser();
-        
+
         if (!user) {
           setError('Please log in to access Project Management');
           return;
         }
 
         setCurrentUser(user);
-        
+
         if (user.roleDetails) {
           const hasProjectViewPermission = user.roleDetails.permissions.includes(
             PermissionType.VIEW_PROJECT
@@ -111,16 +111,23 @@ export const ProjectManagement: React.FC = () => {
 
   const handleProjectUpdated = async () => {
     await fetchProjects();
+    setSuccessMessage('Project updated successfully');
   };
 
   const handleProjectDeleted = async (projectId: string) => {
     try {
+      console.log(`Attempting to delete project with ID: ${projectId}`);
       await projectApi.delete(projectId);
-      await fetchProjects();
+      console.log('Delete API call successful');
       setSuccessMessage('Project deleted successfully');
+      // Refresh the project list after successful deletion
+      await fetchProjects();
     } catch (err: any) {
       console.error('Error deleting project:', err);
-      setError(err.message || 'Failed to delete project');
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete project';
+      setError(errorMessage);
+      // Refresh the project list anyway to ensure UI is in sync with backend
+      await fetchProjects();
     }
   };
 

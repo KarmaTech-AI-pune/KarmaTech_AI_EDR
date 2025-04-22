@@ -53,6 +53,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const [level1Options, setLevel1Options] = useState<WBSOption[]>([]);
   const [level2Options, setLevel2Options] = useState<WBSOption[]>([]);
   const [level3OptionsMap, setLevel3OptionsMap] = useState<{ [key: string]: WBSOption[] }>({});
+  
   // We only use the setter function, not the value itself
   const [, setLastUpdateTime] = useState<number>(Date.now());
   // We only use the setter function, not the value itself
@@ -156,7 +157,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
             return row; // Return row if no role ID
           })
         );
-        setAllWbsData(dataWithRoles); // Store the complete data
+        // Removed unused state update: setAllWbsData(dataWithRoles);
 
         // Filter rows based on TaskType
         // If taskType is not set (for backward compatibility), we'll infer it from the title
@@ -344,7 +345,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           // If no project selected, reset states
           setManpowerRows([]);
           setOdcRows([]);
-          setAllWbsData([]);
+          // setAllWbsData([]);
           setMonths([]); // Reset months if no project
         }
       } catch (error) {

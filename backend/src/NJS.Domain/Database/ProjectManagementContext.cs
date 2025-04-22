@@ -43,6 +43,7 @@ namespace NJS.Domain.Database
         public DbSet<GoNoGoDecisionTransaction> GoNoGoDecisionTransactions { get; set; }
         public DbSet<JobStartForm> JobStartForms { get; set; }
         public DbSet<JobStartFormSelection> JobStartFormSelections { get; set; } // Add DbSet for Selections
+        public DbSet<InputRegister> InputRegisters { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -269,6 +270,30 @@ namespace NJS.Domain.Database
             {
                  // Optional: Add index on ProjectId if frequent lookups by project are expected
                  entity.HasIndex(w => w.ProjectId);
+            });
+
+            // Configure InputRegister entity
+            modelBuilder.Entity<InputRegister>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DataReceived).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.ReceivedFrom).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.FilesFormat).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.CheckedBy).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.Custodian).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.StoragePath).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.Remarks).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.CreatedBy).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(i => i.Project)
+                      .WithMany()
+                      .HasForeignKey(i => i.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }
