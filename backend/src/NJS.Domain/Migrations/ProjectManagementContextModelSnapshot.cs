@@ -225,7 +225,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BidPreparations");
+                    b.ToTable("BidPreparations", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.BidVersionHistory", b =>
@@ -262,7 +262,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("BidPreparationId");
 
-                    b.ToTable("BidVersionHistories");
+                    b.ToTable("BidVersionHistories", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.FailedEmailLog", b =>
@@ -299,7 +299,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("FailedEmailLogs");
+                    b.ToTable("FailedEmailLogs", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.FeasibilityStudy", b =>
@@ -346,7 +346,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("FeasibilityStudies");
+                    b.ToTable("FeasibilityStudies", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecision", b =>
@@ -527,7 +527,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("GoNoGoDecisions");
+                    b.ToTable("GoNoGoDecisions", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionHeader", b =>
@@ -596,7 +596,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("OpportunityId");
 
-                    b.ToTable("GoNoGoDecisionHeaders");
+                    b.ToTable("GoNoGoDecisionHeaders", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionOpportunity", b =>
@@ -649,7 +649,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ScoringCriteriaId");
 
-                    b.ToTable("GoNoGoDecisionOpportunities");
+                    b.ToTable("GoNoGoDecisionOpportunities", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionTransaction", b =>
@@ -690,7 +690,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ScoringCriteriaId");
 
-                    b.ToTable("GoNoGoDecisionTransactions");
+                    b.ToTable("GoNoGoDecisionTransactions", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoVersion", b =>
@@ -735,7 +735,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("GoNoGoDecisionHeaderId");
 
-                    b.ToTable("GoNoGoVersions");
+                    b.ToTable("GoNoGoVersions", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.InputRegister", b =>
@@ -811,7 +811,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("InputRegisters");
+                    b.ToTable("InputRegisters", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.JobStartForm", b =>
@@ -887,7 +887,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("WorkBreakdownStructureId");
 
-                    b.ToTable("JobStartForms");
+                    b.ToTable("JobStartForms", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.JobStartFormSelection", b =>
@@ -917,7 +917,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("FormId");
 
-                    b.ToTable("JobStartFormSelections");
+                    b.ToTable("JobStartFormSelections", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityHistory", b =>
@@ -959,7 +959,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("OpportunityHistories");
+                    b.ToTable("OpportunityHistories", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityStatus", b =>
@@ -975,7 +975,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OpportunityStatuses");
+                    b.ToTable("OpportunityStatuses", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityTracking", b =>
@@ -1107,7 +1107,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ReviewManagerId");
 
-                    b.ToTable("OpportunityTrackings");
+                    b.ToTable("OpportunityTrackings", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Permission", b =>
@@ -1135,7 +1135,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Permissions");
+                    b.ToTable("Permissions", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
@@ -1281,7 +1281,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("SeniorProjectManagerId");
 
-                    b.ToTable("Projects");
+                    b.ToTable("Projects", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ProjectResource", b =>
@@ -1320,7 +1320,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ProjectResources");
+                    b.ToTable("ProjectResources", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Region", b =>
@@ -1339,7 +1339,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Regions");
+                    b.ToTable("Regions", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.RolePermission", b =>
@@ -1369,7 +1369,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("RolePermissions");
+                    b.ToTable("RolePermissions", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ScoreRange", b =>
@@ -1391,7 +1391,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ScoreRange");
+                    b.ToTable("ScoreRange", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ScoringCriteria", b =>
@@ -1422,7 +1422,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ScoringCriteria");
+                    b.ToTable("ScoringCriteria", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ScoringDescriptionSummarry", b =>
@@ -1449,7 +1449,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ScoringDescriptionID");
 
-                    b.ToTable("ScoringDescriptionSummarry");
+                    b.ToTable("ScoringDescriptionSummarry", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ScoringDescriptions", b =>
@@ -1465,7 +1465,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ScoringDescription");
+                    b.ToTable("ScoringDescription", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.User", b =>
@@ -1608,7 +1608,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("WBSTaskId");
 
-                    b.ToTable("UserWBSTasks");
+                    b.ToTable("UserWBSTasks", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WBSOption", b =>
@@ -1647,7 +1647,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ParentValue");
 
-                    b.ToTable("WBSOptions");
+                    b.ToTable("WBSOptions", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WBSTask", b =>
@@ -1712,7 +1712,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("WorkBreakdownStructureId");
 
-                    b.ToTable("WBSTasks");
+                    b.ToTable("WBSTasks", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WBSTaskMonthlyHour", b =>
@@ -1760,7 +1760,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("WBSTaskId");
 
-                    b.ToTable("WBSTaskMonthlyHour");
+                    b.ToTable("WBSTaskMonthlyHour", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WorkBreakdownStructure", b =>
@@ -1793,7 +1793,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("WorkBreakdownStructures");
+                    b.ToTable("WorkBreakdownStructures", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
