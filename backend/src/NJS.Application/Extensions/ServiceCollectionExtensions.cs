@@ -36,7 +36,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IInputRegisterRepository, InputRegisterRepository>();
             services.AddScoped<ICorrespondenceInwardRepository, CorrespondenceInwardRepository>();
             services.AddScoped<ICorrespondenceOutwardRepository, CorrespondenceOutwardRepository>();
-            services.AddScoped<ICheckReviewRepository, CheckReviewRepository>()
+            services.AddScoped<ICheckReviewRepository, CheckReviewRepository>();
               
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
