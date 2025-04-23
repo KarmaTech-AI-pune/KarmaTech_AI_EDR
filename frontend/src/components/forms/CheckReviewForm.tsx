@@ -64,7 +64,18 @@ const CheckReviewForm: React.FC = () => {
       console.log('Loading reviews for project:', context.selectedProject.id);
       const reviews = await getCheckReviewsByProject(context.selectedProject.id.toString());
       console.log('Loaded reviews:', reviews);
-      setRows(reviews);
+
+      // Ensure each review has an id property
+      const reviewsWithIds = reviews.map(review => {
+        if (!review.id && review.id !== 0) {
+          console.warn(`Review with activityNo ${review.activityNo} has no ID, using activityNo as fallback`);
+          return { ...review, id: review.activityNo };
+        }
+        return review;
+      });
+
+      console.log('Reviews with IDs:', reviewsWithIds);
+      setRows(reviewsWithIds);
       setError('');
     } catch (err: any) {
       console.error('Error loading reviews:', err);
@@ -122,6 +133,12 @@ const CheckReviewForm: React.FC = () => {
 
   const handleDeleteReview = async (id: string) => {
     try {
+      if (!id && id !== '0') {
+        console.error('Cannot delete review: ID is undefined or empty');
+        setError('Cannot delete review: ID is missing');
+        return;
+      }
+
       console.log('Deleting review with ID:', id);
 
       // Add confirmation dialog
@@ -132,6 +149,14 @@ const CheckReviewForm: React.FC = () => {
 
       // Add more detailed logging
       console.log('Proceeding with deletion, ID:', id);
+
+      // Try to find the review in the rows array to get more information
+      const reviewToDelete = rows.find(r => r.id?.toString() === id.toString());
+      if (reviewToDelete) {
+        console.log('Found review to delete:', reviewToDelete);
+      } else {
+        console.warn('Could not find review with ID:', id);
+      }
 
       const result = await deleteCheckReview(id);
       console.log('Review deleted successfully, result:', result);
@@ -303,11 +328,24 @@ const CheckReviewForm: React.FC = () => {
                           <IconButton
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (row.id) {
+                              // Use row.id if available, otherwise use activityNo as fallback
+                              if (row.id || row.id === 0) {
                                 console.log('Delete button clicked for review ID:', row.id);
-                                handleDeleteReview(row.id);
+                                handleDeleteReview(row.id.toString());
+                              } else if (row.activityNo) {
+                                console.log('Delete button clicked for review with no ID, using activityNo as fallback:', row.activityNo);
+                                // Try to find the review by activityNo and projectId
+                                const reviewToDelete = rows.find(r =>
+                                  r.activityNo === row.activityNo && r.projectId === row.projectId);
+
+                                if (reviewToDelete && reviewToDelete.id) {
+                                  handleDeleteReview(reviewToDelete.id.toString());
+                                } else {
+                                  console.error('Cannot find review ID for deletion');
+                                  setError('Cannot delete review: Unable to determine review ID');
+                                }
                               } else {
-                                console.error('Cannot delete review: ID is undefined');
+                                console.error('Cannot delete review: Both ID and activityNo are undefined');
                                 setError('Cannot delete review: ID is missing');
                               }
                             }}

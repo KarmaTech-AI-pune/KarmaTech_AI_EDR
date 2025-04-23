@@ -225,7 +225,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BidPreparations", (string)null);
+                    b.ToTable("BidPreparations");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.BidVersionHistory", b =>
@@ -262,7 +262,224 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("BidPreparationId");
 
-                    b.ToTable("BidVersionHistories", (string)null);
+                    b.ToTable("BidVersionHistories");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.CheckReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionTaken")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ActivityName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ActivityNo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("CheckedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Completion")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("nvarchar(1)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Objective")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("QualityIssues")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("References")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("CheckReviews");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.CorrespondenceInward", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionTaken")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("AttachmentDetails")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("From")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("IncomingLetterNo")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("LetterDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NjsInwardNo")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReceiptDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("RepliedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("StoragePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("CorrespondenceInwards");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.CorrespondenceOutward", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Acknowledgement")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ActionTaken")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("AttachmentDetails")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LetterDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LetterNo")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("StoragePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("To")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("CorrespondenceOutwards");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.FailedEmailLog", b =>
@@ -299,7 +516,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("FailedEmailLogs", (string)null);
+                    b.ToTable("FailedEmailLogs");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.FeasibilityStudy", b =>
@@ -346,7 +563,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("FeasibilityStudies", (string)null);
+                    b.ToTable("FeasibilityStudies");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecision", b =>
@@ -527,7 +744,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("GoNoGoDecisions", (string)null);
+                    b.ToTable("GoNoGoDecisions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionHeader", b =>
@@ -596,7 +813,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("OpportunityId");
 
-                    b.ToTable("GoNoGoDecisionHeaders", (string)null);
+                    b.ToTable("GoNoGoDecisionHeaders");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionOpportunity", b =>
@@ -649,7 +866,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ScoringCriteriaId");
 
-                    b.ToTable("GoNoGoDecisionOpportunities", (string)null);
+                    b.ToTable("GoNoGoDecisionOpportunities");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionTransaction", b =>
@@ -690,7 +907,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ScoringCriteriaId");
 
-                    b.ToTable("GoNoGoDecisionTransactions", (string)null);
+                    b.ToTable("GoNoGoDecisionTransactions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoVersion", b =>
@@ -735,7 +952,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("GoNoGoDecisionHeaderId");
 
-                    b.ToTable("GoNoGoVersions", (string)null);
+                    b.ToTable("GoNoGoVersions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.InputRegister", b =>
@@ -811,7 +1028,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("InputRegisters", (string)null);
+                    b.ToTable("InputRegisters");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.JobStartForm", b =>
@@ -887,7 +1104,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("WorkBreakdownStructureId");
 
-                    b.ToTable("JobStartForms", (string)null);
+                    b.ToTable("JobStartForms");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.JobStartFormSelection", b =>
@@ -917,7 +1134,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("FormId");
 
-                    b.ToTable("JobStartFormSelections", (string)null);
+                    b.ToTable("JobStartFormSelections");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityHistory", b =>
@@ -959,7 +1176,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("OpportunityHistories", (string)null);
+                    b.ToTable("OpportunityHistories");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityStatus", b =>
@@ -975,7 +1192,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OpportunityStatuses", (string)null);
+                    b.ToTable("OpportunityStatuses");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.OpportunityTracking", b =>
@@ -995,6 +1212,9 @@ namespace NJS.Domain.Migrations
 
                     b.Property<string>("BidManagerId")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("BidNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("CapitalValue")
                         .HasColumnType("decimal(18,2)");
@@ -1107,7 +1327,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ReviewManagerId");
 
-                    b.ToTable("OpportunityTrackings", (string)null);
+                    b.ToTable("OpportunityTrackings");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Permission", b =>
@@ -1135,7 +1355,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Permissions", (string)null);
+                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
@@ -1281,7 +1501,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("SeniorProjectManagerId");
 
-                    b.ToTable("Projects", (string)null);
+                    b.ToTable("Projects");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ProjectResource", b =>
@@ -1320,7 +1540,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ProjectResources", (string)null);
+                    b.ToTable("ProjectResources");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Region", b =>
@@ -1339,7 +1559,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Regions", (string)null);
+                    b.ToTable("Regions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.RolePermission", b =>
@@ -1369,7 +1589,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("RolePermissions", (string)null);
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ScoreRange", b =>
@@ -1391,7 +1611,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ScoreRange", (string)null);
+                    b.ToTable("ScoreRange");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ScoringCriteria", b =>
@@ -1422,7 +1642,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ScoringCriteria", (string)null);
+                    b.ToTable("ScoringCriteria");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ScoringDescriptionSummarry", b =>
@@ -1449,7 +1669,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ScoringDescriptionID");
 
-                    b.ToTable("ScoringDescriptionSummarry", (string)null);
+                    b.ToTable("ScoringDescriptionSummarry");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ScoringDescriptions", b =>
@@ -1465,7 +1685,31 @@ namespace NJS.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ScoringDescription", (string)null);
+                    b.ToTable("ScoringDescription");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.Settings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Settings");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.User", b =>
@@ -1573,12 +1817,8 @@ namespace NJS.Domain.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<decimal>("ODCCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<double>("ODCHours")
-                        .HasColumnType("float");
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalCost")
                         .HasPrecision(18, 2)
@@ -1586,6 +1826,9 @@ namespace NJS.Domain.Migrations
 
                     b.Property<double>("TotalHours")
                         .HasColumnType("float");
+
+                    b.Property<string>("Unit")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1595,7 +1838,6 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
@@ -1608,7 +1850,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("WBSTaskId");
 
-                    b.ToTable("UserWBSTasks", (string)null);
+                    b.ToTable("UserWBSTasks");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WBSOption", b =>
@@ -1647,7 +1889,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ParentValue");
 
-                    b.ToTable("WBSOptions", (string)null);
+                    b.ToTable("WBSOptions");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WBSTask", b =>
@@ -1691,6 +1933,9 @@ namespace NJS.Domain.Migrations
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("TaskType")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -1712,7 +1957,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("WorkBreakdownStructureId");
 
-                    b.ToTable("WBSTasks", (string)null);
+                    b.ToTable("WBSTasks");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WBSTaskMonthlyHour", b =>
@@ -1760,7 +2005,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("WBSTaskId");
 
-                    b.ToTable("WBSTaskMonthlyHour", (string)null);
+                    b.ToTable("WBSTaskMonthlyHour");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WorkBreakdownStructure", b =>
@@ -1793,7 +2038,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("WorkBreakdownStructures", (string)null);
+                    b.ToTable("WorkBreakdownStructures");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
@@ -1899,6 +2144,39 @@ namespace NJS.Domain.Migrations
                         .IsRequired();
 
                     b.Navigation("BidPreparation");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.CheckReview", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.CorrespondenceInward", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.CorrespondenceOutward", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.FeasibilityStudy", b =>
@@ -2148,9 +2426,7 @@ namespace NJS.Domain.Migrations
                 {
                     b.HasOne("NJS.Domain.Entities.User", "User")
                         .WithMany("UserWBSTasks")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.HasOne("NJS.Domain.Entities.WBSTask", "WBSTask")
                         .WithMany("UserWBSTasks")

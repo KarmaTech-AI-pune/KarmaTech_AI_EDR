@@ -76,8 +76,34 @@ export const updateCheckReview = async (id: string, updatedReview: Partial<Check
 // Delete a check review
 export const deleteCheckReview = async (id: string): Promise<boolean> => {
   try {
+    if (!id && id !== '0') {
+      throw new Error('ID is required for deletion');
+    }
+
     // Convert id to integer for backend
     const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
+      console.warn(`ID '${id}' could not be parsed as an integer, using original value`);
+      // If we can't parse it as an integer, we'll try to use the original string
+      // This might happen if we're using activityNo as a fallback
+
+      // Try to find the review by activityNo
+      try {
+        console.log(`Attempting to find review by activityNo: ${id}`);
+        const response = await axios.get(`${API_URL}/by-activity-no/${id}`);
+        if (response.data && response.data.id) {
+          console.log(`Found review with ID: ${response.data.id} for activityNo: ${id}`);
+          const deleteResponse = await axios.delete(`${API_URL}/${response.data.id}`);
+          console.log('Delete response:', deleteResponse);
+          return true;
+        }
+      } catch (findError) {
+        console.error('Error finding review by activityNo:', findError);
+      }
+
+      throw new Error(`Invalid ID format: ${id}`);
+    }
+
     console.log(`Deleting check review with ID: ${parsedId}`);
 
     // Add more detailed logging

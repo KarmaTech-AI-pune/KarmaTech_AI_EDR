@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace NJS.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class updatesettings : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -584,14 +584,14 @@ namespace NJS.Domain.Migrations
                     ProjectManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     SeniorProjectManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     RegionalManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    Office = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Region = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TypeOfJob = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Office = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Region = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    TypeOfJob = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Sector = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    FeeType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FeeType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     EstimatedCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Priority = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Priority = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Currency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -721,6 +721,105 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CheckReviews",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    ActivityNo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ActivityName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Objective = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    References = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    FileName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    QualityIssues = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Completion = table.Column<string>(type: "nvarchar(1)", maxLength: 1, nullable: false),
+                    CheckedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ApprovedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ActionTaken = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CheckReviews", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CheckReviews_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CorrespondenceInwards",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    IncomingLetterNo = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    LetterDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    NjsInwardNo = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    ReceiptDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    From = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Subject = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    AttachmentDetails = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ActionTaken = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    StoragePath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Remarks = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    RepliedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CorrespondenceInwards", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CorrespondenceInwards_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CorrespondenceOutwards",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    LetterNo = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    LetterDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    To = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Subject = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    AttachmentDetails = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ActionTaken = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    StoragePath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Remarks = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Acknowledgement = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CorrespondenceOutwards", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CorrespondenceOutwards_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "FeasibilityStudies",
                 columns: table => new
                 {
@@ -803,6 +902,41 @@ namespace NJS.Domain.Migrations
                     table.PrimaryKey("PK_GoNoGoDecisions", x => x.Id);
                     table.ForeignKey(
                         name: "FK_GoNoGoDecisions_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "InputRegisters",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    DataReceived = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    ReceiptDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReceivedFrom = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    FilesFormat = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NoOfFiles = table.Column<int>(type: "int", nullable: false),
+                    FitForPurpose = table.Column<bool>(type: "bit", nullable: false),
+                    Check = table.Column<bool>(type: "bit", nullable: false),
+                    CheckedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CheckedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Custodian = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    StoragePath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Remarks = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InputRegisters", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_InputRegisters_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id",
@@ -923,7 +1057,8 @@ namespace NJS.Domain.Migrations
                     UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     EstimatedBudget = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TaskType = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -971,13 +1106,13 @@ namespace NJS.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     WBSTaskId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CostRate = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    ODCCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    Unit = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TotalHours = table.Column<double>(type: "float", nullable: false),
                     TotalCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    ODCHours = table.Column<double>(type: "float", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -990,8 +1125,7 @@ namespace NJS.Domain.Migrations
                         name: "FK_UserWBSTasks_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_UserWBSTasks_WBSTasks_WBSTaskId",
                         column: x => x.WBSTaskId,
@@ -1092,6 +1226,21 @@ namespace NJS.Domain.Migrations
                 column: "BidPreparationId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CheckReviews_ProjectId",
+                table: "CheckReviews",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CorrespondenceInwards_ProjectId",
+                table: "CorrespondenceInwards",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CorrespondenceOutwards_ProjectId",
+                table: "CorrespondenceOutwards",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_FeasibilityStudies_ProjectId",
                 table: "FeasibilityStudies",
                 column: "ProjectId");
@@ -1130,6 +1279,11 @@ namespace NJS.Domain.Migrations
                 name: "IX_GoNoGoVersions_GoNoGoDecisionHeaderId",
                 table: "GoNoGoVersions",
                 column: "GoNoGoDecisionHeaderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InputRegisters_ProjectId",
+                table: "InputRegisters",
+                column: "ProjectId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_JobStartForms_ProjectId",
@@ -1294,6 +1448,15 @@ namespace NJS.Domain.Migrations
                 name: "BidVersionHistories");
 
             migrationBuilder.DropTable(
+                name: "CheckReviews");
+
+            migrationBuilder.DropTable(
+                name: "CorrespondenceInwards");
+
+            migrationBuilder.DropTable(
+                name: "CorrespondenceOutwards");
+
+            migrationBuilder.DropTable(
                 name: "FailedEmailLogs");
 
             migrationBuilder.DropTable(
@@ -1310,6 +1473,9 @@ namespace NJS.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "GoNoGoVersions");
+
+            migrationBuilder.DropTable(
+                name: "InputRegisters");
 
             migrationBuilder.DropTable(
                 name: "JobStartFormSelections");
