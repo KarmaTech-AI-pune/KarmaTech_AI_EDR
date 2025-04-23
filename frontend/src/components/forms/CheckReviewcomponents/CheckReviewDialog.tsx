@@ -42,9 +42,10 @@ interface CheckReviewDialogProps {
   onClose: () => void;
   onSave: (data: Omit<CheckReviewRow, 'projectId' | 'activityNo'>) => void;
   nextActivityNo: string;
+  editData?: CheckReviewRow;
 }
 
-export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: CheckReviewDialogProps) => {
+export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editData }: CheckReviewDialogProps) => {
   const [formData, setFormData] = useState<Omit<CheckReviewRow, 'projectId' | 'activityNo'>>({
     activityName: '',
     objective: '',
@@ -57,7 +58,7 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
     actionTaken: ''
   });
 
-  const handleChange = (field: keyof Omit<CheckReviewRow, 'projectId' | 'activityNo'>) => 
+  const handleChange = (field: keyof Omit<CheckReviewRow, 'projectId' | 'activityNo'>) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setFormData({
         ...formData,
@@ -71,6 +72,36 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
       completion: event.target.checked ? 'Y' : 'N'
     });
   };
+
+  // Initialize form data when editData changes
+  React.useEffect(() => {
+    if (editData) {
+      setFormData({
+        activityName: editData.activityName,
+        objective: editData.objective,
+        references: editData.references || '',
+        fileName: editData.fileName || '',
+        qualityIssues: editData.qualityIssues || '',
+        completion: editData.completion,
+        checkedBy: editData.checkedBy || '',
+        approvedBy: editData.approvedBy || '',
+        actionTaken: editData.actionTaken || ''
+      });
+    } else {
+      // Reset form when not editing
+      setFormData({
+        activityName: '',
+        objective: '',
+        references: '',
+        fileName: '',
+        qualityIssues: '',
+        completion: 'N',
+        checkedBy: '',
+        approvedBy: '',
+        actionTaken: ''
+      });
+    }
+  }, [editData, open]);
 
   const handleSubmit = () => {
     onSave(formData);
@@ -114,7 +145,7 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
     <StyledDialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ m: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" component="div" sx={{ color: '#1976d2', fontWeight: 500 }}>
-          Add Check Review - Activity No: {nextActivityNo}
+          {editData ? 'Edit Check Review' : `Add Check Review - Activity No: ${nextActivityNo}`}
         </Typography>
         <IconButton
           onClick={onClose}
@@ -269,9 +300,9 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
       </DialogContent>
 
       <DialogActions>
-        <Button 
+        <Button
           onClick={onClose}
-          sx={{ 
+          sx={{
             color: 'text.secondary',
             '&:hover': {
               backgroundColor: 'rgba(0, 0, 0, 0.04)'
@@ -280,7 +311,7 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
         >
           Cancel
         </Button>
-        <Button 
+        <Button
           onClick={handleSubmit}
           variant="contained"
           sx={{

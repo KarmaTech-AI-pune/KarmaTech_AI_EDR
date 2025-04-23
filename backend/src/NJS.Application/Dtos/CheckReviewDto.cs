@@ -1,8 +1,11 @@
+using System;
+
 namespace NJS.Application.Dtos
 {
     public class CheckReviewDto
     {
-        public string ProjectId { get; set; }
+        public int Id { get; set; }
+        public int ProjectId { get; set; }
         public string ActivityNo { get; set; }
         public string ActivityName { get; set; }
         public string Objective { get; set; }
@@ -13,5 +16,9 @@ namespace NJS.Application.Dtos
         public string CheckedBy { get; set; }
         public string ApprovedBy { get; set; }
         public string ActionTaken { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string CreatedBy { get; set; }
+        public string UpdatedBy { get; set; }
     }
 }

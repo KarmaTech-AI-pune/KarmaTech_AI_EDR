@@ -26,6 +26,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             {
                 Id = o.Id,
                 Stage = o.Stage,
+                BidNumber = o.BidNumber ?? "",
                 StrategicRanking = o.StrategicRanking,
                 BidFees = o.BidFees,
                 Emd = o.Emd,

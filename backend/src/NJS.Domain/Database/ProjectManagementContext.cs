@@ -11,7 +11,7 @@ namespace NJS.Domain.Database
     {
         public ProjectManagementContext(DbContextOptions<ProjectManagementContext> options) : base(options)
         {
-            
+
         }
 
         public DbSet<BidPreparation> BidPreparations { get; set; }
@@ -48,6 +48,7 @@ namespace NJS.Domain.Database
         public DbSet<InputRegister> InputRegisters { get; set; }
         public DbSet<CorrespondenceInward> CorrespondenceInwards { get; set; }
         public DbSet<CorrespondenceOutward> CorrespondenceOutwards { get; set; }
+        public DbSet<CheckReview> CheckReviews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -338,6 +339,33 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.StoragePath).HasMaxLength(500).IsRequired(false);
                 entity.Property(e => e.Remarks).HasMaxLength(1000).IsRequired(false);
                 entity.Property(e => e.Acknowledgement).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.CreatedBy).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(i => i.Project)
+                      .WithMany()
+                      .HasForeignKey(i => i.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure CheckReview entity
+            modelBuilder.Entity<CheckReview>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ActivityNo).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ActivityName).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Objective).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.References).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.FileName).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.QualityIssues).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.Completion).IsRequired().HasMaxLength(1);
+                entity.Property(e => e.CheckedBy).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.ApprovedBy).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.ActionTaken).HasMaxLength(500).IsRequired(false);
                 entity.Property(e => e.CreatedBy).IsRequired(false);
                 entity.Property(e => e.UpdatedBy).IsRequired(false);
 

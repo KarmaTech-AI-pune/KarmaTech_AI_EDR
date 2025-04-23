@@ -34,8 +34,10 @@ namespace NJS.Application.Extensions
             services.AddScoped<IBidPreparationRepository, BidPreparationRepository>();
             services.AddScoped<ISettingsRepository, SettingsRepository>();
             services.AddScoped<IInputRegisterRepository, InputRegisterRepository>();
-            services.AddScoped<ICorrespondenceOutwardRepository , CorrespondenceOutwardRepository>();
             services.AddScoped<ICorrespondenceInwardRepository, CorrespondenceInwardRepository>();
+            services.AddScoped<ICorrespondenceOutwardRepository, CorrespondenceOutwardRepository>();
+            services.AddScoped<ICheckReviewRepository, CheckReviewRepository>()
+              
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
