@@ -39,6 +39,7 @@ export interface TableTemplateProps {
   totalLabel: string;
   initialExpanded?: boolean;
   customRows?: CustomRow[];
+  totalCalculationType?: 'sumResourcesOnly' | 'sumExpenseContingencies' | 'sumAll'; // Add this line
   onDataChange?: (data: { resources: WBSResource[], customRows: CustomRow[] }) => void;
 }
 
@@ -118,6 +119,7 @@ const TableTemplate = ({
   totalLabel,
   initialExpanded = true,
   customRows = [],
+  totalCalculationType = 'sumAll', // Default to summing everything if not specified
   onDataChange
 }: TableTemplateProps) => {
   const [expanded, setExpanded] = useState<string[]>(initialExpanded ? [sectionId] : []);
@@ -170,14 +172,29 @@ const TableTemplate = ({
     }
   };
 
-  // Calculate total budgeted cost based on specific custom rows
-  const totalBudgetedCost = localCustomRows
-    .filter(row => 
-      row.id === 'expenses-subtotal' || 
-      row.id === 'expenses-contingencies' || 
-      row.id === 'expenses-expense-contingencies'
-    )
-    .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+  // Calculate total budgeted cost based on the specified type
+  const totalBudgetedCost = (() => {
+    switch (totalCalculationType) {
+      case 'sumResourcesOnly':
+        // Sum only the costs from the main resources array
+        return resources.reduce((sum, resource) => sum + (resource.budgetedCost || 0), 0);
+      case 'sumExpenseContingencies':
+        // Sum only the specific expense-related custom rows
+        return localCustomRows
+          .filter(row =>
+            row.id === 'expenses-subtotal' ||
+            row.id === 'expenses-contingencies' ||
+            row.id === 'expenses-expense-contingencies'
+          )
+          .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+      case 'sumAll': // Default: Sum all resources and all custom rows
+      default:
+        return [
+          ...resources.map(r => r.budgetedCost || 0),
+          ...localCustomRows.filter(r => r.budgetedCost !== undefined).map(r => r.budgetedCost || 0)
+        ].reduce((sum, cost) => sum + cost, 0);
+    }
+  })();
 
   return (
     <Box sx={{ ...tableStyles.section, mb: 3 }}>

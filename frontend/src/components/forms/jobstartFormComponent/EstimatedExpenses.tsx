@@ -106,6 +106,7 @@ const EstimatedExpenses = ({ wbsResources, onTotalCostChange }: EstimatedExpense
         initialExpanded={true}
         customRows={tableData.customRows}
         onDataChange={handleDataChange}
+        totalCalculationType='sumExpenseContingencies' // Add this prop
       />
     </>
   );

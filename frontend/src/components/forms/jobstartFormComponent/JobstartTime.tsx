@@ -45,6 +45,7 @@ const JobstartTime = ({ wbsResources, onTotalCostChange }: JobstartTimeProps) =>
         initialExpanded={true}
         customRows={tableData.customRows}
         onDataChange={handleDataChange}
+        totalCalculationType='sumResourcesOnly' // Add this prop
       />
     </>
   );
