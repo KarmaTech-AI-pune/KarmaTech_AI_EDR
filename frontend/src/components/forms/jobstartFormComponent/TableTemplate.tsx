@@ -13,7 +13,8 @@ import {
   TableBody,
   TextField,
   SxProps,
-  Theme
+  Theme,
+  InputAdornment // Add this import
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { WBSResource } from '../../../types/jobStartFormTypes';
@@ -24,7 +25,7 @@ export interface CustomRow {
   title: string;
   hasRateField?: boolean;
   hasUnitsField?: boolean;
-  unitPrefix?: string;
+  unitSuffix?: string;
   units?: number;
   budgetedCost?: number;
   remarks?: string;
@@ -262,31 +263,29 @@ const TableTemplate = ({
                     <TableCell align="center">
                       {row.hasRateField ? (
                         <TextField
-                          fullWidth
                           size="small"
                           variant="outlined"
                           placeholder="Rate"
-                          type="number"
+                          type="text"
                           onChange={(e) => handleCustomRowChange(row.id, 'rate', e.target.value)}
-                          sx={tableStyles.textField}
+                          sx={{ ...tableStyles.textField, width: '120px' }} // Apply width here
                         />
                       ) : null}
                     </TableCell>
                     <TableCell align="center">
                       {row.hasUnitsField ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {row.unitPrefix && <Typography sx={{ mr: 1 }}>{row.unitPrefix}</Typography>}
-                          <TextField
-                            fullWidth
-                            size="small"
-                            variant="outlined"
-                            placeholder="Units"
-                            type="number"
-                            value={row.units || ''}
+                        <TextField
+                          fullWidth
+                          size="small"
+                          variant="outlined"
+                          type="text"
+                            value={row.units || '0'}
                             onChange={(e) => handleCustomRowChange(row.id, 'units', e.target.value)}
-                            sx={tableStyles.textField}
-                          />
-                        </Box>
+                            sx={{ ...tableStyles.textField, width: '120px' }} // Apply width here
+                            InputProps={row.unitSuffix === '%' ? { // Conditionally add adornment
+                              endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                            } : undefined} // No adornment if unitSuffix is not '%'
+                        />
                       ) : null}
                     </TableCell>
                     <TableCell align="center">{row.budgetedCost?.toLocaleString() || '0'}</TableCell>

@@ -26,7 +26,7 @@ const EstimatedExpenses = ({ wbsResources, onTotalCostChange }: EstimatedExpense
         title: 'Contingencies (LS)',
         hasRateField: false,
         hasUnitsField: true,
-        unitPrefix: '%',
+        unitSuffix: '%',
         budgetedCost: 0,
         remarks: ''
       },
@@ -36,7 +36,7 @@ const EstimatedExpenses = ({ wbsResources, onTotalCostChange }: EstimatedExpense
         title: 'Expense Contingencies (LS)',
         hasRateField: false,
         hasUnitsField: true,
-        unitPrefix: '%',
+        unitSuffix: '%',
         budgetedCost: 0,
         remarks: ''
       }
@@ -70,12 +70,12 @@ const EstimatedExpenses = ({ wbsResources, onTotalCostChange }: EstimatedExpense
     }
     
     // Calculate contingencies based on percentage if units are provided
-    if (contingenciesRow && contingenciesRow.units) {
+    if (contingenciesRow && contingenciesRow.units !== undefined && contingenciesRow.units !== null) {
       contingenciesRow.budgetedCost = percentageCalculation(contingenciesRow.units, subtotal);
     }
     
     // Calculate expense contingencies based on percentage if units are provided
-    if (expenseContingenciesRow && expenseContingenciesRow.units) {
+    if (expenseContingenciesRow && expenseContingenciesRow.units !== undefined && expenseContingenciesRow.units !== null) {
       expenseContingenciesRow.budgetedCost = percentageCalculation(expenseContingenciesRow.units, subtotal);
     }
     

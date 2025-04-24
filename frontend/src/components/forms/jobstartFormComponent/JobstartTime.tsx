@@ -16,6 +16,7 @@ const JobstartTime = ({ wbsResources, onTotalCostChange }: JobstartTimeProps) =>
         title: 'Time Contingencies',
         hasRateField: true,
         hasUnitsField: true,
+        unitSuffix: '%',
         budgetedCost: 0,
         remarks: ''
       }
