@@ -170,10 +170,17 @@ const EstimatedExpenses = ({ wbsResources }: EstimatedExpensesProps) => {
 
                   {/* Total Row */}
                   {wbsResources.length > 0 && (
-                    <TableRow sx={summaryRowStyle}>
-                      <TableCell colSpan={4} align="right">Total ODC Expenses</TableCell>
-                      <TableCell align="right">{totalBudgetedCost.toLocaleString()}</TableCell>
-                      <TableCell></TableCell>
+                    <TableRow sx={{
+                      bgcolor: '#f0f0f0',
+                      '& .MuiTableCell-root': {
+                        fontWeight: 'bold',
+                        fontSize: '1rem',
+                        padding: '16px'
+                      }
+                    }}>
+                      <TableCell colSpan={4} sx={{ fontWeight: 'bold' }}>Total ODC Expenses</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{totalBudgetedCost.toLocaleString()}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}></TableCell>
                     </TableRow>
                   )}
                 </TableBody>
