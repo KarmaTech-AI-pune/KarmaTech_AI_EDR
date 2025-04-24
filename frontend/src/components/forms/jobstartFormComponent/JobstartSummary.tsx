@@ -103,7 +103,7 @@ const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
         }
       }}>
         <TableContainer>
-          <Table>
+          <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
             <TableBody>
               {/* Profit Row */}
               <TableRow sx={{
@@ -114,24 +114,25 @@ const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
                   fontWeight: 'bold'
                 }
               }}>
-                <TableCell colSpan={4} sx={tableCellStyle}>Profit</TableCell>
+                <TableCell colSpan={4} sx={{...tableCellStyle, width: 'calc(100% - 256px)'}}>Profit</TableCell>
                 <TableCell
                   align="right"
                   sx={{
                     ...tableCellStyle,
+                    width: '240px',
                     color: parseFloat(calculateProfit().replace(/,/g, '')) >= 0 ? '#2e7d32' : '#d32f2f',
                     fontSize: '1.2em'
                   }}
                 >
                   {calculateProfit()}
                 </TableCell>
-                <TableCell sx={tableCellStyle}></TableCell>
+                <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
               </TableRow>
 
               {/* Project Fees Section */}
               <TableRow sx={{ bgcolor: '#fafafa' }}>
-                <TableCell colSpan={4} sx={{ ...tableCellStyle, fontWeight: 'bold' }}>PROJECT FEES</TableCell>
-                <TableCell align="right" sx={tableCellStyle}>
+                <TableCell colSpan={4} sx={{ ...tableCellStyle, width: 'calc(100% - 256px)', fontWeight: 'bold' }}>PROJECT FEES</TableCell>
+                <TableCell align="right" sx={{...tableCellStyle, width: '240px'}}>
                   <TextField
                     size="small"
                     type="number"
@@ -139,13 +140,14 @@ const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
                     onChange={(e) => handleProjectFeesChange(e.target.value)}
                     sx={{
                       ...textFieldStyle,
+                      width: '50%',
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: '#fff'
                       }
                     }}
                   />
                 </TableCell>
-                <TableCell sx={tableCellStyle}></TableCell>
+                <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
               </TableRow>
 
               {/* Service Tax Row */}
@@ -154,6 +156,7 @@ const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
                   colSpan={4}
                   sx={{
                     ...tableCellStyle,
+                    width: 'calc(100% - 256px)',
                     fontWeight: 'bold',
                     '& .MuiBox-root': {
                       display: 'flex',
@@ -186,13 +189,14 @@ const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
                   align="right"
                   sx={{
                     ...tableCellStyle,
+                    width: '240px',
                     fontWeight: 'bold',
                     color: '#1976d2'
                   }}
                 >
                   {calculateServiceTax()}
                 </TableCell>
-                <TableCell sx={tableCellStyle}></TableCell>
+                <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
               </TableRow>
 
               {/* Total Project Fees Row */}
@@ -204,9 +208,9 @@ const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
                   fontSize: '1.1em'
                 }
               }}>
-                <TableCell colSpan={4} sx={tableCellStyle}>TOTAL PROJECT FEES</TableCell>
-                <TableCell align="right" sx={tableCellStyle}>{calculateTotalProjectFees()}</TableCell>
-                <TableCell sx={tableCellStyle}></TableCell>
+                <TableCell colSpan={4} sx={{...tableCellStyle, width: 'calc(100% - 256px)'}}>TOTAL PROJECT FEES</TableCell>
+                <TableCell align="right" sx={{...tableCellStyle, width: '240px'}}>{calculateTotalProjectFees()}</TableCell>
+                <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
               </TableRow>
             </TableBody>
           </Table>

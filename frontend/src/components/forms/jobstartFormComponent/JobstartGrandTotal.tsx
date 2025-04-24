@@ -21,7 +21,7 @@ const JobstartGrandTotal = ({ timeCost, odcExpensesCost }: JobstartGrandTotalPro
   };
 
   const summaryRowStyle = {
-    bgcolor: '#f8f9fa',
+    bgcolor: '#e3f2fd', // Changed to match the Profit row in JobstartSummary
     '& .MuiTableCell-root': {
       fontWeight: 'bold'
     }
@@ -50,7 +50,7 @@ const JobstartGrandTotal = ({ timeCost, odcExpensesCost }: JobstartGrandTotalPro
   return (
     <Box sx={{ ...sectionStyle, mb: 3 }}>
       <TableContainer>
-        <Table>
+        <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
           <TableBody>
             <TableRow sx={{
               ...summaryRowStyle,
@@ -59,9 +59,9 @@ const JobstartGrandTotal = ({ timeCost, odcExpensesCost }: JobstartGrandTotalPro
                 fontSize: '1.1em'
               }
             }}>
-              <TableCell colSpan={4} sx={tableCellStyle}>GRAND TOTAL</TableCell>
-              <TableCell align="right" sx={tableCellStyle}>{calculateGrandTotal()}</TableCell>
-              <TableCell sx={tableCellStyle}></TableCell>
+              <TableCell colSpan={4} sx={{...tableCellStyle, width: 'calc(100% - 256px)'}}>GRAND TOTAL</TableCell>
+              <TableCell align="right" sx={{...tableCellStyle, width: '240px'}}>{calculateGrandTotal()}</TableCell>
+              <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
             </TableRow>
           </TableBody>
         </Table>
