@@ -9,7 +9,12 @@ import {
   TextField
 } from '@mui/material';
 
-const JobstartSummary = () => {
+// Define interface for component props
+interface JobstartSummaryProps {
+  grandTotal: number;
+}
+
+const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
   // State for project fees and service tax
   const [projectFees, setProjectFees] = useState<string>('0');
   const [serviceTax, setServiceTax] = useState({
@@ -18,36 +23,36 @@ const JobstartSummary = () => {
   });
 
   // Styles
-  const tableCellStyle = { 
-    borderBottom: '1px solid #e0e0e0', 
-    padding: '12px 16px' 
-  }; 
-  
-  const textFieldStyle = { 
-    '& .MuiOutlinedInput-root': {  
-      borderRadius: 1, 
-      backgroundColor: '#fff', 
-      '&:hover fieldset': { 
-        borderColor: '#1976d2', 
-      }, 
-      '&.Mui-focused fieldset': { 
-        borderColor: '#1976d2', 
-      } 
-    } 
+  const tableCellStyle = {
+    borderBottom: '1px solid #e0e0e0',
+    padding: '12px 16px'
   };
-  
-  const sectionStyle = { 
-    border: '1px solid #e0e0e0', 
-    borderRadius: '4px', 
-    overflow: 'hidden', 
-    '& .MuiAccordion-root': { 
-      borderRadius: '4px 4px 0 0 !important', 
-      borderBottom: 'none' 
-    }, 
-    '& .MuiTableContainer-root': { 
-      borderRadius: '0 0 4px 4px', 
-      borderTop: 'none' 
-    } 
+
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 1,
+      backgroundColor: '#fff',
+      '&:hover fieldset': {
+        borderColor: '#1976d2',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#1976d2',
+      }
+    }
+  };
+
+  const sectionStyle = {
+    border: '1px solid #e0e0e0',
+    borderRadius: '4px',
+    overflow: 'hidden',
+    '& .MuiAccordion-root': {
+      borderRadius: '4px 4px 0 0 !important',
+      borderBottom: 'none'
+    },
+    '& .MuiTableContainer-root': {
+      borderRadius: '0 0 4px 4px',
+      borderTop: 'none'
+    }
   };
 
   // Handlers for input changes
@@ -64,9 +69,10 @@ const JobstartSummary = () => {
 
   // Calculation functions
   const calculateProfit = () => {
-    // This would typically calculate profit based on revenue minus costs
-    // For now, returning a placeholder value
-    return '50000.00';
+    // Calculate profit as project fees minus grand total
+    const fees = parseFloat(projectFees) || 0;
+    const profit =  fees - grandTotal;
+    return profit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   const calculateServiceTax = () => {
@@ -87,7 +93,7 @@ const JobstartSummary = () => {
   return (
     <>
       {/* Summary Section */}
-      <Box sx={{ 
+      <Box sx={{
         ...sectionStyle,
         '& .MuiTableRow-root:not(:last-child)': {
           '& .MuiTableCell-root': {
@@ -108,11 +114,11 @@ const JobstartSummary = () => {
                 }
               }}>
                 <TableCell colSpan={4} sx={tableCellStyle}>Profit</TableCell>
-                <TableCell 
-                  align="right" 
+                <TableCell
+                  align="right"
                   sx={{
                     ...tableCellStyle,
-                    color: parseFloat(calculateProfit()) >= 0 ? '#2e7d32' : '#d32f2f',
+                    color: parseFloat(calculateProfit().replace(/,/g, '')) >= 0 ? '#2e7d32' : '#d32f2f',
                     fontSize: '1.2em'
                   }}
                 >
@@ -143,10 +149,10 @@ const JobstartSummary = () => {
 
               {/* Service Tax Row */}
               <TableRow sx={{ bgcolor: '#fafafa' }}>
-                <TableCell 
-                  colSpan={4} 
-                  sx={{ 
-                    ...tableCellStyle, 
+                <TableCell
+                  colSpan={4}
+                  sx={{
+                    ...tableCellStyle,
                     fontWeight: 'bold',
                     '& .MuiBox-root': {
                       display: 'flex',
@@ -175,10 +181,10 @@ const JobstartSummary = () => {
                     <Box component="span" sx={{ ml: 1 }}>%</Box>
                   </Box>
                 </TableCell>
-                <TableCell 
-                  align="right" 
-                  sx={{ 
-                    ...tableCellStyle, 
+                <TableCell
+                  align="right"
+                  sx={{
+                    ...tableCellStyle,
                     fontWeight: 'bold',
                     color: '#1976d2'
                   }}

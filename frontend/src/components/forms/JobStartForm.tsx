@@ -139,7 +139,9 @@ const JobStartForm: React.FC = () => {
                   timeCost={totalTimeCost}
                   odcExpensesCost={totalODCExpensesCost}
                 />
-                <JobstartSummary />
+                <JobstartSummary
+                  grandTotal={totalTimeCost + totalODCExpensesCost}
+                />
               </>
             )}
           </Paper>
