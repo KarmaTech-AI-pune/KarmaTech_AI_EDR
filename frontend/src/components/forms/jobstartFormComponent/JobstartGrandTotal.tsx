@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Box,
   TableContainer,
@@ -8,39 +7,44 @@ import {
   TableCell
 } from '@mui/material';
 
-const JobstartGrandTotal = () => {
+// Define interface for component props
+interface JobstartGrandTotalProps {
+  timeCost: number;
+  odcExpensesCost: number;
+}
+
+const JobstartGrandTotal = ({ timeCost, odcExpensesCost }: JobstartGrandTotalProps) => {
   // Styles
-  const tableCellStyle = { 
-    borderBottom: '1px solid #e0e0e0', 
-    padding: '12px 16px' 
-  }; 
-  
-  const summaryRowStyle = { 
-    bgcolor: '#f8f9fa', 
-    '& .MuiTableCell-root': { 
-      fontWeight: 'bold' 
-    } 
-  };
-  
-  const sectionStyle = { 
-    border: '1px solid #e0e0e0', 
-    borderRadius: '4px', 
-    overflow: 'hidden', 
-    '& .MuiAccordion-root': { 
-      borderRadius: '4px 4px 0 0 !important', 
-      borderBottom: 'none' 
-    }, 
-    '& .MuiTableContainer-root': { 
-      borderRadius: '0 0 4px 4px', 
-      borderTop: 'none' 
-    } 
+  const tableCellStyle = {
+    borderBottom: '1px solid #e0e0e0',
+    padding: '12px 16px'
   };
 
-  // Function to calculate grand total - placeholder for now
-  const calculateGrandTotal = () => {
-    // This would typically sum up all the costs from different sections
-    // For now, returning a placeholder value
-    return '0.00';
+  const summaryRowStyle = {
+    bgcolor: '#f8f9fa',
+    '& .MuiTableCell-root': {
+      fontWeight: 'bold'
+    }
+  };
+
+  const sectionStyle = {
+    border: '1px solid #e0e0e0',
+    borderRadius: '4px',
+    overflow: 'hidden',
+    '& .MuiAccordion-root': {
+      borderRadius: '4px 4px 0 0 !important',
+      borderBottom: 'none'
+    },
+    '& .MuiTableContainer-root': {
+      borderRadius: '0 0 4px 4px',
+      borderTop: 'none'
+    }
+  };
+
+  // Function to calculate grand total as sum of timeCost and odcExpensesCost
+  const calculateGrandTotal = (): string => {
+    const grandTotal = timeCost + odcExpensesCost;
+    return grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   return (

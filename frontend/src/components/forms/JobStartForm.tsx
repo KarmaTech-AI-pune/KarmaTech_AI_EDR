@@ -16,6 +16,10 @@ const JobStartForm: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
+  // State to track total costs for different sections
+  const [totalTimeCost, setTotalTimeCost] = useState<number>(0)
+  const [totalODCExpensesCost, setTotalODCExpensesCost] = useState<number>(0)
+
   // Get project ID from context
   const projectId = context?.selectedProject?.id?.toString()
 
@@ -113,9 +117,28 @@ const JobStartForm: React.FC = () => {
               <Typography color="error" sx={{ my: 2 }}>{error}</Typography>
             ) : (
               <>
-                <JobstartTime wbsResources={wbsResources.filter(resource => resource.taskType === 0)} />
-                <EstimatedExpenses wbsResources={wbsResources.filter(resource => resource.taskType === 1)} />
-                <JobstartGrandTotal />
+                <JobstartTime
+                  wbsResources={wbsResources.filter(resource => resource.taskType === 0)}
+                  onTotalCostChange={(data) => {
+                    // Calculate total from resources and custom rows
+                    const resourcesCost = data.resources.reduce((sum, resource) => sum + resource.budgetedCost, 0);
+                    const customRowsCost = data.customRows.reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+                    setTotalTimeCost(resourcesCost + customRowsCost);
+                  }}
+                />
+                <EstimatedExpenses
+                  wbsResources={wbsResources.filter(resource => resource.taskType === 1)}
+                  onTotalCostChange={(data) => {
+                    // Calculate total from resources and custom rows
+                    const resourcesCost = data.resources.reduce((sum, resource) => sum + resource.budgetedCost, 0);
+                    const customRowsCost = data.customRows.reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+                    setTotalODCExpensesCost(resourcesCost + customRowsCost);
+                  }}
+                />
+                <JobstartGrandTotal
+                  timeCost={totalTimeCost}
+                  odcExpensesCost={totalODCExpensesCost}
+                />
                 <JobstartSummary />
               </>
             )}
