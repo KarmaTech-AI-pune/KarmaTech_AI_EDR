@@ -12,8 +12,10 @@ export interface WBSResource {
 
 export interface JobstartTimeProps {
   wbsResources: WBSResource[];
+  onTotalCostChange?: (data: { resources: WBSResource[], customRows: any[] }) => void;
 }
 
 export interface EstimatedExpensesProps {
   wbsResources: WBSResource[];
+  onTotalCostChange?: (data: { resources: WBSResource[], customRows: any[] }) => void;
 }

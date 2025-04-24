@@ -24,6 +24,8 @@ export interface CustomRow {
   title: string;
   hasRateField?: boolean;
   hasUnitsField?: boolean;
+  unitPrefix?: string;
+  units?: number;
   budgetedCost?: number;
   remarks?: string;
 }
@@ -168,11 +170,14 @@ const TableTemplate = ({
     }
   };
 
-  // Calculate total budgeted cost including custom rows
-  const totalBudgetedCost = [
-    ...resources.map(r => r.budgetedCost),
-    ...localCustomRows.filter(r => r.budgetedCost !== undefined).map(r => r.budgetedCost || 0)
-  ].reduce((sum, cost) => sum + cost, 0);
+  // Calculate total budgeted cost based on specific custom rows
+  const totalBudgetedCost = localCustomRows
+    .filter(row => 
+      row.id === 'expenses-subtotal' || 
+      row.id === 'expenses-contingencies' || 
+      row.id === 'expenses-expense-contingencies'
+    )
+    .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
 
   return (
     <Box sx={{ ...tableStyles.section, mb: 3 }}>
@@ -252,15 +257,19 @@ const TableTemplate = ({
                     </TableCell>
                     <TableCell align="center">
                       {row.hasUnitsField ? (
-                        <TextField
-                          fullWidth
-                          size="small"
-                          variant="outlined"
-                          placeholder="Units"
-                          type="number"
-                          onChange={(e) => handleCustomRowChange(row.id, 'units', e.target.value)}
-                          sx={tableStyles.textField}
-                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {row.unitPrefix && <Typography sx={{ mr: 1 }}>{row.unitPrefix}</Typography>}
+                          <TextField
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            placeholder="Units"
+                            type="number"
+                            value={row.units || ''}
+                            onChange={(e) => handleCustomRowChange(row.id, 'units', e.target.value)}
+                            sx={tableStyles.textField}
+                          />
+                        </Box>
                       ) : null}
                     </TableCell>
                     <TableCell align="center">{row.budgetedCost?.toLocaleString() || '0'}</TableCell>
@@ -293,4 +302,4 @@ const TableTemplate = ({
   );
 };
 
-export default TableTemplate; 
+export default TableTemplate;

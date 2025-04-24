@@ -28,9 +28,9 @@ export const multiplyCalculation = (...numbers: number[]): number => {
  * @param decimalPlaces - Optional number of decimal places (default: 2)
  * @returns The percentage value
  */
-export const percentageCalculation = (value: number, total: number, decimalPlaces: number = 2): number => {
-  if (total === 0) return 0;
-  const percentage = (value / total) * 100;
+export const percentageCalculation = (percent: number, total: number, decimalPlaces: number = 2): number => {
+  if (percent === 0) return 0;
+  const percentage = (percent * total) / 100;
   return Number(percentage.toFixed(decimalPlaces));
 };
 

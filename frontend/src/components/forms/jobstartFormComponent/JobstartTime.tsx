@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import TableTemplate, { CustomRow } from './TableTemplate';
 import { JobstartTimeProps, WBSResource } from '../../../types/jobStartFormTypes';
 
-const JobstartTime = ({ wbsResources }: JobstartTimeProps) => {
+const JobstartTime = ({ wbsResources, onTotalCostChange }: JobstartTimeProps) => {
   const [tableData, setTableData] = useState<{
     resources: WBSResource[];
     customRows: CustomRow[];
@@ -21,6 +21,13 @@ const JobstartTime = ({ wbsResources }: JobstartTimeProps) => {
       }
     ]
   });
+
+  // Notify parent component when data changes
+  useEffect(() => {
+    if (onTotalCostChange) {
+      onTotalCostChange(tableData);
+    }
+  }, [tableData, onTotalCostChange]);
 
   const handleDataChange = (data: { resources: WBSResource[]; customRows: CustomRow[] }) => {
     setTableData(data);
