@@ -10,12 +10,15 @@ import {
   TableHead,
   TableRow,
   TableCell,
-  TableBody
+  TableBody,
+  TextField
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { JobstartTimeProps } from '../../../types/jobStartFormTypes';
 
-const JobstartTime = () => {
+const JobstartTime = ({ wbsResources }: JobstartTimeProps) => {
   const [expanded, setExpanded] = useState<string[]>(['time']);
+  const [remarks, setRemarks] = useState<{ [key: string]: string }>({});
 
   const handleAccordionChange = (panel: string) => {
     setExpanded(prev => {
@@ -26,6 +29,16 @@ const JobstartTime = () => {
       }
     });
   };
+
+  const handleRemarksChange = (id: string | number, value: string) => {
+    setRemarks(prev => ({
+      ...prev,
+      [id.toString()]: value
+    }));
+  };
+
+  // Calculate total budgeted cost
+  const totalBudgetedCost = wbsResources.reduce((sum, resource) => sum + resource.budgetedCost, 0);
 
   const textFieldStyle = {
     '& .MuiOutlinedInput-root': {
@@ -129,6 +142,36 @@ const JobstartTime = () => {
                     <TableCell align="right"></TableCell>
                     <TableCell align="right"></TableCell>
                     <TableCell align="right"></TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+
+                  {/* WBS Resources with taskType=0 (Manpower) */}
+                  {wbsResources.map((resource, index) => (
+                    <TableRow key={resource.id}>
+                      <TableCell sx={{ pl: 5 }}>{`1a.${index + 1}`}</TableCell>
+                      <TableCell>
+                        {resource.employeeName || resource.name || "Unknown"}
+                      </TableCell>
+                      <TableCell align="right">{resource.rate.toLocaleString()}</TableCell>
+                      <TableCell align="right">{resource.units.toLocaleString()}</TableCell>
+                      <TableCell align="right">{resource.budgetedCost.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          variant="outlined"
+                          value={remarks[resource.id.toString()] || ''}
+                          onChange={(e) => handleRemarksChange(resource.id, e.target.value)}
+                          sx={textFieldStyle}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                  {/* Total Row */}
+                  <TableRow sx={summaryRowStyle}>
+                    <TableCell colSpan={4} align="right">Total Employee Personnel Cost</TableCell>
+                    <TableCell align="right">{totalBudgetedCost.toLocaleString()}</TableCell>
                     <TableCell></TableCell>
                   </TableRow>
                 </TableBody>
