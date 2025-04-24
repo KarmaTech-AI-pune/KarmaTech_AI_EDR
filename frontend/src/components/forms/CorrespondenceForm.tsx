@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
+import axios from 'axios';
 import {
   Box,
   Tab,
@@ -31,8 +32,6 @@ import {
   createOutwardRow,
   getInwardRows,
   getOutwardRows,
-  updateInwardRow,
-  updateOutwardRow,
   deleteInwardRow,
   deleteOutwardRow,
   InwardRow,
@@ -236,12 +235,19 @@ const CorrespondenceForm: React.FC = () => {
       const newData = { ...data, projectId };
 
       // Handle date formatting and add required fields
-      const formatDates = (data: any) => {
+      const formatDates = (data: any, isUpdate = false) => {
         const formattedData = { ...data };
 
-        // Add CreatedBy field - this is required by the backend
-        const user = context?.user;
-        formattedData.createdBy = user?.userName || 'System';
+        // Only add CreatedBy field for new records - this is required by the backend
+        if (!isUpdate) {
+          const user = context?.user;
+          formattedData.createdBy = user?.userName || 'System';
+          console.log('Adding createdBy for new record');
+        } else {
+          console.log('Not adding createdBy for update - using existing value');
+          // Make sure we don't have createdBy in update requests
+          delete formattedData.createdBy;
+        }
 
         // Make sure all required dates are properly formatted
         if (formattedData.letterDate) {
@@ -279,35 +285,97 @@ const CorrespondenceForm: React.FC = () => {
 
       console.log('Saving data:', newData);
 
-      if (isEdit && data.id) {
-        // Update existing record
+      // Check for our special flag to determine if this is an edit operation
+      const isUpdateOperation = data._isEditOperation === true;
+      console.log('OPERATION TYPE FROM FLAG:', isUpdateOperation ? 'UPDATE' : 'CREATE');
+      console.log('DATA ID:', data.id);
+
+      if (isUpdateOperation && data.id) {
+        // Update existing record - using the ID from the data
         if (tabValue === 0) {
-          const updatedData = formatDates(newData);
+          // Remove our special flag before sending to API
+          const { _isEditOperation, ...cleanData } = newData;
+          const updatedData = formatDates(cleanData, true); // Pass true for isUpdate
+
           // Add UpdatedBy field for updates
           const user = context?.user;
           updatedData.updatedBy = user?.userName || 'System';
+
           console.log('Formatted data for update:', updatedData);
-          const updatedRow = await updateInwardRow(data.id, updatedData);
+          console.log('EXPLICITLY CALLING PUT API with ID:', data.id);
+
+          // DIRECT AXIOS PUT REQUEST - completely bypassing the API functions
+          console.log('USING DIRECT AXIOS PUT REQUEST');
+          const token = localStorage.getItem('token');
+          const response = await axios.put(
+            `http://localhost:5245/api/correspondence/inward/${data.id}`,
+            updatedData,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : '',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+              },
+              withCredentials: false
+            }
+          );
+          const updatedRow = response.data;
+          console.log('Update successful, response:', updatedRow);
+
+          // Update the state with the updated row
           setInwardRows(inwardRows.map(row => row.id === data.id ? updatedRow : row));
         } else {
-          const updatedData = formatDates(newData);
+          // Remove our special flag before sending to API
+          const { _isEditOperation, ...cleanData } = newData;
+          const updatedData = formatDates(cleanData, true); // Pass true for isUpdate
+
           // Add UpdatedBy field for updates
           const user = context?.user;
           updatedData.updatedBy = user?.userName || 'System';
+
           console.log('Formatted data for update:', updatedData);
-          const updatedRow = await updateOutwardRow(data.id, updatedData);
+          console.log('EXPLICITLY CALLING PUT API with ID:', data.id);
+
+          // DIRECT AXIOS PUT REQUEST - completely bypassing the API functions
+          console.log('USING DIRECT AXIOS PUT REQUEST');
+          const token = localStorage.getItem('token');
+          const response = await axios.put(
+            `http://localhost:5245/api/correspondence/outward/${data.id}`,
+            updatedData,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : '',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+              },
+              withCredentials: false
+            }
+          );
+          const updatedRow = response.data;
+          console.log('Update successful, response:', updatedRow);
+
+          // Update the state with the updated row
           setOutwardRows(outwardRows.map(row => row.id === data.id ? updatedRow : row));
         }
       } else {
         // Create new record
+        // Remove our special flag before sending to API
+        const { _isEditOperation, ...cleanData } = newData;
+
         if (tabValue === 0) {
-          const formattedData = formatDates(newData);
+          const formattedData = formatDates(cleanData);
           console.log('Formatted data for create:', formattedData);
+          console.log('CALLING POST API for new inward record');
           const newRow = await createInwardRow(formattedData);
           setInwardRows([...inwardRows, newRow]);
         } else {
-          const formattedData = formatDates(newData);
+          const formattedData = formatDates(cleanData);
           console.log('Formatted data for create:', formattedData);
+          console.log('CALLING POST API for new outward record');
           const newRow = await createOutwardRow(formattedData);
           setOutwardRows([...outwardRows, newRow]);
         }

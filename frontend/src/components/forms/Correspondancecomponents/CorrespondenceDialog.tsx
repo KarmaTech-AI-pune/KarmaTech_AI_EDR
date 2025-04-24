@@ -41,7 +41,7 @@ interface CorrespondenceDialogProps {
   onClose: () => void;
   onSave: (data: any) => void;
   type: 'inward' | 'outward';
-  editData?: InwardRow | OutwardRow;
+  editData?: InwardRow | OutwardRow | null;
   isEdit?: boolean;
 }
 
@@ -152,8 +152,21 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
     setFormErrors({});
     setFormSubmitError(null);
 
-    // If editing, include the ID in the data
-    const dataToSave = isEdit && editData ? { ...formData, id: editData.id } : formData;
+    // CRITICAL: Always force the isEdit flag and ID if we're editing
+    let dataToSave;
+
+    if (isEdit && editData) {
+      // Make sure we're explicitly setting the ID
+      dataToSave = {
+        ...formData,
+        id: editData.id,
+        _isEditOperation: true  // Add a special flag to indicate this is an edit operation
+      };
+      console.log('EDIT MODE: Adding ID to data:', editData.id);
+    } else {
+      dataToSave = { ...formData, _isEditOperation: false };
+      console.log('CREATE MODE: No ID added');
+    }
 
     try {
       onSave(dataToSave);
