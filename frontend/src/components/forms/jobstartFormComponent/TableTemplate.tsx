@@ -143,7 +143,7 @@ const TableTemplate = ({
       [id.toString()]: value
     };
     setRemarks(newRemarks);
-    
+
     if (onDataChange) {
       onDataChange({
         resources: resources.map(resource => ({
@@ -162,9 +162,9 @@ const TableTemplate = ({
       }
       return row;
     });
-    
+
     setLocalCustomRows(updatedRows);
-    
+
     if (onDataChange) {
       onDataChange({
         resources,
@@ -239,9 +239,9 @@ const TableTemplate = ({
                     <TableCell>
                       {resource.employeeName || resource.name || resource.description || "Unknown"}
                     </TableCell>
-                    <TableCell align="center">{resource.rate.toLocaleString()}</TableCell>
-                    <TableCell align="center">{resource.units.toLocaleString()}</TableCell>
-                    <TableCell align="center">{resource.budgetedCost.toLocaleString()}</TableCell>
+                    <TableCell align="center">{resource.rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell align="center">{resource.units.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell align="center">{resource.budgetedCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                     <TableCell>
                       <TextField
                         fullWidth
@@ -288,7 +288,7 @@ const TableTemplate = ({
                         />
                       ) : null}
                     </TableCell>
-                    <TableCell align="center">{row.budgetedCost?.toLocaleString() || '0'}</TableCell>
+                    <TableCell align="center">{row.budgetedCost ? row.budgetedCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</TableCell>
                     <TableCell>
                       <TextField
                         fullWidth
@@ -306,7 +306,7 @@ const TableTemplate = ({
                 {/* Total Row */}
                 <TableRow sx={tableStyles.totalRow}>
                   <TableCell colSpan={4} sx={{ fontWeight: 'bold' }}>{totalLabel}</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>{totalBudgetedCost.toLocaleString()}</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>{totalBudgetedCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}></TableCell>
                 </TableRow>
               </TableBody>

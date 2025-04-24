@@ -79,15 +79,16 @@ const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
     // Calculate service tax based on project fees and tax percentage
     const fees = parseFloat(projectFees) || 0;
     const taxRate = parseFloat(serviceTax.percentage) || 0;
-    const taxAmount = (fees * taxRate / 100).toFixed(2);
-    return taxAmount;
+    const taxAmount = (fees * taxRate / 100);
+    return taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   const calculateTotalProjectFees = () => {
     // Calculate total project fees including service tax
     const fees = parseFloat(projectFees) || 0;
-    const tax = parseFloat(calculateServiceTax()) || 0;
-    return (fees + tax).toFixed(2);
+    const tax = parseFloat(calculateServiceTax().replace(/,/g, '')) || 0;
+    const total = fees + tax;
+    return total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   return (
