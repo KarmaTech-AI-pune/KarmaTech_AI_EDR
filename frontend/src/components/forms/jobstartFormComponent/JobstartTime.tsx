@@ -168,6 +168,40 @@ const JobstartTime = ({ wbsResources }: JobstartTimeProps) => {
                     </TableRow>
                   ))}
 
+                  {/* Time Contingencies Row */}
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 'bold', pl: 3 }}>1b</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>Time Contingencies</TableCell>
+                    <TableCell align="right">
+                      <TextField
+                        fullWidth
+                        size="small"
+                        variant="outlined"
+                        placeholder="Rate"
+                        sx={textFieldStyle}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <TextField
+                        fullWidth
+                        size="small"
+                        variant="outlined"
+                        placeholder="Units"
+                        sx={textFieldStyle}
+                      />
+                    </TableCell>
+                    <TableCell align="right">0</TableCell>
+                    <TableCell>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        variant="outlined"
+                        placeholder="Remarks"
+                        sx={textFieldStyle}
+                      />
+                    </TableCell>
+                  </TableRow>
+
                   {/* Total Row */}
                   <TableRow sx={{
                     bgcolor: '#f0f0f0',
