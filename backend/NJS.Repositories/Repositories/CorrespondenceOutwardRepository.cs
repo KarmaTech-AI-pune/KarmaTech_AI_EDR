@@ -40,16 +40,21 @@ namespace NJS.Repositories.Repositories
         {
             if (correspondenceOutward == null) throw new ArgumentNullException(nameof(correspondenceOutward));
 
-            // Check if we need to reset the identity seed before adding a new entry
-            await ResetIdentitySeedAsync();
-
-            // Ensure CreatedAt is set to a non-null value
-            correspondenceOutward.CreatedAt = DateTime.UtcNow;
-
             try
             {
+                // Check if we need to reset the identity seed before adding a new entry
+                await ResetIdentitySeedAsync();
+
+                // Ensure CreatedAt is set to a non-null value
+                correspondenceOutward.CreatedAt = DateTime.UtcNow;
+
+                // Don't set the ID - let the database assign it automatically
+
                 _context.CorrespondenceOutwards.Add(correspondenceOutward);
                 await _context.SaveChangesAsync();
+
+                Console.WriteLine($"Added correspondence outward with ID: {correspondenceOutward.Id}");
+
                 return correspondenceOutward.Id;
             }
             catch (Exception ex)
@@ -75,14 +80,28 @@ namespace NJS.Repositories.Repositories
 
         public async Task DeleteAsync(int id)
         {
-            var correspondenceOutward = await _context.CorrespondenceOutwards.FindAsync(id);
-            if (correspondenceOutward != null)
+            try
             {
-                _context.CorrespondenceOutwards.Remove(correspondenceOutward);
-                await _context.SaveChangesAsync();
-
-                // Reset the identity seed after deleting an entry
-                await ResetIdentitySeedAsync();
+                var correspondenceOutward = await _context.CorrespondenceOutwards.FindAsync(id);
+                if (correspondenceOutward != null)
+                {
+                    _context.CorrespondenceOutwards.Remove(correspondenceOutward);
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine($"Deleted correspondence outward with ID: {id}");
+                }
+                else
+                {
+                    Console.WriteLine($"No correspondence outward found with ID: {id}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting correspondence outward: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                throw;
             }
         }
 
@@ -114,21 +133,31 @@ namespace NJS.Repositories.Repositories
             }
             else
             {
-                // Find the next available ID (look for gaps)
-                var allIds = await _context.CorrespondenceOutwards.Select(i => i.Id).OrderBy(id => id).ToListAsync();
-                int nextId = 1;
-
-                foreach (var id in allIds)
+                // Get the minimum available ID
+                var minId = await _context.CorrespondenceOutwards.MinAsync(i => i.Id);
+                if (minId > 1)
                 {
-                    if (id != nextId)
-                    {
-                        break;
-                    }
-                    nextId++;
+                    // Reset the identity seed to start from 1
+                    await _context.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT ('CorrespondenceOutwards', RESEED, 0)");
                 }
+                else
+                {
+                    // Find the next available ID (look for gaps)
+                    var allIds = await _context.CorrespondenceOutwards.Select(i => i.Id).OrderBy(id => id).ToListAsync();
+                    int nextId = 1;
 
-                // Reset the identity seed to the next available ID - 1
-                await _context.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT ('CorrespondenceOutwards', RESEED, {nextId - 1})");
+                    foreach (var id in allIds)
+                    {
+                        if (id != nextId)
+                        {
+                            break;
+                        }
+                        nextId++;
+                    }
+
+                    // Reset the identity seed to the next available ID - 1
+                    await _context.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT ('CorrespondenceOutwards', RESEED, {nextId - 1})");
+                }
             }
         }
     }
