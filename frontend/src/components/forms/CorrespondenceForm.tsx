@@ -135,7 +135,10 @@ const CorrespondenceForm: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-          const projectId = context.selectedProject.id;
+          const projectId = context.selectedProject?.id;
+          if (!projectId) {
+            throw new Error('Project ID is required');
+          }
           const [inwardData, outwardData] = await Promise.all([
             getInwardRows(projectId),
             getOutwardRows(projectId)
@@ -232,7 +235,10 @@ const CorrespondenceForm: React.FC = () => {
         token: localStorage.getItem('token') ? 'Present' : 'Missing',
         isTokenValid
       });
-      const projectId = context.selectedProject.id;
+      const projectId = context.selectedProject?.id;
+      if (!projectId) {
+        throw new Error('Project ID is required');
+      }
       const newData = { ...data, projectId };
 
       // Handle date formatting and add required fields
