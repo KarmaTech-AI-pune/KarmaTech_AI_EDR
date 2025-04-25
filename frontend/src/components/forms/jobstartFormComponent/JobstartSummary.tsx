@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   TableContainer,
@@ -12,9 +12,16 @@ import {
 // Define interface for component props
 interface JobstartSummaryProps {
   grandTotal: number;
+  onDataChange?: (data: {
+    projectFees: number;
+    serviceTaxPercentage: number;
+    serviceTaxAmount: number;
+    totalProjectFees: number;
+    profit: number;
+  }) => void;
 }
 
-const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
+const JobstartSummary = ({ grandTotal, onDataChange }: JobstartSummaryProps) => {
   // State for project fees and service tax
   const [projectFees, setProjectFees] = useState<string>('0');
   const [serviceTax, setServiceTax] = useState({
@@ -58,6 +65,7 @@ const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
   // Handlers for input changes
   const handleProjectFeesChange = (value: string) => {
     setProjectFees(value);
+    notifyParentOfChanges(value, serviceTax.percentage);
   };
 
   const handleServiceTaxChange = (value: string) => {
@@ -65,7 +73,32 @@ const JobstartSummary = ({ grandTotal }: JobstartSummaryProps) => {
       ...serviceTax,
       percentage: value
     });
+    notifyParentOfChanges(projectFees, value);
   };
+
+  // Notify parent component of changes
+  const notifyParentOfChanges = (fees: string, taxPercentage: string) => {
+    if (onDataChange) {
+      const feesNum = parseFloat(fees) || 0;
+      const taxPercent = parseFloat(taxPercentage) || 0;
+      const taxAmount = (feesNum * taxPercent / 100);
+      const totalFees = feesNum + taxAmount;
+      const profit = feesNum - grandTotal;
+
+      onDataChange({
+        projectFees: feesNum,
+        serviceTaxPercentage: taxPercent,
+        serviceTaxAmount: taxAmount,
+        totalProjectFees: totalFees,
+        profit: profit
+      });
+    }
+  };
+
+  // Notify parent component on mount and when grandTotal changes
+  useEffect(() => {
+    notifyParentOfChanges(projectFees, serviceTax.percentage);
+  }, [grandTotal]);
 
   // Calculation functions
   const calculateProfit = () => {

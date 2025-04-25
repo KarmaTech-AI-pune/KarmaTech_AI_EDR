@@ -152,4 +152,10 @@ export interface JobStartFormData {
     serviceTax: ServiceTaxData;
     totalProjectFees: number;
     profit: number;
+    // Optional fields for backend
+    formTitle?: string;
+    description?: string;
+    startDate?: string;
+    preparedBy?: string;
+    selections?: any[]; // JobStartFormSelectionDto[]
 }

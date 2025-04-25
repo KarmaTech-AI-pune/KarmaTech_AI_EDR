@@ -27,15 +27,13 @@ export const submitJobStartForm = async (projectId: number | string, formData: J
     projectFees: formData.projectFees,
     totalProjectFees: formData.totalProjectFees,
     profit: formData.profit,
-
-    // TODO: Add mapping for other fields if they exist in formData or need to be passed
-    // e.g., FormTitle, Description, StartDate, PreparedBy, Selections
-    // Example (if these fields were added to JobStartFormData):
-    // formTitle: formData.formTitle,
-    // description: formData.description,
-    // startDate: formData.startDate,
-    // preparedBy: formData.preparedBy,
-    // selections: formData.selections // Assuming selections are already in the correct DTO format
+    // Default values for required fields
+    formTitle: formData.formTitle || 'Job Start Form',
+    description: formData.description || '',
+    startDate: formData.startDate || new Date().toISOString(),
+    preparedBy: formData.preparedBy || '',
+    // Include selections if available
+    selections: formData.selections || []
   };
 
   try {
@@ -87,8 +85,7 @@ export const getJobStartFormById = async (projectId: number | string, formId: nu
  */
 export const updateJobStartForm = async (projectId: number | string, formId: number | string, formData: JobStartFormData): Promise<any> => {
   // Transform the nested frontend data structure to the flat DTO expected by the backend
-  // This transformation should ideally match the one in submitJobStartForm
-  // or be adapted if the update endpoint expects a different structure.
+  // This transformation should match the one in submitJobStartForm
   const payload = {
     formId: Number(formId), // Include formId for update
     projectId: Number(projectId),
@@ -100,7 +97,11 @@ export const updateJobStartForm = async (projectId: number | string, formId: num
     projectFees: formData.projectFees,
     totalProjectFees: formData.totalProjectFees,
     profit: formData.profit,
-    // TODO: Add mapping for other fields if they exist in formData or need to be passed
+    formTitle: formData.formTitle || 'Job Start Form',
+    description: formData.description || '',
+    startDate: formData.startDate || new Date().toISOString(),
+    preparedBy: formData.preparedBy || '',
+    selections: formData.selections || []
   };
 
   try {

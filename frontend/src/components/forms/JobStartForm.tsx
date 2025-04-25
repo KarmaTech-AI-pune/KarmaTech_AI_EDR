@@ -21,6 +21,15 @@ const JobStartForm: React.FC = () => {
   const [totalTimeCost, setTotalTimeCost] = useState<number>(0)
   const [totalODCExpensesCost, setTotalODCExpensesCost] = useState<number>(0)
 
+  // State for summary data
+  const [summaryData, setSummaryData] = useState({
+    projectFees: 0,
+    serviceTaxPercentage: 18,
+    serviceTaxAmount: 0,
+    totalProjectFees: 0,
+    profit: 0
+  })
+
   // State for form submission
   const [submitting, setSubmitting] = useState<boolean>(false)
   const [isUpdating, setIsUpdating] = useState<boolean>(false)
@@ -110,16 +119,20 @@ const JobStartForm: React.FC = () => {
       const formData = {
         projectId: Number(projectId),
         formId: formId || 0,
-        totalTimeCost: totalTimeCost,
-        totalExpenses: totalODCExpensesCost,
-        grandTotal: totalTimeCost + totalODCExpensesCost,
-        projectFees: 0, // This should be retrieved from JobstartSummary component
-        serviceTax: {
-          percentage: 0, // This should be retrieved from JobstartSummary component
-          amount: 0 // This should be calculated
+        time: {
+          totalTimeCost: totalTimeCost
         },
-        totalProjectFees: 0, // This should be calculated
-        profit: 0 // This should be calculated
+        expenses: {
+          totalExpenses: totalODCExpensesCost
+        },
+        grandTotal: totalTimeCost + totalODCExpensesCost,
+        projectFees: summaryData.projectFees,
+        serviceTax: {
+          percentage: summaryData.serviceTaxPercentage,
+          amount: summaryData.serviceTaxAmount
+        },
+        totalProjectFees: summaryData.totalProjectFees,
+        profit: summaryData.profit
       }
 
       let result
@@ -210,6 +223,7 @@ const JobStartForm: React.FC = () => {
                 />
                 <JobstartSummary
                   grandTotal={totalTimeCost + totalODCExpensesCost}
+                  onDataChange={setSummaryData}
                 />
 
                 {/* Submit Button */}
