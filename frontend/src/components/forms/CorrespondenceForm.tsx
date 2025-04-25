@@ -100,8 +100,7 @@ const CorrespondenceForm: React.FC = () => {
   const [outwardRows, setOutwardRows] = useState<OutwardRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  // Changed type from null to undefined to match CorrespondenceDialog prop type
-  const [editData, setEditData] = useState<InwardRow | OutwardRow | undefined>(undefined);
+  const [editData, setEditData] = useState<InwardRow | OutwardRow | null>(null);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [itemToDelete, setItemToDelete] = useState<{id: number, type: 'inward' | 'outward'} | null>(null);
@@ -131,13 +130,12 @@ const CorrespondenceForm: React.FC = () => {
   useEffect(() => {
     if (!checkToken()) return;
 
-    const projectId = context?.selectedProject?.id; // Capture the ID first
-    if (projectId) { // Check if projectId is truthy
+    if (context?.selectedProject?.id) {
       const fetchData = async () => {
         setLoading(true);
         setError(null);
         try {
-          // Use the captured projectId which is guaranteed to be non-null here
+          const projectId = context.selectedProject.id;
           const [inwardData, outwardData] = await Promise.all([
             getInwardRows(projectId),
             getOutwardRows(projectId)
@@ -167,7 +165,7 @@ const CorrespondenceForm: React.FC = () => {
 
   const handleAddClick = () => {
     setIsEdit(false);
-    setEditData(undefined); // Changed from null to undefined
+    setEditData(null);
     setDialogOpen(true);
   };
 
@@ -185,7 +183,7 @@ const CorrespondenceForm: React.FC = () => {
   const handleDialogClose = () => {
     setDialogOpen(false);
     setIsEdit(false);
-    setEditData(undefined); // Changed from null to undefined
+    setEditData(null);
   };
 
   const handleDeleteDialogClose = () => {
@@ -223,12 +221,7 @@ const CorrespondenceForm: React.FC = () => {
   };
 
   const handleSave = async (data: any) => {
-    // Check for selected project and store its ID
-    const projectId = context?.selectedProject?.id;
-    if (!projectId) { // Check if projectId is falsy (null, undefined, 0) - assuming 0 isn't a valid ID here
-      setError("No project selected. Cannot save correspondence.");
-      return;
-    }
+    if (!context?.selectedProject?.id) return;
     if (!checkToken()) return;
 
     setLoading(true);
@@ -239,7 +232,7 @@ const CorrespondenceForm: React.FC = () => {
         token: localStorage.getItem('token') ? 'Present' : 'Missing',
         isTokenValid
       });
-      // Use the already validated projectId from the check above
+      const projectId = context.selectedProject.id;
       const newData = { ...data, projectId };
 
       // Handle date formatting and add required fields

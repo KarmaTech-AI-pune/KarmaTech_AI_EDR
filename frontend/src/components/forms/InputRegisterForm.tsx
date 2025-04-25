@@ -49,16 +49,14 @@ const InputRegisterForm: React.FC = () => {
   const [isDialogOpening, setIsDialogOpening] = useState(false);
 
   useEffect(() => {
-    const projectId = context?.selectedProject?.id; // Capture ID first
-    if (!projectId) { // Check if ID is falsy
+    if (!context?.selectedProject?.id) {
       setError('No project selected');
       return;
     }
 
     const fetchData = async () => {
       try {
-        // Use the validated projectId
-        const data = await getInputRegisterByProject(projectId.toString());
+        const data = await getInputRegisterByProject(context.selectedProject.id.toString());
         setRows(data);
         setError('');
       } catch (err) {
@@ -338,8 +336,7 @@ const InputRegisterForm: React.FC = () => {
         onClose={handleCloseDialog}
         onSave={handleSave}
         initialData={selectedRow}
-        // Access projectId directly from context here, ensuring it exists
-        projectId={context?.selectedProject?.id ? context.selectedProject.id.toString() : ''}
+        projectId={context.selectedProject.id.toString()}
       />
     </Container>
   );

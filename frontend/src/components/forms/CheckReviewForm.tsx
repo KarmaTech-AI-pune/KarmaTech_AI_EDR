@@ -67,8 +67,7 @@ const CheckReviewForm: React.FC = () => {
 
       // Ensure each review has an id property
       const reviewsWithIds = reviews.map(review => {
-        // Simplified check: if id is falsy (null, undefined, 0, '')
-        if (!review.id) {
+        if (!review.id && review.id !== 0) {
           console.warn(`Review with activityNo ${review.activityNo} has no ID, using activityNo as fallback`);
           return { ...review, id: review.activityNo };
         }
@@ -330,8 +329,7 @@ const CheckReviewForm: React.FC = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               // Use row.id if available, otherwise use activityNo as fallback
-                              // Check if row.id is not undefined
-                              if (row.id !== undefined) {
+                              if (row.id || row.id === 0) {
                                 console.log('Delete button clicked for review ID:', row.id);
                                 handleDeleteReview(row.id.toString());
                               } else if (row.activityNo) {

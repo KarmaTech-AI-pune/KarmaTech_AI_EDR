@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import BargraphPopup, { BargraphData as PopupBargraphData } from '../common/BargraphPopup';
 
 
