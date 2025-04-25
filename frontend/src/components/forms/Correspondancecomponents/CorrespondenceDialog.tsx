@@ -81,27 +81,40 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
   // Update form data when editData changes or dialog opens
   useEffect(() => {
     if (open && editData) {
-      // Format dates for the form
-      const formattedData = { ...editData };
+      let formattedData: any; // Use 'any' temporarily for flexibility during formatting
 
       if (type === 'inward') {
-        const inwardData = formattedData as InwardRow;
-        if (inwardData.letterDate) {
-          formattedData.letterDate = new Date(inwardData.letterDate).toISOString().split('T')[0];
-        }
-        if (inwardData.receiptDate) {
-          formattedData.receiptDate = new Date(inwardData.receiptDate).toISOString().split('T')[0];
-        }
-        if (inwardData.repliedDate) {
-          formattedData.repliedDate = new Date(inwardData.repliedDate).toISOString().split('T')[0];
-        }
-      } else {
-        const outwardData = formattedData as OutwardRow;
-        if (outwardData.letterDate) {
-          formattedData.letterDate = new Date(outwardData.letterDate).toISOString().split('T')[0];
-        }
+        const inwardData = editData as InwardRow; // Assert type first
+        formattedData = {
+          ...getInitialFormData(), // Start with initial structure
+          ...inwardData, // Spread the actual data
+          // Format dates and ensure required fields exist
+          letterDate: inwardData.letterDate ? new Date(inwardData.letterDate).toISOString().split('T')[0] : '',
+          receiptDate: inwardData.receiptDate ? new Date(inwardData.receiptDate).toISOString().split('T')[0] : '',
+          repliedDate: inwardData.repliedDate ? new Date(inwardData.repliedDate).toISOString().split('T')[0] : '',
+          // Ensure optional fields have default values if undefined
+          attachmentDetails: inwardData.attachmentDetails ?? '',
+          actionTaken: inwardData.actionTaken ?? '',
+          storagePath: inwardData.storagePath ?? '',
+          remarks: inwardData.remarks ?? '',
+        };
+      } else { // type === 'outward'
+        const outwardData = editData as OutwardRow; // Assert type first
+        formattedData = {
+          ...getInitialFormData(), // Start with initial structure
+          ...outwardData, // Spread the actual data
+          // Format dates and ensure required fields exist
+          letterDate: outwardData.letterDate ? new Date(outwardData.letterDate).toISOString().split('T')[0] : '',
+          // Ensure optional fields have default values if undefined
+          attachmentDetails: outwardData.attachmentDetails ?? '',
+          actionTaken: outwardData.actionTaken ?? '',
+          storagePath: outwardData.storagePath ?? '',
+          remarks: outwardData.remarks ?? '',
+          acknowledgement: outwardData.acknowledgement ?? '',
+        };
       }
 
+      // Now formattedData matches the state structure
       setFormData(formattedData);
     } else if (open) {
       // Reset form when opening for a new entry

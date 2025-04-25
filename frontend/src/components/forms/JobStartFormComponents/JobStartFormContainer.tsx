@@ -277,7 +277,8 @@ const JobStartFormContainer: React.FC = () => {
     }));
   };
 
-  const handleProjectSpecificChange = (id: keyof ProjectSpecificType, field: keyof ProjectSpecificEntry, value: string) => {
+  // Corrected type for 'field' parameter
+  const handleProjectSpecificChange = (id: keyof ProjectSpecificType, field: keyof ProjectSpecificType[keyof ProjectSpecificType], value: string) => {
     setProjectSpecific(prev => ({
       ...prev,
       [id]: { ...prev[id], [field]: value }
