@@ -26,7 +26,8 @@ import {
   ProjectSpecificType,
   ExpenseEntry,
   ServiceTaxEntry,
-  OutsideAgencyEntry
+  OutsideAgencyEntry,
+  ProjectSpecificEntry
 } from '../../../types/jobStartForm';
 import { formatTitle } from '../../../utils/jobStartFormUtils';
 import {

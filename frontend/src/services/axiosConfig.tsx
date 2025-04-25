@@ -69,7 +69,7 @@ axiosInstance.interceptors.response.use(
 // Helper function to ensure token is included in requests
 export const ensureAuthHeader = (config?: AxiosRequestConfig): AxiosRequestConfig => {
   const token = localStorage.getItem('token');
-  const newConfig = { ...config } || {};
+  const newConfig = config ? { ...config } : {};
 
   if (!newConfig.headers) {
     newConfig.headers = {};
