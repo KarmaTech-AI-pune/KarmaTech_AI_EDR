@@ -202,19 +202,30 @@ const JobStartForm: React.FC = () => {
                 <JobstartTime
                   wbsResources={wbsResources.filter(resource => resource.taskType === 0)}
                   onTotalCostChange={(data) => {
-                    // Calculate total from resources and custom rows
-                    const resourcesCost = data.resources.reduce((sum, resource) => sum + resource.budgetedCost, 0);
-                    const customRowsCost = data.customRows.reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
-                    setTotalTimeCost(resourcesCost + customRowsCost);
+                    // Calculate total using only the time-related custom rows (subtotal and contingencies)
+                    const timeTotal = data.customRows
+                      .filter(row =>
+                        row.id === 'time-subtotal' ||
+                        row.id === 'time-contingencies'
+                      )
+                      .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+
+                    setTotalTimeCost(timeTotal);
                   }}
                 />
                 <EstimatedExpenses
                   wbsResources={wbsResources.filter(resource => resource.taskType === 1)}
                   onTotalCostChange={(data) => {
-                    // Calculate total from resources and custom rows
-                    const resourcesCost = data.resources.reduce((sum, resource) => sum + resource.budgetedCost, 0);
-                    const customRowsCost = data.customRows.reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
-                    setTotalODCExpensesCost(resourcesCost + customRowsCost);
+                    // Calculate total using only the expense-related custom rows
+                    const expensesTotal = data.customRows
+                      .filter(row =>
+                        row.id === 'expenses-subtotal' ||
+                        row.id === 'expenses-contingencies' ||
+                        row.id === 'expenses-expense-contingencies'
+                      )
+                      .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+
+                    setTotalODCExpensesCost(expensesTotal);
                   }}
                 />
                 <JobstartGrandTotal
