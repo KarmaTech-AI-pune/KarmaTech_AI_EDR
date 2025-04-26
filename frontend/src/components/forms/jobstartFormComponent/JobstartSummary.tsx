@@ -6,7 +6,8 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  TextField
+  TextField,
+  InputAdornment
 } from '@mui/material';
 
 // Define interface for component props
@@ -64,16 +65,74 @@ const JobstartSummary = ({ grandTotal, onDataChange }: JobstartSummaryProps) => 
 
   // Handlers for input changes
   const handleProjectFeesChange = (value: string) => {
-    setProjectFees(value);
-    notifyParentOfChanges(value, serviceTax.percentage);
+    // Only allow numeric values (including decimal points)
+    if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
+      // Remove any leading zeros (except for decimal values like 0.xx)
+      let cleanedValue = value;
+      if (value.length > 1 && value.startsWith('0') && value.charAt(1) !== '.') {
+        cleanedValue = value.replace(/^0+/, '');
+      }
+
+      setProjectFees(cleanedValue);
+      notifyParentOfChanges(cleanedValue, serviceTax.percentage);
+    }
+  };
+
+  // Format project fees to always have 2 decimal places when focus is lost
+  const handleProjectFeesBlur = () => {
+    if (projectFees) {
+      const numValue = parseFloat(projectFees);
+      if (!isNaN(numValue)) {
+        // Format to 2 decimal places without leading zeros
+        const formattedValue = numValue.toFixed(2);
+        setProjectFees(formattedValue);
+        notifyParentOfChanges(formattedValue, serviceTax.percentage);
+      }
+    } else {
+      // If field is empty, set to 0.00
+      setProjectFees('0.00');
+      notifyParentOfChanges('0.00', serviceTax.percentage);
+    }
   };
 
   const handleServiceTaxChange = (value: string) => {
-    setServiceTax({
-      ...serviceTax,
-      percentage: value
-    });
-    notifyParentOfChanges(projectFees, value);
+    // Only allow numeric values (including decimal points)
+    if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
+      // Remove any leading zeros (except for decimal values like 0.xx)
+      let cleanedValue = value;
+      if (value.length > 1 && value.startsWith('0') && value.charAt(1) !== '.') {
+        cleanedValue = value.replace(/^0+/, '');
+      }
+
+      setServiceTax({
+        ...serviceTax,
+        percentage: cleanedValue
+      });
+      notifyParentOfChanges(projectFees, cleanedValue);
+    }
+  };
+
+  // Handle service tax when focus is lost
+  const handleServiceTaxBlur = () => {
+    if (serviceTax.percentage) {
+      const numValue = parseFloat(serviceTax.percentage);
+      if (!isNaN(numValue)) {
+        // Just use the numeric value without decimal formatting
+        const formattedValue = numValue.toString();
+        setServiceTax({
+          ...serviceTax,
+          percentage: formattedValue
+        });
+        notifyParentOfChanges(projectFees, formattedValue);
+      }
+    } else {
+      // If field is empty, set to 0
+      setServiceTax({
+        ...serviceTax,
+        percentage: '0'
+      });
+      notifyParentOfChanges(projectFees, '0');
+    }
   };
 
   // Notify parent component of changes
@@ -168,9 +227,14 @@ const JobstartSummary = ({ grandTotal, onDataChange }: JobstartSummaryProps) => 
                 <TableCell align="right" sx={{...tableCellStyle, width: '240px'}}>
                   <TextField
                     size="small"
-                    type="number"
+                    type="text"
+                    inputProps={{
+                      min: 0,
+                      step: 0.01
+                    }}
                     value={projectFees}
                     onChange={(e) => handleProjectFeesChange(e.target.value)}
+                    onBlur={handleProjectFeesBlur}
                     sx={{
                       ...textFieldStyle,
                       width: '50%',
@@ -200,22 +264,30 @@ const JobstartSummary = ({ grandTotal, onDataChange }: JobstartSummaryProps) => 
                 >
                   <Box>
                     Service Tax (GST)
-                    <Box component="span" sx={{ mx: 1 }}>@</Box>
                     <TextField
                       size="small"
-                      type="number"
+                      type="text"
+                      inputProps={{
+                        min: 0,
+                        max: 100,
+                        step: 0.01
+                      }}
                       value={serviceTax.percentage}
                       onChange={(e) => handleServiceTaxChange(e.target.value)}
+                      onBlur={handleServiceTaxBlur}
                       sx={{
                         width: '80px',
+                        ml: 2,
                         ...textFieldStyle,
                         '& .MuiOutlinedInput-root': {
                           backgroundColor: '#fff',
                           height: '36px'
                         }
                       }}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">%</InputAdornment>
+                      }}
                     />
-                    <Box component="span" sx={{ ml: 1 }}>%</Box>
                   </Box>
                 </TableCell>
                 <TableCell
