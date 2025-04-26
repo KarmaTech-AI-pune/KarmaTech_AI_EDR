@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import TableTemplate, { CustomRow } from './TableTemplate';
 import { JobstartTimeProps, WBSResource } from '../../../types/jobStartFormTypes';
+import { addCalculation, percentageCalculation } from '../../../utils/calculations';
 
 const JobstartTime = ({ wbsResources, onTotalCostChange }: JobstartTimeProps) => {
   const [tableData, setTableData] = useState<{
@@ -11,9 +12,18 @@ const JobstartTime = ({ wbsResources, onTotalCostChange }: JobstartTimeProps) =>
     resources: wbsResources,
     customRows: [
       {
-        id: 'time-contingencies',
+        id: 'time-subtotal',
         prefix: '1b',
-        title: 'Time Contingencies',
+        title: 'Sub-Total',
+        hasRateField: false,
+        hasUnitsField: false,
+        budgetedCost: 0,
+        remarks: ''
+      },
+      {
+        id: 'time-contingencies',
+        prefix: '1c',
+        title: 'Time Contingencies (LS)',
         hasRateField: false,
         hasUnitsField: true,
         unitSuffix: '%',
@@ -23,6 +33,11 @@ const JobstartTime = ({ wbsResources, onTotalCostChange }: JobstartTimeProps) =>
     ]
   });
 
+  // Calculate subtotal and contingencies whenever resources change
+  useEffect(() => {
+    updateCalculations(tableData.resources, tableData.customRows);
+  }, [tableData.resources]);
+
   // Notify parent component when data changes
   useEffect(() => {
     if (onTotalCostChange) {
@@ -30,8 +45,37 @@ const JobstartTime = ({ wbsResources, onTotalCostChange }: JobstartTimeProps) =>
     }
   }, [tableData, onTotalCostChange]);
 
+  const updateCalculations = (resources: WBSResource[], customRows: CustomRow[]) => {
+    // Calculate subtotal from all resources
+    const subtotal = addCalculation(...resources.map(resource => resource.budgetedCost));
+
+    // Find the custom rows by id
+    const subtotalRow = customRows.find(row => row.id === 'time-subtotal');
+    const contingenciesRow = customRows.find(row => row.id === 'time-contingencies');
+
+    // Update the subtotal row
+    if (subtotalRow) {
+      subtotalRow.budgetedCost = subtotal;
+    }
+
+    // Calculate contingencies based on percentage if units are provided
+    if (contingenciesRow && contingenciesRow.units !== undefined && contingenciesRow.units !== null) {
+      contingenciesRow.budgetedCost = percentageCalculation(contingenciesRow.units, subtotal);
+    }
+
+    // Update the state with the new calculations
+    setTableData(prevData => ({
+      ...prevData,
+      customRows: [...customRows]
+    }));
+  };
+
   const handleDataChange = (data: { resources: WBSResource[]; customRows: CustomRow[] }) => {
+    // First update the data
     setTableData(data);
+
+    // Then run calculations to update the custom rows
+    updateCalculations(data.resources, data.customRows);
   };
 
   return (
@@ -46,7 +90,7 @@ const JobstartTime = ({ wbsResources, onTotalCostChange }: JobstartTimeProps) =>
         initialExpanded={true}
         customRows={tableData.customRows}
         onDataChange={handleDataChange}
-        totalCalculationType='sumResourcesOnly' // Add this prop
+        totalCalculationType='sumTimeContingencies' // Use the new calculation type for time-related rows
       />
     </>
   );

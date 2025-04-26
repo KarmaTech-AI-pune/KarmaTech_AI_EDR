@@ -40,7 +40,7 @@ export interface TableTemplateProps {
   totalLabel: string;
   initialExpanded?: boolean;
   customRows?: CustomRow[];
-  totalCalculationType?: 'sumResourcesOnly' | 'sumExpenseContingencies' | 'sumAll'; // Add this line
+  totalCalculationType?: 'sumResourcesOnly' | 'sumExpenseContingencies' | 'sumTimeContingencies' | 'sumAll';
   onDataChange?: (data: { resources: WBSResource[], customRows: CustomRow[] }) => void;
 }
 
@@ -186,6 +186,14 @@ const TableTemplate = ({
             row.id === 'expenses-subtotal' ||
             row.id === 'expenses-contingencies' ||
             row.id === 'expenses-expense-contingencies'
+          )
+          .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+      case 'sumTimeContingencies':
+        // Sum only the specific time-related custom rows
+        return localCustomRows
+          .filter(row =>
+            row.id === 'time-subtotal' ||
+            row.id === 'time-contingencies'
           )
           .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
       case 'sumAll': // Default: Sum all resources and all custom rows
