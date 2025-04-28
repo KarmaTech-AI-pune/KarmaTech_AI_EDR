@@ -65,6 +65,7 @@ const CheckReviewForm: React.FC = () => {
     try {
       setLoading(true);
       console.log('Loading reviews for project:', context.selectedProject.id);
+ feature/Correspondence_Inward_And_Outward_1
 
       try {
         const reviews = await getCheckReviewsByProject(context.selectedProject.id.toString());
@@ -75,6 +76,11 @@ const CheckReviewForm: React.FC = () => {
           setRows([]);
           setError('');
           return;
+
+      const reviews = await getCheckReviewsByProject(context.selectedProject.id.toString());
+      console.log('Loaded reviews:', reviews);
+
+     
         }
 
         // Process reviews to ensure proper ID handling
@@ -166,7 +172,7 @@ const CheckReviewForm: React.FC = () => {
   const handleDeleteReview = async (id: string) => {
     setLoading(true);
     try {
-      if (!id && id !== '0') {
+      if (id === undefined || id === '') {
         console.error('Cannot delete review: ID is undefined or empty');
         setError('Cannot delete review: ID is missing');
         setLoading(false);
@@ -379,7 +385,7 @@ const CheckReviewForm: React.FC = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               // Use row.id if available, otherwise use activityNo as fallback
-                              if (row.id || row.id === 0) {
+                              if (row.id !== undefined && row.id !== '') {
                                 console.log('Delete button clicked for review ID:', row.id);
                                 handleDeleteReview(row.id.toString());
                               } else if (row.activityNo) {

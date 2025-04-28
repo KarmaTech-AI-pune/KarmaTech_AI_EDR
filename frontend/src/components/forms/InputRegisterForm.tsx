@@ -56,6 +56,9 @@ const InputRegisterForm: React.FC = () => {
 
     const fetchData = async () => {
       try {
+        if (!context.selectedProject?.id) {
+          throw new Error('Project ID is required');
+        }
         const data = await getInputRegisterByProject(context.selectedProject.id.toString());
         setRows(data);
         setError('');
@@ -336,7 +339,7 @@ const InputRegisterForm: React.FC = () => {
         onClose={handleCloseDialog}
         onSave={handleSave}
         initialData={selectedRow}
-        projectId={context.selectedProject.id.toString()}
+        projectId={context.selectedProject?.id?.toString() || ''}
       />
     </Container>
   );

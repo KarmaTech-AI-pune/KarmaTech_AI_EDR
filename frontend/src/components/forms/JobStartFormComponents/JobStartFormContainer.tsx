@@ -26,7 +26,8 @@ import {
   ProjectSpecificType,
   ExpenseEntry,
   ServiceTaxEntry,
-  OutsideAgencyEntry
+  OutsideAgencyEntry,
+  ProjectSpecificEntry
 } from '../../../types/jobStartForm';
 import { formatTitle } from '../../../utils/jobStartFormUtils';
 import {
@@ -69,7 +70,7 @@ const JobStartFormContainer: React.FC = () => {
       }
     });
   };
-  
+
   const [expenses, setExpenses] = useState<ExpensesType>({
     '2a': { number: '10000', remarks: '' },
     '2b': { number: '10000', remarks: '' },
@@ -117,10 +118,21 @@ const JobStartFormContainer: React.FC = () => {
         // Process the resource allocations from the backend
         wbsResourceData.resourceAllocations.forEach((allocation: any) => {
           const employeeId = allocation.employeeId;
+
+          // Determine the correct name based on task type
+          let displayName;
+          if (allocation.taskType === 1) { // TaskType.ODC = 1
+            // For ODC tasks, use the name field
+            displayName = allocation.name;
+          } else {
+            // For Manpower tasks, use the employeeName field
+            displayName = allocation.employeeName;
+          }
+
           if (!employeeMap.has(employeeId)) {
             employeeMap.set(employeeId, {
               id: employeeId,
-              name: allocation.employeeName,
+              name: displayName,
               is_consultant: allocation.isConsultant,
               allocations: [],
               totalHours: 0,
@@ -195,7 +207,7 @@ const JobStartFormContainer: React.FC = () => {
         if (savedFormData) {
           console.log('Loading form data from local storage.');
           const parsedData = JSON.parse(savedFormData);
-          
+
           setEmployeeAllocations(parsedData.time.employeeAllocations);
           setTimeContingency(parsedData.time.timeContingency);
           setExpenses(parsedData.expenses.regularExpenses);

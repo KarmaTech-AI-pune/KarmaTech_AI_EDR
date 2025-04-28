@@ -68,12 +68,16 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TaskTitle = task.Title,
                         RoleId = roleId, // Use the role ID we determined above
                         EmployeeId = userTask.UserId,
-                        EmployeeName = userTask.User?.Name ?? "Unknown",
+                        // For Manpower tasks, use User.Name; for ODC tasks, use "null"
+                        EmployeeName = task.TaskType == TaskType.Manpower ? (userTask.User?.Name ?? "Unknown") : "null",
+                        // For Manpower tasks, use "null"; for ODC tasks, use the Name field
+                        Name = task.TaskType == TaskType.Manpower ? "null" : (userTask.Name ?? "Unknown"),
                         IsConsultant = userTask.User?.IsConsultant ?? false,
                         CostRate = userTask.CostRate,
                         TotalHours = (decimal)userTask.TotalHours,
                         TotalCost = userTask.TotalCost,
-                        ODC = 0
+                        ODC = 0,
+                        TaskType = (int)task.TaskType // Add the TaskType from WBSTask
                     };
 
                     result.ResourceAllocations.Add(allocation);
