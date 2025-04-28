@@ -10,6 +10,7 @@ const EstimatedExpenses = ({
   initialContingencyRemarks,
   initialExpenseContingencyUnits,
   initialExpenseContingencyRemarks,
+  initialSubtotalRemarks,
   onTotalCostChange
 }: EstimatedExpensesProps) => {
   const [tableData, setTableData] = useState<{
@@ -25,7 +26,7 @@ const EstimatedExpenses = ({
         hasRateField: false,
         hasUnitsField: false,
         budgetedCost: 0,
-        remarks: ''
+        remarks: initialSubtotalRemarks || ''
       },
       {
         id: 'expenses-contingencies',
@@ -58,7 +59,8 @@ const EstimatedExpenses = ({
       initialContingencyUnits !== undefined ||
       initialContingencyRemarks !== undefined ||
       initialExpenseContingencyUnits !== undefined ||
-      initialExpenseContingencyRemarks !== undefined;
+      initialExpenseContingencyRemarks !== undefined ||
+      initialSubtotalRemarks !== undefined;
 
     if (hasInitialValues) {
       setTableData(prevData => {
@@ -77,6 +79,12 @@ const EstimatedExpenses = ({
               remarks: initialExpenseContingencyRemarks !== undefined ? initialExpenseContingencyRemarks : row.remarks
             };
           }
+          if (row.id === 'expenses-subtotal' && initialSubtotalRemarks !== undefined) {
+            return {
+              ...row,
+              remarks: initialSubtotalRemarks
+            };
+          }
           return row;
         });
 
@@ -90,7 +98,8 @@ const EstimatedExpenses = ({
     initialContingencyUnits,
     initialContingencyRemarks,
     initialExpenseContingencyUnits,
-    initialExpenseContingencyRemarks
+    initialExpenseContingencyRemarks,
+    initialSubtotalRemarks
   ]);
 
   // Calculate subtotal and contingencies whenever resources change

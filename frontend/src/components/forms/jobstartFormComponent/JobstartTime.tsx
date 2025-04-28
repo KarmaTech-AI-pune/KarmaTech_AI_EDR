@@ -8,6 +8,7 @@ const JobstartTime = ({
   wbsResources,
   initialTimeContingencyUnits,
   initialTimeContingencyRemarks,
+  initialSubtotalRemarks,
   onTotalCostChange
 }: JobstartTimeProps) => {
   const [tableData, setTableData] = useState<{
@@ -23,7 +24,7 @@ const JobstartTime = ({
         hasRateField: false,
         hasUnitsField: false,
         budgetedCost: 0,
-        remarks: ''
+        remarks: initialSubtotalRemarks || ''
       },
       {
         id: 'time-contingencies',
@@ -41,7 +42,9 @@ const JobstartTime = ({
 
   // Update when initial values change
   useEffect(() => {
-    if (initialTimeContingencyUnits !== undefined || initialTimeContingencyRemarks !== undefined) {
+    if (initialTimeContingencyUnits !== undefined ||
+        initialTimeContingencyRemarks !== undefined ||
+        initialSubtotalRemarks !== undefined) {
       setTableData(prevData => {
         const updatedCustomRows = prevData.customRows.map(row => {
           if (row.id === 'time-contingencies') {
@@ -49,6 +52,12 @@ const JobstartTime = ({
               ...row,
               units: initialTimeContingencyUnits !== undefined ? initialTimeContingencyUnits : row.units,
               remarks: initialTimeContingencyRemarks !== undefined ? initialTimeContingencyRemarks : row.remarks
+            };
+          }
+          if (row.id === 'time-subtotal' && initialSubtotalRemarks !== undefined) {
+            return {
+              ...row,
+              remarks: initialSubtotalRemarks
             };
           }
           return row;
@@ -60,7 +69,7 @@ const JobstartTime = ({
         };
       });
     }
-  }, [initialTimeContingencyUnits, initialTimeContingencyRemarks]);
+  }, [initialTimeContingencyUnits, initialTimeContingencyRemarks, initialSubtotalRemarks]);
 
   // Calculate subtotal and contingencies whenever resources change
   useEffect(() => {

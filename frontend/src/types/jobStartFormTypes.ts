@@ -14,6 +14,7 @@ export interface JobstartTimeProps {
   wbsResources: WBSResource[];
   initialTimeContingencyUnits?: number;
   initialTimeContingencyRemarks?: string;
+  initialSubtotalRemarks?: string;
   onTotalCostChange?: (data: { resources: WBSResource[], customRows: any[] }) => void;
 }
 
@@ -23,5 +24,6 @@ export interface EstimatedExpensesProps {
   initialContingencyRemarks?: string;
   initialExpenseContingencyUnits?: number;
   initialExpenseContingencyRemarks?: string;
+  initialSubtotalRemarks?: string;
   onTotalCostChange?: (data: { resources: WBSResource[], customRows: any[] }) => void;
 }

@@ -123,10 +123,16 @@ const JobStartForm: React.FC = () => {
         let existingCustomRows: Record<string, any> = {}
 
         try {
+          // Get data from /api/projects/{projectId}/jobstartforms
           const formData = await getJobStartFormByProjectId(projectId)
           if (formData && Array.isArray(formData) && formData.length > 0) {
             existingFormData = formData[0] // Get the first form if multiple exist
-            setFormId(existingFormData.formId)
+            // Ensure formId is a number before setting it
+            if (existingFormData.formId !== undefined) {
+              setFormId(typeof existingFormData.formId === 'string'
+                ? parseInt(existingFormData.formId)
+                : existingFormData.formId)
+            }
             setIsUpdating(true)
 
             // Set summary data
@@ -157,7 +163,7 @@ const JobStartForm: React.FC = () => {
           // Continue with WBS data if no form exists
         }
 
-        // Then fetch WBS resource data
+        // Then fetch WBS resource data from /api/projects/{projectId}/jobstartforms/wbsresources
         const wbsData = await getWBSResourceData(projectId)
 
         // Transform the data from the API to match our WBSResource type
@@ -187,7 +193,19 @@ const JobStartForm: React.FC = () => {
           const updatedTimeCustomRows = [...timeCustomRows];
           const updatedExpensesCustomRows = [...expensesCustomRows];
 
-          // Update Time custom rows
+          // Update Time subtotal row remarks
+          const timeSubtotalRow = existingCustomRows['time-subtotal'];
+          if (timeSubtotalRow) {
+            const timeSubtotalIndex = updatedTimeCustomRows.findIndex(row => row.id === 'time-subtotal');
+            if (timeSubtotalIndex !== -1) {
+              updatedTimeCustomRows[timeSubtotalIndex] = {
+                ...updatedTimeCustomRows[timeSubtotalIndex],
+                remarks: timeSubtotalRow.remarks || ''
+              };
+            }
+          }
+
+          // Update Time contingencies row
           const timeContingenciesRow = existingCustomRows['time-contingencies'];
           if (timeContingenciesRow) {
             const timeContingencyIndex = updatedTimeCustomRows.findIndex(row => row.id === 'time-contingencies');
@@ -200,7 +218,19 @@ const JobStartForm: React.FC = () => {
             }
           }
 
-          // Update Expenses custom rows
+          // Update Expenses subtotal row remarks
+          const expensesSubtotalRow = existingCustomRows['expenses-subtotal'];
+          if (expensesSubtotalRow) {
+            const expensesSubtotalIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-subtotal');
+            if (expensesSubtotalIndex !== -1) {
+              updatedExpensesCustomRows[expensesSubtotalIndex] = {
+                ...updatedExpensesCustomRows[expensesSubtotalIndex],
+                remarks: expensesSubtotalRow.remarks || ''
+              };
+            }
+          }
+
+          // Update Expenses contingencies row
           const expensesContingenciesRow = existingCustomRows['expenses-contingencies'];
           if (expensesContingenciesRow) {
             const expensesContingencyIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-contingencies');
@@ -213,6 +243,7 @@ const JobStartForm: React.FC = () => {
             }
           }
 
+          // Update Expense contingencies row
           const expenseExpenseContingenciesRow = existingCustomRows['expenses-expense-contingencies'];
           if (expenseExpenseContingenciesRow) {
             const expenseExpenseContingencyIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-expense-contingencies');
@@ -423,6 +454,7 @@ const JobStartForm: React.FC = () => {
                   wbsResources={wbsResources.filter(resource => resource.taskType === 0)}
                   initialTimeContingencyUnits={timeCustomRows.find(row => row.id === 'time-contingencies')?.units}
                   initialTimeContingencyRemarks={timeCustomRows.find(row => row.id === 'time-contingencies')?.remarks}
+                  initialSubtotalRemarks={timeCustomRows.find(row => row.id === 'time-subtotal')?.remarks}
                   onTotalCostChange={(data) => {
                     // Calculate total using only the time-related custom rows (subtotal and contingencies)
                     const timeTotal = data.customRows
@@ -444,6 +476,7 @@ const JobStartForm: React.FC = () => {
                   initialContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.remarks}
                   initialExpenseContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.units}
                   initialExpenseContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.remarks}
+                  initialSubtotalRemarks={expensesCustomRows.find(row => row.id === 'expenses-subtotal')?.remarks}
                   onTotalCostChange={(data) => {
                     // Calculate total using only the expense-related custom rows
                     const expensesTotal = data.customRows
