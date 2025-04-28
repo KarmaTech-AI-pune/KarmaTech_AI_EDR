@@ -1,11 +1,5 @@
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace NJS.API.Tests.Interfaces
 {
