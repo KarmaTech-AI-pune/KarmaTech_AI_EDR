@@ -7,6 +7,7 @@ import JobstartSummary from './jobstartFormComponent/JobstartSummary'
 import { Container, Box, Paper, Typography, CircularProgress, Alert, Snackbar } from '@mui/material'
 import { getWBSResourceData, submitJobStartForm, updateJobStartForm } from '../../services/jobStartFormApi'
 import { WBSResource } from '../../types/jobStartFormTypes'
+import { CustomRow } from './jobstartFormComponent/TableTemplate'
 import { projectManagementAppContext } from '../../App'
 import { projectManagementAppContextType } from '../../types'
 import LoadingButton from '../common/LoadingButton'
@@ -20,6 +21,14 @@ const JobStartForm: React.FC = () => {
   // State to track total costs for different sections
   const [totalTimeCost, setTotalTimeCost] = useState<number>(0)
   const [totalODCExpensesCost, setTotalODCExpensesCost] = useState<number>(0)
+
+  // State to track resources for Time and Expenses
+  const [timeResources, setTimeResources] = useState<WBSResource[]>([])
+  const [expensesResources, setExpensesResources] = useState<WBSResource[]>([])
+
+  // State to track custom rows for Time and Expenses
+  const [timeCustomRows, setTimeCustomRows] = useState<CustomRow[]>([])
+  const [expensesCustomRows, setExpensesCustomRows] = useState<CustomRow[]>([])
 
   // State for summary data
   const [summaryData, setSummaryData] = useState({
@@ -132,7 +141,58 @@ const JobStartForm: React.FC = () => {
           amount: summaryData.serviceTaxAmount
         },
         totalProjectFees: summaryData.totalProjectFees,
-        profit: summaryData.profit
+        profit: summaryData.profit,
+        // Add resources for backend storage
+        resources: [
+          // Regular time resources
+          ...timeResources.map(resource => ({
+            wbsTaskId: typeof resource.id === 'string' ? parseInt(resource.id) : resource.id,
+            taskType: 0, // Manpower/Time
+            description: resource.description,
+            rate: resource.rate,
+            units: resource.units,
+            budgetedCost: resource.budgetedCost,
+            remarks: resource.remarks || '',
+            employeeName: resource.employeeName || '',
+            name: resource.name || ''
+          })),
+          // Time custom rows (subtotal, contingencies)
+          ...timeCustomRows.map(row => ({
+            wbsTaskId: null, // No WBS task ID for custom rows
+            taskType: 0, // Manpower/Time
+            description: row.title,
+            rate: 0, // Custom rows don't have rates
+            units: row.units || 0,
+            budgetedCost: row.budgetedCost || 0,
+            remarks: row.remarks || '',
+            employeeName: '', // No employee name for custom rows
+            name: row.id // Use the row ID as the name to identify it
+          })),
+          // Regular expenses resources
+          ...expensesResources.map(resource => ({
+            wbsTaskId: typeof resource.id === 'string' ? parseInt(resource.id) : resource.id,
+            taskType: 1, // ODC/Expenses
+            description: resource.description,
+            rate: resource.rate,
+            units: resource.units,
+            budgetedCost: resource.budgetedCost,
+            remarks: resource.remarks || '',
+            employeeName: resource.employeeName || '',
+            name: resource.name || ''
+          })),
+          // Expenses custom rows (subtotal, contingencies, expense contingencies)
+          ...expensesCustomRows.map(row => ({
+            wbsTaskId: null, // No WBS task ID for custom rows
+            taskType: 1, // ODC/Expenses
+            description: row.title,
+            rate: 0, // Custom rows don't have rates
+            units: row.units || 0,
+            budgetedCost: row.budgetedCost || 0,
+            remarks: row.remarks || '',
+            employeeName: '', // No employee name for custom rows
+            name: row.id // Use the row ID as the name to identify it
+          }))
+        ]
       }
 
       let result
@@ -210,6 +270,9 @@ const JobStartForm: React.FC = () => {
                       )
                       .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
 
+                    // Save the resources and custom rows for submission
+                    setTimeResources(data.resources);
+                    setTimeCustomRows(data.customRows);
                     setTotalTimeCost(timeTotal);
                   }}
                 />
@@ -225,6 +288,9 @@ const JobStartForm: React.FC = () => {
                       )
                       .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
 
+                    // Save the resources and custom rows for submission
+                    setExpensesResources(data.resources);
+                    setExpensesCustomRows(data.customRows);
                     setTotalODCExpensesCost(expensesTotal);
                   }}
                 />

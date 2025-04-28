@@ -33,7 +33,9 @@ export const submitJobStartForm = async (projectId: number | string, formData: J
     startDate: formData.startDate || new Date().toISOString(),
     preparedBy: formData.preparedBy || '',
     // Include selections if available
-    selections: formData.selections || []
+    selections: formData.selections || [],
+    // Include resources for Time and Expenses
+    resources: formData.resources || []
   };
 
   try {
@@ -101,7 +103,9 @@ export const updateJobStartForm = async (projectId: number | string, formId: num
     description: formData.description || '',
     startDate: formData.startDate || new Date().toISOString(),
     preparedBy: formData.preparedBy || '',
-    selections: formData.selections || []
+    selections: formData.selections || [],
+    // Include resources for Time and Expenses
+    resources: formData.resources || []
   };
 
   try {

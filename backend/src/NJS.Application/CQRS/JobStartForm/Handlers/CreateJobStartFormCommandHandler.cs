@@ -18,12 +18,12 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
         private readonly IUnitOfWork _unitOfWork;
 
         public CreateJobStartFormCommandHandler(
-            IJobStartFormRepository jobStartFormRepository, 
+            IJobStartFormRepository jobStartFormRepository,
             IUnitOfWork unitOfWork)
         {
-            _jobStartFormRepository = jobStartFormRepository ?? 
+            _jobStartFormRepository = jobStartFormRepository ??
                 throw new ArgumentNullException(nameof(jobStartFormRepository));
-            _unitOfWork = unitOfWork ?? 
+            _unitOfWork = unitOfWork ??
                 throw new ArgumentNullException(nameof(unitOfWork));
         }
 
@@ -35,7 +35,7 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
             // Validate required fields
             if (request.JobStartForm.ProjectId <= 0)
                 throw new ArgumentException("Invalid ProjectId", nameof(request.JobStartForm.ProjectId));
-            
+
             // Prevent creating with existing FormID
             if (request.JobStartForm.FormId != 0)
                 throw new ArgumentException("FormID must not be provided for new entries. Use update instead.");
@@ -78,6 +78,27 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                         OptionName = selection.OptionName ?? string.Empty,
                         IsSelected = selection.IsSelected,
                         Notes = selection.Notes ?? string.Empty
+                    });
+                }
+            }
+
+            // Add resources if any, with null checks
+            if (request.JobStartForm.Resources?.Any() == true)
+            {
+                foreach (var resource in request.JobStartForm.Resources)
+                {
+                    jobStartForm.Resources.Add(new JobStartFormResource
+                    {
+                        WBSTaskId = resource.WBSTaskId,
+                        TaskType = resource.TaskType, // 0 = Manpower/Time, 1 = ODC/Expenses
+                        Description = resource.Description ?? string.Empty,
+                        Rate = resource.Rate,
+                        Units = resource.Units,
+                        BudgetedCost = resource.BudgetedCost,
+                        Remarks = resource.Remarks ?? string.Empty,
+                        EmployeeName = resource.EmployeeName ?? string.Empty, // For Manpower resources
+                        Name = resource.Name ?? string.Empty, // For ODC resources
+                        CreatedDate = DateTime.UtcNow
                     });
                 }
             }
