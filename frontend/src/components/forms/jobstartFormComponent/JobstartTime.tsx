@@ -4,7 +4,12 @@ import TableTemplate, { CustomRow } from './TableTemplate';
 import { JobstartTimeProps, WBSResource } from '../../../types/jobStartFormTypes';
 import { addCalculation, percentageCalculation } from '../../../utils/calculations';
 
-const JobstartTime = ({ wbsResources, onTotalCostChange }: JobstartTimeProps) => {
+const JobstartTime = ({
+  wbsResources,
+  initialTimeContingencyUnits,
+  initialTimeContingencyRemarks,
+  onTotalCostChange
+}: JobstartTimeProps) => {
   const [tableData, setTableData] = useState<{
     resources: WBSResource[];
     customRows: CustomRow[];
@@ -28,10 +33,34 @@ const JobstartTime = ({ wbsResources, onTotalCostChange }: JobstartTimeProps) =>
         hasUnitsField: true,
         unitSuffix: '%',
         budgetedCost: 0,
-        remarks: ''
+        units: initialTimeContingencyUnits,
+        remarks: initialTimeContingencyRemarks || ''
       }
     ]
   });
+
+  // Update when initial values change
+  useEffect(() => {
+    if (initialTimeContingencyUnits !== undefined || initialTimeContingencyRemarks !== undefined) {
+      setTableData(prevData => {
+        const updatedCustomRows = prevData.customRows.map(row => {
+          if (row.id === 'time-contingencies') {
+            return {
+              ...row,
+              units: initialTimeContingencyUnits !== undefined ? initialTimeContingencyUnits : row.units,
+              remarks: initialTimeContingencyRemarks !== undefined ? initialTimeContingencyRemarks : row.remarks
+            };
+          }
+          return row;
+        });
+
+        return {
+          ...prevData,
+          customRows: updatedCustomRows
+        };
+      });
+    }
+  }, [initialTimeContingencyUnits, initialTimeContingencyRemarks]);
 
   // Calculate subtotal and contingencies whenever resources change
   useEffect(() => {

@@ -5,7 +5,7 @@ import EstimatedExpenses from './jobstartFormComponent/EstimatedExpenses'
 import JobstartGrandTotal from './jobstartFormComponent/JobstartGrandTotal'
 import JobstartSummary from './jobstartFormComponent/JobstartSummary'
 import { Container, Box, Paper, Typography, CircularProgress, Alert, Snackbar } from '@mui/material'
-import { getWBSResourceData, submitJobStartForm, updateJobStartForm } from '../../services/jobStartFormApi'
+import { getWBSResourceData, submitJobStartForm, updateJobStartForm, getJobStartFormByProjectId } from '../../services/jobStartFormApi'
 import { WBSResource } from '../../types/jobStartFormTypes'
 import { CustomRow } from './jobstartFormComponent/TableTemplate'
 import { projectManagementAppContext } from '../../App'
@@ -27,8 +27,62 @@ const JobStartForm: React.FC = () => {
   const [expensesResources, setExpensesResources] = useState<WBSResource[]>([])
 
   // State to track custom rows for Time and Expenses
-  const [timeCustomRows, setTimeCustomRows] = useState<CustomRow[]>([])
-  const [expensesCustomRows, setExpensesCustomRows] = useState<CustomRow[]>([])
+  const [timeCustomRows, setTimeCustomRows] = useState<CustomRow[]>([
+    {
+      id: 'time-subtotal',
+      prefix: '1b',
+      title: 'Sub-Total',
+      hasRateField: false,
+      hasUnitsField: false,
+      budgetedCost: 0,
+      remarks: ''
+    },
+    {
+      id: 'time-contingencies',
+      prefix: '1c',
+      title: 'Time Contingencies (LS)',
+      hasRateField: false,
+      hasUnitsField: true,
+      unitSuffix: '%',
+      budgetedCost: 0,
+      units: 0,
+      remarks: ''
+    }
+  ])
+
+  const [expensesCustomRows, setExpensesCustomRows] = useState<CustomRow[]>([
+    {
+      id: 'expenses-subtotal',
+      prefix: '2b',
+      title: 'Sub-Total',
+      hasRateField: false,
+      hasUnitsField: false,
+      budgetedCost: 0,
+      remarks: ''
+    },
+    {
+      id: 'expenses-contingencies',
+      prefix: '2c',
+      title: 'Contingencies (LS)',
+      hasRateField: false,
+      hasUnitsField: true,
+      unitSuffix: '%',
+      budgetedCost: 0,
+      units: 0,
+      remarks: ''
+    },
+    {
+      id: 'expenses-expense-contingencies',
+      prefix: '2d',
+      title: 'Expense Contingencies (LS)',
+      hasRateField: false,
+      hasUnitsField: true,
+      unitSuffix: '%',
+      budgetedCost: 0,
+      units: 0,
+      remarks: ''
+    }
+  ])
 
   // State for summary data
   const [summaryData, setSummaryData] = useState({
@@ -53,7 +107,7 @@ const JobStartForm: React.FC = () => {
   const projectId = context?.selectedProject?.id?.toString()
 
   useEffect(() => {
-    const fetchWBSResourceData = async () => {
+    const fetchData = async () => {
       if (!projectId) {
         setError('Project ID is missing')
         setLoading(false)
@@ -62,31 +116,133 @@ const JobStartForm: React.FC = () => {
 
       try {
         setLoading(true)
-        const data = await getWBSResourceData(projectId)
+
+        // First, try to fetch existing JobStartForm data
+        let existingFormData = null
+        let existingResources: Record<string, any> = {}
+        let existingCustomRows: Record<string, any> = {}
+
+        try {
+          const formData = await getJobStartFormByProjectId(projectId)
+          if (formData && Array.isArray(formData) && formData.length > 0) {
+            existingFormData = formData[0] // Get the first form if multiple exist
+            setFormId(existingFormData.formId)
+            setIsUpdating(true)
+
+            // Set summary data
+            setSummaryData({
+              projectFees: existingFormData.projectFees || 0,
+              serviceTaxPercentage: existingFormData.serviceTaxPercentage || 18,
+              serviceTaxAmount: existingFormData.serviceTaxAmount || 0,
+              totalProjectFees: existingFormData.totalProjectFees || 0,
+              profit: existingFormData.profit || 0
+            })
+
+            // Process existing resources and custom rows
+            if (existingFormData.resources && Array.isArray(existingFormData.resources)) {
+              // Create a map of existing resources by WBS task ID for easy lookup
+              existingFormData.resources.forEach(resource => {
+                if (resource.wbsTaskId) {
+                  // Regular resource
+                  existingResources[resource.wbsTaskId] = resource
+                } else if (resource.name) {
+                  // Custom row (name field contains the row ID)
+                  existingCustomRows[resource.name] = resource
+                }
+              })
+            }
+          }
+        } catch (err) {
+          console.log('No existing JobStartForm found, creating a new one')
+          // Continue with WBS data if no form exists
+        }
+
+        // Then fetch WBS resource data
+        const wbsData = await getWBSResourceData(projectId)
 
         // Transform the data from the API to match our WBSResource type
-        const resources: WBSResource[] = data.resourceAllocations.map((allocation: any) => ({
-          id: allocation.taskId,
-          taskType: allocation.taskType,
-          description: allocation.taskTitle,
-          rate: allocation.costRate,
-          units: allocation.totalHours,
-          budgetedCost: allocation.totalCost,
-          remarks: '',
-          employeeName: allocation.employeeName !== 'null' ? allocation.employeeName : null,
-          name: allocation.name !== 'null' ? allocation.name : null
-        }))
+        const resources: WBSResource[] = wbsData.resourceAllocations.map((allocation: any) => {
+          const taskId = allocation.taskId.toString()
+          const existingResource = existingResources[taskId]
+
+          return {
+            id: taskId,
+            taskType: allocation.taskType,
+            description: allocation.taskTitle,
+            rate: allocation.costRate,
+            units: allocation.totalHours,
+            budgetedCost: allocation.totalCost,
+            // Use existing remarks if available, otherwise empty string
+            remarks: existingResource?.remarks || '',
+            employeeName: allocation.employeeName !== 'null' ? allocation.employeeName : null,
+            name: allocation.name !== 'null' ? allocation.name : null
+          }
+        })
 
         setWbsResources(resources)
+
+        // Set initial custom rows data if available
+        if (Object.keys(existingCustomRows).length > 0) {
+          // Create new arrays for custom rows with updated values
+          const updatedTimeCustomRows = [...timeCustomRows];
+          const updatedExpensesCustomRows = [...expensesCustomRows];
+
+          // Update Time custom rows
+          const timeContingenciesRow = existingCustomRows['time-contingencies'];
+          if (timeContingenciesRow) {
+            const timeContingencyIndex = updatedTimeCustomRows.findIndex(row => row.id === 'time-contingencies');
+            if (timeContingencyIndex !== -1) {
+              updatedTimeCustomRows[timeContingencyIndex] = {
+                ...updatedTimeCustomRows[timeContingencyIndex],
+                units: timeContingenciesRow.units,
+                remarks: timeContingenciesRow.remarks || ''
+              };
+            }
+          }
+
+          // Update Expenses custom rows
+          const expensesContingenciesRow = existingCustomRows['expenses-contingencies'];
+          if (expensesContingenciesRow) {
+            const expensesContingencyIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-contingencies');
+            if (expensesContingencyIndex !== -1) {
+              updatedExpensesCustomRows[expensesContingencyIndex] = {
+                ...updatedExpensesCustomRows[expensesContingencyIndex],
+                units: expensesContingenciesRow.units,
+                remarks: expensesContingenciesRow.remarks || ''
+              };
+            }
+          }
+
+          const expenseExpenseContingenciesRow = existingCustomRows['expenses-expense-contingencies'];
+          if (expenseExpenseContingenciesRow) {
+            const expenseExpenseContingencyIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-expense-contingencies');
+            if (expenseExpenseContingencyIndex !== -1) {
+              updatedExpensesCustomRows[expenseExpenseContingencyIndex] = {
+                ...updatedExpensesCustomRows[expenseExpenseContingencyIndex],
+                units: expenseExpenseContingenciesRow.units,
+                remarks: expenseExpenseContingenciesRow.remarks || ''
+              };
+            }
+          }
+
+          // Set the updated custom rows
+          setTimeCustomRows(updatedTimeCustomRows);
+          setExpensesCustomRows(updatedExpensesCustomRows);
+
+          // Log the updated custom rows for debugging
+          console.log('Updated Time Custom Rows:', updatedTimeCustomRows);
+          console.log('Updated Expenses Custom Rows:', updatedExpensesCustomRows);
+        }
+
         setLoading(false)
       } catch (err) {
-        console.error('Error fetching WBS resource data:', err)
-        setError('Failed to load WBS resource data. Please try again later.')
+        console.error('Error fetching data:', err)
+        setError('Failed to load data. Please try again later.')
         setLoading(false)
       }
     }
 
-    fetchWBSResourceData()
+    fetchData()
   }, [projectId])
 
   // If context is not available, show an error
@@ -259,8 +415,14 @@ const JobStartForm: React.FC = () => {
               <Typography color="error" sx={{ my: 2 }}>{error}</Typography>
             ) : (
               <>
+                {/* Debug info */}
+                {console.log('Time Custom Rows:', timeCustomRows)}
+                {console.log('Expenses Custom Rows:', expensesCustomRows)}
+
                 <JobstartTime
                   wbsResources={wbsResources.filter(resource => resource.taskType === 0)}
+                  initialTimeContingencyUnits={timeCustomRows.find(row => row.id === 'time-contingencies')?.units}
+                  initialTimeContingencyRemarks={timeCustomRows.find(row => row.id === 'time-contingencies')?.remarks}
                   onTotalCostChange={(data) => {
                     // Calculate total using only the time-related custom rows (subtotal and contingencies)
                     const timeTotal = data.customRows
@@ -278,6 +440,10 @@ const JobStartForm: React.FC = () => {
                 />
                 <EstimatedExpenses
                   wbsResources={wbsResources.filter(resource => resource.taskType === 1)}
+                  initialContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.units}
+                  initialContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.remarks}
+                  initialExpenseContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.units}
+                  initialExpenseContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.remarks}
                   onTotalCostChange={(data) => {
                     // Calculate total using only the expense-related custom rows
                     const expensesTotal = data.customRows
@@ -300,6 +466,8 @@ const JobStartForm: React.FC = () => {
                 />
                 <JobstartSummary
                   grandTotal={totalTimeCost + totalODCExpensesCost}
+                  initialProjectFees={summaryData.projectFees}
+                  initialServiceTaxPercentage={summaryData.serviceTaxPercentage}
                   onDataChange={setSummaryData}
                 />
 

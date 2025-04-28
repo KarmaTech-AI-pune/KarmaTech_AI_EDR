@@ -1,5 +1,48 @@
 import { axiosInstance } from '../dummyapi/axiosConfig'; // Use the existing configured Axios instance
-import { JobStartFormData } from '../types'; // Assuming a type definition exists or will be created for the detailed form data
+import { ServiceTaxData } from '../types'; // Import only what we need
+
+// Simplified interfaces for the JobStartForm component
+interface SimpleTimeData {
+  totalTimeCost: number;
+}
+
+interface SimpleExpensesData {
+  totalExpenses: number;
+}
+
+// Simplified JobStartFormData for the component
+export interface SimpleJobStartFormData {
+  formId?: number | string;
+  projectId: number | string | undefined;
+  time: SimpleTimeData;
+  expenses: SimpleExpensesData;
+  grandTotal: number;
+  projectFees: number;
+  serviceTax: ServiceTaxData;
+  serviceTaxPercentage?: number; // Added for compatibility with backend
+  serviceTaxAmount?: number; // Added for compatibility with backend
+  totalProjectFees: number;
+  profit: number;
+  formTitle?: string;
+  description?: string;
+  startDate?: string;
+  preparedBy?: string;
+  selections?: any[];
+  resources?: JobStartFormResourceData[];
+}
+
+// Interface for JobStartFormResourceData
+export interface JobStartFormResourceData {
+  wbsTaskId?: number | string | null;
+  taskType: number;
+  description: string;
+  rate: number;
+  units: number;
+  budgetedCost: number;
+  remarks?: string;
+  employeeName?: string;
+  name?: string;
+}
 
 const API_URL = '/api/projects'; // Base URL for projects
 
@@ -13,7 +56,7 @@ const API_URL = '/api/projects'; // Base URL for projects
  * @param formData The detailed Job Start Form data collected from the frontend.
  * @returns A promise that resolves with the response data from the backend.
  */
-export const submitJobStartForm = async (projectId: number | string, formData: JobStartFormData): Promise<any> => {
+export const submitJobStartForm = async (projectId: number | string, formData: SimpleJobStartFormData): Promise<any> => {
   // Transform the nested frontend data structure to the flat DTO expected by the backend
   const payload = {
     // Assuming FormId is 0 or not needed for creation, backend generates it
@@ -56,7 +99,7 @@ export const submitJobStartForm = async (projectId: number | string, formData: J
  * @param formId The ID of the Job Start Form to fetch.
  * @returns A promise that resolves with the Job Start Form data.
  */
-export const getJobStartFormByProjectId = async (projectId: number | string): Promise<JobStartFormData> => {
+export const getJobStartFormByProjectId = async (projectId: number | string): Promise<SimpleJobStartFormData[]> => {
   try {
     const response = await axiosInstance.get(`${API_URL}/${projectId}/jobstartforms`);
     return response.data;
@@ -66,7 +109,7 @@ export const getJobStartFormByProjectId = async (projectId: number | string): Pr
   }
 };
 
-export const getJobStartFormById = async (projectId: number | string, formId: number | string): Promise<JobStartFormData> => {
+export const getJobStartFormById = async (projectId: number | string, formId: number | string): Promise<SimpleJobStartFormData> => {
   try {
     const response = await axiosInstance.get(`${API_URL}/${projectId}/jobstartforms/${formId}`);
     return response.data;
@@ -85,7 +128,7 @@ export const getJobStartFormById = async (projectId: number | string, formId: nu
  * @param formData The detailed Job Start Form data collected from the frontend.
  * @returns A promise that resolves with the response data from the backend.
  */
-export const updateJobStartForm = async (projectId: number | string, formId: number | string, formData: JobStartFormData): Promise<any> => {
+export const updateJobStartForm = async (projectId: number | string, formId: number | string, formData: SimpleJobStartFormData): Promise<any> => {
   // Transform the nested frontend data structure to the flat DTO expected by the backend
   // This transformation should match the one in submitJobStartForm
   const payload = {

@@ -12,10 +12,16 @@ export interface WBSResource {
 
 export interface JobstartTimeProps {
   wbsResources: WBSResource[];
+  initialTimeContingencyUnits?: number;
+  initialTimeContingencyRemarks?: string;
   onTotalCostChange?: (data: { resources: WBSResource[], customRows: any[] }) => void;
 }
 
 export interface EstimatedExpensesProps {
   wbsResources: WBSResource[];
+  initialContingencyUnits?: number;
+  initialContingencyRemarks?: string;
+  initialExpenseContingencyUnits?: number;
+  initialExpenseContingencyRemarks?: string;
   onTotalCostChange?: (data: { resources: WBSResource[], customRows: any[] }) => void;
 }

@@ -13,6 +13,8 @@ import {
 // Define interface for component props
 interface JobstartSummaryProps {
   grandTotal: number;
+  initialProjectFees?: number;
+  initialServiceTaxPercentage?: number;
   onDataChange?: (data: {
     projectFees: number;
     serviceTaxPercentage: number;
@@ -22,11 +24,13 @@ interface JobstartSummaryProps {
   }) => void;
 }
 
-const JobstartSummary = ({ grandTotal, onDataChange }: JobstartSummaryProps) => {
+const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPercentage, onDataChange }: JobstartSummaryProps) => {
   // State for project fees and service tax
-  const [projectFees, setProjectFees] = useState<string>('0');
+  const [projectFees, setProjectFees] = useState<string>(
+    (initialProjectFees || 0).toString()
+  );
   const [serviceTax, setServiceTax] = useState({
-    percentage: '18', // Default GST rate in India
+    percentage: (initialServiceTaxPercentage || 18).toString(), // Default GST rate in India
     amount: '0'
   });
 
@@ -228,6 +232,7 @@ const JobstartSummary = ({ grandTotal, onDataChange }: JobstartSummaryProps) => 
                   <TextField
                     size="small"
                     type="text"
+                    // Using inputProps for now as slotProps doesn't support min/step directly
                     inputProps={{
                       min: 0,
                       step: 0.01
@@ -267,6 +272,7 @@ const JobstartSummary = ({ grandTotal, onDataChange }: JobstartSummaryProps) => 
                     <TextField
                       size="small"
                       type="text"
+                      // Using inputProps for now as slotProps doesn't support min/max/step directly
                       inputProps={{
                         min: 0,
                         max: 100,
@@ -284,8 +290,10 @@ const JobstartSummary = ({ grandTotal, onDataChange }: JobstartSummaryProps) => 
                           height: '36px'
                         }
                       }}
-                      InputProps={{
-                        endAdornment: <InputAdornment position="end">%</InputAdornment>
+                      slotProps={{
+                        input: {
+                          endAdornment: <InputAdornment position="end">%</InputAdornment>
+                        }
                       }}
                     />
                   </Box>

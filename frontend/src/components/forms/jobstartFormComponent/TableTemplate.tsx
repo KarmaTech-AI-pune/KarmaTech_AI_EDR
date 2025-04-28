@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Accordion,
@@ -12,9 +12,7 @@ import {
   TableCell,
   TableBody,
   TextField,
-  SxProps,
-  Theme,
-  InputAdornment // Add this import
+  InputAdornment
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { WBSResource } from '../../../types/jobStartFormTypes';
@@ -126,6 +124,11 @@ const TableTemplate = ({
   const [expanded, setExpanded] = useState<string[]>(initialExpanded ? [sectionId] : []);
   const [remarks, setRemarks] = useState<{ [key: string]: string }>({});
   const [localCustomRows, setLocalCustomRows] = useState<CustomRow[]>(customRows);
+
+  // Update localCustomRows when customRows prop changes
+  useEffect(() => {
+    setLocalCustomRows(customRows);
+  }, [customRows]);
 
   const handleAccordionChange = (panel: string) => {
     setExpanded(prev => {
@@ -290,9 +293,12 @@ const TableTemplate = ({
                             value={row.units || '0'}
                             onChange={(e) => handleCustomRowChange(row.id, 'units', e.target.value)}
                             sx={{ ...tableStyles.textField, width: '120px' }} // Apply width here
-                            InputProps={row.unitSuffix === '%' ? { // Conditionally add adornment
-                              endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                            } : undefined} // No adornment if unitSuffix is not '%'
+                            // Using slotProps instead of InputProps (which is deprecated)
+                            slotProps={{
+                              input: {
+                                endAdornment: row.unitSuffix === '%' ? <InputAdornment position="end">%</InputAdornment> : undefined
+                              }
+                            }}
                         />
                       ) : null}
                     </TableCell>
