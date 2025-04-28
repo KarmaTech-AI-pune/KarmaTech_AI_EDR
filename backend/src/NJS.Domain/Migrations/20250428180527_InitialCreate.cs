@@ -1078,6 +1078,37 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "JobStartFormResources",
+                columns: table => new
+                {
+                    ResourceId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FormId = table.Column<int>(type: "int", nullable: false),
+                    WBSTaskId = table.Column<int>(type: "int", nullable: true),
+                    TaskType = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Rate = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    Units = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    BudgetedCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmployeeName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JobStartFormResources", x => x.ResourceId);
+                    table.ForeignKey(
+                        name: "FK_JobStartFormResources_JobStartForms_FormId",
+                        column: x => x.FormId,
+                        principalTable: "JobStartForms",
+                        principalColumn: "FormId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "JobStartFormSelections",
                 columns: table => new
                 {
@@ -1286,6 +1317,11 @@ namespace NJS.Domain.Migrations
                 column: "ProjectId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_JobStartFormResources_FormId",
+                table: "JobStartFormResources",
+                column: "FormId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_JobStartForms_ProjectId",
                 table: "JobStartForms",
                 column: "ProjectId");
@@ -1476,6 +1512,9 @@ namespace NJS.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "InputRegisters");
+
+            migrationBuilder.DropTable(
+                name: "JobStartFormResources");
 
             migrationBuilder.DropTable(
                 name: "JobStartFormSelections");

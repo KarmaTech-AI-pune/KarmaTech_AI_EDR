@@ -12,8 +12,8 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20250428142936_AddJobStartFormResources")]
-    partial class AddJobStartFormResources
+    [Migration("20250428180527_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1137,9 +1137,6 @@ namespace NJS.Domain.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("JobStartFormFormId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
@@ -1166,8 +1163,6 @@ namespace NJS.Domain.Migrations
                     b.HasKey("ResourceId");
 
                     b.HasIndex("FormId");
-
-                    b.HasIndex("JobStartFormFormId");
 
                     b.ToTable("JobStartFormResources");
                 });
@@ -2351,14 +2346,10 @@ namespace NJS.Domain.Migrations
             modelBuilder.Entity("NJS.Domain.Entities.JobStartFormResource", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.JobStartForm", "JobStartForm")
-                        .WithMany()
+                        .WithMany("Resources")
                         .HasForeignKey("FormId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("NJS.Domain.Entities.JobStartForm", null)
-                        .WithMany("Resources")
-                        .HasForeignKey("JobStartFormFormId");
 
                     b.Navigation("JobStartForm");
                 });

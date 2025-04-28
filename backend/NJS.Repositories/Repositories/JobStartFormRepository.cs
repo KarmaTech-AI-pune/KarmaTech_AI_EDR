@@ -33,8 +33,10 @@ namespace NJS.Repositories.Repositories
 
         public async Task<JobStartForm> GetByIdAsync(int id)
         {
-            // Corrected implementation
-            return await _context.JobStartForms.FindAsync(id);
+            // Use FirstOrDefaultAsync with Include to load related resources
+            return await _context.JobStartForms
+                                 .Include(jsf => jsf.Resources) // Corrected navigation property name
+                                 .FirstOrDefaultAsync(jsf => jsf.FormId == id && !jsf.IsDeleted);
         }
 
         public async Task<IEnumerable<JobStartForm>> GetAllByProjectIdAsync(int projectId)
