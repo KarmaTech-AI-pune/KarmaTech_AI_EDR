@@ -1,12 +1,7 @@
-using MediatR;
 using Moq;
 using NJS.Application.CQRS.InputRegister.Commands;
 using NJS.Application.CQRS.InputRegister.Handlers;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace NJS.API.Tests.CQRS.InputRegister.Handlers
 {

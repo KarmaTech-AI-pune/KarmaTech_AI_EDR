@@ -1,10 +1,6 @@
 using NJS.Application.CQRS.InputRegister.Queries;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Reflection;
-using Xunit;
 
 namespace NJS.API.Tests.CQRS.InputRegister.Queries
 {

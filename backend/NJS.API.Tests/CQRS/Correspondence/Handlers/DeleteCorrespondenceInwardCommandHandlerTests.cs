@@ -2,10 +2,6 @@ using Moq;
 using NJS.Application.CQRS.Correspondence.Commands;
 using NJS.Application.CQRS.Correspondence.Handlers;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace NJS.API.Tests.CQRS.Correspondence.Handlers
 {

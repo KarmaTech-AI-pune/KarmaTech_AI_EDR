@@ -6,11 +6,6 @@ using NJS.Application.CQRS.Correspondence.Commands;
 using NJS.Application.CQRS.Correspondence.Queries;
 using NJS.Application.DTOs;
 using NJSAPI.Controllers;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace NJS.API.Tests.Controllers
 {

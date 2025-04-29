@@ -1,4 +1,5 @@
 using NJS.Application.CQRS.InputRegister.Commands;
+using NJS.Application.DTOs;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -44,11 +45,8 @@ namespace NJS.API.Tests.CQRS.InputRegister.Commands
             // Arrange
             var command = new CreateInputRegisterCommand
             {
-                ProjectId = 1,
-                // Missing DataReceived
-                ReceiptDate = DateTime.Now,
-                // Missing ReceivedFrom
-                // Missing FilesFormat
+                ProjectId = 1,                
+                ReceiptDate = DateTime.Now,                
                 NoOfFiles = 1,
                 FitForPurpose = true,
                 Check = true
@@ -107,9 +105,7 @@ namespace NJS.API.Tests.CQRS.InputRegister.Commands
             // Act
             var validationResults = ValidateModel(command);
 
-            // Assert
-            // Note: This test might fail if there's no validation for future dates
-            // If that's the case, you might want to add such validation
+            // Assert            
             Assert.Empty(validationResults);
         }
 
@@ -130,9 +126,8 @@ namespace NJS.API.Tests.CQRS.InputRegister.Commands
                 i.IsGenericType &&
                 i.GetGenericTypeDefinition() == typeof(MediatR.IRequest<>));
 
-            // The actual type might be NJS.API.Tests.CQRS.InputRegister.InputRegisterDto in the test environment
-            // but in production it would be NJS.Application.DTOs.InputRegisterDto
-            Assert.Equal(typeof(NJS.API.Tests.CQRS.InputRegister.InputRegisterDto), genericInterface.GetGenericArguments()[0]);
+           
+            Assert.Equal(typeof(InputRegisterDto), genericInterface.GetGenericArguments()[0]);
         }
 
         [Fact]
@@ -208,10 +203,8 @@ namespace NJS.API.Tests.CQRS.InputRegister.Commands
             var genericInterface = interfaces.First(i =>
                 i.IsGenericType &&
                 i.GetGenericTypeDefinition() == typeof(MediatR.IRequest<>));
-
-            // The actual type might be NJS.API.Tests.CQRS.InputRegister.InputRegisterDto in the test environment
-            // but in production it would be NJS.Application.DTOs.InputRegisterDto
-            Assert.Equal(typeof(NJS.API.Tests.CQRS.InputRegister.InputRegisterDto), genericInterface.GetGenericArguments()[0]);
+          
+            Assert.Equal(typeof(InputRegisterDto), genericInterface.GetGenericArguments()[0]);
         }
 
         [Fact]

@@ -1,11 +1,6 @@
-using FluentValidation;
 using NJS.API.Tests.CQRS.Correspondence.Validators;
 using NJS.Application.CQRS.Correspondence.Commands;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using Xunit;
 
 namespace NJS.API.Tests.CQRS.Correspondence.Commands
 {
