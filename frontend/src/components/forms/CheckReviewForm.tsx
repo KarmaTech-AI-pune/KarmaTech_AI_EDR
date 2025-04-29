@@ -12,7 +12,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   Grid,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -46,6 +47,7 @@ const CheckReviewForm: React.FC = () => {
   const [rows, setRows] = useState<CheckReviewRow[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const [editingReview, setEditingReview] = useState<CheckReviewRow | undefined>(undefined);
 
   useEffect(() => {
@@ -61,27 +63,60 @@ const CheckReviewForm: React.FC = () => {
     }
 
     try {
+      setLoading(true);
       console.log('Loading reviews for project:', context.selectedProject.id);
+ feature/Correspondence_Inward_And_Outward_1
+
+      try {
+        const reviews = await getCheckReviewsByProject(context.selectedProject.id.toString());
+        console.log('Loaded reviews from backend:', reviews);
+
+        if (!reviews || reviews.length === 0) {
+          console.log('No reviews found for this project');
+          setRows([]);
+          setError('');
+          return;
+
       const reviews = await getCheckReviewsByProject(context.selectedProject.id.toString());
       console.log('Loaded reviews:', reviews);
 
-      // Ensure each review has an id property
-      const reviewsWithIds = reviews.map(review => {
-        if (review.id === undefined || review.id === '') {
-          console.warn(`Review with activityNo ${review.activityNo} has no ID, using activityNo as fallback`);
-          return { ...review, id: review.activityNo };
+     
         }
-        return review;
-      });
 
-      console.log('Reviews with IDs:', reviewsWithIds);
-      setRows(reviewsWithIds);
-      setError('');
+        // Process reviews to ensure proper ID handling
+        const processedReviews = reviews.map((review, index) => {
+          // Store the original backend ID for API operations
+          const backendId = review.id ? review.id.toString() : null;
+
+          // Log each review with its ID for debugging
+          console.log(`Review ${index}:`, {
+            backendId: backendId,
+            activityNo: review.activityNo,
+            activityName: review.activityName
+          });
+
+          // Return the review with originalId set to the backend ID
+          return {
+            ...review,
+            originalId: backendId
+          };
+        });
+
+        console.log('Processed reviews with backend IDs:', processedReviews);
+        setRows(processedReviews);
+        setError('');
+      } catch (apiError) {
+        console.error('API error loading reviews:', apiError);
+        setRows([]);
+        setError('Failed to load reviews. Please try again.');
+      }
     } catch (err: any) {
-      console.error('Error loading reviews:', err);
+      console.error('Error in loadReviews function:', err);
       // Extract more detailed error message if available
       const errorMessage = err.response?.data || err.message || 'Unknown error';
       setError(`Failed to load check review data: ${errorMessage}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,6 +132,7 @@ const CheckReviewForm: React.FC = () => {
       return;
     }
 
+    setLoading(true);
     try {
       if (editingReview) {
         // Update existing review
@@ -128,14 +164,18 @@ const CheckReviewForm: React.FC = () => {
       // Extract more detailed error message if available
       const errorMessage = err.response?.data || err.message || 'Failed to save review';
       setError(`Failed to save review: ${errorMessage}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteReview = async (id: string) => {
+    setLoading(true);
     try {
       if (id === undefined || id === '') {
         console.error('Cannot delete review: ID is undefined or empty');
         setError('Cannot delete review: ID is missing');
+        setLoading(false);
         return;
       }
 
@@ -144,6 +184,7 @@ const CheckReviewForm: React.FC = () => {
       // Add confirmation dialog
       if (!window.confirm('Are you sure you want to delete this review?')) {
         console.log('Delete cancelled by user');
+        setLoading(false);
         return;
       }
 
@@ -183,6 +224,8 @@ const CheckReviewForm: React.FC = () => {
       }
 
       setError(`Failed to delete review: ${errorMessage}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -266,7 +309,20 @@ const CheckReviewForm: React.FC = () => {
             </Box>
           )}
 
+          {loading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+              <CircularProgress />
+            </Box>
+          )}
+
           <Box>
+            {!loading && rows.length === 0 && (
+              <Box sx={{ mx: 3, my: 4, textAlign: 'center' }}>
+                <Typography color="text.secondary">
+                  No reviews found for this project. Click "Add Review" to create one.
+                </Typography>
+              </Box>
+            )}
             {rows.map((row) => (
               <Accordion
                 key={row.activityNo}

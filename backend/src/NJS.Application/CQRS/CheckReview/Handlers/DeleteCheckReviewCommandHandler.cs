@@ -21,6 +21,10 @@ namespace NJS.Application.CQRS.CheckReview.Handlers
             try
             {
                 await _repository.DeleteAsync(request.Id);
+
+                // Reset the identity seed to ensure new entries start from the lowest available ID
+                await _repository.ResetIdentitySeedAsync();
+
                 return true;
             }
             catch (KeyNotFoundException)

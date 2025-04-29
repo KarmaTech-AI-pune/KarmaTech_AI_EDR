@@ -168,8 +168,31 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
     setFormErrors({});
     setFormSubmitError(null);
 
-    // If editing, include the ID in the data
-    const dataToSave = isEdit && editData ? { ...formData, id: editData.id } : formData;
+    // CRITICAL: Always force the isEdit flag and ID if we're editing
+    let dataToSave;
+
+    if (isEdit && editData) {
+      // Make sure we're explicitly setting the ID
+      dataToSave = {
+        ...formData,
+        id: editData.id,
+        _isEditOperation: true  // Add a special flag to indicate this is an edit operation
+      };
+      console.log('EDIT MODE: Adding ID to data:', editData.id);
+      console.log('EDIT MODE: Full data being sent:', JSON.stringify(dataToSave, null, 2));
+      console.log('EDIT MODE: This should trigger a PUT request to /api/correspondence/{type}/{id}');
+
+      // Double check that the ID is present
+      if (!dataToSave.id && dataToSave.id !== 0) {
+        console.error('CRITICAL ERROR: ID is missing in edit mode!');
+        setFormSubmitError('Cannot update record: Missing ID');
+        return;
+      }
+    } else {
+      dataToSave = { ...formData, _isEditOperation: false };
+      console.log('CREATE MODE: No ID added');
+      console.log('CREATE MODE: This should trigger a POST request to /api/correspondence/{type}');
+    }
 
     try {
       onSave(dataToSave);
