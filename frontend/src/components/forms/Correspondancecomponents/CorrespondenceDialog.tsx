@@ -41,7 +41,7 @@ interface CorrespondenceDialogProps {
   onClose: () => void;
   onSave: (data: any) => void;
   type: 'inward' | 'outward';
-  editData?: InwardRow | OutwardRow;
+  editData?: InwardRow | OutwardRow | null;
   isEdit?: boolean;
 }
 
@@ -81,28 +81,44 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
   // Update form data when editData changes or dialog opens
   useEffect(() => {
     if (open && editData) {
-      // Format dates for the form
-      const formattedData = { ...editData };
+      // Create a new form data object that matches the expected structure
+      let newFormData;
 
       if (type === 'inward') {
-        const inwardData = formattedData as InwardRow;
-        if (inwardData.letterDate) {
-          formattedData.letterDate = new Date(inwardData.letterDate).toISOString().split('T')[0];
-        }
-        if (inwardData.receiptDate) {
-          formattedData.receiptDate = new Date(inwardData.receiptDate).toISOString().split('T')[0];
-        }
-        if (inwardData.repliedDate) {
-          formattedData.repliedDate = new Date(inwardData.repliedDate).toISOString().split('T')[0];
-        }
+        const inwardData = editData as InwardRow;
+
+        // Create a new object with only the properties we need for the form
+        newFormData = {
+          incomingLetterNo: inwardData.incomingLetterNo,
+          letterDate: inwardData.letterDate ? new Date(inwardData.letterDate).toISOString().split('T')[0] : '',
+          njsInwardNo: inwardData.njsInwardNo,
+          receiptDate: inwardData.receiptDate ? new Date(inwardData.receiptDate).toISOString().split('T')[0] : '',
+          from: inwardData.from,
+          subject: inwardData.subject,
+          attachmentDetails: inwardData.attachmentDetails || '',
+          actionTaken: inwardData.actionTaken || '',
+          storagePath: inwardData.storagePath || '',
+          remarks: inwardData.remarks || '',
+          repliedDate: inwardData.repliedDate ? new Date(inwardData.repliedDate).toISOString().split('T')[0] : ''
+        };
       } else {
-        const outwardData = formattedData as OutwardRow;
-        if (outwardData.letterDate) {
-          formattedData.letterDate = new Date(outwardData.letterDate).toISOString().split('T')[0];
-        }
+        const outwardData = editData as OutwardRow;
+
+        // Create a new object with only the properties we need for the form
+        newFormData = {
+          letterNo: outwardData.letterNo,
+          letterDate: outwardData.letterDate ? new Date(outwardData.letterDate).toISOString().split('T')[0] : '',
+          to: outwardData.to,
+          subject: outwardData.subject,
+          attachmentDetails: outwardData.attachmentDetails || '',
+          actionTaken: outwardData.actionTaken || '',
+          storagePath: outwardData.storagePath || '',
+          remarks: outwardData.remarks || '',
+          acknowledgement: outwardData.acknowledgement || ''
+        };
       }
 
-      setFormData(formattedData);
+      setFormData(newFormData);
     } else if (open) {
       // Reset form when opening for a new entry
       setFormData(getInitialFormData());

@@ -67,7 +67,7 @@ const CheckReviewForm: React.FC = () => {
 
       // Ensure each review has an id property
       const reviewsWithIds = reviews.map(review => {
-        if (!review.id && review.id !== 0) {
+        if (review.id === undefined || review.id === '') {
           console.warn(`Review with activityNo ${review.activityNo} has no ID, using activityNo as fallback`);
           return { ...review, id: review.activityNo };
         }
@@ -133,7 +133,7 @@ const CheckReviewForm: React.FC = () => {
 
   const handleDeleteReview = async (id: string) => {
     try {
-      if (!id && id !== '0') {
+      if (id === undefined || id === '') {
         console.error('Cannot delete review: ID is undefined or empty');
         setError('Cannot delete review: ID is missing');
         return;
@@ -329,7 +329,7 @@ const CheckReviewForm: React.FC = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               // Use row.id if available, otherwise use activityNo as fallback
-                              if (row.id || row.id === 0) {
+                              if (row.id !== undefined && row.id !== '') {
                                 console.log('Delete button clicked for review ID:', row.id);
                                 handleDeleteReview(row.id.toString());
                               } else if (row.activityNo) {
