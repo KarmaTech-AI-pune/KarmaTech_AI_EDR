@@ -1107,6 +1107,63 @@ namespace NJS.Domain.Migrations
                     b.ToTable("JobStartForms");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.JobStartFormResource", b =>
+                {
+                    b.Property<int>("ResourceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResourceId"));
+
+                    b.Property<decimal>("BudgetedCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmployeeName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("FormId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Rate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TaskType")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Units")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("WBSTaskId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ResourceId");
+
+                    b.HasIndex("FormId");
+
+                    b.ToTable("JobStartFormResources");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.JobStartFormSelection", b =>
                 {
                     b.Property<int>("SelectionId")
@@ -2283,6 +2340,17 @@ namespace NJS.Domain.Migrations
                     b.Navigation("WorkBreakdownStructure");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.JobStartFormResource", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.JobStartForm", "JobStartForm")
+                        .WithMany("Resources")
+                        .HasForeignKey("FormId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobStartForm");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.JobStartFormSelection", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.JobStartForm", "JobStartForm")
@@ -2491,6 +2559,8 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("NJS.Domain.Entities.JobStartForm", b =>
                 {
+                    b.Navigation("Resources");
+
                     b.Navigation("Selections");
                 });
 

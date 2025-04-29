@@ -103,7 +103,6 @@ export interface ProjectSpecificEntry {
 }
 
 export interface TimeContingencyEntry {
-    rate: string; // Can be number or string
     units: string; // Can be number or string
     remarks: string;
 }
@@ -142,6 +141,18 @@ export interface ExpensesData {
     totalExpenses: number;
 }
 
+export interface JobStartFormResourceData {
+    wbsTaskId?: number | string;
+    taskType: number; // 0 = Manpower/Time, 1 = ODC/Expenses
+    description: string;
+    rate: number;
+    units: number;
+    budgetedCost: number;
+    remarks?: string;
+    employeeName?: string; // For Manpower resources (taskType=0)
+    name?: string; // For ODC resources (taskType=1)
+}
+
 export interface JobStartFormData {
     formId?: number | string; // Added optional formId for updates
     projectId: number | string | undefined; // Match context type
@@ -152,4 +163,11 @@ export interface JobStartFormData {
     serviceTax: ServiceTaxData;
     totalProjectFees: number;
     profit: number;
+    // Optional fields for backend
+    formTitle?: string;
+    description?: string;
+    startDate?: string;
+    preparedBy?: string;
+    selections?: any[]; // JobStartFormSelectionDto[]
+    resources?: JobStartFormResourceData[]; // Resources for Time and Expenses
 }

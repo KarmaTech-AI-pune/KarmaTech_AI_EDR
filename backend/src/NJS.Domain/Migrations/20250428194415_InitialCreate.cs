@@ -721,6 +721,39 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CheckReviews",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    ActivityNo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ActivityName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Objective = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    References = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    FileName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    QualityIssues = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Completion = table.Column<string>(type: "nvarchar(1)", maxLength: 1, nullable: false),
+                    CheckedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ApprovedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ActionTaken = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CheckReviews", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CheckReviews_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CorrespondenceInwards",
                 columns: table => new
                 {
@@ -1045,6 +1078,37 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "JobStartFormResources",
+                columns: table => new
+                {
+                    ResourceId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FormId = table.Column<int>(type: "int", nullable: false),
+                    WBSTaskId = table.Column<int>(type: "int", nullable: true),
+                    TaskType = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Rate = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    Units = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    BudgetedCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmployeeName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JobStartFormResources", x => x.ResourceId);
+                    table.ForeignKey(
+                        name: "FK_JobStartFormResources_JobStartForms_FormId",
+                        column: x => x.FormId,
+                        principalTable: "JobStartForms",
+                        principalColumn: "FormId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "JobStartFormSelections",
                 columns: table => new
                 {
@@ -1193,6 +1257,11 @@ namespace NJS.Domain.Migrations
                 column: "BidPreparationId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CheckReviews_ProjectId",
+                table: "CheckReviews",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CorrespondenceInwards_ProjectId",
                 table: "CorrespondenceInwards",
                 column: "ProjectId");
@@ -1246,6 +1315,11 @@ namespace NJS.Domain.Migrations
                 name: "IX_InputRegisters_ProjectId",
                 table: "InputRegisters",
                 column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobStartFormResources_FormId",
+                table: "JobStartFormResources",
+                column: "FormId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_JobStartForms_ProjectId",
@@ -1410,6 +1484,9 @@ namespace NJS.Domain.Migrations
                 name: "BidVersionHistories");
 
             migrationBuilder.DropTable(
+                name: "CheckReviews");
+
+            migrationBuilder.DropTable(
                 name: "CorrespondenceInwards");
 
             migrationBuilder.DropTable(
@@ -1435,6 +1512,9 @@ namespace NJS.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "InputRegisters");
+
+            migrationBuilder.DropTable(
+                name: "JobStartFormResources");
 
             migrationBuilder.DropTable(
                 name: "JobStartFormSelections");

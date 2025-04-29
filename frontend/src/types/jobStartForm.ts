@@ -37,7 +37,6 @@ export interface ProjectSpecificEntry {
 }
 
 export interface TimeContingencyEntry {
-  rate: string;
   units: string;
   remarks: string;
 }
