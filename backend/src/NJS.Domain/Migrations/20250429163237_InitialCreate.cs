@@ -721,6 +721,73 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ChangeControls",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    SrNo = table.Column<int>(type: "int", nullable: false),
+                    DateLogged = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Originator = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    CostImpact = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    TimeImpact = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ResourcesImpact = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    QualityImpact = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ChangeOrderStatus = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ClientApprovalStatus = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ClaimSituation = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChangeControls", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChangeControls_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CheckReviews",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    ActivityNo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ActivityName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Objective = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    References = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    FileName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    QualityIssues = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Completion = table.Column<string>(type: "nvarchar(1)", maxLength: 1, nullable: false),
+                    CheckedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ApprovedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ActionTaken = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CheckReviews", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CheckReviews_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CorrespondenceInwards",
                 columns: table => new
                 {
@@ -1193,6 +1260,16 @@ namespace NJS.Domain.Migrations
                 column: "BidPreparationId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ChangeControls_ProjectId",
+                table: "ChangeControls",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CheckReviews_ProjectId",
+                table: "CheckReviews",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CorrespondenceInwards_ProjectId",
                 table: "CorrespondenceInwards",
                 column: "ProjectId");
@@ -1408,6 +1485,12 @@ namespace NJS.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "BidVersionHistories");
+
+            migrationBuilder.DropTable(
+                name: "ChangeControls");
+
+            migrationBuilder.DropTable(
+                name: "CheckReviews");
 
             migrationBuilder.DropTable(
                 name: "CorrespondenceInwards");
