@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -10,7 +10,8 @@ import {
   Typography,
   IconButton,
   Grid,
-  styled
+  styled,
+  Alert
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { ChangeControl } from "../../../models";
@@ -40,24 +41,77 @@ interface ChangeControlDialogProps {
   onClose: () => void;
   onSave: (data: Omit<ChangeControl, 'id' | 'projectId'>) => void;
   nextSrNo: number;
+  editData?: ChangeControl;
 }
 
-export const ChangeControlDialog = ({ open, onClose, onSave, nextSrNo }: ChangeControlDialogProps) => {
+export const ChangeControlDialog = ({ open, onClose, onSave, nextSrNo, editData }: ChangeControlDialogProps) => {
   const [formData, setFormData] = useState<Omit<ChangeControl, 'id' | 'projectId'>>({
-    srNo: nextSrNo,
-    dateLogged: '',
-    originator: '',
-    description: '',
-    costImpact: '',
-    timeImpact: '',
-    resourcesImpact: '',
-    qualityImpact: '',
-    changeOrderStatus: '',
-    clientApprovalStatus: '',
-    claimSituation: ''
+    srNo: editData?.srNo || nextSrNo,
+    dateLogged: editData?.dateLogged || '',
+    originator: editData?.originator || '',
+    description: editData?.description || '',
+    costImpact: editData?.costImpact || '',
+    timeImpact: editData?.timeImpact || '',
+    resourcesImpact: editData?.resourcesImpact || '',
+    qualityImpact: editData?.qualityImpact || '',
+    changeOrderStatus: editData?.changeOrderStatus || '',
+    clientApprovalStatus: editData?.clientApprovalStatus || '',
+    claimSituation: editData?.claimSituation || ''
   });
 
-  const handleChange = (field: keyof Omit<ChangeControl, 'id' | 'projectId' | 'srNo'>) => 
+  const [errors, setErrors] = useState({
+    dateLogged: false,
+    originator: false,
+    description: false
+  });
+
+  // Update form data when editData changes
+  useEffect(() => {
+    if (editData) {
+      // Format the date for the input field (YYYY-MM-DD)
+      let formattedDate = '';
+      try {
+        const dateObj = new Date(editData.dateLogged);
+        formattedDate = dateObj.toISOString().split('T')[0];
+      } catch (err) {
+        console.error('Error formatting date:', err);
+        formattedDate = new Date().toISOString().split('T')[0];
+      }
+
+      setFormData({
+        srNo: editData.srNo,
+        dateLogged: formattedDate,
+        originator: editData.originator,
+        description: editData.description,
+        costImpact: editData.costImpact || '',
+        timeImpact: editData.timeImpact || '',
+        resourcesImpact: editData.resourcesImpact || '',
+        qualityImpact: editData.qualityImpact || '',
+        changeOrderStatus: editData.changeOrderStatus || '',
+        clientApprovalStatus: editData.clientApprovalStatus || '',
+        claimSituation: editData.claimSituation || ''
+      });
+    } else {
+      // Reset form when not editing and set today's date as default
+      const today = new Date().toISOString().split('T')[0];
+
+      setFormData({
+        srNo: nextSrNo,
+        dateLogged: today,
+        originator: '',
+        description: '',
+        costImpact: '',
+        timeImpact: '',
+        resourcesImpact: '',
+        qualityImpact: '',
+        changeOrderStatus: '',
+        clientApprovalStatus: '',
+        claimSituation: ''
+      });
+    }
+  }, [editData, nextSrNo]);
+
+  const handleChange = (field: keyof Omit<ChangeControl, 'id' | 'projectId' | 'srNo'>) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setFormData({
         ...formData,
@@ -66,7 +120,36 @@ export const ChangeControlDialog = ({ open, onClose, onSave, nextSrNo }: ChangeC
     };
 
   const handleSubmit = () => {
-    onSave(formData);
+    // Validate required fields
+    const newErrors = {
+      dateLogged: !formData.dateLogged,
+      originator: !formData.originator,
+      description: !formData.description
+    };
+
+    setErrors(newErrors);
+
+    // Check if there are any errors
+    if (newErrors.dateLogged || newErrors.originator || newErrors.description) {
+      return; // Don't submit if there are errors
+    }
+
+    // Ensure all string fields have values (even if empty)
+    const sanitizedData = {
+      ...formData,
+      originator: formData.originator || '',
+      description: formData.description || '',
+      costImpact: formData.costImpact || '',
+      timeImpact: formData.timeImpact || '',
+      resourcesImpact: formData.resourcesImpact || '',
+      qualityImpact: formData.qualityImpact || '',
+      changeOrderStatus: formData.changeOrderStatus || '',
+      clientApprovalStatus: formData.clientApprovalStatus || '',
+      claimSituation: formData.claimSituation || ''
+    };
+
+    console.log("Submitting form data:", JSON.stringify(sanitizedData, null, 2));
+    onSave(sanitizedData);
     setFormData({
       srNo: nextSrNo,
       dateLogged: '',
@@ -109,7 +192,7 @@ export const ChangeControlDialog = ({ open, onClose, onSave, nextSrNo }: ChangeC
     <StyledDialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ m: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" component="div" sx={{ color: '#1976d2', fontWeight: 500 }}>
-          Add Change Control - Sr. No: {nextSrNo}
+          {editData ? 'Edit' : 'Add'} Change Control - Sr. No: {formData.srNo}
         </Typography>
         <IconButton
           onClick={onClose}
@@ -124,6 +207,11 @@ export const ChangeControlDialog = ({ open, onClose, onSave, nextSrNo }: ChangeC
       </DialogTitle>
 
       <DialogContent>
+        {(errors.dateLogged || errors.originator || errors.description) && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Please fill in all required fields.
+          </Alert>
+        )}
         <Box sx={{ mb: 4 }}>
           <Typography sx={sectionTitleStyle}>
             Basic Information
@@ -136,6 +224,9 @@ export const ChangeControlDialog = ({ open, onClose, onSave, nextSrNo }: ChangeC
                 value={formData.dateLogged}
                 onChange={handleChange('dateLogged')}
                 fullWidth
+                required
+                error={errors.dateLogged}
+                helperText={errors.dateLogged ? "Date is required" : ""}
                 InputLabelProps={{
                   shrink: true,
                 }}
@@ -148,6 +239,9 @@ export const ChangeControlDialog = ({ open, onClose, onSave, nextSrNo }: ChangeC
                 value={formData.originator}
                 onChange={handleChange('originator')}
                 fullWidth
+                required
+                error={errors.originator}
+                helperText={errors.originator ? "Originator is required" : ""}
                 sx={textFieldStyle}
               />
             </Grid>
@@ -157,6 +251,9 @@ export const ChangeControlDialog = ({ open, onClose, onSave, nextSrNo }: ChangeC
                 value={formData.description}
                 onChange={handleChange('description')}
                 fullWidth
+                required
+                error={errors.description}
+                helperText={errors.description ? "Description is required" : ""}
                 multiline
                 rows={2}
                 sx={textFieldStyle}
@@ -246,9 +343,9 @@ export const ChangeControlDialog = ({ open, onClose, onSave, nextSrNo }: ChangeC
       </DialogContent>
 
       <DialogActions>
-        <Button 
+        <Button
           onClick={onClose}
-          sx={{ 
+          sx={{
             color: 'text.secondary',
             '&:hover': {
               backgroundColor: 'rgba(0, 0, 0, 0.04)'
@@ -257,7 +354,7 @@ export const ChangeControlDialog = ({ open, onClose, onSave, nextSrNo }: ChangeC
         >
           Cancel
         </Button>
-        <Button 
+        <Button
           onClick={handleSubmit}
           variant="contained"
           sx={{

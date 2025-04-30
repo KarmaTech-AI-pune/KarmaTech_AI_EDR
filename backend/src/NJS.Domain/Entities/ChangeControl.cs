@@ -1,10 +1,12 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace NJS.Application.Dtos
+namespace NJS.Domain.Entities
 {
-    public class ChangeControlDto
+    public class ChangeControl
     {
+        [Key]
         public int Id { get; set; }
 
         [Required]
@@ -24,18 +26,37 @@ namespace NJS.Application.Dtos
         [StringLength(500)]
         public string Description { get; set; }
 
+        [StringLength(255)]
         public string CostImpact { get; set; }
+
+        [StringLength(255)]
         public string TimeImpact { get; set; }
+
+        [StringLength(255)]
         public string ResourcesImpact { get; set; }
+
+        [StringLength(255)]
         public string QualityImpact { get; set; }
+
+        [StringLength(100)]
         public string ChangeOrderStatus { get; set; }
+
+        [StringLength(100)]
         public string ClientApprovalStatus { get; set; }
+
+        [StringLength(255)]
         public string ClaimSituation { get; set; }
 
-        // Audit fields - these will be set in the backend
+        // Navigation property
+        [ForeignKey("ProjectId")]
+        public virtual Project Project { get; set; }
+
+        // Audit fields
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
+        [StringLength(100)]
         public string CreatedBy { get; set; } = "System";
+        [StringLength(100)]
         public string UpdatedBy { get; set; } = "System";
     }
 }

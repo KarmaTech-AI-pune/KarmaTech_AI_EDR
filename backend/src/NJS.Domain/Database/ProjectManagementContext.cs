@@ -50,6 +50,7 @@ namespace NJS.Domain.Database
         public DbSet<CorrespondenceInward> CorrespondenceInwards { get; set; }
         public DbSet<CorrespondenceOutward> CorrespondenceOutwards { get; set; }
         public DbSet<CheckReview> CheckReviews { get; set; }
+        public DbSet<ChangeControl> ChangeControls { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -398,6 +399,32 @@ namespace NJS.Domain.Database
                 entity.HasOne(i => i.Project)
                       .WithMany()
                       .HasForeignKey(i => i.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure ChangeControl entity
+            modelBuilder.Entity<ChangeControl>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Originator).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.CostImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.TimeImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.ResourcesImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.QualityImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.ChangeOrderStatus).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.ClientApprovalStatus).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.ClaimSituation).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).HasMaxLength(100).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(cc => cc.Project)
+                      .WithMany()
+                      .HasForeignKey(cc => cc.ProjectId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
         }
