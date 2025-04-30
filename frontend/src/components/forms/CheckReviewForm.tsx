@@ -65,7 +65,6 @@ const CheckReviewForm: React.FC = () => {
     try {
       setLoading(true);
       console.log('Loading reviews for project:', context.selectedProject.id);
- feature/Correspondence_Inward_And_Outward_1
 
       try {
         const reviews = await getCheckReviewsByProject(context.selectedProject.id.toString());
@@ -76,11 +75,6 @@ const CheckReviewForm: React.FC = () => {
           setRows([]);
           setError('');
           return;
-
-      const reviews = await getCheckReviewsByProject(context.selectedProject.id.toString());
-      console.log('Loaded reviews:', reviews);
-
-     
         }
 
         // Process reviews to ensure proper ID handling
