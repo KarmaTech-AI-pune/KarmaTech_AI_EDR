@@ -1,5 +1,5 @@
 import { Container, Grid, Typography } from '@mui/material';
-import BusinessDevelopmentCharts from '../components/dashboard/BusinessDevelopmentCharts';
+import OpportunityStackedBarChart from '../components/dashboard/BusinessDevelopmentCharts';
 
 const BusinessDevelopmentDashboard = () => {
   return (
@@ -10,7 +10,7 @@ const BusinessDevelopmentDashboard = () => {
       
       <Grid container spacing={3}>
         <Grid item xs={12}>
-          <BusinessDevelopmentCharts />
+          <OpportunityStackedBarChart />
         </Grid>
         
         {/* Additional dashboard components can be added here */}

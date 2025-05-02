@@ -3,11 +3,6 @@ export interface WBSOption {
   label: string;
 }
 
-export enum TaskType {
-  Manpower = 0,
-  ODC = 1
-}
-
 export interface WBSRowData {
   id: string;
   level: 1 | 2 | 3;
@@ -22,10 +17,6 @@ export interface WBSRowData {
   totalCost: number;
   parentId?: string | null;
   assignedUserId?: string | null;
-  taskType?: TaskType;
-  unit?: string;
-  resourceName?: string | null;
-  resourceUnit?: string | null;
 }
 
 export interface WBSChildTotals {

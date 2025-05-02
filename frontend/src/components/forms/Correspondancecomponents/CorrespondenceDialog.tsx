@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-import Alert from '@mui/material/Alert';
-import { InwardRow, OutwardRow } from '../../../services/correspondenceApi';
+import { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -132,30 +130,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
     }));
   };
 
-  // Validate form data before submission
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-
-    if (type === 'inward') {
-      if (!formData.incomingLetterNo) errors.incomingLetterNo = 'Incoming Letter No is required';
-      if (!formData.letterDate) errors.letterDate = 'Letter Date is required';
-      if (!formData.njsInwardNo) errors.njsInwardNo = 'NJS Inward No is required';
-      if (!formData.receiptDate) errors.receiptDate = 'Receipt Date is required';
-      if (!formData.from) errors.from = 'From is required';
-      if (!formData.subject) errors.subject = 'Subject is required';
-    } else {
-      if (!formData.letterNo) errors.letterNo = 'Letter No is required';
-      if (!formData.letterDate) errors.letterDate = 'Letter Date is required';
-      if (!formData.to) errors.to = 'To is required';
-      if (!formData.subject) errors.subject = 'Subject is required';
-    }
-
-    return errors;
-  };
-
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [formSubmitError, setFormSubmitError] = useState<string | null>(null);
-
   const handleSubmit = () => {
     // Validate form
     const errors = validateForm();
@@ -229,10 +203,7 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
     <StyledDialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ m: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" component="div" sx={{ color: '#1976d2', fontWeight: 500 }}>
-          {isEdit
-            ? (type === 'inward' ? 'Edit Inward Correspondence' : 'Edit Outward Correspondence')
-            : (type === 'inward' ? 'Add Inward Correspondence' : 'Add Outward Correspondence')
-          }
+          {type === 'inward' ? 'Add Inward Correspondence' : 'Add Outward Correspondence'}
         </Typography>
         <IconButton
           onClick={onClose}
@@ -247,11 +218,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
       </DialogTitle>
 
       <DialogContent>
-        {formSubmitError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {formSubmitError}
-          </Alert>
-        )}
         {type === 'inward' ? (
           <>
             <Box sx={{ mb: 4 }}>
@@ -266,9 +232,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                     value={formData.incomingLetterNo}
                     onChange={handleChange('incomingLetterNo')}
                     sx={textFieldStyle}
-                    required
-                    error={!!formErrors.incomingLetterNo}
-                    helperText={formErrors.incomingLetterNo}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -280,9 +243,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                     onChange={handleChange('letterDate')}
                     InputLabelProps={{ shrink: true }}
                     sx={textFieldStyle}
-                    required
-                    error={!!formErrors.letterDate}
-                    helperText={formErrors.letterDate}
                   />
                 </Grid>
               </Grid>
@@ -300,9 +260,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                     value={formData.njsInwardNo}
                     onChange={handleChange('njsInwardNo')}
                     sx={textFieldStyle}
-                    required
-                    error={!!formErrors.njsInwardNo}
-                    helperText={formErrors.njsInwardNo}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -314,9 +271,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                     onChange={handleChange('receiptDate')}
                     InputLabelProps={{ shrink: true }}
                     sx={textFieldStyle}
-                    required
-                    error={!!formErrors.receiptDate}
-                    helperText={formErrors.receiptDate}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -326,9 +280,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                     value={formData.from}
                     onChange={handleChange('from')}
                     sx={textFieldStyle}
-                    required
-                    error={!!formErrors.from}
-                    helperText={formErrors.from}
                   />
                 </Grid>
               </Grid>
@@ -346,9 +297,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                     value={formData.subject}
                     onChange={handleChange('subject')}
                     sx={textFieldStyle}
-                    required
-                    error={!!formErrors.subject}
-                    helperText={formErrors.subject}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -425,9 +373,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                     value={formData.letterNo}
                     onChange={handleChange('letterNo')}
                     sx={textFieldStyle}
-                    required
-                    error={!!formErrors.letterNo}
-                    helperText={formErrors.letterNo}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -439,9 +384,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                     onChange={handleChange('letterDate')}
                     InputLabelProps={{ shrink: true }}
                     sx={textFieldStyle}
-                    required
-                    error={!!formErrors.letterDate}
-                    helperText={formErrors.letterDate}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -451,9 +393,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                     value={formData.to}
                     onChange={handleChange('to')}
                     sx={textFieldStyle}
-                    required
-                    error={!!formErrors.to}
-                    helperText={formErrors.to}
                   />
                 </Grid>
               </Grid>
@@ -471,9 +410,6 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                     value={formData.subject}
                     onChange={handleChange('subject')}
                     sx={textFieldStyle}
-                    required
-                    error={!!formErrors.subject}
-                    helperText={formErrors.subject}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -538,9 +474,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
       </DialogContent>
 
       <DialogActions>
-        <Button
+        <Button 
           onClick={onClose}
-          sx={{
+          sx={{ 
             color: 'text.secondary',
             '&:hover': {
               backgroundColor: 'rgba(0, 0, 0, 0.04)'
@@ -549,7 +485,7 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
         >
           Cancel
         </Button>
-        <Button
+        <Button 
           onClick={handleSubmit}
           variant="contained"
           sx={{
@@ -559,7 +495,7 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
             }
           }}
         >
-          {isEdit ? 'Update' : 'Save'}
+          Save
         </Button>
       </DialogActions>
     </StyledDialog>
