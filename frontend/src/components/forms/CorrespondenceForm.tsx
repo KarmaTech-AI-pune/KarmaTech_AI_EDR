@@ -132,10 +132,10 @@ const CorrespondenceForm: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-          const projectId = context.selectedProject.id;
+          const projectId = context.selectedProject?.id;
           const [inwardData, outwardData] = await Promise.all([
-            getInwardRows(projectId),
-            getOutwardRows(projectId)
+            getInwardRows(projectId!),
+            getOutwardRows(projectId!)
           ]);
           setInwardRows(inwardData);
           setOutwardRows(outwardData);
