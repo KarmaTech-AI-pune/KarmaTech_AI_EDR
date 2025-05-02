@@ -14,7 +14,7 @@ namespace NJS.Domain.Entities
         [Required]
         [StringLength(100)]
         public string? Name { get; set; }
-        public int ProjectNo { get; set; } 
+        public int ProjectNo { get; set; }
 
         [Required]
         [StringLength(100)]
@@ -36,14 +36,24 @@ namespace NJS.Domain.Entities
 		public string? RegionalManagerId { get; set; }
 		public virtual User RegionalManager { get; set; }
 
-        public string Office {  get; set; }
-		public string Region { get; set; }
-        public string TypeOfJob { get; set; }
+        [Required]
+        [StringLength(100)]
+        public string Office {  get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100)]
+		public string Region { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100)]
+        public string TypeOfJob { get; set; } = string.Empty;
 
         [Required]
         [StringLength(50)]
         public string? Sector { get; set; }
-        public string FeeType { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string FeeType { get; set; } = string.Empty;
 
 
         [Column(TypeName = "decimal(18,2)")]
@@ -52,7 +62,9 @@ namespace NJS.Domain.Entities
         [Column(TypeName ="decimal(18,2)")]
         public decimal Budget {  get; set; }
 
-        public string Priority {  get; set; }
+        [Required]
+        [StringLength(50)]
+        public string Priority {  get; set; } = string.Empty;
 
 		[Required]
 		[StringLength(3)]
@@ -65,7 +77,7 @@ namespace NJS.Domain.Entities
 
 		[Column(TypeName = "decimal(18,2)")]
         public decimal? CapitalValue { get; set; }
-        
+
         [Required]
         public ProjectStatus Status { get; set; }
 
@@ -76,10 +88,10 @@ namespace NJS.Domain.Entities
         [StringLength(100)]
         public string? FundingStream { get; set; }
 
-        
+
         [StringLength(50)]
         public string? ContractType { get; set; }
-        
+
         [ForeignKey("OpportunityTrackingId")]
         public int? OpportunityTrackingId { get; set; }
         public virtual OpportunityTracking OpportunityTracking { get; set; }
