@@ -203,6 +203,79 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             });
             setExistingClosureId(existingClosure.id);
             mapClosureDataToForm(existingClosure);
+
+            // Try to parse Positives and LessonsLearned as JSON arrays
+            try {
+              // Parse Positives
+              if (existingClosure.positives) {
+                try {
+                  const positivesArray = JSON.parse(existingClosure.positives);
+                  if (Array.isArray(positivesArray)) {
+                    const positiveComments = positivesArray.map((item, index) => ({
+                      id: `positive-${Date.now()}-${index}`,
+                      projectId: existingClosure.projectId.toString(),
+                      type: 'positives' as const,
+                      comment: item
+                    }));
+
+                    // Add to comments state
+                    setComments(prev => [
+                      ...prev.filter(c => c.type !== 'positives'),
+                      ...positiveComments
+                    ]);
+                  }
+                } catch (e) {
+                  // If not valid JSON, add as a single comment
+                  if (existingClosure.positives && existingClosure.positives.trim()) {
+                    setComments(prev => [
+                      ...prev.filter(c => c.type !== 'positives'),
+                      {
+                        id: `positive-${Date.now()}`,
+                        projectId: existingClosure.projectId.toString(),
+                        type: 'positives',
+                        comment: existingClosure.positives || ''
+                      }
+                    ]);
+                  }
+                }
+              }
+
+              // Parse LessonsLearned
+              if (existingClosure.lessonsLearned) {
+                try {
+                  const lessonsArray = JSON.parse(existingClosure.lessonsLearned);
+                  if (Array.isArray(lessonsArray)) {
+                    const lessonComments = lessonsArray.map((item, index) => ({
+                      id: `lesson-${Date.now()}-${index}`,
+                      projectId: existingClosure.projectId.toString(),
+                      type: 'lessons-learned' as const,
+                      comment: item
+                    }));
+
+                    // Add to comments state
+                    setComments(prev => [
+                      ...prev.filter(c => c.type !== 'lessons-learned'),
+                      ...lessonComments
+                    ]);
+                  }
+                } catch (e) {
+                  // If not valid JSON, add as a single comment
+                  if (existingClosure.lessonsLearned && existingClosure.lessonsLearned.trim()) {
+                    setComments(prev => [
+                      ...prev.filter(c => c.type !== 'lessons-learned'),
+                      {
+                        id: `lesson-${Date.now()}`,
+                        projectId: existingClosure.projectId.toString(),
+                        type: 'lessons-learned',
+                        comment: existingClosure.lessonsLearned || ''
+                      }
+                    ]);
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('Error parsing comments:', error);
+            }
           }
         }
         // If no closureId but we have a selected project, try to find by project ID
@@ -230,6 +303,79 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
               });
               setExistingClosureId(mostRecentClosure.id);
               mapClosureDataToForm(mostRecentClosure);
+
+              // Try to parse Positives and LessonsLearned as JSON arrays
+              try {
+                // Parse Positives
+                if (mostRecentClosure.positives) {
+                  try {
+                    const positivesArray = JSON.parse(mostRecentClosure.positives);
+                    if (Array.isArray(positivesArray)) {
+                      const positiveComments = positivesArray.map((item, index) => ({
+                        id: `positive-${Date.now()}-${index}`,
+                        projectId: mostRecentClosure.projectId.toString(),
+                        type: 'positives' as const,
+                        comment: item
+                      }));
+
+                      // Add to comments state
+                      setComments(prev => [
+                        ...prev.filter(c => c.type !== 'positives'),
+                        ...positiveComments
+                      ]);
+                    }
+                  } catch (e) {
+                    // If not valid JSON, add as a single comment
+                    if (mostRecentClosure.positives && mostRecentClosure.positives.trim()) {
+                      setComments(prev => [
+                        ...prev.filter(c => c.type !== 'positives'),
+                        {
+                          id: `positive-${Date.now()}`,
+                          projectId: mostRecentClosure.projectId.toString(),
+                          type: 'positives',
+                          comment: mostRecentClosure.positives || ''
+                        }
+                      ]);
+                    }
+                  }
+                }
+
+                // Parse LessonsLearned
+                if (mostRecentClosure.lessonsLearned) {
+                  try {
+                    const lessonsArray = JSON.parse(mostRecentClosure.lessonsLearned);
+                    if (Array.isArray(lessonsArray)) {
+                      const lessonComments = lessonsArray.map((item, index) => ({
+                        id: `lesson-${Date.now()}-${index}`,
+                        projectId: mostRecentClosure.projectId.toString(),
+                        type: 'lessons-learned' as const,
+                        comment: item
+                      }));
+
+                      // Add to comments state
+                      setComments(prev => [
+                        ...prev.filter(c => c.type !== 'lessons-learned'),
+                        ...lessonComments
+                      ]);
+                    }
+                  } catch (e) {
+                    // If not valid JSON, add as a single comment
+                    if (mostRecentClosure.lessonsLearned && mostRecentClosure.lessonsLearned.trim()) {
+                      setComments(prev => [
+                        ...prev.filter(c => c.type !== 'lessons-learned'),
+                        {
+                          id: `lesson-${Date.now()}`,
+                          projectId: mostRecentClosure.projectId.toString(),
+                          type: 'lessons-learned',
+                          comment: mostRecentClosure.lessonsLearned || ''
+                        }
+                      ]);
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error('Error parsing comments:', error);
+              }
             } else {
               console.log('No existing project closures found for this project');
             }
@@ -654,18 +800,23 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
           console.log('Project ID before update:', projectId, typeof projectId);
 
           // Update existing project closure
-          await updateProjectClosure(idToUpdate, {
-            ...existingClosure, // Start with all existing fields
-            ...formattedData,   // Override with new form data
-            ...missingFields,   // Add any missing fields
-            id: idToUpdate,
-            projectId: projectId.toString(), // Convert to string as required by the interface
-            // Keep existing metadata
-            createdAt: existingClosure.createdAt,
-            createdBy: existingClosure.createdBy || '',
-            updatedAt: null,
-            updatedBy: ''
-          } as ProjectClosureWithMetadata);
+          await updateProjectClosure(
+            idToUpdate,
+            {
+              ...existingClosure, // Start with all existing fields
+              ...formattedData,   // Override with new form data
+              ...missingFields,   // Add any missing fields
+              id: idToUpdate,
+              projectId: projectId.toString(), // Convert to string as required by the interface
+              // Keep existing metadata
+              createdAt: existingClosure.createdAt,
+              createdBy: existingClosure.createdBy || '',
+              updatedAt: null,
+              updatedBy: ''
+            } as ProjectClosureWithMetadata,
+            // Pass the comments array
+            comments
+          );
 
           console.log('Successfully updated project closure');
 
@@ -774,7 +925,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
           console.log('Sending data without ID field:', dataToSend);
 
-          const result = await createProjectClosure(dataToSend);
+          const result = await createProjectClosure(dataToSend, comments);
 
           // Store the new ID so we can update it next time
           if (result && result.id) {
@@ -829,7 +980,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
             console.log('Retrying with data (no ID):', dataToRetry);
 
-            const result = await createProjectClosure(dataToRetry);
+            const result = await createProjectClosure(dataToRetry, comments);
 
             console.log('Successfully created project closure on retry:', result);
 
@@ -871,7 +1022,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
             console.log('Retrying with data (no ID):', dataToRetry);
 
-            const result = await createProjectClosure(dataToRetry);
+            const result = await createProjectClosure(dataToRetry, comments);
 
             console.log('Successfully created project closure on retry:', result);
 
@@ -1143,6 +1294,8 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
                 <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>Project Plan</Typography>
                 {renderTextField('planUpToDate')}
                 {renderTextField('planUseful')}
+                {renderTextField('planningIssues')}
+                {renderTextField('planningLessons')}
 
                 <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>Hindrances</Typography>
                 {renderTextField('hindrances')}

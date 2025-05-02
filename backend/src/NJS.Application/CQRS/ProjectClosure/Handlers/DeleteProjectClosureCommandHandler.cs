@@ -57,9 +57,20 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                 Console.WriteLine($"Invalid argument in DeleteProjectClosureCommandHandler: {ex.Message}");
                 throw;
             }
+            catch (InvalidOperationException ex)
+            {
+                // If the entity was not found in the repository, log it but return true
+                // This is to handle the case where the entity might have been deleted by another process
+                Console.WriteLine($"Entity not found in repository: {ex.Message}");
+                return true; // Return true to indicate the entity doesn't exist anymore
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error deleting project closure: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
                 return false;
             }
         }

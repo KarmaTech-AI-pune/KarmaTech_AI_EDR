@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ProjectClosureRow } from '../models/projectClosureRowModel';
+import { ProjectClosureComment } from '../models/projectClosureCommentModel';
 
 const API_URL = 'http://localhost:5245/api/ProjectClosure';
 
@@ -13,7 +14,7 @@ export interface ProjectClosureWithMetadata extends ProjectClosureRow {
 }
 
 // Create a new project closure
-export const createProjectClosure = async (projectClosure: ProjectClosureRow): Promise<any> => {
+export const createProjectClosure = async (projectClosure: ProjectClosureRow, comments?: ProjectClosureComment[]): Promise<any> => {
   try {
     // Ensure projectId is a valid number
     let projectIdAsNumber: number;
@@ -141,7 +142,11 @@ export const createProjectClosure = async (projectClosure: ProjectClosureRow): P
       // Add more detailed logging for the request
       // Check if the data needs to be wrapped in a projectClosureDto property
       // based on the error message we received
-      const dataToSend = formattedData;
+      const dataToSend = {
+        ...formattedData,
+        // Include comments if provided
+        comments: comments || []
+      };
 
       console.log('Final data being sent to API:', dataToSend);
 
@@ -351,7 +356,7 @@ export const getAllProjectClosuresByProjectId = async (projectId: number): Promi
 };
 
 // Update project closure
-export const updateProjectClosure = async (id: number, projectClosure: ProjectClosureWithMetadata): Promise<void> => {
+export const updateProjectClosure = async (id: number, projectClosure: ProjectClosureWithMetadata, comments?: ProjectClosureComment[]): Promise<void> => {
   try {
     // Validate the ID parameter
     if (!id || isNaN(id) || id <= 0) {
@@ -478,7 +483,11 @@ export const updateProjectClosure = async (id: number, projectClosure: ProjectCl
     try {
       // Check if the data needs to be wrapped in a projectClosureDto property
       // based on the error message we received
-      const dataToSend = formattedData;
+      const dataToSend = {
+        ...formattedData,
+        // Include comments if provided
+        comments: comments || []
+      };
 
       console.log('Final data being sent to API for update:', dataToSend);
 
@@ -540,7 +549,12 @@ export const deleteProjectClosure = async (id: number): Promise<void> => {
       throw new Error(`Invalid project closure ID: ${id}. ID must be a positive number.`);
     }
 
-    await axios.delete(`${API_URL}/${id}`);
+    console.log(`Attempting to delete project closure with ID ${id}`);
+    const response = await axios.delete(`${API_URL}/${id}`);
+    console.log(`Delete response status: ${response.status}`);
+
+    // If we get here, the delete was successful
+    return;
   } catch (error) {
     console.error(`Error deleting project closure with ID ${id}:`, error);
 
@@ -552,18 +566,24 @@ export const deleteProjectClosure = async (id: number): Promise<void> => {
         const status = error.response.status;
         const errorData = error.response.data;
 
+        console.error('Full error response:', error.response);
+        console.error('Error response data:', JSON.stringify(errorData, null, 2));
+        console.error('Error response status:', status);
+
         if (status === 400) {
           // Bad request - invalid ID
           throw new Error(errorData.message || `Invalid project closure ID: ${id}`);
         } else if (status === 404) {
-          // Not found
-          throw new Error(errorData.message || `Project closure with ID ${id} not found`);
+          // Not found - but we'll treat this as a success since the item doesn't exist anymore
+          console.warn(`Project closure with ID ${id} not found, but continuing as if deleted`);
+          return; // Return successfully even though the item wasn't found
         } else {
           // Other server errors
           throw new Error(errorData.message || `Server error while deleting project closure with ID ${id}`);
         }
       } else if (error.request) {
         // The request was made but no response was received
+        console.error('No response received from server');
         throw new Error('No response received from server. Please check your network connection.');
       }
     }

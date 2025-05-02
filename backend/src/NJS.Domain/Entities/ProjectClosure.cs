@@ -155,6 +155,7 @@ namespace NJS.Domain.Entities
         public string ConstructionOther { get; set; }
 
         // Section E: Overall
+        // These fields store JSON arrays of strings for multiple entries
         public string Positives { get; set; }
         public string LessonsLearned { get; set; }
 

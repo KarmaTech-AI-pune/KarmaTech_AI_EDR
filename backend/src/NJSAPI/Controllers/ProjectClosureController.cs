@@ -4,10 +4,12 @@ using NJS.Application.CQRS.ProjectClosure.Commands;
 using NJS.Application.CQRS.ProjectClosure.Queries;
 using NJS.Application.CQRS.Projects.Queries;
 using NJS.Application.Dtos;
+using NJS.Application.Helpers;
 using NJS.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace NJSAPI.Controllers
@@ -76,13 +78,77 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> Create([FromBody] ProjectClosureDto projectClosureDto)
+        public async Task<IActionResult> Create([FromBody] dynamic requestData)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
+                // Convert dynamic to JSON string then to ProjectClosureDto
+                string jsonString = JsonSerializer.Serialize(requestData);
+                var projectClosureDto = JsonSerializer.Deserialize<ProjectClosureDto>(jsonString, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                // Check for comments in the request
+                if (requestData.GetProperty("comments").ValueKind != JsonValueKind.Undefined)
+                {
+                    try
+                    {
+                        // Extract comments from the request
+                        var commentsJson = requestData.GetProperty("comments").ToString();
+                        var comments = JsonSerializer.Deserialize<List<JsonElement>>(commentsJson);
+
+                        // Process positives
+                        var positiveComments = new List<string>();
+                        var lessonsLearnedComments = new List<string>();
+
+                        foreach (var comment in comments)
+                        {
+                            try
+                            {
+                                if (comment.TryGetProperty("type", out JsonElement typeElement))
+                                {
+                                    string type = typeElement.GetString() ?? "";
+
+                                    if (comment.TryGetProperty("comment", out JsonElement commentElement))
+                                    {
+                                        string commentText = commentElement.GetString() ?? "";
+
+                                        if (!string.IsNullOrWhiteSpace(commentText))
+                                        {
+                                            if (type == "positives")
+                                            {
+                                                positiveComments.Add(commentText);
+                                            }
+                                            else if (type == "lessons-learned")
+                                            {
+                                                lessonsLearnedComments.Add(commentText);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error processing comment: {ex.Message}");
+                                // Continue with the next comment
+                            }
+                        }
+
+                        // Set the lists in the DTO
+                        projectClosureDto.PositivesList = positiveComments;
+                        projectClosureDto.LessonsLearnedList = lessonsLearnedComments;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error processing comments: {ex.Message}");
+                        // Continue with the request even if comments processing fails
+                    }
+                }
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
                 // Ensure ProjectId is valid
                 if (projectClosureDto.ProjectId <= 0)
                 {
@@ -239,16 +305,80 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> Update(int id, [FromBody] ProjectClosureDto projectClosureDto)
+        public async Task<IActionResult> Update(int id, [FromBody] dynamic requestData)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (id != projectClosureDto.Id)
-                return BadRequest("ID mismatch");
-
             try
             {
+                // Convert dynamic to JSON string then to ProjectClosureDto
+                string jsonString = JsonSerializer.Serialize(requestData);
+                var projectClosureDto = JsonSerializer.Deserialize<ProjectClosureDto>(jsonString, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                if (id != projectClosureDto.Id)
+                    return BadRequest("ID mismatch");
+
+                // Check for comments in the request
+                if (requestData.GetProperty("comments").ValueKind != JsonValueKind.Undefined)
+                {
+                    try
+                    {
+                        // Extract comments from the request
+                        var commentsJson = requestData.GetProperty("comments").ToString();
+                        var comments = JsonSerializer.Deserialize<List<JsonElement>>(commentsJson);
+
+                        // Process positives
+                        var positiveComments = new List<string>();
+                        var lessonsLearnedComments = new List<string>();
+
+                        foreach (var comment in comments)
+                        {
+                            try
+                            {
+                                if (comment.TryGetProperty("type", out JsonElement typeElement))
+                                {
+                                    string type = typeElement.GetString() ?? "";
+
+                                    if (comment.TryGetProperty("comment", out JsonElement commentElement))
+                                    {
+                                        string commentText = commentElement.GetString() ?? "";
+
+                                        if (!string.IsNullOrWhiteSpace(commentText))
+                                        {
+                                            if (type == "positives")
+                                            {
+                                                positiveComments.Add(commentText);
+                                            }
+                                            else if (type == "lessons-learned")
+                                            {
+                                                lessonsLearnedComments.Add(commentText);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error processing comment: {ex.Message}");
+                                // Continue with the next comment
+                            }
+                        }
+
+                        // Set the lists in the DTO
+                        projectClosureDto.PositivesList = positiveComments;
+                        projectClosureDto.LessonsLearnedList = lessonsLearnedComments;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error processing comments: {ex.Message}");
+                        // Continue with the request even if comments processing fails
+                    }
+                }
+
                 // Ensure ProjectId is valid
                 if (projectClosureDto.ProjectId <= 0)
                 {

@@ -264,28 +264,34 @@ namespace NJS.Repositories.Repositories
                 var projectClosure = _repository.GetByIdAsync(id).GetAwaiter().GetResult();
                 if (projectClosure != null)
                 {
-                    // Perform hard delete - completely remove from the database
-                    _repository.RemoveAsync(projectClosure).GetAwaiter().GetResult();
-                    _repository.SaveChangesAsync().GetAwaiter().GetResult();
-                    Console.WriteLine($"Successfully deleted project closure with ID {id}");
+                    try
+                    {
+                        // Perform hard delete - completely remove from the database
+                        _repository.RemoveAsync(projectClosure).GetAwaiter().GetResult();
+                        _repository.SaveChangesAsync().GetAwaiter().GetResult();
+                        Console.WriteLine($"Successfully deleted project closure with ID {id}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error during database delete operation: {ex.Message}");
+                        if (ex.InnerException != null)
+                        {
+                            Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                        }
+                        throw; // Re-throw to be handled by the caller
+                    }
                 }
                 else
                 {
-                    // If not found, log it and throw an exception to indicate the entity doesn't exist
-                    Console.WriteLine($"Project closure with ID {id} not found. Cannot delete non-existent entity.");
-                    throw new InvalidOperationException($"Project closure with ID {id} not found");
+                    // If not found, log it but don't throw an exception
+                    // This allows the DELETE API to return success even if the entity doesn't exist
+                    Console.WriteLine($"Project closure with ID {id} not found, but continuing as if deleted");
                 }
             }
             catch (ArgumentException ex)
             {
                 // Re-throw argument exceptions for invalid IDs
                 Console.WriteLine($"Invalid argument in Delete: {ex.Message}");
-                throw;
-            }
-            catch (InvalidOperationException ex)
-            {
-                // Re-throw for not found entities
-                Console.WriteLine($"Entity not found in Delete: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
