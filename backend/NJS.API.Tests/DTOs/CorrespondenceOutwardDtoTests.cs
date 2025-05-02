@@ -1,5 +1,8 @@
 using NJS.Application.DTOs;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Xunit;
 
 namespace NJS.API.Tests.DTOs
 {

@@ -1,7 +1,13 @@
 using Moq;
 using NJS.Application.CQRS.InputRegister.Handlers;
 using NJS.Application.CQRS.InputRegister.Queries;
+using NJS.Application.DTOs;
+using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace NJS.API.Tests.CQRS.InputRegister.Handlers
 {
