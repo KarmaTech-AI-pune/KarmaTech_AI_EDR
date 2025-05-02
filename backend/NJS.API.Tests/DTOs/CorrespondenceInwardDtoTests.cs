@@ -1,5 +1,5 @@
 using NJS.Application.DTOs;
-using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations;
 
 namespace NJS.API.Tests.DTOs
 {
