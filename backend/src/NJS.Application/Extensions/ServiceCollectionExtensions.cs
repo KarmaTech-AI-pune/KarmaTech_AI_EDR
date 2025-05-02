@@ -45,8 +45,8 @@ namespace NJS.Application.Extensions
             services.AddScoped<IGoNoGoDecisionService, GoNoGoDecisionService>();
             services.AddScoped<IUserContext, UserContext>();
             services.AddScoped<IEmailService, EmailService>();
-
-
+            
+            
             return services;
         }
     }

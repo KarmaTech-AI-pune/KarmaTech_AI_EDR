@@ -53,7 +53,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     opportunityTrackingId: project?.opportunityTrackingId || 0,
     feeType: project?.feeType || ''
   })
-
+ 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -73,31 +73,14 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Ensure all required fields are properly formatted
-    const submissionData = {
+    onSubmit({
       ...formData,
       estimatedCost: Number(formData.estimatedCost),
-      budget: Number(formData.budget || 0),
+      budget: Number(formData.budget),
       projectManagerId: formData.projectManagerId,
       seniorProjectManagerId: formData.seniorProjectManagerId,
-      regionalManagerId: formData.regionalManagerId,
-      // Ensure problematic fields are never null or undefined
-      office: formData.office || '',
-      typeOfJob: formData.typeOfJob || '',
-      priority: formData.priority || '',
-      // Include other fields that might be missing
-      updatedAt: new Date().toISOString()
-    };
-
-    // Log the problematic fields
-    console.log('Submitting form data with specific focus on:');
-    console.log('Office:', submissionData.office);
-    console.log('TypeOfJob:', submissionData.typeOfJob);
-    console.log('Budget:', submissionData.budget);
-    console.log('Priority:', submissionData.priority);
-
-    onSubmit(submissionData);
+      regionalManagerId: formData.regionalManagerId
+    });
   };
 
   return (

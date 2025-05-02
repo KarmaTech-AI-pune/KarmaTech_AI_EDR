@@ -51,7 +51,7 @@ namespace NJS.API.Tests.Controllers
             // Arrange
             var projectId = 1;
             var mockProject = new Project { Id = projectId, Name = "Project 1" };
-
+            
             _mediator.Setup(m => m.Send(It.Is<GetProjectByIdQuery>(q => q.Id == projectId), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(mockProject);
 
@@ -136,7 +136,7 @@ namespace NJS.API.Tests.Controllers
             var projectId = 1;
             var projectDto = new ProjectDto { Id = projectId, Name = "Updated Project" };
 
-            _mediator.Setup(m => m.Send(It.Is<UpdateProjectCommand>(c => c.Id == projectId && c.ProjectDto == projectDto),
+            _mediator.Setup(m => m.Send(It.Is<UpdateProjectCommand>(c => c.Id == projectId && c.ProjectDto == projectDto), 
                                       It.IsAny<CancellationToken>()))
                     .ReturnsAsync(Unit.Value);
 
@@ -144,8 +144,7 @@ namespace NJS.API.Tests.Controllers
             var result = await _controller.Update(projectId, projectDto);
 
             // Assert
-            // The actual implementation returns OkObjectResult, not NoContentResult
-            Assert.IsType<OkObjectResult>(result);
+            Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
@@ -174,8 +173,7 @@ namespace NJS.API.Tests.Controllers
             var result = await _controller.Delete(projectId);
 
             // Assert
-            // The actual implementation returns OkObjectResult, not NoContentResult
-            Assert.IsType<OkObjectResult>(result);
+            Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
@@ -208,7 +206,7 @@ namespace NJS.API.Tests.Controllers
             };
 
             var feasibilityStudyId = 1;
-            _mediator.Setup(m => m.Send(It.Is<CreateFeasibilityStudyCommand>(c => c.ProjectId == projectId),
+            _mediator.Setup(m => m.Send(It.Is<CreateFeasibilityStudyCommand>(c => c.ProjectId == projectId), 
                                       It.IsAny<CancellationToken>()))
                     .ReturnsAsync(feasibilityStudyId);
 

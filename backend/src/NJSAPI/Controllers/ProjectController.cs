@@ -57,10 +57,10 @@ namespace NJSAPI.Controllers
         {
             var query = new GetProjectByIdQuery { Id = id };
             var result = await _mediator.Send(query);
-
+            
             if (result == null)
                 return NotFound();
-
+            
             return Ok(result);
         }
 
@@ -86,34 +86,11 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(500)]
         public async Task<IActionResult> Update(int id, [FromBody] ProjectDto projectData)
         {
-            // Log the update request
-            Console.WriteLine($"Received request to update project with ID: {id}");
-            Console.WriteLine($"Project data: {System.Text.Json.JsonSerializer.Serialize(projectData)}");
-
-            // Log specific fields we're having trouble with
-            Console.WriteLine($"Office: '{projectData.Office ?? "NULL"}'");
-            Console.WriteLine($"TypeOfJob: '{projectData.TypeOfJob ?? "NULL"}'");
-            Console.WriteLine($"Budget: {projectData.Budget}");
-            Console.WriteLine($"Priority: '{projectData.Priority ?? "NULL"}'");
-
-            // Ensure these fields are never null
-            projectData.Office = projectData.Office ?? string.Empty;
-            projectData.TypeOfJob = projectData.TypeOfJob ?? string.Empty;
-            projectData.Priority = projectData.Priority ?? string.Empty;
-            projectData.FeeType = projectData.FeeType ?? string.Empty;
-            projectData.Region = projectData.Region ?? string.Empty;
-
             if (id != projectData.Id)
-            {
-                Console.WriteLine($"ID mismatch: URL ID {id} != DTO ID {projectData.Id}");
                 return BadRequest("ID mismatch");
-            }
 
             if (!ModelState.IsValid)
-            {
-                Console.WriteLine($"Invalid model state: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
                 return BadRequest(ModelState);
-            }
 
             try
             {
@@ -123,22 +100,10 @@ namespace NJSAPI.Controllers
                     ProjectDto = projectData
                 };
                 await _mediator.Send(command);
-
-                // Log success
-                Console.WriteLine($"Successfully updated project with ID: {id}");
-
-                // Return the updated project data
-                var updatedProject = await _mediator.Send(new GetProjectByIdQuery { Id = id });
-                return Ok(updatedProject);
-            }
-            catch (ArgumentException ex) // Project not found
-            {
-                Console.WriteLine($"Project not found error: {ex.Message}");
-                return NotFound(new { message = ex.Message });
+                return NoContent();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating project: {ex.Message}");
                 return StatusCode(500, new { message = ex.Message });
             }
         }
@@ -147,33 +112,19 @@ namespace NJSAPI.Controllers
         /// Deletes a project
         /// </summary>
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                // Log the delete request
-                Console.WriteLine($"Received request to delete project with ID: {id}");
-
-                try
-                {
-                    await _mediator.Send(new DeleteProjectCommand { Id = id });
-                    // Log success
-                    Console.WriteLine($"Successfully deleted project with ID: {id}");
-                    return Ok(new { success = true, message = $"Project with ID {id} deleted successfully" });
-                }
-                catch (ArgumentException ex) // Project not found
-                {
-                    Console.WriteLine($"Project not found, but returning success: {ex.Message}");
-                    // Return success even if project doesn't exist
-                    return Ok(new { success = true, message = $"Project with ID {id} deleted successfully" });
-                }
+                await _mediator.Send(new DeleteProjectCommand { Id = id });
+                return NoContent();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error deleting project: {ex.Message}");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
@@ -214,7 +165,7 @@ namespace NJSAPI.Controllers
             var feasibilityStudy = _projectManagementService.GetFeasibilityStudy(id);
             if (feasibilityStudy == null)
                 return NotFound();
-
+                
             return Ok(feasibilityStudy);
         }
     }
