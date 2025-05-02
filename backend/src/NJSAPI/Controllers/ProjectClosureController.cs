@@ -1,0 +1,474 @@
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using NJS.Application.CQRS.ProjectClosure.Commands;
+using NJS.Application.CQRS.ProjectClosure.Queries;
+using NJS.Application.CQRS.Projects.Queries;
+using NJS.Application.Dtos;
+using NJS.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace NJSAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProjectClosureController : ControllerBase
+    {
+        private readonly IMediator _mediator;
+
+        public ProjectClosureController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
+        /// <summary>
+        /// Gets all project closures
+        /// </summary>
+        [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<ProjectClosureDto>), 200)]
+        public async Task<IActionResult> GetAll()
+        {
+            var query = new GetAllProjectClosuresQuery();
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Gets a project closure by ID
+        /// </summary>
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(ProjectClosureDto), 200)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var query = new GetProjectClosureByIdQuery(id);
+            var result = await _mediator.Send(query);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Gets a project closure by project ID
+        /// </summary>
+        [HttpGet("project/{projectId}")]
+        [ProducesResponseType(typeof(ProjectClosureDto), 200)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetByProjectId(int projectId)
+        {
+            var query = new GetProjectClosureByProjectIdQuery(projectId);
+            var result = await _mediator.Send(query);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Creates a new project closure
+        /// </summary>
+        [HttpPost]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> Create([FromBody] ProjectClosureDto projectClosureDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                // Ensure ProjectId is valid
+                if (projectClosureDto.ProjectId <= 0)
+                {
+                    Console.WriteLine($"Invalid ProjectId received: {projectClosureDto.ProjectId}");
+                    return BadRequest(new { message = "Invalid ProjectId. ProjectId must be a positive number." });
+                }
+
+                // Check if the project exists before proceeding
+                var projectQuery = new GetProjectByIdQuery { Id = projectClosureDto.ProjectId };
+                var project = await _mediator.Send(projectQuery);
+
+                if (project == null)
+                {
+                    Console.WriteLine($"Project with ID {projectClosureDto.ProjectId} does not exist");
+
+                    // Get available projects to suggest
+                    var projectsQuery = new GetAllProjectsQuery();
+                    var projects = await _mediator.Send(projectsQuery);
+
+                    if (projects != null && projects.Any())
+                    {
+                        var availableIds = string.Join(", ", projects.Select(p => p.Id));
+                        return BadRequest(new {
+                            message = $"Project with ID {projectClosureDto.ProjectId} does not exist. Available project IDs are: {availableIds}. Please use one of these IDs."
+                        });
+                    }
+                    else
+                    {
+                        return BadRequest(new { message = $"Project with ID {projectClosureDto.ProjectId} does not exist and no projects are available. Please create a project first." });
+                    }
+                }
+
+                Console.WriteLine($"Project found: {project.Name} (ID: {project.Id})");
+
+                // Only set CreatedBy and CreatedAt if they're not provided
+                if (string.IsNullOrEmpty(projectClosureDto.CreatedBy))
+                {
+                    projectClosureDto.CreatedBy = User.Identity?.Name ?? "System";
+                }
+
+                if (projectClosureDto.CreatedAt == default)
+                {
+                    projectClosureDto.CreatedAt = DateTime.UtcNow;
+                }
+
+                // Preserve UpdatedBy and UpdatedAt from the request
+
+                Console.WriteLine($"Creating project closure for project ID {projectClosureDto.ProjectId}");
+
+                // Make a deep copy of the DTO to preserve the original values
+                var originalDto = new ProjectClosureDto
+                {
+                    Id = projectClosureDto.Id,
+                    ProjectId = projectClosureDto.ProjectId,
+                    ClientFeedback = projectClosureDto.ClientFeedback,
+                    SuccessCriteria = projectClosureDto.SuccessCriteria,
+                    ClientExpectations = projectClosureDto.ClientExpectations,
+                    OtherStakeholders = projectClosureDto.OtherStakeholders,
+                    EnvIssues = projectClosureDto.EnvIssues,
+                    EnvManagement = projectClosureDto.EnvManagement,
+                    ThirdPartyIssues = projectClosureDto.ThirdPartyIssues,
+                    ThirdPartyManagement = projectClosureDto.ThirdPartyManagement,
+                    RiskIssues = projectClosureDto.RiskIssues,
+                    RiskManagement = projectClosureDto.RiskManagement,
+                    KnowledgeGoals = projectClosureDto.KnowledgeGoals,
+                    BaselineComparison = projectClosureDto.BaselineComparison,
+                    DelayedDeliverables = projectClosureDto.DelayedDeliverables,
+                    UnforeseeableDelays = projectClosureDto.UnforeseeableDelays,
+                    BudgetEstimate = projectClosureDto.BudgetEstimate,
+                    ProfitTarget = projectClosureDto.ProfitTarget,
+                    ChangeOrders = projectClosureDto.ChangeOrders,
+                    CloseOutBudget = projectClosureDto.CloseOutBudget,
+                    ResourceAvailability = projectClosureDto.ResourceAvailability,
+                    VendorFeedback = projectClosureDto.VendorFeedback,
+                    ProjectTeamFeedback = projectClosureDto.ProjectTeamFeedback,
+                    DesignOutputs = projectClosureDto.DesignOutputs,
+                    ProjectReviewMeetings = projectClosureDto.ProjectReviewMeetings,
+                    ClientDesignReviews = projectClosureDto.ClientDesignReviews,
+                    InternalReporting = projectClosureDto.InternalReporting,
+                    ClientReporting = projectClosureDto.ClientReporting,
+                    InternalMeetings = projectClosureDto.InternalMeetings,
+                    ClientMeetings = projectClosureDto.ClientMeetings,
+                    ExternalMeetings = projectClosureDto.ExternalMeetings,
+                    PlanUpToDate = projectClosureDto.PlanUpToDate,
+                    PlanningIssues = projectClosureDto.PlanningIssues,
+                    PlanningLessons = projectClosureDto.PlanningLessons,
+                    DesignReview = projectClosureDto.DesignReview,
+                    TechnicalRequirements = projectClosureDto.TechnicalRequirements,
+                    InnovativeIdeas = projectClosureDto.InnovativeIdeas,
+                    SuitableOptions = projectClosureDto.SuitableOptions,
+                    AdditionalInformation = projectClosureDto.AdditionalInformation,
+                    DeliverableExpectations = projectClosureDto.DeliverableExpectations,
+                    StakeholderInvolvement = projectClosureDto.StakeholderInvolvement,
+                    KnowledgeGoalsAchieved = projectClosureDto.KnowledgeGoalsAchieved,
+                    TechnicalToolsDissemination = projectClosureDto.TechnicalToolsDissemination,
+                    SpecialistKnowledgeValue = projectClosureDto.SpecialistKnowledgeValue,
+                    OtherComments = projectClosureDto.OtherComments,
+                    TargetCostAccuracyValue = projectClosureDto.TargetCostAccuracyValue,
+                    TargetCostAccuracy = projectClosureDto.TargetCostAccuracy,
+                    ChangeControlReviewValue = projectClosureDto.ChangeControlReviewValue,
+                    ChangeControlReview = projectClosureDto.ChangeControlReview,
+                    CompensationEventsValue = projectClosureDto.CompensationEventsValue,
+                    CompensationEvents = projectClosureDto.CompensationEvents,
+                    ExpenditureProfileValue = projectClosureDto.ExpenditureProfileValue,
+                    ExpenditureProfile = projectClosureDto.ExpenditureProfile,
+                    Positives = projectClosureDto.Positives,
+                    LessonsLearned = projectClosureDto.LessonsLearned,
+                    CreatedAt = projectClosureDto.CreatedAt,
+                    CreatedBy = projectClosureDto.CreatedBy,
+                    UpdatedAt = projectClosureDto.UpdatedAt,
+                    UpdatedBy = projectClosureDto.UpdatedBy
+                };
+
+                // Ensure the ID is not set in the DTO
+                projectClosureDto.Id = 0;
+
+                var command = new CreateProjectClosureCommand(projectClosureDto);
+                var id = await _mediator.Send(command);
+
+                // Update the ID in the original DTO to match the one assigned by the database
+                originalDto.Id = id;
+
+                return Ok(new {
+                    id = id,
+                    message = "Project closure created successfully",
+                    data = originalDto
+                });
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("does not exist"))
+            {
+                // Handle the case when the project doesn't exist
+                Console.WriteLine($"Project does not exist: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Log the full exception details
+                Console.WriteLine($"Error creating project closure: {ex.ToString()}");
+
+                // Return a more detailed error message
+                return StatusCode(500, new {
+                    message = "An error occurred while creating the project closure.",
+                    error = ex.Message,
+                    innerError = ex.InnerException?.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing project closure
+        /// </summary>
+        [HttpPut("{id}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> Update(int id, [FromBody] ProjectClosureDto projectClosureDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (id != projectClosureDto.Id)
+                return BadRequest("ID mismatch");
+
+            try
+            {
+                // Ensure ProjectId is valid
+                if (projectClosureDto.ProjectId <= 0)
+                {
+                    Console.WriteLine($"Invalid ProjectId received in update: {projectClosureDto.ProjectId}");
+                    return BadRequest(new { message = "Invalid ProjectId. ProjectId must be a positive number." });
+                }
+
+                // Check if the project exists before proceeding
+                var projectQuery = new GetProjectByIdQuery { Id = projectClosureDto.ProjectId };
+                var project = await _mediator.Send(projectQuery);
+
+                if (project == null)
+                {
+                    Console.WriteLine($"Project with ID {projectClosureDto.ProjectId} does not exist");
+
+                    // Get available projects to suggest
+                    var projectsQuery = new GetAllProjectsQuery();
+                    var projects = await _mediator.Send(projectsQuery);
+
+                    if (projects != null && projects.Any())
+                    {
+                        var availableIds = string.Join(", ", projects.Select(p => p.Id));
+                        return BadRequest(new {
+                            message = $"Project with ID {projectClosureDto.ProjectId} does not exist. Available project IDs are: {availableIds}. Please use one of these IDs."
+                        });
+                    }
+                    else
+                    {
+                        return BadRequest(new { message = $"Project with ID {projectClosureDto.ProjectId} does not exist and no projects are available. Please create a project first." });
+                    }
+                }
+
+                Console.WriteLine($"Project found for update: {project.Name} (ID: {project.Id})");
+
+                // Make a deep copy of the DTO to preserve the original values
+                var originalDto = new ProjectClosureDto
+                {
+                    Id = projectClosureDto.Id,
+                    ProjectId = projectClosureDto.ProjectId,
+                    ClientFeedback = projectClosureDto.ClientFeedback,
+                    SuccessCriteria = projectClosureDto.SuccessCriteria,
+                    ClientExpectations = projectClosureDto.ClientExpectations,
+                    OtherStakeholders = projectClosureDto.OtherStakeholders,
+                    EnvIssues = projectClosureDto.EnvIssues,
+                    EnvManagement = projectClosureDto.EnvManagement,
+                    ThirdPartyIssues = projectClosureDto.ThirdPartyIssues,
+                    ThirdPartyManagement = projectClosureDto.ThirdPartyManagement,
+                    RiskIssues = projectClosureDto.RiskIssues,
+                    RiskManagement = projectClosureDto.RiskManagement,
+                    KnowledgeGoals = projectClosureDto.KnowledgeGoals,
+                    BaselineComparison = projectClosureDto.BaselineComparison,
+                    DelayedDeliverables = projectClosureDto.DelayedDeliverables,
+                    UnforeseeableDelays = projectClosureDto.UnforeseeableDelays,
+                    BudgetEstimate = projectClosureDto.BudgetEstimate,
+                    ProfitTarget = projectClosureDto.ProfitTarget,
+                    ChangeOrders = projectClosureDto.ChangeOrders,
+                    CloseOutBudget = projectClosureDto.CloseOutBudget,
+                    ResourceAvailability = projectClosureDto.ResourceAvailability,
+                    VendorFeedback = projectClosureDto.VendorFeedback,
+                    ProjectTeamFeedback = projectClosureDto.ProjectTeamFeedback,
+                    DesignOutputs = projectClosureDto.DesignOutputs,
+                    ProjectReviewMeetings = projectClosureDto.ProjectReviewMeetings,
+                    ClientDesignReviews = projectClosureDto.ClientDesignReviews,
+                    InternalReporting = projectClosureDto.InternalReporting,
+                    ClientReporting = projectClosureDto.ClientReporting,
+                    InternalMeetings = projectClosureDto.InternalMeetings,
+                    ClientMeetings = projectClosureDto.ClientMeetings,
+                    ExternalMeetings = projectClosureDto.ExternalMeetings,
+                    PlanUpToDate = projectClosureDto.PlanUpToDate,
+                    PlanningIssues = projectClosureDto.PlanningIssues,
+                    PlanningLessons = projectClosureDto.PlanningLessons,
+                    DesignReview = projectClosureDto.DesignReview,
+                    TechnicalRequirements = projectClosureDto.TechnicalRequirements,
+                    InnovativeIdeas = projectClosureDto.InnovativeIdeas,
+                    SuitableOptions = projectClosureDto.SuitableOptions,
+                    AdditionalInformation = projectClosureDto.AdditionalInformation,
+                    DeliverableExpectations = projectClosureDto.DeliverableExpectations,
+                    StakeholderInvolvement = projectClosureDto.StakeholderInvolvement,
+                    KnowledgeGoalsAchieved = projectClosureDto.KnowledgeGoalsAchieved,
+                    TechnicalToolsDissemination = projectClosureDto.TechnicalToolsDissemination,
+                    SpecialistKnowledgeValue = projectClosureDto.SpecialistKnowledgeValue,
+                    OtherComments = projectClosureDto.OtherComments,
+                    TargetCostAccuracyValue = projectClosureDto.TargetCostAccuracyValue,
+                    TargetCostAccuracy = projectClosureDto.TargetCostAccuracy,
+                    ChangeControlReviewValue = projectClosureDto.ChangeControlReviewValue,
+                    ChangeControlReview = projectClosureDto.ChangeControlReview,
+                    CompensationEventsValue = projectClosureDto.CompensationEventsValue,
+                    CompensationEvents = projectClosureDto.CompensationEvents,
+                    ExpenditureProfileValue = projectClosureDto.ExpenditureProfileValue,
+                    ExpenditureProfile = projectClosureDto.ExpenditureProfile,
+                    Positives = projectClosureDto.Positives,
+                    LessonsLearned = projectClosureDto.LessonsLearned,
+                    CreatedAt = projectClosureDto.CreatedAt,
+                    CreatedBy = projectClosureDto.CreatedBy,
+                    UpdatedAt = DateTime.UtcNow,
+                    UpdatedBy = User.Identity?.Name ?? "System"
+                };
+
+                // Update the DTO with the current user
+                projectClosureDto.UpdatedBy = User.Identity?.Name ?? "System";
+                projectClosureDto.UpdatedAt = DateTime.UtcNow;
+
+                var command = new UpdateProjectClosureCommand(projectClosureDto);
+                var result = await _mediator.Send(command);
+
+                if (!result)
+                    return NotFound();
+
+                // Return the original data with updated timestamp
+                return Ok(new {
+                    id = id,
+                    message = "Project closure updated successfully",
+                    data = originalDto
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Deletes a project closure
+        /// </summary>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(204)] // Success, no content
+        [ProducesResponseType(400)] // Bad request (invalid ID)
+        [ProducesResponseType(404)] // Not found
+        [ProducesResponseType(500)] // Server error
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                // Validate ID - allow ID 0 since it's a valid ID in our system
+                if (id < 0)
+                {
+                    Console.WriteLine($"Invalid project closure ID: {id}");
+                    return BadRequest(new { message = $"Invalid project closure ID: {id}. ID must be a non-negative number." });
+                }
+
+                // Create and send the delete command
+                var command = new DeleteProjectClosureCommand(id);
+                var result = await _mediator.Send(command);
+
+                // Check the result
+                if (!result)
+                {
+                    Console.WriteLine($"Project closure with ID {id} not found");
+                    return NotFound(new { message = $"Project closure with ID {id} not found" });
+                }
+
+                // Return success with no content
+                Console.WriteLine($"Successfully deleted project closure with ID {id}");
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                // Handle invalid arguments (like invalid ID format)
+                Console.WriteLine($"Bad request in Delete: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle unexpected errors
+                Console.WriteLine($"Error deleting project closure: {ex.Message}");
+                return StatusCode(500, new {
+                    message = "An error occurred while deleting the project closure",
+                    error = ex.Message,
+                    innerError = ex.InnerException?.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Gets all available projects that can be used for project closure
+        /// </summary>
+        [HttpGet("available-projects")]
+        [ProducesResponseType(typeof(IEnumerable<object>), 200)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetAvailableProjects()
+        {
+            try
+            {
+                // Get all projects
+                var projectsQuery = new GetAllProjectsQuery();
+                var projects = await _mediator.Send(projectsQuery);
+
+                // Return all projects since we now allow multiple closures per project
+                var availableProjects = projects
+                    .Select(p => new
+                    {
+                        id = p.Id,
+                        name = p.Name,
+                        clientName = p.ClientName,
+                        projectNo = p.ProjectNo,
+                        office = p.Office,
+                        typeOfJob = p.TypeOfJob,
+                        sector = p.Sector,
+                        status = p.Status.ToString()
+                    });
+
+                return Ok(availableProjects);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting available projects: {ex.Message}");
+                return StatusCode(500, new { message = "Error retrieving available projects", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets all project closures for a specific project
+        /// </summary>
+        [HttpGet("project/{projectId}/all")]
+        [ProducesResponseType(typeof(IEnumerable<ProjectClosureDto>), 200)]
+        public async Task<IActionResult> GetAllByProjectId(int projectId)
+        {
+            var query = new GetProjectClosuresByProjectIdQuery(projectId);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+    }
+}
