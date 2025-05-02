@@ -25,6 +25,10 @@ namespace NJS.Application.CQRS.Correspondence.Handlers
             }
 
             await _repository.DeleteAsync(request.Id);
+
+            // Reset the identity seed to ensure new entries start from the lowest available ID
+            await _repository.ResetIdentitySeedAsync();
+
             return true;
         }
     }

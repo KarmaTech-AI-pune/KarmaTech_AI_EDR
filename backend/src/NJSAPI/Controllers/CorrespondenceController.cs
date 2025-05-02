@@ -100,8 +100,17 @@ namespace NJSAPI.Controllers
                 command.CreatedBy = User.Identity?.IsAuthenticated == true ?
                     User.FindFirstValue(ClaimTypes.Name) ?? "System" :
                     "System";
-                var result = await _mediator.Send(command);
-                return CreatedAtAction(nameof(GetInwardById), new { id = result.Id }, result);
+
+                try
+                {
+                    var result = await _mediator.Send(command);
+                    return CreatedAtAction(nameof(GetInwardById), new { id = result.Id }, result);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("already exists for project ID"))
+                {
+                    // An entry already exists for this project
+                    return BadRequest(new { message = ex.Message });
+                }
             }
             catch (Exception ex)
             {
@@ -239,8 +248,17 @@ namespace NJSAPI.Controllers
                 command.CreatedBy = User.Identity?.IsAuthenticated == true ?
                     User.FindFirstValue(ClaimTypes.Name) ?? "System" :
                     "System";
-                var result = await _mediator.Send(command);
-                return CreatedAtAction(nameof(GetOutwardById), new { id = result.Id }, result);
+
+                try
+                {
+                    var result = await _mediator.Send(command);
+                    return CreatedAtAction(nameof(GetOutwardById), new { id = result.Id }, result);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("already exists for project ID"))
+                {
+                    // An entry already exists for this project
+                    return BadRequest(new { message = ex.Message });
+                }
             }
             catch (Exception ex)
             {

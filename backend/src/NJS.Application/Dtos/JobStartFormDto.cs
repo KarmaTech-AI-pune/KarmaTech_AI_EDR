@@ -26,6 +26,9 @@ namespace NJS.Application.Dtos
         public decimal Profit { get; set; }
 
         public List<JobStartFormSelectionDto> Selections { get; set; } = new List<JobStartFormSelectionDto>();
+
+        // Resources for Time and Expenses
+        public List<JobStartFormResourceDto> Resources { get; set; } = new List<JobStartFormResourceDto>();
     }
 
     public class JobStartFormSelectionDto

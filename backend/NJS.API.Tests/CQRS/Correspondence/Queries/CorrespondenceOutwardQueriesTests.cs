@@ -1,5 +1,8 @@
 using NJS.Application.CQRS.Correspondence.Queries;
 using NJS.Application.DTOs;
+using System.Collections.Generic;
+using System.Linq;
+using Xunit;
 
 namespace NJS.API.Tests.CQRS.Correspondence.Queries
 {

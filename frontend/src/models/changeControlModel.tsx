@@ -1,6 +1,6 @@
 export interface ChangeControl {
-    id: string;
-    projectId: string;
+    id: number;
+    projectId: number;
     srNo: number;
     dateLogged: string;
     originator: string;
@@ -12,4 +12,8 @@ export interface ChangeControl {
     changeOrderStatus: string;
     clientApprovalStatus: string;
     claimSituation: string;
+    createdBy?: string;
+    updatedBy?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }

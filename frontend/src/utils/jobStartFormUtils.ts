@@ -1,6 +1,6 @@
-import { 
-  EmployeeAllocation, 
-  OutsideAgencyEntry, 
+import {
+  EmployeeAllocation,
+  OutsideAgencyEntry,
   TimeContingencyEntry,
   ExpensesType,
   OutsideAgencyType,
@@ -24,9 +24,9 @@ export const calculateTotalCost = (employees: EmployeeAllocation[], isConsultant
 
 // Calculate time contingency cost
 export const calculateTimeContingencyCost = (timeContingency: TimeContingencyEntry): number => {
-  const rate = Number(timeContingency.rate) || 0;
+  // Only use units as percentage of total employee cost
   const units = Number(timeContingency.units) || 0;
-  return rate * units;
+  return units;
 };
 
 // Calculate outside agency cost
@@ -38,13 +38,18 @@ export const calculateOutsideAgencyCost = (entry: OutsideAgencyEntry): number =>
 
 // Calculate total time cost
 export const calculateTotalTimeCost = (
-  employeeAllocations: EmployeeAllocation[], 
+  employeeAllocations: EmployeeAllocation[],
   timeContingency: TimeContingencyEntry
 ): number => {
   const employeesTotal = calculateTotalCost(employeeAllocations, false);
   const consultantsTotal = calculateTotalCost(employeeAllocations, true);
-  const contingencyTotal = calculateTimeContingencyCost(timeContingency);
-  return employeesTotal + consultantsTotal + contingencyTotal;
+  const totalEmployeeCost = employeesTotal + consultantsTotal;
+
+  // Calculate contingency as percentage of total employee cost
+  const contingencyPercentage = calculateTimeContingencyCost(timeContingency);
+  const contingencyTotal = (totalEmployeeCost * contingencyPercentage) / 100;
+
+  return totalEmployeeCost + contingencyTotal;
 };
 
 // Calculate expenses total

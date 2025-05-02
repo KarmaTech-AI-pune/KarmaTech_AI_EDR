@@ -265,6 +265,82 @@ namespace NJS.Domain.Migrations
                     b.ToTable("BidVersionHistories");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ChangeControl", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ChangeOrderStatus")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ClaimSituation")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ClientApprovalStatus")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CostImpact")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("DateLogged")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Originator")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("QualityImpact")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ResourcesImpact")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("SrNo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TimeImpact")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ChangeControls");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.CheckReview", b =>
                 {
                     b.Property<int>("Id")
@@ -1105,6 +1181,63 @@ namespace NJS.Domain.Migrations
                     b.HasIndex("WorkBreakdownStructureId");
 
                     b.ToTable("JobStartForms");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.JobStartFormResource", b =>
+                {
+                    b.Property<int>("ResourceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResourceId"));
+
+                    b.Property<decimal>("BudgetedCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmployeeName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("FormId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Rate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TaskType")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Units")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("WBSTaskId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ResourceId");
+
+                    b.HasIndex("FormId");
+
+                    b.ToTable("JobStartFormResources");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.JobStartFormSelection", b =>
@@ -2146,6 +2279,17 @@ namespace NJS.Domain.Migrations
                     b.Navigation("BidPreparation");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ChangeControl", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.CheckReview", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.Project", "Project")
@@ -2281,6 +2425,17 @@ namespace NJS.Domain.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("WorkBreakdownStructure");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.JobStartFormResource", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.JobStartForm", "JobStartForm")
+                        .WithMany("Resources")
+                        .HasForeignKey("FormId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobStartForm");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.JobStartFormSelection", b =>
@@ -2491,6 +2646,8 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("NJS.Domain.Entities.JobStartForm", b =>
                 {
+                    b.Navigation("Resources");
+
                     b.Navigation("Selections");
                 });
 

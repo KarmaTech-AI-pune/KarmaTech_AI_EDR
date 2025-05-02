@@ -45,10 +45,12 @@ namespace NJS.Domain.Database
         public DbSet<GoNoGoDecisionTransaction> GoNoGoDecisionTransactions { get; set; }
         public DbSet<JobStartForm> JobStartForms { get; set; }
         public DbSet<JobStartFormSelection> JobStartFormSelections { get; set; } // Add DbSet for Selections
+        public DbSet<JobStartFormResource> JobStartFormResources { get; set; } // Add DbSet for Resources
         public DbSet<InputRegister> InputRegisters { get; set; }
         public DbSet<CorrespondenceInward> CorrespondenceInwards { get; set; }
         public DbSet<CorrespondenceOutward> CorrespondenceOutwards { get; set; }
         public DbSet<CheckReview> CheckReviews { get; set; }
+        public DbSet<ChangeControl> ChangeControls { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -253,6 +255,11 @@ namespace NJS.Domain.Database
                       .HasForeignKey(s => s.FormId)
                       .OnDelete(DeleteBehavior.Cascade);
 
+                entity.HasMany(jsf => jsf.Resources)
+                      .WithOne(r => r.JobStartForm)
+                      .HasForeignKey(r => r.FormId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
                 entity.HasIndex(jsf => jsf.ProjectId);
             });
 
@@ -262,6 +269,22 @@ namespace NJS.Domain.Database
                 entity.HasKey(e => e.SelectionId);
                 // No complex relationships needed here as it's primarily linked via JobStartForm
                 entity.HasIndex(s => s.FormId); // Index for faster lookup by form
+            });
+
+            // Configure JobStartFormResource entity
+            modelBuilder.Entity<JobStartFormResource>(entity =>
+            {
+                entity.HasKey(e => e.ResourceId);
+                entity.Property(e => e.Rate).HasPrecision(18, 2);
+                entity.Property(e => e.Units).HasPrecision(18, 2);
+                entity.Property(e => e.BudgetedCost).HasPrecision(18, 2);
+
+                entity.HasOne(r => r.JobStartForm)
+                      .WithMany(j => j.Resources)
+                      .HasForeignKey(r => r.FormId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(r => r.FormId); // Index for faster lookup by form
             });
 
              // Configure UserWBSTask entity decimal properties
@@ -376,6 +399,32 @@ namespace NJS.Domain.Database
                 entity.HasOne(i => i.Project)
                       .WithMany()
                       .HasForeignKey(i => i.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure ChangeControl entity
+            modelBuilder.Entity<ChangeControl>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Originator).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.CostImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.TimeImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.ResourcesImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.QualityImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.ChangeOrderStatus).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.ClientApprovalStatus).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.ClaimSituation).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).HasMaxLength(100).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(cc => cc.Project)
+                      .WithMany()
+                      .HasForeignKey(cc => cc.ProjectId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
         }

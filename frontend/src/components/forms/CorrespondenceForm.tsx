@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
+import axios from 'axios';
 import {
   Box,
   Tab,
@@ -27,12 +28,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CorrespondenceDialog from './Correspondancecomponents/CorrespondenceDialog';
 import {
-  createInwardRow,
-  createOutwardRow,
   getInwardRows,
   getOutwardRows,
-  updateInwardRow,
-  updateOutwardRow,
   deleteInwardRow,
   deleteOutwardRow,
   InwardRow,
@@ -227,111 +224,279 @@ const CorrespondenceForm: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      // Log authentication status
       console.log('Authentication status:', {
         token: localStorage.getItem('token') ? 'Present' : 'Missing',
         isTokenValid
       });
+
       const projectId = context.selectedProject.id;
       const newData = { ...data, projectId };
 
-      // Handle date formatting and add required fields
-      const formatDates = (data: any) => {
+      // Format dates and prepare data for API
+      const formatData = (data: any, isUpdate = false) => {
         const formattedData = { ...data };
 
-        // Add CreatedBy field - this is required by the backend
-        const user = context?.user;
-        formattedData.createdBy = user?.userName || 'System';
-
-        // Make sure all required dates are properly formatted
-        if (formattedData.letterDate) {
-          try {
-            formattedData.letterDate = new Date(formattedData.letterDate).toISOString();
-          } catch (e) {
-            console.error('Invalid letterDate format:', formattedData.letterDate, e);
-          }
+        // Remove special flag used for tracking edit operations
+        if (formattedData._isEditOperation !== undefined) {
+          delete formattedData._isEditOperation;
         }
 
-        if (formattedData.receiptDate) {
-          try {
-            formattedData.receiptDate = new Date(formattedData.receiptDate).toISOString();
-          } catch (e) {
-            console.error('Invalid receiptDate format:', formattedData.receiptDate, e);
-          }
-        }
+        // Handle create vs update operations differently
+        if (!isUpdate) {
+          // For new records, remove ID and audit fields
+          delete formattedData.id;
+          delete formattedData.createdAt;
+          delete formattedData.updatedAt;
+          delete formattedData.updatedBy;
 
-        if (formattedData.repliedDate && formattedData.repliedDate !== '') {
-          try {
-            formattedData.repliedDate = new Date(formattedData.repliedDate).toISOString();
-          } catch (e) {
-            console.error('Invalid repliedDate format:', formattedData.repliedDate, e);
-            // If there's an error, set to null instead of invalid date
-            formattedData.repliedDate = null;
-          }
+          // Add createdBy for new records
+          const user = context?.user;
+          formattedData.createdBy = user?.userName || 'System';
         } else {
-          // Make sure empty string is converted to null
+          // For updates, keep ID but remove other backend-managed fields
+          delete formattedData.createdAt;
+
+          // Add updatedBy for update operations
+          const user = context?.user;
+          formattedData.updatedBy = user?.userName || 'System';
+        }
+
+        // Format all date fields properly
+        const formatDate = (dateValue: any) => {
+          if (!dateValue || dateValue === '') return null;
+
+          try {
+            const date = new Date(dateValue);
+            if (isNaN(date.getTime())) {
+              console.error('Invalid date value:', dateValue);
+              return null;
+            }
+            return date.toISOString();
+          } catch (e) {
+            console.error('Error formatting date:', e);
+            return null;
+          }
+        };
+
+        // Format common date fields
+        if (formattedData.letterDate) {
+          formattedData.letterDate = formatDate(formattedData.letterDate);
+        }
+
+        // Format inward-specific date fields
+        if (formattedData.receiptDate) {
+          formattedData.receiptDate = formatDate(formattedData.receiptDate);
+        }
+
+        if (formattedData.repliedDate) {
+          formattedData.repliedDate = formatDate(formattedData.repliedDate);
+        } else {
           formattedData.repliedDate = null;
         }
 
-        console.log('Formatted data with CreatedBy:', formattedData);
+        // Ensure projectId is a number
+        if (formattedData.projectId && typeof formattedData.projectId !== 'number') {
+          formattedData.projectId = Number(formattedData.projectId);
+        }
+
         return formattedData;
       };
 
-      console.log('Saving data:', newData);
+      // Determine if this is an update operation
+      // Check both the _isEditOperation flag and the presence of an ID
+      const hasEditFlag = data._isEditOperation === true;
+      const hasId = data.id !== undefined && data.id !== null;
+      const isUpdateOperation = hasEditFlag || hasId;
 
-      if (isEdit && data.id) {
-        // Update existing record
+      console.log('Operation detection:', {
+        hasEditFlag,
+        hasId,
+        finalDecision: isUpdateOperation ? 'UPDATE' : 'CREATE'
+      });
+      console.log('Data received from dialog:', JSON.stringify(data, null, 2));
+
+      // Get API endpoint based on tab value
+      const endpoint = tabValue === 0 ? 'inward' : 'outward';
+      const baseUrl = `http://localhost:5245/api/correspondence/${endpoint}`;
+
+      // Prepare headers for API request
+      const token = localStorage.getItem('token');
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : '',
+      };
+
+      if (isUpdateOperation) {
+        // UPDATE OPERATION
+        if (data.id === undefined || data.id === null) {
+          console.error('Update operation detected but no ID found!');
+          throw new Error('Cannot update record: Missing ID');
+        }
+
+        console.log('Updating existing record with ID:', data.id);
+        console.log('This should use PUT method to endpoint:', `${baseUrl}/${data.id}`);
+
+        // Format data for update
+        const formattedData = formatData(newData, true);
+
+        // Ensure ID is valid - note that ID can be 0 in some cases, so we need to check if it's undefined or null
+        if (formattedData.id === undefined || formattedData.id === null || typeof formattedData.id !== 'number') {
+          throw new Error('Invalid ID for update operation');
+        }
+
+        // Preserve createdBy from original record if not present
+        if (!formattedData.createdBy) {
+          const rows = tabValue === 0 ? inwardRows : outwardRows;
+          const originalRecord = rows.find(row => row.id === data.id);
+
+          if (originalRecord && originalRecord.createdBy) {
+            formattedData.createdBy = originalRecord.createdBy;
+          } else {
+            formattedData.createdBy = 'System'; // Fallback
+          }
+        }
+
+        console.log('Sending update data to API:', JSON.stringify(formattedData, null, 2));
+
+        // Make API request - explicitly use PUT method for updates
+        console.log(`Making PUT request to ${baseUrl}/${data.id}`);
+        console.log('PUT request headers:', headers);
+        console.log('PUT request data:', JSON.stringify(formattedData, null, 2));
+
+        const response = await axios({
+          method: 'put',
+          url: `${baseUrl}/${data.id}`,
+          data: formattedData,
+          headers: headers
+        });
+
+        const updatedRow = response.data;
+        console.log('Update successful, response:', updatedRow);
+
+        // Update state with updated row
         if (tabValue === 0) {
-          const updatedData = formatDates(newData);
-          // Add UpdatedBy field for updates
-          const user = context?.user;
-          updatedData.updatedBy = user?.userName || 'System';
-          console.log('Formatted data for update:', updatedData);
-          const updatedRow = await updateInwardRow(data.id, updatedData);
           setInwardRows(inwardRows.map(row => row.id === data.id ? updatedRow : row));
         } else {
-          const updatedData = formatDates(newData);
-          // Add UpdatedBy field for updates
-          const user = context?.user;
-          updatedData.updatedBy = user?.userName || 'System';
-          console.log('Formatted data for update:', updatedData);
-          const updatedRow = await updateOutwardRow(data.id, updatedData);
           setOutwardRows(outwardRows.map(row => row.id === data.id ? updatedRow : row));
         }
       } else {
-        // Create new record
+        // CREATE OPERATION
+        console.log('Creating new record');
+
+        // Format data for create
+        const formattedData = formatData(newData, false);
+
+        // Validate required fields
+        const requiredFields = tabValue === 0
+          ? ['projectId', 'incomingLetterNo', 'letterDate', 'njsInwardNo', 'receiptDate', 'from', 'subject', 'createdBy']
+          : ['projectId', 'letterNo', 'letterDate', 'to', 'subject', 'createdBy'];
+
+        const missingFields = requiredFields.filter(field => {
+          if (field === 'letterDate' || field === 'receiptDate') {
+            return !formattedData[field]; // Check if date field is missing or null
+          }
+          return !formattedData[field] || formattedData[field] === '';
+        });
+
+        if (missingFields.length > 0) {
+          throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+        }
+
+        console.log('Sending create data to API:', JSON.stringify(formattedData, null, 2));
+
+        // Make API request - explicitly use POST method for creates
+        console.log(`Making POST request to ${baseUrl}`);
+        console.log('POST request headers:', headers);
+        console.log('POST request data:', JSON.stringify(formattedData, null, 2));
+
+        const response = await axios({
+          method: 'post',
+          url: baseUrl,
+          data: formattedData,
+          headers: headers
+        });
+
+        const newRow = response.data;
+        console.log('Create successful, response:', newRow);
+
+        // Update state with new row
         if (tabValue === 0) {
-          const formattedData = formatDates(newData);
-          console.log('Formatted data for create:', formattedData);
-          const newRow = await createInwardRow(formattedData);
           setInwardRows([...inwardRows, newRow]);
         } else {
-          const formattedData = formatDates(newData);
-          console.log('Formatted data for create:', formattedData);
-          const newRow = await createOutwardRow(formattedData);
           setOutwardRows([...outwardRows, newRow]);
         }
       }
     } catch (err: any) {
       console.error('Error saving correspondence data:', err);
+
+      // Detailed error handling
       let errorMessage = 'Failed to save correspondence data. Please try again.';
 
-      // Check for authentication error
-      if (err.response && err.response.status === 401) {
-        setIsTokenValid(false);
-        errorMessage = 'Your session has expired. Please log in again.';
-      } else if (err.response && err.response.data) {
-        // Try to extract more detailed error message if available
-        if (typeof err.response.data === 'string') {
-          errorMessage = err.response.data;
-        } else if (err.response.data.message) {
-          errorMessage = err.response.data.message;
-        } else if (err.response.data.error) {
-          errorMessage = err.response.data.error;
+      if (err.response) {
+        console.error('Error response status:', err.response.status);
+        console.error('Error response data:', err.response.data);
+
+        // Handle different error status codes
+        switch (err.response.status) {
+          case 401:
+            setIsTokenValid(false);
+            errorMessage = 'Your session has expired. Please log in again.';
+            break;
+
+          case 400:
+            errorMessage = 'Invalid data format. Please check all required fields.';
+            if (err.response.data) {
+              if (typeof err.response.data === 'string') {
+                errorMessage = err.response.data;
+              } else if (err.response.data.message) {
+                // Check if this is the "already exists for project ID" error
+                if (err.response.data.message.includes("already exists for project ID")) {
+                  errorMessage = err.response.data.message;
+                  // Add a more user-friendly explanation
+                  errorMessage += " Please edit the existing entry instead of creating a new one.";
+                } else {
+                  errorMessage = err.response.data.message;
+                }
+              } else if (err.response.data.error) {
+                errorMessage = `Validation error: ${err.response.data.error}`;
+              }
+            }
+            break;
+
+          case 500:
+            if (err.response.data) {
+              if (typeof err.response.data === 'string') {
+                errorMessage = err.response.data;
+              } else if (err.response.data.message) {
+                errorMessage = err.response.data.message;
+              } else if (err.response.data.error) {
+                errorMessage = `Server error: ${err.response.data.error}`;
+
+                // Check for entity validation errors
+                if (err.response.data.error.includes("entity changes")) {
+                  errorMessage = "Database validation error. Please check that all required fields are filled correctly and dates are valid.";
+                  console.error("Data that caused the error:", JSON.stringify(err.config?.data, null, 2));
+                }
+              }
+            } else {
+              errorMessage = 'Internal server error. Please check the backend logs for details.';
+            }
+            break;
+
+          default:
+            if (err.response.data && typeof err.response.data === 'string') {
+              errorMessage = err.response.data;
+            } else if (err.response.data && err.response.data.message) {
+              errorMessage = err.response.data.message;
+            }
         }
+      } else if (err.message) {
+        // Handle client-side errors
+        errorMessage = err.message;
       }
 
       setError(errorMessage);
+      console.error('Final error message displayed to user:', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -383,22 +548,30 @@ const CorrespondenceForm: React.FC = () => {
               <Typography noWrap>{row.subject}</Typography>
             </Grid>
             <Grid item xs={2} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Tooltip title="Edit">
-                <IconButton size="small" onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditClick(row);
-                }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Delete">
-                <IconButton size="small" color="error" onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteClick(row.id, 'inward');
-                }}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              <Box component="span" sx={{ mr: 1 }}>
+                <Tooltip title="Edit">
+                  <span>
+                    <IconButton size="small" onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(row);
+                    }}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Box>
+              <Box component="span">
+                <Tooltip title="Delete">
+                  <span>
+                    <IconButton size="small" color="error" onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteClick(row.id, 'inward');
+                    }}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Box>
             </Grid>
           </Grid>
         </AccordionSummary>
@@ -500,22 +673,30 @@ const CorrespondenceForm: React.FC = () => {
               <Typography noWrap>{row.subject}</Typography>
             </Grid>
             <Grid item xs={2} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Tooltip title="Edit">
-                <IconButton size="small" onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditClick(row);
-                }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Delete">
-                <IconButton size="small" color="error" onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteClick(row.id, 'outward');
-                }}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              <Box component="span" sx={{ mr: 1 }}>
+                <Tooltip title="Edit">
+                  <span>
+                    <IconButton size="small" onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(row);
+                    }}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Box>
+              <Box component="span">
+                <Tooltip title="Delete">
+                  <span>
+                    <IconButton size="small" color="error" onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteClick(row.id, 'outward');
+                    }}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Box>
             </Grid>
           </Grid>
         </AccordionSummary>

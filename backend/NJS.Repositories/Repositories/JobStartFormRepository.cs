@@ -28,19 +28,24 @@ namespace NJS.Repositories.Repositories
         // Implementation for GetAllAsync as required by the interface
         public async Task<IEnumerable<JobStartForm>> GetAllAsync()
         {
-            return await _context.JobStartForms.ToListAsync();
+            return await _context.JobStartForms
+                .Include(jsf => jsf.Resources)
+                .ToListAsync();
         }
 
         public async Task<JobStartForm> GetByIdAsync(int id)
         {
-            // Corrected implementation
-            return await _context.JobStartForms.FindAsync(id);
+            // Use FirstOrDefaultAsync with Include to load related resources
+            return await _context.JobStartForms
+                                 .Include(jsf => jsf.Resources) // Corrected navigation property name
+                                 .FirstOrDefaultAsync(jsf => jsf.FormId == id && !jsf.IsDeleted);
         }
 
         public async Task<IEnumerable<JobStartForm>> GetAllByProjectIdAsync(int projectId)
         {
             return await _context.JobStartForms
                 .Where(j => j.ProjectId == projectId && !j.IsDeleted)
+                .Include(jsf => jsf.Resources)
                 .ToListAsync();
         }
 

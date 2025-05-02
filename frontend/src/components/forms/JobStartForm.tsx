@@ -1,576 +1,531 @@
-import React, { useState, useEffect, useContext } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  CircularProgress,
-  Container,
-  Snackbar,
-  Alert
-} from '@mui/material';
-import LoadingButton from '../common/LoadingButton'; // Corrected path
-import { projectManagementAppContext } from '../../App';
-import { projectManagementAppContextType, JobStartFormData } from '../../types';
-import { FormWrapper } from './FormWrapper';
-import {
-  submitJobStartForm,
-  getJobStartFormByProjectId,
-  updateJobStartForm,
-  getWBSResourceData
-} from '../../services/jobStartFormApi';
-import {
-  EmployeeAllocation,
-  TimeContingencyEntry,
-  ExpensesType,
-  OutsideAgencyType,
-  ProjectSpecificType,
-      ExpenseEntry,
-      ServiceTaxEntry,
-      OutsideAgencyEntry,
-      ProjectSpecificEntry // Added missing import
-    } from '../../types/jobStartForm';
-import { formatTitle } from '../../utils/jobStartFormUtils';
-import {
-  textFieldStyle,
-  tableHeaderStyle,
-  tableCellStyle,
-  accordionStyle,
-  sectionStyle,
-  summaryRowStyle
-} from '../../utils/jobStartFormStyles';
-import TimeSection from './JobStartFormComponents/TimeSection';
-import ExpensesSection from './JobStartFormComponents/ExpensesSection';
-import SummarySection from './JobStartFormComponents/SummarySection';
+import React, { useState, useEffect, useContext } from 'react'
+import { FormWrapper } from './FormWrapper'
+import JobstartTime from './jobstartFormComponent/JobstartTime'
+import EstimatedExpenses from './jobstartFormComponent/EstimatedExpenses'
+import JobstartGrandTotal from './jobstartFormComponent/JobstartGrandTotal'
+import JobstartSummary from './jobstartFormComponent/JobstartSummary'
+import { Container, Box, Paper, Typography, CircularProgress, Alert, Snackbar } from '@mui/material'
+import { getWBSResourceData, submitJobStartForm, updateJobStartForm, getJobStartFormByProjectId } from '../../services/jobStartFormApi'
+import { WBSResource } from '../../types/jobStartFormTypes'
+import { CustomRow } from './jobstartFormComponent/TableTemplate'
+import { projectManagementAppContext } from '../../App'
+import { projectManagementAppContextType } from '../../types'
+import LoadingButton from '../common/LoadingButton'
 
 const JobStartForm: React.FC = () => {
-  const context = useContext<projectManagementAppContextType | null>(projectManagementAppContext);
-  const [employeeAllocations, setEmployeeAllocations] = useState<EmployeeAllocation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [currentFormId, setCurrentFormId] = useState<number | string | null>(null);
+  const context = useContext<projectManagementAppContextType | null>(projectManagementAppContext)
+  const [wbsResources, setWbsResources] = useState<WBSResource[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const [timeContingency, setTimeContingency] = useState<TimeContingencyEntry>({
-    rate: '',
-    units: '',
-    remarks: ''
-  });
-  const [expanded, setExpanded] = useState<string[]>(['time', 'expenses']);
+  // State to track total costs for different sections
+  const [totalTimeCost, setTotalTimeCost] = useState<number>(0)
+  const [totalODCExpensesCost, setTotalODCExpensesCost] = useState<number>(0)
 
-  const handleAccordionChange = (panel: string) => {
-    setExpanded(prev => {
-      if (prev.includes(panel)) {
-        return prev.filter(p => p !== panel);
-      } else {
-        return [...prev, panel];
-      }
-    });
-  };
+  // State to track resources for Time and Expenses
+  const [timeResources, setTimeResources] = useState<WBSResource[]>([])
+  const [expensesResources, setExpensesResources] = useState<WBSResource[]>([])
 
-  const [expenses, setExpenses] = useState<ExpensesType>({
-    '2a': { number: '10000', remarks: '' },
-    '2b': { number: '10000', remarks: '' },
-    '3': { number: '', remarks: '' },
-    '4': { number: '10000', remarks: '' },
-    '5': { number: '10000', remarks: '' },
-    '7': { number: '100000', remarks: '' },
-  });
+  // State to track custom rows for Time and Expenses
+  const [timeCustomRows, setTimeCustomRows] = useState<CustomRow[]>([
+    {
+      id: 'time-subtotal',
+      prefix: '1b',
+      title: 'Sub-Total',
+      hasRateField: false,
+      hasUnitsField: false,
+      budgetedCost: 0,
+      remarks: ''
+    },
+    {
+      id: 'time-contingencies',
+      prefix: '1c',
+      title: 'Time Contingencies (LS)',
+      hasRateField: false,
+      hasUnitsField: true,
+      unitSuffix: '%',
+      budgetedCost: 0,
+      units: 0,
+      remarks: ''
+    }
+  ])
 
-  const [surveyWorks, setSurveyWorks] = useState<ExpenseEntry>({
-    number: '',
-    remarks: ''
-  });
+  const [expensesCustomRows, setExpensesCustomRows] = useState<CustomRow[]>([
+    {
+      id: 'expenses-subtotal',
+      prefix: '2b',
+      title: 'Sub-Total',
+      hasRateField: false,
+      hasUnitsField: false,
+      budgetedCost: 0,
+      remarks: ''
+    },
+    {
+      id: 'expenses-contingencies',
+      prefix: '2c',
+      title: 'Contingencies (LS)',
+      hasRateField: false,
+      hasUnitsField: true,
+      unitSuffix: '%',
+      budgetedCost: 0,
+      units: 0,
+      remarks: ''
+    },
+    {
+      id: 'expenses-expense-contingencies',
+      prefix: '2d',
+      title: 'Expense Contingencies (LS)',
+      hasRateField: false,
+      hasUnitsField: true,
+      unitSuffix: '%',
+      budgetedCost: 0,
+      units: 0,
+      remarks: ''
+    }
+  ])
 
-  const [outsideAgency, setOutsideAgency] = useState<OutsideAgencyType>({
-    'a': { description: '', rate: '', units: '', remarks: '' },
-    'b': { description: '', rate: '', units: '', remarks: '' },
-    'c': { description: '', rate: '', units: '', remarks: '' },
-  });
+  // State for summary data
+  const [summaryData, setSummaryData] = useState({
+    projectFees: 0,
+    serviceTaxPercentage: 18,
+    serviceTaxAmount: 0,
+    totalProjectFees: 0,
+    profit: 0
+  })
 
-  const [projectSpecific, setProjectSpecific] = useState<ProjectSpecificType>({
-    '6c': { name: '', number: '', remarks: '' },
-    '6d': { name: '', number: '', remarks: '' },
-    '6e': { name: '', number: '', remarks: '' },
-  });
+  // State for form submission
+  const [submitting, setSubmitting] = useState<boolean>(false)
+  const [isUpdating, setIsUpdating] = useState<boolean>(false)
+  const [formId, setFormId] = useState<number | null>(null)
 
-  const [projectFees, setProjectFees] = useState<string>('800000');
-  const [serviceTax, setServiceTax] = useState<ServiceTaxEntry>({
-    percentage: '15'
-  });
+  // State for snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false)
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('')
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success')
 
-  // Effect for loading WBS and Resource data
+  // Get project ID from context
+  const projectId = context?.selectedProject?.id?.toString()
+
   useEffect(() => {
-    if (!context?.selectedProject?.id) return;
+    const fetchData = async () => {
+      if (!projectId) {
+        setError('Project ID is missing')
+        setLoading(false)
+        return
+      }
 
-    const fetchWBSResourceData = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        setLoading(true)
 
-        const wbsResourceData = await getWBSResourceData(context.selectedProject?.id?.toString() || '');
+        // First, try to fetch existing JobStartForm data
+        let existingFormData = null
+        let existingResources: Record<string, any> = {}
+        let existingCustomRows: Record<string, any> = {}
 
-        const employeeMap = new Map<string, EmployeeAllocation>();
+        try {
+          // Get data from /api/projects/{projectId}/jobstartforms
+          const formData = await getJobStartFormByProjectId(projectId)
+          if (formData && Array.isArray(formData) && formData.length > 0) {
+            existingFormData = formData[0] // Get the first form if multiple exist
+            // Ensure formId is a number before setting it
+            if (existingFormData.formId !== undefined) {
+              setFormId(typeof existingFormData.formId === 'string'
+                ? parseInt(existingFormData.formId)
+                : existingFormData.formId)
+            }
+            setIsUpdating(true)
 
-        // Process the resource allocations from the backend
-        wbsResourceData.resourceAllocations.forEach((allocation: any) => {
-          const employeeId = allocation.employeeId;
+            // Set summary data
+            setSummaryData({
+              projectFees: existingFormData.projectFees || 0,
+              serviceTaxPercentage: existingFormData.serviceTaxPercentage || 18,
+              serviceTaxAmount: existingFormData.serviceTaxAmount || 0,
+              totalProjectFees: existingFormData.totalProjectFees || 0,
+              profit: existingFormData.profit || 0
+            })
 
-          // Determine the correct name based on task type
-          let displayName;
-          if (allocation.taskType === 1) { // TaskType.ODC = 1
-            // For ODC tasks, use the name field
-            displayName = allocation.name;
-          } else {
-            // For Manpower tasks, use the employeeName field
-            displayName = allocation.employeeName;
+            // Process existing resources and custom rows
+            if (existingFormData.resources && Array.isArray(existingFormData.resources)) {
+              // Create a map of existing resources by WBS task ID for easy lookup
+              existingFormData.resources.forEach(resource => {
+                if (resource.wbsTaskId) {
+                  // Regular resource
+                  existingResources[resource.wbsTaskId] = resource
+                } else if (resource.name) {
+                  // Custom row (name field contains the row ID)
+                  existingCustomRows[resource.name] = resource
+                }
+              })
+            }
           }
+        } catch (err) {
+          console.log('No existing JobStartForm found, creating a new one')
+          // Continue with WBS data if no form exists
+        }
 
-          if (!employeeMap.has(employeeId)) {
-            employeeMap.set(employeeId, {
-              id: employeeId,
-              name: displayName,
-              is_consultant: allocation.isConsultant,
-              allocations: [],
-              totalHours: 0,
-              totalCost: 0,
-              remarks: ''
-            });
-          }
+        // Then fetch WBS resource data from /api/projects/{projectId}/jobstartforms/wbsresources
+        const wbsData = await getWBSResourceData(projectId)
 
-          const emp = employeeMap.get(employeeId)!;
-          const taskCost = allocation.costRate * allocation.totalHours;
+        // Transform the data from the API to match our WBSResource type
+        const resources: WBSResource[] = wbsData.resourceAllocations.map((allocation: any) => {
+          const taskId = allocation.taskId.toString()
+          const existingResource = existingResources[taskId]
 
-          emp.allocations.push({
-            taskId: allocation.taskId,
-            title: allocation.taskTitle || `Task ${allocation.taskId}`,
+          return {
+            id: taskId,
+            taskType: allocation.taskType,
+            description: allocation.taskTitle,
             rate: allocation.costRate,
-            hours: allocation.totalHours,
-            cost: taskCost
-          });
-          emp.totalHours += allocation.totalHours;
-          emp.totalCost += taskCost;
-        });
-
-        setEmployeeAllocations(Array.from(employeeMap.values()));
-
-      } catch (error) {
-        console.error('Error fetching WBS resource data:', error);
-        setError('Failed to load WBS resource data. Please ensure you have submitted a WBS form for this project.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWBSResourceData();
-  }, [context?.selectedProject?.id]);
-
-  // Effect for loading existing Job Start Form data or falling back to local storage
-  useEffect(() => {
-    const loadFormData = async () => {
-      const projectId = context?.selectedProject?.id?.toString();
-      if (!projectId) return;
-
-      setLoading(true);
-      setIsUpdating(false);
-      setCurrentFormId(null);
-
-      try {
-        const responseArray = await getJobStartFormByProjectId(projectId);
-
-        if (responseArray && Array.isArray(responseArray) && responseArray.length > 0) {
-          const backendDto = responseArray[0];
-          console.log('Flat DTO loaded from backend:', backendDto);
-
-          setProjectFees(backendDto.projectFees?.toString() ?? '');
-          setServiceTax({ percentage: backendDto.serviceTaxPercentage?.toString() ?? '18' });
-
-          setIsUpdating(true);
-          setCurrentFormId(backendDto.formId);
-
-          setLoading(false);
-          return;
-        } else {
-           console.log('No existing form data DTO found on backend for this project.');
-        }
-
-      } catch (error) {
-        console.warn('Failed to fetch form data from backend, checking local storage.', error);
-      }
-
-      // Fallback to localStorage if backend fetch fails or returns no data
-      try {
-        const savedFormData = localStorage.getItem(`jobStartFormData_${projectId}`);
-        if (savedFormData) {
-          console.log('Loading form data from local storage.');
-          const parsedData = JSON.parse(savedFormData);
-
-          setEmployeeAllocations(parsedData.time.employeeAllocations);
-          setTimeContingency(parsedData.time.timeContingency);
-          setExpenses(parsedData.expenses.regularExpenses);
-          setSurveyWorks(parsedData.expenses.surveyWorks);
-          setOutsideAgency(parsedData.expenses.outsideAgency);
-          setProjectSpecific(parsedData.expenses.projectSpecific);
-          setProjectFees(parsedData.projectFees?.toString() ?? '');
-          setServiceTax({ percentage: parsedData.serviceTax.percentage?.toString() ?? '18' });
-
-          if (parsedData.formId) {
-            setIsUpdating(true);
-            setCurrentFormId(parsedData.formId);
-          } else {
-            setIsUpdating(false);
-            setCurrentFormId(null);
+            units: allocation.totalHours,
+            budgetedCost: allocation.totalCost,
+            // Use existing remarks if available, otherwise empty string
+            remarks: existingResource?.remarks || '',
+            employeeName: allocation.employeeName !== 'null' ? allocation.employeeName : null,
+            name: allocation.name !== 'null' ? allocation.name : null
           }
-        } else {
-          console.log('No form data found in local storage either. Starting fresh.');
-          setIsUpdating(false);
-          setCurrentFormId(null);
+        })
+
+        setWbsResources(resources)
+
+        // Set initial custom rows data if available
+        if (Object.keys(existingCustomRows).length > 0) {
+          // Create new arrays for custom rows with updated values
+          const updatedTimeCustomRows = [...timeCustomRows];
+          const updatedExpensesCustomRows = [...expensesCustomRows];
+
+          // Update Time subtotal row remarks
+          const timeSubtotalRow = existingCustomRows['time-subtotal'];
+          if (timeSubtotalRow) {
+            const timeSubtotalIndex = updatedTimeCustomRows.findIndex(row => row.id === 'time-subtotal');
+            if (timeSubtotalIndex !== -1) {
+              updatedTimeCustomRows[timeSubtotalIndex] = {
+                ...updatedTimeCustomRows[timeSubtotalIndex],
+                remarks: timeSubtotalRow.remarks || ''
+              };
+            }
+          }
+
+          // Update Time contingencies row
+          const timeContingenciesRow = existingCustomRows['time-contingencies'];
+          if (timeContingenciesRow) {
+            const timeContingencyIndex = updatedTimeCustomRows.findIndex(row => row.id === 'time-contingencies');
+            if (timeContingencyIndex !== -1) {
+              updatedTimeCustomRows[timeContingencyIndex] = {
+                ...updatedTimeCustomRows[timeContingencyIndex],
+                units: timeContingenciesRow.units,
+                remarks: timeContingenciesRow.remarks || ''
+              };
+            }
+          }
+
+          // Update Expenses subtotal row remarks
+          const expensesSubtotalRow = existingCustomRows['expenses-subtotal'];
+          if (expensesSubtotalRow) {
+            const expensesSubtotalIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-subtotal');
+            if (expensesSubtotalIndex !== -1) {
+              updatedExpensesCustomRows[expensesSubtotalIndex] = {
+                ...updatedExpensesCustomRows[expensesSubtotalIndex],
+                remarks: expensesSubtotalRow.remarks || ''
+              };
+            }
+          }
+
+          // Update Expenses contingencies row
+          const expensesContingenciesRow = existingCustomRows['expenses-contingencies'];
+          if (expensesContingenciesRow) {
+            const expensesContingencyIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-contingencies');
+            if (expensesContingencyIndex !== -1) {
+              updatedExpensesCustomRows[expensesContingencyIndex] = {
+                ...updatedExpensesCustomRows[expensesContingencyIndex],
+                units: expensesContingenciesRow.units,
+                remarks: expensesContingenciesRow.remarks || ''
+              };
+            }
+          }
+
+          // Update Expense contingencies row
+          const expenseExpenseContingenciesRow = existingCustomRows['expenses-expense-contingencies'];
+          if (expenseExpenseContingenciesRow) {
+            const expenseExpenseContingencyIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-expense-contingencies');
+            if (expenseExpenseContingencyIndex !== -1) {
+              updatedExpensesCustomRows[expenseExpenseContingencyIndex] = {
+                ...updatedExpensesCustomRows[expenseExpenseContingencyIndex],
+                units: expenseExpenseContingenciesRow.units,
+                remarks: expenseExpenseContingenciesRow.remarks || ''
+              };
+            }
+          }
+
+          // Set the updated custom rows
+          setTimeCustomRows(updatedTimeCustomRows);
+          setExpensesCustomRows(updatedExpensesCustomRows);
+
+          // Log the updated custom rows for debugging
+          console.log('Updated Time Custom Rows:', updatedTimeCustomRows);
+          console.log('Updated Expenses Custom Rows:', updatedExpensesCustomRows);
         }
-      } catch (e) {
-        console.error("Error reading or parsing local storage data:", e);
-        setIsUpdating(false);
-        setCurrentFormId(null);
-      } finally {
-        setLoading(false);
+
+        setLoading(false)
+      } catch (err) {
+        console.error('Error fetching data:', err)
+        setError('Failed to load data. Please try again later.')
+        setLoading(false)
       }
-    };
-
-    loadFormData();
-  }, [context?.selectedProject?.id]);
-
-  // Handler functions
-  const handleRemarksChange = (employeeId: string, value: string) => {
-    setEmployeeAllocations((prevAllocations: EmployeeAllocation[]) =>
-      prevAllocations.map(emp =>
-        emp.id === employeeId ? { ...emp, remarks: value } : emp
-      )
-    );
-  };
-
-  const handleTimeContingencyChange = (field: keyof TimeContingencyEntry, value: string) => {
-    setTimeContingency((prev: TimeContingencyEntry) => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleExpenseChange = (id: keyof ExpensesType, field: keyof ExpenseEntry, value: string) => {
-    setExpenses((prev: ExpensesType) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value }
-    }));
-  };
-
-  const handleSurveyWorksChange = (field: keyof ExpenseEntry, value: string) => {
-    setSurveyWorks((prev: ExpenseEntry) => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleOutsideAgencyChange = (id: keyof OutsideAgencyType, field: keyof OutsideAgencyEntry, value: string) => {
-    setOutsideAgency((prev: OutsideAgencyType) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value }
-    }));
-  };
-
-  const handleProjectSpecificChange = (id: keyof ProjectSpecificType, field: keyof ProjectSpecificEntry, value: string) => {
-    setProjectSpecific((prev: ProjectSpecificType) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value }
-    }));
-  };
-
-  const handleProjectFeesChange = (value: string) => {
-    setProjectFees(value);
-  };
-
-  const handleServiceTaxChange = (value: string) => {
-    setServiceTax((prev: ServiceTaxEntry) => ({
-      ...prev,
-      percentage: value
-    }));
-  };
-
-  // Calculation functions
-  const calculateTotalCost = (employees: EmployeeAllocation[], isConsultant: boolean) => {
-    return employees
-      .filter(emp => emp.is_consultant === isConsultant)
-      .reduce((total, emp) => total + emp.totalCost, 0);
-  };
-
-  const calculateTimeContingencyCost = () => {
-    const rate = Number(timeContingency.rate) || 0;
-    const units = Number(timeContingency.units) || 0;
-    return rate * units;
-  };
-
-  const calculateOutsideAgencyCost = (entry: OutsideAgencyEntry) => {
-    const rate = Number(entry.rate) || 0;
-    const units = Number(entry.units) || 0;
-    return rate * units;
-  };
-
-  const calculateTotalTimeCost = () => {
-    const employeesTotal = calculateTotalCost(employeeAllocations, false);
-    const consultantsTotal = calculateTotalCost(employeeAllocations, true);
-    const contingencyTotal = calculateTimeContingencyCost();
-    return employeesTotal + consultantsTotal + contingencyTotal;
-  };
-
-  const calculateExpensesTotal = () => {
-    let total = 0;
-    // Add up all expense entries
-    Object.values(expenses).forEach((entry: ExpenseEntry) => {
-      total += Number(entry.number) || 0;
-    });
-    // Add survey works
-    total += Number(surveyWorks.number) || 0;
-    // Add up outside agency entries (rate * units)
-    Object.values(outsideAgency).forEach((entry: OutsideAgencyEntry) => {
-      total += calculateOutsideAgencyCost(entry);
-    });
-    // Add up project specific entries
-    Object.values(projectSpecific).forEach((entry: ProjectSpecificEntry) => {
-      total += Number(entry.number) || 0;
-    });
-    return total;
-  };
-
-  const calculateGrandTotal = () => {
-    const timeCost = calculateTotalTimeCost();
-    const expensesTotal = calculateExpensesTotal();
-    return timeCost + expensesTotal;
-  };
-
-  const calculateProfit = () => {
-    const fees = Number(projectFees) || 0;
-    const total = calculateGrandTotal();
-    return fees - total;
-  };
-
-  const calculateServiceTax = () => {
-    const fees = Number(projectFees) || 0;
-    const taxPercentage = Number(serviceTax.percentage) || 0;
-    return (fees * taxPercentage) / 100;
-  };
-
-  const calculateTotalProjectFees = () => {
-    const fees = Number(projectFees) || 0;
-    const tax = calculateServiceTax();
-    return fees + tax;
-  };
-
-  const handleSubmit = async () => {
-    const projectId = context?.selectedProject?.id;
-    if (!projectId) {
-      setSnackbarMessage('No project selected. Cannot submit.');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
     }
 
-    setSubmitting(true);
+    fetchData()
+  }, [projectId])
+
+  // If context is not available, show an error
+  if (!context) {
+    return (
+      <Container>
+        <Alert severity="error">Context not available</Alert>
+      </Container>
+    );
+  }
+
+  // If no project is selected, show a warning
+  if (!projectId) {
+    return (
+      <Container>
+        <Alert severity="warning">No project selected</Alert>
+      </Container>
+    );
+  }
+
+  // Handler for snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false)
+  }
+
+  // Handler for form submission
+  const handleSubmit = async () => {
+    if (!projectId) {
+      setSnackbarSeverity('error')
+      setSnackbarMessage('Project ID is missing')
+      setSnackbarOpen(true)
+      return
+    }
+
     try {
-      // Collect all form data into the structure expected by the API
-      const formData: JobStartFormData = {
-        projectId: projectId,
-        formId: isUpdating ? Number(currentFormId) : undefined,
+      setSubmitting(true)
+
+      // Prepare form data
+      const formData = {
+        projectId: Number(projectId),
+        formId: formId || 0,
         time: {
-          employeeAllocations,
-          timeContingency,
-          totalTimeCost: calculateTotalTimeCost()
+          totalTimeCost: totalTimeCost
         },
         expenses: {
-          regularExpenses: expenses,
-          surveyWorks,
-          outsideAgency,
-          projectSpecific,
-          totalExpenses: calculateExpensesTotal()
+          totalExpenses: totalODCExpensesCost
         },
-        grandTotal: calculateGrandTotal(),
-        projectFees: Number(projectFees),
+        grandTotal: totalTimeCost + totalODCExpensesCost,
+        projectFees: summaryData.projectFees,
         serviceTax: {
-          percentage: Number(serviceTax.percentage),
-          amount: calculateServiceTax()
+          percentage: summaryData.serviceTaxPercentage,
+          amount: summaryData.serviceTaxAmount
         },
-        totalProjectFees: calculateTotalProjectFees(),
-        profit: calculateProfit()
-      };
-
-      let response;
-      if (isUpdating && currentFormId) {
-        console.log(`Attempting to update form ID: ${currentFormId} for project: ${projectId}`);
-        response = await updateJobStartForm(projectId, currentFormId, formData);
-        setSnackbarMessage('Job Start Form updated successfully');
-      } else {
-        console.log(`Attempting to create new form for project: ${projectId}`);
-        response = await submitJobStartForm(projectId, formData);
-        if (response && response.formId) {
-          setIsUpdating(true);
-          setCurrentFormId(response.formId);
-          console.log(`New form created with ID: ${response.formId}. Switched to update mode.`);
-        }
-        setSnackbarMessage('Job Start Form submitted successfully');
+        totalProjectFees: summaryData.totalProjectFees,
+        profit: summaryData.profit,
+        // Add resources for backend storage
+        resources: [
+          // Regular time resources
+          ...timeResources.map(resource => ({
+            wbsTaskId: typeof resource.id === 'string' ? parseInt(resource.id) : resource.id,
+            taskType: 0, // Manpower/Time
+            description: resource.description,
+            rate: resource.rate,
+            units: resource.units,
+            budgetedCost: resource.budgetedCost,
+            remarks: resource.remarks || '',
+            employeeName: resource.employeeName || '',
+            name: resource.name || ''
+          })),
+          // Time custom rows (subtotal, contingencies)
+          ...timeCustomRows.map(row => ({
+            wbsTaskId: null, // No WBS task ID for custom rows
+            taskType: 0, // Manpower/Time
+            description: row.title,
+            rate: 0, // Custom rows don't have rates
+            units: row.units || 0,
+            budgetedCost: row.budgetedCost || 0,
+            remarks: row.remarks || '',
+            employeeName: '', // No employee name for custom rows
+            name: row.id // Use the row ID as the name to identify it
+          })),
+          // Regular expenses resources
+          ...expensesResources.map(resource => ({
+            wbsTaskId: typeof resource.id === 'string' ? parseInt(resource.id) : resource.id,
+            taskType: 1, // ODC/Expenses
+            description: resource.description,
+            rate: resource.rate,
+            units: resource.units,
+            budgetedCost: resource.budgetedCost,
+            remarks: resource.remarks || '',
+            employeeName: resource.employeeName || '',
+            name: resource.name || ''
+          })),
+          // Expenses custom rows (subtotal, contingencies, expense contingencies)
+          ...expensesCustomRows.map(row => ({
+            wbsTaskId: null, // No WBS task ID for custom rows
+            taskType: 1, // ODC/Expenses
+            description: row.title,
+            rate: 0, // Custom rows don't have rates
+            units: row.units || 0,
+            budgetedCost: row.budgetedCost || 0,
+            remarks: row.remarks || '',
+            employeeName: '', // No employee name for custom rows
+            name: row.id // Use the row ID as the name to identify it
+          }))
+        ]
       }
 
-      // Clear local storage on successful submission/update
-      localStorage.removeItem(`jobStartFormData_${projectId}`);
-      console.log('Cleared local storage for project:', projectId);
+      let result
+      if (isUpdating && formId) {
+        // Update existing form
+        result = await updateJobStartForm(projectId, formId, formData)
+        setSnackbarMessage('Job Start Form updated successfully')
+      } else {
+        // Create new form
+        result = await submitJobStartForm(projectId, formData)
+        setFormId(result.formId)
+        setIsUpdating(true)
+        setSnackbarMessage('Job Start Form submitted successfully')
+      }
 
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-
-    } catch (error) {
-      console.error('Error submitting/updating form:', error);
-      setSnackbarMessage(`Failed to ${isUpdating ? 'update' : 'submit'} Job Start Form`);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      setSnackbarSeverity('success')
+      setSnackbarOpen(true)
+    } catch (err) {
+      console.error('Error submitting Job Start Form:', err)
+      setSnackbarSeverity('error')
+      setSnackbarMessage('Failed to submit Job Start Form. Please try again.')
+      setSnackbarOpen(true)
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
-
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
-
-  if (loading) {
-    return (
-      <FormWrapper>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <CircularProgress />
-        </Box>
-      </FormWrapper>
-    );
   }
-
-  if (error) {
-    return (
-      <FormWrapper>
-        <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
-          <Typography color="error">{error}</Typography>
-        </Paper>
-      </FormWrapper>
-    );
-  }
-
-  const formContent = (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Box sx={{
-        width: '100%',
-        maxHeight: 'calc(100vh - 200px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        pr: 1,
-        pb: 4
-      }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            border: '1px solid #e0e0e0',
-            borderRadius: 1
-          }}
-        >
-          <Typography
-            variant="h5"
-            gutterBottom
-            sx={{
-              color: '#1976d2',
-              fontWeight: 500,
-              mb: 3
-            }}
-          >
-            PMD1. Job Start Form
-          </Typography>
-
-          {/* Time Section */}
-          <TimeSection
-            employeeAllocations={employeeAllocations}
-            timeContingency={timeContingency}
-            onRemarksChange={handleRemarksChange}
-            onTimeContingencyChange={handleTimeContingencyChange}
-            calculateTotalCost={calculateTotalCost}
-            calculateTimeContingencyCost={calculateTimeContingencyCost}
-            calculateTotalTimeCost={calculateTotalTimeCost}
-            expanded={expanded}
-            handleAccordionChange={handleAccordionChange}
-            textFieldStyle={textFieldStyle}
-            tableHeaderStyle={tableHeaderStyle}
-            tableCellStyle={tableCellStyle}
-            accordionStyle={accordionStyle}
-            sectionStyle={sectionStyle}
-            summaryRowStyle={summaryRowStyle}
-            formatTitle={formatTitle}
-          />
-
-          {/* Expenses Section */}
-          <ExpensesSection
-            expenses={expenses}
-            surveyWorks={surveyWorks}
-            outsideAgency={outsideAgency}
-            projectSpecific={projectSpecific}
-            onExpenseChange={handleExpenseChange}
-            onSurveyWorksChange={handleSurveyWorksChange}
-            onOutsideAgencyChange={handleOutsideAgencyChange}
-            onProjectSpecificChange={handleProjectSpecificChange}
-            calculateOutsideAgencyCost={calculateOutsideAgencyCost}
-            calculateExpensesTotal={calculateExpensesTotal}
-            expanded={expanded}
-            handleAccordionChange={handleAccordionChange}
-            textFieldStyle={textFieldStyle}
-            tableHeaderStyle={tableHeaderStyle}
-            tableCellStyle={tableCellStyle}
-            accordionStyle={accordionStyle}
-            sectionStyle={sectionStyle}
-            summaryRowStyle={summaryRowStyle}
-          />
-
-          {/* Summary Section */}
-          <SummarySection
-            projectFees={projectFees}
-            serviceTax={serviceTax}
-            onProjectFeesChange={handleProjectFeesChange}
-            onServiceTaxChange={handleServiceTaxChange}
-            calculateGrandTotal={calculateGrandTotal}
-            calculateProfit={calculateProfit}
-            calculateServiceTax={calculateServiceTax}
-            calculateTotalProjectFees={calculateTotalProjectFees}
-            textFieldStyle={textFieldStyle}
-            tableCellStyle={tableCellStyle}
-            sectionStyle={sectionStyle}
-          />
-
-          {/* Submit Button */}
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
-            <LoadingButton
-              onClick={handleSubmit}
-              disabled={submitting}
-              loading={submitting}
-              text={isUpdating ? 'Update Form' : 'Submit Form'}
-              loadingText={isUpdating ? 'Updating...' : 'Submitting...'}
-              sx={{
-                px: 4,
-                py: 1.5,
-                borderRadius: 1,
-                fontWeight: 'bold',
-                boxShadow: 2
-              }}
-            />
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
-  );
 
   return (
     <FormWrapper>
-      {formContent}
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box sx={{
+          width: '100%',
+          maxHeight: 'calc(100vh - 200px)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          pr: 1,
+          pb: 4
+        }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: '1px solid #e0e0e0',
+              borderRadius: 1
+            }}
+          >
+            <Typography
+              variant="h5"
+              gutterBottom
+              sx={{
+                color: '#1976d2',
+                fontWeight: 500,
+                mb: 3
+              }}
+            >
+              PMD1. Job Start Form
+            </Typography>
+
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : error ? (
+              <Typography color="error" sx={{ my: 2 }}>{error}</Typography>
+            ) : (
+              <>
+                {/* Debug info */}
+                {console.log('Time Custom Rows:', timeCustomRows)}
+                {console.log('Expenses Custom Rows:', expensesCustomRows)}
+
+                <JobstartTime
+                  wbsResources={wbsResources.filter(resource => resource.taskType === 0)}
+                  initialTimeContingencyUnits={timeCustomRows.find(row => row.id === 'time-contingencies')?.units}
+                  initialTimeContingencyRemarks={timeCustomRows.find(row => row.id === 'time-contingencies')?.remarks}
+                  initialSubtotalRemarks={timeCustomRows.find(row => row.id === 'time-subtotal')?.remarks}
+                  onTotalCostChange={(data) => {
+                    // Calculate total using only the time-related custom rows (subtotal and contingencies)
+                    const timeTotal = data.customRows
+                      .filter(row =>
+                        row.id === 'time-subtotal' ||
+                        row.id === 'time-contingencies'
+                      )
+                      .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+
+                    // Save the resources and custom rows for submission
+                    setTimeResources(data.resources);
+                    setTimeCustomRows(data.customRows);
+                    setTotalTimeCost(timeTotal);
+                  }}
+                />
+                <EstimatedExpenses
+                  wbsResources={wbsResources.filter(resource => resource.taskType === 1)}
+                  initialContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.units}
+                  initialContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.remarks}
+                  initialExpenseContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.units}
+                  initialExpenseContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.remarks}
+                  initialSubtotalRemarks={expensesCustomRows.find(row => row.id === 'expenses-subtotal')?.remarks}
+                  onTotalCostChange={(data) => {
+                    // Calculate total using only the expense-related custom rows
+                    const expensesTotal = data.customRows
+                      .filter(row =>
+                        row.id === 'expenses-subtotal' ||
+                        row.id === 'expenses-contingencies' ||
+                        row.id === 'expenses-expense-contingencies'
+                      )
+                      .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+
+                    // Save the resources and custom rows for submission
+                    setExpensesResources(data.resources);
+                    setExpensesCustomRows(data.customRows);
+                    setTotalODCExpensesCost(expensesTotal);
+                  }}
+                />
+                <JobstartGrandTotal
+                  timeCost={totalTimeCost}
+                  odcExpensesCost={totalODCExpensesCost}
+                />
+                <JobstartSummary
+                  grandTotal={totalTimeCost + totalODCExpensesCost}
+                  initialProjectFees={summaryData.projectFees}
+                  initialServiceTaxPercentage={summaryData.serviceTaxPercentage}
+                  onDataChange={setSummaryData}
+                />
+
+                {/* Submit Button */}
+                <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+                  <LoadingButton
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    loading={submitting}
+                    text={isUpdating ? 'Update Form' : 'Submit Form'}
+                    loadingText={isUpdating ? 'Updating...' : 'Submitting...'}
+                    sx={{
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 1,
+                      fontWeight: 'bold',
+                      boxShadow: 2
+                    }}
+                  />
+                </Box>
+              </>
+            )}
+          </Paper>
+        </Box>
+      </Container>
 
       {/* Success/Error Snackbar */}
       <Snackbar
@@ -589,7 +544,7 @@ const JobStartForm: React.FC = () => {
         </Alert>
       </Snackbar>
     </FormWrapper>
-  );
-};
+  )
+}
 
-export default JobStartForm;
+export default JobStartForm
