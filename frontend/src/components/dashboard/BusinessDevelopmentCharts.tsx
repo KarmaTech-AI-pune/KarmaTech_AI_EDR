@@ -39,7 +39,7 @@ import { Card, CardContent, Typography, Box } from '@mui/material';
 // This function will fetch opportunity data from your API
 const fetchOpportunityData = async (): Promise<OpportunityData[]> => {
   try {
-    // For demo, returning mock data that matches your requirements
+    // For demo, returning mock data that matches the screenshots
     return [
       // Opportunity Tracking - BDM (3)
       {
@@ -153,6 +153,13 @@ const fetchOpportunityData = async (): Promise<OpportunityData[]> => {
 const OpportunityStackedBarChart = () => {
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [opportunities, setOpportunities] = useState<OpportunityData[]>([]);
+  const [popupState, setPopupState] = useState<PopupState>({
+    open: false,
+    formType: '',
+    stateType: '',
+    opportunities: []
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -173,7 +180,7 @@ const OpportunityStackedBarChart = () => {
 
         // Count opportunities for each state
         stateTypes.forEach(state => {
-          formData[state] = opportunities.filter(
+          formData[state] = fetchedOpportunities.filter(
             opp => opp.form === formType && opp.state === state
           ).length;
         });

@@ -60,6 +60,7 @@ interface WBSTableProps {
   employees: Employee[];
   editMode: boolean;
   formType?: 'manpower' | 'odc';
+  manpowerCount?: number; // Add explicit prop for manpower count
   levelOptions: {
     level1: WBSOption[];
     level2: WBSOption[];
@@ -69,6 +70,7 @@ interface WBSTableProps {
   onDeleteRow: (id: string) => void;
   onLevelChange: (id: string, value: string) => void;
   onRoleChange: (id: string, roleId: string) => void;
+  onUnitChange: (id: string, unitValue: string) => void;
   onEmployeeChange: (id: string, employeeId: string) => void;
   onCostRateChange: (id: string, value: string) => void;
   onHoursChange: (id: string, month: string, value: string) => void;
@@ -82,11 +84,13 @@ const WBSTable: React.FC<WBSTableProps> = ({
   employees,
   editMode,
   formType,
+  manpowerCount = 0, // Default to 0 if not provided
   levelOptions,
   onAddRow,
   onDeleteRow,
   onLevelChange,
   onRoleChange,
+  onUnitChange,
   onEmployeeChange,
   onCostRateChange,
   onHoursChange,
@@ -148,7 +152,15 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
   const renderAddButton = (level: 1 | 2 | 3, parentId?: string): JSX.Element => {
     // Calculate colspan based on formType
-    let colspan = 5 + months.length; // Base columns: Work Description, Role, Name, Rate, months
+    let colspan = 4 + months.length; // Base columns: Work Description, Rate, Unit, months
+
+    // Add columns for Resource Role and Resource Name if not ODC form
+    // For ODC form, add 1 for Name column
+    if (formType !== 'odc') {
+      colspan += 2; // Add 2 for Resource Role and Resource Name
+    } else {
+      colspan += 1; // Add 1 for Name column in ODC form (Unit is already counted in base)
+    }
 
     if (!editMode) {
       colspan += 1; // Add 1 for the delete button column
@@ -206,9 +218,12 @@ const WBSTable: React.FC<WBSTableProps> = ({
 
   const getSequenceNumber = (row: WBSRowData): string => {
     if (row.level === 1) {
+      // Calculate the index of this row among level 1 rows
       const level1Index = rows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
-      // If formType is 'odc', add 5 to the index to start from 6
-      const adjustedIndex = formType === 'odc' ? level1Index + 5 : level1Index;
+
+      // If formType is 'odc', add the manpower count to continue numbering
+      // Use the manpowerCount prop directly instead of reading from DOM
+      const adjustedIndex = formType === 'odc' ? level1Index + manpowerCount : level1Index;
       return adjustedIndex.toString();
     } else if (row.level === 2) {
       const parentRow = rows.find(r => r.id === row.parentId);
@@ -252,6 +267,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
           onDelete={onDeleteRow}
           onLevelChange={onLevelChange}
           onRoleChange={onRoleChange}
+          onUnitChange={onUnitChange}
           onEmployeeChange={onEmployeeChange}
           onCostRateChange={onCostRateChange}
           onHoursChange={onHoursChange}
@@ -277,6 +293,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             onDelete={onDeleteRow}
             onLevelChange={onLevelChange}
             onRoleChange={onRoleChange}
+            onUnitChange={onUnitChange}
             onEmployeeChange={onEmployeeChange}
             onCostRateChange={onCostRateChange}
             onHoursChange={onHoursChange}
@@ -302,6 +319,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
               onDelete={onDeleteRow}
               onLevelChange={onLevelChange}
               onRoleChange={onRoleChange}
+              onUnitChange={onUnitChange}
               onEmployeeChange={onEmployeeChange}
               onCostRateChange={onCostRateChange}
               onHoursChange={onHoursChange}
@@ -346,9 +364,17 @@ const WBSTable: React.FC<WBSTableProps> = ({
               </HeaderCell>
             )}
             <StickyHeaderCell sx={{ minWidth: '300px', backgroundColor: '#FFFFFF' }}>Work Description</StickyHeaderCell>
-            <HeaderCell sx={{ minWidth: '150px' }}>Resource Role</HeaderCell>
-            <HeaderCell sx={{ minWidth: '150px' }}>Resource Name</HeaderCell>
+            {formType === 'odc' ? (
+              <HeaderCell sx={{ minWidth: '150px' }}>Name</HeaderCell>
+            ) : (
+              <>
+                <HeaderCell sx={{ minWidth: '150px' }}>Resource Role</HeaderCell>
+                <HeaderCell sx={{ minWidth: '170px' }}>Resource Name</HeaderCell>
+              </>
+            )}
             <HeaderCell sx={{ minWidth: 100 }}>Rate</HeaderCell>
+            {/* Add Unit column for both ODC and Manpower forms */}
+            <HeaderCell sx={{ minWidth: '150px' }}>Unit</HeaderCell>
             {months.map(month => (
               <HeaderCell key={month} sx={{ minWidth: 100 }}>{month}</HeaderCell>
             ))}

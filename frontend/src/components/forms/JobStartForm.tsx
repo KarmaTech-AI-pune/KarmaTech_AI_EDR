@@ -302,10 +302,10 @@ const JobStartForm: React.FC = () => {
   // Handler for form submission
   const handleSubmit = async () => {
     if (!projectId) {
-      setSnackbarMessage('Project ID is missing.');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
+      setSnackbarSeverity('error')
+      setSnackbarMessage('Project ID is missing')
+      setSnackbarOpen(true)
+      return
     }
 
     try {

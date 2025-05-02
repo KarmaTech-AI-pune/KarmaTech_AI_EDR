@@ -14,8 +14,17 @@ import {
   AccordionDetails,
   Grid,
   Alert,
+  IconButton,
+  Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CorrespondenceDialog from './Correspondancecomponents/CorrespondenceDialog';
 import {
@@ -84,10 +93,40 @@ const CorrespondenceForm: React.FC = () => {
   const context = useContext(projectManagementAppContext);
   const [tabValue, setTabValue] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [inwardRows, setInwardRows] = useState<any[]>([]);
-  const [outwardRows, setOutwardRows] = useState<any[]>([]);
+  const [inwardRows, setInwardRows] = useState<InwardRow[]>([]);
+  const [outwardRows, setOutwardRows] = useState<OutwardRow[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editData, setEditData] = useState<InwardRow | OutwardRow | null>(null);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [itemToDelete, setItemToDelete] = useState<{id: number, type: 'inward' | 'outward'} | null>(null);
+  const [isTokenValid, setIsTokenValid] = useState<boolean>(true);
+
+  // Check if token is valid
+  const checkToken = useCallback(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsTokenValid(false);
+      setError('You must be logged in to access this feature. Please log in again.');
+      return false;
+    }
+
+    try {
+      // Log token for debugging
+      console.log('Token found:', token.substring(0, 20) + '...');
+      return true;
+    } catch (err) {
+      console.error('Error checking token:', err);
+      setIsTokenValid(false);
+      setError('Invalid authentication token. Please log in again.');
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
+    if (!checkToken()) return;
+
     if (context?.selectedProject?.id) {
       const fetchData = async () => {
         setLoading(true);
@@ -115,21 +154,70 @@ const CorrespondenceForm: React.FC = () => {
 
       fetchData();
     }
-  }, [context?.selectedProject?.id]);
+  }, [context?.selectedProject?.id, checkToken]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
   const handleAddClick = () => {
+    setIsEdit(false);
+    setEditData(null);
     setDialogOpen(true);
+  };
+
+  const handleEditClick = (data: InwardRow | OutwardRow) => {
+    setIsEdit(true);
+    setEditData(data);
+    setDialogOpen(true);
+  };
+
+  const handleDeleteClick = (id: number, type: 'inward' | 'outward') => {
+    setItemToDelete({ id, type });
+    setDeleteDialogOpen(true);
   };
 
   const handleDialogClose = () => {
     setDialogOpen(false);
+    setIsEdit(false);
+    setEditData(null);
   };
 
-  const handleSave = (data: any) => {
+  const handleDeleteDialogClose = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return;
+    if (!checkToken()) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      if (itemToDelete.type === 'inward') {
+        await deleteInwardRow(itemToDelete.id);
+        setInwardRows(inwardRows.filter(row => row.id !== itemToDelete.id));
+      } else {
+        await deleteOutwardRow(itemToDelete.id);
+        setOutwardRows(outwardRows.filter(row => row.id !== itemToDelete.id));
+      }
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    } catch (err: any) {
+      console.error('Error deleting correspondence:', err);
+      if (err.response && err.response.status === 401) {
+        setIsTokenValid(false);
+        setError('Your session has expired. Please log in again.');
+      } else {
+        setError('Failed to delete correspondence. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (data: any) => {
     if (!context?.selectedProject?.id) return;
     if (!checkToken()) return;
 
@@ -416,7 +504,7 @@ const CorrespondenceForm: React.FC = () => {
 
   const renderInwardAccordions = () => {
     return inwardRows.map((row, index) => (
-      <Accordion 
+      <Accordion
         key={row.id}
         sx={{
           '&:before': { display: 'none' },
@@ -456,7 +544,7 @@ const CorrespondenceForm: React.FC = () => {
             <Grid item xs={2}>
               <Typography>{row.from}</Typography>
             </Grid>
-            <Grid item xs={5}>
+            <Grid item xs={3}>
               <Typography noWrap>{row.subject}</Typography>
             </Grid>
             <Grid item xs={2} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -541,7 +629,7 @@ const CorrespondenceForm: React.FC = () => {
 
   const renderOutwardAccordions = () => {
     return outwardRows.map((row, index) => (
-      <Accordion 
+      <Accordion
         key={row.id}
         sx={{
           '&:before': { display: 'none' },
@@ -581,7 +669,7 @@ const CorrespondenceForm: React.FC = () => {
             <Grid item xs={2}>
               <Typography>{row.to}</Typography>
             </Grid>
-            <Grid item xs={5}>
+            <Grid item xs={3}>
               <Typography noWrap>{row.subject}</Typography>
             </Grid>
             <Grid item xs={2} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -670,17 +758,41 @@ const CorrespondenceForm: React.FC = () => {
 
   const formContent = (
     <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Box sx={{ 
-        width: '100%', 
+      {error && (
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={
+            !isTokenValid && (
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  if (context?.handleLogout) {
+                    context.handleLogout();
+                  }
+                }}
+              >
+                Login Again
+              </Button>
+            )
+          }
+        >
+          {error}
+        </Alert>
+      )}
+
+      <Box sx={{
+        width: '100%',
         maxHeight: 'calc(100vh - 200px)',
         overflowY: 'auto',
         overflowX: 'hidden',
         pr: 1,
         pb: 4
       }}>
-        <Paper 
+        <Paper
           elevation={0}
-          sx={{ 
+          sx={{
             border: '1px solid #e0e0e0',
             borderRadius: 1,
             backgroundColor: '#fff'
@@ -688,9 +800,9 @@ const CorrespondenceForm: React.FC = () => {
         >
           <StyledHeaderBox>
             <Box>
-              <Typography 
-                variant="h5" 
-                sx={{ 
+              <Typography
+                variant="h5"
+                sx={{
                   color: '#1976d2',
                   fontWeight: 500,
                   mb: 2
@@ -698,8 +810,8 @@ const CorrespondenceForm: React.FC = () => {
               >
                 PMD4. Correspondence Inward-Outward
               </Typography>
-              <StyledTabs 
-                value={tabValue} 
+              <StyledTabs
+                value={tabValue}
                 onChange={handleTabChange}
               >
                 <Tab label="Inward" />
@@ -710,6 +822,7 @@ const CorrespondenceForm: React.FC = () => {
               variant="outlined"
               startIcon={<AddIcon />}
               onClick={handleAddClick}
+              disabled={loading}
             >
               Add Entry
             </Button>
@@ -717,11 +830,31 @@ const CorrespondenceForm: React.FC = () => {
 
           <Box sx={{ mt: 2 }}>
             <TabPanel value={tabValue} index={0}>
-              {renderInwardAccordions()}
+              {loading ? (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography>Loading inward correspondence...</Typography>
+                </Box>
+              ) : inwardRows.length === 0 ? (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography color="text.secondary">No inward correspondence found. Click "Add Entry" to create one.</Typography>
+                </Box>
+              ) : (
+                renderInwardAccordions()
+              )}
             </TabPanel>
 
             <TabPanel value={tabValue} index={1}>
-              {renderOutwardAccordions()}
+              {loading ? (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography>Loading outward correspondence...</Typography>
+                </Box>
+              ) : outwardRows.length === 0 ? (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography color="text.secondary">No outward correspondence found. Click "Add Entry" to create one.</Typography>
+                </Box>
+              ) : (
+                renderOutwardAccordions()
+              )}
             </TabPanel>
           </Box>
 
@@ -730,7 +863,34 @@ const CorrespondenceForm: React.FC = () => {
             onClose={handleDialogClose}
             onSave={handleSave}
             type={tabValue === 0 ? 'inward' : 'outward'}
+            editData={editData}
+            isEdit={isEdit}
           />
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog
+            open={deleteDialogOpen}
+            onClose={handleDeleteDialogClose}
+            aria-labelledby="delete-dialog-title"
+            aria-describedby="delete-dialog-description"
+          >
+            <DialogTitle id="delete-dialog-title">
+              Confirm Deletion
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText id="delete-dialog-description">
+                Are you sure you want to delete this correspondence? This action cannot be undone.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleDeleteDialogClose} color="primary">
+                Cancel
+              </Button>
+              <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+                Delete
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Paper>
       </Box>
     </Container>

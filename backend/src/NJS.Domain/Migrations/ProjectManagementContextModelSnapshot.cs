@@ -226,7 +226,6 @@ namespace NJS.Domain.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("BidPreparations");
-                    b.ToTable("BidPreparations");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.BidVersionHistory", b =>
@@ -1539,7 +1538,9 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("FeeType")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("FundingStream")
                         .HasMaxLength(100)
@@ -1564,13 +1565,17 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Office")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int?>("OpportunityTrackingId")
                         .HasColumnType("int");
 
                     b.Property<string>("Priority")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("Progress")
                         .HasColumnType("int");
@@ -1582,7 +1587,9 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Region")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("RegionalManagerId")
                         .HasColumnType("nvarchar(450)");
@@ -1607,7 +1614,9 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("TypeOfJob")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -2387,6 +2396,17 @@ namespace NJS.Domain.Migrations
                         .IsRequired();
 
                     b.Navigation("GoNoGoDecisionHeader");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.InputRegister", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.JobStartForm", b =>
