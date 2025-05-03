@@ -489,13 +489,20 @@ export const updateProjectClosure = async (id: number, projectClosure: ProjectCl
         comments: comments || []
       };
 
-      console.log('Final data being sent to API for update:', dataToSend);
+      console.log('Final data being sent to API for update:', JSON.stringify(dataToSend, null, 2));
+      console.log(`Sending PUT request to ${API_URL}/${id}`);
 
-      await axios.put(`${API_URL}/${id}`, dataToSend, {
+      const response = await axios.put(`${API_URL}/${id}`, dataToSend, {
         headers: {
           'Content-Type': 'application/json'
         }
       });
+
+      console.log('Update response:', response.status, response.data);
+
+      if (response.status !== 200) {
+        console.warn(`Unexpected response status: ${response.status}`);
+      }
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         const status = error.response.status;
@@ -552,6 +559,14 @@ export const deleteProjectClosure = async (id: number): Promise<void> => {
     console.log(`Attempting to delete project closure with ID ${id}`);
     const response = await axios.delete(`${API_URL}/${id}`);
     console.log(`Delete response status: ${response.status}`);
+    console.log(`Delete response data:`, response.data);
+
+    // Check if the response status is 200 (OK)
+    if (response.status === 200) {
+      console.log(`Project closure with ID ${id} deleted successfully`);
+    } else {
+      console.warn(`Unexpected response status: ${response.status}`);
+    }
 
     // If we get here, the delete was successful
     return;

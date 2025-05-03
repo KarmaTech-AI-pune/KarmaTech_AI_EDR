@@ -481,11 +481,14 @@ namespace NJSAPI.Controllers
                 projectClosureDto.UpdatedBy = User.Identity?.Name ?? "System";
                 projectClosureDto.UpdatedAt = DateTime.UtcNow;
 
+                // Log the data being sent to the command
+                Console.WriteLine($"Sending update command for project closure ID {id} with ProjectId {projectClosureDto.ProjectId}");
+
                 var command = new UpdateProjectClosureCommand(projectClosureDto);
                 var result = await _mediator.Send(command);
 
                 if (!result)
-                    return NotFound();
+                    return NotFound(new { message = $"Project closure with ID {id} not found" });
 
                 // Return the original data with updated timestamp
                 return Ok(new {
@@ -504,7 +507,7 @@ namespace NJSAPI.Controllers
         /// Deletes a project closure
         /// </summary>
         [HttpDelete("{id}")]
-        [ProducesResponseType(204)] // Success, no content
+        [ProducesResponseType(200)] // Success with content
         [ProducesResponseType(400)] // Bad request (invalid ID)
         [ProducesResponseType(404)] // Not found
         [ProducesResponseType(500)] // Server error
@@ -530,9 +533,9 @@ namespace NJSAPI.Controllers
                     return NotFound(new { message = $"Project closure with ID {id} not found" });
                 }
 
-                // Return success with no content
+                // Return success with content
                 Console.WriteLine($"Successfully deleted project closure with ID {id}");
-                return NoContent();
+                return Ok(new { message = $"Project closure with ID {id} deleted successfully" });
             }
             catch (ArgumentException ex)
             {

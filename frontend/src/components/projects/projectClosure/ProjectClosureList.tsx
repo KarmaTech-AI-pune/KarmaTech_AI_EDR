@@ -132,13 +132,13 @@ const ProjectClosureList: React.FC = () => {
         // Call the delete API
         await deleteProjectClosure(id);
 
-        // Remove the deleted item from the state
+        // Show success message
+        alert('Project closure deleted successfully');
+
+        // Remove the deleted item from the state immediately
         setProjectClosures(prevClosures =>
           prevClosures.filter(closure => closure.id !== id)
         );
-
-        // Show success message
-        alert('Project closure deleted successfully');
       } catch (err: any) {
         console.error('Error deleting project closure:', err);
 
@@ -151,9 +151,6 @@ const ProjectClosureList: React.FC = () => {
       } finally {
         // Clear loading state
         setLoading(false);
-
-        // Refresh the data to ensure we have the latest state
-        fetchProjectClosures();
       }
     }
   };

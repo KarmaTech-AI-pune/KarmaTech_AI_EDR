@@ -183,6 +183,13 @@ namespace NJS.Repositories.Repositories
             {
                 Console.WriteLine($"Updating project closure with ID {projectClosure.Id}");
 
+                // First, check if the entity exists
+                var existingEntity = _repository.GetByIdAsync(projectClosure.Id).GetAwaiter().GetResult();
+                if (existingEntity == null)
+                {
+                    throw new InvalidOperationException($"Project closure with ID {projectClosure.Id} not found");
+                }
+
                 // Log all the values being updated
                 Console.WriteLine($"Updating project closure with values:");
                 Console.WriteLine($"  ID: {projectClosure.Id}");
@@ -238,8 +245,16 @@ namespace NJS.Repositories.Repositories
                     projectClosure.UpdatedAt = DateTime.UtcNow;
                 }
 
-                _repository.UpdateAsync(projectClosure).GetAwaiter().GetResult();
-                _repository.SaveChangesAsync().GetAwaiter().GetResult();
+                // Explicitly detach any existing entity with the same ID
+                var existingEntry = _context.Entry(existingEntity);
+                if (existingEntry.State != EntityState.Detached)
+                {
+                    existingEntry.State = EntityState.Detached;
+                }
+
+                // Attach the updated entity and mark it as modified
+                _context.Entry(projectClosure).State = EntityState.Modified;
+                _context.SaveChanges();
 
                 Console.WriteLine($"Successfully updated project closure with ID {projectClosure.Id}");
             }

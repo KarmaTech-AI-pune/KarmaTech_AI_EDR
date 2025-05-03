@@ -181,6 +181,19 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
   // State to track the existing project closure ID if found
   const [existingClosureId, setExistingClosureId] = useState<number | null>(null);
 
+  // Debug log when closureId or existingClosureId changes
+  useEffect(() => {
+    console.log('Debug - closureId:', closureId);
+    console.log('Debug - existingClosureId:', existingClosureId);
+    console.log('Debug - Should show delete button:', !!(closureId || existingClosureId));
+
+    // Force reset existingClosureId if we're in create mode (no closureId provided)
+    if (!closureId && !context?.selectedProject?.id) {
+      console.log('Resetting existingClosureId in create mode');
+      setExistingClosureId(null);
+    }
+  }, [closureId, existingClosureId, context?.selectedProject?.id]);
+
   // Load data based on closureId if provided, otherwise try to find by project ID
   useEffect(() => {
     const loadExistingData = async () => {
@@ -556,18 +569,15 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
   const handleDelete = async () => {
     const idToDelete = closureId || existingClosureId;
 
+    // Close the confirmation dialog
+    setDeleteConfirmOpen(false);
+
     if (!idToDelete) {
-      setError('No project closure ID found to delete');
-      setDeleteConfirmOpen(false);
-      return;
-    }
+      // If there's no ID to delete, it means we're trying to delete a new form
+      // Just clear all the fields instead of showing an error
+      console.log('No ID to delete, just clearing the form');
 
-    try {
-      await deleteProjectClosure(idToDelete);
-      setSuccess('Project closure deleted successfully');
-      setDeleteConfirmOpen(false);
-
-      // Reset form data with empty strings instead of null
+      // Clear all form fields
       setFormData({
         projectId: selectedProject?.id?.toString() || '',
         clientFeedback: '',
@@ -601,6 +611,8 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
         externalMeetings: '',
         planUpToDate: '',
         planUseful: '',
+        planningIssues: '',
+        planningLessons: '',
         hindrances: '',
         clientPayment: '',
         briefAims: '',
@@ -649,16 +661,36 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
         technoLegalIssues: '',
         constructionOther: '',
         positives: '',
-        lessonsLearned: '',
-        planningIssues: '',
-        planningLessons: ''
+        lessonsLearned: ''
       });
 
-      // Reset existingClosureId
-      setExistingClosureId(null);
+      // Clear comments
+      setComments([]);
 
-      // Call onSubmit callback if provided
-      onSubmit?.();
+      // Show success message
+      alert('Form cleared successfully');
+      return;
+    }
+
+    try {
+      console.log(`Deleting project closure with ID: ${idToDelete}`);
+
+      // Call the API to delete the project closure
+      await deleteProjectClosure(idToDelete);
+      console.log(`Project closure with ID: ${idToDelete} deleted successfully`);
+
+      // Show success message
+      alert('Project closure deleted successfully!');
+
+      // Call the onSubmit callback if provided to handle navigation
+      if (onSubmit) {
+        onSubmit();
+        return; // Exit early if we have an onSubmit handler
+      }
+
+      // If no onSubmit handler, navigate to the project closure list
+      window.location.href = '/project-closure';
+      return; // Exit early to prevent form reset
     } catch (error: any) {
       console.error('Error deleting project closure:', error);
       setError(error.message || 'Error deleting project closure');
@@ -800,20 +832,26 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
           console.log('Project ID before update:', projectId, typeof projectId);
 
           // Update existing project closure
+          console.log(`Updating project closure with ID: ${idToUpdate} and ProjectId: ${projectId}`);
+
+          const updateData = {
+            ...existingClosure, // Start with all existing fields
+            ...formattedData,   // Override with new form data
+            ...missingFields,   // Add any missing fields
+            id: idToUpdate,
+            projectId: projectId.toString(), // Convert to string as required by the interface
+            // Keep existing metadata
+            createdAt: existingClosure.createdAt,
+            createdBy: existingClosure.createdBy || '',
+            updatedAt: new Date().toISOString(),
+            updatedBy: 'System'
+          } as ProjectClosureWithMetadata;
+
+          console.log('Update data being sent to API:', JSON.stringify(updateData, null, 2));
+
           await updateProjectClosure(
             idToUpdate,
-            {
-              ...existingClosure, // Start with all existing fields
-              ...formattedData,   // Override with new form data
-              ...missingFields,   // Add any missing fields
-              id: idToUpdate,
-              projectId: projectId.toString(), // Convert to string as required by the interface
-              // Keep existing metadata
-              createdAt: existingClosure.createdAt,
-              createdBy: existingClosure.createdBy || '',
-              updatedAt: null,
-              updatedBy: ''
-            } as ProjectClosureWithMetadata,
+            updateData,
             // Pass the comments array
             comments
           );
@@ -822,6 +860,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
           // Update the existingClosureId in case we found it by project ID
           if (!closureId && !existingClosureId) {
+            console.log('Setting existingClosureId after update:', idToUpdate);
             setExistingClosureId(idToUpdate);
           }
         } else {
@@ -929,6 +968,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
           // Store the new ID so we can update it next time
           if (result && result.id) {
+            console.log('Setting existingClosureId after create:', result.id);
             setExistingClosureId(result.id);
           }
 
@@ -1203,17 +1243,19 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             borderRadius: 1
           }}
         >
-          <Typography
-            variant="h5"
-            gutterBottom
-            sx={{
-              color: '#1976d2',
-              fontWeight: 500,
-              mb: 3
-            }}
-          >
-            PMD8. Project Closure Form
-          </Typography>
+          <Box sx={{ mb: 3 }}>
+            <Typography
+              variant="h5"
+              gutterBottom
+              sx={{
+                color: '#1976d2',
+                fontWeight: 500,
+                mb: 0
+              }}
+            >
+              PMD8. Project Closure Form
+            </Typography>
+          </Box>
 
           <form onSubmit={handleSubmit}>
             {/* Section A: Overall Project Delivery */}
@@ -1594,37 +1636,35 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
               </AccordionDetails>
             </Accordion>
 
-            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
-              {/* Delete button - only show if we have an existing closure */}
-              <Box>
-                {(closureId || existingClosureId) && (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => setDeleteConfirmOpen(true)}
-                    startIcon={<DeleteIcon />}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </Box>
-
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                {onCancel && (
-                  <Button variant="outlined" onClick={onCancel}>
-                    Cancel
-                  </Button>
-                )}
-                <Button type="submit" variant="contained" color="primary">
-                  Save
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              {onCancel && (
+                <Button variant="outlined" onClick={onCancel}>
+                  Cancel
                 </Button>
-              </Box>
+              )}
+
+              {/* Always show delete button */}
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={() => {
+                  console.log('Delete button clicked, closureId:', closureId, 'existingClosureId:', existingClosureId);
+                  setDeleteConfirmOpen(true);
+                }}
+                startIcon={<DeleteIcon />}
+              >
+                Delete
+              </Button>
+
+              <Button type="submit" variant="contained" color="primary">
+                Save
+              </Button>
             </Box>
           </form>
         </Paper>
       </Box>
 
-      {/* Delete confirmation dialog */}
+      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
