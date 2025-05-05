@@ -9,5 +9,6 @@ namespace NJS.Repositories.Interfaces
         Task Add(Project project);
         void Update(Project project);
         void Delete(int id);
+        Task<IEnumerable<Project>> GetAllByUserId(string userId);
     }
 }

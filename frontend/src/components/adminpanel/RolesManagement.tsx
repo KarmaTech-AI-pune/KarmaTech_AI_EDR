@@ -39,7 +39,7 @@ const RolesManagement = () => {
   }>({
     id: '',
     name: '',
-    minRate:0,
+    minRate: 0,
     isResourceRole: false,
     permissions: [],
   });
@@ -64,7 +64,7 @@ const RolesManagement = () => {
     setFormData({
       id: '',
       name: '',
-      minRate:0,
+      minRate: 0,
       isResourceRole: false,
       permissions: [],
     });
@@ -123,7 +123,7 @@ const RolesManagement = () => {
     if (permission === 'SYSTEM_ADMIN') {
       return 'System administrator';
     }
-    
+
     if (permission.includes('BUSINESS_DEVELOPMENT')) {
       return permission
         .replace('BUSINESS_DEVELOPMENT', '')
@@ -132,7 +132,7 @@ const RolesManagement = () => {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ') + ' business development';
     }
-    
+
     if (permission.includes('PROJECT')) {
       return permission
         .replace('PROJECT', '')
@@ -141,7 +141,7 @@ const RolesManagement = () => {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ') + ' project';
     }
-    
+
     return permission
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -153,7 +153,12 @@ const RolesManagement = () => {
       ...acc,
       [group.category]: group.permissions.map(p => p.name)
     }), {} as Record<string, string[]>);
-    
+
+    const knownCategories = ['Project', 'Business Development', 'System'];
+    const otherPermissions = Object.entries(groups)
+      .filter(([category]) => !knownCategories.includes(category))
+      .flatMap(([, perms]) => perms);
+
     return (
       <Stack direction="row" spacing={1}>
         {groups['Project']?.length > 0 && (
@@ -189,6 +194,17 @@ const RolesManagement = () => {
             />
           </Tooltip>
         )}
+
+        {otherPermissions.length > 0 && (
+          <Tooltip title={otherPermissions.map(formatPermissionLabel).join(', ')}>
+            <Chip
+              label={`${otherPermissions.length} Other`}
+              color="default"
+              variant="outlined"
+              size="small"
+            />
+          </Tooltip>
+        )}
       </Stack>
     );
   };
@@ -217,7 +233,7 @@ const RolesManagement = () => {
             {roles.map((role) => (
               <TableRow key={role.id}>
                 <TableCell>{role.name}</TableCell>
-                <TableCell>{role.minRate}</TableCell>                
+                <TableCell>{role.minRate}</TableCell>
                 <TableCell>{role.isResourceRole ? 'Yes' : 'No'}</TableCell>
                 <TableCell>
                   {renderPermissionChips(role)}
