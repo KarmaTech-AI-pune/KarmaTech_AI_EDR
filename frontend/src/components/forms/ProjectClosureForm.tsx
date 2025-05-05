@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
 import {
   Box,
   TextField,
@@ -567,15 +568,19 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
   // Handle delete project closure
   const handleDelete = async () => {
+    console.log('handleDelete function called');
+
+    // Get the ID to delete
     const idToDelete = closureId || existingClosureId;
+    console.log(`ID to delete: ${idToDelete}, type: ${typeof idToDelete}`);
+    console.log(`closureId: ${closureId}, existingClosureId: ${existingClosureId}`);
 
     // Close the confirmation dialog
     setDeleteConfirmOpen(false);
 
-    if (!idToDelete) {
-      // If there's no ID to delete, it means we're trying to delete a new form
-      // Just clear all the fields instead of showing an error
-      console.log('No ID to delete, just clearing the form');
+    // Function to clear all form fields
+    const clearFormFields = () => {
+      console.log('Clearing all form fields');
 
       // Clear all form fields
       setFormData({
@@ -667,34 +672,122 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
       // Clear comments
       setComments([]);
 
+      // Reset existingClosureId to ensure we're in "create" mode
+      setExistingClosureId(null);
+    };
+
+    if (!idToDelete && idToDelete !== 0) {
+      // If there's no ID to delete, it means we're trying to delete a new form
+      // Just clear all the fields instead of showing an error
+      console.log('No ID to delete, just clearing the form');
+
+      // Clear the form
+      clearFormFields();
+
       // Show success message
       alert('Form cleared successfully');
       return;
     }
 
     try {
+      // Set loading state if needed
+      // setLoading(true);
+
       console.log(`Deleting project closure with ID: ${idToDelete}`);
 
-      // Call the API to delete the project closure
-      await deleteProjectClosure(idToDelete);
-      console.log(`Project closure with ID: ${idToDelete} deleted successfully`);
+      // Log the API URL that will be called
+      const apiUrl = `http://localhost:5245/api/ProjectClosure/${idToDelete}`;
+      console.log(`API URL for delete: ${apiUrl}`);
 
-      // Show success message
-      alert('Project closure deleted successfully!');
+      // Add a network request monitor
+      console.log('Network request about to be sent...');
 
-      // Call the onSubmit callback if provided to handle navigation
-      if (onSubmit) {
-        onSubmit();
-        return; // Exit early if we have an onSubmit handler
+      // Force the ID to be a number
+      const numericId = Number(idToDelete);
+      console.log(`Converting ID to number: ${numericId}`);
+
+      // Call the API function with retry logic
+      let deleteSuccess = false;
+      let deleteError = null;
+
+      // Try up to 3 times to delete
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`Delete attempt ${attempt} for ID ${numericId}`);
+          await deleteProjectClosure(numericId);
+          console.log(`Project closure with ID: ${numericId} deleted successfully on attempt ${attempt}`);
+          deleteSuccess = true;
+          break; // Exit the loop if successful
+        } catch (error) {
+          console.warn(`Delete attempt ${attempt} failed:`, error);
+          deleteError = error;
+
+          // If it's a 404 error, treat it as success
+          if (axios.isAxiosError(error) && error.response?.status === 404) {
+            console.log(`Project closure with ID ${numericId} not found, treating as success`);
+            deleteSuccess = true;
+            break;
+          }
+
+          // Wait a bit before retrying
+          if (attempt < 3) {
+            console.log(`Waiting before retry ${attempt + 1}...`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
       }
 
-      // If no onSubmit handler, navigate to the project closure list
-      window.location.href = '/project-closure';
-      return; // Exit early to prevent form reset
+      if (deleteSuccess) {
+        // Clear the form after successful deletion
+        clearFormFields();
+
+        // Reset state variables
+        setExistingClosureId(null);
+        setClosureId(undefined);
+
+        // Show success message
+        alert('Project closure deleted successfully!');
+
+        // Call the onSubmit callback if provided to handle navigation
+        if (onSubmit) {
+          onSubmit();
+          return; // Exit early if we have an onSubmit handler
+        }
+      } else if (deleteError) {
+        throw deleteError; // Re-throw the last error
+      }
     } catch (error: any) {
       console.error('Error deleting project closure:', error);
+
+      // More detailed error logging
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        });
+
+        // If it's a 404 error, treat it as success
+        if (error.response?.status === 404) {
+          console.log('Entity not found, treating as successful deletion');
+
+          // Clear the form
+          clearFormFields();
+
+          // Show success message
+          alert('Project closure deleted successfully!');
+
+          return;
+        }
+      }
+
+      // Show error message to user
       setError(error.message || 'Error deleting project closure');
-      setDeleteConfirmOpen(false);
+      alert(`Failed to delete project closure: ${error.message || 'Unknown error'}`);
+    } finally {
+      // Clear loading state if needed
+      // setLoading(false);
     }
   };
 

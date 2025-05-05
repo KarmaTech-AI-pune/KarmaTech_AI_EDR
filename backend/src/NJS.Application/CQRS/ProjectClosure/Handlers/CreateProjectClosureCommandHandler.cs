@@ -50,14 +50,18 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                 if (string.IsNullOrEmpty(request.ProjectClosureDto.CreatedBy))
                     request.ProjectClosureDto.CreatedBy = "System";
 
-                // We're allowing multiple project closures per project, so we don't need to check if one already exists
-                Console.WriteLine($"Creating a new project closure entry for project ID {request.ProjectClosureDto.ProjectId}");
+                // Check if a project closure already exists for this project
+                var existingClosure = await _projectClosureRepository.GetByProjectId(request.ProjectClosureDto.ProjectId);
+
+                Console.WriteLine(existingClosure != null
+                    ? $"Found existing project closure with ID {existingClosure.Id} for project ID {request.ProjectClosureDto.ProjectId}"
+                    : $"Creating a new project closure entry for project ID {request.ProjectClosureDto.ProjectId}");
 
                 // Create new project closure entity
                 var projectClosure = new Domain.Entities.ProjectClosure
                 {
-                    // Explicitly set ID to 0 to ensure the database generates a new ID
-                    Id = 0,
+                    // If existing closure found, use its ID, otherwise set to 0 for new entry
+                    Id = existingClosure?.Id ?? 0,
                     ProjectId = request.ProjectClosureDto.ProjectId,
 
                     // Map all properties from DTO, preserving null values

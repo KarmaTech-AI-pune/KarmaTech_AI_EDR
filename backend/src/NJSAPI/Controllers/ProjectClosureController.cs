@@ -262,8 +262,22 @@ namespace NJSAPI.Controllers
                     UpdatedBy = projectClosureDto.UpdatedBy
                 };
 
-                // Ensure the ID is not set in the DTO
-                projectClosureDto.Id = 0;
+                // Check if a project closure already exists for this project
+                var existingQuery = new GetProjectClosureByProjectIdQuery(projectClosureDto.ProjectId);
+                var existingClosure = await _mediator.Send(existingQuery);
+
+                // If an entry already exists, use its ID
+                if (existingClosure != null)
+                {
+                    Console.WriteLine($"Found existing project closure with ID {existingClosure.Id} for project ID {projectClosureDto.ProjectId}");
+                    projectClosureDto.Id = existingClosure.Id;
+                    originalDto.Id = existingClosure.Id;
+                }
+                else
+                {
+                    // Otherwise, ensure the ID is not set in the DTO for a new entry
+                    projectClosureDto.Id = 0;
+                }
 
                 var command = new CreateProjectClosureCommand(projectClosureDto);
                 var id = await _mediator.Send(command);
@@ -271,9 +285,14 @@ namespace NJSAPI.Controllers
                 // Update the ID in the original DTO to match the one assigned by the database
                 originalDto.Id = id;
 
+                // Determine the appropriate message based on whether we created or updated
+                string message = existingClosure != null
+                    ? "Project closure updated successfully"
+                    : "Project closure created successfully";
+
                 return Ok(new {
                     id = id,
-                    message = "Project closure created successfully",
+                    message = message,
                     data = originalDto
                 });
             }
@@ -515,12 +534,17 @@ namespace NJSAPI.Controllers
         {
             try
             {
+                Console.WriteLine($"ProjectClosureController: Received delete request for ID {id}");
+
                 // Validate ID - allow ID 0 since it's a valid ID in our system
                 if (id < 0)
                 {
                     Console.WriteLine($"Invalid project closure ID: {id}");
                     return BadRequest(new { message = $"Invalid project closure ID: {id}. ID must be a non-negative number." });
                 }
+
+                // No special handling needed for ID 0 anymore
+                // Our repository and command handler now handle all IDs consistently
 
                 // Create and send the delete command
                 var command = new DeleteProjectClosureCommand(id);

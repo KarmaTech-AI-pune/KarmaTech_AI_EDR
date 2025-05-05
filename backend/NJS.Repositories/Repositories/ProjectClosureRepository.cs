@@ -102,14 +102,38 @@ namespace NJS.Repositories.Repositories
                     throw new InvalidOperationException($"Project with ID {projectClosure.ProjectId} does not exist");
                 }
 
-                // Always force the database to generate a new ID
+                // Check if a project closure already exists for this project
+                var existingClosure = await GetByProjectId(projectClosure.ProjectId);
+                if (existingClosure != null)
+                {
+                    Console.WriteLine($"Project closure already exists for project ID {projectClosure.ProjectId} with ID {existingClosure.Id}");
+
+                    // Set the ID to match the existing one so we update instead of creating a new entry
+                    projectClosure.Id = existingClosure.Id;
+
+                    // Preserve original creation metadata
+                    projectClosure.CreatedAt = existingClosure.CreatedAt;
+                    projectClosure.CreatedBy = existingClosure.CreatedBy;
+
+                    // Set update metadata
+                    projectClosure.UpdatedAt = DateTime.UtcNow;
+                    projectClosure.UpdatedBy = projectClosure.UpdatedBy ?? "System";
+
+                    // Update the existing entry instead of creating a new one
+                    Update(projectClosure);
+
+                    // Return early since we've handled the update
+                    return;
+                }
+
+                // If no existing closure, create a new one
                 // Explicitly set ID to 0 to ensure the database generates a new ID
                 projectClosure.Id = 0;
 
                 // Reset the identity seed to ensure we get the next available ID
                 await ResetIdentitySeedAsync();
 
-                Console.WriteLine("Forcing database to generate a new ID for project closure");
+                Console.WriteLine("Creating new project closure entry");
 
                 // Ensure required fields are set
                 if (string.IsNullOrEmpty(projectClosure.CreatedBy))
@@ -275,20 +299,76 @@ namespace NJS.Repositories.Repositories
                     throw new ArgumentException($"Invalid project closure ID: {id}. ID must be a non-negative number.");
                 }
 
-                // Check if the entity exists
-                var projectClosure = _repository.GetByIdAsync(id).GetAwaiter().GetResult();
-                if (projectClosure != null)
+                Console.WriteLine($"Attempting to delete project closure with ID {id}");
+
+                // Use a transaction to ensure consistency
+                using (var transaction = _context.Database.BeginTransaction())
                 {
                     try
                     {
-                        // Perform hard delete - completely remove from the database
-                        _repository.RemoveAsync(projectClosure).GetAwaiter().GetResult();
-                        _repository.SaveChangesAsync().GetAwaiter().GetResult();
-                        Console.WriteLine($"Successfully deleted project closure with ID {id}");
+                        // First try direct SQL approach - most reliable and works for all IDs including 0
+                        Console.WriteLine($"Attempting to delete project closure with ID {id} using direct SQL");
+                        var rowsAffected = _context.Database.ExecuteSqlRaw($"DELETE FROM ProjectClosures WHERE Id = {id}");
+                        Console.WriteLine($"Direct SQL delete affected {rowsAffected} rows");
+
+                        if (rowsAffected > 0)
+                        {
+                            // Commit the transaction
+                            transaction.Commit();
+                            Console.WriteLine($"Successfully deleted project closure with ID {id} using direct SQL");
+
+                            // Reset identity seed after successful deletion
+                            ResetIdentitySeedAsync().GetAwaiter().GetResult();
+                            return;
+                        }
+
+                        // If direct SQL didn't work, try using Entity Framework
+                        Console.WriteLine($"Direct SQL didn't affect any rows, trying EF Core approach");
+
+                        // Try to find the entity
+                        var projectClosure = _context.Set<ProjectClosure>().Find(id);
+
+                        if (projectClosure != null)
+                        {
+                            // Remove the entity using EF Core
+                            _context.Set<ProjectClosure>().Remove(projectClosure);
+                            var result = _context.SaveChanges();
+
+                            Console.WriteLine($"EF Core removal affected {result} rows");
+
+                            if (result > 0)
+                            {
+                                // Commit the transaction
+                                transaction.Commit();
+                                Console.WriteLine($"Successfully deleted project closure with ID {id} using EF Core");
+
+                                // Reset identity seed after successful deletion
+                                ResetIdentitySeedAsync().GetAwaiter().GetResult();
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Project closure with ID {id} not found in database");
+
+                            // For ID 0 or any ID that doesn't exist, consider it a success
+                            // This ensures the API returns 200 OK
+                            Console.WriteLine($"Treating deletion as successful even though no entity was found");
+
+                            // Commit the transaction (even though nothing was deleted)
+                            transaction.Commit();
+                            return;
+                        }
+
+                        // If we get here, neither approach worked
+                        Console.WriteLine($"Failed to delete project closure with ID {id}");
+                        transaction.Rollback();
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error during database delete operation: {ex.Message}");
+                        // Roll back the transaction on error
+                        transaction.Rollback();
+                        Console.WriteLine($"Error during transaction, rolling back: {ex.Message}");
                         if (ex.InnerException != null)
                         {
                             Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
@@ -296,22 +376,14 @@ namespace NJS.Repositories.Repositories
                         throw; // Re-throw to be handled by the caller
                     }
                 }
-                else
-                {
-                    // If not found, log it but don't throw an exception
-                    // This allows the DELETE API to return success even if the entity doesn't exist
-                    Console.WriteLine($"Project closure with ID {id} not found, but continuing as if deleted");
-                }
-            }
-            catch (ArgumentException ex)
-            {
-                // Re-throw argument exceptions for invalid IDs
-                Console.WriteLine($"Invalid argument in Delete: {ex.Message}");
-                throw;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error deleting project closure with ID {id}: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
                 throw;
             }
         }
