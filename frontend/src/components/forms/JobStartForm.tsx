@@ -446,9 +446,6 @@ const JobStartForm: React.FC = () => {
               <Typography color="error" sx={{ my: 2 }}>{error}</Typography>
             ) : (
               <>
-                {/* Debug info */}
-                {console.log('Time Custom Rows:', timeCustomRows)}
-                {console.log('Expenses Custom Rows:', expensesCustomRows)}
 
                 <JobstartTime
                   wbsResources={wbsResources.filter(resource => resource.taskType === 0)}

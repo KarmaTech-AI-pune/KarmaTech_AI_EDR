@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Box } from '@mui/material';
 import TableTemplate, { CustomRow } from './TableTemplate';
 import { EstimatedExpensesProps, WBSResource } from '../../../types/jobStartFormTypes';
 import { addCalculation, percentageCalculation } from '../../../utils/calculations';

@@ -4,10 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
-using NJS.Domain.Enums; // Add import for WBSTaskLevel
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using NJS.Domain.Enums;
 
 namespace NJS.Domain.Extensions
 {
@@ -54,7 +51,10 @@ namespace NJS.Domain.Extensions
                     new Permission { Name = "SUBMIT_FOR_APPROVAL", Description = "Submit items for approval", Category = "Business Development" },
 
                     // System Permissions
-                    new Permission { Name = "SYSTEM_ADMIN", Description = "Full system administration access", Category = "System" }
+                    new Permission { Name = "SYSTEM_ADMIN", Description = "Full system administration access", Category = "System" },
+
+                    new Permission{Name="CHECKER", Description = "Only the checker", Category = "CheckerReviewer" },
+                    new Permission{Name="REVIEWER", Description = "Only  the Reviewer", Category = "CheckerReviewer" }
                 };
 
                 foreach (var permission in permissions)
@@ -90,7 +90,10 @@ namespace NJS.Domain.Extensions
                     }},
                     new { Name = "Regional Director", Description = "Approval Manager for BD form", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
                         "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "APPROVE_PROJECT", "CREATE_BUSINESS_DEVELOPMENT", "EDIT_BUSINESS_DEVELOPMENT", "DELETE_BUSINESS_DEVELOPMENT", "VIEW_BUSINESS_DEVELOPMENT", "APPROVE_BUSINESS_DEVELOPMENT"
-                    }}
+                    }},
+
+                    new { Name = "Reviewer", Description = "Review the check-review form", MinRate = 0.00m, IsResourceRole = false, Permissions = new[] {"REVIEWER"}},
+                    new { Name = "Checker", Description = "Check the check-review form", MinRate = 0.00m, IsResourceRole = false, Permissions = new[] {"CHECKER"}}
                 };
 
                 foreach (var roleData in roles)

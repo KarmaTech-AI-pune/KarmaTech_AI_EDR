@@ -1,5 +1,8 @@
 using NJS.Application.DTOs;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Xunit;
 
 namespace NJS.API.Tests.DTOs
 {
@@ -45,8 +48,11 @@ namespace NJS.API.Tests.DTOs
             var dto = new InputRegisterDto
             {
                 Id = 1,
-                ProjectId = 1,              
-                ReceiptDate = DateTime.Now,               
+                ProjectId = 1,
+                // Missing DataReceived
+                ReceiptDate = DateTime.Now,
+                // Missing ReceivedFrom
+                // Missing FilesFormat
                 NoOfFiles = 1,
                 FitForPurpose = true,
                 Check = true
@@ -70,7 +76,7 @@ namespace NJS.API.Tests.DTOs
             {
                 Id = 1,
                 ProjectId = 1,
-                DataReceived = new string('A', 256), 
+                DataReceived = new string('A', 256), // Exceeds 255 characters
                 ReceiptDate = DateTime.Now,
                 ReceivedFrom = "Test User",
                 FilesFormat = "PDF",
@@ -101,7 +107,8 @@ namespace NJS.API.Tests.DTOs
                 FilesFormat = "PDF",
                 NoOfFiles = 1,
                 FitForPurpose = true,
-                Check = true,               
+                Check = true,
+                // Optional fields are null
                 CheckedBy = null,
                 CheckedDate = null,
                 Custodian = null,
@@ -128,18 +135,18 @@ namespace NJS.API.Tests.DTOs
             {
                 Id = 1,
                 ProjectId = 1,
-                DataReceived = new string('A', 255),
+                DataReceived = new string('A', 255), // Max length
                 ReceiptDate = DateTime.Now,
-                ReceivedFrom = new string('B', 255),
-                FilesFormat = new string('C', 100), 
+                ReceivedFrom = new string('B', 255), // Max length
+                FilesFormat = new string('C', 100), // Max length
                 NoOfFiles = 1,
                 FitForPurpose = true,
                 Check = true,
-                CheckedBy = new string('D', 255), 
+                CheckedBy = new string('D', 255), // Max length
                 CheckedDate = DateTime.Now,
-                Custodian = new string('E', 255), 
-                StoragePath = new string('F', 500), 
-                Remarks = new string('G', 1000), 
+                Custodian = new string('E', 255), // Max length
+                StoragePath = new string('F', 500), // Max length
+                Remarks = new string('G', 1000), // Max length
                 CreatedBy = "Test Creator",
                 CreatedAt = DateTime.Now
             };

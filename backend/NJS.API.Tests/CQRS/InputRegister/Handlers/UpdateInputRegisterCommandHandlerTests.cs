@@ -1,7 +1,14 @@
+using MediatR;
 using Moq;
 using NJS.Application.CQRS.InputRegister.Commands;
 using NJS.Application.CQRS.InputRegister.Handlers;
+using NJS.Application.DTOs;
+using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace NJS.API.Tests.CQRS.InputRegister.Handlers
 {
@@ -97,10 +104,11 @@ namespace NJS.API.Tests.CQRS.InputRegister.Handlers
             Assert.Equal(updateCommand.UpdatedBy, result.UpdatedBy);
             Assert.NotNull(result.UpdatedAt);
             
-          
+            // Verify original creation data is preserved
             Assert.Equal(existingInputRegister.CreatedBy, result.CreatedBy);
             Assert.Equal(existingInputRegister.CreatedAt, result.CreatedAt);
-          
+
+            // Verify repository was called correctly
             _mockRepository.Verify(r => r.GetByIdAsync(inputRegisterId), Times.Once);
             _mockRepository.Verify(r => r.UpdateAsync(It.Is<Domain.Entities.InputRegister>(
                 ir => ir.Id == inputRegisterId &&
@@ -182,7 +190,8 @@ namespace NJS.API.Tests.CQRS.InputRegister.Handlers
                 FilesFormat = "DOCX",
                 NoOfFiles = 2,
                 FitForPurpose = false,
-                Check = false,              
+                Check = false,
+                // Optional fields not provided
                 CheckedBy = null,
                 CheckedDate = null,
                 Custodian = null,
@@ -218,7 +227,8 @@ namespace NJS.API.Tests.CQRS.InputRegister.Handlers
             Assert.Null(result.Remarks);
             Assert.Equal(updateCommand.UpdatedBy, result.UpdatedBy);
             Assert.NotNull(result.UpdatedAt);
-        
+
+            // Verify repository was called correctly
             _mockRepository.Verify(r => r.UpdateAsync(It.Is<Domain.Entities.InputRegister>(
                 ir => ir.Id == inputRegisterId &&
                       ir.ProjectId == updateCommand.ProjectId &&
@@ -263,18 +273,18 @@ namespace NJS.API.Tests.CQRS.InputRegister.Handlers
             {
                 Id = inputRegisterId,
                 ProjectId = 2,
-                DataReceived = new string('A', 255), 
+                DataReceived = new string('A', 255), // Max length for DataReceived
                 ReceiptDate = new DateTime(2023, 2, 1),
-                ReceivedFrom = new string('B', 255), 
-                FilesFormat = new string('C', 100), 
+                ReceivedFrom = new string('B', 255), // Max length for ReceivedFrom
+                FilesFormat = new string('C', 100), // Max length for FilesFormat
                 NoOfFiles = 2,
                 FitForPurpose = false,
                 Check = false,
-                CheckedBy = new string('D', 255), 
+                CheckedBy = new string('D', 255), // Max length for CheckedBy
                 CheckedDate = new DateTime(2023, 2, 2),
-                Custodian = new string('E', 255), 
-                StoragePath = new string('F', 500), 
-                Remarks = new string('G', 1000), 
+                Custodian = new string('E', 255), // Max length for Custodian
+                StoragePath = new string('F', 500), // Max length for StoragePath
+                Remarks = new string('G', 1000), // Max length for Remarks
                 UpdatedBy = "Test Updater"
             };
 
@@ -306,6 +316,7 @@ namespace NJS.API.Tests.CQRS.InputRegister.Handlers
             Assert.Equal(updateCommand.UpdatedBy, result.UpdatedBy);
             Assert.NotNull(result.UpdatedAt);
 
+            // Verify repository was called correctly
             _mockRepository.Verify(r => r.UpdateAsync(It.Is<Domain.Entities.InputRegister>(
                 ir => ir.Id == inputRegisterId &&
                       ir.ProjectId == updateCommand.ProjectId &&
@@ -371,6 +382,7 @@ namespace NJS.API.Tests.CQRS.InputRegister.Handlers
                 .Returns(Task.CompletedTask)
                 .Callback<Domain.Entities.InputRegister>(ir => 
                 {
+                    // Capture the UpdatedAt value for verification
                     existingInputRegister.UpdatedAt = ir.UpdatedAt;
                 });
 
@@ -380,13 +392,13 @@ namespace NJS.API.Tests.CQRS.InputRegister.Handlers
 
             // Assert
             Assert.NotNull(result.UpdatedAt);
-            Assert.NotEqual(new DateTime(2023, 1, 15), result.UpdatedAt);
+            Assert.NotEqual(new DateTime(2023, 1, 15), result.UpdatedAt); // Should not be the old value
             
-         
+            // UpdatedAt should be between beforeUpdate and afterUpdate
             Assert.True(result.UpdatedAt >= beforeUpdate);
             Assert.True(result.UpdatedAt <= afterUpdate);
             
-           
+            // Verify repository was called with updated timestamp
             _mockRepository.Verify(r => r.UpdateAsync(It.Is<Domain.Entities.InputRegister>(
                 ir => ir.UpdatedAt >= beforeUpdate && ir.UpdatedAt <= afterUpdate
             )), Times.Once);
