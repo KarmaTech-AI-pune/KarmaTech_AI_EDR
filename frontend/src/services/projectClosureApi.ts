@@ -551,25 +551,71 @@ export const updateProjectClosure = async (id: number, projectClosure: ProjectCl
 // Delete project closure
 export const deleteProjectClosure = async (id: number): Promise<void> => {
   try {
-    // Validate ID before sending to the API
-    if (!id || isNaN(id) || id <= 0) {
-      throw new Error(`Invalid project closure ID: ${id}. ID must be a positive number.`);
+    // Validate ID before sending to the API - allow ID 0 but prevent negative IDs
+    if (isNaN(id) || id < 0) {
+      throw new Error(`Invalid project closure ID: ${id}. ID must be a non-negative number.`);
     }
 
     console.log(`Attempting to delete project closure with ID ${id}`);
-    const response = await axios.delete(`${API_URL}/${id}`);
-    console.log(`Delete response status: ${response.status}`);
-    console.log(`Delete response data:`, response.data);
 
-    // Check if the response status is 200 (OK)
-    if (response.status === 200) {
-      console.log(`Project closure with ID ${id} deleted successfully`);
-    } else {
-      console.warn(`Unexpected response status: ${response.status}`);
+    try {
+      // Add a retry mechanism for more reliability
+      let retries = 3;
+      let success = false;
+      let lastError: any = null;
+
+      while (retries > 0 && !success) {
+        try {
+          console.log(`Delete attempt ${4 - retries} for ID ${id}`);
+          const response = await axios.delete(`${API_URL}/${id}`);
+          console.log(`Delete response status: ${response.status}`);
+          console.log(`Delete response data:`, response.data);
+
+          // If we get here, the delete was successful
+          success = true;
+        } catch (error) {
+          lastError = error;
+          console.warn(`Delete attempt ${4 - retries} failed:`, error);
+          retries--;
+
+          // If this is a 404 error, treat it as success for any ID (not just 0)
+          if (axios.isAxiosError(error) && error.response?.status === 404) {
+            console.log(`Project closure with ID ${id} not found, treating as success`);
+            return; // Return successfully even though the item wasn't found
+          }
+
+          // Wait a bit before retrying
+          if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+      }
+
+      if (success) {
+        console.log(`Successfully deleted project closure with ID ${id}`);
+        return;
+      } else if (lastError) {
+        throw lastError;
+      }
+    } catch (axiosError) {
+      // Handle specific error cases
+      if (axios.isAxiosError(axiosError)) {
+        if (axiosError.response?.status === 404) {
+          // Not found - treat as success since the item doesn't exist anymore
+          console.warn(`Project closure with ID ${id} not found, but continuing as if deleted`);
+          return; // Return successfully even though the item wasn't found
+        }
+
+        // For other status codes, provide detailed error information
+        if (axiosError.response) {
+          console.error('Error response status:', axiosError.response.status);
+          console.error('Error response data:', axiosError.response.data);
+        }
+      }
+
+      // Re-throw for other errors
+      throw axiosError;
     }
-
-    // If we get here, the delete was successful
-    return;
   } catch (error) {
     console.error(`Error deleting project closure with ID ${id}:`, error);
 
