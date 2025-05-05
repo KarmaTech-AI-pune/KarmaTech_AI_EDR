@@ -1,141 +1,152 @@
 export interface ProjectClosureRow {
     projectId: string;
+    // Metadata fields
+    createdAt?: string;
+    createdBy?: string;
+    updatedAt?: string | null;
+    updatedBy?: string | null;
     // Section A: Overall Project Delivery
-    clientFeedback: string;
-    successCriteria: string;
-    clientExpectations: string;
-    otherStakeholders: string;
-  
+    clientFeedback: string | null;
+    successCriteria: string | null;
+    clientExpectations: string | null;
+    otherStakeholders: string | null;
+
     // Section B: Project Management
     // Environmental Management
-    envIssues: string;
-    envManagement: string;
-  
+    envIssues: string | null;
+    envManagement: string | null;
+
     // Third Party Management
-    thirdPartyIssues: string;
-    thirdPartyManagement: string;
-  
+    thirdPartyIssues: string | null;
+    thirdPartyManagement: string | null;
+
     // Risk Management
-    riskIssues: string;
-    riskManagement: string;
-  
+    riskIssues: string | null;
+    riskManagement: string | null;
+
     // Knowledge Management
-    knowledgeGoals: string;
-  
+    knowledgeGoals: string | null;
+
     // Programme
-    baselineComparison: string;
-    delayedDeliverables: string;
-    unforeseeableDelays: string;
-  
+    baselineComparison: string | null;
+    delayedDeliverables: string | null;
+    unforeseeableDelays: string | null;
+
     // Budget
-    budgetEstimate: string;
-    profitTarget: string;
-    changeOrders: string;
-    closeOutBudget: string;
-  
+    budgetEstimate: string | null;
+    profitTarget: string | null;
+    changeOrders: string | null;
+    closeOutBudget: string | null;
+
     // Resources
-    resourceAvailability: string;
-    vendorFeedback: string;
-    projectTeamFeedback: string;
-  
+    resourceAvailability: string | null;
+    vendorFeedback: string | null;
+    projectTeamFeedback: string | null;
+
     // Project Checks & Reviews
-    designOutputs: string;
-    projectReviewMeetings: string;
-    clientDesignReviews: string;
-  
+    designOutputs: string | null;
+    projectReviewMeetings: string | null;
+    clientDesignReviews: string | null;
+
     // Project Reporting & Control
-    internalReporting: string;
-    clientReporting: string;
-    internalMeetings: string;
-    clientMeetings: string;
-    externalMeetings: string;
-  
+    internalReporting: string | null;
+    clientReporting: string | null;
+    internalMeetings: string | null;
+    clientMeetings: string | null;
+    externalMeetings: string | null;
+
     // Project Plan
-    planUpToDate: string;
-    planUseful: string;
-  
+    planUpToDate: string | null;
+    planUseful: string | null;
+
     // Hindrances
-    hindrances: string;
-  
+    hindrances: string | null;
+
     // Client Payment Performance
-    clientPayment: string;
-  
+    clientPayment: string | null;
+
     // General Design Items
     // Project Brief
-    briefAims: string;
-    designReviewOutputs: string;
-  
+    briefAims: string | null;
+    designReviewOutputs: string | null;
+
     // Constructability
-    constructabilityReview: string;
-  
+    constructabilityReview: string | null;
+
     // Technical Content
-    designReview: string;
-    technicalRequirements: string;
-    innovativeIdeas: string;
-    suitableOptions: string;
-    additionalInformation: string;
-  
+    designReview: string | null;
+    technicalRequirements: string | null;
+    innovativeIdeas: string | null;
+    suitableOptions: string | null;
+    additionalInformation: string | null;
+
     // Quality
-    deliverableExpectations: string;
-  
+    deliverableExpectations: string | null;
+
     // Involvement
-    stakeholderInvolvement: string;
-  
+    stakeholderInvolvement: string | null;
+
     // Knowledge Goals
-    knowledgeGoalsAchieved: string;
-    technicalToolsDissemination: string;
-  
+    knowledgeGoalsAchieved: string | null;
+    technicalToolsDissemination: string | null;
+
     // Specialist Knowledge
-    specialistKnowledgeValue: string;
-  
+    specialistKnowledgeValue: string | null;
+
     // Other
-    otherComments: string;
-  
+    otherComments: string | null;
+
     // Section D: Construction
     // Target Cost
     targetCostAccuracyValue: boolean;
-    targetCostAccuracy: string;
+    targetCostAccuracy: string | null;
     changeControlReviewValue: boolean;
-    changeControlReview: string;
+    changeControlReview: string | null;
     compensationEventsValue: boolean;
-    compensationEvents: string;
+    compensationEvents: string | null;
     expenditureProfileValue: boolean;
-    expenditureProfile: string;
-  
+    expenditureProfile: string | null;
+
     // Health & Safety
     healthSafetyConcernsValue: boolean;
-    healthSafetyConcerns: string;
-  
+    healthSafetyConcerns: string | null;
+
     // Programme
     programmeRealisticValue: boolean;
-    programmeRealistic: string;
+    programmeRealistic: string | null;
     programmeUpdatesValue: boolean;
-    programmeUpdates: string;
-  
+    programmeUpdates: string | null;
+
     // Quality
     requiredQualityValue: boolean;
-    requiredQuality: string;
+    requiredQuality: string | null;
     operationalRequirementsValue: boolean;
-    operationalRequirements: string;
-  
+    operationalRequirements: string | null;
+
     // Involvement
     constructionInvolvementValue: boolean;
-    constructionInvolvement: string;
+    constructionInvolvement: string | null;
     efficienciesValue: boolean;
-    efficiencies: string;
-  
+    efficiencies: string | null;
+
     // Maintenance Agreements
     maintenanceAgreementsValue: boolean;
-    maintenanceAgreements: string;
-  
+    maintenanceAgreements: string | null;
+
     // As Builts and O&M Manuals
     asBuiltManualsValue: boolean;
-    asBuiltManuals: string;
+    asBuiltManuals: string | null;
     hsFileForwardedValue: boolean;
-    hsFileForwarded: string;
-  
+    hsFileForwarded: string | null;
+
     // Additional Construction Fields
-    variations: string;
-    technoLegalIssues: string;
-    constructionOther: string;
+    variations: string | null;
+    technoLegalIssues: string | null;
+    constructionOther: string | null;
+
+    // Additional fields for positives and lessons learned
+    positives?: string | null;
+    lessonsLearned?: string | null;
+    planningIssues?: string | null;
+    planningLessons?: string | null;
   }

@@ -51,6 +51,9 @@ namespace NJS.Domain.Database
         public DbSet<CorrespondenceOutward> CorrespondenceOutwards { get; set; }
         public DbSet<CheckReview> CheckReviews { get; set; }
         public DbSet<ChangeControl> ChangeControls { get; set; }
+        public DbSet<ProjectClosure> ProjectClosures { get; set; }
+        // Removed ProjectClosureComment to fix build issues
+        // public DbSet<ProjectClosureComment> ProjectClosureComments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -427,6 +430,116 @@ namespace NJS.Domain.Database
                       .HasForeignKey(cc => cc.ProjectId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+
+            // Configure ProjectClosure entity
+            modelBuilder.Entity<ProjectClosure>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Configure string properties with appropriate lengths
+                entity.Property(e => e.ClientFeedback).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.SuccessCriteria).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ClientExpectations).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.OtherStakeholders).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.EnvIssues).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.EnvManagement).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ThirdPartyIssues).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ThirdPartyManagement).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.RiskIssues).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.RiskManagement).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.KnowledgeGoals).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.BaselineComparison).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.DelayedDeliverables).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.UnforeseeableDelays).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.BudgetEstimate).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ProfitTarget).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ChangeOrders).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.CloseOutBudget).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ResourceAvailability).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.VendorFeedback).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ProjectTeamFeedback).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.DesignOutputs).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ProjectReviewMeetings).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ClientDesignReviews).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.InternalReporting).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ClientReporting).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.InternalMeetings).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ClientMeetings).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ExternalMeetings).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.PlanUpToDate).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.PlanUseful).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.Hindrances).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ClientPayment).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.PlanningIssues).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.PlanningLessons).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.BriefAims).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.DesignReviewOutputs).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ConstructabilityReview).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.DesignReview).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.TechnicalRequirements).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.InnovativeIdeas).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.SuitableOptions).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.AdditionalInformation).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.DeliverableExpectations).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.StakeholderInvolvement).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.KnowledgeGoalsAchieved).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.TechnicalToolsDissemination).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.SpecialistKnowledgeValue).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.OtherComments).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.TargetCostAccuracy).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ChangeControlReview).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.CompensationEvents).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ExpenditureProfile).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.HealthSafetyConcerns).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ProgrammeRealistic).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ProgrammeUpdates).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.RequiredQuality).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.OperationalRequirements).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ConstructionInvolvement).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.Efficiencies).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.MaintenanceAgreements).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.AsBuiltManuals).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.HsFileForwarded).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.Variations).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.TechnoLegalIssues).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ConstructionOther).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.Positives).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.LessonsLearned).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).HasMaxLength(100).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(pc => pc.Project)
+                      .WithMany()
+                      .HasForeignKey(pc => pc.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Removed ProjectClosureComment entity configuration to fix build issues
+            /*
+            modelBuilder.Entity<ProjectClosureComment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Configure string properties
+                entity.Property(e => e.Type).HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Comment).IsRequired();
+                entity.Property(e => e.CreatedBy).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).HasMaxLength(100).IsRequired(false);
+
+                // Create index on ProjectClosureId for faster lookups
+                entity.HasIndex(e => e.ProjectClosureId);
+
+                // Configure relationship with ProjectClosure
+                entity.HasOne(pcc => pcc.ProjectClosure)
+                      .WithMany(pc => pc.Comments)
+                      .HasForeignKey(pcc => pcc.ProjectClosureId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            */
         }
     }
 }

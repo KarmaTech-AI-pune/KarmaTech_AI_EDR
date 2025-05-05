@@ -45,6 +45,8 @@ export const projectClosureLabels = {
   // Project Plan
   planUpToDate: "Has the Project Plan been kept up-to-date ?",
   planUseful: "Has the Project Plan considered useful by the project team ?",
+  planningIssues: "Were there any planning issues not identified at the start of the project?",
+  planningLessons: "What planning lessons have been learned from this project?",
 
   // Hindrances
   hindrances: "Hindrances",
@@ -88,20 +90,20 @@ export const projectClosureLabels = {
   changeControlReview: "Review change control log, claims and variations.",
   compensationEvents: "Could compensation events have been foreseen/avoided ?",
   expenditureProfile: "Was the expenditure profile and revised expected out-turn costs updated regularly to reflect compensation events ?",
-  
+
   healthSafetyConcerns: "Were Health & Safety concerns adequately addressed throughout the construction period ?",
-  
+
   programmeRealistic: "Was the original programme realistic? If not, could the delays have been foreseen/avoided?",
   programmeUpdates: "Was the programme updated regularly to reflect actual progress/delay ?",
-  
+
   requiredQuality: "Were the works to the required quality ?",
   operationalRequirements: "Do the works meet operational requirements ?",
-  
+
   constructionInvolvement: "Was there effective involvement of the client/consultant/contractor as required throughout the construction period ?",
   efficiencies: "Were efficiencies made ? If so, what, and have these been briefed to others ?",
-  
+
   maintenanceAgreements: "Are all NJS maintenance agreements with client in place and effective ? Look for sufficient resources.",
-  
+
   asBuiltManuals: "Have 'as builts' and O&M Manuals (where required) been produced ? Look for evidence of review of as builts against initial design.",
   hsFileForwarded: "Has H&S File (where appropriate) been forwarded to client (Under cover of Document Transmittal) ?",
 
