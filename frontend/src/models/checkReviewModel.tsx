@@ -11,6 +11,8 @@ export interface CheckReviewRow {
     checkedBy: string;
     approvedBy: string;
     actionTaken: string;
+    maker: string;
+    checker: string;
     createdAt?: string;
     updatedAt?: string;
     createdBy?: string;
