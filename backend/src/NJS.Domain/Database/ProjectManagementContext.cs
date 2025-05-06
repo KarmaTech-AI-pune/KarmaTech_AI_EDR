@@ -11,6 +11,7 @@ namespace NJS.Domain.Database
     {
         public ProjectManagementContext(DbContextOptions<ProjectManagementContext> options) : base(options)
         {
+
         }
 
         public DbSet<BidPreparation> BidPreparations { get; set; }
@@ -24,12 +25,15 @@ namespace NJS.Domain.Database
         public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; }
         public DbSet<WBSTask> WBSTasks { get; set; }
         public DbSet<UserWBSTask> UserWBSTasks { get; set; }
+        public DbSet<WBSOption> WBSOptions { get; set; }
         public DbSet<OpportunityTracking> OpportunityTrackings { get; set; }
         public DbSet<ProjectResource> ProjectResources { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<OpportunityStatus> OpportunityStatuses { get; set; }
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
         public DbSet<Region> Regions { get; set; }
+        public DbSet<FailedEmailLog> FailedEmailLogs { get; set; }
+        public DbSet<Settings> Settings { get; set; }
 
         public DbSet<GoNoGoDecisionOpportunity> GoNoGoDecisionOpportunities { get; set; }
         public DbSet<ScoringCriteria> ScoringCriteria { get; set; }
@@ -39,6 +43,17 @@ namespace NJS.Domain.Database
         public DbSet<ScoringDescriptionSummarry> ScoringDescriptionSummarry { get; set; }
         public DbSet<GoNoGoDecisionHeader> GoNoGoDecisionHeaders { get; set; }
         public DbSet<GoNoGoDecisionTransaction> GoNoGoDecisionTransactions { get; set; }
+        public DbSet<JobStartForm> JobStartForms { get; set; }
+        public DbSet<JobStartFormSelection> JobStartFormSelections { get; set; } // Add DbSet for Selections
+        public DbSet<JobStartFormResource> JobStartFormResources { get; set; } // Add DbSet for Resources
+        public DbSet<InputRegister> InputRegisters { get; set; }
+        public DbSet<CorrespondenceInward> CorrespondenceInwards { get; set; }
+        public DbSet<CorrespondenceOutward> CorrespondenceOutwards { get; set; }
+        public DbSet<CheckReview> CheckReviews { get; set; }
+        public DbSet<ChangeControl> ChangeControls { get; set; }
+        public DbSet<ProjectClosure> ProjectClosures { get; set; }
+        // Removed ProjectClosureComment to fix build issues
+        // public DbSet<ProjectClosureComment> ProjectClosureComments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -69,7 +84,7 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.CreatedBy).IsRequired(false);
                 entity.Property(e => e.UpdatedBy).IsRequired(false);
                 entity.Property(e => e.Comments).IsRequired(false);
-                
+
                 // Create index on UserId for faster lookups
                 entity.HasIndex(e => e.UserId);
 
@@ -93,7 +108,7 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
                 entity.Property(e => e.Comments).IsRequired(false);
                 entity.Property(e => e.ModifiedBy).IsRequired();
-                
+
                 // Create index on BidPreparationId for faster lookups
                 entity.HasIndex(e => e.BidPreparationId);
             });
@@ -118,6 +133,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<Project>().Property(f => f.EstimatedCost).HasPrecision(18, 2);
             modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
             modelBuilder.Entity<Role>().ToTable("AspNetRoles");
+            modelBuilder.Entity<Permission>();
 
             // Configure OpportunityTracking decimal precisions
             modelBuilder.Entity<OpportunityTracking>()
@@ -144,7 +160,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OpportunityTracking>().Property(o => o.ReviewManagerId).IsRequired(false);
             modelBuilder.Entity<OpportunityHistory>().Property(o => o.Comments).IsRequired(false);
 
-            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId); 
+            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
 
@@ -156,7 +172,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<GoNoGoDecisionTransaction>()
                 .HasOne(t => t.GoNoGoDecisionHeader)
                 .WithMany()
-                .HasForeignKey(t => t.GoNoGoDecisionHeaderId);
+                .HasForeignKey(t => t.GoNoGoDecisionHeaderId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<GoNoGoDecisionTransaction>()
                 .HasOne(t => t.ScoringCriterias)
@@ -167,10 +184,362 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<GoNoGoDecisionHeader>()
                 .HasOne(h => h.OpportunityTracking)
                 .WithMany()
-                .HasForeignKey(h => h.OpportunityId);
+                .HasForeignKey(h => h.OpportunityId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.TypeOfClient).IsRequired(false);
             modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.RegionalBDHead).IsRequired(false);
+
+            // Configure WBSOption entity
+            modelBuilder.Entity<WBSOption>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Value).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Label).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Level).IsRequired();
+                entity.Property(e => e.ParentValue).HasMaxLength(100);
+                entity.Property(e => e.FormType).IsRequired();
+
+                // Create index on Level for faster lookups
+                entity.HasIndex(e => e.Level);
+
+                // Create index on ParentValue for faster hierarchical queries
+                entity.HasIndex(e => e.ParentValue);
+
+                // Create index on FormType for faster filtering
+                entity.HasIndex(e => e.FormType);
+            });
+
+            // Configure WBSTask entity
+            modelBuilder.Entity<WBSTask>(entity =>
+            {
+                entity.Property(t => t.EstimatedBudget).HasPrecision(18, 2);
+
+                // Configure self-referencing relationship for hierarchy
+                entity.HasOne(t => t.Parent)
+                      .WithMany(t => t.Children)
+                      .HasForeignKey(t => t.ParentId)
+                      .OnDelete(DeleteBehavior.Restrict); // Prevent deleting a task if it has children
+
+                // Configure relationship with WorkBreakdownStructure
+                entity.HasOne(t => t.WorkBreakdownStructure)
+                      .WithMany(w => w.Tasks)
+                  .HasForeignKey(t => t.WorkBreakdownStructureId)
+                  .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+            });
+
+            // Configure JobStartForm entity
+            modelBuilder.Entity<JobStartForm>(entity =>
+            {
+                entity.HasKey(e => e.FormId);
+
+                entity.Property(e => e.GrandTotal).HasPrecision(18, 2);
+                entity.Property(e => e.Profit).HasPrecision(18, 2);
+                entity.Property(e => e.ProjectFees).HasPrecision(18, 2);
+                entity.Property(e => e.ServiceTaxAmount).HasPrecision(18, 2);
+                entity.Property(e => e.ServiceTaxPercentage).HasPrecision(5, 2);
+                entity.Property(e => e.TotalExpenses).HasPrecision(18, 2);
+                entity.Property(e => e.TotalProjectFees).HasPrecision(18, 2);
+                entity.Property(e => e.TotalTimeCost).HasPrecision(18, 2);
+
+                entity.HasOne(jsf => jsf.Project)
+                      .WithMany()
+                      .HasForeignKey(jsf => jsf.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(jsf => jsf.WorkBreakdownStructure)
+                      .WithMany(wbs => wbs.JobStartForms)
+                      .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(jsf => jsf.Selections)
+                      .WithOne(s => s.JobStartForm)
+                      .HasForeignKey(s => s.FormId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(jsf => jsf.Resources)
+                      .WithOne(r => r.JobStartForm)
+                      .HasForeignKey(r => r.FormId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(jsf => jsf.ProjectId);
+            });
+
+            // Configure JobStartFormSelection entity
+            modelBuilder.Entity<JobStartFormSelection>(entity =>
+            {
+                entity.HasKey(e => e.SelectionId);
+                // No complex relationships needed here as it's primarily linked via JobStartForm
+                entity.HasIndex(s => s.FormId); // Index for faster lookup by form
+            });
+
+            // Configure JobStartFormResource entity
+            modelBuilder.Entity<JobStartFormResource>(entity =>
+            {
+                entity.HasKey(e => e.ResourceId);
+                entity.Property(e => e.Rate).HasPrecision(18, 2);
+                entity.Property(e => e.Units).HasPrecision(18, 2);
+                entity.Property(e => e.BudgetedCost).HasPrecision(18, 2);
+
+                entity.HasOne(r => r.JobStartForm)
+                      .WithMany(j => j.Resources)
+                      .HasForeignKey(r => r.FormId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(r => r.FormId); // Index for faster lookup by form
+            });
+
+             // Configure UserWBSTask entity decimal properties
+            modelBuilder.Entity<UserWBSTask>(entity =>
+            {
+                entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
+                entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
+            });
+
+            // Configure WorkBreakdownStructure entity
+            modelBuilder.Entity<WorkBreakdownStructure>(entity =>
+            {
+                 // Optional: Add index on ProjectId if frequent lookups by project are expected
+                 entity.HasIndex(w => w.ProjectId);
+            });
+
+            // Configure InputRegister entity
+            modelBuilder.Entity<InputRegister>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DataReceived).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.ReceivedFrom).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.FilesFormat).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.CheckedBy).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.Custodian).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.StoragePath).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.Remarks).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.CreatedBy).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(i => i.Project)
+                      .WithMany()
+                      .HasForeignKey(i => i.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure CorrespondenceInward entity
+            modelBuilder.Entity<CorrespondenceInward>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.IncomingLetterNo).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.NjsInwardNo).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.From).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Subject).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.AttachmentDetails).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.ActionTaken).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.StoragePath).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.Remarks).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.CreatedBy).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(i => i.Project)
+                      .WithMany()
+                      .HasForeignKey(i => i.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure CorrespondenceOutward entity
+            modelBuilder.Entity<CorrespondenceOutward>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.LetterNo).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.To).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Subject).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.AttachmentDetails).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.ActionTaken).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.StoragePath).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.Remarks).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.Acknowledgement).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.CreatedBy).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(i => i.Project)
+                      .WithMany()
+                      .HasForeignKey(i => i.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure CheckReview entity
+            modelBuilder.Entity<CheckReview>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ActivityNo).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ActivityName).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Objective).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.References).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.FileName).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.QualityIssues).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.Completion).IsRequired().HasMaxLength(1);
+                entity.Property(e => e.CheckedBy).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.ApprovedBy).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.ActionTaken).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.CreatedBy).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(i => i.Project)
+                      .WithMany()
+                      .HasForeignKey(i => i.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure ChangeControl entity
+            modelBuilder.Entity<ChangeControl>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Originator).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.CostImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.TimeImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.ResourcesImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.QualityImpact).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.ChangeOrderStatus).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.ClientApprovalStatus).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.ClaimSituation).HasMaxLength(255).IsRequired(false);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).HasMaxLength(100).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(cc => cc.Project)
+                      .WithMany()
+                      .HasForeignKey(cc => cc.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure ProjectClosure entity
+            modelBuilder.Entity<ProjectClosure>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Configure string properties with appropriate lengths
+                entity.Property(e => e.ClientFeedback).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.SuccessCriteria).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ClientExpectations).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.OtherStakeholders).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.EnvIssues).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.EnvManagement).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ThirdPartyIssues).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ThirdPartyManagement).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.RiskIssues).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.RiskManagement).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.KnowledgeGoals).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.BaselineComparison).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.DelayedDeliverables).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.UnforeseeableDelays).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.BudgetEstimate).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ProfitTarget).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ChangeOrders).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.CloseOutBudget).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ResourceAvailability).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.VendorFeedback).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ProjectTeamFeedback).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.DesignOutputs).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ProjectReviewMeetings).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ClientDesignReviews).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.InternalReporting).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ClientReporting).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.InternalMeetings).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ClientMeetings).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ExternalMeetings).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.PlanUpToDate).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.PlanUseful).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.Hindrances).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ClientPayment).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.PlanningIssues).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.PlanningLessons).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.BriefAims).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.DesignReviewOutputs).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ConstructabilityReview).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.DesignReview).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.TechnicalRequirements).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.InnovativeIdeas).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.SuitableOptions).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.AdditionalInformation).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.DeliverableExpectations).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.StakeholderInvolvement).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.KnowledgeGoalsAchieved).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.TechnicalToolsDissemination).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.SpecialistKnowledgeValue).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.OtherComments).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.TargetCostAccuracy).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ChangeControlReview).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.CompensationEvents).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ExpenditureProfile).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.HealthSafetyConcerns).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ProgrammeRealistic).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ProgrammeUpdates).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.RequiredQuality).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.OperationalRequirements).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ConstructionInvolvement).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.Efficiencies).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.MaintenanceAgreements).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.AsBuiltManuals).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.HsFileForwarded).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.Variations).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.TechnoLegalIssues).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.ConstructionOther).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.Positives).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.LessonsLearned).HasMaxLength(1000).IsRequired(false);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).HasMaxLength(100).IsRequired(false);
+
+                // Create index on ProjectId for faster lookups
+                entity.HasIndex(e => e.ProjectId);
+
+                // Configure relationship with Project
+                entity.HasOne(pc => pc.Project)
+                      .WithMany()
+                      .HasForeignKey(pc => pc.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Removed ProjectClosureComment entity configuration to fix build issues
+            /*
+            modelBuilder.Entity<ProjectClosureComment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Configure string properties
+                entity.Property(e => e.Type).HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Comment).IsRequired();
+                entity.Property(e => e.CreatedBy).HasMaxLength(100).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).HasMaxLength(100).IsRequired(false);
+
+                // Create index on ProjectClosureId for faster lookups
+                entity.HasIndex(e => e.ProjectClosureId);
+
+                // Configure relationship with ProjectClosure
+                entity.HasOne(pcc => pcc.ProjectClosure)
+                      .WithMany(pc => pc.Comments)
+                      .HasForeignKey(pcc => pcc.ProjectClosureId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            */
         }
     }
 }

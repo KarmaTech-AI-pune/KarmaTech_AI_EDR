@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
+import {
+  Box,
+  Typography,
   TextField,
   Button,
   Divider,
@@ -17,8 +17,9 @@ import { Pagination } from '../components/Pagination';
 //import { authApi } from '../dummyapi/authApi';
 import { projectApi } from '../services/projectApi';
 import { UserWithRole } from '../types';
-import { Project} from '../models';
+import { Project } from '../models';
 import { PermissionType } from '../models';
+import ProjectStatusPieChart from '../components/dashboard/ProjectStatusPieChart';
 import { authApi } from '../services/authApi';
 import { ProjectFormData } from '../types/index.tsx';
 
@@ -53,14 +54,14 @@ export const ProjectManagement: React.FC = () => {
     const checkUserPermissions = async () => {
       try {
         const user = await authApi.getCurrentUser();
-        
+
         if (!user) {
           setError('Please log in to access Project Management');
           return;
         }
 
         setCurrentUser(user);
-        
+
         if (user.roleDetails) {
           const hasProjectViewPermission = user.roleDetails.permissions.includes(
             PermissionType.VIEW_PROJECT
@@ -68,7 +69,7 @@ export const ProjectManagement: React.FC = () => {
           const hasProjectCreatePermission = user.roleDetails.permissions.includes(
             PermissionType.CREATE_PROJECT
           );
-          
+
           setCanViewProjects(hasProjectViewPermission);
           setCanCreateProject(hasProjectCreatePermission);
 
@@ -110,16 +111,23 @@ export const ProjectManagement: React.FC = () => {
 
   const handleProjectUpdated = async () => {
     await fetchProjects();
+    setSuccessMessage('Project updated successfully');
   };
 
   const handleProjectDeleted = async (projectId: string) => {
     try {
+      console.log(`Attempting to delete project with ID: ${projectId}`);
       await projectApi.delete(projectId);
-      await fetchProjects();
+      console.log('Delete API call successful');
       setSuccessMessage('Project deleted successfully');
+      // Refresh the project list after successful deletion
+      await fetchProjects();
     } catch (err: any) {
       console.error('Error deleting project:', err);
-      setError(err.message || 'Failed to delete project');
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete project';
+      setError(errorMessage);
+      // Refresh the project list anyway to ensure UI is in sync with backend
+      await fetchProjects();
     }
   };
 
@@ -143,18 +151,27 @@ export const ProjectManagement: React.FC = () => {
 
     // Check all roles the user has
     console.log('Filtering project:', project.name);
+    console.log('Project details:', {
+      regionalManagerId: project.regionalManagerId,
+      seniorProjectManagerId: project.seniorProjectManagerId,
+      projectManagerId: project.projectManagerId
+    });
+    console.log('Current user ID:', currentUser.id);
     console.log('Current user roles:', currentUser.roles);
-    
+
     return currentUser.roles.some(role => {
-      console.log('Checking role:', role);
+      console.log('Checking role:', role.name);
       switch(role.name) {
         case 'Regional Manager':
-          return project.regionalManagerId === currentUser.id;
+          return true;
+        case 'Regional Director':
+          return true;
         case 'Senior Project Manager':
           return project.seniorProjectManagerId === currentUser.id;
         case 'Project Manager':
           return project.projectManagerId === currentUser.id;
         default:
+          console.log('Unknown role:', role.name);
           return false;
       }
     });
@@ -164,8 +181,8 @@ export const ProjectManagement: React.FC = () => {
   const searchFilteredProjects = roleFilteredProjects.filter((project: Project) => {
     const searchTermLower = searchTerm.toLowerCase();
     const name = project.name?.toLowerCase() || '';
-    const description = project.details?.toLowerCase() || '';
-    
+    const description = project.description?.toLowerCase() || '';
+
     return name.includes(searchTermLower) ||
            description.includes(searchTermLower);
   });
@@ -188,7 +205,7 @@ export const ProjectManagement: React.FC = () => {
   return (
     <Box sx={{ mt: '64px' }}>  {/* Added top margin to account for fixed navbar */}
       <Box
-        sx={{ 
+        sx={{
           p: 2,
           bgcolor: '#ffffff',
           borderRadius: '8px',
@@ -197,29 +214,29 @@ export const ProjectManagement: React.FC = () => {
           m: 2
         }}
       >
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3
         }}>
-          <Typography 
-            variant="h6" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            sx={{
               fontWeight: 500,
               color: '#1a237e'
             }}
           >
             Project Management
           </Typography>
-          
+
           {canCreateProject && (
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               color="primary"
               startIcon={<AddCircleOutlineIcon />}
               onClick={handleCreateProject}
-              sx={{ 
+              sx={{
                 textTransform: 'none',
                 borderRadius: 2,
                 px: 3
@@ -238,11 +255,22 @@ export const ProjectManagement: React.FC = () => {
 
         <Divider sx={{ mb: 3 }} />
 
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3 
+        {/* Project Status Pie Chart */}
+        <Box sx={{
+          width: '100%',
+          maxWidth: 400,
+          mx: 'auto',
+          mb: 4,
+          mt: 2
+        }}>
+          <ProjectStatusPieChart />
+        </Box>
+
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3
         }}>
           <TextField
             variant="outlined"
@@ -256,12 +284,12 @@ export const ProjectManagement: React.FC = () => {
                   <SearchIcon />
                 </IconButton>
               ),
-              sx: { 
+              sx: {
                 borderRadius: 2,
                 backgroundColor: 'background.paper'
               }
             }}
-            sx={{ 
+            sx={{
               width: 250,
             }}
           />
@@ -274,10 +302,10 @@ export const ProjectManagement: React.FC = () => {
           onProjectUpdated={handleProjectUpdated}
         />
 
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          mt: 3 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          mt: 3
         }}>
           <Pagination
             projectsPerPage={projectsPerPage}

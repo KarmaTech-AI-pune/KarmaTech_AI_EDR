@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Alert from '@mui/material/Alert';
+import { InwardRow, OutwardRow } from '../../../services/correspondenceApi';
 import {
   Dialog,
   DialogTitle,
@@ -39,32 +41,89 @@ interface CorrespondenceDialogProps {
   onClose: () => void;
   onSave: (data: any) => void;
   type: 'inward' | 'outward';
+  editData?: InwardRow | OutwardRow | null;
+  isEdit?: boolean;
 }
 
-export default function CorrespondenceDialog({ open, onClose, onSave, type }: CorrespondenceDialogProps) {
-  const [formData, setFormData] = useState(type === 'inward' ? {
-    incomingLetterNo: '',
-    letterDate: '',
-    njsInwardNo: '',
-    receiptDate: '',
-    from: '',
-    subject: '',
-    attachmentDetails: '',
-    actionTaken: '',
-    storagePath: '',
-    remarks: '',
-    repliedDate: ''
-  } : {
-    letterNo: '',
-    letterDate: '',
-    to: '',
-    subject: '',
-    attachmentDetails: '',
-    actionTaken: '',
-    storagePath: '',
-    remarks: '',
-    acknowledgement: ''
-  });
+export default function CorrespondenceDialog({ open, onClose, onSave, type, editData, isEdit = false }: CorrespondenceDialogProps) {
+  const getInitialFormData = () => {
+    if (type === 'inward') {
+      return {
+        incomingLetterNo: '',
+        letterDate: '',
+        njsInwardNo: '',
+        receiptDate: '',
+        from: '',
+        subject: '',
+        attachmentDetails: '',
+        actionTaken: '',
+        storagePath: '',
+        remarks: '',
+        repliedDate: ''
+      };
+    } else {
+      return {
+        letterNo: '',
+        letterDate: '',
+        to: '',
+        subject: '',
+        attachmentDetails: '',
+        actionTaken: '',
+        storagePath: '',
+        remarks: '',
+        acknowledgement: ''
+      };
+    }
+  };
+
+  const [formData, setFormData] = useState(getInitialFormData());
+
+  // Update form data when editData changes or dialog opens
+  useEffect(() => {
+    if (open && editData) {
+      // Create a new form data object that matches the expected structure
+      let newFormData;
+
+      if (type === 'inward') {
+        const inwardData = editData as InwardRow;
+
+        // Create a new object with only the properties we need for the form
+        newFormData = {
+          incomingLetterNo: inwardData.incomingLetterNo,
+          letterDate: inwardData.letterDate ? new Date(inwardData.letterDate).toISOString().split('T')[0] : '',
+          njsInwardNo: inwardData.njsInwardNo,
+          receiptDate: inwardData.receiptDate ? new Date(inwardData.receiptDate).toISOString().split('T')[0] : '',
+          from: inwardData.from,
+          subject: inwardData.subject,
+          attachmentDetails: inwardData.attachmentDetails || '',
+          actionTaken: inwardData.actionTaken || '',
+          storagePath: inwardData.storagePath || '',
+          remarks: inwardData.remarks || '',
+          repliedDate: inwardData.repliedDate ? new Date(inwardData.repliedDate).toISOString().split('T')[0] : ''
+        };
+      } else {
+        const outwardData = editData as OutwardRow;
+
+        // Create a new object with only the properties we need for the form
+        newFormData = {
+          letterNo: outwardData.letterNo,
+          letterDate: outwardData.letterDate ? new Date(outwardData.letterDate).toISOString().split('T')[0] : '',
+          to: outwardData.to,
+          subject: outwardData.subject,
+          attachmentDetails: outwardData.attachmentDetails || '',
+          actionTaken: outwardData.actionTaken || '',
+          storagePath: outwardData.storagePath || '',
+          remarks: outwardData.remarks || '',
+          acknowledgement: outwardData.acknowledgement || ''
+        };
+      }
+
+      setFormData(newFormData);
+    } else if (open) {
+      // Reset form when opening for a new entry
+      setFormData(getInitialFormData());
+    }
+  }, [open, editData, type]);
 
   const handleChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -73,32 +132,75 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
     }));
   };
 
+  // Validate form data before submission
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (type === 'inward') {
+      if (!formData.incomingLetterNo) errors.incomingLetterNo = 'Incoming Letter No is required';
+      if (!formData.letterDate) errors.letterDate = 'Letter Date is required';
+      if (!formData.njsInwardNo) errors.njsInwardNo = 'NJS Inward No is required';
+      if (!formData.receiptDate) errors.receiptDate = 'Receipt Date is required';
+      if (!formData.from) errors.from = 'From is required';
+      if (!formData.subject) errors.subject = 'Subject is required';
+    } else {
+      if (!formData.letterNo) errors.letterNo = 'Letter No is required';
+      if (!formData.letterDate) errors.letterDate = 'Letter Date is required';
+      if (!formData.to) errors.to = 'To is required';
+      if (!formData.subject) errors.subject = 'Subject is required';
+    }
+
+    return errors;
+  };
+
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [formSubmitError, setFormSubmitError] = useState<string | null>(null);
+
   const handleSubmit = () => {
-    onSave(formData);
-    setFormData(type === 'inward' ? {
-      incomingLetterNo: '',
-      letterDate: '',
-      njsInwardNo: '',
-      receiptDate: '',
-      from: '',
-      subject: '',
-      attachmentDetails: '',
-      actionTaken: '',
-      storagePath: '',
-      remarks: '',
-      repliedDate: ''
-    } : {
-      letterNo: '',
-      letterDate: '',
-      to: '',
-      subject: '',
-      attachmentDetails: '',
-      actionTaken: '',
-      storagePath: '',
-      remarks: '',
-      acknowledgement: ''
-    });
-    onClose();
+    // Validate form
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    // Clear any previous errors
+    setFormErrors({});
+    setFormSubmitError(null);
+
+    // CRITICAL: Always force the isEdit flag and ID if we're editing
+    let dataToSave;
+
+    if (isEdit && editData) {
+      // Make sure we're explicitly setting the ID
+      dataToSave = {
+        ...formData,
+        id: editData.id,
+        _isEditOperation: true  // Add a special flag to indicate this is an edit operation
+      };
+      console.log('EDIT MODE: Adding ID to data:', editData.id);
+      console.log('EDIT MODE: Full data being sent:', JSON.stringify(dataToSave, null, 2));
+      console.log('EDIT MODE: This should trigger a PUT request to /api/correspondence/{type}/{id}');
+
+      // Double check that the ID is present
+      if (!dataToSave.id && dataToSave.id !== 0) {
+        console.error('CRITICAL ERROR: ID is missing in edit mode!');
+        setFormSubmitError('Cannot update record: Missing ID');
+        return;
+      }
+    } else {
+      dataToSave = { ...formData, _isEditOperation: false };
+      console.log('CREATE MODE: No ID added');
+      console.log('CREATE MODE: This should trigger a POST request to /api/correspondence/{type}');
+    }
+
+    try {
+      onSave(dataToSave);
+      onClose();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setFormSubmitError('Failed to save data. Please try again.');
+    }
   };
 
   const textFieldStyle = {
@@ -127,7 +229,10 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
     <StyledDialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ m: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" component="div" sx={{ color: '#1976d2', fontWeight: 500 }}>
-          {type === 'inward' ? 'Add Inward Correspondence' : 'Add Outward Correspondence'}
+          {isEdit
+            ? (type === 'inward' ? 'Edit Inward Correspondence' : 'Edit Outward Correspondence')
+            : (type === 'inward' ? 'Add Inward Correspondence' : 'Add Outward Correspondence')
+          }
         </Typography>
         <IconButton
           onClick={onClose}
@@ -142,6 +247,11 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
       </DialogTitle>
 
       <DialogContent>
+        {formSubmitError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {formSubmitError}
+          </Alert>
+        )}
         {type === 'inward' ? (
           <>
             <Box sx={{ mb: 4 }}>
@@ -156,6 +266,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
                     value={formData.incomingLetterNo}
                     onChange={handleChange('incomingLetterNo')}
                     sx={textFieldStyle}
+                    required
+                    error={!!formErrors.incomingLetterNo}
+                    helperText={formErrors.incomingLetterNo}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -167,6 +280,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
                     onChange={handleChange('letterDate')}
                     InputLabelProps={{ shrink: true }}
                     sx={textFieldStyle}
+                    required
+                    error={!!formErrors.letterDate}
+                    helperText={formErrors.letterDate}
                   />
                 </Grid>
               </Grid>
@@ -184,6 +300,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
                     value={formData.njsInwardNo}
                     onChange={handleChange('njsInwardNo')}
                     sx={textFieldStyle}
+                    required
+                    error={!!formErrors.njsInwardNo}
+                    helperText={formErrors.njsInwardNo}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -195,6 +314,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
                     onChange={handleChange('receiptDate')}
                     InputLabelProps={{ shrink: true }}
                     sx={textFieldStyle}
+                    required
+                    error={!!formErrors.receiptDate}
+                    helperText={formErrors.receiptDate}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -204,6 +326,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
                     value={formData.from}
                     onChange={handleChange('from')}
                     sx={textFieldStyle}
+                    required
+                    error={!!formErrors.from}
+                    helperText={formErrors.from}
                   />
                 </Grid>
               </Grid>
@@ -221,6 +346,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
                     value={formData.subject}
                     onChange={handleChange('subject')}
                     sx={textFieldStyle}
+                    required
+                    error={!!formErrors.subject}
+                    helperText={formErrors.subject}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -297,6 +425,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
                     value={formData.letterNo}
                     onChange={handleChange('letterNo')}
                     sx={textFieldStyle}
+                    required
+                    error={!!formErrors.letterNo}
+                    helperText={formErrors.letterNo}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -308,6 +439,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
                     onChange={handleChange('letterDate')}
                     InputLabelProps={{ shrink: true }}
                     sx={textFieldStyle}
+                    required
+                    error={!!formErrors.letterDate}
+                    helperText={formErrors.letterDate}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -317,6 +451,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
                     value={formData.to}
                     onChange={handleChange('to')}
                     sx={textFieldStyle}
+                    required
+                    error={!!formErrors.to}
+                    helperText={formErrors.to}
                   />
                 </Grid>
               </Grid>
@@ -334,6 +471,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
                     value={formData.subject}
                     onChange={handleChange('subject')}
                     sx={textFieldStyle}
+                    required
+                    error={!!formErrors.subject}
+                    helperText={formErrors.subject}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -398,9 +538,9 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
       </DialogContent>
 
       <DialogActions>
-        <Button 
+        <Button
           onClick={onClose}
-          sx={{ 
+          sx={{
             color: 'text.secondary',
             '&:hover': {
               backgroundColor: 'rgba(0, 0, 0, 0.04)'
@@ -409,7 +549,7 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
         >
           Cancel
         </Button>
-        <Button 
+        <Button
           onClick={handleSubmit}
           variant="contained"
           sx={{
@@ -419,7 +559,7 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type }: Co
             }
           }}
         >
-          Save
+          {isEdit ? 'Update' : 'Save'}
         </Button>
       </DialogActions>
     </StyledDialog>

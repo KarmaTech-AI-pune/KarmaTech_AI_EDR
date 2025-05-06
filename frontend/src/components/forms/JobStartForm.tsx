@@ -1,1018 +1,547 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  CircularProgress, 
-  TextField, 
-  Container,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { ResourceAPI, WBSStructureAPI } from '../../dummyapi/wbsApi';
-import { projectManagementAppContext } from '../../App';
-import { projectManagementAppContextType } from '../../types';
-import { WBSTaskResourceAllocation } from "../../models";;
-import { WBSRowData } from '../../types/wbs';
-import { FormWrapper } from './FormWrapper';
-
-interface TaskAllocation {
-  taskId: string;
-  title: string;
-  rate: number;
-  hours: number;
-  cost: number;
-}
-
-interface EmployeeAllocation {
-  id: string;
-  name: string;
-  is_consultant: boolean;
-  allocations: TaskAllocation[];
-  totalHours: number;
-  totalCost: number;
-  remarks: string;
-}
-
-interface ExpenseEntry {
-  number: string;
-  remarks: string;
-}
-
-interface OutsideAgencyEntry {
-  description: string;
-  rate: string;
-  units: string;
-  remarks: string;
-}
-
-interface ProjectSpecificEntry {
-  name: string;
-  number: string;
-  remarks: string;
-}
-
-interface TimeContingencyEntry {
-  rate: string;
-  units: string;
-  remarks: string;
-}
-
-interface ServiceTaxEntry {
-  percentage: string;
-}
-
-type ExpensesType = {
-  '2a': ExpenseEntry;
-  '2b': ExpenseEntry;
-  '3': ExpenseEntry;
-  '4': ExpenseEntry;
-  '5': ExpenseEntry;
-  '7': ExpenseEntry;
-}
-
-type OutsideAgencyType = {
-  'a': OutsideAgencyEntry;
-  'b': OutsideAgencyEntry;
-  'c': OutsideAgencyEntry;
-}
-
-type ProjectSpecificType = {
-  '6c': ProjectSpecificEntry;
-  '6d': ProjectSpecificEntry;
-  '6e': ProjectSpecificEntry;
-}
-
-const formatTitle = (title: string): string => {
-  return title
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-};
+import React, { useState, useEffect, useContext } from 'react'
+import { FormWrapper } from './FormWrapper'
+import JobstartTime from './jobstartFormComponent/JobstartTime'
+import EstimatedExpenses from './jobstartFormComponent/EstimatedExpenses'
+import JobstartGrandTotal from './jobstartFormComponent/JobstartGrandTotal'
+import JobstartSummary from './jobstartFormComponent/JobstartSummary'
+import { Container, Box, Paper, Typography, CircularProgress, Alert, Snackbar } from '@mui/material'
+import { getWBSResourceData, submitJobStartForm, updateJobStartForm, getJobStartFormByProjectId } from '../../services/jobStartFormApi'
+import { WBSResource } from '../../types/jobStartFormTypes'
+import { CustomRow } from './jobstartFormComponent/TableTemplate'
+import { projectManagementAppContext } from '../../App'
+import { projectManagementAppContextType } from '../../types'
+import LoadingButton from '../common/LoadingButton'
 
 const JobStartForm: React.FC = () => {
-  const context = useContext<projectManagementAppContextType | null>(projectManagementAppContext);
-  const [employeeAllocations, setEmployeeAllocations] = useState<EmployeeAllocation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const context = useContext<projectManagementAppContextType | null>(projectManagementAppContext)
+  const [wbsResources, setWbsResources] = useState<WBSResource[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const [timeContingency, setTimeContingency] = useState<TimeContingencyEntry>({
-    rate: '',
-    units: '',
-    remarks: ''
-  });
-  const [expanded, setExpanded] = useState<string[]>(['time', 'expenses']);
+  // State to track total costs for different sections
+  const [totalTimeCost, setTotalTimeCost] = useState<number>(0)
+  const [totalODCExpensesCost, setTotalODCExpensesCost] = useState<number>(0)
 
-  const handleAccordionChange = (panel: string) => {
-    setExpanded(prev => {
-      if (prev.includes(panel)) {
-        return prev.filter(p => p !== panel);
-      } else {
-        return [...prev, panel];
-      }
-    });
-  };
-  const [expenses, setExpenses] = useState<ExpensesType>({
-    '2a': { number: '10000', remarks: '' },
-    '2b': { number: '10000', remarks: '' },
-    '3': { number: '', remarks: '' },
-    '4': { number: '10000', remarks: '' },
-    '5': { number: '10000', remarks: '' },
-    '7': { number: '100000', remarks: '' },
-  });
+  // State to track resources for Time and Expenses
+  const [timeResources, setTimeResources] = useState<WBSResource[]>([])
+  const [expensesResources, setExpensesResources] = useState<WBSResource[]>([])
 
-  const [surveyWorks, setSurveyWorks] = useState<ExpenseEntry>({
-    number: '',
-    remarks: ''
-  });
+  // State to track custom rows for Time and Expenses
+  const [timeCustomRows, setTimeCustomRows] = useState<CustomRow[]>([
+    {
+      id: 'time-subtotal',
+      prefix: '1b',
+      title: 'Sub-Total',
+      hasRateField: false,
+      hasUnitsField: false,
+      budgetedCost: 0,
+      remarks: ''
+    },
+    {
+      id: 'time-contingencies',
+      prefix: '1c',
+      title: 'Time Contingencies (LS)',
+      hasRateField: false,
+      hasUnitsField: true,
+      unitSuffix: '%',
+      budgetedCost: 0,
+      units: 0,
+      remarks: ''
+    }
+  ])
 
-  const [outsideAgency, setOutsideAgency] = useState<OutsideAgencyType>({
-    'a': { description: '', rate: '', units: '', remarks: '' },
-    'b': { description: '', rate: '', units: '', remarks: '' },
-    'c': { description: '', rate: '', units: '', remarks: '' },
-  });
+  const [expensesCustomRows, setExpensesCustomRows] = useState<CustomRow[]>([
+    {
+      id: 'expenses-subtotal',
+      prefix: '2b',
+      title: 'Sub-Total',
+      hasRateField: false,
+      hasUnitsField: false,
+      budgetedCost: 0,
+      remarks: ''
+    },
+    {
+      id: 'expenses-contingencies',
+      prefix: '2c',
+      title: 'Contingencies (LS)',
+      hasRateField: false,
+      hasUnitsField: true,
+      unitSuffix: '%',
+      budgetedCost: 0,
+      units: 0,
+      remarks: ''
+    },
+    {
+      id: 'expenses-expense-contingencies',
+      prefix: '2d',
+      title: 'Expense Contingencies (LS)',
+      hasRateField: false,
+      hasUnitsField: true,
+      unitSuffix: '%',
+      budgetedCost: 0,
+      units: 0,
+      remarks: ''
+    }
+  ])
 
-  const [projectSpecific, setProjectSpecific] = useState<ProjectSpecificType>({
-    '6c': { name: '', number: '', remarks: '' },
-    '6d': { name: '', number: '', remarks: '' },
-    '6e': { name: '', number: '', remarks: '' },
-  });
+  // State for summary data
+  const [summaryData, setSummaryData] = useState({
+    projectFees: 0,
+    serviceTaxPercentage: 18,
+    serviceTaxAmount: 0,
+    totalProjectFees: 0,
+    profit: 0
+  })
 
-  const [projectFees, setProjectFees] = useState<string>('800000');
-  const [serviceTax, setServiceTax] = useState<ServiceTaxEntry>({
-    percentage: '15'
-  });
+  // State for form submission
+  const [submitting, setSubmitting] = useState<boolean>(false)
+  const [isUpdating, setIsUpdating] = useState<boolean>(false)
+  const [formId, setFormId] = useState<number | null>(null)
+
+  // State for snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false)
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('')
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success')
+
+  // Get project ID from context
+  const projectId = context?.selectedProject?.id?.toString()
 
   useEffect(() => {
-    const fetchAllocations = async () => {
-      if (!context?.selectedProject?.id) {
-        setError('No project selected');
-        setLoading(false);
-        return;
+    const fetchData = async () => {
+      if (!projectId) {
+        setError('Project ID is missing')
+        setLoading(false)
+        return
       }
 
       try {
-        setLoading(true);
-        setError(null);
+        setLoading(true)
 
-        const [allocations, wbsTasks] = await Promise.all([
-          ResourceAPI.getResourceAllocations(context.selectedProject.id.toString()),
-          WBSStructureAPI.getProjectWBS(context.selectedProject.id.toString())
-        ]);
+        // First, try to fetch existing JobStartForm data
+        let existingFormData = null
+        let existingResources: Record<string, any> = {}
+        let existingCustomRows: Record<string, any> = {}
 
-        const employeeMap = new Map<string, EmployeeAllocation>();
+        try {
+          // Get data from /api/projects/{projectId}/jobstartforms
+          const formData = await getJobStartFormByProjectId(projectId)
+          if (formData && Array.isArray(formData) && formData.length > 0) {
+            existingFormData = formData[0] // Get the first form if multiple exist
+            // Ensure formId is a number before setting it
+            if (existingFormData.formId !== undefined) {
+              setFormId(typeof existingFormData.formId === 'string'
+                ? parseInt(existingFormData.formId)
+                : existingFormData.formId)
+            }
+            setIsUpdating(true)
 
-        allocations.forEach((allocation: WBSTaskResourceAllocation) => {
-          if (!allocation.employee) return;
+            // Set summary data
+            setSummaryData({
+              projectFees: existingFormData.projectFees || 0,
+              serviceTaxPercentage: existingFormData.serviceTaxPercentage || 18,
+              serviceTaxAmount: existingFormData.serviceTaxAmount || 0,
+              totalProjectFees: existingFormData.totalProjectFees || 0,
+              profit: existingFormData.profit || 0
+            })
 
-          const employeeId = allocation.employee.id;
-          if (!employeeMap.has(employeeId)) {
-            employeeMap.set(employeeId, {
-              id: employeeId,
-              name: allocation.employee.name,
-              is_consultant: allocation.employee.is_consultant,
-              allocations: [],
-              totalHours: 0,
-              totalCost: 0,
-              remarks: ''
-            });
+            // Process existing resources and custom rows
+            if (existingFormData.resources && Array.isArray(existingFormData.resources)) {
+              // Create a map of existing resources by WBS task ID for easy lookup
+              existingFormData.resources.forEach(resource => {
+                if (resource.wbsTaskId) {
+                  // Regular resource
+                  existingResources[resource.wbsTaskId] = resource
+                } else if (resource.name) {
+                  // Custom row (name field contains the row ID)
+                  existingCustomRows[resource.name] = resource
+                }
+              })
+            }
+          }
+        } catch (err) {
+          console.log('No existing JobStartForm found, creating a new one')
+          // Continue with WBS data if no form exists
+        }
+
+        // Then fetch WBS resource data from /api/projects/{projectId}/jobstartforms/wbsresources
+        const wbsData = await getWBSResourceData(projectId)
+
+        // Transform the data from the API to match our WBSResource type
+        const resources: WBSResource[] = wbsData.resourceAllocations.map((allocation: any) => {
+          const taskId = allocation.taskId.toString()
+          const existingResource = existingResources[taskId]
+
+          return {
+            id: taskId,
+            taskType: allocation.taskType,
+            description: allocation.taskTitle,
+            rate: allocation.costRate,
+            units: allocation.totalHours,
+            budgetedCost: allocation.totalCost,
+            // Use existing remarks if available, otherwise empty string
+            remarks: existingResource?.remarks || '',
+            employeeName: allocation.employeeName !== 'null' ? allocation.employeeName : null,
+            name: allocation.name !== 'null' ? allocation.name : null
+          }
+        })
+
+        setWbsResources(resources)
+
+        // Set initial custom rows data if available
+        if (Object.keys(existingCustomRows).length > 0) {
+          // Create new arrays for custom rows with updated values
+          const updatedTimeCustomRows = [...timeCustomRows];
+          const updatedExpensesCustomRows = [...expensesCustomRows];
+
+          // Update Time subtotal row remarks
+          const timeSubtotalRow = existingCustomRows['time-subtotal'];
+          if (timeSubtotalRow) {
+            const timeSubtotalIndex = updatedTimeCustomRows.findIndex(row => row.id === 'time-subtotal');
+            if (timeSubtotalIndex !== -1) {
+              updatedTimeCustomRows[timeSubtotalIndex] = {
+                ...updatedTimeCustomRows[timeSubtotalIndex],
+                remarks: timeSubtotalRow.remarks || ''
+              };
+            }
           }
 
-          const emp = employeeMap.get(employeeId)!;
-          const task = wbsTasks.find((t: WBSRowData) => t.id === allocation.wbs_task_id);
-          const taskCost = allocation.cost_rate * (allocation.total_hours || 0);
-
-          emp.allocations.push({
-            taskId: allocation.wbs_task_id,
-            title: task?.title || `Task ${allocation.wbs_task_id}`,
-            rate: allocation.cost_rate,
-            hours: allocation.total_hours || 0,
-            cost: taskCost
-          });
-          emp.totalHours += allocation.total_hours || 0;
-          emp.totalCost += taskCost;
-        });
-
-        setEmployeeAllocations(Array.from(employeeMap.values()));
-      } catch (error) {
-        console.error('Error fetching allocations:', error);
-        setError('Failed to load allocation data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllocations();
-  }, [context?.selectedProject?.id]);
-
-  const calculateTotalCost = (employees: EmployeeAllocation[], isConsultant: boolean) => {
-    return employees
-      .filter(emp => emp.is_consultant === isConsultant)
-      .reduce((total, emp) => total + emp.totalCost, 0);
-  };
-
-  const handleRemarksChange = (employeeId: string, value: string) => {
-    setEmployeeAllocations(prevAllocations => 
-      prevAllocations.map(emp => 
-        emp.id === employeeId ? { ...emp, remarks: value } : emp
-      )
-    );
-  };
-
-  const handleTimeContingencyChange = (field: keyof TimeContingencyEntry, value: string) => {
-    setTimeContingency(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleExpenseChange = (id: keyof ExpensesType, field: keyof ExpenseEntry, value: string) => {
-    setExpenses(prev => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value }
-    }));
-  };
-
-  const handleSurveyWorksChange = (field: keyof ExpenseEntry, value: string) => {
-    setSurveyWorks(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleOutsideAgencyChange = (id: keyof OutsideAgencyType, field: keyof OutsideAgencyEntry, value: string) => {
-    setOutsideAgency(prev => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value }
-    }));
-  };
-
-  const handleProjectSpecificChange = (id: keyof ProjectSpecificType, field: keyof ProjectSpecificEntry, value: string) => {
-    setProjectSpecific(prev => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value }
-    }));
-  };
-
-  const handleProjectFeesChange = (value: string) => {
-    setProjectFees(value);
-  };
-
-  const handleServiceTaxChange = (value: string) => {
-    setServiceTax(prev => ({
-      ...prev,
-      percentage: value
-    }));
-  };
-
-  const calculateTimeContingencyCost = () => {
-    const rate = Number(timeContingency.rate) || 0;
-    const units = Number(timeContingency.units) || 0;
-    return rate * units;
-  };
-
-  const calculateOutsideAgencyCost = (entry: OutsideAgencyEntry) => {
-    const rate = Number(entry.rate) || 0;
-    const units = Number(entry.units) || 0;
-    return rate * units;
-  };
-
-  const calculateTotalTimeCost = () => {
-    const employeesTotal = calculateTotalCost(employeeAllocations, false);
-    const consultantsTotal = calculateTotalCost(employeeAllocations, true);
-    const contingencyTotal = calculateTimeContingencyCost();
-    return employeesTotal + consultantsTotal + contingencyTotal;
-  };
-
-  const calculateExpensesTotal = () => {
-    let total = 0;
-    // Add up all expense entries
-    Object.values(expenses).forEach(entry => {
-      total += Number(entry.number) || 0;
-    });
-    // Add survey works
-    total += Number(surveyWorks.number) || 0;
-    // Add up outside agency entries (rate * units)
-    Object.values(outsideAgency).forEach(entry => {
-      total += calculateOutsideAgencyCost(entry);
-    });
-    // Add up project specific entries
-    Object.values(projectSpecific).forEach(entry => {
-      total += Number(entry.number) || 0;
-    });
-    return total;
-  };
-
-  const calculateGrandTotal = () => {
-    const timeCost = calculateTotalTimeCost();
-    const expensesTotal = calculateExpensesTotal();
-    return timeCost + expensesTotal;
-  };
-
-  const calculateProfit = () => {
-    const fees = Number(projectFees) || 0;
-    const total = calculateGrandTotal();
-    return fees - total;
-  };
-
-  const calculateServiceTax = () => {
-    const fees = Number(projectFees) || 0;
-    const taxPercentage = Number(serviceTax.percentage) || 0;
-    return (fees * taxPercentage) / 100;
-  };
-
-  const calculateTotalProjectFees = () => {
-    const fees = Number(projectFees) || 0;
-    const tax = calculateServiceTax();
-    return fees + tax;
-  };
-
-  if (loading) {
-    return (
-      <FormWrapper>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <CircularProgress />
-        </Box>
-      </FormWrapper>
-    );
-  }
-
-  if (error) {
-    return (
-      <FormWrapper>
-        <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
-          <Typography color="error">{error}</Typography>
-        </Paper>
-        </FormWrapper>
-      );
-  }
-
-  const textFieldStyle = {
-    '& .MuiOutlinedInput-root': { 
-      borderRadius: 1,
-      backgroundColor: '#fff',
-      '&:hover fieldset': {
-        borderColor: '#1976d2',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#1976d2',
-      }
-    }
-  };
-
-  const tableHeaderStyle = {
-    '& .MuiTableCell-head': {
-      fontWeight: 600,
-      backgroundColor: '#f5f5f5',
-      borderBottom: '2px solid #e0e0e0'
-    }
-  };
-
-  const tableCellStyle = {
-    borderBottom: '1px solid #e0e0e0',
-    padding: '12px 16px'
-  };
-
-  const accordionStyle = {
-    '& .MuiAccordionSummary-root': {
-      backgroundColor: '#f8f9fa',
-      borderLeft: '3px solid #1976d2',
-      minHeight: '48px',
-      '&.Mui-expanded': {
-        borderBottom: '1px solid #e0e0e0'
-      }
-    },
-    '& .MuiAccordionSummary-content': {
-      margin: '12px 0',
-      '&.Mui-expanded': {
-        margin: '12px 0'
-      }
-    },
-    '& .MuiAccordionDetails-root': {
-      padding: 0,
-      backgroundColor: '#fff'
-    }
-  };
-
-  const sectionStyle = {
-    border: '1px solid #e0e0e0',
-    borderRadius: '4px',
-    overflow: 'hidden',
-    '& .MuiAccordion-root': {
-      borderRadius: '4px 4px 0 0 !important',
-      borderBottom: 'none'
-    },
-    '& .MuiTableContainer-root': {
-      borderRadius: '0 0 4px 4px',
-      borderTop: 'none'
-    }
-  };
-
-  const summaryRowStyle = {
-    bgcolor: '#f8f9fa',
-    '& .MuiTableCell-root': {
-      fontWeight: 'bold'
-    }
-  };
-
-  if (loading) {
-  return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Paper sx={{ p: 3, bgcolor: '#fff3f3' }}>
-        <Typography color="error">{error}</Typography>
-      </Paper>
-    );
-  }
-
-  const formContent = (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Box sx={{ 
-        width: '100%', 
-        maxHeight: 'calc(100vh - 200px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        pr: 1,
-        pb: 4
-      }}>
-        <Paper 
-          elevation={0}
-          sx={{ 
-            p: 3,
-            border: '1px solid #e0e0e0',
-            borderRadius: 1
-          }}
-        >
-          <Typography 
-            variant="h5" 
-            gutterBottom 
-            sx={{ 
-              color: '#1976d2', 
-              fontWeight: 500,
-              mb: 3
-            }}
-          >
-            PMD1. Job Start Form
-          </Typography>
-
-          {/* Time Section */}
-          <Box sx={{ ...sectionStyle, mb: 3 }}>
-            <Accordion 
-              expanded={expanded.includes('time')}
-              onChange={() => handleAccordionChange('time')}
-              elevation={0}
-              sx={accordionStyle}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography sx={{ fontWeight: 'bold' }}>1.0 TIME</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow sx={tableHeaderStyle}>
-                        <TableCell sx={tableCellStyle}>Sr. No.</TableCell>
-                        <TableCell sx={tableCellStyle}>Description</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Rate (Rs)</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Units</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Budgeted Cost (Rs.)</TableCell>
-                        <TableCell sx={tableCellStyle}>Remarks</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {/* Employee Personnel Section */}
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', pl: 3 }}>1a</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Employee Personnel</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell align="right">{calculateTotalCost(employeeAllocations, false)}</TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-
-                    {/* Employee Allocations */}
-                    {employeeAllocations
-                      .filter(emp => !emp.is_consultant)
-                      .map((emp) => (
-                        <React.Fragment key={emp.id}>
-                          <TableRow>
-                            <TableCell></TableCell>
-                            <TableCell sx={{ pl: 4 }}>{emp.name}</TableCell>
-                            <TableCell align="right">
-                              {emp.allocations.length === 1 ? emp.allocations[0].rate : ''}
-                            </TableCell>
-                            <TableCell align="right">
-                              {emp.allocations.length === 1 ? emp.allocations[0].hours : emp.totalHours}
-                            </TableCell>
-                            <TableCell align="right">{emp.totalCost}</TableCell>
-                            <TableCell>
-                              <TextField
-                                size="small"
-                                fullWidth
-                                value={emp.remarks}
-                                onChange={(e) => handleRemarksChange(emp.id, e.target.value)}
-                                sx={textFieldStyle}
-                              />
-                            </TableCell>
-                          </TableRow>
-                          {emp.allocations.length > 1 && emp.allocations.map((alloc) => (
-                            <TableRow key={`${emp.id}-${alloc.taskId}`}>
-                              <TableCell></TableCell>
-                              <TableCell sx={{ pl: 4 }}>{formatTitle(alloc.title)}</TableCell>
-                              <TableCell align="right">{alloc.rate}</TableCell>
-                              <TableCell align="right">{alloc.hours}</TableCell>
-                              <TableCell align="right">{alloc.cost}</TableCell>
-                              <TableCell></TableCell>
-                            </TableRow>
-                          ))}
-                        </React.Fragment>
-                      ))}
-
-                    {/* Contract Employee Section */}
-                    <TableRow>
-                      <TableCell></TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', pl: 3 }}>Contract Employee</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell align="right">{calculateTotalCost(employeeAllocations, true)}</TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-
-                    {/* Contract Employee Allocations */}
-                    {employeeAllocations
-                      .filter(emp => emp.is_consultant)
-                      .map((emp) => (
-                        <React.Fragment key={emp.id}>
-                          <TableRow>
-                            <TableCell></TableCell>
-                            <TableCell sx={{ pl: 4 }}>{emp.name}</TableCell>
-                            <TableCell align="right">
-                              {emp.allocations.length === 1 ? emp.allocations[0].rate : ''}
-                            </TableCell>
-                            <TableCell align="right">
-                              {emp.allocations.length === 1 ? emp.allocations[0].hours : emp.totalHours}
-                            </TableCell>
-                            <TableCell align="right">{emp.totalCost}</TableCell>
-                            <TableCell>
-                              <TextField
-                                size="small"
-                                fullWidth
-                                value={emp.remarks}
-                                onChange={(e) => handleRemarksChange(emp.id, e.target.value)}
-                                sx={textFieldStyle}
-                              />
-                            </TableCell>
-                          </TableRow>
-                          {emp.allocations.length > 1 && emp.allocations.map((alloc) => (
-                            <TableRow key={`${emp.id}-${alloc.taskId}`}>
-                              <TableCell></TableCell>
-                              <TableCell sx={{ pl: 4 }}>{formatTitle(alloc.title)}</TableCell>
-                              <TableCell align="right">{alloc.rate}</TableCell>
-                              <TableCell align="right">{alloc.hours}</TableCell>
-                              <TableCell align="right">{alloc.cost}</TableCell>
-                              <TableCell></TableCell>
-                            </TableRow>
-                          ))}
-                        </React.Fragment>
-                      ))}
-
-                    {/* Time Contingencies Row */}
-                    <TableRow>
-                      <TableCell sx={{ pl: 3 }}>1b</TableCell>
-                      <TableCell>Time Contingencies</TableCell>
-                      <TableCell>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={timeContingency.rate}
-                          onChange={(e) => handleTimeContingencyChange('rate', e.target.value)}
-                          placeholder="Rate"
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={timeContingency.units}
-                          onChange={(e) => handleTimeContingencyChange('units', e.target.value)}
-                          placeholder="Units"
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                      <TableCell align="right">{calculateTimeContingencyCost()}</TableCell>
-                      <TableCell>
-                        <TextField
-                          size="small"
-                          fullWidth
-                          value={timeContingency.remarks}
-                          onChange={(e) => handleTimeContingencyChange('remarks', e.target.value)}
-                          placeholder="Remarks"
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                    </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </AccordionDetails>
-            </Accordion>
-            <TableContainer>
-              <Table>
-                <TableBody>
-                  <TableRow sx={summaryRowStyle}>
-                    <TableCell colSpan={4} sx={tableCellStyle}>TOTAL TIME COST</TableCell>
-                    <TableCell align="right" sx={tableCellStyle}>{calculateTotalTimeCost()}</TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-
-          {/* Expenses Section */}
-          <Box sx={{ ...sectionStyle, mb: 3 }}>
-            <Accordion 
-              expanded={expanded.includes('expenses')}
-              onChange={() => handleAccordionChange('expenses')}
-              elevation={0}
-              sx={accordionStyle}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography sx={{ fontWeight: 'bold' }}>2.0 ESTIMATED EXPENSES</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow sx={tableHeaderStyle}>
-                        <TableCell sx={tableCellStyle}>Sr. No.</TableCell>
-                        <TableCell sx={tableCellStyle}>Description</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Rate (Rs)</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Units</TableCell>
-                        <TableCell align="right" sx={tableCellStyle}>Budgeted Cost (Rs.)</TableCell>
-                        <TableCell sx={tableCellStyle}>Remarks</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {/* Regular Expenses */}
-                    {(['2a', '2b', '3', '4', '5'] as (keyof ExpensesType)[]).map((id) => (
-                      <TableRow key={id}>
-                        <TableCell sx={{ pl: 3 }}>{id}</TableCell>
-                        <TableCell>
-                          {id === '2a' && 'Travel'}
-                          {id === '2b' && 'Subsistence'}
-                          {id === '3' && 'Local conveyance'}
-                          {id === '4' && 'Communications'}
-                          {id === '5' && 'Stationery and printing'}
-                        </TableCell>
-                        <TableCell align="right">
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={expenses[id].number}
-                            onChange={(e) => handleExpenseChange(id, 'number', e.target.value)}
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell></TableCell>
-                        <TableCell align="right">{expenses[id].number}</TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={expenses[id].remarks}
-                            onChange={(e) => handleExpenseChange(id, 'remarks', e.target.value)}
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {/* Outside Agency Section */}
-                    <TableRow>
-                      <TableCell sx={{ pl: 3 }}>6a</TableCell>
-                      <TableCell colSpan={5}>Outside Agency</TableCell>
-                    </TableRow>
-
-                    {(Object.entries(outsideAgency) as [keyof OutsideAgencyType, OutsideAgencyEntry][]).map(([id, entry]) => (
-                      <TableRow key={id}>
-                        <TableCell></TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={entry.description}
-                            onChange={(e) => handleOutsideAgencyChange(id, 'description', e.target.value)}
-                            placeholder="Enter description"
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={entry.rate}
-                            onChange={(e) => handleOutsideAgencyChange(id, 'rate', e.target.value)}
-                            placeholder="Rate"
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={entry.units}
-                            onChange={(e) => handleOutsideAgencyChange(id, 'units', e.target.value)}
-                            placeholder="Units"
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell align="right">
-                          {calculateOutsideAgencyCost(entry)}
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={entry.remarks}
-                            onChange={(e) => handleOutsideAgencyChange(id, 'remarks', e.target.value)}
-                            placeholder="Remarks"
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {/* Survey Works Section */}
-                    <TableRow>
-                      <TableCell sx={{ pl: 3 }}>6b</TableCell>
-                      <TableCell>Survey works</TableCell>
-                      <TableCell align="right">
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={surveyWorks.number}
-                          onChange={(e) => handleSurveyWorksChange('number', e.target.value)}
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                      <TableCell></TableCell>
-                      <TableCell align="right">{surveyWorks.number}</TableCell>
-                      <TableCell>
-                        <TextField
-                          size="small"
-                          fullWidth
-                          value={surveyWorks.remarks}
-                          onChange={(e) => handleSurveyWorksChange('remarks', e.target.value)}
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                    </TableRow>
-
-                    {/* Project Specific Items */}
-                    {(Object.entries(projectSpecific) as [keyof ProjectSpecificType, ProjectSpecificEntry][]).map(([id, entry]) => (
-                      <TableRow key={id}>
-                        <TableCell sx={{ pl: 3 }}>{id}</TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={entry.name}
-                            onChange={(e) => handleProjectSpecificChange(id, 'name', e.target.value)}
-                            placeholder="Project specific item name"
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
-                        <TableCell align="right">
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={entry.number}
-                            onChange={(e) => handleProjectSpecificChange(id, 'number', e.target.value)}
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            fullWidth
-                            value={entry.remarks}
-                            onChange={(e) => handleProjectSpecificChange(id, 'remarks', e.target.value)}
-                            sx={textFieldStyle}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {/* Expense Contingencies */}
-                    <TableRow>
-                      <TableCell sx={{ pl: 3 }}>7</TableCell>
-                      <TableCell>Expense Contingencies</TableCell>
-                      <TableCell align="right">
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={expenses['7'].number}
-                          onChange={(e) => handleExpenseChange('7', 'number', e.target.value)}
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                      <TableCell></TableCell>
-                      <TableCell align="right">{expenses['7'].number}</TableCell>
-                      <TableCell>
-                        <TextField
-                          size="small"
-fullWidth
-                          value={expenses['7'].remarks}
-                          onChange={(e) => handleExpenseChange('7', 'remarks', e.target.value)}
-                          sx={textFieldStyle}
-                        />
-                      </TableCell>
-                    </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </AccordionDetails>
-            </Accordion>
-            <TableContainer>
-              <Table>
-                <TableBody>
-                  <TableRow sx={summaryRowStyle}>
-                    <TableCell colSpan={4} sx={tableCellStyle}>TOTAL EXPENSES (ODC)</TableCell>
-                    <TableCell align="right" sx={tableCellStyle}>{calculateExpensesTotal()}</TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-
-          <Box sx={{ ...sectionStyle, mb: 3 }}>
-          <TableContainer>
-              <Table>
-                <TableBody>
-                  <TableRow sx={{
-                    ...summaryRowStyle,
-                    '& .MuiTableCell-root': {
-                      borderBottom: 'none',
-                      fontSize: '1.1em'
-                    }
-                  }}>
-                    <TableCell colSpan={4} sx={tableCellStyle}>GRAND TOTAL</TableCell>
-                    <TableCell align="right" sx={tableCellStyle}>{calculateGrandTotal()}</TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-
-          {/* Summary Section */}
-          <Box sx={{ 
-            ...sectionStyle,
-            '& .MuiTableRow-root:not(:last-child)': {
-              '& .MuiTableCell-root': {
-                borderBottom: '1px solid #e0e0e0'
-              }
+          // Update Time contingencies row
+          const timeContingenciesRow = existingCustomRows['time-contingencies'];
+          if (timeContingenciesRow) {
+            const timeContingencyIndex = updatedTimeCustomRows.findIndex(row => row.id === 'time-contingencies');
+            if (timeContingencyIndex !== -1) {
+              updatedTimeCustomRows[timeContingencyIndex] = {
+                ...updatedTimeCustomRows[timeContingencyIndex],
+                units: timeContingenciesRow.units,
+                remarks: timeContingenciesRow.remarks || ''
+              };
             }
-          }}>
-            <TableContainer>
-              <Table>
-                <TableBody>
-                  {/* Profit Row */}
-                  <TableRow sx={{
-                    bgcolor: '#e3f2fd',
-                    '& .MuiTableCell-root': {
-                      py: 2,
-                      fontSize: '1.1em',
-                      fontWeight: 'bold'
-                    }
-                  }}>
-                    <TableCell colSpan={4} sx={tableCellStyle}>Profit</TableCell>
-                    <TableCell 
-                      align="right" 
-                      sx={{
-                        ...tableCellStyle,
-                        color: calculateProfit() >= 0 ? '#2e7d32' : '#d32f2f',
-                        fontSize: '1.2em'
-                      }}
-                    >
-                      {calculateProfit()}
-                    </TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
+          }
 
-                  {/* Project Fees Section */}
-                  <TableRow sx={{ bgcolor: '#fafafa' }}>
-                    <TableCell colSpan={4} sx={{ ...tableCellStyle, fontWeight: 'bold' }}>PROJECT FEES</TableCell>
-                    <TableCell align="right" sx={tableCellStyle}>
-                      <TextField
-                        size="small"
-                        type="number"
-                        value={projectFees}
-                        onChange={(e) => handleProjectFeesChange(e.target.value)}
-                        sx={{
-                          ...textFieldStyle,
-                          '& .MuiOutlinedInput-root': {
-                            backgroundColor: '#fff'
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
+          // Update Expenses subtotal row remarks
+          const expensesSubtotalRow = existingCustomRows['expenses-subtotal'];
+          if (expensesSubtotalRow) {
+            const expensesSubtotalIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-subtotal');
+            if (expensesSubtotalIndex !== -1) {
+              updatedExpensesCustomRows[expensesSubtotalIndex] = {
+                ...updatedExpensesCustomRows[expensesSubtotalIndex],
+                remarks: expensesSubtotalRow.remarks || ''
+              };
+            }
+          }
 
-                  {/* Service Tax Row */}
-                  <TableRow sx={{ bgcolor: '#fafafa' }}>
-                    <TableCell 
-                      colSpan={4} 
-                      sx={{ 
-                        ...tableCellStyle, 
-                        fontWeight: 'bold',
-                        '& .MuiBox-root': {
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1
-                        }
-                      }}
-                    >
-                      <Box>
-                        Service Tax (GST)
-                        <Box component="span" sx={{ mx: 1 }}>@</Box>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={serviceTax.percentage}
-                          onChange={(e) => handleServiceTaxChange(e.target.value)}
-                          sx={{
-                            width: '80px',
-                            ...textFieldStyle,
-                            '& .MuiOutlinedInput-root': {
-                              backgroundColor: '#fff',
-                              height: '36px'
-                            }
-                          }}
-                        />
-                        <Box component="span" sx={{ ml: 1 }}>%</Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell 
-                      align="right" 
-                      sx={{ 
-                        ...tableCellStyle, 
-                        fontWeight: 'bold',
-                        color: '#1976d2'
-                      }}
-                    >
-                      {calculateServiceTax()}
-                    </TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
+          // Update Expenses contingencies row
+          const expensesContingenciesRow = existingCustomRows['expenses-contingencies'];
+          if (expensesContingenciesRow) {
+            const expensesContingencyIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-contingencies');
+            if (expensesContingencyIndex !== -1) {
+              updatedExpensesCustomRows[expensesContingencyIndex] = {
+                ...updatedExpensesCustomRows[expensesContingencyIndex],
+                units: expensesContingenciesRow.units,
+                remarks: expensesContingenciesRow.remarks || ''
+              };
+            }
+          }
 
-                  {/* Total Project Fees Row */}
-                  <TableRow sx={{
-                    bgcolor: '#f5f5f5',
-                    '& .MuiTableCell-root': {
-                      borderBottom: 'none',
-                      fontWeight: 'bold',
-                      fontSize: '1.1em'
-                    }
-                  }}>
-                    <TableCell colSpan={4} sx={tableCellStyle}>TOTAL PROJECT FEES</TableCell>
-                    <TableCell align="right" sx={tableCellStyle}>{calculateTotalProjectFees()}</TableCell>
-                    <TableCell sx={tableCellStyle}></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
-  );
+          // Update Expense contingencies row
+          const expenseExpenseContingenciesRow = existingCustomRows['expenses-expense-contingencies'];
+          if (expenseExpenseContingenciesRow) {
+            const expenseExpenseContingencyIndex = updatedExpensesCustomRows.findIndex(row => row.id === 'expenses-expense-contingencies');
+            if (expenseExpenseContingencyIndex !== -1) {
+              updatedExpensesCustomRows[expenseExpenseContingencyIndex] = {
+                ...updatedExpensesCustomRows[expenseExpenseContingencyIndex],
+                units: expenseExpenseContingenciesRow.units,
+                remarks: expenseExpenseContingenciesRow.remarks || ''
+              };
+            }
+          }
+
+          // Set the updated custom rows
+          setTimeCustomRows(updatedTimeCustomRows);
+          setExpensesCustomRows(updatedExpensesCustomRows);
+
+          // Log the updated custom rows for debugging
+          console.log('Updated Time Custom Rows:', updatedTimeCustomRows);
+          console.log('Updated Expenses Custom Rows:', updatedExpensesCustomRows);
+        }
+
+        setLoading(false)
+      } catch (err) {
+        console.error('Error fetching data:', err)
+        setError('Failed to load data. Please try again later.')
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [projectId])
+
+  // If context is not available, show an error
+  if (!context) {
+    return (
+      <Container>
+        <Alert severity="error">Context not available</Alert>
+      </Container>
+    );
+  }
+
+  // If no project is selected, show a warning
+  if (!projectId) {
+    return (
+      <Container>
+        <Alert severity="warning">No project selected</Alert>
+      </Container>
+    );
+  }
+
+  // Handler for snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false)
+  }
+
+  // Handler for form submission
+  const handleSubmit = async () => {
+    if (!projectId) {
+      setSnackbarSeverity('error')
+      setSnackbarMessage('Project ID is missing')
+      setSnackbarOpen(true)
+      return
+    }
+
+    try {
+      setSubmitting(true)
+
+      // Prepare form data
+      const formData = {
+        projectId: Number(projectId),
+        formId: formId || 0,
+        time: {
+          totalTimeCost: totalTimeCost
+        },
+        expenses: {
+          totalExpenses: totalODCExpensesCost
+        },
+        grandTotal: totalTimeCost + totalODCExpensesCost,
+        projectFees: summaryData.projectFees,
+        serviceTax: {
+          percentage: summaryData.serviceTaxPercentage,
+          amount: summaryData.serviceTaxAmount
+        },
+        totalProjectFees: summaryData.totalProjectFees,
+        profit: summaryData.profit,
+        // Add resources for backend storage
+        resources: [
+          // Regular time resources
+          ...timeResources.map(resource => ({
+            wbsTaskId: typeof resource.id === 'string' ? parseInt(resource.id) : resource.id,
+            taskType: 0, // Manpower/Time
+            description: resource.description,
+            rate: resource.rate,
+            units: resource.units,
+            budgetedCost: resource.budgetedCost,
+            remarks: resource.remarks || '',
+            employeeName: resource.employeeName || '',
+            name: resource.name || ''
+          })),
+          // Time custom rows (subtotal, contingencies)
+          ...timeCustomRows.map(row => ({
+            wbsTaskId: null, // No WBS task ID for custom rows
+            taskType: 0, // Manpower/Time
+            description: row.title,
+            rate: 0, // Custom rows don't have rates
+            units: row.units || 0,
+            budgetedCost: row.budgetedCost || 0,
+            remarks: row.remarks || '',
+            employeeName: '', // No employee name for custom rows
+            name: row.id // Use the row ID as the name to identify it
+          })),
+          // Regular expenses resources
+          ...expensesResources.map(resource => ({
+            wbsTaskId: typeof resource.id === 'string' ? parseInt(resource.id) : resource.id,
+            taskType: 1, // ODC/Expenses
+            description: resource.description,
+            rate: resource.rate,
+            units: resource.units,
+            budgetedCost: resource.budgetedCost,
+            remarks: resource.remarks || '',
+            employeeName: resource.employeeName || '',
+            name: resource.name || ''
+          })),
+          // Expenses custom rows (subtotal, contingencies, expense contingencies)
+          ...expensesCustomRows.map(row => ({
+            wbsTaskId: null, // No WBS task ID for custom rows
+            taskType: 1, // ODC/Expenses
+            description: row.title,
+            rate: 0, // Custom rows don't have rates
+            units: row.units || 0,
+            budgetedCost: row.budgetedCost || 0,
+            remarks: row.remarks || '',
+            employeeName: '', // No employee name for custom rows
+            name: row.id // Use the row ID as the name to identify it
+          }))
+        ]
+      }
+
+      let result
+      if (isUpdating && formId) {
+        // Update existing form
+        result = await updateJobStartForm(projectId, formId, formData)
+        setSnackbarMessage('Job Start Form updated successfully')
+      } else {
+        // Create new form
+        result = await submitJobStartForm(projectId, formData)
+        setFormId(result.formId)
+        setIsUpdating(true)
+        setSnackbarMessage('Job Start Form submitted successfully')
+      }
+
+      setSnackbarSeverity('success')
+      setSnackbarOpen(true)
+    } catch (err) {
+      console.error('Error submitting Job Start Form:', err)
+      setSnackbarSeverity('error')
+      setSnackbarMessage('Failed to submit Job Start Form. Please try again.')
+      setSnackbarOpen(true)
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <FormWrapper>
-        {formContent}
-    </FormWrapper>
-);
-};
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box sx={{
+          width: '100%',
+          maxHeight: 'calc(100vh - 200px)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          pr: 1,
+          pb: 4
+        }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: '1px solid #e0e0e0',
+              borderRadius: 1
+            }}
+          >
+            <Typography
+              variant="h5"
+              gutterBottom
+              sx={{
+                color: '#1976d2',
+                fontWeight: 500,
+                mb: 3
+              }}
+            >
+              PMD1. Job Start Form
+            </Typography>
 
-export default JobStartForm;
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : error ? (
+              <Typography color="error" sx={{ my: 2 }}>{error}</Typography>
+            ) : (
+              <>
+
+                <JobstartTime
+                  wbsResources={wbsResources.filter(resource => resource.taskType === 0)}
+                  initialTimeContingencyUnits={timeCustomRows.find(row => row.id === 'time-contingencies')?.units}
+                  initialTimeContingencyRemarks={timeCustomRows.find(row => row.id === 'time-contingencies')?.remarks}
+                  initialSubtotalRemarks={timeCustomRows.find(row => row.id === 'time-subtotal')?.remarks}
+                  onTotalCostChange={(data) => {
+                    // Calculate total using only the time-related custom rows (subtotal and contingencies)
+                    const timeTotal = data.customRows
+                      .filter(row =>
+                        row.id === 'time-subtotal' ||
+                        row.id === 'time-contingencies'
+                      )
+                      .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+
+                    // Save the resources and custom rows for submission
+                    setTimeResources(data.resources);
+                    setTimeCustomRows(data.customRows);
+                    setTotalTimeCost(timeTotal);
+                  }}
+                />
+                <EstimatedExpenses
+                  wbsResources={wbsResources.filter(resource => resource.taskType === 1)}
+                  initialContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.units}
+                  initialContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.remarks}
+                  initialExpenseContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.units}
+                  initialExpenseContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.remarks}
+                  initialSubtotalRemarks={expensesCustomRows.find(row => row.id === 'expenses-subtotal')?.remarks}
+                  onTotalCostChange={(data) => {
+                    // Calculate total using only the expense-related custom rows
+                    const expensesTotal = data.customRows
+                      .filter(row =>
+                        row.id === 'expenses-subtotal' ||
+                        row.id === 'expenses-contingencies' ||
+                        row.id === 'expenses-expense-contingencies'
+                      )
+                      .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+
+                    // Save the resources and custom rows for submission
+                    setExpensesResources(data.resources);
+                    setExpensesCustomRows(data.customRows);
+                    setTotalODCExpensesCost(expensesTotal);
+                  }}
+                />
+                <JobstartGrandTotal
+                  timeCost={totalTimeCost}
+                  odcExpensesCost={totalODCExpensesCost}
+                />
+                <JobstartSummary
+                  grandTotal={totalTimeCost + totalODCExpensesCost}
+                  initialProjectFees={summaryData.projectFees}
+                  initialServiceTaxPercentage={summaryData.serviceTaxPercentage}
+                  onDataChange={setSummaryData}
+                />
+
+                {/* Submit Button */}
+                <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+                  <LoadingButton
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    loading={submitting}
+                    text={isUpdating ? 'Update Form' : 'Submit Form'}
+                    loadingText={isUpdating ? 'Updating...' : 'Submitting...'}
+                    sx={{
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 1,
+                      fontWeight: 'bold',
+                      boxShadow: 2
+                    }}
+                  />
+                </Box>
+              </>
+            )}
+          </Paper>
+        </Box>
+      </Container>
+
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </FormWrapper>
+  )
+}
+
+export default JobStartForm

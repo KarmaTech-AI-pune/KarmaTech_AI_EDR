@@ -1,20 +1,23 @@
-import { Credentials, LoginResponse, UserWithRole } from '../types';
+import { LoginResponse, UserWithRole } from '../types';
+import { Credentials } from '../types/auth';
 // import { Credentials, LoginResponse } from '../types';
 import { Role } from '../models';
-import { 
-    validateUser, 
+import {
+    validateUser,
 } from './usersApi';
 import { rolesApi } from './rolesApi';
 
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
+
+      // Use username from the Credentials type
       const user = validateUser(credentials.username, credentials.password);
-      
+
       if (user) {
         // Simulate token generation
         const token = `dummy_token_${user.userName}_${Date.now()}`;
-        
+
         // Get role details
         const roleDetails: Role = {
           id: user.roles[0].name,
@@ -39,7 +42,7 @@ export const authApi = {
         // Store full user information in localStorage
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userWithRole));
-        
+
         return {
           success: true,
           user: userWithRole,
@@ -47,7 +50,7 @@ export const authApi = {
           message: 'Login successful'
         };
       }
-      
+
       return {
         success: false,
         message: 'Invalid username or password'
@@ -81,7 +84,7 @@ export const authApi = {
     try {
       // Retrieve user from localStorage
       const storedUser = localStorage.getItem('user');
-      
+
       if (storedUser) {
         return JSON.parse(storedUser);
       }

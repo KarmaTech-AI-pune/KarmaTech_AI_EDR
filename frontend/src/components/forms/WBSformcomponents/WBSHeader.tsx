@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Button,
-  Alert,
   styled
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -20,15 +19,15 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
 }));
 
 interface WBSHeaderProps {
+  title: string;
   editMode: boolean;
-  error: string;
   onEditModeToggle: () => void;
   onAddMonth: () => void;
 }
 
 const WBSHeader: React.FC<WBSHeaderProps> = ({
+  title,
   editMode,
-  error,
   onEditModeToggle,
   onAddMonth
 }) => {
@@ -43,7 +42,7 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
             mb: 0
           }}
         >
-          PMD2. Work Breakdown Structure
+          {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
@@ -64,12 +63,6 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
           )}
         </Box>
       </StyledHeaderBox>
-
-      {error && (
-        <Alert severity="error" sx={{ mt: 2, mx: 2, mb: 2 }}>
-          {error}
-        </Alert>
-      )}
     </>
   );
 };

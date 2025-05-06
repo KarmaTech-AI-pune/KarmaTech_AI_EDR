@@ -30,7 +30,7 @@ const isValidWorkflowStatus = (status: unknown): status is WorkflowStatus => {
 };
 
 type OTWProps = {
-  onOpportunityUpdated?: (() => void) | undefined;
+  onOpportunityUpdated?: ((updatedOpportunity?: OpportunityTracking) => void) | undefined;
   opportunity: OpportunityTracking;
 }
 
@@ -65,7 +65,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
     setWorkflowDialogOpen(true);
   };
 
-  const handleWorkflowClose = async (success: boolean = false) => {
+  const handleWorkflowClose = async (success: boolean = false, updatedOpp?: OpportunityTracking) => {
     setWorkflowDialogOpen(false);
     if (success) {
       // Update status immediately for instant feedback
@@ -178,13 +178,18 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
             onClose={() => handleWorkflowClose(false)}
             opportunityId={opportunity.id}
             currentUser={context.currentUser.name}
-            onDecisionMade={async () => {
-              // Update status immediately when decision is made
-              const nextStatusId = (Array.isArray(opportunity.currentHistory)
-                ? opportunity.currentHistory[0]?.statusId || 0
-                : opportunity.currentHistory?.statusId || 0) + 1;
-              setLocalStatusId(nextStatusId);
-              await handleWorkflowClose(true);
+            onDecisionMade={async (updatedOpportunity) => {
+              // If we have the updated opportunity, use it
+              if (updatedOpportunity) {
+                await handleWorkflowClose(true, updatedOpportunity);
+              } else {
+                // Fallback to original behavior
+                const nextStatusId = (Array.isArray(opportunity.currentHistory)
+                  ? opportunity.currentHistory[0]?.statusId || 0
+                  : opportunity.currentHistory?.statusId || 0) + 1;
+                setLocalStatusId(nextStatusId);
+                await handleWorkflowClose(true);
+              }
             }}
           />
         );

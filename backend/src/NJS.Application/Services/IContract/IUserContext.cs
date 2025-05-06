@@ -3,5 +3,6 @@
     public interface IUserContext
     {
         string GetCurrentUserId();
+        string GetCurrentUserName();
     }
 }

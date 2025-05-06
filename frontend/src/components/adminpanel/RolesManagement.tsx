@@ -33,10 +33,14 @@ const RolesManagement = () => {
   const [formData, setFormData] = useState<{
     id: string;
     name: string;
+    minRate: number,
+    isResourceRole: boolean,
     permissions: PermissionCategoryGroup[];
   }>({
     id: '',
     name: '',
+    minRate:0,
+    isResourceRole: false,
     permissions: [],
   });
 
@@ -60,6 +64,8 @@ const RolesManagement = () => {
     setFormData({
       id: '',
       name: '',
+      minRate:0,
+      isResourceRole: false,
       permissions: [],
     });
   };
@@ -75,6 +81,8 @@ const RolesManagement = () => {
       setFormData({
         id: role.id,
         name: role.name,
+        isResourceRole: role.isResourceRole,
+        minRate: role.minRate,
         permissions: role.permissions,
       });
       setOpen(true);
@@ -199,6 +207,8 @@ const RolesManagement = () => {
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
+              <TableCell>Min Rate</TableCell>
+              <TableCell>Resource Role</TableCell>
               <TableCell>Permissions</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
@@ -207,6 +217,8 @@ const RolesManagement = () => {
             {roles.map((role) => (
               <TableRow key={role.id}>
                 <TableCell>{role.name}</TableCell>
+                <TableCell>{role.minRate}</TableCell>                
+                <TableCell>{role.isResourceRole ? 'Yes' : 'No'}</TableCell>
                 <TableCell>
                   {renderPermissionChips(role)}
                 </TableCell>

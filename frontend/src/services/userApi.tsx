@@ -84,8 +84,8 @@ export const createUser = async (user: Omit<AuthUser, 'id'>): Promise<AuthUser> 
       email: user.email,
       avatar: user.avatar,
       roles: roles,
-      IsConsultant: false,
-      StandardRate: 0
+      IsConsultant: user.isConsultant,
+      StandardRate: user.standardRate
       // Note: Password is set to "Admin@123" by backend
     };
     

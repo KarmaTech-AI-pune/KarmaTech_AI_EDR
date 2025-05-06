@@ -6,6 +6,8 @@ namespace NJS.Application.Dtos
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+        public decimal MinRate {  get; set; }   
+        public bool IsResourceRole {  get; set; }   
         public List<PermissionCategoryGroup> Permissions { get; set; } = new List<PermissionCategoryGroup>();
     }
 

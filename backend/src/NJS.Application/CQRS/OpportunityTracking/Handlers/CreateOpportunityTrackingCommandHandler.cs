@@ -11,11 +11,16 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
         : IRequestHandler<CreateOpportunityTrackingCommand, OpportunityTrackingDto>
     {
         private readonly IOpportunityTrackingRepository _repository;
+        private readonly ISettingsRepository _settingsRepository;
         private readonly IUserContext _userContext;
+        
         public CreateOpportunityTrackingCommandHandler(
-            IOpportunityTrackingRepository repository, IUserContext userContext)
+            IOpportunityTrackingRepository repository, 
+            ISettingsRepository settingsRepository,
+            IUserContext userContext)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _settingsRepository = settingsRepository ?? throw new ArgumentNullException(nameof(settingsRepository));
             _userContext = userContext;
         }
 
@@ -25,11 +30,16 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
         {
             var histories = new List<OpportunityHistory>();
             var currentDateTime = DateTime.UtcNow;
-            var currentUser= _userContext.GetCurrentUserId();
+            var currentUser = _userContext.GetCurrentUserId();
+            
+            // Get next bid number
+            int nextBidNumber = await _settingsRepository.GetNextBidNumberAsync();
+            string formattedBidNumber = nextBidNumber.ToString("0000000");
+            
             // Map command to entity
             var entity = new Domain.Entities.OpportunityTracking
             {
-
+                BidNumber = formattedBidNumber,
                 Stage = request.Stage,
                 StrategicRanking = request.StrategicRanking,
                 BidFees = request.BidFees,
@@ -109,6 +119,7 @@ namespace NJS.Application.CQRS.OpportunityTracking.Handlers
             return new OpportunityTrackingDto
             {
                 Id = result.Id,
+                BidNumber = result.BidNumber,
                 Stage = result.Stage,
                 StrategicRanking = result.StrategicRanking,
                 BidFees = result.BidFees,

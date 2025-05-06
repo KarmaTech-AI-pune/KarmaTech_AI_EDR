@@ -11,7 +11,7 @@ interface OpportunityListProps {
   opportunities: OpportunityTracking[];
   emptyMessage?: string;
   onOpportunityDeleted?: (opportunityId: string) => void;
-  onOpportunityUpdated?: () => void;
+  onOpportunityUpdated?: (updatedOpportunity?: OpportunityTracking) => void;
 }
 
 export const OpportunityList: React.FC<OpportunityListProps> = ({ 

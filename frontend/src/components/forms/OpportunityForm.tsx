@@ -38,7 +38,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   const [bdManagers, setBdManagers] = useState<{id: string, name: string}[]>([]);
   const [reviewManagers, setReviewManagers] = useState<{id: string, name: string}[]>([]);
   const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
-  const [formData, setFormData] = useState<Partial<OpportunityTracking>>({    
+  const [formData, setFormData] = useState<Partial<OpportunityTracking>>({
+    bidNumber: project?.bidNumber,
     stage: project?.stage || undefined,
     strategicRanking: project?.strategicRanking || '',
     bidFees: project?.bidFees || 0,
@@ -172,6 +173,20 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                 Key Project Information
               </Typography>
               <Grid container spacing={2}>
+                {project?.bidNumber && (
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Bid Number"
+                      name="bidNumber"
+                      value={formData.bidNumber || ''}
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                      disabled
+                    />
+                  </Grid>
+                )}
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
@@ -398,8 +413,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       data-testid="review-manager-select"
                     >
                       <MenuItem value="">None</MenuItem>
-                      {reviewManagers.map((manager) => (
-                        <MenuItem key={`review_manager_${manager.id}`} value={manager.id}>
+                      {reviewManagers.map((manager, index) => (
+                        <MenuItem key={`review_list_${index}_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
@@ -418,8 +433,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                       data-testid="approval-manager-select"
                     >
                       <MenuItem value="">None</MenuItem>
-                      {approvalManagers.map((manager) => (
-                        <MenuItem key={`approval_manager_${manager.id}`} value={manager.id}>
+                      {approvalManagers.map((manager, index) => (
+                        <MenuItem key={`approval_list_${index}_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}

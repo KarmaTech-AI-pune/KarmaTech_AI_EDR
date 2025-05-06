@@ -10,6 +10,7 @@ type OpportunityTrackingStatus =
 
 export interface OpportunityTracking {
   id: number;
+  bidNumber?: string;
   projectId?: number | string | null;
   stage?: OpportunityStage;
   strategicRanking?: string;

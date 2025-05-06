@@ -1,11 +1,12 @@
 import React from 'react';
 import {
   Box,
-  Button,
   Divider,
   Typography,
   styled
 } from '@mui/material';
+import LoadingButton from '../../common/LoadingButton';
+
 
 const SummaryText = styled(Typography)({
   fontWeight: 500,
@@ -20,6 +21,7 @@ interface WBSSummaryProps {
   currency: string;
   disabled: boolean;
   onSave: () => void;
+  loading: boolean;
 }
 
 const WBSSummary: React.FC<WBSSummaryProps> = ({
@@ -27,7 +29,8 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
   totalCost,
   currency,
   disabled,
-  onSave
+  onSave,
+  loading
 }) => {
   return (
     <Box sx={{ 
@@ -44,14 +47,14 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
       <SummaryText>
         Total Cost: {currency} {totalCost.toLocaleString()}
       </SummaryText>
-      <Button
-        variant="contained"
-        onClick={onSave}
-        disabled={disabled}
-        size="small"
-      >
-        Save
-      </Button>
+      <LoadingButton 
+      onClick={onSave}
+      loading={loading}
+      disabled={disabled}
+      text='Save'
+      loadingText='Saving...'
+      size='medium'
+      />
     </Box>
   );
 };

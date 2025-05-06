@@ -12,6 +12,8 @@ export const axiosInstance = axios.create({
 // Add request interceptor to add token to all requests
 axiosInstance.interceptors.request.use(
   (config) => {
+    // const { setLoading } = useLoading(); // Hooks cannot be called here
+    // setLoading(true);
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -26,13 +28,19 @@ axiosInstance.interceptors.request.use(
 
 // Add response interceptor to handle authentication errors
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // const { setLoading } = useLoading(); // Hooks cannot be called here
+    // setLoading(false);
+    return response;
+  },
   (error) => {
     console.error('Detailed Response error:', {
       status: error.response?.status,
       data: error.response?.data,
       message: error.message
     });
+    // const { setLoading } = useLoading(); // Hooks cannot be called here
+    // setLoading(false);
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
     }

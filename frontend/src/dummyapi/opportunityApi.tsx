@@ -256,7 +256,7 @@ export const opportunityApi = {
       };
       
       // Make API call to backend
-      const response = await axiosInstance.put<OpportunityTracking>(`api/OpportunityTracking/${opportunityId}`, command);
+      const response = await axiosInstance.put<OpportunityTracking>(`api/OpportunityTracking/UpdateOpportunityTracking/${opportunityId}`, command);
       
       // Normalize the response data, including audit fields
       const updatedData = {

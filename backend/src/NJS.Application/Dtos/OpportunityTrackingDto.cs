@@ -5,7 +5,8 @@ namespace NJS.Application.Dtos
 {
     public class OpportunityTrackingDto
     {
-        public int Id { get; set; }      
+        public int Id { get; set; }
+        public string? BidNumber { get; set; }
         public OpportunityStage Stage { get; set; }
         public string StrategicRanking { get; set; }
         public decimal? BidFees { get; set; }
