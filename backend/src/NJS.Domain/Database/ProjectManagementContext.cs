@@ -31,6 +31,7 @@ namespace NJS.Domain.Database
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<OpportunityStatus> OpportunityStatuses { get; set; }
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
+        public DbSet<ProjectHistory> ProjectHistories { get; set; }
         public DbSet<Region> Regions { get; set; }
         public DbSet<FailedEmailLog> FailedEmailLogs { get; set; }
         public DbSet<Settings> Settings { get; set; }
@@ -159,6 +160,10 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
+
+            modelBuilder.Entity<ProjectHistory>().HasOne(ph => ph.Project).WithMany(p => p.ProjectHistories).HasForeignKey(ph => ph.ProjectId);
+            modelBuilder.Entity<ProjectHistory>().HasOne(ph => ph.ActionUser).WithMany().HasForeignKey(ph => ph.ActionBy);
+            modelBuilder.Entity<ProjectHistory>().Property(ph => ph.Comments).IsRequired(false);
 
             modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoringCriterias).WithMany(s => s.GoNoGoDecisionOpportunities).HasForeignKey(oh => oh.ScoringCriteriaId);
             modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoreRanges).WithMany(s => s.GoNoGoDecisionOpportunitiesScoring).HasForeignKey(oh => oh.ScoreRangeId);

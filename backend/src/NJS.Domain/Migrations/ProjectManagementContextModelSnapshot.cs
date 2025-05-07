@@ -1561,6 +1561,46 @@ namespace NJS.Domain.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ActionBy")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ActionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AssignedToId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionBy");
+
+                    b.HasIndex("AssignedToId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectHistories");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.ProjectResource", b =>
                 {
                     b.Property<int>("Id")
@@ -2441,6 +2481,29 @@ namespace NJS.Domain.Migrations
                     b.Navigation("SeniorProjectManager");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectHistory", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.User", "ActionUser")
+                        .WithMany()
+                        .HasForeignKey("ActionBy");
+
+                    b.HasOne("NJS.Domain.Entities.User", "AssignedTo")
+                        .WithMany()
+                        .HasForeignKey("AssignedToId");
+
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany("ProjectHistories")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ActionUser");
+
+                    b.Navigation("AssignedTo");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.ProjectResource", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.Project", "Project")
@@ -2581,6 +2644,8 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
                 {
+                    b.Navigation("ProjectHistories");
+
                     b.Navigation("ProjectResources");
                 });
 
