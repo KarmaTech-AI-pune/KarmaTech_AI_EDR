@@ -23,6 +23,17 @@ export const projectApi = {
     }
   },
 
+  getByUserId: async (userId:string) => {
+    try {
+      const response = await axiosInstance.get(`api/Project/getByUserId/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error getting all projects:', error);
+      throw error;
+    }
+  },
+ 
+
   getById: async (projectId: string) => {
     try {
       const response = await axiosInstance.get(`api/Project/${projectId}`);
