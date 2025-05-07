@@ -161,6 +161,15 @@ namespace NJS.Domain.Entities
 
         // Removed workflow fields
 
+        // Workflow status
+        public int WorkflowStatusId { get; set; } = 1; // Default to Initial
+
+        [ForeignKey("WorkflowStatusId")]
+        public PMWorkflowStatus WorkflowStatus { get; set; }
+
+        // Navigation property for workflow history
+        public ICollection<ProjectClosureWorkflowHistory> WorkflowHistories { get; set; } = new List<ProjectClosureWorkflowHistory>();
+
         // Audit fields
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string CreatedBy { get; set; } = "System";

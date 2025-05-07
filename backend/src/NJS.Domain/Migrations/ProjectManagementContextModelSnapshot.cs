@@ -309,6 +309,9 @@ namespace NJS.Domain.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("PMWorkflowStatusId")
+                        .HasColumnType("int");
+
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
@@ -334,11 +337,72 @@ namespace NJS.Domain.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("WorkflowStatusId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("PMWorkflowStatusId");
 
                     b.HasIndex("ProjectId");
 
+                    b.HasIndex("WorkflowStatusId");
+
                     b.ToTable("ChangeControls");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ChangeControlWorkflowHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ActionBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ActionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AssignedToId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("ChangeControlId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ChangeControlId1")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PMWorkflowStatusId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionBy");
+
+                    b.HasIndex("AssignedToId");
+
+                    b.HasIndex("ChangeControlId");
+
+                    b.HasIndex("ChangeControlId1");
+
+                    b.HasIndex("PMWorkflowStatusId");
+
+                    b.HasIndex("StatusId");
+
+                    b.ToTable("ChangeControlWorkflowHistories");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.CheckReview", b =>
@@ -1463,6 +1527,22 @@ namespace NJS.Domain.Migrations
                     b.ToTable("OpportunityTrackings");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.PMWorkflowStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PMWorkflowStatuses");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.Permission", b =>
                 {
                     b.Property<int>("Id")
@@ -1846,6 +1926,9 @@ namespace NJS.Domain.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<int?>("PMWorkflowStatusId")
+                        .HasColumnType("int");
+
                     b.Property<string>("PlanUpToDate")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -1976,11 +2059,72 @@ namespace NJS.Domain.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<int>("WorkflowStatusId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("PMWorkflowStatusId");
 
                     b.HasIndex("ProjectId");
 
+                    b.HasIndex("WorkflowStatusId");
+
                     b.ToTable("ProjectClosures");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectClosureWorkflowHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ActionBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ActionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AssignedToId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PMWorkflowStatusId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectClosureId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProjectClosureId1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionBy");
+
+                    b.HasIndex("AssignedToId");
+
+                    b.HasIndex("PMWorkflowStatusId");
+
+                    b.HasIndex("ProjectClosureId");
+
+                    b.HasIndex("ProjectClosureId1");
+
+                    b.HasIndex("StatusId");
+
+                    b.ToTable("ProjectClosureWorkflowHistories");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ProjectResource", b =>
@@ -2627,13 +2771,67 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("NJS.Domain.Entities.ChangeControl", b =>
                 {
+                    b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", null)
+                        .WithMany("ChangeControls")
+                        .HasForeignKey("PMWorkflowStatusId");
+
                     b.HasOne("NJS.Domain.Entities.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "WorkflowStatus")
+                        .WithMany()
+                        .HasForeignKey("WorkflowStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Project");
+
+                    b.Navigation("WorkflowStatus");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ChangeControlWorkflowHistory", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.User", "ActionUser")
+                        .WithMany()
+                        .HasForeignKey("ActionBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("NJS.Domain.Entities.User", "AssignedTo")
+                        .WithMany()
+                        .HasForeignKey("AssignedToId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("NJS.Domain.Entities.ChangeControl", "ChangeControl")
+                        .WithMany()
+                        .HasForeignKey("ChangeControlId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NJS.Domain.Entities.ChangeControl", null)
+                        .WithMany("WorkflowHistories")
+                        .HasForeignKey("ChangeControlId1");
+
+                    b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", null)
+                        .WithMany("ChangeControlHistories")
+                        .HasForeignKey("PMWorkflowStatusId");
+
+                    b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ActionUser");
+
+                    b.Navigation("AssignedTo");
+
+                    b.Navigation("ChangeControl");
+
+                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.CheckReview", b =>
@@ -2876,13 +3074,67 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("NJS.Domain.Entities.ProjectClosure", b =>
                 {
+                    b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", null)
+                        .WithMany("ProjectClosures")
+                        .HasForeignKey("PMWorkflowStatusId");
+
                     b.HasOne("NJS.Domain.Entities.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "WorkflowStatus")
+                        .WithMany()
+                        .HasForeignKey("WorkflowStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Project");
+
+                    b.Navigation("WorkflowStatus");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectClosureWorkflowHistory", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.User", "ActionUser")
+                        .WithMany()
+                        .HasForeignKey("ActionBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("NJS.Domain.Entities.User", "AssignedTo")
+                        .WithMany()
+                        .HasForeignKey("AssignedToId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", null)
+                        .WithMany("ProjectClosureHistories")
+                        .HasForeignKey("PMWorkflowStatusId");
+
+                    b.HasOne("NJS.Domain.Entities.ProjectClosure", "ProjectClosure")
+                        .WithMany()
+                        .HasForeignKey("ProjectClosureId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NJS.Domain.Entities.ProjectClosure", null)
+                        .WithMany("WorkflowHistories")
+                        .HasForeignKey("ProjectClosureId1");
+
+                    b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ActionUser");
+
+                    b.Navigation("AssignedTo");
+
+                    b.Navigation("ProjectClosure");
+
+                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ProjectResource", b =>
@@ -2996,6 +3248,11 @@ namespace NJS.Domain.Migrations
                     b.Navigation("VersionHistory");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ChangeControl", b =>
+                {
+                    b.Navigation("WorkflowHistories");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionHeader", b =>
                 {
                     b.Navigation("Versions");
@@ -3018,6 +3275,17 @@ namespace NJS.Domain.Migrations
                     b.Navigation("OpportunityHistories");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.PMWorkflowStatus", b =>
+                {
+                    b.Navigation("ChangeControlHistories");
+
+                    b.Navigation("ChangeControls");
+
+                    b.Navigation("ProjectClosureHistories");
+
+                    b.Navigation("ProjectClosures");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.Permission", b =>
                 {
                     b.Navigation("RolePermissions");
@@ -3026,6 +3294,11 @@ namespace NJS.Domain.Migrations
             modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
                 {
                     b.Navigation("ProjectResources");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectClosure", b =>
+                {
+                    b.Navigation("WorkflowHistories");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ScoreRange", b =>

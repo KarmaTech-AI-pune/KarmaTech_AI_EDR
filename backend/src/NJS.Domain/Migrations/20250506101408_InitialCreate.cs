@@ -110,6 +110,19 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PMWorkflowStatuses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PMWorkflowStatuses", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Regions",
                 columns: table => new
                 {
@@ -738,14 +751,27 @@ namespace NJS.Domain.Migrations
                     ChangeOrderStatus = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     ClientApprovalStatus = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     ClaimSituation = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    WorkflowStatusId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    PMWorkflowStatusId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChangeControls", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChangeControls_PMWorkflowStatuses_PMWorkflowStatusId",
+                        column: x => x.PMWorkflowStatusId,
+                        principalTable: "PMWorkflowStatuses",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ChangeControls_PMWorkflowStatuses_WorkflowStatusId",
+                        column: x => x.WorkflowStatusId,
+                        principalTable: "PMWorkflowStatuses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ChangeControls_Projects_ProjectId",
                         column: x => x.ProjectId,
@@ -1066,14 +1092,27 @@ namespace NJS.Domain.Migrations
                     ConstructionOther = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     Positives = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     LessonsLearned = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    WorkflowStatusId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    PMWorkflowStatusId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProjectClosures", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectClosures_PMWorkflowStatuses_PMWorkflowStatusId",
+                        column: x => x.PMWorkflowStatusId,
+                        principalTable: "PMWorkflowStatuses",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ProjectClosures_PMWorkflowStatuses_WorkflowStatusId",
+                        column: x => x.WorkflowStatusId,
+                        principalTable: "PMWorkflowStatuses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ProjectClosures_Projects_ProjectId",
                         column: x => x.ProjectId,
@@ -1135,6 +1174,116 @@ namespace NJS.Domain.Migrations
                         principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ChangeControlWorkflowHistories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ChangeControlId = table.Column<int>(type: "int", nullable: false),
+                    StatusId = table.Column<int>(type: "int", nullable: false),
+                    Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ActionDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ActionBy = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AssignedToId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    ChangeControlId1 = table.Column<int>(type: "int", nullable: true),
+                    PMWorkflowStatusId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChangeControlWorkflowHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChangeControlWorkflowHistories_AspNetUsers_ActionBy",
+                        column: x => x.ActionBy,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ChangeControlWorkflowHistories_AspNetUsers_AssignedToId",
+                        column: x => x.AssignedToId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ChangeControlWorkflowHistories_ChangeControls_ChangeControlId",
+                        column: x => x.ChangeControlId,
+                        principalTable: "ChangeControls",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ChangeControlWorkflowHistories_ChangeControls_ChangeControlId1",
+                        column: x => x.ChangeControlId1,
+                        principalTable: "ChangeControls",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ChangeControlWorkflowHistories_PMWorkflowStatuses_PMWorkflowStatusId",
+                        column: x => x.PMWorkflowStatusId,
+                        principalTable: "PMWorkflowStatuses",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ChangeControlWorkflowHistories_PMWorkflowStatuses_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "PMWorkflowStatuses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProjectClosureWorkflowHistories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectClosureId = table.Column<int>(type: "int", nullable: false),
+                    StatusId = table.Column<int>(type: "int", nullable: false),
+                    Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ActionDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ActionBy = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AssignedToId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    PMWorkflowStatusId = table.Column<int>(type: "int", nullable: true),
+                    ProjectClosureId1 = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectClosureWorkflowHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectClosureWorkflowHistories_AspNetUsers_ActionBy",
+                        column: x => x.ActionBy,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ProjectClosureWorkflowHistories_AspNetUsers_AssignedToId",
+                        column: x => x.AssignedToId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ProjectClosureWorkflowHistories_PMWorkflowStatuses_PMWorkflowStatusId",
+                        column: x => x.PMWorkflowStatusId,
+                        principalTable: "PMWorkflowStatuses",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ProjectClosureWorkflowHistories_PMWorkflowStatuses_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "PMWorkflowStatuses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ProjectClosureWorkflowHistories_ProjectClosures_ProjectClosureId",
+                        column: x => x.ProjectClosureId,
+                        principalTable: "ProjectClosures",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProjectClosureWorkflowHistories_ProjectClosures_ProjectClosureId1",
+                        column: x => x.ProjectClosureId1,
+                        principalTable: "ProjectClosures",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1396,9 +1545,49 @@ namespace NJS.Domain.Migrations
                 column: "BidPreparationId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ChangeControls_PMWorkflowStatusId",
+                table: "ChangeControls",
+                column: "PMWorkflowStatusId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ChangeControls_ProjectId",
                 table: "ChangeControls",
                 column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChangeControls_WorkflowStatusId",
+                table: "ChangeControls",
+                column: "WorkflowStatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChangeControlWorkflowHistories_ActionBy",
+                table: "ChangeControlWorkflowHistories",
+                column: "ActionBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChangeControlWorkflowHistories_AssignedToId",
+                table: "ChangeControlWorkflowHistories",
+                column: "AssignedToId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChangeControlWorkflowHistories_ChangeControlId",
+                table: "ChangeControlWorkflowHistories",
+                column: "ChangeControlId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChangeControlWorkflowHistories_ChangeControlId1",
+                table: "ChangeControlWorkflowHistories",
+                column: "ChangeControlId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChangeControlWorkflowHistories_PMWorkflowStatusId",
+                table: "ChangeControlWorkflowHistories",
+                column: "PMWorkflowStatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChangeControlWorkflowHistories_StatusId",
+                table: "ChangeControlWorkflowHistories",
+                column: "StatusId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CheckReviews_ProjectId",
@@ -1516,9 +1705,49 @@ namespace NJS.Domain.Migrations
                 column: "ReviewManagerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProjectClosures_PMWorkflowStatusId",
+                table: "ProjectClosures",
+                column: "PMWorkflowStatusId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProjectClosures_ProjectId",
                 table: "ProjectClosures",
                 column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectClosures_WorkflowStatusId",
+                table: "ProjectClosures",
+                column: "WorkflowStatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectClosureWorkflowHistories_ActionBy",
+                table: "ProjectClosureWorkflowHistories",
+                column: "ActionBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectClosureWorkflowHistories_AssignedToId",
+                table: "ProjectClosureWorkflowHistories",
+                column: "AssignedToId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectClosureWorkflowHistories_PMWorkflowStatusId",
+                table: "ProjectClosureWorkflowHistories",
+                column: "PMWorkflowStatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectClosureWorkflowHistories_ProjectClosureId",
+                table: "ProjectClosureWorkflowHistories",
+                column: "ProjectClosureId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectClosureWorkflowHistories_ProjectClosureId1",
+                table: "ProjectClosureWorkflowHistories",
+                column: "ProjectClosureId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectClosureWorkflowHistories_StatusId",
+                table: "ProjectClosureWorkflowHistories",
+                column: "StatusId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectResources_ProjectId",
@@ -1633,7 +1862,7 @@ namespace NJS.Domain.Migrations
                 name: "BidVersionHistories");
 
             migrationBuilder.DropTable(
-                name: "ChangeControls");
+                name: "ChangeControlWorkflowHistories");
 
             migrationBuilder.DropTable(
                 name: "CheckReviews");
@@ -1675,7 +1904,7 @@ namespace NJS.Domain.Migrations
                 name: "OpportunityHistories");
 
             migrationBuilder.DropTable(
-                name: "ProjectClosures");
+                name: "ProjectClosureWorkflowHistories");
 
             migrationBuilder.DropTable(
                 name: "ProjectResources");
@@ -1705,6 +1934,9 @@ namespace NJS.Domain.Migrations
                 name: "BidPreparations");
 
             migrationBuilder.DropTable(
+                name: "ChangeControls");
+
+            migrationBuilder.DropTable(
                 name: "ScoreRange");
 
             migrationBuilder.DropTable(
@@ -1720,6 +1952,9 @@ namespace NJS.Domain.Migrations
                 name: "OpportunityStatuses");
 
             migrationBuilder.DropTable(
+                name: "ProjectClosures");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
@@ -1730,6 +1965,9 @@ namespace NJS.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "WBSTasks");
+
+            migrationBuilder.DropTable(
+                name: "PMWorkflowStatuses");
 
             migrationBuilder.DropTable(
                 name: "WorkBreakdownStructures");
