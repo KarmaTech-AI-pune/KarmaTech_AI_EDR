@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.WorkBreakdownStructures.Commands;
 using NJS.Application.Dtos;
+using NJS.Application.Services.IContract;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums; // Add import for WBSTaskLevel
@@ -18,14 +19,22 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
     {
         private readonly ProjectManagementContext _context;
         private readonly IUnitOfWork _unitOfWork; // Inject Unit of Work
+        private readonly IProjectHistoryService _projectHistoryService;
+        private readonly IUserContext _userContext;
 
         // TODO: Inject ICurrentUserService or similar to get current user for CreatedBy/UpdatedBy
         private readonly string _currentUser = "System"; // Placeholder
 
-        public SetWBSCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork)
+        public SetWBSCommandHandler(
+            ProjectManagementContext context, 
+            IUnitOfWork unitOfWork,
+            IProjectHistoryService projectHistoryService,
+            IUserContext userContext)
         {
             _context = context;
             _unitOfWork = unitOfWork;
+            _projectHistoryService = projectHistoryService;
+            _userContext = userContext;
         }
 
         public async Task<Unit> Handle(SetWBSCommand request, CancellationToken cancellationToken)
@@ -203,6 +212,24 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             {
                 await _unitOfWork.SaveChangesAsync();
             }
+
+            // --- 7. Create ProjectHistory record ---
+            // Get the current user ID
+            var currentUserId = _userContext.GetCurrentUserId() ?? _currentUser;
+            
+            // Create a history record for the WBS manpower data update
+            var projectHistory = new ProjectHistory
+            {
+                ProjectId = request.ProjectId,
+                StatusId = 1, // Status ID 1 as requested
+                Action = "WBS Manpower Data Updated",
+                Comments = "WBS manpower data has been updated",
+                ActionDate = DateTime.UtcNow,
+                ActionBy = currentUserId
+            };
+            
+            // Add the history record
+            await _projectHistoryService.AddHistoryAsync(projectHistory);
 
             return Unit.Value;
         }
