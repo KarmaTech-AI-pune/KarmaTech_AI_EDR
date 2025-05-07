@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MediatR;
 using NJS.Application.Dtos;
 using NJS.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Application.CQRS.JobStartForm.Queries
 {
@@ -38,20 +39,18 @@ namespace NJS.Application.CQRS.JobStartForm.Queries
                 FormId = jobStartForm.FormId,
                 ProjectId = jobStartForm.ProjectId,
                 WorkBreakdownStructureId = jobStartForm.WorkBreakdownStructureId,
-                FormTitle = jobStartForm.FormTitle,
-                Description = jobStartForm.Description,
+                FormTitle = jobStartForm.FormTitle ?? "Job Start Form",
+                Description = jobStartForm.Description ?? "",
                 StartDate = jobStartForm.StartDate,
-                PreparedBy = jobStartForm.PreparedBy,
+                PreparedBy = jobStartForm.PreparedBy ?? "",
                 CreatedDate = jobStartForm.CreatedDate,
                 UpdatedDate = jobStartForm.UpdatedDate,
 
-                // Deserialize complex objects from JSON
+                // Financial fields
                 TotalTimeCost = jobStartForm.TotalTimeCost,
                 TotalExpenses = jobStartForm.TotalExpenses,
                 ServiceTaxPercentage = jobStartForm.ServiceTaxPercentage,
                 ServiceTaxAmount = jobStartForm.ServiceTaxAmount,
-
-                // Financial fields
                 GrandTotal = jobStartForm.GrandTotal,
                 ProjectFees = jobStartForm.ProjectFees,
                 TotalProjectFees = jobStartForm.TotalProjectFees,
@@ -66,8 +65,24 @@ namespace NJS.Application.CQRS.JobStartForm.Queries
                     OptionName = s.OptionName,
                     IsSelected = s.IsSelected,
                     Notes = s.Notes
-                }).ToList() ?? new List<JobStartFormSelectionDto>()
-            }).ToList();
+                }).ToList() ?? new List<JobStartFormSelectionDto>(),
+
+                // Resources
+                Resources = jobStartForm.Resources?.Select(r => new JobStartFormResourceDto
+                {
+                    ResourceId = r.ResourceId,
+                    FormId = r.FormId,
+                    WBSTaskId = r.WBSTaskId,
+                    TaskType = r.TaskType,
+                    Description = r.Description,
+                    Rate = r.Rate,
+                    Units = r.Units,
+                    BudgetedCost = r.BudgetedCost,
+                    Remarks = r.Remarks,
+                    EmployeeName = r.EmployeeName,
+                    Name = r.Name
+                }).ToList() ?? new List<JobStartFormResourceDto>()
+            });
         }
     }
 }

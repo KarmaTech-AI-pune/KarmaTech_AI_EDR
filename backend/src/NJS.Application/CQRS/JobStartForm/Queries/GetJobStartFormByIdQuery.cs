@@ -69,7 +69,26 @@ namespace NJS.Application.CQRS.JobStartForm.Queries
                     OptionName = s.OptionName,
                     IsSelected = s.IsSelected,
                     Notes = s.Notes
-                }).ToList() ?? new List<JobStartFormSelectionDto>()
+                }).ToList() ?? new List<JobStartFormSelectionDto>(),
+
+                // *** ADDED MAPPING FOR RESOURCES ***
+                Resources = jobStartForm.Resources?.Select(r => new JobStartFormResourceDto // Use correct navigation property 'Resources'
+                {
+                    ResourceId = r.ResourceId, // Map ResourceId
+                    FormId = r.FormId,
+                    WBSTaskId = r.WBSTaskId,
+                    TaskType = r.TaskType,
+                    Description = r.Description,
+                    Rate = r.Rate,
+                    Units = r.Units,
+                    BudgetedCost = r.BudgetedCost,
+                    Remarks = r.Remarks,
+                    EmployeeName = r.EmployeeName,
+                    Name = r.Name,
+                    CreatedDate = r.CreatedDate, // Map CreatedDate
+                    UpdatedDate = r.UpdatedDate  // Map UpdatedDate
+                }).ToList() ?? new List<JobStartFormResourceDto>()
+                // *** END ADDED MAPPING ***
             };
         }
     }

@@ -23,11 +23,12 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
 
         public async Task<IEnumerable<JobStartFormDto>> Handle(GetAllJobStartFormByProjectIdQuery query, CancellationToken cancellationToken)
         {
-            // Use generic repository, filter by ProjectId, include Selections
+            // Use generic repository, filter by ProjectId, include Selections and Resources
             var jobStartForms = await _unitOfWork.GetRepository<NJS.Domain.Entities.JobStartForm>()
                                                 .Query()
                                                 .Where(jsf => jsf.ProjectId == query.ProjectId)
                                                 .Include(jsf => jsf.Selections)
+                                                .Include(jsf => jsf.Resources)
                                                 .ToListAsync(cancellationToken);
 
             // Map entities to DTOs
@@ -42,6 +43,17 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                 PreparedBy = jobStartForm.PreparedBy,
                 CreatedDate = jobStartForm.CreatedDate,
                 UpdatedDate = jobStartForm.UpdatedDate,
+                // Deserialize complex objects from JSON
+                TotalTimeCost = jobStartForm.TotalTimeCost,
+                TotalExpenses = jobStartForm.TotalExpenses,
+                ServiceTaxPercentage = jobStartForm.ServiceTaxPercentage,
+                ServiceTaxAmount = jobStartForm.ServiceTaxAmount,
+                GrandTotal = jobStartForm.GrandTotal,
+                ProjectFees = jobStartForm.ProjectFees,
+                TotalProjectFees = jobStartForm.TotalProjectFees,
+                Profit = jobStartForm.Profit,
+
+                // Map selections
                 Selections = jobStartForm.Selections.Select(s => new JobStartFormSelectionDto
                 {
                     SelectionId = s.SelectionId,
@@ -50,6 +62,24 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                     OptionName = s.OptionName,
                     IsSelected = s.IsSelected,
                     Notes = s.Notes
+                }).ToList(),
+
+                // Map resources
+                Resources = jobStartForm.Resources.Select(r => new JobStartFormResourceDto
+                {
+                    ResourceId = r.ResourceId,
+                    FormId = r.FormId,
+                    WBSTaskId = r.WBSTaskId,
+                    TaskType = r.TaskType,
+                    Description = r.Description,
+                    Rate = r.Rate,
+                    Units = r.Units,
+                    BudgetedCost = r.BudgetedCost,
+                    Remarks = r.Remarks,
+                    EmployeeName = r.EmployeeName,
+                    Name = r.Name,
+                    CreatedDate = r.CreatedDate,
+                    UpdatedDate = r.UpdatedDate
                 }).ToList()
             });
         }

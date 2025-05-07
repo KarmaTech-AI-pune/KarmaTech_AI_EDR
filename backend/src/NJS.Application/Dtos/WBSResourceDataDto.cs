@@ -22,10 +22,12 @@ namespace NJS.Application.Dtos
         public string RoleId { get; set; }
         public string EmployeeId { get; set; }
         public string EmployeeName { get; set; }
+        public string Name { get; set; }
         public bool IsConsultant { get; set; }
         public decimal CostRate { get; set; }
         public decimal TotalHours { get; set; }
         public decimal TotalCost { get; set; }
         public decimal ODC { get; set; }
+        public int TaskType { get; set; }
     }
 }

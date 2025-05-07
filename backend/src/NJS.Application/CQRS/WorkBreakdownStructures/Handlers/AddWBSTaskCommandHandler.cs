@@ -63,6 +63,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 EstimatedBudget = taskDto.EstimatedBudget,
                 StartDate = taskDto.StartDate,
                 EndDate = taskDto.EndDate,
+                TaskType = taskDto.TaskType, // Set TaskType
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = _currentUser,
                 IsDeleted = false,
@@ -88,28 +89,50 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         private void UpdateUserAssignment(WBSTask taskEntity, WBSTaskDto taskDto)
         {
-            // This method assumes taskEntity.UserWBSTasks is initialized
-            // For a new task, we only need the 'else' part of the original logic
-
-            if (!string.IsNullOrEmpty(taskDto.AssignedUserId))
+            // Handle Manpower tasks
+            if (taskEntity.TaskType == TaskType.Manpower)
             {
-                // Create new assignment
-                var newUserTask = new UserWBSTask
+                // Only proceed if UserId is not null/empty
+                if (!string.IsNullOrEmpty(taskDto.AssignedUserId))
                 {
-                    WBSTask = taskEntity, // EF Core should link this via navigation property
-                    UserId = taskDto.AssignedUserId,
-                    CostRate = taskDto.CostRate,
-                    ODCCost = taskDto.ODCCost,
-                    // Calculate based on current monthly hours (which should be added by UpdateMonthlyHours)
-                    TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
-                    TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate + taskDto.ODCCost,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = _currentUser
-                };
-                taskEntity.UserWBSTasks.Add(newUserTask);
-                // Context should track this automatically as it's added to the tracked taskEntity
+                    // Create new assignment for Manpower task
+                    var newUserTask = new UserWBSTask
+                    {
+                        WBSTask = taskEntity,
+                        UserId = taskDto.AssignedUserId,
+                        Name = null, // No Name for Manpower tasks
+                        CostRate = taskDto.CostRate,
+                        Unit = taskDto.ResourceUnit,
+                        TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
+                        TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = _currentUser
+                    };
+                    taskEntity.UserWBSTasks.Add(newUserTask);
+                }
             }
-            // No need to handle removal for a new task
+            // Handle ODC tasks
+            else if (taskEntity.TaskType == TaskType.ODC)
+            {
+                // Only proceed if Name is not null/empty
+                if (!string.IsNullOrEmpty(taskDto.ResourceName))
+                {
+                    // Create new assignment for ODC task
+                    var newUserTask = new UserWBSTask
+                    {
+                        WBSTask = taskEntity,
+                        UserId = null, // No UserId for ODC tasks
+                        Name = taskDto.ResourceName,
+                        CostRate = taskDto.CostRate,
+                        Unit = taskDto.ResourceUnit,
+                        TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
+                        TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = _currentUser
+                    };
+                    taskEntity.UserWBSTasks.Add(newUserTask);
+                }
+            }
         }
 
         private void UpdateMonthlyHours(WBSTask taskEntity, WBSTaskDto taskDto)
@@ -138,7 +161,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             if (userTask != null)
             {
                 userTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
-                userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate + userTask.ODCCost;
+                userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate;
             }
         }
     }

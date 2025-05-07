@@ -63,15 +63,15 @@ namespace NJSAPI.Controllers
         /// <returns>Updated monthly hours data</returns>
         [HttpPut("tasks/{taskId}/monthlyhours")]
         public async Task<IActionResult> UpdateMonthlyHours(
-            int projectId, 
-            int taskId, 
+            int projectId,
+            int taskId,
             [FromBody] UpdateMonthlyHoursRequest data)
         {
             var task = await _context.WBSTasks
                 .Include(t => t.MonthlyHours)
                 .Include(t => t.UserWBSTasks)
-                .FirstOrDefaultAsync(t => t.Id == taskId && 
-                                         t.WorkBreakdownStructure.ProjectId == projectId && 
+                .FirstOrDefaultAsync(t => t.Id == taskId &&
+                                         t.WorkBreakdownStructure.ProjectId == projectId &&
                                          !t.IsDeleted);
 
             if (task == null)
@@ -104,11 +104,11 @@ namespace NJSAPI.Controllers
             // Update total hours and cost in UserWBSTask
             var totalHours = data.MonthlyHours.Sum(mh => mh.PlannedHours);
             var userTask = task.UserWBSTasks.FirstOrDefault();
-            
+
             if (userTask != null)
             {
                 userTask.TotalHours = totalHours;
-                userTask.TotalCost = (decimal)totalHours * userTask.CostRate + userTask.ODCCost;
+                userTask.TotalCost = (decimal)totalHours * userTask.CostRate;
                 userTask.UpdatedAt = DateTime.UtcNow;
                 userTask.UpdatedBy = "System"; // Replace with current user
             }

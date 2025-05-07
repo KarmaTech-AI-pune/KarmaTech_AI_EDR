@@ -30,9 +30,10 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
             if (command.JobStartFormDto.FormId <= 0)
                 throw new ArgumentException("Invalid FormId in DTO", nameof(command.JobStartFormDto.FormId));
 
-            // Use the injected context directly to find and include Selections
+            // Use the injected context directly to find and include Selections and Resources
             var jobStartForm = await _context.JobStartForms
                                              .Include(j => j.Selections) // Eager load Selections
+                                             .Include(j => j.Resources) // Eager load Resources
                                              .FirstOrDefaultAsync(j => j.FormId == command.JobStartFormDto.FormId && !j.IsDeleted, cancellationToken);
 
             if (jobStartForm != null)
@@ -80,8 +81,37 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                 }
                 // --- End Update Selections ---
 
+                // --- Update Resources (Clear and Add strategy) ---
+                // Since Resources were loaded with .Include(), EF Core knows about the existing ones.
+                // Clearing the collection marks existing related entities for deletion.
+                jobStartForm.Resources.Clear();
+
+                // Add new/updated resources from DTO. EF Core will mark these as added.
+                if (command.JobStartFormDto.Resources?.Any() == true)
+                {
+                    foreach (var resourceDto in command.JobStartFormDto.Resources)
+                    {
+                        jobStartForm.Resources.Add(new JobStartFormResource
+                        {
+                            // FormId will be set by EF Core relationship fixup
+                            WBSTaskId = resourceDto.WBSTaskId,
+                            TaskType = resourceDto.TaskType, // 0 = Manpower/Time, 1 = ODC/Expenses
+                            Description = resourceDto.Description ?? string.Empty,
+                            Rate = resourceDto.Rate,
+                            Units = resourceDto.Units,
+                            BudgetedCost = resourceDto.BudgetedCost,
+                            Remarks = resourceDto.Remarks ?? string.Empty,
+                            EmployeeName = resourceDto.EmployeeName ?? string.Empty, // For Manpower resources
+                            Name = resourceDto.Name ?? string.Empty, // For ODC resources
+                            CreatedDate = DateTime.UtcNow,
+                            UpdatedDate = DateTime.UtcNow
+                        });
+                    }
+                }
+                // --- End Update Resources ---
+
                 // No need for explicit UpdateAsync call when the entity is tracked by the context.
-                // SaveChangesAsync will detect changes to jobStartForm and its Selections collection.
+                // SaveChangesAsync will detect changes to jobStartForm and its collections.
                 await _unitOfWork.SaveChangesAsync();
             }
         }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -11,11 +11,22 @@ import {
   FormControlLabel,
   Typography,
   IconButton,
+  styled,
   Grid,
-  styled
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  FormHelperText,
+  SelectChangeEvent
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { CheckReviewRow } from "../../../models";
+import { CheckReviewRow, Employee } from "../../../models";
+import { User } from "../../../models";
+import * as userApi from "../../../services/userApi";
+import { projectManagementAppContext } from '../../../App';
+import { WBSStructureAPI } from '../../../services/wbsApi';
+import { ResourceAPI } from '../../../services/resourceApi';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
@@ -42,9 +53,10 @@ interface CheckReviewDialogProps {
   onClose: () => void;
   onSave: (data: Omit<CheckReviewRow, 'projectId' | 'activityNo'>) => void;
   nextActivityNo: string;
+  editData?: CheckReviewRow;
 }
 
-export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: CheckReviewDialogProps) => {
+export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editData }: CheckReviewDialogProps) => {
   const [formData, setFormData] = useState<Omit<CheckReviewRow, 'projectId' | 'activityNo'>>({
     activityName: '',
     objective: '',
@@ -54,16 +66,163 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
     completion: 'N',
     checkedBy: '',
     approvedBy: '',
-    actionTaken: ''
+    actionTaken: '',
+    maker: '',
+    checker: ''
   });
 
-  const handleChange = (field: keyof Omit<CheckReviewRow, 'projectId' | 'activityNo'>) => 
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData({
-        ...formData,
-        [field]: event.target.value
+  const [users, setUsers] = useState<User[]>([]);
+  const context = useContext(projectManagementAppContext);
+  const [activityOptions, setActivityOptions] = useState<string[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [loadingEmployees, setLoadingEmployees] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [employeesError, setEmployeesError] = useState<string | null>(null);
+  const [activityToUserMap, setActivityToUserMap] = useState<Map<string, string>>(new Map());
+
+  // Fetch WBS data and users when dialog opens
+  useEffect(() => {
+    if (open) {
+      // Load users for dropdowns
+      const loadUsers = async () => {
+        try {
+          const allUsers = await userApi.getAllUsers();
+          setUsers(allUsers);
+        } catch (err) {
+          console.error('Error fetching users:', err);
+        }
+      };
+
+      // Load WBS data if project is selected
+      if (context?.selectedProject?.id) {
+        fetchWBSData(context.selectedProject.id.toString());
+      }
+
+      loadUsers();
+    }
+  }, [open, context?.selectedProject?.id]);
+
+
+  const fetchWBSData = async (projectId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Use WBSStructureAPI to fetch WBS data
+      const wbsData = await WBSStructureAPI.getProjectWBS(projectId);
+
+      // Extract level3 titles from WBS data and remove duplicates using a Set
+      const uniqueLevel3TitlesSet = new Set(
+        wbsData
+          .filter(task => task.level === 3)
+          .map(task => task.title)
+          .filter(title => title && title.trim() !== '')
+      );
+
+      // Convert Set back to array
+      const uniqueLevel3Titles = Array.from(uniqueLevel3TitlesSet);
+
+      setActivityOptions(uniqueLevel3Titles);
+
+      // Find level3 tasks with assigned users
+      const level3TasksWithUsers = wbsData
+        .filter(task => task.level === 3 && task.assignedUserId);
+
+      // Create a map of activity names to assigned users
+      const newActivityToUserMap = new Map<string, string>();
+      level3TasksWithUsers.forEach(task => {
+        if (task.title && task.assignedUserId) {
+          newActivityToUserMap.set(task.title, task.assignedUserId);
+        }
       });
+
+      // Update the activity to user map
+      setActivityToUserMap(newActivityToUserMap);
+
+      // Get all assigned user IDs from WBS data and remove duplicates
+      const uniqueAssignedUserIdsSet = new Set(
+        level3TasksWithUsers
+          .map(task => task.assignedUserId)
+          .filter(id => id !== null && id !== undefined) as string[]
+      );
+
+      // Convert Set back to array
+      const uniqueAssignedUserIds = Array.from(uniqueAssignedUserIdsSet);
+
+      // If we have assigned users, fetch their details
+      if (uniqueAssignedUserIds.length > 0) {
+        setLoadingEmployees(true);
+        try {
+          // Fetch all employees to ensure we have complete data
+          const allEmployees = await ResourceAPI.getAllEmployees();
+
+          // Filter employees to only include those assigned in WBS
+          const wbsEmployees = allEmployees.filter(emp =>
+            uniqueAssignedUserIds.includes(emp.id)
+          );
+
+          // If we have WBS employees, update the employees list
+          if (wbsEmployees.length > 0) {
+            // Create a Map to ensure uniqueness by employee ID
+            const uniqueEmployeesMap = new Map(
+              wbsEmployees.map(emp => [emp.id, emp])
+            );
+
+            // Convert Map values back to array
+            const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
+
+            setEmployees(uniqueEmployees);
+          }
+
+          // If we have a current activity selected, update the maker field
+          if (formData.activityName && newActivityToUserMap.has(formData.activityName)) {
+            setFormData(prevData => ({
+              ...prevData,
+              maker: newActivityToUserMap.get(formData.activityName) || ''
+            }));
+          }
+        } catch (err) {
+          console.error('Error fetching employee details:', err);
+          setEmployeesError('Failed to load employee details from WBS.');
+        } finally {
+          setLoadingEmployees(false);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching WBS data:', err);
+      setError('Failed to load activity options. Using default options.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTextFieldChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const name = event.target.name as keyof typeof formData;
+    const value = event.target.value as string;
+
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  const handleSelectChange = (event: SelectChangeEvent) => {
+    const name = event.target.name as keyof typeof formData;
+    const value = event.target.value;
+
+    // Create updated form data
+    const updatedFormData = {
+      ...formData,
+      [name]: value
     };
+
+    // If activity name changed, update the maker field based on the activity-to-user mapping
+    if (name === 'activityName' && value && activityToUserMap.has(value)) {
+      updatedFormData.maker = activityToUserMap.get(value) || '';
+    }
+
+    setFormData(updatedFormData);
+  };
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -71,6 +230,40 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
       completion: event.target.checked ? 'Y' : 'N'
     });
   };
+
+  // Initialize form data when editData changes
+  React.useEffect(() => {
+    if (editData) {
+      setFormData({
+        activityName: editData.activityName,
+        objective: editData.objective,
+        references: editData.references || '',
+        fileName: editData.fileName || '',
+        qualityIssues: editData.qualityIssues || '',
+        completion: editData.completion,
+        checkedBy: editData.checkedBy || '',
+        approvedBy: editData.approvedBy || '',
+        actionTaken: editData.actionTaken || '',
+        maker: editData.maker || '',
+        checker: editData.checker || ''
+      });
+    } else {
+      // Reset form when not editing
+      setFormData({
+        activityName: '',
+        objective: '',
+        references: '',
+        fileName: '',
+        qualityIssues: '',
+        completion: 'N',
+        checkedBy: '',
+        approvedBy: '',
+        actionTaken: '',
+        maker: '',
+        checker: ''
+      });
+    }
+  }, [editData, open]);
 
   const handleSubmit = () => {
     onSave(formData);
@@ -83,7 +276,9 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
       completion: 'N',
       checkedBy: '',
       approvedBy: '',
-      actionTaken: ''
+      actionTaken: '',
+      maker: '',
+      checker: ''
     });
     onClose();
   };
@@ -114,7 +309,7 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
     <StyledDialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ m: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" component="div" sx={{ color: '#1976d2', fontWeight: 500 }}>
-          Add Check Review - Activity No: {nextActivityNo}
+          {editData ? 'Edit Check Review' : `Add Check Review - Activity No: ${nextActivityNo}`}
         </Typography>
         <IconButton
           onClick={onClose}
@@ -135,19 +330,74 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <TextField
-                label="Activity Name"
-                value={formData.activityName}
-                onChange={handleChange('activityName')}
-                fullWidth
-                sx={textFieldStyle}
-              />
+              <FormControl fullWidth sx={textFieldStyle}>
+                <InputLabel id="activity-name-label">Activity Name</InputLabel>
+                <Select
+                  labelId="activity-name-label"
+                  id="activity-name"
+                  value={formData.activityName}
+                  name="activityName"
+                  label="Activity Name"
+                  onChange={handleSelectChange}
+                >
+                  {activityOptions.map((option: string) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth sx={textFieldStyle}>
+                <InputLabel id="maker-label">Maker</InputLabel>
+                <Select
+                  labelId="maker-label"
+                  id="maker"
+                  value={formData.maker}
+                  name="maker"
+                  label="Maker"
+                  onChange={handleSelectChange}
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {employees.map((employee) => (
+                    <MenuItem key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth sx={textFieldStyle}>
+                <InputLabel id="checker-label">Checker</InputLabel>
+                <Select
+                  labelId="checker-label"
+                  id="checker"
+                  value={formData.checker}
+                  name="checker"
+                  label="Checker"
+                  onChange={handleSelectChange}
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {employees.map((employee) => (
+                    <MenuItem key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12}>
               <TextField
                 label="Objective"
                 value={formData.objective}
-                onChange={handleChange('objective')}
+                name='objective'
+                onChange={handleTextFieldChange}
                 fullWidth
                 multiline
                 rows={2}
@@ -166,7 +416,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
               <TextField
                 label="References and Standards"
                 value={formData.references}
-                onChange={handleChange('references')}
+                name='references'
+                onChange={handleTextFieldChange}
                 fullWidth
                 sx={textFieldStyle}
               />
@@ -175,7 +426,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
               <TextField
                 label="File Name"
                 value={formData.fileName}
-                onChange={handleChange('fileName')}
+                name='fileName'
+                onChange={handleTextFieldChange}
                 fullWidth
                 sx={textFieldStyle}
               />
@@ -192,7 +444,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
               <TextField
                 label="Specific Quality Issues"
                 value={formData.qualityIssues}
-                onChange={handleChange('qualityIssues')}
+                name='qualityIssues'
+                onChange={handleTextFieldChange}
                 fullWidth
                 multiline
                 rows={2}
@@ -224,7 +477,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
                 label="Checked by"
                 type="date"
                 value={formData.checkedBy}
-                onChange={handleChange('checkedBy')}
+                name='checkedBy'
+                onChange={handleTextFieldChange}
                 fullWidth
                 InputLabelProps={{
                   shrink: true,
@@ -237,7 +491,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
                 label="Approved by"
                 type="date"
                 value={formData.approvedBy}
-                onChange={handleChange('approvedBy')}
+                name='approvedBy'
+                onChange={handleTextFieldChange}
                 fullWidth
                 InputLabelProps={{
                   shrink: true,
@@ -257,7 +512,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
               <TextField
                 label="Action Taken"
                 value={formData.actionTaken}
-                onChange={handleChange('actionTaken')}
+                name='actionTaken'
+                onChange={handleTextFieldChange}
                 fullWidth
                 multiline
                 rows={2}
@@ -269,9 +525,9 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
       </DialogContent>
 
       <DialogActions>
-        <Button 
+        <Button
           onClick={onClose}
-          sx={{ 
+          sx={{
             color: 'text.secondary',
             '&:hover': {
               backgroundColor: 'rgba(0, 0, 0, 0.04)'
@@ -280,7 +536,7 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo }: Che
         >
           Cancel
         </Button>
-        <Button 
+        <Button
           onClick={handleSubmit}
           variant="contained"
           sx={{

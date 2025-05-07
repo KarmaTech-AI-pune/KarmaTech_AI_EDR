@@ -44,6 +44,9 @@ namespace NJS.Domain.Entities
         // Navigation property for related selections/options
         public virtual ICollection<JobStartFormSelection> Selections { get; set; } = new List<JobStartFormSelection>();
 
+        // Navigation property for related resources
+        public virtual ICollection<JobStartFormResource> Resources { get; set; } = new List<JobStartFormResource>();
+
         // Audit fields
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedDate { get; set; }
