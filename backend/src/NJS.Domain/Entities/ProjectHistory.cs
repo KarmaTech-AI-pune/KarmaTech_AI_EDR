@@ -19,6 +19,7 @@ namespace NJS.Domain.Entities
         public int ProjectId { get; set; }
         public Project Project { get; set; }
         public int StatusId { get; set; }
+        public OpportunityStatus Status { get; set; }
         public string Action { get; set; }
         public string Comments { get; set; }
         public DateTime ActionDate { get; set; }
