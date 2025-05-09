@@ -65,6 +65,23 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
+        /// Gets projects by UserId
+        /// </summary>
+        [HttpGet("getByUserId/{userId}")]
+        [ProducesResponseType(typeof(Project), 200)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetByUserId(string userId)
+        {
+            var query = new GetProjectByUserIdQuery { UserId = userId };
+            var result = await _mediator.Send(query);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Gets all projects
         /// </summary>
         [HttpGet]

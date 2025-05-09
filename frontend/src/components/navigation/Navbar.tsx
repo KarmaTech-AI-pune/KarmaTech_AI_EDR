@@ -166,7 +166,7 @@ export const Navbar = () => {
               }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={() => handleNavClick(page)}>
+                <MenuItem key={page} onClick={() => handleNavClick(page)} data-testid={`mobile-nav-${page.replace(/\s+/g, '-').toLowerCase()}`}>
                   <Typography textAlign="center">{page}</Typography>
                 </MenuItem>
               ))}
@@ -184,6 +184,7 @@ export const Navbar = () => {
               <Button
                 key={page}
                 onClick={() => handleNavClick(page)}
+                data-testid={`desktop-nav-${page.replace(/\s+/g, '-').toLowerCase()}`}
                 sx={{ 
                   my: 2, 
                   color: 'white', 
@@ -242,6 +243,7 @@ export const Navbar = () => {
               }}
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
+              data-testid="menu"
             >
               <MenuItem onClick={handleCloseUserMenu}>
                 <Typography textAlign="center">Profile</Typography>

@@ -19,8 +19,13 @@ export const BDChips: React.FC<BDChipsProps> = ({ opportunityId }) => {
 
   useEffect(() => {
     const fetchWorkflow = async () => {
-      const workflowData = await getWorkflowByOpportunityId(opportunityId);
-      setWorkflow(workflowData);
+      try {
+        const workflowData = await getWorkflowByOpportunityId(opportunityId);
+        setWorkflow(workflowData);
+      } catch (error) {
+        console.error("Error fetching workflow data:", error);
+        // Optionally setWorkflow to an initial state or handle error in UI
+      }
     };
     fetchWorkflow();
   }, [opportunityId]);
