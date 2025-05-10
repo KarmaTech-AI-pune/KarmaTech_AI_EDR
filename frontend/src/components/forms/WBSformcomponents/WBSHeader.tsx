@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   Box,
   Typography,
@@ -7,6 +7,8 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import { ProjectTrackingWorkflow } from '../../dialogbox/ProjectReviewWorkflow/ProjectTrackingWorkflow';
+import { projectManagementAppContext } from '../../../App';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -31,12 +33,21 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
   onEditModeToggle,
   onAddMonth
 }) => {
+  const context = useContext(projectManagementAppContext);
+  const statusId = "Initial"; // Capitalized to match the case in the component
+  const projectId = context?.selectedProject?.id ? Number(context.selectedProject.id) : undefined;
+
+  const handleStatusUpdate = (newStatus: string) => {
+    console.log("WBS Status updated to:", newStatus);
+    // You can add additional logic here to handle status updates
+  };
+
   return (
     <>
       <StyledHeaderBox>
-        <Typography 
-          variant="h5" 
-          sx={{ 
+        <Typography
+          variant="h5"
+          sx={{
             color: '#1976d2',
             fontWeight: 500,
             mb: 0
@@ -45,6 +56,13 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
           {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
+        {editMode && (
+            <ProjectTrackingWorkflow
+              statusId={statusId}
+              projectId={projectId}
+              onStatusUpdate={handleStatusUpdate}
+            />
+          )}
           <Button
             variant="outlined"
             startIcon={<EditIcon />}
