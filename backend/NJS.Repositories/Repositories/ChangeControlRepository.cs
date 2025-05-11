@@ -21,6 +21,7 @@ namespace NJS.Repositories.Repositories
         public async Task<IEnumerable<ChangeControl>> GetAllAsync()
         {
             return await _context.ChangeControls
+                .Include(cc => cc.WorkflowHistories)
                 .OrderBy(cc => cc.ProjectId)
                 .ThenBy(cc => cc.SrNo)
                 .ToListAsync();
@@ -34,6 +35,7 @@ namespace NJS.Repositories.Repositories
         public async Task<IEnumerable<ChangeControl>> GetByProjectIdAsync(int projectId)
         {
             return await _context.ChangeControls
+                .Include(cc => cc.WorkflowHistories)
                 .Where(cc => cc.ProjectId == projectId)
                 .OrderBy(cc => cc.SrNo)
                 .ToListAsync();

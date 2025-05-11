@@ -20,9 +20,9 @@ namespace NJS.API.Tests.Validation
                 Description = "Test Description",
                 StartDate = DateTime.UtcNow,
                 PreparedBy = "Test User",
-                TimeDataJson = "{\"hours\": 40}",
-                ExpensesDataJson = "{\"travel\": 1000}",
-                ServiceTaxJson = "{\"tax\": 18}",
+                //TimeDataJson = "{\"hours\": 40}",
+                //ExpensesDataJson = "{\"travel\": 1000}",
+                //ServiceTaxJson = "{\"tax\": 18}",
                 GrandTotal = 5000,
                 ProjectFees = 4000,
                 TotalProjectFees = 4720,
@@ -85,9 +85,9 @@ namespace NJS.API.Tests.Validation
                 Description = "Test Description",
                 StartDate = DateTime.UtcNow,
                 PreparedBy = "Test User",
-                TimeDataJson = "{\"hours\": 40}",
-                ExpensesDataJson = "{\"travel\": 1000}",
-                ServiceTaxJson = "{\"tax\": 18}",
+                //TimeDataJson = "{\"hours\": 40}",
+                //ExpensesDataJson = "{\"travel\": 1000}",
+                //ServiceTaxJson = "{\"tax\": 18}",
                 GrandTotal = -5000, // Negative amount
                 ProjectFees = -4000, // Negative amount
                 TotalProjectFees = -4720, // Negative amount

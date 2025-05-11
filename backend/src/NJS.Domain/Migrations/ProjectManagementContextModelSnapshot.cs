@@ -376,9 +376,6 @@ namespace NJS.Domain.Migrations
                     b.Property<int>("ChangeControlId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ChangeControlId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("Comments")
                         .HasColumnType("nvarchar(max)");
 
@@ -395,8 +392,6 @@ namespace NJS.Domain.Migrations
                     b.HasIndex("AssignedToId");
 
                     b.HasIndex("ChangeControlId");
-
-                    b.HasIndex("ChangeControlId1");
 
                     b.HasIndex("PMWorkflowStatusId");
 
@@ -2104,9 +2099,6 @@ namespace NJS.Domain.Migrations
                     b.Property<int>("ProjectClosureId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ProjectClosureId1")
-                        .HasColumnType("int");
-
                     b.Property<int>("StatusId")
                         .HasColumnType("int");
 
@@ -2119,8 +2111,6 @@ namespace NJS.Domain.Migrations
                     b.HasIndex("PMWorkflowStatusId");
 
                     b.HasIndex("ProjectClosureId");
-
-                    b.HasIndex("ProjectClosureId1");
 
                     b.HasIndex("StatusId");
 
@@ -2806,14 +2796,10 @@ namespace NJS.Domain.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("NJS.Domain.Entities.ChangeControl", "ChangeControl")
-                        .WithMany()
+                        .WithMany("WorkflowHistories")
                         .HasForeignKey("ChangeControlId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("NJS.Domain.Entities.ChangeControl", null)
-                        .WithMany("WorkflowHistories")
-                        .HasForeignKey("ChangeControlId1");
 
                     b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", null)
                         .WithMany("ChangeControlHistories")
@@ -3113,14 +3099,10 @@ namespace NJS.Domain.Migrations
                         .HasForeignKey("PMWorkflowStatusId");
 
                     b.HasOne("NJS.Domain.Entities.ProjectClosure", "ProjectClosure")
-                        .WithMany()
+                        .WithMany("WorkflowHistories")
                         .HasForeignKey("ProjectClosureId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("NJS.Domain.Entities.ProjectClosure", null)
-                        .WithMany("WorkflowHistories")
-                        .HasForeignKey("ProjectClosureId1");
 
                     b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "Status")
                         .WithMany()

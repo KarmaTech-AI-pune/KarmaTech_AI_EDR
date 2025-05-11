@@ -549,7 +549,7 @@ namespace NJS.Domain.Database
 
                 // Configure relationship with ChangeControl
                 entity.HasOne(h => h.ChangeControl)
-                      .WithMany()
+                      .WithMany(h=>h.WorkflowHistories)
                       .HasForeignKey(h => h.ChangeControlId)
                       .OnDelete(DeleteBehavior.Cascade);
 
@@ -587,7 +587,7 @@ namespace NJS.Domain.Database
 
                 // Configure relationship with ProjectClosure
                 entity.HasOne(h => h.ProjectClosure)
-                      .WithMany()
+                      .WithMany(h=>h.WorkflowHistories)
                       .HasForeignKey(h => h.ProjectClosureId)
                       .OnDelete(DeleteBehavior.Cascade);
 

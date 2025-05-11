@@ -2,11 +2,6 @@ using MediatR;
 using NJS.Application.CQRS.ChangeControl.Queries;
 using NJS.Application.Dtos;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.ChangeControl.Handlers
 {
@@ -39,7 +34,21 @@ namespace NJS.Application.CQRS.ChangeControl.Handlers
                 ClientApprovalStatus = entity.ClientApprovalStatus,
                 ClaimSituation = entity.ClaimSituation,
                 CreatedBy = entity.CreatedBy,
-                UpdatedBy = entity.UpdatedBy
+                UpdatedBy = entity.UpdatedBy,
+                WorkflowHistory = entity.WorkflowHistories.OrderByDescending(x => x.ActionDate)
+                .Select(history => new ChangeControlWorkflowHistoryDto
+                {
+                    Id = history.Id,
+                    ChangeControlId = history.ChangeControlId,
+                    ActionDate = history.ActionDate,
+                    Comments = history.Comments,                   
+                    StatusId = history.StatusId,
+                    Action = history.Action,
+                    ActionBy = history.ActionBy,
+                    AssignedToId = history.AssignedToId
+
+                })
+                .FirstOrDefault()
             });
         }
     }

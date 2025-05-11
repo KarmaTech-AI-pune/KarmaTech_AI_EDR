@@ -1,138 +1,43 @@
-using MediatR;
-using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
 using NJS.Application.CQRS.PMWorkflow.Commands;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Database;
-using NJS.Domain.Entities;
-using NJS.Domain.Enums;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Application.CQRS.PMWorkflow.Handlers
 {
-    public class SendToApprovalCommandHandler : IRequestHandler<SendToApprovalCommand, PMWorkflowDto>
+    public class SendToApprovalCommandHandler : IRequestHandler<ProjectSendToApprovalCommand, PMWorkflowDto>
     {
         private readonly ProjectManagementContext _context;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IEntityWorkflowStrategySelector _strategySelector;
 
-        public SendToApprovalCommandHandler(
-            ProjectManagementContext context,
-            ICurrentUserService currentUserService)
+        public SendToApprovalCommandHandler(ProjectManagementContext context, ICurrentUserService currentUserService, IEntityWorkflowStrategySelector strategySelector)
         {
             _context = context;
             _currentUserService = currentUserService;
+            _strategySelector = strategySelector;
         }
 
-        public async Task<PMWorkflowDto> Handle(SendToApprovalCommand request, CancellationToken cancellationToken)
+
+        public async Task<PMWorkflowDto> Handle(ProjectSendToApprovalCommand request, CancellationToken cancellationToken)
         {
-            string currentUserId = _currentUserService.UserId;
+            var currentUserId = _currentUserService.UserId;
             var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
             var assignedToUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.AssignedToId, cancellationToken);
 
-            if (request.EntityType == "ChangeControl")
+            var strategy = _strategySelector.GetStrategy(request.EntityType);
+            var context = new WorkflowActionContext
             {
-                var changeControl = await _context.ChangeControls
-                    .FirstOrDefaultAsync(c => c.Id == request.EntityId, cancellationToken);
+                Action = request.Action,
+                EntityId = request.EntityId,
+                CurrentUser = currentUser!,
+                AssignedToUser = assignedToUser!,
+                AssignedToId = request.AssignedToId
+            };
 
-                if (changeControl == null)
-                    throw new Exception($"Change Control with ID {request.EntityId} not found");
-
-                // Verify current status is SentForReview or ReviewChanges
-                if (changeControl.WorkflowStatusId != (int)PMWorkflowStatusEnum.SentForReview &&
-                    changeControl.WorkflowStatusId != (int)PMWorkflowStatusEnum.ReviewChanges)
-                {
-                    throw new InvalidOperationException("Change Control must be in 'Sent for Review' or 'Review Changes' status to send for approval");
-                }
-
-                // Update workflow status
-                changeControl.WorkflowStatusId = (int)PMWorkflowStatusEnum.SentForApproval;
-                changeControl.UpdatedAt = DateTime.UtcNow;
-                changeControl.UpdatedBy = currentUserId;
-
-                // Create history entry
-                var history = new ChangeControlWorkflowHistory
-                {
-                    ChangeControlId = request.EntityId,
-                    StatusId = (int)PMWorkflowStatusEnum.SentForApproval,
-                    Action = "Sent for Approval",
-                    Comments = request.Comments,
-                    ActionBy = currentUserId,
-                    AssignedToId = request.AssignedToId
-                };
-
-                _context.ChangeControlWorkflowHistories.Add(history);
-                await _context.SaveChangesAsync(cancellationToken);
-
-                return new PMWorkflowDto
-                {
-                    Id = history.Id,
-                    EntityId = request.EntityId,
-                    EntityType = "ChangeControl",
-                    StatusId = (int)PMWorkflowStatusEnum.SentForApproval,
-                    Status = "Sent for Approval",
-                    Action = "Sent for Approval",
-                    Comments = request.Comments,
-                    ActionDate = history.ActionDate,
-                    ActionBy = currentUserId,
-                    ActionByName = currentUser?.UserName ?? "Unknown",
-                    AssignedToId = request.AssignedToId,
-                    AssignedToName = assignedToUser?.UserName ?? "Unknown"
-                };
-            }
-            else if (request.EntityType == "ProjectClosure")
-            {
-                var projectClosure = await _context.ProjectClosures
-                    .FirstOrDefaultAsync(p => p.Id == request.EntityId, cancellationToken);
-
-                if (projectClosure == null)
-                    throw new Exception($"Project Closure with ID {request.EntityId} not found");
-
-                // Verify current status is SentForReview or ReviewChanges
-                if (projectClosure.WorkflowStatusId != (int)PMWorkflowStatusEnum.SentForReview &&
-                    projectClosure.WorkflowStatusId != (int)PMWorkflowStatusEnum.ReviewChanges)
-                {
-                    throw new InvalidOperationException("Project Closure must be in 'Sent for Review' or 'Review Changes' status to send for approval");
-                }
-
-                // Update workflow status
-                projectClosure.WorkflowStatusId = (int)PMWorkflowStatusEnum.SentForApproval;
-                projectClosure.UpdatedAt = DateTime.UtcNow;
-                projectClosure.UpdatedBy = currentUserId;
-
-                // Create history entry
-                var history = new ProjectClosureWorkflowHistory
-                {
-                    ProjectClosureId = request.EntityId,
-                    StatusId = (int)PMWorkflowStatusEnum.SentForApproval,
-                    Action = "Sent for Approval",
-                    Comments = request.Comments,
-                    ActionBy = currentUserId,
-                    AssignedToId = request.AssignedToId
-                };
-
-                _context.ProjectClosureWorkflowHistories.Add(history);
-                await _context.SaveChangesAsync(cancellationToken);
-
-                return new PMWorkflowDto
-                {
-                    Id = history.Id,
-                    EntityId = request.EntityId,
-                    EntityType = "ProjectClosure",
-                    StatusId = (int)PMWorkflowStatusEnum.SentForApproval,
-                    Status = "Sent for Approval",
-                    Action = "Sent for Approval",
-                    Comments = request.Comments,
-                    ActionDate = history.ActionDate,
-                    ActionBy = currentUserId,
-                    ActionByName = currentUser?.UserName ?? "Unknown",
-                    AssignedToId = request.AssignedToId,
-                    AssignedToName = assignedToUser?.UserName ?? "Unknown"
-                };
-            }
-
-            throw new ArgumentException("Invalid entity type");
+            return await strategy.ExecuteAsync(context, cancellationToken);
         }
     }
 }

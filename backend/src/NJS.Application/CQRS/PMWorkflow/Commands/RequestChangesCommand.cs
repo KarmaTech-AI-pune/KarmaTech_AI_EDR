@@ -7,7 +7,9 @@ namespace NJS.Application.CQRS.PMWorkflow.Commands
     {
         public int EntityId { get; set; }
         public string EntityType { get; set; } // "ChangeControl" or "ProjectClosure"
+        public string AssignedToId { get; set; } // RM/RD user ID
         public string Comments { get; set; }
-        public bool IsApprovalChanges { get; set; } // true if RM/RD requesting changes, false if SPM
+        public string Action { get; set; }
+        public bool? IsApprovalChanges { get; set; } // true if RM/RD requesting changes, false if SPM
     }
 }
