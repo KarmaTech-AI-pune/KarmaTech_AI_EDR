@@ -45,6 +45,13 @@ export interface projectManagementAppContextType {
     setCanApproveBD: (can: boolean) => void;
     canSubmitForApproval: boolean;
     setCanSubmitForApproval: (can: boolean) => void;
+
+    canProjectSubmitForReview: boolean
+    setProjectCanSubmitForReview: (can: boolean) => void;
+    canProjectSubmitForApproval: boolean
+    setProjectCanSubmitForApproval: (can: boolean) => void;
+    canProjectCanApprove: boolean
+    setProjectCanApprove: (can: boolean) => void;
 }
 
 export interface Credentials {

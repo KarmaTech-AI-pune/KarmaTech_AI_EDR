@@ -43,7 +43,13 @@ namespace NJS.Application.Extensions
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
             services.AddScoped<IGoNoGoDecisionService, GoNoGoDecisionService>();
             services.AddScoped<IUserContext, UserContext>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IEmailService, EmailService>();
+
+            //Define Strategy pattern 
+            services.AddScoped<IEntityWorkflowStrategy, ChangeControlWorkflowStrategy>();
+            services.AddScoped<IEntityWorkflowStrategy, ProjectClosureWorkflowStrategy>();
+            services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
 
 
             return services;

@@ -12,8 +12,8 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20250505102211_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250509233824_newMigrations3")]
+    partial class newMigrations3
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

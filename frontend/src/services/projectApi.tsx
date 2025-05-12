@@ -23,6 +23,17 @@ export const projectApi = {
     }
   },
 
+  getByUserId: async (userId:string) => {
+    try {
+      const response = await axiosInstance.get(`api/Project/getByUserId/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error getting all projects:', error);
+      throw error;
+    }
+  },
+ 
+
   getById: async (projectId: string) => {
     try {
       const response = await axiosInstance.get(`api/Project/${projectId}`);
@@ -88,5 +99,25 @@ export const projectApi = {
       console.error(`Error deleting project ${projectId}:`, error);
       throw error;
     }
+  },
+
+  sendToReview: async(command: any)=>{
+    try {
+      debugger;
+    const response = await axiosInstance.post(`api/PMWorkflow/sendtoreview`, command);
+      return response.data;
+    }
+    catch (error) {
+      console.error('Error getting all projects:', error);
+      throw error;
+    }
+
   }
+  // Send the change control for review
+      //  await axiosInstance.post(`/api/projects/${projectId}/changecontrols/${changeControlId}/workflow/sendtoreview`, {
+        //  entityId: changeControlId,
+         // entityType: 'ChangeControl',
+         // assignedToId: selectedReviewer,
+         // comments: `Sent for review by ${currentUser}`
+       // });
 };

@@ -8,12 +8,12 @@ const validateRequiredFields = (project: Omit<Project, 'id'>) => {
   const requiredFields = [
     { field: 'name', label: 'Project Name' },
     { field: 'clientName', label: 'Client Name' },
-    { field: 'projectMangerId', label: 'Project Manager' },
+    { field: 'projectManagerId', label: 'Project Manager' },
     { field: 'projectNo', label: 'Project Number' },
-    { field: 'seniorProjectMangerId', label: 'Senior Project Manager' },
+    { field: 'seniorProjectManagerId', label: 'Senior Project Manager' },
     { field: 'estimatedCost', label: 'Estimated Cost' },
     { field: 'currency', label: 'Currency' },
-    { field: 'regionalManagerID', label: 'Regional Manager' }
+    { field: 'regionalManagerId', label: 'Regional Manager' }
   ];
 
   const missingFields = requiredFields.filter(({ field }) => {

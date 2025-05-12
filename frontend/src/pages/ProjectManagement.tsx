@@ -12,7 +12,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { ProjectManagementProjectList } from '../components/projects/ProjectManagementProjectList';
-import {ProjectInitializationDialog}  from '../components/projects/ProjectInitializationDialog';
+import { ProjectInitializationDialog } from '../components/projects/ProjectInitializationDialog';
 import { Pagination } from '../components/Pagination';
 //import { authApi } from '../dummyapi/authApi';
 import { projectApi } from '../services/projectApi';
@@ -41,7 +41,27 @@ export const ProjectManagement: React.FC = () => {
         return;
       }
 
-      const response = await projectApi.getAll();
+      let response: any;
+
+      // if (canViewProjects) {
+      //   response = (await projectApi.getByUserId(currentUser.id));
+      // } 
+     
+      
+         if (currentUser.roles.some(role => role.name === "Project Manager")) {
+              response =(await projectApi.getByUserId(currentUser.id));;
+            } 
+            else if (currentUser.roles.some(role => role.name ===  "Senior Project Manager")) {
+              response = (await projectApi.getByUserId(currentUser.id));
+            }  
+            else if (currentUser.roles.some(role => role.name ===  "Regional Director")) {
+              response =  response = (await projectApi.getByUserId(currentUser.id));;
+            } 
+      
+      else {
+        response = await projectApi.getAll();
+      }
+
       setProjects(response);
       setError(undefined);
     } catch (err: any) {
@@ -53,6 +73,7 @@ export const ProjectManagement: React.FC = () => {
   useEffect(() => {
     const checkUserPermissions = async () => {
       try {
+        debugger;
         const user = await authApi.getCurrentUser();
 
         if (!user) {
@@ -161,7 +182,7 @@ export const ProjectManagement: React.FC = () => {
 
     return currentUser.roles.some(role => {
       console.log('Checking role:', role.name);
-      switch(role.name) {
+      switch (role.name) {
         case 'Regional Manager':
           return true;
         case 'Regional Director':
@@ -184,7 +205,7 @@ export const ProjectManagement: React.FC = () => {
     const description = project.description?.toLowerCase() || '';
 
     return name.includes(searchTermLower) ||
-           description.includes(searchTermLower);
+      description.includes(searchTermLower);
   });
 
   // Finally apply pagination

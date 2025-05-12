@@ -42,7 +42,24 @@ namespace NJS.Application.CQRS.ChangeControl.Handlers
                 ClientApprovalStatus = entity.ClientApprovalStatus,
                 ClaimSituation = entity.ClaimSituation,
                 CreatedBy = entity.CreatedBy,
-                UpdatedBy = entity.UpdatedBy
+                UpdatedBy = entity.UpdatedBy,
+                WorkflowHistory = entity.WorkflowHistories.OrderByDescending(x => x.ActionDate)
+                .Select(history => new ChangeControlWorkflowHistoryDto
+                {
+                    Id = history.Id,
+                    ChangeControlId = history.ChangeControlId,
+                    ActionDate = history.ActionDate,
+                    Comments = history.Comments,
+                   /// Status = history.Status.Status,
+                    StatusId = history.StatusId,
+                    Action = history.Action,
+                    ActionBy = history.ActionBy,
+                    AssignedToId = history.AssignedToId
+
+                })
+                .FirstOrDefault()
+              
+
             });
         }
     }
