@@ -7,19 +7,19 @@ namespace NJS.Domain.Entities
     /// <summary>
     /// This model is used to track project workflow history
     /// </summary>
-    public class ProjectHistory
+    public class WBSHistory
     {
-        public ProjectHistory()
+        public WBSHistory()
         {
             ActionDate = DateTime.UtcNow;
         }
 
         [Key]
         public int Id { get; set; }
-        public int ProjectId { get; set; }
-        public Project Project { get; set; }
+        public int WBSTaskMonthlyHourHeaderId { get; set; }
+        public WBSTaskMonthlyHourHeader WBSTaskMonthlyHourHeader { get; set; }
         public int StatusId { get; set; }
-        public OpportunityStatus Status { get; set; }
+        public PMWorkflowStatus Status { get; set; }
         public string Action { get; set; }
         public string Comments { get; set; }
         public DateTime ActionDate { get; set; }

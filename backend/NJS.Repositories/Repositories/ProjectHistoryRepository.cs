@@ -18,31 +18,31 @@ namespace NJS.Repositories.Repositories
             _context = context;
         }
 
-        public async Task<ProjectHistory> GetByIdAsync(int id)
+        public async Task<WBSHistory> GetByIdAsync(int id)
         {
-            return await _context.ProjectHistories
-                .Include(ph => ph.Project)
+            return await _context.WBSHistories
+                .Include(ph => ph.WBSTaskMonthlyHourHeader)
                 .Include(ph => ph.ActionUser)
                 .FirstOrDefaultAsync(ph => ph.Id == id);
         }
 
-        public async Task<List<ProjectHistory>> GetAllAsync()
+        public async Task<List<WBSHistory>> GetAllAsync()
         {
-            return await _context.ProjectHistories
-                .Include(ph => ph.Project)
+            return await _context.WBSHistories
+                .Include(ph => ph.WBSTaskMonthlyHourHeader)
                 .Include(ph => ph.ActionUser)
                 .ToListAsync();
         }
 
-        public async Task AddAsync(ProjectHistory projectHistory)
+        public async Task AddAsync(WBSHistory projectHistory)
         {
-            _context.ProjectHistories.Add(projectHistory);
+            _context.WBSHistories.Add(projectHistory);
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(ProjectHistory projectHistory)
+        public async Task UpdateAsync(WBSHistory projectHistory)
         {
-            _context.ProjectHistories.Update(projectHistory);
+            _context.WBSHistories.Update(projectHistory);
             await _context.SaveChangesAsync();
         }
 
@@ -51,28 +51,10 @@ namespace NJS.Repositories.Repositories
             var projectHistory = await GetByIdAsync(id);
             if (projectHistory != null)
             {
-                _context.ProjectHistories.Remove(projectHistory);
+                _context.WBSHistories.Remove(projectHistory);
                 await _context.SaveChangesAsync();
             }
         }
-
-        public async Task<List<ProjectHistory>> GetByProjectIdAsync(int projectId)
-        {
-            return await _context.ProjectHistories
-                .Where(ph => ph.ProjectId == projectId)
-                .Include(ph => ph.Project)
-                .Include(ph => ph.ActionUser)
-                .ToListAsync();
-        }
-
-        public async Task<ProjectHistory> GetCurrentStatusForProjectAsync(int id)
-        {
-            var result = await _context.ProjectHistories
-                .Where(ph => ph.ProjectId == id)
-                .OrderByDescending(ph => ph.ActionDate)
-                .FirstOrDefaultAsync();
-            
-            return result;
-        }
+       
     }
 }

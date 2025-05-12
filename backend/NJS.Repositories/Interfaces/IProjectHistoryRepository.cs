@@ -6,12 +6,11 @@ namespace NJS.Repositories.Interfaces
 {
     public interface IProjectHistoryRepository
     {
-        Task<List<ProjectHistory>> GetAllAsync();
-        Task<ProjectHistory> GetByIdAsync(int id);
-        Task AddAsync(ProjectHistory projectHistory);
-        Task UpdateAsync(ProjectHistory projectHistory);
+        Task<List<WBSHistory>> GetAllAsync();
+        Task<WBSHistory> GetByIdAsync(int id);
+        Task AddAsync(WBSHistory projectHistory);
+        Task UpdateAsync(WBSHistory projectHistory);
         Task DeleteAsync(int id);
-        Task<List<ProjectHistory>> GetByProjectIdAsync(int projectId);
-        Task<ProjectHistory> GetCurrentStatusForProjectAsync(int id);
+        
     }
 }

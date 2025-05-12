@@ -5,140 +5,116 @@ using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
-using NJS.Domain.Enums; // Add import for WBSTaskLevel
-using NJS.Domain.UnitWork; // Assuming IUnitOfWork is here
+using NJS.Domain.Enums;
+using NJS.Domain.UnitWork;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
     public class SetWBSCommandHandler : IRequestHandler<SetWBSCommand, Unit>
     {
         private readonly ProjectManagementContext _context;
-        private readonly IUnitOfWork _unitOfWork; // Inject Unit of Work
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IProjectHistoryService _projectHistoryService;
         private readonly IUserContext _userContext;
-
-        // TODO: Inject ICurrentUserService or similar to get current user for CreatedBy/UpdatedBy
-        private readonly string _currentUser = "System"; // Placeholder
+        private readonly ILogger<SetWBSCommandHandler> _logger;
+        private readonly string _currentUser = "System";
 
         public SetWBSCommandHandler(
-            ProjectManagementContext context, 
+            ProjectManagementContext context,
             IUnitOfWork unitOfWork,
             IProjectHistoryService projectHistoryService,
-            IUserContext userContext)
+            IUserContext userContext,
+            ILogger<SetWBSCommandHandler> logger)
         {
             _context = context;
             _unitOfWork = unitOfWork;
             _projectHistoryService = projectHistoryService;
             _userContext = userContext;
+            _logger = logger;
         }
 
         public async Task<Unit> Handle(SetWBSCommand request, CancellationToken cancellationToken)
         {
-            // --- 1. Fetch or Create WorkBreakdownStructure ---
             var wbs = await _context.WorkBreakdownStructures
-                .Include(w => w.Tasks)
+                .Include(w => w.Tasks.Where(t => !t.IsDeleted))
                     .ThenInclude(t => t.UserWBSTasks)
-                .Include(w => w.Tasks)
+                .Include(w => w.Tasks.Where(t => !t.IsDeleted))
                     .ThenInclude(t => t.MonthlyHours)
                 .FirstOrDefaultAsync(w => w.ProjectId == request.ProjectId, cancellationToken);
 
             if (wbs == null)
             {
-                // Create new WBS if it doesn't exist
                 wbs = new WorkBreakdownStructure
                 {
                     ProjectId = request.ProjectId,
                     IsActive = true,
-                    Version = "1.0", // Initial version
+                    Version = "1.0",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = _currentUser,
-                    Tasks = new List<WBSTask>() // Initialize tasks collection
+                    Tasks = new List<WBSTask>()
                 };
                 _context.WorkBreakdownStructures.Add(wbs);
-                // Need to save here to get wbs.Id if tasks are added immediately?
-                // Or rely on EF Core relationship fixup. Let's try relying on EF Core first.
             }
             else
             {
-                // Optionally update WBS metadata if needed (e.g., version)
-                wbs.Version = CalculateNextVersion(wbs.Version); // Example version increment
+                wbs.Version = CalculateNextVersion(wbs.Version);
             }
 
-            var existingTasks = wbs.Tasks.ToList();
-            var incomingTasksDto = request.Tasks;
-            var incomingTaskIds = incomingTasksDto.Where(dto => dto.Id > 0).Select(dto => dto.Id).ToList();
+            var existingTasksDict = wbs.Tasks.ToDictionary(t => t.Id);
+            var incomingTaskIds = request.Tasks.Where(t => t.Id > 0).Select(t => t.Id).ToHashSet();
 
-            // --- 2. Handle Deletions ---
-            var tasksToDelete = existingTasks.Where(et => !et.IsDeleted && !incomingTaskIds.Contains(et.Id)).ToList();
-            foreach (var taskToDelete in tasksToDelete)
+            var tasksToDelete = wbs.Tasks.Where(t => !t.IsDeleted && !incomingTaskIds.Contains(t.Id)).ToList();
+            foreach (var task in tasksToDelete)
             {
-                taskToDelete.IsDeleted = true; // Soft delete
-                taskToDelete.UpdatedAt = DateTime.UtcNow;
-                taskToDelete.UpdatedBy = _currentUser;
-                // EF Core should handle cascading deletes/updates for related entities if configured,
-                // otherwise, manually handle UserWBSTasks and MonthlyHours if needed.
+                task.IsDeleted = true;
+                task.UpdatedAt = DateTime.UtcNow;
+                task.UpdatedBy = _currentUser;
             }
 
-            // --- 3. Handle Additions and Updates (Two-Pass Save Logic) ---
-            var tempIdToNewEntityMap = new Dictionary<string, WBSTask>();
-            var newChildToTempParentIdMap = new Dictionary<WBSTask, string>();
-            var allProcessedEntities = new List<WBSTask>(); // Keep track of entities processed in pass 1
+            var tempIdToEntityMap = new Dictionary<string, WBSTask>();
+            var pendingParentUpdates = new Dictionary<WBSTask, string>();
+            var allTasks = new List<WBSTask>();
 
-            // --- Pass 1: Create/Update Entities, Identify Relationships for New Tasks ---
-            foreach (var taskDto in incomingTasksDto)
+            foreach (var dto in request.Tasks)
             {
                 WBSTask taskEntity;
-
-                if (taskDto.Id > 0)
+                if (dto.Id > 0 && existingTasksDict.TryGetValue(dto.Id, out taskEntity))
                 {
-                    // --- Update Existing Task ---
-                    taskEntity = existingTasks.FirstOrDefault(et => et.Id == taskDto.Id);
-                    if (taskEntity == null || taskEntity.IsDeleted) continue; // Skip if not found or already marked deleted
-
-                    // Map basic properties
-                    taskEntity.Title = taskDto.Title;
-                    taskEntity.Description = taskDto.Description;
-                    taskEntity.Level = taskDto.Level;
-                    // ParentId from DTO should be correct if parent already exists
-                    taskEntity.ParentId = taskDto.ParentId;
-                    taskEntity.DisplayOrder = taskDto.DisplayOrder;
-                    taskEntity.EstimatedBudget = taskDto.EstimatedBudget;
-                    taskEntity.StartDate = taskDto.StartDate;
-                    taskEntity.EndDate = taskDto.EndDate;
-                    taskEntity.TaskType = taskDto.TaskType; // Update TaskType
+                    taskEntity.Title = dto.Title;
+                    taskEntity.Description = dto.Description;
+                    taskEntity.Level = dto.Level;
+                    taskEntity.ParentId = dto.ParentId;
+                    taskEntity.DisplayOrder = dto.DisplayOrder;
+                    taskEntity.EstimatedBudget = dto.EstimatedBudget;
+                    taskEntity.StartDate = dto.StartDate;
+                    taskEntity.EndDate = dto.EndDate;
+                    taskEntity.TaskType = dto.TaskType;
                     taskEntity.UpdatedAt = DateTime.UtcNow;
                     taskEntity.UpdatedBy = _currentUser;
-                    taskEntity.IsDeleted = false; // Ensure it's not marked deleted if it's being updated
+                    taskEntity.IsDeleted = false;
 
-                    // Update User Assignment (assuming one user per task)
-                    UpdateUserAssignment(taskEntity, taskDto);
-
-                    // Update Monthly Hours
-                    UpdateMonthlyHours(taskEntity, taskDto);
-
-                    allProcessedEntities.Add(taskEntity); // Track processed entity
+                    await UpdateUserAssignment(taskEntity, dto);
+                    await UpdateMonthlyHours(taskEntity, dto);
                 }
-                else // Id == 0, means new task
+                else
                 {
-                    // --- Add New Task ---
                     taskEntity = new WBSTask
                     {
-                        WorkBreakdownStructure = wbs, // Associate with the WBS
-                        Title = taskDto.Title,
-                        Description = taskDto.Description,
-                        Level = taskDto.Level,
-                        // ParentId might be null if parent is also new, or set if parent exists
-                        ParentId = taskDto.ParentId,
-                        DisplayOrder = taskDto.DisplayOrder,
-                        EstimatedBudget = taskDto.EstimatedBudget,
-                        StartDate = taskDto.StartDate,
-                        EndDate = taskDto.EndDate,
-                        TaskType = taskDto.TaskType, // Set TaskType
+                        WorkBreakdownStructure = wbs,
+                        Title = dto.Title,
+                        Description = dto.Description,
+                        Level = dto.Level,
+                        DisplayOrder = dto.DisplayOrder,
+                        EstimatedBudget = dto.EstimatedBudget,
+                        StartDate = dto.StartDate,
+                        EndDate = dto.EndDate,
+                        TaskType = dto.TaskType,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser,
                         IsDeleted = false,
@@ -146,231 +122,232 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         MonthlyHours = new List<WBSTaskMonthlyHour>()
                     };
 
-                    // Add User Assignment
-                    UpdateUserAssignment(taskEntity, taskDto); // Use the same logic
-
-                    // Add Monthly Hours
-                    UpdateMonthlyHours(taskEntity, taskDto); // Use the same logic
-
                     _context.WBSTasks.Add(taskEntity);
-                    if (!wbs.Tasks.Contains(taskEntity)) // Ensure association
-                    {
-                        wbs.Tasks.Add(taskEntity);
-                    }
-                    allProcessedEntities.Add(taskEntity); // Track processed entity
+                    wbs.Tasks.Add(taskEntity);
 
-                    // Store mapping for new tasks using their temporary frontend ID
-                    if (!string.IsNullOrEmpty(taskDto.FrontendTempId))
-                    {
-                        tempIdToNewEntityMap[taskDto.FrontendTempId] = taskEntity;
-                    }
+                    await UpdateUserAssignment(taskEntity, dto);
+                    await UpdateMonthlyHours(taskEntity, dto);
 
-                    // If the parent is also new (indicated by ParentFrontendTempId), store for Pass 2
-                    if (!string.IsNullOrEmpty(taskDto.ParentFrontendTempId))
+                    if (!string.IsNullOrEmpty(dto.FrontendTempId))
+                        tempIdToEntityMap[dto.FrontendTempId] = taskEntity;
+
+                    if (!string.IsNullOrEmpty(dto.ParentFrontendTempId))
                     {
-                        newChildToTempParentIdMap[taskEntity] = taskDto.ParentFrontendTempId;
-                        taskEntity.ParentId = null; // Ensure ParentId is null for the first save
+                        taskEntity.ParentId = null;
+                        pendingParentUpdates[taskEntity] = dto.ParentFrontendTempId;
                     }
                 }
+
+                allTasks.Add(taskEntity);
             }
 
-            // --- 4. Save Changes (Pass 1) ---
-            // This save generates real IDs for all newly added entities
             await _unitOfWork.SaveChangesAsync();
 
-            // --- 5. Pass 2: Link New Children to New Parents ---
             bool requiresSecondSave = false;
-            foreach (var kvp in newChildToTempParentIdMap)
+            foreach (var kv in pendingParentUpdates)
             {
-                var childEntity = kvp.Key;
-                var tempParentId = kvp.Value;
-
-                if (tempIdToNewEntityMap.TryGetValue(tempParentId, out var parentEntity))
+                if (tempIdToEntityMap.TryGetValue(kv.Value, out var parentEntity) && parentEntity.Id > 0)
                 {
-                    // Check if parentEntity has a valid ID (should have after Save 1)
-                    if (parentEntity.Id > 0)
-                    {
-                        childEntity.ParentId = parentEntity.Id;
-                        requiresSecondSave = true;
-                    }
-                    else
-                    {
-                        // Log or handle error: Parent entity was found but has no valid ID after first save
-                        Console.Error.WriteLine($"Error: Parent entity for temp ID {tempParentId} did not get a valid DB ID.");
-                    }
+                    kv.Key.ParentId = parentEntity.Id;
+                    requiresSecondSave = true;
                 }
                 else
                 {
-                    // Log or handle error: Parent entity not found for temp ID
-                     Console.Error.WriteLine($"Error: Parent entity not found for temp ID {tempParentId}. Cannot link child {childEntity.Title}.");
+                    _logger.LogWarning("Unable to resolve parent task for temp ID {TempId}", kv.Value);
                 }
             }
 
-            // --- 6. Save Changes (Pass 2) ---
-            // This save persists the ParentId links established in Pass 2
             if (requiresSecondSave)
-            {
                 await _unitOfWork.SaveChangesAsync();
-            }
 
-            // --- 7. Create ProjectHistory record ---
-            // Get the current user ID
-            var currentUserId = _userContext.GetCurrentUserId() ?? _currentUser;
             
-            // Create a history record for the WBS manpower data update
-            var projectHistory = new ProjectHistory
-            {
-                ProjectId = request.ProjectId,
-                StatusId = 1, // Status ID 1 as requested
-                Action = "WBS Manpower Data Updated",
-                Comments = "WBS manpower data has been updated",
-                ActionDate = DateTime.UtcNow,
-                ActionBy = currentUserId
-            };
-            
-            // Add the history record
-            await _projectHistoryService.AddHistoryAsync(projectHistory);
 
             return Unit.Value;
         }
 
-        private void UpdateUserAssignment(WBSTask taskEntity, WBSTaskDto taskDto)
+        private async Task UpdateUserAssignment(WBSTask task, WBSTaskDto dto)
         {
-            var existingUserTask = taskEntity.UserWBSTasks.FirstOrDefault();
+            var userTask = task.UserWBSTasks.FirstOrDefault();
+            var totalHours = task.MonthlyHours.Sum(mh => mh.PlannedHours);
+            var totalCost = (decimal)totalHours * dto.CostRate;
 
-            // Handle Manpower tasks
-            if (taskEntity.TaskType == TaskType.Manpower)
+            if (task.TaskType == TaskType.Manpower && !string.IsNullOrEmpty(dto.AssignedUserId))
             {
-                // Only proceed if UserId is not null/empty
-                if (!string.IsNullOrEmpty(taskDto.AssignedUserId))
+                if (userTask != null)
                 {
-                    if (existingUserTask != null)
-                    {
-                        // Update existing assignment for Manpower task
-                        existingUserTask.UserId = taskDto.AssignedUserId;
-                        existingUserTask.Name = null; // Reset Name for Manpower tasks
-                        existingUserTask.CostRate = taskDto.CostRate;
-                        existingUserTask.Unit = taskDto.ResourceUnit;
-                        existingUserTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
-                        existingUserTask.TotalCost = (decimal)existingUserTask.TotalHours * existingUserTask.CostRate;
-                        existingUserTask.UpdatedAt = DateTime.UtcNow;
-                        existingUserTask.UpdatedBy = _currentUser;
-                    }
-                    else
-                    {
-                        // Create new assignment for Manpower task
-                        var newUserTask = new UserWBSTask
-                        {
-                            WBSTask = taskEntity,
-                            UserId = taskDto.AssignedUserId,
-                            Name = null, // No Name for Manpower tasks
-                            CostRate = taskDto.CostRate,
-                            Unit = taskDto.ResourceUnit,
-                            TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
-                            TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
-                            CreatedAt = DateTime.UtcNow,
-                            CreatedBy = _currentUser
-                        };
-                        taskEntity.UserWBSTasks.Add(newUserTask);
-                    }
+                    userTask.UserId = dto.AssignedUserId;
+                    userTask.Name = null;
+                    userTask.CostRate = dto.CostRate;
+                    userTask.Unit = dto.ResourceUnit;
+                    userTask.TotalHours = totalHours;
+                    userTask.TotalCost = totalCost;
+                    userTask.UpdatedAt = DateTime.UtcNow;
+                    userTask.UpdatedBy = _currentUser;
                 }
-                else if (existingUserTask != null)
+                else
                 {
-                    // Remove existing assignment if no valid UserId
-                    _context.UserWBSTasks.Remove(existingUserTask);
+                    task.UserWBSTasks.Add(new UserWBSTask
+                    {
+                        WBSTask = task,
+                        UserId = dto.AssignedUserId,
+                        Name = null,
+                        CostRate = dto.CostRate,
+                        Unit = dto.ResourceUnit,
+                        TotalHours = totalHours,
+                        TotalCost = totalCost,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = _currentUser
+                    });
                 }
             }
-            // Handle ODC tasks
-            else if (taskEntity.TaskType == TaskType.ODC)
+            else if (task.TaskType == TaskType.ODC && !string.IsNullOrEmpty(dto.ResourceName))
             {
-                // Only proceed if Name is not null/empty
-                if (!string.IsNullOrEmpty(taskDto.ResourceName))
+                if (userTask != null)
                 {
-                    if (existingUserTask != null)
-                    {
-                        // Update existing assignment for ODC task
-                        existingUserTask.UserId = null; // Reset UserId for ODC tasks
-                        existingUserTask.Name = taskDto.ResourceName;
-                        existingUserTask.CostRate = taskDto.CostRate;
-                        existingUserTask.Unit = taskDto.ResourceUnit;
-                        existingUserTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
-                        existingUserTask.TotalCost = (decimal)existingUserTask.TotalHours * existingUserTask.CostRate;
-                        existingUserTask.UpdatedAt = DateTime.UtcNow;
-                        existingUserTask.UpdatedBy = _currentUser;
-                    }
-                    else
-                    {
-                        // Create new assignment for ODC task
-                        var newUserTask = new UserWBSTask
-                        {
-                            WBSTask = taskEntity,
-                            UserId = null, // No UserId for ODC tasks
-                            Name = taskDto.ResourceName,
-                            CostRate = taskDto.CostRate,
-                            Unit = taskDto.ResourceUnit,
-                            TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
-                            TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
-                            CreatedAt = DateTime.UtcNow,
-                            CreatedBy = _currentUser
-                        };
-                        taskEntity.UserWBSTasks.Add(newUserTask);
-                    }
+                    userTask.UserId = null;
+                    userTask.Name = dto.ResourceName;
+                    userTask.CostRate = dto.CostRate;
+                    userTask.Unit = dto.ResourceUnit;
+                    userTask.TotalHours = totalHours;
+                    userTask.TotalCost = totalCost;
+                    userTask.UpdatedAt = DateTime.UtcNow;
+                    userTask.UpdatedBy = _currentUser;
                 }
-                else if (existingUserTask != null)
+                else
                 {
-                    // Remove existing assignment if no valid Name
-                    _context.UserWBSTasks.Remove(existingUserTask);
+                    task.UserWBSTasks.Add(new UserWBSTask
+                    {
+                        WBSTask = task,
+                        UserId = null,
+                        Name = dto.ResourceName,
+                        CostRate = dto.CostRate,
+                        Unit = dto.ResourceUnit,
+                        TotalHours = totalHours,
+                        TotalCost = totalCost,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = _currentUser
+                    });
                 }
+            }
+            else if (userTask != null)
+            {
+                _context.UserWBSTasks.Remove(userTask);
             }
         }
 
-        private void UpdateMonthlyHours(WBSTask taskEntity, WBSTaskDto taskDto)
+        private async Task UpdateMonthlyHours(WBSTask task, WBSTaskDto dto)
         {
-            // Simple approach: Remove existing and add new ones
-            // More complex: Diffing (add/update/delete individual months)
+            var header = await GetOrCreateMonthlyHourHeader(task.WorkBreakdownStructure.ProjectId);
+            var existing = task.MonthlyHours.ToDictionary(m => (m.Year, m.Month));
 
-            // Remove existing
-            var existingMonthlyHours = taskEntity.MonthlyHours.ToList();
-            foreach (var existingHour in existingMonthlyHours)
+            foreach (var mhDto in dto.MonthlyHours)
             {
-                _context.Set<WBSTaskMonthlyHour>().Remove(existingHour);
-                // Or taskEntity.MonthlyHours.Remove(existingHour);
-            }
-            taskEntity.MonthlyHours.Clear(); // Ensure collection is clear if Remove doesn't update it immediately
-
-            // Add new ones from DTO
-            foreach (var mhDto in taskDto.MonthlyHours)
-            {
-                var newMh = new WBSTaskMonthlyHour
+                var key = (mhDto.Year.ToString(), mhDto.Month);
+                if (existing.TryGetValue(key, out var existingMh))
                 {
-                    WBSTask = taskEntity,
-                    Year = mhDto.Year.ToString(),
-                    Month = mhDto.Month,
-                    PlannedHours = mhDto.PlannedHours,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = _currentUser
-                    // ActualHours = null // Initialize if tracking actuals
-                };
-                taskEntity.MonthlyHours.Add(newMh);
-                // Context should track this automatically
+                    existingMh.PlannedHours = mhDto.PlannedHours;
+                    existingMh.UpdatedAt = DateTime.UtcNow;
+                    existingMh.UpdatedBy = _currentUser;
+                }
+                else
+                {
+                    var newMh = new WBSTaskMonthlyHour
+                    {
+                        WBSTask = task,
+                        WBSTaskMonthlyHourHeader = header,
+                        WBSTaskMonthlyHourHeaderId = header.Id,
+                        Year = mhDto.Year.ToString(),
+                        Month = mhDto.Month,
+                        PlannedHours = mhDto.PlannedHours,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = _currentUser
+                    };
+                    task.MonthlyHours.Add(newMh);
+                    header.MonthlyHours.Add(newMh);
+                }
             }
 
-            // Recalculate TotalHours on the UserWBSTask if it exists
-             var userTask = taskEntity.UserWBSTasks.FirstOrDefault();
-             if(userTask != null) {
-                 userTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
-                 userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate;
-             }
+            var userTask = task.UserWBSTasks.FirstOrDefault();
+            if (userTask != null)
+            {
+                userTask.TotalHours = task.MonthlyHours.Sum(m => m.PlannedHours);
+                userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate;
+            }
+        }
+
+        private async Task<WBSTaskMonthlyHourHeader> GetOrCreateMonthlyHourHeader(int projectId)
+        {
+            var header = await _context.Set<WBSTaskMonthlyHourHeader>()
+                .FirstOrDefaultAsync(h => h.ProjectId == projectId);
+
+            if (header == null)
+            {
+                var project = await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId);
+                if (project == null)
+                    throw new InvalidOperationException($"Project with ID {projectId} not found");
+
+                var histories = new List<WBSHistory>();
+                if (project.ProjectManagerId is not null)
+                {
+                    histories.Add(new WBSHistory
+                    {
+                        StatusId = 1,
+                        Action = "Initial",
+                        Comments = "WBS manpower data has been updated",
+                        ActionDate = DateTime.UtcNow,
+                        ActionBy = _userContext.GetCurrentUserId(),
+                        AssignedToId = project.ProjectManagerId,
+                        
+                    });
+                }
+                if (project.SeniorProjectManagerId is not null)
+                {
+                    histories.Add(new WBSHistory
+                    {
+                        StatusId = 1,
+                        Action = "Initial",
+                        Comments = "WBS manpower data has been updated",
+                        ActionDate = DateTime.UtcNow,
+                        ActionBy = _userContext.GetCurrentUserId(),
+                        AssignedToId = project.SeniorProjectManagerId,
+                    });
+                }
+                if (project.RegionalManagerId is not null)
+                {
+                    histories.Add(new WBSHistory
+                    {
+                        StatusId = (int)PMWorkflowStatusEnum.Initial,
+                        Action = "",
+                        Comments = "Initial",
+                        ActionDate = DateTime.UtcNow,
+                        ActionBy = _userContext.GetCurrentUserId(),
+                        AssignedToId = project.RegionalManagerId,
+                    });
+                }
+
+                header = new WBSTaskMonthlyHourHeader
+                {
+                    ProjectId = projectId,                  
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = _currentUser,
+                    MonthlyHours = new HashSet<WBSTaskMonthlyHour>(),
+                    WBSHistories = new List<WBSHistory>()
+                };
+
+                header.WBSHistories = histories;
+                _context.Set<WBSTaskMonthlyHourHeader>().Add(header);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return header;
         }
 
         private string CalculateNextVersion(string currentVersion)
         {
             if (string.IsNullOrEmpty(currentVersion)) return "1.0";
-            if (decimal.TryParse(currentVersion, out decimal versionNumber))
-            {
-                return (versionNumber + 0.1m).ToString("F1"); // Increment minor version
-            }
-            return currentVersion + "_updated"; // Fallback
+            return decimal.TryParse(currentVersion, out var v)
+                ? (v + 0.1m).ToString("F1")
+                : currentVersion + "_updated";
         }
     }
 }

@@ -6,12 +6,11 @@ namespace NJS.Application.Services.IContract
 {
     public interface IProjectHistoryService
     {
-        Task<List<ProjectHistory>> GetAllHistoryAsync();
-        Task<ProjectHistory> GetHistoryByIdAsync(int id);
-        Task AddHistoryAsync(ProjectHistory projectHistory);
-        Task UpdateHistoryAsync(ProjectHistory projectHistory);
+        Task<List<WBSHistory>> GetAllHistoryAsync();
+        Task<WBSHistory> GetHistoryByIdAsync(int id);
+        Task AddHistoryAsync(WBSHistory projectHistory);
+        Task UpdateHistoryAsync(WBSHistory projectHistory);
         Task DeleteHistoryAsync(int id);
-        Task<ProjectHistory> GetCurrentStatusForProjectAsync(int id);
-        Task<List<ProjectHistory>> GetByProjectIdAsync(int projectId);
+       
     }
 }

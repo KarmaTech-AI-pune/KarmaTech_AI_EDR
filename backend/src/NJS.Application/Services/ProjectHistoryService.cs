@@ -15,22 +15,22 @@ namespace NJS.Application.Services
             _repository = repository;
         }
 
-        public async Task<List<ProjectHistory>> GetAllHistoryAsync()
+        public async Task<List<WBSHistory>> GetAllHistoryAsync()
         {
             return await _repository.GetAllAsync();
         }
 
-        public async Task<ProjectHistory> GetHistoryByIdAsync(int id)
+        public async Task<WBSHistory> GetHistoryByIdAsync(int id)
         {
             return await _repository.GetByIdAsync(id);
         }
 
-        public async Task AddHistoryAsync(ProjectHistory projectHistory)
+        public async Task AddHistoryAsync(WBSHistory projectHistory)
         {
             await _repository.AddAsync(projectHistory);
         }
 
-        public async Task UpdateHistoryAsync(ProjectHistory projectHistory)
+        public async Task UpdateHistoryAsync(WBSHistory projectHistory)
         {
             await _repository.UpdateAsync(projectHistory);
         }
@@ -39,15 +39,6 @@ namespace NJS.Application.Services
         {
             await _repository.DeleteAsync(id);
         }
-
-        public async Task<ProjectHistory> GetCurrentStatusForProjectAsync(int id)
-        {
-            return await _repository.GetCurrentStatusForProjectAsync(id);
-        }
-
-        public async Task<List<ProjectHistory>> GetByProjectIdAsync(int projectId)
-        {
-            return await _repository.GetByProjectIdAsync(projectId);
-        }
+        
     }
 }

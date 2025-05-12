@@ -54,7 +54,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             };
 
             // Manually map the tasks
-            foreach (var taskEntity in wbs.Tasks.OrderBy(t => t.DisplayOrder)) // Ensure order
+            foreach (var taskEntity in wbs.Tasks.Where(x=>x.IsDeleted==false).OrderBy(t => t.DisplayOrder)) // Ensure order
             {
                 var taskDto = new WBSTaskDto
                 {

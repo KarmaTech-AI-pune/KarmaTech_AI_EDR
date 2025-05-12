@@ -31,7 +31,7 @@ namespace NJS.Domain.Database
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<OpportunityStatus> OpportunityStatuses { get; set; }
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
-        public DbSet<ProjectHistory> ProjectHistories { get; set; }
+        public DbSet<WBSHistory> WBSHistories { get; set; }
         public DbSet<Region> Regions { get; set; }
         public DbSet<FailedEmailLog> FailedEmailLogs { get; set; }
         public DbSet<Settings> Settings { get; set; }
@@ -166,13 +166,25 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OpportunityTracking>().Property(o => o.ReviewManagerId).IsRequired(false);
             modelBuilder.Entity<OpportunityHistory>().Property(o => o.Comments).IsRequired(false);
 
-            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Opportunity).WithMany(o => o.OpportunityHistories).HasForeignKey(oh => oh.OpportunityId);
-            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
+            modelBuilder.Entity<OpportunityHistory>()
+                .HasOne(oh => oh.Opportunity)
+                .WithMany(o => o.OpportunityHistories)
+                .HasForeignKey(oh => oh.OpportunityId);
+            modelBuilder.Entity<OpportunityHistory>()
+                .HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
 
-            modelBuilder.Entity<ProjectHistory>().HasOne(ph => ph.Project).WithMany(p => p.ProjectHistories).HasForeignKey(ph => ph.ProjectId);
-            modelBuilder.Entity<ProjectHistory>().HasOne(ph => ph.ActionUser).WithMany().HasForeignKey(ph => ph.ActionBy);
-            modelBuilder.Entity<ProjectHistory>().Property(ph => ph.Comments).IsRequired(false);
+            modelBuilder.Entity<WBSHistory>()
+                .HasOne(ph => ph.WBSTaskMonthlyHourHeader)
+                .WithMany(p => p.WBSHistories)
+                .HasForeignKey(ph => ph.WBSTaskMonthlyHourHeaderId);
+           
+            modelBuilder.Entity<WBSHistory>()
+                .HasOne(ph => ph.ActionUser)
+                .WithMany().HasForeignKey(ph => ph.ActionBy);
+
+            modelBuilder.Entity<WBSHistory>()
+                .Property(ph => ph.Comments).IsRequired(false);
 
             modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoringCriterias).WithMany(s => s.GoNoGoDecisionOpportunities).HasForeignKey(oh => oh.ScoringCriteriaId);
             modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoreRanges).WithMany(s => s.GoNoGoDecisionOpportunitiesScoring).HasForeignKey(oh => oh.ScoreRangeId);
@@ -300,7 +312,7 @@ namespace NJS.Domain.Database
                 entity.HasIndex(r => r.FormId); // Index for faster lookup by form
             });
 
-             // Configure UserWBSTask entity decimal properties
+            // Configure UserWBSTask entity decimal properties
             modelBuilder.Entity<UserWBSTask>(entity =>
             {
                 entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
@@ -310,8 +322,8 @@ namespace NJS.Domain.Database
             // Configure WorkBreakdownStructure entity
             modelBuilder.Entity<WorkBreakdownStructure>(entity =>
             {
-                 // Optional: Add index on ProjectId if frequent lookups by project are expected
-                 entity.HasIndex(w => w.ProjectId);
+                // Optional: Add index on ProjectId if frequent lookups by project are expected
+                entity.HasIndex(w => w.ProjectId);
             });
 
             // Configure InputRegister entity
@@ -554,7 +566,7 @@ namespace NJS.Domain.Database
 
                 // Configure relationship with ChangeControl
                 entity.HasOne(h => h.ChangeControl)
-                      .WithMany(h=>h.WorkflowHistories)
+                      .WithMany(h => h.WorkflowHistories)
                       .HasForeignKey(h => h.ChangeControlId)
                       .OnDelete(DeleteBehavior.Cascade);
 
@@ -592,7 +604,7 @@ namespace NJS.Domain.Database
 
                 // Configure relationship with ProjectClosure
                 entity.HasOne(h => h.ProjectClosure)
-                      .WithMany(h=>h.WorkflowHistories)
+                      .WithMany(h => h.WorkflowHistories)
                       .HasForeignKey(h => h.ProjectClosureId)
                       .OnDelete(DeleteBehavior.Cascade);
 
@@ -616,6 +628,11 @@ namespace NJS.Domain.Database
                       .IsRequired(false);
             });
 
+            modelBuilder.Entity<WBSTaskMonthlyHour>()
+                .HasOne(m => m.WBSTaskMonthlyHourHeader)
+                .WithMany(h => h.MonthlyHours)
+                .HasForeignKey(m => m.WBSTaskMonthlyHourHeaderId)
+                .OnDelete(DeleteBehavior.Restrict);
             // Removed ProjectClosureComment entity configuration to fix build issues
             /*
             modelBuilder.Entity<ProjectClosureComment>(entity =>
