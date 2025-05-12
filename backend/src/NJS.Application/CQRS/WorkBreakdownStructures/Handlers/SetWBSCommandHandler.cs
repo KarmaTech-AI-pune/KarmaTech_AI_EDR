@@ -7,11 +7,6 @@ using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using NJS.Domain.UnitWork;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
@@ -237,12 +232,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         private async Task UpdateMonthlyHours(WBSTask task, WBSTaskDto dto)
         {
-            var header = await GetOrCreateMonthlyHourHeader(task.WorkBreakdownStructure.ProjectId);
-            var existing = task.MonthlyHours.ToDictionary(m => (m.Year, m.Month));
+            var header = await GetOrCreateMonthlyHourHeader(task.WorkBreakdownStructure.ProjectId, task.TaskType);
+            var existing = task.MonthlyHours.ToDictionary(m => (m.Year, m.Month,m.WBSTaskMonthlyHourHeaderId));
 
             foreach (var mhDto in dto.MonthlyHours)
             {
-                var key = (mhDto.Year.ToString(), mhDto.Month);
+                var key = (mhDto.Year.ToString(), mhDto.Month, header.Id);
                 if (existing.TryGetValue(key, out var existingMh))
                 {
                     existingMh.PlannedHours = mhDto.PlannedHours;
@@ -275,41 +270,43 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
         }
 
-        private async Task<WBSTaskMonthlyHourHeader> GetOrCreateMonthlyHourHeader(int projectId)
+        private async Task<WBSTaskMonthlyHourHeader> GetOrCreateMonthlyHourHeader(int projectId, TaskType taskType)
         {
             var header = await _context.Set<WBSTaskMonthlyHourHeader>()
-                .FirstOrDefaultAsync(h => h.ProjectId == projectId);
+                .FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskType);
+
+            // Get project information regardless of whether header exists
+            var project = await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId);
+            if (project == null)
+                throw new InvalidOperationException($"Project with ID {projectId} not found");
+            var histories = new List<WBSHistory>();
 
             if (header == null)
             {
-                var project = await _context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId);
-                if (project == null)
-                    throw new InvalidOperationException($"Project with ID {projectId} not found");
-
-                var histories = new List<WBSHistory>();
+                
+                // Add history entry for ODC task type
                 if (project.ProjectManagerId is not null)
                 {
                     histories.Add(new WBSHistory
                     {
-                        StatusId = 1,
+                        StatusId = (int)PMWorkflowStatusEnum.Initial,
                         Action = "Initial",
-                        Comments = "WBS manpower data has been updated",
+                        Comments = "WBS ODC data has been updated",
                         ActionDate = DateTime.UtcNow,
                         ActionBy = _userContext.GetCurrentUserId(),
-                        AssignedToId = project.ProjectManagerId,
-                        
+                        AssignedToId = project.ProjectManagerId ?? project.SeniorProjectManagerId ?? project.RegionalManagerId
                     });
                 }
                 if (project.SeniorProjectManagerId is not null)
                 {
                     histories.Add(new WBSHistory
                     {
-                        StatusId = 1,
+                        StatusId = (int)PMWorkflowStatusEnum.Initial,
                         Action = "Initial",
-                        Comments = "WBS manpower data has been updated",
+                        Comments = "WBS ODC data has been updated",
                         ActionDate = DateTime.UtcNow,
                         ActionBy = _userContext.GetCurrentUserId(),
-                        AssignedToId = project.SeniorProjectManagerId,
+                        AssignedToId = project.SeniorProjectManagerId
                     });
                 }
                 if (project.RegionalManagerId is not null)
@@ -317,25 +314,72 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     histories.Add(new WBSHistory
                     {
                         StatusId = (int)PMWorkflowStatusEnum.Initial,
-                        Action = "",
-                        Comments = "Initial",
+                        Action = "Initial",
+                        Comments = "WBS ODC data has been updated",
                         ActionDate = DateTime.UtcNow,
                         ActionBy = _userContext.GetCurrentUserId(),
-                        AssignedToId = project.RegionalManagerId,
+                        AssignedToId = project.RegionalManagerId
                     });
-                }
 
+                }
                 header = new WBSTaskMonthlyHourHeader
                 {
                     ProjectId = projectId,                  
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = _currentUser,
                     MonthlyHours = new HashSet<WBSTaskMonthlyHour>(),
-                    WBSHistories = new List<WBSHistory>()
+                    WBSHistories = new List<WBSHistory>(),
+                    TaskType=taskType,
                 };
 
                 header.WBSHistories = histories;
                 _context.Set<WBSTaskMonthlyHourHeader>().Add(header);
+                await _unitOfWork.SaveChangesAsync();
+            }
+            var temp = _context.WBSHistories.Where(x => x.WBSTaskMonthlyHourHeaderId == header.Id);
+            if (!temp.Any())
+            {
+                if (project.ProjectManagerId is not null)
+                {
+                    histories.Add(new WBSHistory
+                    {
+                        StatusId = (int)PMWorkflowStatusEnum.Initial,
+                        Action = "Initial",
+                        Comments = "WBS ODC data has been updated",
+                        ActionDate = DateTime.UtcNow,
+                        ActionBy = _userContext.GetCurrentUserId(),
+                        AssignedToId = project.ProjectManagerId ,
+                        WBSTaskMonthlyHourHeaderId= header.Id
+                    });
+                }
+                if (project.SeniorProjectManagerId is not null)
+                {
+                    histories.Add(new WBSHistory
+                    {
+                        StatusId = (int)PMWorkflowStatusEnum.Initial,
+                        Action = "Initial",
+                        Comments = "WBS ODC data has been updated",
+                        ActionDate = DateTime.UtcNow,
+                        ActionBy = _userContext.GetCurrentUserId(),
+                        AssignedToId = project.SeniorProjectManagerId,
+                        WBSTaskMonthlyHourHeaderId = header.Id
+                    });
+                }
+                if (project.RegionalManagerId is not null)
+                {
+                    histories.Add(new WBSHistory
+                    {
+                        StatusId = (int)PMWorkflowStatusEnum.Initial,
+                        Action = "Initial",
+                        Comments = "WBS ODC data has been updated",
+                        ActionDate = DateTime.UtcNow,
+                        ActionBy = _userContext.GetCurrentUserId(),
+                        AssignedToId = project.RegionalManagerId,
+                        WBSTaskMonthlyHourHeaderId = header.Id
+                    });
+
+                }
+                header.WBSHistories = histories;
                 await _unitOfWork.SaveChangesAsync();
             }
 
