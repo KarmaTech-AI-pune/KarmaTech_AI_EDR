@@ -92,7 +92,7 @@ namespace NJS.API.Tests.Validation
             };
 
             // Act
-            var result = await controller.UpdateProject(999, projectDto);
+            var result = await controller.Update(999, projectDto);
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);

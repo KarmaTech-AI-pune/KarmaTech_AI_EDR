@@ -34,6 +34,11 @@ function App() {
   const [canApproveBD, setCanApproveBD] = useState(false);
   const [canSubmitForApproval, setCanSubmitForApproval] = useState(false);
 
+  const [canProjectSubmitForReview, setProjectCanSubmitForReview] = useState(false);
+  const [canProjectSubmitForApproval, setProjectCanSubmitForApproval] = useState(false);
+  const [canProjectCanApprove, setProjectCanApprove] = useState(false);
+  
+
   useEffect(() => {
     const checkUserPermissions = async () => {
       try {
@@ -46,6 +51,9 @@ function App() {
           setCanSubmitForReview(false);
           setCanReviewBD(false);
           setCanApproveBD(false);
+          setProjectCanSubmitForReview(false)
+          setProjectCanSubmitForApproval(false)
+          setProjectCanApprove(false)
           return;
         }
  
@@ -70,6 +78,19 @@ function App() {
           setCanApproveBD(
             user.roleDetails.permissions.includes(PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
           );
+          
+          //project approval workflow permissions
+          setProjectCanSubmitForReview(
+            user.roleDetails.permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_REVIEW)
+          );
+
+          setProjectCanApprove(
+            user.roleDetails.permissions.includes(PermissionType.APPROVE_PROJECT)
+          );
+
+          setProjectCanSubmitForApproval(
+            user.roleDetails.permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_APPROVAL)
+          );
         }
       } catch (err) {
         console.error('Error checking user permissions:', err as Error);
@@ -78,6 +99,9 @@ function App() {
         setCanSubmitForReview(false);
         setCanReviewBD(false);
         setCanApproveBD(false);
+        setProjectCanSubmitForReview(false)
+        setProjectCanSubmitForApproval(false)
+        setProjectCanApprove(false)
       }
     };
     
@@ -193,7 +217,13 @@ function App() {
       canApproveBD,
       setCanApproveBD,
       canSubmitForApproval,
-      setCanSubmitForApproval
+      setCanSubmitForApproval,
+      canProjectSubmitForReview, 
+      setProjectCanSubmitForReview,
+      canProjectSubmitForApproval, 
+      setProjectCanSubmitForApproval,
+      canProjectCanApprove, 
+      setProjectCanApprove,
     }}>
       <LoadingProvider>
         <LoadingSpinner />

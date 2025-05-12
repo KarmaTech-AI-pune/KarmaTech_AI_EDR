@@ -104,10 +104,10 @@ namespace NJS.API.Tests.Validation
             // Arrange
             var opportunity = new OpportunityTracking
             {
-                ProjectName = "Test Project",
-                ClientName = "Test Client",
+                WorkName = "Test Project",
+                Client = "Test Client",
                 ClientSector = "Infrastructure",
-                Status = Domain.Enums.OpportunityTrackingStatus.New,
+                Status = Domain.Enums.OpportunityTrackingStatus.BID_UNDER_PREPERATION,
                 Currency = "USD",
                 CapitalValue = 1000000,
                 DurationOfProject = 12,
@@ -131,10 +131,10 @@ namespace NJS.API.Tests.Validation
             var opportunity = new OpportunityTracking
             {
                 // Missing required fields
-                ProjectName = "Test Project",
+                WorkName = "Test Project",
                 // ClientName is missing
                 // ClientSector is missing
-                Status = Domain.Enums.OpportunityTrackingStatus.New,
+                Status = Domain.Enums.OpportunityTrackingStatus.BID_UNDER_PREPERATION,
                 // Currency is missing
                 CapitalValue = 1000000,
                 DurationOfProject = 12
@@ -164,9 +164,9 @@ namespace NJS.API.Tests.Validation
                 Description = "Test Description",
                 StartDate = DateTime.UtcNow,
                 PreparedBy = "Test User",
-                TimeDataJson = "{\"hours\": 40}",
-                ExpensesDataJson = "{\"travel\": 1000}",
-                ServiceTaxJson = "{\"tax\": 18}",
+               // TimeDataJson = "{\"hours\": 40}",
+               // ExpensesDataJson = "{\"travel\": 1000}",
+               // ServiceTaxJson = "{\"tax\": 18}",
                 GrandTotal = 5000,
                 ProjectFees = 4000,
                 TotalProjectFees = 4720,

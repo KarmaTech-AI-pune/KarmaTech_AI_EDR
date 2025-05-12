@@ -1,20 +1,22 @@
 using MediatR;
 using NJS.Application.CQRS.ChangeControl.Commands;
-using NJS.Application.Dtos;
+using NJS.Application.Services.IContract;
+using NJS.Domain.Enums;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.ChangeControl.Handlers
 {
     public class CreateChangeControlCommandHandler : IRequestHandler<CreateChangeControlCommand, int>
     {
         private readonly IChangeControlRepository _changeControlRepository;
+        private readonly IProjectRepository _projectRepository;
+        private readonly ICurrentUserService _currentUserService;
 
-        public CreateChangeControlCommandHandler(IChangeControlRepository changeControlRepository)
+        public CreateChangeControlCommandHandler(IChangeControlRepository changeControlRepository, IProjectRepository projectRepository, ICurrentUserService currentUserService)
         {
             _changeControlRepository = changeControlRepository ?? throw new ArgumentNullException(nameof(changeControlRepository));
+            _projectRepository = projectRepository;
+            _currentUserService = currentUserService;
         }
 
         public async Task<int> Handle(CreateChangeControlCommand request, CancellationToken cancellationToken)
@@ -23,27 +25,74 @@ namespace NJS.Application.CQRS.ChangeControl.Handlers
                 throw new ArgumentNullException(nameof(request));
 
             // Ensure all string fields have values and set audit fields
-            var entity = new NJS.Domain.Entities.ChangeControl
-            {
-                ProjectId = request.ChangeControlDto.ProjectId,
-                SrNo = request.ChangeControlDto.SrNo,
-                DateLogged = request.ChangeControlDto.DateLogged,
-                Originator = request.ChangeControlDto.Originator ?? string.Empty,
-                Description = request.ChangeControlDto.Description ?? string.Empty,
-                CostImpact = request.ChangeControlDto.CostImpact ?? string.Empty,
-                TimeImpact = request.ChangeControlDto.TimeImpact ?? string.Empty,
-                ResourcesImpact = request.ChangeControlDto.ResourcesImpact ?? string.Empty,
-                QualityImpact = request.ChangeControlDto.QualityImpact ?? string.Empty,
-                ChangeOrderStatus = request.ChangeControlDto.ChangeOrderStatus ?? string.Empty,
-                ClientApprovalStatus = request.ChangeControlDto.ClientApprovalStatus ?? string.Empty,
-                ClaimSituation = request.ChangeControlDto.ClaimSituation ?? string.Empty,
-                // Always set audit fields with default values if not provided
-                CreatedBy = string.IsNullOrEmpty(request.ChangeControlDto.CreatedBy) ? "System" : request.ChangeControlDto.CreatedBy,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedBy = string.IsNullOrEmpty(request.ChangeControlDto.UpdatedBy) ? "System" : request.ChangeControlDto.UpdatedBy,
-                UpdatedAt = DateTime.UtcNow
-            };
+            var project = _projectRepository.GetById(request.ChangeControlDto.ProjectId);
 
+            var dateNow= DateTime.UtcNow;
+
+            var entity = new NJS.Domain.Entities.ChangeControl();
+            var histories = new List<Domain.Entities.ChangeControlWorkflowHistory>();
+
+            entity.ProjectId = request.ChangeControlDto.ProjectId;
+            entity.SrNo = request.ChangeControlDto.SrNo;
+            entity.DateLogged = request.ChangeControlDto.DateLogged;
+            entity.Originator = request.ChangeControlDto.Originator ?? string.Empty;
+            entity.Description = request.ChangeControlDto.Description ?? string.Empty;
+            entity.CostImpact = request.ChangeControlDto.CostImpact ?? string.Empty;
+            entity.TimeImpact = request.ChangeControlDto.TimeImpact ?? string.Empty;
+            entity.ResourcesImpact = request.ChangeControlDto.ResourcesImpact ?? string.Empty;
+            entity.QualityImpact = request.ChangeControlDto.QualityImpact ?? string.Empty;
+            entity.ChangeOrderStatus = request.ChangeControlDto.ChangeOrderStatus ?? string.Empty;
+            entity.ClientApprovalStatus = request.ChangeControlDto.ClientApprovalStatus ?? string.Empty;
+            entity.ClaimSituation = request.ChangeControlDto.ClaimSituation ?? string.Empty;
+
+            entity.CreatedBy = string.IsNullOrEmpty(request.ChangeControlDto.CreatedBy) ? "System" : request.ChangeControlDto.CreatedBy;
+            entity.CreatedAt = dateNow;
+            entity.UpdatedBy = string.IsNullOrEmpty(request.ChangeControlDto.UpdatedBy) ? "System" : request.ChangeControlDto.UpdatedBy;
+            entity.UpdatedAt = dateNow;
+
+            if(project.ProjectManagerId is not null)
+            {
+                histories.Add(new Domain.Entities.ChangeControlWorkflowHistory()
+                {
+                    Action = "Initial",
+                    Comments="Submitted",
+                    StatusId = (int)PMWorkflowStatusEnum.Initial,
+                    ActionDate = dateNow,
+                    AssignedToId = project.ProjectManagerId,
+                    ChangeControlId = entity.Id,
+                    ActionBy = _currentUserService.UserId
+                });
+               
+            }
+            if (project.SeniorProjectManagerId is not null)
+            {
+                histories.Add(new Domain.Entities.ChangeControlWorkflowHistory()
+                {
+                    Action = "Initial",
+                    Comments = "Submitted",
+                    StatusId = (int)PMWorkflowStatusEnum.Initial,
+                    ActionDate = dateNow,
+                    AssignedToId = project.SeniorProjectManagerId,
+                    ChangeControlId = entity.Id,
+                    ActionBy = _currentUserService.UserId
+                });
+
+            }
+            if (project.RegionalManagerId is not null)
+            {
+                histories.Add(new Domain.Entities.ChangeControlWorkflowHistory()
+                {
+                    Action = "Initial",
+                    Comments = "Submitted",
+                    StatusId = (int)PMWorkflowStatusEnum.Initial,
+                    ActionDate = dateNow,
+                    AssignedToId = project.RegionalManagerId,
+                    ChangeControlId = entity.Id,
+                    ActionBy = _currentUserService.UserId
+                });
+
+            }
+            entity.WorkflowHistories = histories;
             return await _changeControlRepository.AddAsync(entity);
         }
     }

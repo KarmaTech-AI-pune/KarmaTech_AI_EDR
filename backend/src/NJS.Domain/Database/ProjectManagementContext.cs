@@ -55,6 +55,11 @@ namespace NJS.Domain.Database
         // Removed ProjectClosureComment to fix build issues
         // public DbSet<ProjectClosureComment> ProjectClosureComments { get; set; }
 
+        // PM Workflow entities
+        public DbSet<PMWorkflowStatus> PMWorkflowStatuses { get; set; }
+        public DbSet<ChangeControlWorkflowHistory> ChangeControlWorkflowHistories { get; set; }
+        public DbSet<ProjectClosureWorkflowHistory> ProjectClosureWorkflowHistories { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -429,6 +434,12 @@ namespace NJS.Domain.Database
                       .WithMany()
                       .HasForeignKey(cc => cc.ProjectId)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
+                entity.HasOne(cc => cc.WorkflowStatus)
+                      .WithMany()
+                      .HasForeignKey(cc => cc.WorkflowStatusId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
 
             // Configure ProjectClosure entity
@@ -516,6 +527,88 @@ namespace NJS.Domain.Database
                       .WithMany()
                       .HasForeignKey(pc => pc.ProjectId)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
+                entity.HasOne(pc => pc.WorkflowStatus)
+                      .WithMany()
+                      .HasForeignKey(pc => pc.WorkflowStatusId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configure ChangeControlWorkflowHistory entity
+            modelBuilder.Entity<ChangeControlWorkflowHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Action).IsRequired();
+                entity.Property(e => e.Comments).IsRequired(false);
+
+                // Create indexes for faster lookups
+                entity.HasIndex(e => e.ChangeControlId);
+                entity.HasIndex(e => e.StatusId);
+                entity.HasIndex(e => e.ActionBy);
+
+                // Configure relationship with ChangeControl
+                entity.HasOne(h => h.ChangeControl)
+                      .WithMany(h=>h.WorkflowHistories)
+                      .HasForeignKey(h => h.ChangeControlId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
+                entity.HasOne(h => h.Status)
+                      .WithMany()
+                      .HasForeignKey(h => h.StatusId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure relationship with User (ActionBy)
+                entity.HasOne(h => h.ActionUser)
+                      .WithMany()
+                      .HasForeignKey(h => h.ActionBy)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure relationship with User (AssignedTo)
+                entity.HasOne(h => h.AssignedTo)
+                      .WithMany()
+                      .HasForeignKey(h => h.AssignedToId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+            });
+
+            // Configure ProjectClosureWorkflowHistory entity
+            modelBuilder.Entity<ProjectClosureWorkflowHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Action).IsRequired();
+                entity.Property(e => e.Comments).IsRequired(false);
+
+                // Create indexes for faster lookups
+                entity.HasIndex(e => e.ProjectClosureId);
+                entity.HasIndex(e => e.StatusId);
+                entity.HasIndex(e => e.ActionBy);
+
+                // Configure relationship with ProjectClosure
+                entity.HasOne(h => h.ProjectClosure)
+                      .WithMany(h=>h.WorkflowHistories)
+                      .HasForeignKey(h => h.ProjectClosureId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
+                entity.HasOne(h => h.Status)
+                      .WithMany()
+                      .HasForeignKey(h => h.StatusId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure relationship with User (ActionBy)
+                entity.HasOne(h => h.ActionUser)
+                      .WithMany()
+                      .HasForeignKey(h => h.ActionBy)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure relationship with User (AssignedTo)
+                entity.HasOne(h => h.AssignedTo)
+                      .WithMany()
+                      .HasForeignKey(h => h.AssignedToId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
             });
 
             // Removed ProjectClosureComment entity configuration to fix build issues

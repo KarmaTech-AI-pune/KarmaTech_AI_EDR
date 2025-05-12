@@ -20,6 +20,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ChangeControl } from  "../../models";
 import { ChangeControlDialog } from './ChangeControlcomponents/ChangeControlDialog';
+import ChangeControlWorkflow from '../common/ChangeControlWorkflow';
 import {
   getChangeControlsByProjectId,
   createChangeControl,
@@ -320,10 +321,16 @@ const ChangeControlForm: React.FC = () => {
                           {row.originator}
                         </Typography>
                       </Grid>
-                      <Grid item xs={7}>
+                      <Grid item xs={5}>
                         <Typography noWrap>
                           {row.description}
                         </Typography>
+                      </Grid>
+                      <Grid item xs={2}>
+                        <ChangeControlWorkflow 
+                          changeControl={row}
+                          onChangeControlUpdated={loadChangeControls}
+                        />
                       </Grid>
                     </Grid>
                   </AccordionSummary>
