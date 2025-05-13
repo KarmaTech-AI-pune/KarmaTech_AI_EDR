@@ -12,8 +12,8 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20250512060005_wbsflow")]
-    partial class wbsflow
+    [Migration("20250513104823_AutoMigration_20250513_161812")]
+    partial class AutoMigration_20250513_161812
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -2686,6 +2686,9 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TaskType")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

@@ -12,8 +12,8 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20250512183234_wbsflow1")]
-    partial class wbsflow1
+    [Migration("20250513105427_AutoMigration_20250513_162420")]
+    partial class AutoMigration_20250513_162420
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
