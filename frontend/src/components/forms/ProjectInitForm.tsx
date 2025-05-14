@@ -92,6 +92,19 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Get the current start date or default to today
+    const startDate = formData.startDate || formatDateToYYYYMMDD(new Date());
+
+    // Calculate the day after the start date for minimum end date
+    const nextDay = new Date(new Date(startDate).setDate(new Date(startDate).getDate() + 1));
+    const nextDayFormatted = formatDateToYYYYMMDD(nextDay);
+
+    // If end date is missing or is on/before start date, set it to day after start date
+    let endDate = formData.endDate || nextDayFormatted;
+    if (endDate <= startDate) {
+      endDate = nextDayFormatted;
+    }
+
     // Ensure all required fields are properly formatted
     const submissionData = {
       ...formData,
@@ -101,8 +114,8 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       seniorProjectManagerId: formData.seniorProjectManagerId,
       regionalManagerId: formData.regionalManagerId,
       // Ensure date fields are properly formatted
-      startDate: formData.startDate || formatDateToYYYYMMDD(new Date()), // Use today's date if not provided
-      endDate: formData.endDate || '',
+      startDate: startDate,
+      endDate: endDate,
       // Ensure problematic fields are never null or undefined
       office: formData.office || '',
       typeOfJob: formData.typeOfJob || '',
@@ -345,7 +358,18 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               value={formData.endDate}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}
+              // Using the min attribute to ensure end date is AFTER start date, not ON start date
+              inputProps={{
+                min: formData.startDate ?
+                  // Add one day to start date to ensure end date is AFTER start date
+                  new Date(new Date(formData.startDate).setDate(new Date(formData.startDate).getDate() + 1)).toISOString().split('T')[0]
+                  :
+                  // If no start date, use tomorrow as minimum
+                  new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]
+              }}
               required
+              // Add error state for visual feedback
+              error={!!(formData.endDate && formData.startDate && formData.endDate <= formData.startDate)}
             />
           </Grid>
           <Grid item xs={12}>
