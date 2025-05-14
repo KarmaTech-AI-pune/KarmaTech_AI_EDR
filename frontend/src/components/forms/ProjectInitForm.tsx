@@ -26,6 +26,13 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   projectManagers,
   seniorProjectManagers
 }) => {
+  // Format today's date as YYYY-MM-DD for default value
+  const formatDateToYYYYMMDD = (date: Date): string => {
+    return date.toISOString().split('T')[0];
+  };
+
+  const today = formatDateToYYYYMMDD(new Date());
+
   const [formData, setFormData] = useState<ProjectFormData>({
     name: project?.name || '',
     details: project?.details || '',
@@ -43,7 +50,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     typeOfClient: project?.typeOfClient || '',
     estimatedCost: project?.estimatedCost || 0,
     fundingStream: project?.fundingStream || 'Lumpsum',
-    startDate: project?.startDate || '',
+    startDate: project?.startDate || today, // Default to today's date if no project data
     endDate: project?.endDate || '',
     currency: project?.currency || 'INR',
     budget: project?.budget || 0,
@@ -57,10 +64,21 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+
+    // Handle date inputs
+    if (name === 'startDate' || name === 'endDate') {
+      // For date inputs, ensure we have a valid date format
+      setFormData(prev => ({
+        ...prev,
+        [name]: value // Date inputs already come in YYYY-MM-DD format
+      }));
+    } else {
+      // For all other inputs
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
 const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,6 +100,9 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       projectManagerId: formData.projectManagerId,
       seniorProjectManagerId: formData.seniorProjectManagerId,
       regionalManagerId: formData.regionalManagerId,
+      // Ensure date fields are properly formatted
+      startDate: formData.startDate || formatDateToYYYYMMDD(new Date()), // Use today's date if not provided
+      endDate: formData.endDate || '',
       // Ensure problematic fields are never null or undefined
       office: formData.office || '',
       typeOfJob: formData.typeOfJob || '',
@@ -89,13 +110,6 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       // Include other fields that might be missing
       updatedAt: new Date().toISOString()
     };
-
-    // Log the problematic fields
-    console.log('Submitting form data with specific focus on:');
-    console.log('Office:', submissionData.office);
-    console.log('TypeOfJob:', submissionData.typeOfJob);
-    console.log('Budget:', submissionData.budget);
-    console.log('Priority:', submissionData.priority);
 
     onSubmit(submissionData);
   };
