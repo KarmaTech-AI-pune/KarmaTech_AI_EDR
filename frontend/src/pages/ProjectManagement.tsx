@@ -73,7 +73,6 @@ export const ProjectManagement: React.FC = () => {
   useEffect(() => {
     const checkUserPermissions = async () => {
       try {
-        debugger;
         const user = await authApi.getCurrentUser();
 
         if (!user) {
