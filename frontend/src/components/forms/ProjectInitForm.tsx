@@ -26,9 +26,37 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   projectManagers,
   seniorProjectManagers
 }) => {
-  // Format today's date as YYYY-MM-DD for default value
+  // Format date as YYYY-MM-DD for form input
   const formatDateToYYYYMMDD = (date: Date): string => {
-    return date.toISOString().split('T')[0];
+    // Ensure we're working with a valid date
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      console.error('Invalid date provided to formatDateToYYYYMMDD:', date);
+      return '';
+    }
+
+    // Format as YYYY-MM-DD without timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  };
+
+  // Parse date string to ensure consistent format
+  const parseDateString = (dateStr: string | undefined): string => {
+    if (!dateStr) return '';
+
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date string:', dateStr);
+        return '';
+      }
+      return formatDateToYYYYMMDD(date);
+    } catch (error) {
+      console.error('Error parsing date string:', error);
+      return '';
+    }
   };
 
   const today = formatDateToYYYYMMDD(new Date());
@@ -50,8 +78,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     typeOfClient: project?.typeOfClient || '',
     estimatedCost: project?.estimatedCost || 0,
     fundingStream: project?.fundingStream || 'Lumpsum',
-    startDate: project?.startDate || today, // Default to today's date if no project data
-    endDate: project?.endDate || '',
+    // Parse dates to ensure consistent format
+    startDate: parseDateString(project?.startDate) || today, // Default to today's date if no project data
+    endDate: parseDateString(project?.endDate) || '',
     currency: project?.currency || 'INR',
     budget: project?.budget || 0,
     priority: project?.priority || '',
@@ -67,11 +96,34 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
 
     // Handle date inputs
     if (name === 'startDate' || name === 'endDate') {
-      // For date inputs, ensure we have a valid date format
-      setFormData(prev => ({
-        ...prev,
-        [name]: value // Date inputs already come in YYYY-MM-DD format
-      }));
+      try {
+        // Validate the date format
+        const dateValue = value ? value : '';
+
+        // If it's a valid date or empty, update the form
+        setFormData(prev => ({
+          ...prev,
+          [name]: dateValue
+        }));
+
+        // If it's the start date, we may need to adjust the end date
+        if (name === 'startDate' && dateValue && formData.endDate) {
+          // Check if end date is now before start date
+          if (formData.endDate <= dateValue) {
+            // Calculate the day after the new start date
+            const nextDay = new Date(new Date(dateValue).setDate(new Date(dateValue).getDate() + 1));
+            const nextDayFormatted = formatDateToYYYYMMDD(nextDay);
+
+            // Update end date to be the day after start date
+            setFormData(prev => ({
+              ...prev,
+              endDate: nextDayFormatted
+            }));
+          }
+        }
+      } catch (error) {
+        console.error(`Error handling date change for ${name}:`, error);
+      }
     } else {
       // For all other inputs
       setFormData(prev => ({
@@ -92,39 +144,62 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Get the current start date or default to today
-    const startDate = formData.startDate || formatDateToYYYYMMDD(new Date());
+    try {
+      // Get the current start date or default to today
+      const startDate = formData.startDate || formatDateToYYYYMMDD(new Date());
 
-    // Calculate the day after the start date for minimum end date
-    const nextDay = new Date(new Date(startDate).setDate(new Date(startDate).getDate() + 1));
-    const nextDayFormatted = formatDateToYYYYMMDD(nextDay);
+      // Ensure start date is in correct format
+      const startDateObj = new Date(startDate);
+      const formattedStartDate = formatDateToYYYYMMDD(startDateObj);
 
-    // If end date is missing or is on/before start date, set it to day after start date
-    let endDate = formData.endDate || nextDayFormatted;
-    if (endDate <= startDate) {
-      endDate = nextDayFormatted;
+      // Calculate the day after the start date for minimum end date
+      const nextDay = new Date(startDateObj);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const nextDayFormatted = formatDateToYYYYMMDD(nextDay);
+
+      // If end date is missing or is on/before start date, set it to day after start date
+      let endDate = formData.endDate || nextDayFormatted;
+
+      // Convert dates to Date objects for proper comparison
+      const endDateObj = new Date(endDate);
+
+      // Compare dates properly (using timestamp comparison)
+      if (endDateObj <= startDateObj || isNaN(endDateObj.getTime())) {
+        endDate = nextDayFormatted;
+      } else {
+        // Ensure end date is in correct format
+        endDate = formatDateToYYYYMMDD(endDateObj);
+      }
+
+      // Ensure all required fields are properly formatted
+      const submissionData = {
+        ...formData,
+        estimatedCost: Number(formData.estimatedCost),
+        budget: Number(formData.budget || 0),
+        projectManagerId: formData.projectManagerId,
+        seniorProjectManagerId: formData.seniorProjectManagerId,
+        regionalManagerId: formData.regionalManagerId,
+        // Ensure date fields are properly formatted
+        startDate: formattedStartDate,
+        endDate: endDate,
+        // Ensure problematic fields are never null or undefined
+        office: formData.office || '',
+        typeOfJob: formData.typeOfJob || '',
+        priority: formData.priority || '',
+        // Include other fields that might be missing
+        updatedAt: new Date().toISOString()
+      };
+
+      console.log('Submitting project with dates:', {
+        startDate: formattedStartDate,
+        endDate: endDate
+      });
+
+      onSubmit(submissionData);
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      // You could add error handling UI here if needed
     }
-
-    // Ensure all required fields are properly formatted
-    const submissionData = {
-      ...formData,
-      estimatedCost: Number(formData.estimatedCost),
-      budget: Number(formData.budget || 0),
-      projectManagerId: formData.projectManagerId,
-      seniorProjectManagerId: formData.seniorProjectManagerId,
-      regionalManagerId: formData.regionalManagerId,
-      // Ensure date fields are properly formatted
-      startDate: startDate,
-      endDate: endDate,
-      // Ensure problematic fields are never null or undefined
-      office: formData.office || '',
-      typeOfJob: formData.typeOfJob || '',
-      priority: formData.priority || '',
-      // Include other fields that might be missing
-      updatedAt: new Date().toISOString()
-    };
-
-    onSubmit(submissionData);
   };
 
   return (
@@ -368,8 +443,8 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]
               }}
               required
-              // Add error state for visual feedback
-              error={!!(formData.endDate && formData.startDate && formData.endDate <= formData.startDate)}
+              // Add error state for visual feedback with proper date comparison
+              error={!!(formData.endDate && formData.startDate && new Date(formData.endDate) <= new Date(formData.startDate))}
             />
           </Grid>
           <Grid item xs={12}>
