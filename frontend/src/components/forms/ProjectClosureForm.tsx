@@ -37,6 +37,9 @@ import {
 import { projectManagementAppContext } from '../../App';
 import { ProjectClosureRow, ProjectClosureComment, Project } from "../../models";
 import { FormWrapper } from './FormWrapper';
+import PMWorkflowButton from '../projects/PMWorkflowButton';
+import { PMWorkflowStatus } from '../../models/pmWorkflowModel';
+import ProjectClosureWorkflow from '../common/ProjectClosureWorkflow';
 
 interface ProjectClosureFormProps {
   onSubmit?: () => void;
@@ -63,6 +66,9 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
       }
     });
   };
+
+  // State for workflow status
+  const [workflowStatus, setWorkflowStatus] = useState<number>(PMWorkflowStatus.Initial);
 
   const [formData, setFormData] = useState<ProjectClosureRow>({
     projectId: '',
@@ -443,6 +449,11 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
         isEnvIssuesEmpty: processedData.envIssues === ''
       });
 
+      // Set workflow status if available
+      if (existingClosure.workflowStatusId) {
+        setWorkflowStatus(existingClosure.workflowStatusId);
+      }
+
       // Set the form data with the processed values
       setFormData({
         projectId: existingClosure.projectId,
@@ -567,6 +578,22 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
   };
 
   // Handle delete project closure
+  // Function to handle workflow updates
+  const handleWorkflowUpdated = async () => {
+    try {
+      // Refresh the project closure data to get the updated workflow status
+      const idToRefresh = closureId || existingClosureId;
+      if (idToRefresh) {
+        const refreshedClosure = await getProjectClosureById(idToRefresh);
+        if (refreshedClosure && refreshedClosure.workflowStatusId) {
+          setWorkflowStatus(refreshedClosure.workflowStatusId);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing workflow status:', error);
+    }
+  };
+
   const handleDelete = async () => {
     console.log('handleDelete function called');
 
@@ -937,7 +964,9 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             createdAt: existingClosure.createdAt,
             createdBy: existingClosure.createdBy || '',
             updatedAt: new Date().toISOString(),
-            updatedBy: 'System'
+            updatedBy: 'System',
+            // Keep existing workflow status
+            workflowStatusId: existingClosure.workflowStatusId || PMWorkflowStatus.Initial
           } as ProjectClosureWithMetadata;
 
           console.log('Update data being sent to API:', JSON.stringify(updateData, null, 2));
@@ -1052,7 +1081,9 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             // These fields are required by the interface but will be overridden by the backend
             createdBy: '',
             updatedAt: null,
-            updatedBy: ''
+            updatedBy: '',
+            // Set initial workflow status
+            workflowStatusId: PMWorkflowStatus.Initial
           } as ProjectClosureRow;
 
           console.log('Sending data without ID field:', dataToSend);
@@ -1349,6 +1380,12 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
               PMD8. Project Closure Form
             </Typography>
           </Box>
+
+          {/* Workflow Approval Button */}
+          <ProjectClosureWorkflow
+            projectClosure={{ ...formData, id: closureId || existingClosureId || undefined, workflowStatusId: workflowStatus }}
+            onProjectClosureUpdated={handleWorkflowUpdated}
+          />
 
           <form onSubmit={handleSubmit}>
             {/* Section A: Overall Project Delivery */}

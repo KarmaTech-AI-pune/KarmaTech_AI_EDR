@@ -14,26 +14,26 @@ import {
   Box,
   Backdrop
 } from '@mui/material';
-import { axiosInstance } from '../../../services/axiosConfig';
 import { projectApi } from '../../../services/projectApi';
-import { changeControlApi } from '../../../services/changeControlApi';
+import { pmWorkflowApi } from '../../../api/pmWorkflowApi';
 
-interface DecideApprovalProps {
+
+interface DecideReviewProps {
   open: boolean;
   onClose: () => void;
-  changeControlId?: number;
+  projectClosureId?: number;
   projectId?: number;
   currentUser: string;
-  onSubmit?: () => void;
+  onDecisionMade?: () => void;
 }
 
-const DecideApproval: React.FC<DecideApprovalProps> = ({
+const DecideReview: React.FC<DecideReviewProps> = ({
   open,
   onClose,
-  changeControlId,
+  projectClosureId,
   projectId,
   currentUser,
-  onSubmit
+  onDecisionMade
 }) => {
   const [decision, setDecision] = useState<string>('');
   const [comments, setComments] = useState<string>('');
@@ -61,8 +61,8 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       return;
     }
 
-    if (!changeControlId) {
-      setError('Change Control ID is missing');
+    if (!projectClosureId) {
+      setError('Project Closure ID is missing');
       return;
     }
 
@@ -71,46 +71,47 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       return;
     }
 
-    try {     
-      let projectResponse = await projectApi.getById(projectId.toString());
-      if (decision === 'approve') {
-        // Approve and final the result
-        await changeControlApi.approvedByRDOrRM({
-          entityId: changeControlId,
-          entityType: 'ChangeControl',
-          action: "Approved",
-          comments: comments || `Approved by ${currentUser}`,
-          assignedToId: projectResponse.regionalManagerId
-        });
-      } else {
-        // Request changes sent back to SPM
-        await changeControlApi.rejectByRDOrRM({
-          entityId: changeControlId,
-          entityType: 'ChangeControl',
-          action: "Approval Changes",
-          comments: comments || `Approved by ${currentUser}`,
-          assignedToId: projectResponse.seniorProjectManagerId,
-        });
-       
-      }
+    try {
+          let response;
+          let projectResponse = await projectApi.getById(projectId.toString());
+          if (decision === 'approve') {
+            // Send to approval to RM or RD
+            response = await pmWorkflowApi.sendToApprovalBySPM({
+              entityId: projectClosureId,
+              entityType: 'ProjectClosure',
+              action: "Approval",
+              assignedToId: projectResponse.regionalManagerId,
+              comments: comments || `Reviewed and sent for approval by ${currentUser}`
+            });
+          } else {
+            // Request changes sent back to project manager
+            response = await pmWorkflowApi.rejectBySPM({
+              entityId: projectClosureId,
+              entityType: 'ProjectClosure',
+              action: "Reject",
+              assignedToId: projectResponse.projectManagerId,
+              comments: comments || `Changes requested by ${currentUser}`,
+              decisionType: 'Review'
+            });
+          }
 
       // Reset dialog state
       setDecision('');
       setComments('');
       setError(null);
-      
+
       // Call the callback
-      if (onSubmit) {
-        await onSubmit();
+      if (onDecisionMade) {
+        onDecisionMade();
       }
-      
+
       onClose();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : 'Failed to submit approval decision';
+      const errorMessage = err instanceof Error
+        ? err.message
+        : 'Failed to submit review decision';
       setError(errorMessage);
-      console.error('Error submitting approval decision:', err);
+      console.error('Error submitting review decision:', err);
     }
   };
 
@@ -148,33 +149,33 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
         onClick: stopEventPropagation
       }}
     >
-      <DialogTitle>Approval Decision</DialogTitle>
+      <DialogTitle>Review Decision</DialogTitle>
       <DialogContent onClick={stopEventPropagation}>
         <Box sx={{ mt: 2 }}>
           <Typography variant="body1" gutterBottom>
-            Please review the change control and make a final decision:
+            Please review the project closure form and make a decision:
           </Typography>
-          
+
           <FormControl component="fieldset" sx={{ mt: 2 }} error={!!error && !decision}>
             <RadioGroup
-              aria-label="approval-decision"
-              name="approval-decision"
+              aria-label="review-decision"
+              name="review-decision"
               value={decision}
               onChange={handleDecisionChange}
             >
-              <FormControlLabel 
-                value="approve" 
-                control={<Radio />} 
-                label="Approve" 
+              <FormControlLabel
+                value="approve"
+                control={<Radio />}
+                label="Approve and send for final approval"
               />
-              <FormControlLabel 
-                value="requestChanges" 
-                control={<Radio />} 
-                label="Request changes" 
+              <FormControlLabel
+                value="requestChanges"
+                control={<Radio />}
+                label="Request changes"
               />
             </RadioGroup>
           </FormControl>
-          
+
           <TextField
             label="Comments"
             multiline
@@ -185,7 +186,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
             onChange={handleCommentsChange}
             placeholder="Add your comments here (optional)"
           />
-          
+
           {error && (
             <Typography color="error" variant="body2" sx={{ mt: 2 }}>
               {error}
@@ -210,4 +211,4 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
   );
 };
 
-export default DecideApproval;
+export default DecideReview;

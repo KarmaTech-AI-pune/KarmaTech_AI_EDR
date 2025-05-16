@@ -14,14 +14,13 @@ import {
   Box,
   Backdrop
 } from '@mui/material';
-import { axiosInstance } from '../../../services/axiosConfig';
+import { pmWorkflowApi } from '../../../api/pmWorkflowApi';
 import { projectApi } from '../../../services/projectApi';
-import { changeControlApi } from '../../../services/changeControlApi';
 
 interface DecideApprovalProps {
   open: boolean;
   onClose: () => void;
-  changeControlId?: number;
+  projectClosureId?: number;
   projectId?: number;
   currentUser: string;
   onSubmit?: () => void;
@@ -30,7 +29,7 @@ interface DecideApprovalProps {
 const DecideApproval: React.FC<DecideApprovalProps> = ({
   open,
   onClose,
-  changeControlId,
+  projectClosureId,
   projectId,
   currentUser,
   onSubmit
@@ -61,8 +60,8 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       return;
     }
 
-    if (!changeControlId) {
-      setError('Change Control ID is missing');
+    if (!projectClosureId) {
+      setError('Project Closure ID is missing');
       return;
     }
 
@@ -72,42 +71,42 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
     }
 
     try {     
-      let projectResponse = await projectApi.getById(projectId.toString());
-      if (decision === 'approve') {
-        // Approve and final the result
-        await changeControlApi.approvedByRDOrRM({
-          entityId: changeControlId,
-          entityType: 'ChangeControl',
-          action: "Approved",
-          comments: comments || `Approved by ${currentUser}`,
-          assignedToId: projectResponse.regionalManagerId
-        });
-      } else {
-        // Request changes sent back to SPM
-        await changeControlApi.rejectByRDOrRM({
-          entityId: changeControlId,
-          entityType: 'ChangeControl',
-          action: "Approval Changes",
-          comments: comments || `Approved by ${currentUser}`,
-          assignedToId: projectResponse.seniorProjectManagerId,
-        });
-       
-      }
+         let projectResponse = await projectApi.getById(projectId.toString());
+         if (decision === 'approve') {
+           // Approve and final the result
+           await pmWorkflowApi.approvedByRDOrRM({
+             entityId: projectClosureId,
+             entityType: 'ProjectClosure',
+             action: "Approved",
+             comments: comments || `Approved by ${currentUser}`,
+             assignedToId: projectResponse.regionalManagerId
+           });
+         } else {
+           // Request changes sent back to SPM
+           await pmWorkflowApi.rejectByRDOrRM({
+             entityId: projectClosureId,
+             entityType: 'ProjectClosure',
+             action: "Approval Changes",
+             comments: comments || `Approved by ${currentUser}`,
+             assignedToId: projectResponse.seniorProjectManagerId,
+           });
+          
+         }
 
       // Reset dialog state
       setDecision('');
       setComments('');
       setError(null);
-      
+
       // Call the callback
       if (onSubmit) {
-        await onSubmit();
+        onSubmit();
       }
-      
+
       onClose();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
+      const errorMessage = err instanceof Error
+        ? err.message
         : 'Failed to submit approval decision';
       setError(errorMessage);
       console.error('Error submitting approval decision:', err);
@@ -152,9 +151,9 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       <DialogContent onClick={stopEventPropagation}>
         <Box sx={{ mt: 2 }}>
           <Typography variant="body1" gutterBottom>
-            Please review the change control and make a final decision:
+            Please review the project closure form and make a final decision:
           </Typography>
-          
+
           <FormControl component="fieldset" sx={{ mt: 2 }} error={!!error && !decision}>
             <RadioGroup
               aria-label="approval-decision"
@@ -162,19 +161,19 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
               value={decision}
               onChange={handleDecisionChange}
             >
-              <FormControlLabel 
-                value="approve" 
-                control={<Radio />} 
-                label="Approve" 
+              <FormControlLabel
+                value="approve"
+                control={<Radio />}
+                label="Approve"
               />
-              <FormControlLabel 
-                value="requestChanges" 
-                control={<Radio />} 
-                label="Request changes" 
+              <FormControlLabel
+                value="requestChanges"
+                control={<Radio />}
+                label="Request changes"
               />
             </RadioGroup>
           </FormControl>
-          
+
           <TextField
             label="Comments"
             multiline
@@ -185,7 +184,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
             onChange={handleCommentsChange}
             placeholder="Add your comments here (optional)"
           />
-          
+
           {error && (
             <Typography color="error" variant="body2" sx={{ mt: 2 }}>
               {error}

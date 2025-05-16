@@ -1,15 +1,15 @@
 import React, { useState, useContext } from 'react';
-import { 
-    Dialog, 
-    DialogTitle, 
-    DialogContent, 
-    DialogActions, 
-    Button, 
-    TextField, 
-    FormControl, 
-    InputLabel, 
-    Select, 
-    MenuItem, 
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
     CircularProgress,
     Typography,
     RadioGroup,
@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { projectManagementAppContext } from '../../App';
 import { pmWorkflowApi } from '../../api/pmWorkflowApi';
-import { userApi } from '../../api/userApi';
+import * as userApi from '../../services/userApi';
 
 interface DecideReviewDialogProps {
     open: boolean;
@@ -43,23 +43,35 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const context = useContext(projectManagementAppContext);
-    
+
     React.useEffect(() => {
         if (open && decision === 'approve') {
             loadRMRDUsers();
         }
     }, [open, decision]);
-    
+
     const loadRMRDUsers = async () => {
         setLoading(true);
         try {
             // Get users with RM or RD role
-            const users = await userApi.getUsersByRoles(['RegionalManager', 'RegionalDirector']);
-            setRmrdUsers(users);
-            
+            const rmUsers = await userApi.getUsersByRole('RegionalManager');
+            const rdUsers = await userApi.getUsersByRole('RegionalDirector');
+
+            // Combine the users from both roles, avoiding duplicates
+            const combinedUsers = [...rmUsers];
+
+            // Add RD users that aren't already in the combined list
+            rdUsers.forEach(rdUser => {
+                if (!combinedUsers.some(user => user.id === rdUser.id)) {
+                    combinedUsers.push(rdUser);
+                }
+            });
+
+            setRmrdUsers(combinedUsers);
+
             // If there's only one RM/RD, select them automatically
-            if (users.length === 1) {
-                setAssignedToId(users[0].id);
+            if (combinedUsers.length === 1) {
+                setAssignedToId(combinedUsers[0].id);
             }
         } catch (error) {
             console.error('Error loading RM/RD users:', error);
@@ -67,18 +79,18 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
             setLoading(false);
         }
     };
-    
+
     const handleSubmit = async () => {
         if (decision === 'approve' && !assignedToId) {
             alert('Please select a Regional Manager or Regional Director');
             return;
         }
-        
+
         if (!comments) {
             alert('Please add comments');
             return;
         }
-        
+
         setSubmitting(true);
         try {
             if (decision === 'approve') {
@@ -96,7 +108,7 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
                     isApprovalChanges: false
                 });
             }
-            
+
             onWorkflowUpdated();
         } catch (error) {
             console.error('Error processing review decision:', error);
@@ -105,14 +117,14 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
             setSubmitting(false);
         }
     };
-    
+
     const handleClose = () => {
         setDecision('');
         setComments('');
         setAssignedToId('');
         onClose();
     };
-    
+
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
             <DialogTitle>Review Decision</DialogTitle>
@@ -120,25 +132,25 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
                 <Typography variant="body1" gutterBottom>
                     Please review this form and decide whether to approve it or request changes.
                 </Typography>
-                
+
                 <FormControl component="fieldset" margin="normal" required>
                     <RadioGroup
                         value={decision}
                         onChange={(e) => setDecision(e.target.value)}
                     >
-                        <FormControlLabel 
-                            value="approve" 
-                            control={<Radio />} 
-                            label="Send for Approval" 
+                        <FormControlLabel
+                            value="approve"
+                            control={<Radio />}
+                            label="Send for Approval"
                         />
-                        <FormControlLabel 
-                            value="reject" 
-                            control={<Radio />} 
-                            label="Request Changes" 
+                        <FormControlLabel
+                            value="reject"
+                            control={<Radio />}
+                            label="Request Changes"
                         />
                     </RadioGroup>
                 </FormControl>
-                
+
                 {decision === 'approve' && (
                     <FormControl fullWidth margin="normal">
                         <InputLabel id="rmrd-select-label">Regional Manager/Director</InputLabel>
@@ -157,7 +169,7 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
                         </Select>
                     </FormControl>
                 )}
-                
+
                 <TextField
                     label={decision === 'approve' ? "Comments for Approval" : "Change Request Comments"}
                     multiline
@@ -166,8 +178,8 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
                     onChange={(e) => setComments(e.target.value)}
                     fullWidth
                     margin="normal"
-                    placeholder={decision === 'approve' 
-                        ? "Add any comments for the approver" 
+                    placeholder={decision === 'approve'
+                        ? "Add any comments for the approver"
                         : "Explain what changes are needed"}
                     required
                 />
@@ -176,13 +188,13 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
                 <Button onClick={handleClose} disabled={submitting}>
                     Cancel
                 </Button>
-                <Button 
-                    onClick={handleSubmit} 
-                    color="primary" 
-                    variant="contained" 
+                <Button
+                    onClick={handleSubmit}
+                    color="primary"
+                    variant="contained"
                     disabled={loading || submitting || !decision || !comments || (decision === 'approve' && !assignedToId)}
                 >
-                    {submitting ? <CircularProgress size={24} /> : 
+                    {submitting ? <CircularProgress size={24} /> :
                         decision === 'approve' ? 'Send for Approval' : 'Request Changes'}
                 </Button>
             </DialogActions>

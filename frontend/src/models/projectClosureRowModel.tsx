@@ -5,6 +5,8 @@ export interface ProjectClosureRow {
     createdBy?: string;
     updatedAt?: string | null;
     updatedBy?: string | null;
+    // Workflow fields
+    workflowStatusId?: number;
     // Section A: Overall Project Delivery
     clientFeedback: string | null;
     successCriteria: string | null;

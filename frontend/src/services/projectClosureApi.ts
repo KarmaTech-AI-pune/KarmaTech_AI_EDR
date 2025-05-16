@@ -11,6 +11,7 @@ export interface ProjectClosureWithMetadata extends ProjectClosureRow {
   createdBy: string;
   updatedAt?: string | null;
   updatedBy?: string | null;
+  workflowStatusId?: number;
 }
 
 // Create a new project closure
