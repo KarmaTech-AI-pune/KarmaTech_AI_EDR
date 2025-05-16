@@ -61,6 +61,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
     activityName: '',
     objective: '',
     references: '',
+    documentNumber: '',
+    documentName: '',
     fileName: '',
     qualityIssues: '',
     completion: 'N',
@@ -271,6 +273,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
       activityName: '',
       objective: '',
       references: '',
+      documentNumber: '',
+      documentName: '',
       fileName: '',
       qualityIssues: '',
       completion: 'N',
@@ -406,6 +410,42 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
             </Grid>
           </Grid>
         </Box>
+
+        <Box sx={{ mb: 4 }}>
+          <Typography sx={sectionTitleStyle}>
+            Document Details
+          </Typography>
+          <Grid container spacing = {2}>
+            <Grid item xs={12} md={6}>
+              <TextField 
+              label="Document Number"
+              value={formData.documentNumber}
+              name='documentNumber'
+              onChange={handleTextFieldChange}
+              fullWidth
+              type="text"
+                inputProps={{ 
+                  inputMode: 'numeric', 
+                  pattern: '[0-9]*',
+                  onInput: (e: React.FormEvent<HTMLInputElement>) => {
+                    e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
+                  }
+                }}
+              sx={textFieldStyle}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Document Name"
+                value={formData.documentName}
+                name='documentName'
+                onChange={handleTextFieldChange}
+                fullWidth
+                sx={textFieldStyle}
+              />
+            </Grid>
+          </Grid>
+          </Box>
 
         <Box sx={{ mb: 4 }}>
           <Typography sx={sectionTitleStyle}>

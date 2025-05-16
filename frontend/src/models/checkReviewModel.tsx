@@ -3,6 +3,8 @@ export interface CheckReviewRow {
     projectId: string;
     activityNo: string;
     activityName: string;
+    documentNumber: String;
+    documentName: string;
     objective: string;
     references: string;
     fileName: string;
