@@ -1,47 +1,53 @@
-using MediatR;
-using NJS.Application.CQRS.CheckReview.Queries;
-using NJS.Application.Dtos;
-using NJS.Repositories.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using NJS.Application.CQRS.CheckReview.Queries;
+using NJS.Application.DTOs;
+using NJS.Domain.Database;
 
 namespace NJS.Application.CQRS.CheckReview.Handlers
 {
     public class GetCheckReviewsByProjectQueryHandler : IRequestHandler<GetCheckReviewsByProjectQuery, IEnumerable<CheckReviewDto>>
     {
-        private readonly ICheckReviewRepository _repository;
+        private readonly ProjectManagementContext _context;
 
-        public GetCheckReviewsByProjectQueryHandler(ICheckReviewRepository repository)
+        public GetCheckReviewsByProjectQueryHandler(ProjectManagementContext context)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _context = context;
         }
 
         public async Task<IEnumerable<CheckReviewDto>> Handle(GetCheckReviewsByProjectQuery request, CancellationToken cancellationToken)
         {
-            var entities = await _repository.GetByProjectIdAsync(request.ProjectId);
-            
-            return entities.Select(entity => new CheckReviewDto
+            var checkReviews = await _context.CheckReviews
+                .Where(cr => cr.ProjectId == request.ProjectId)
+                .ToListAsync(cancellationToken);
+
+            return checkReviews.Select(checkReview => new CheckReviewDto
             {
-                Id = entity.Id,
-                ProjectId = entity.ProjectId,
-                ActivityNo = entity.ActivityNo,
-                ActivityName = entity.ActivityName,
-                Objective = entity.Objective,
-                References = entity.References,
-                FileName = entity.FileName,
-                QualityIssues = entity.QualityIssues,
-                Completion = entity.Completion,
-                CheckedBy = entity.CheckedBy,
-                ApprovedBy = entity.ApprovedBy,
-                ActionTaken = entity.ActionTaken,
-                CreatedAt = entity.CreatedAt,
-                UpdatedAt = entity.UpdatedAt,
-                CreatedBy = entity.CreatedBy,
-                UpdatedBy = entity.UpdatedBy
-            });
+                Id = checkReview.Id,
+                ProjectId = checkReview.ProjectId,
+                ActivityNo = checkReview.ActivityNo,
+                ActivityName = checkReview.ActivityName,
+                DocumentNumber = checkReview.DocumentNumber,
+                DocumentName = checkReview.DocumentName,
+                Objective = checkReview.Objective,
+                References = checkReview.References,
+                FileName = checkReview.FileName,
+                QualityIssues = checkReview.QualityIssues,
+                Completion = checkReview.Completion,
+                CheckedBy = checkReview.CheckedBy,
+                ApprovedBy = checkReview.ApprovedBy,
+                ActionTaken = checkReview.ActionTaken,
+                Maker = checkReview.Maker,
+                Checker = checkReview.Checker,
+                CreatedAt = checkReview.CreatedAt,
+                UpdatedAt = checkReview.UpdatedAt,
+                CreatedBy = checkReview.CreatedBy,
+                UpdatedBy = checkReview.UpdatedBy
+            }).ToList();
         }
     }
 }

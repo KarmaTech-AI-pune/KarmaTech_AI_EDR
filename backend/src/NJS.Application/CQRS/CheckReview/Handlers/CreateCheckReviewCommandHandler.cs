@@ -1,63 +1,69 @@
-using MediatR;
-using NJS.Application.CQRS.CheckReview.Commands;
-using NJS.Application.Dtos;
-using NJS.Domain.Entities;
-using NJS.Repositories.Interfaces;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
+using NJS.Application.CQRS.CheckReview.Commands;
+using NJS.Application.DTOs;
+using NJS.Domain.Database;
 
 namespace NJS.Application.CQRS.CheckReview.Handlers
 {
     public class CreateCheckReviewCommandHandler : IRequestHandler<CreateCheckReviewCommand, CheckReviewDto>
     {
-        private readonly ICheckReviewRepository _repository;
+        private readonly ProjectManagementContext _context;
 
-        public CreateCheckReviewCommandHandler(ICheckReviewRepository repository)
+        public CreateCheckReviewCommandHandler(ProjectManagementContext context)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _context = context;
         }
 
         public async Task<CheckReviewDto> Handle(CreateCheckReviewCommand request, CancellationToken cancellationToken)
         {
-            var entity = new Domain.Entities.CheckReview
+            var checkReview = new NJS.Domain.Entities.CheckReview
             {
                 ProjectId = request.ProjectId,
                 ActivityNo = request.ActivityNo,
                 ActivityName = request.ActivityName,
+                DocumentNumber = request.DocumentNumber,
+                DocumentName = request.DocumentName,
                 Objective = request.Objective,
                 References = request.References,
                 FileName = request.FileName,
                 QualityIssues = request.QualityIssues,
-                Completion = request.Completion,
+                Completion = request.Completion ?? "N",
                 CheckedBy = request.CheckedBy,
                 ApprovedBy = request.ApprovedBy,
                 ActionTaken = request.ActionTaken,
-                CreatedBy = request.CreatedBy,
-                CreatedAt = DateTime.UtcNow
+                Maker = request.Maker,
+                Checker = request.Checker,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = request.CreatedBy
             };
 
-            var id = await _repository.AddAsync(entity);
+            await _context.CheckReviews.AddAsync(checkReview, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
 
-            // Retrieve the created entity to get the generated ID
-            var createdEntity = await _repository.GetByIdAsync(id);
-
+            // Manual mapping to DTO
             return new CheckReviewDto
             {
-                Id = createdEntity.Id,
-                ProjectId = createdEntity.ProjectId,
-                ActivityNo = createdEntity.ActivityNo,
-                ActivityName = createdEntity.ActivityName,
-                Objective = createdEntity.Objective,
-                References = createdEntity.References,
-                FileName = createdEntity.FileName,
-                QualityIssues = createdEntity.QualityIssues,
-                Completion = createdEntity.Completion,
-                CheckedBy = createdEntity.CheckedBy,
-                ApprovedBy = createdEntity.ApprovedBy,
-                ActionTaken = createdEntity.ActionTaken,
-                CreatedAt = createdEntity.CreatedAt,
-                CreatedBy = createdEntity.CreatedBy
+                Id = checkReview.Id,
+                ProjectId = checkReview.ProjectId,
+                ActivityNo = checkReview.ActivityNo,
+                ActivityName = checkReview.ActivityName,
+                DocumentNumber = checkReview.DocumentNumber,
+                DocumentName = checkReview.DocumentName,
+                Objective = checkReview.Objective,
+                References = checkReview.References,
+                FileName = checkReview.FileName,
+                QualityIssues = checkReview.QualityIssues,
+                Completion = checkReview.Completion,
+                CheckedBy = checkReview.CheckedBy,
+                ApprovedBy = checkReview.ApprovedBy,
+                ActionTaken = checkReview.ActionTaken,
+                Maker = checkReview.Maker,
+                Checker = checkReview.Checker,
+                CreatedAt = checkReview.CreatedAt,
+                CreatedBy = checkReview.CreatedBy
             };
         }
     }

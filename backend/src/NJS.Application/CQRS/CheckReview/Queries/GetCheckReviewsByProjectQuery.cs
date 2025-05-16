@@ -1,6 +1,6 @@
-using MediatR;
-using NJS.Application.Dtos;
 using System.Collections.Generic;
+using MediatR;
+using NJS.Application.DTOs;
 
 namespace NJS.Application.CQRS.CheckReview.Queries
 {

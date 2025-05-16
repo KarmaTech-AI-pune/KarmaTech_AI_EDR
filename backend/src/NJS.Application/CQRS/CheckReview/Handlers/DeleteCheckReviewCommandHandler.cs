@@ -1,42 +1,35 @@
-using MediatR;
-using NJS.Application.CQRS.CheckReview.Commands;
-using NJS.Repositories.Interfaces;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using NJS.Application.CQRS.CheckReview.Commands;
+using NJS.Domain.Database;
 
 namespace NJS.Application.CQRS.CheckReview.Handlers
 {
     public class DeleteCheckReviewCommandHandler : IRequestHandler<DeleteCheckReviewCommand, bool>
     {
-        private readonly ICheckReviewRepository _repository;
+        private readonly ProjectManagementContext _context;
 
-        public DeleteCheckReviewCommandHandler(ICheckReviewRepository repository)
+        public DeleteCheckReviewCommandHandler(ProjectManagementContext context)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _context = context;
         }
 
         public async Task<bool> Handle(DeleteCheckReviewCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                await _repository.DeleteAsync(request.Id);
+            var checkReview = await _context.CheckReviews
+                .FirstOrDefaultAsync(cr => cr.Id == request.Id, cancellationToken);
 
-                // Reset the identity seed to ensure new entries start from the lowest available ID
-                await _repository.ResetIdentitySeedAsync();
-
-                return true;
-            }
-            catch (KeyNotFoundException)
+            if (checkReview == null)
             {
-                // Item not found, return false
                 return false;
             }
-            catch (Exception)
-            {
-                // Any other exception, rethrow
-                throw;
-            }
+
+            _context.CheckReviews.Remove(checkReview);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return true;
         }
     }
 }

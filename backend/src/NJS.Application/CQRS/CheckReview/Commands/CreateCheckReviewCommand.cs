@@ -1,50 +1,27 @@
-using MediatR;
-using NJS.Application.Dtos;
 using System;
-using System.ComponentModel.DataAnnotations;
+using MediatR;
+using NJS.Application.DTOs;
+using NJS.Domain.Entities;
 
 namespace NJS.Application.CQRS.CheckReview.Commands
 {
     public class CreateCheckReviewCommand : IRequest<CheckReviewDto>
     {
-        [Required]
         public int ProjectId { get; set; }
-        
-        [Required]
-        [StringLength(50)]
         public string ActivityNo { get; set; }
-        
-        [Required]
-        [StringLength(255)]
         public string ActivityName { get; set; }
-        
-        [Required]
-        [StringLength(500)]
+        public string DocumentNumber { get; set; }
+        public string DocumentName { get; set; }
         public string Objective { get; set; }
-        
-        [StringLength(500)]
         public string References { get; set; }
-        
-        [StringLength(255)]
         public string FileName { get; set; }
-        
-        [StringLength(500)]
         public string QualityIssues { get; set; }
-        
-        [Required]
-        [StringLength(1)]
-        public string Completion { get; set; } = "N";
-        
-        [StringLength(255)]
+        public string Completion { get; set; }
         public string CheckedBy { get; set; }
-        
-        [StringLength(255)]
         public string ApprovedBy { get; set; }
-        
-        [StringLength(500)]
         public string ActionTaken { get; set; }
-        
-        // This will be set by the controller
+        public string Maker { get; set; }
+        public string Checker { get; set; }
         public string CreatedBy { get; set; }
     }
 }

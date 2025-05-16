@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.CheckReview.Commands;
 using NJS.Application.CQRS.CheckReview.Queries;
-using NJS.Application.Dtos;
+using NJS.Application.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
