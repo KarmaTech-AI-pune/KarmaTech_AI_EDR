@@ -4,6 +4,7 @@ using NJS.Application.CQRS.PMWorkflow.Commands;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Database;
+using NJS.Domain.Entities;
 
 namespace NJS.Application.CQRS.PMWorkflow.Handlers
 {

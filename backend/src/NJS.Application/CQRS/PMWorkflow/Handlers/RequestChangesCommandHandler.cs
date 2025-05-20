@@ -144,7 +144,8 @@ namespace NJS.Application.CQRS.PMWorkflow.Handlers
                 CurrentUser = currentUser!,
                 AssignedToUser = assignedToUser, // This can be null if no assignedToId is provided
                 AssignedToId = request.AssignedToId,
-                Comments = request.Comments
+                Comments = request.Comments,
+                IsApprovalChanges = request.IsApprovalChanges ?? false // Pass the IsApprovalChanges flag
             };
 
             return await strategy.ExecuteAsync(context, cancellationToken);

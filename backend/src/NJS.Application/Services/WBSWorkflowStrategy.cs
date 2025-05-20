@@ -47,13 +47,13 @@ namespace NJS.Application.Services
             PMWorkflowStatusEnum status;
             if (context.Action == "Reject")
             {
-                // If rejecting from "Sent for Approval" status, use "Approval Changes" (5)
+                // If this is an RM/RD rejection (IsApprovalChanges is true), use "Approval Changes" (5)
                 // Otherwise, use "Review Changes" (3)
-                status = isFromSentForApproval ?
+                status = context.IsApprovalChanges ?
                     PMWorkflowStatusEnum.ApprovalChanges :
                     PMWorkflowStatusEnum.ReviewChanges;
 
-                Console.WriteLine($"WBSWorkflowStrategy: Rejection detected. Using status: {status} ({(int)status})");
+                Console.WriteLine($"WBSWorkflowStrategy: Rejection detected. IsApprovalChanges: {context.IsApprovalChanges}, Using status: {status} ({(int)status})");
             }
             else
             {
