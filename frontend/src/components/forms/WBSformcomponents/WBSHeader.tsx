@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -7,8 +7,11 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import { ProjectTrackingWorkflow } from '../../dialogbox/ProjectReviewWorkflow/ProjectTrackingWorkflow';
+import SendIcon from '@mui/icons-material/Send';
+import { ProjectTrackingWorkflow } from '../../common/ProjectTrackingWorkflow';
 import { projectManagementAppContext } from '../../../App';
+import { TaskType } from '../../../types/wbs';
+import { wbsHeaderApi } from '../../../services/wbsHeaderApi';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -25,21 +28,104 @@ interface WBSHeaderProps {
   editMode: boolean;
   onEditModeToggle: () => void;
   onAddMonth: () => void;
+  formType?: TaskType;
+}
+
+interface WBSHeaderStatus {
+  id: number;
+  status: string;
 }
 
 const WBSHeader: React.FC<WBSHeaderProps> = ({
   title,
   editMode,
   onEditModeToggle,
-  onAddMonth
+  onAddMonth,
+  formType = TaskType.Manpower
 }) => {
   const context = useContext(projectManagementAppContext);
-  const statusId = "Initial"; // Capitalized to match the case in the component
-  const projectId = context?.selectedProject?.id ? Number(context.selectedProject.id) : undefined;
+  const projectId = context?.selectedProject?.id;
+  const [wbsHeaderId, setWbsHeaderId] = useState<number | null>(null);
+  const [status, setStatus] = useState<string>("Initial");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
 
+  // Function to fetch the header status
+  const fetchWBSHeaderStatus = async () => {
+    if (!projectId) return;
+
+    try {
+      // Fetch the WBS header status using the API
+      const headerStatus = await wbsHeaderApi.getWBSHeaderStatus(Number(projectId), formType);
+
+      if (headerStatus) {
+        setWbsHeaderId(headerStatus.id);
+
+        // Map status ID to status string
+        const statusMap: { [key: number]: string } = {
+          1: "Initial",
+          2: "Sent for Review",
+          3: "Review Changes",
+          4: "Sent for Approval",
+          5: "Approval Changes",
+          6: "Approved"
+        };
+
+        const mappedStatus = statusMap[headerStatus.statusId] || "Initial";
+        console.log("WBSHeader - Refreshed status:", mappedStatus, "ID:", headerStatus.id, "Status ID:", headerStatus.statusId);
+
+        // Log the raw response for debugging
+        console.log("WBSHeader - Raw status response:", headerStatus);
+
+        setStatus(mappedStatus);
+      }
+    } catch (error) {
+      console.error("Error fetching WBS header status:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    const initialFetch = async () => {
+      if (!projectId) return;
+
+      setIsLoading(true);
+      try {
+        await fetchWBSHeaderStatus();
+      } catch (error) {
+        console.error("Error in initial fetch:", error);
+        setStatus("Initial");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialFetch();
+  }, [projectId, formType, lastRefreshTime]);
+
+  // Refresh the status when edit mode changes
+  useEffect(() => {
+    if (projectId) {
+      // Set a small delay to ensure the backend has processed any changes
+      const timer = setTimeout(() => {
+        fetchWBSHeaderStatus();
+        setLastRefreshTime(Date.now());
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [editMode, projectId]);
+
+  // Handle status update from workflow component
   const handleStatusUpdate = (newStatus: string) => {
-    console.log("WBS Status updated to:", newStatus);
-    // You can add additional logic here to handle status updates
+    console.log("WBSHeader - Status updated to:", newStatus);
+    setStatus(newStatus);
+
+    // Refresh the header status from the backend after a short delay
+    // to ensure the backend has processed the status change
+    setTimeout(() => {
+      fetchWBSHeaderStatus();
+    }, 1000);
   };
 
   return (
@@ -56,10 +142,13 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
           {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
-        {editMode && (
+        {!isLoading && wbsHeaderId && projectId && (
             <ProjectTrackingWorkflow
-              statusId={statusId}
-              projectId={projectId}
+              projectId={projectId.toString()}
+              status={status}
+              entityId={wbsHeaderId}
+              entityType="WBS"
+              formType={formType}
               onStatusUpdate={handleStatusUpdate}
             />
           )}

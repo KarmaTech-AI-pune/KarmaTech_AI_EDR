@@ -49,6 +49,7 @@ export interface RequestChangesRequest {
     entityType: string;
     comments: string;
     isApprovalChanges: boolean;
+    assignedToId?: string; // Optional assignedToId for specifying who to assign to
 }
 
 export interface ApproveRequest {

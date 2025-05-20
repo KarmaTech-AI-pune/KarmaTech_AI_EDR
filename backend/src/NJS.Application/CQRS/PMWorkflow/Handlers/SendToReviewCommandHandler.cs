@@ -29,12 +29,12 @@ namespace NJS.Application.CQRS.PMWorkflow.Handlers
             var strategy = _strategySelector.GetStrategy(request.EntityType);
             var context = new WorkflowActionContext
             {
-                Action=request.Action,
-                EntityId=request.EntityId,
-                CurrentUser= currentUser!,
-                AssignedToUser= assignedToUser!,
-                AssignedToId= request.AssignedToId,
-
+                Action = request.Action,
+                EntityId = request.EntityId,
+                CurrentUser = currentUser!,
+                AssignedToUser = assignedToUser!,
+                AssignedToId = request.AssignedToId,
+                Comments = request.Comments
             };
             return await strategy.ExecuteAsync(context, cancellationToken);
         }
