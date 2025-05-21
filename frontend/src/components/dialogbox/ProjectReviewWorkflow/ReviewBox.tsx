@@ -6,6 +6,8 @@ import {
   DialogContent,
   DialogActions,
   FormControl,
+  CircularProgress,
+  Typography
 } from "@mui/material";
 import { projectManagementAppContext } from "../../../App";
 import { Project } from "../../../models";
@@ -22,6 +24,10 @@ interface ReviewBoxProps {
   formType?: TaskType;
 }
 
+interface ManagerData {
+  [key: string]: string;
+}
+
 const ReviewBox: React.FC<ReviewBoxProps> = ({
   open,
   onClose,
@@ -31,58 +37,81 @@ const ReviewBox: React.FC<ReviewBoxProps> = ({
   formType
 }) => {
   const context = useContext(projectManagementAppContext);
-  const [reviewer, setReviewer] = useState<{[key: string]: string}>({});
+  const [reviewer, setReviewer] = useState<ManagerData>({});
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchManagerData = async () => {
-          if (!context?.selectedProject) return;
+      if (!context?.selectedProject) {
+        setLoading(false);
+        return;
+      }
 
-          const project = context.selectedProject as Project;
-          const managerIds = [
-            project.projectManagerId,
-            project.seniorProjectManagerId,
-            project.regionalManagerId
-          ].filter(Boolean);
-          if (managerIds.length === 0) return;
+      const project = context.selectedProject as Project;
+      const managerIds = [
+        project.projectManagerId,
+        project.seniorProjectManagerId,
+        project.regionalManagerId
+      ].filter(Boolean);
+      
+      if (managerIds.length === 0) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        const fetchedNames: ManagerData = {};
+
+        // Use Promise.all for parallel fetching
+        await Promise.all(managerIds.map(async (id) => {
           try {
-            const fetchedNames: {[key: string]: string} = {};
-
-            for (const id of managerIds) {
-              try {
-                const userData = await getUserById(id);
-                if (userData) {
-                  fetchedNames[id] = userData.name;
-                }
-              } catch (err) {
-                console.error(`Error fetching user with ID ${id}:`, err);
-                fetchedNames[id] = 'Not assigned';
-              }
+            const userData = await getUserById(id);
+            if (userData) {
+              fetchedNames[id] = userData.name;
             }
-            setReviewer(fetchedNames);
           } catch (err) {
-            console.error('Error fetching manager data:', err);
+            console.error(`Error fetching user with ID ${id}:`, err);
+            fetchedNames[id] = 'Not assigned';
           }
-        }
-        fetchManagerData();
-  }, []);
+        }));
+
+        setReviewer(fetchedNames);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching manager data:', err);
+        setError('Failed to load reviewer data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (open) {
+      fetchManagerData();
+    }
+  }, [context?.selectedProject, open]);
 
   const getReviewerName = (managerId: string) => {
     if (!managerId) return 'Not assigned';
     return reviewer[managerId] || 'Loading...';
   };
 
-  const handleCancel = () => {
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
     onClose();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
     if (!context?.selectedProject?.id) {
-      console.error('No project selected');
+      setError('No project selected');
       return;
     }
 
     if (!context?.currentUser?.id) {
-      console.error('No current user');
+      setError('No current user');
       return;
     }
 
@@ -92,11 +121,9 @@ const ReviewBox: React.FC<ReviewBoxProps> = ({
       : '';
 
     if (!seniorProjectManagerId) {
-      console.error('No senior project manager assigned');
+      setError('No senior project manager assigned');
       return;
     }
-
-    console.log("ReviewBox - Submitting review with entity ID:", entityId, "and entity type:", entityType);
 
     // Prepare the payload for sending the form for review
     const payload = {
@@ -109,8 +136,6 @@ const ReviewBox: React.FC<ReviewBoxProps> = ({
       entityType: entityType,
       formType: formType
     };
-
-    console.log("ReviewBox - Prepared payload:", payload);
 
     // Pass the payload to the parent component
     if (onSubmit) {
@@ -125,10 +150,15 @@ const ReviewBox: React.FC<ReviewBoxProps> = ({
     e.stopPropagation();
   };
 
+  // Get the reviewer name
+  const reviewerName = context?.selectedProject && 'seniorProjectManagerId' in context.selectedProject
+    ? getReviewerName(context.selectedProject.seniorProjectManagerId || '')
+    : 'Not assigned';
+
   return (
     <Dialog
       open={open}
-      onClose={handleCancel}
+      onClose={onClose}
       maxWidth="sm"
       fullWidth
       onClick={stopEventPropagation}
@@ -137,7 +167,7 @@ const ReviewBox: React.FC<ReviewBoxProps> = ({
         "& .MuiDialog-paper": {
           position: "relative",
         },
-        zIndex: 1300, // Standard MUI dialog z-index
+        zIndex: 1300,
         "& .MuiBackdrop-root": {
           backgroundColor: "rgba(0, 0, 0, 0.5)",
         }
@@ -155,10 +185,25 @@ const ReviewBox: React.FC<ReviewBoxProps> = ({
       <DialogTitle>Send For Review</DialogTitle>
       <DialogContent onClick={stopEventPropagation}>
         <FormControl
-        fullWidth
-        margin="normal"
+          fullWidth
+          margin="normal"
         >
-          <div style={{ textAlign:"center" }}>Send to {getReviewerName(context?.selectedProject && 'seniorProjectManagerId' in context.selectedProject ? context.selectedProject.seniorProjectManagerId || '' : '')} for approval</div>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <CircularProgress size={24} />
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Loading reviewer information...
+              </Typography>
+            </div>
+          ) : error ? (
+            <Typography color="error" align="center">
+              {error}
+            </Typography>
+          ) : (
+            <div style={{ textAlign: "center" }}>
+              Send to {reviewerName} for approval
+            </div>
+          )}
         </FormControl>
       </DialogContent>
 
@@ -170,7 +215,7 @@ const ReviewBox: React.FC<ReviewBoxProps> = ({
           onClick={handleSubmit}
           variant="contained"
           color="primary"
-          // disabled={!selectedReviewer}
+          disabled={loading || !!error || reviewerName === 'Not assigned'}
         >
           OK
         </Button>
