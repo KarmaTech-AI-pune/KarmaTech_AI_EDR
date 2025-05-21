@@ -840,6 +840,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
            editMode={formType === 'manpower' ? isManpowerEditing : isOdcEditing} // Use form-specific state
            onEditModeToggle={() => formType === 'manpower' ? setIsManpowerEditing(!isManpowerEditing) : setIsOdcEditing(!isOdcEditing)}
            onAddMonth={addNewMonth}
+           formType={formType === 'manpower'? TaskType.Manpower: TaskType.ODC}          
          />
       </Paper>
 

@@ -86,19 +86,19 @@ namespace NJS.Repositories.Repositories
                 {
                     _context.CorrespondenceInwards.Remove(correspondenceInward);
                     await _context.SaveChangesAsync();
-                    Console.WriteLine($"Deleted correspondence inward with ID: {id}");
+                    _logger.LogInformation($"Deleted correspondence inward with ID: {id}");
                 }
                 else
                 {
-                    Console.WriteLine($"No correspondence inward found with ID: {id}");
+                    _logger.LogInformation($"No correspondence inward found with ID: {id}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error deleting correspondence inward: {ex.Message}");
+                _logger.LogInformation($"Error deleting correspondence inward: {ex.Message}");
                 if (ex.InnerException != null)
                 {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    _logger.LogInformation($"Inner exception: {ex.InnerException.Message}");
                 }
                 throw;
             }
