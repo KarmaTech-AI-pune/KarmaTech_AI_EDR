@@ -1,4 +1,5 @@
-﻿﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Database;
@@ -10,10 +11,12 @@ namespace NJS.Application.Services
     public class WBSWorkflowStrategy : IEntityWorkflowStrategy
     {
         private readonly ProjectManagementContext _context;
+        private readonly ILogger<WBSWorkflowStrategy> _logger;
 
-        public WBSWorkflowStrategy(ProjectManagementContext context)
+        public WBSWorkflowStrategy(ProjectManagementContext context, ILogger<WBSWorkflowStrategy> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public string EntityType => "WBS";
@@ -40,7 +43,7 @@ namespace NJS.Application.Services
             if (latestHistory != null)
             {
                 isFromSentForApproval = latestHistory.StatusId == (int)PMWorkflowStatusEnum.SentForApproval;
-                Console.WriteLine($"WBSWorkflowStrategy: Latest history status: {latestHistory.StatusId}, isFromSentForApproval: {isFromSentForApproval}");
+                _logger.LogInformation($"WBSWorkflowStrategy: Latest history status: {latestHistory.StatusId}, isFromSentForApproval: {isFromSentForApproval}");
             }
 
             // Determine the new status based on the action and current status
@@ -53,7 +56,7 @@ namespace NJS.Application.Services
                     PMWorkflowStatusEnum.ApprovalChanges :
                     PMWorkflowStatusEnum.ReviewChanges;
 
-                Console.WriteLine($"WBSWorkflowStrategy: Rejection detected. IsApprovalChanges: {context.IsApprovalChanges}, Using status: {status} ({(int)status})");
+                _logger.LogInformation($"WBSWorkflowStrategy: Rejection detected. IsApprovalChanges: {context.IsApprovalChanges}, Using status: {status} ({(int)status})");
             }
             else
             {
@@ -80,27 +83,19 @@ namespace NJS.Application.Services
                 AssignedToId = context.AssignedToId
             };
 
-            // Add the history entry to the WBS header
             wbsHeader.WBSHistories.Add(history);
 
-            // Update the status in the database
-            // For the "Approved" status, we need to ensure it's properly saved
             if (status == PMWorkflowStatusEnum.Approved)
             {
                 try
                 {
-                    // Create a direct property on the header to track the status
-                    // This ensures the status is saved even if the history entry is lost
                     wbsHeader.StatusId = (int)status;
-
-                    // Log the approval
-                    Console.WriteLine($"WBS Header {wbsHeader.Id} APPROVED by user {currentUserId}");
                 }
                 catch (Exception ex)
                 {
-                    // Log any errors that occur during approval
-                    Console.WriteLine($"Error setting approval status: {ex.Message}");
-                    throw;
+
+                    _logger.LogInformation($"Error setting approval status: {ex.Message}");
+
                 }
             }
 
@@ -111,7 +106,7 @@ namespace NJS.Application.Services
             await _context.SaveChangesAsync(cancellationToken);
 
             // Log the status update
-            Console.WriteLine($"WBS Header {wbsHeader.Id} status updated to {status} by user {currentUserId}");
+            _logger.LogInformation($"WBS Header {wbsHeader.Id} status updated to {status} by user {currentUserId}");
 
             // Return the workflow DTO
             return new PMWorkflowDto
