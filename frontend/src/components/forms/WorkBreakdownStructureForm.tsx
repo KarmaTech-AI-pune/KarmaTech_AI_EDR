@@ -767,6 +767,10 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
       // Update lastUpdateTime to trigger the useEffect to reload data
       setLastUpdateTime(Date.now()); // This will call loadWBSData again
+      
+      // Reload the WBS data to refresh the status
+      await loadWBSData(projectId);
+      
       // Toggle edit mode after successful save
       if (formType === 'manpower') {
         setIsManpowerEditing(!isManpowerEditing);

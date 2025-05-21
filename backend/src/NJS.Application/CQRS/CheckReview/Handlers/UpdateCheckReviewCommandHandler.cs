@@ -1,66 +1,78 @@
-using MediatR;
-using NJS.Application.CQRS.CheckReview.Commands;
-using NJS.Application.Dtos;
-using NJS.Repositories.Interfaces;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using NJS.Application.CQRS.CheckReview.Commands;
+using NJS.Application.DTOs;
+using NJS.Domain.Database;
+using System.Collections.Generic;
 
 namespace NJS.Application.CQRS.CheckReview.Handlers
 {
     public class UpdateCheckReviewCommandHandler : IRequestHandler<UpdateCheckReviewCommand, CheckReviewDto>
     {
-        private readonly ICheckReviewRepository _repository;
+        private readonly ProjectManagementContext _context;
 
-        public UpdateCheckReviewCommandHandler(ICheckReviewRepository repository)
+        public UpdateCheckReviewCommandHandler(ProjectManagementContext context)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _context = context;
         }
 
         public async Task<CheckReviewDto> Handle(UpdateCheckReviewCommand request, CancellationToken cancellationToken)
         {
-            var existingEntity = await _repository.GetByIdAsync(request.Id);
-            if (existingEntity == null)
+            var checkReview = await _context.CheckReviews
+                .FirstOrDefaultAsync(cr => cr.Id == request.Id, cancellationToken);
+
+            if (checkReview == null)
             {
-                throw new KeyNotFoundException($"CheckReview with ID {request.Id} not found.");
+                throw new KeyNotFoundException($"CheckReview with ID {request.Id} not found");
             }
 
-            // Update entity properties
-            existingEntity.ProjectId = request.ProjectId;
-            existingEntity.ActivityNo = request.ActivityNo;
-            existingEntity.ActivityName = request.ActivityName;
-            existingEntity.Objective = request.Objective;
-            existingEntity.References = request.References;
-            existingEntity.FileName = request.FileName;
-            existingEntity.QualityIssues = request.QualityIssues;
-            existingEntity.Completion = request.Completion;
-            existingEntity.CheckedBy = request.CheckedBy;
-            existingEntity.ApprovedBy = request.ApprovedBy;
-            existingEntity.ActionTaken = request.ActionTaken;
-            existingEntity.UpdatedBy = request.UpdatedBy;
-            existingEntity.UpdatedAt = DateTime.UtcNow;
+            // Update properties
+            checkReview.ProjectId = request.ProjectId;
+            checkReview.ActivityNo = request.ActivityNo;
+            checkReview.ActivityName = request.ActivityName;
+            checkReview.DocumentNumber = request.DocumentNumber;
+            checkReview.DocumentName = request.DocumentName;
+            checkReview.Objective = request.Objective;
+            checkReview.References = request.References;
+            checkReview.FileName = request.FileName;
+            checkReview.QualityIssues = request.QualityIssues;
+            checkReview.Completion = request.Completion;
+            checkReview.CheckedBy = request.CheckedBy;
+            checkReview.ApprovedBy = request.ApprovedBy;
+            checkReview.ActionTaken = request.ActionTaken;
+            checkReview.Maker = request.Maker;
+            checkReview.Checker = request.Checker;
+            checkReview.UpdatedAt = DateTime.UtcNow;
+            checkReview.UpdatedBy = request.UpdatedBy;
 
-            await _repository.UpdateAsync(existingEntity);
+            await _context.SaveChangesAsync(cancellationToken);
 
-            // Return updated entity as DTO
+            // Manual mapping to DTO
             return new CheckReviewDto
             {
-                Id = existingEntity.Id,
-                ProjectId = existingEntity.ProjectId,
-                ActivityNo = existingEntity.ActivityNo,
-                ActivityName = existingEntity.ActivityName,
-                Objective = existingEntity.Objective,
-                References = existingEntity.References,
-                FileName = existingEntity.FileName,
-                QualityIssues = existingEntity.QualityIssues,
-                Completion = existingEntity.Completion,
-                CheckedBy = existingEntity.CheckedBy,
-                ApprovedBy = existingEntity.ApprovedBy,
-                ActionTaken = existingEntity.ActionTaken,
-                CreatedAt = existingEntity.CreatedAt,
-                UpdatedAt = existingEntity.UpdatedAt,
-                CreatedBy = existingEntity.CreatedBy,
-                UpdatedBy = existingEntity.UpdatedBy
+                Id = checkReview.Id,
+                ProjectId = checkReview.ProjectId,
+                ActivityNo = checkReview.ActivityNo,
+                ActivityName = checkReview.ActivityName,
+                DocumentNumber = checkReview.DocumentNumber,
+                DocumentName = checkReview.DocumentName,
+                Objective = checkReview.Objective,
+                References = checkReview.References,
+                FileName = checkReview.FileName,
+                QualityIssues = checkReview.QualityIssues,
+                Completion = checkReview.Completion,
+                CheckedBy = checkReview.CheckedBy,
+                ApprovedBy = checkReview.ApprovedBy,
+                ActionTaken = checkReview.ActionTaken,
+                Maker = checkReview.Maker,
+                Checker = checkReview.Checker,
+                CreatedAt = checkReview.CreatedAt,
+                UpdatedAt = checkReview.UpdatedAt,
+                CreatedBy = checkReview.CreatedBy,
+                UpdatedBy = checkReview.UpdatedBy
             };
         }
     }

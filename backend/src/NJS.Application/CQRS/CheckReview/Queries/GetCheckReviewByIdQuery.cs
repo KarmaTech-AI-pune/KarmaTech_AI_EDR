@@ -1,5 +1,5 @@
 using MediatR;
-using NJS.Application.Dtos;
+using NJS.Application.DTOs;
 
 namespace NJS.Application.CQRS.CheckReview.Queries
 {

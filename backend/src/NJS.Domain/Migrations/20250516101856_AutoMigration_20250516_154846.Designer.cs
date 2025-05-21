@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NJS.Domain.Database;
 
@@ -11,9 +12,11 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    partial class ProjectManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20250516101856_AutoMigration_20250516_154846")]
+    partial class AutoMigration_20250516_154846
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2494,14 +2497,12 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ActionBy")
-                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("ActionDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("AssignedToId")
-                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Comments")
@@ -2703,17 +2704,12 @@ namespace NJS.Domain.Migrations
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("TaskType")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
-
-                    b.HasIndex("StatusId");
 
                     b.ToTable("WBSTaskMonthlyHourHeader");
                 });
@@ -3301,7 +3297,7 @@ namespace NJS.Domain.Migrations
                     b.HasOne("NJS.Domain.Entities.WBSTaskMonthlyHourHeader", "WBSTaskMonthlyHourHeader")
                         .WithMany("WBSHistories")
                         .HasForeignKey("WBSTaskMonthlyHourHeaderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("ActionUser");
@@ -3358,15 +3354,7 @@ namespace NJS.Domain.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "Status")
-                        .WithMany()
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Project");
-
-                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.WorkBreakdownStructure", b =>

@@ -29,6 +29,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IOpportunityTrackingRepository, OpportunityTrackingRepository>();
             services.AddScoped<IPermissionRepository, PermissionRepository>();
             services.AddScoped<IOpportunityHistoryRepository, OpportunityHistoryRepository>();
+            services.AddScoped<IProjectHistoryRepository, ProjectHistoryRepository>();
             services.AddScoped<IBidPreparationRepository, BidPreparationRepository>();
             services.AddScoped<ISettingsRepository, SettingsRepository>();
             services.AddScoped<IInputRegisterRepository, InputRegisterRepository>();
@@ -41,14 +42,16 @@ namespace NJS.Application.Extensions
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
+            services.AddScoped<IProjectHistoryService, ProjectHistoryService>();
             services.AddScoped<IGoNoGoDecisionService, GoNoGoDecisionService>();
             services.AddScoped<IUserContext, UserContext>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IEmailService, EmailService>();
 
-            //Define Strategy pattern 
+            //Define Strategy pattern
             services.AddScoped<IEntityWorkflowStrategy, ChangeControlWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategy, ProjectClosureWorkflowStrategy>();
+            services.AddScoped<IEntityWorkflowStrategy, WBSWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
 
 

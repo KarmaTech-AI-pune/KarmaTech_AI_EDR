@@ -130,6 +130,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
       // Fallback to fetching from API
       try {
         const fetchedOpportunity = await opportunityApi.getById(opportunity.id);
+        console.log("fetched opportunity", fetchedOpportunity);
         setCurrentOpportunity(fetchedOpportunity);
         if (onOpportunityUpdated) {
           onOpportunityUpdated();
