@@ -48,9 +48,10 @@ namespace NJS.Application.Extensions
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IEmailService, EmailService>();
 
-            //Define Strategy pattern 
+            //Define Strategy pattern
             services.AddScoped<IEntityWorkflowStrategy, ChangeControlWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategy, ProjectClosureWorkflowStrategy>();
+            services.AddScoped<IEntityWorkflowStrategy, WBSWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
 
 

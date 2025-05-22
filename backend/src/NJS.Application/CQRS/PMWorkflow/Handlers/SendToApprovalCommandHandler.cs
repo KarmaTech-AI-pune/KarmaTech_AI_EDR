@@ -34,7 +34,8 @@ namespace NJS.Application.CQRS.PMWorkflow.Handlers
                 EntityId = request.EntityId,
                 CurrentUser = currentUser!,
                 AssignedToUser = assignedToUser!,
-                AssignedToId = request.AssignedToId
+                AssignedToId = request.AssignedToId,
+                Comments = request.Comments
             };
 
             return await strategy.ExecuteAsync(context, cancellationToken);

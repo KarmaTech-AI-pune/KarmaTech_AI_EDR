@@ -177,7 +177,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<WBSHistory>()
                 .HasOne(ph => ph.WBSTaskMonthlyHourHeader)
                 .WithMany(p => p.WBSHistories)
-                .HasForeignKey(ph => ph.WBSTaskMonthlyHourHeaderId);
+                .HasForeignKey(ph => ph.WBSTaskMonthlyHourHeaderId)
+                .OnDelete(DeleteBehavior.Restrict);
            
             modelBuilder.Entity<WBSHistory>()
                 .HasOne(ph => ph.ActionUser)
