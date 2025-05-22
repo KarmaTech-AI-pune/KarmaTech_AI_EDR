@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
@@ -92,7 +93,8 @@ namespace NJS.API.Tests.Repositories
             // Arrange
             using var context = CreateContext();
             await SeedTestDataAsync(context);
-            var repository = new CorrespondenceInwardRepository(context);
+            var logger = new Mock<ILogger<CorrespondenceInwardRepository>>();
+            var repository = new CorrespondenceInwardRepository(context, logger.Object);
 
             // Act
             var result = await repository.GetAllAsync();
@@ -108,7 +110,8 @@ namespace NJS.API.Tests.Repositories
             // Arrange
             using var context = CreateContext();
             await SeedTestDataAsync(context);
-            var repository = new CorrespondenceInwardRepository(context);
+            var logger = new Mock<ILogger<CorrespondenceInwardRepository>>();
+            var repository = new CorrespondenceInwardRepository(context, logger.Object);
             var expectedId = 1;
 
             // Act
@@ -126,7 +129,8 @@ namespace NJS.API.Tests.Repositories
             // Arrange
             using var context = CreateContext();
             await SeedTestDataAsync(context);
-            var repository = new CorrespondenceInwardRepository(context);
+            var logger = new Mock<ILogger<CorrespondenceInwardRepository>>();
+            var repository = new CorrespondenceInwardRepository(context, logger.Object);
             var nonExistingId = 999;
 
             // Act
@@ -142,7 +146,8 @@ namespace NJS.API.Tests.Repositories
             // Arrange
             using var context = CreateContext();
             await SeedTestDataAsync(context);
-            var repository = new CorrespondenceInwardRepository(context);
+            var logger = new Mock<ILogger<CorrespondenceInwardRepository>>();
+            var repository = new CorrespondenceInwardRepository(context, logger.Object);
             var projectId = 1;
 
             // Act
@@ -160,7 +165,8 @@ namespace NJS.API.Tests.Repositories
             // Arrange
             using var context = CreateContext();
             await SeedTestDataAsync(context);
-            var repository = new CorrespondenceInwardRepository(context);
+            var logger = new Mock<ILogger<CorrespondenceInwardRepository>>();
+            var repository = new CorrespondenceInwardRepository(context, logger.Object);
             var nonExistingProjectId = 999;
 
             // Act
@@ -213,7 +219,8 @@ namespace NJS.API.Tests.Repositories
             // Arrange
             using var context = CreateContext();
             await SeedTestDataAsync(context);
-            var repository = new CorrespondenceInwardRepository(context);
+            var logger = new Mock<ILogger<CorrespondenceInwardRepository>>();
+            var repository = new CorrespondenceInwardRepository(context, logger.Object);
             var id = 1;
             var correspondenceInward = await repository.GetByIdAsync(id);
             var originalSubject = correspondenceInward.Subject;
@@ -275,7 +282,8 @@ namespace NJS.API.Tests.Repositories
             // Arrange
             using var context = CreateContext();
             await SeedTestDataAsync(context);
-            var repository = new CorrespondenceInwardRepository(context);
+            var logger = new Mock<ILogger<CorrespondenceInwardRepository>>();
+            var repository = new CorrespondenceInwardRepository(context, logger.Object);
             var id = 1;
 
             // Act
@@ -291,7 +299,8 @@ namespace NJS.API.Tests.Repositories
             // Arrange
             using var context = CreateContext();
             await SeedTestDataAsync(context);
-            var repository = new CorrespondenceInwardRepository(context);
+            var logger = new Mock<ILogger<CorrespondenceInwardRepository>>();
+            var repository = new CorrespondenceInwardRepository(context, logger.Object);
             var nonExistingId = 999;
 
             // Act
@@ -307,7 +316,8 @@ namespace NJS.API.Tests.Repositories
             // Arrange
             using var context = CreateContext();
             await SeedTestDataAsync(context);
-            var repository = new CorrespondenceInwardRepository(context);
+            var logger = new Mock<ILogger<CorrespondenceInwardRepository>>();
+            var repository = new CorrespondenceInwardRepository(context, logger.Object);
 
             // Act
             var nextId = await repository.GetNextIdAsync();
@@ -322,7 +332,8 @@ namespace NJS.API.Tests.Repositories
             // Arrange
             using var context = CreateContext();
             await SeedTestDataAsync(context);
-            var repository = new CorrespondenceInwardRepository(context);
+            var logger = new Mock<ILogger<CorrespondenceInwardRepository>>();
+            var repository = new CorrespondenceInwardRepository(context, logger.Object);
 
             // Mock the repository method to avoid SQL commands in in-memory database
             // In a real test with a real database, we would test the actual implementation

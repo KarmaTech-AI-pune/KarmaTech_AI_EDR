@@ -50,11 +50,7 @@ namespace NJS.Repositories.Repositories
 
                 // Log the project state after update
                 var updatedProject = _repository.GetByIdAsync(project.Id).GetAwaiter().GetResult();
-                _logger.LogInformation($"Repository - Project state after update:");
-                _logger.LogInformation($"Office: '{updatedProject.Office}'");
-                _logger.LogInformation($"TypeOfJob: '{updatedProject.TypeOfJob}'");
-                _logger.LogInformation($"Budget: {updatedProject.Budget}");
-                _logger.LogInformation($"Priority: '{updatedProject.Priority}'");
+               
             }
             catch (Exception ex)
             {
