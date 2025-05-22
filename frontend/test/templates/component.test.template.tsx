@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom'; // for extend expect with dom matchers
-import { {{componentName}} } from '../../components/{{componentName}}';
+import { {{componentName}} } from '../../src/components/{{componentName}}';
 
 describe('{{componentName}} Component', () => {
   beforeEach(() => {

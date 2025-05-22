@@ -1,4 +1,4 @@
-import { ModelNamePlaceholder } from '../../models/ModelNamePlaceholder';
+import { ModelNamePlaceholder } from '../../src/models/ModelNamePlaceholder';
 
 describe('ModelNamePlaceholder Model', () => {
   describe('Data Transformations', () => {
