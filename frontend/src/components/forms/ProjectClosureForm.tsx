@@ -1367,7 +1367,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             borderRadius: 1
           }}
         >
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography
               variant="h5"
               gutterBottom
@@ -1379,13 +1379,13 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             >
               PMD8. Project Closure Form
             </Typography>
-          </Box>
 
-          {/* Workflow Approval Button */}
-          <ProjectClosureWorkflow
-            projectClosure={{ ...formData, id: closureId || existingClosureId || undefined, workflowStatusId: workflowStatus }}
-            onProjectClosureUpdated={handleWorkflowUpdated}
-          />
+            {/* Workflow Approval Button */}
+            <ProjectClosureWorkflow
+              projectClosure={{ ...formData, id: closureId || existingClosureId || undefined, workflowStatusId: workflowStatus }}
+              onProjectClosureUpdated={handleWorkflowUpdated}
+            />
+          </Box>
 
           <form onSubmit={handleSubmit}>
             {/* Section A: Overall Project Delivery */}

@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import { Button, Chip } from '@mui/material';
 import { Send } from '@mui/icons-material';
 import { useState, useContext, useEffect } from 'react';
 import { projectManagementAppContext } from '../../App';
@@ -54,10 +54,10 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
     setLocalStatusId(projectClosure.workflowStatusId || 1);
   }, [projectClosure.workflowStatusId]);
 
-  useEffect(() => {
-    console.log('canProjectSubmitForReview:', context?.canProjectSubmitForReview);
-    console.log('workflowStatusId:', localStatusId);
-  }, [context, localStatusId]);
+  // useEffect(() => {
+  //   console.log('canProjectSubmitForReview:', context?.canProjectSubmitForReview);
+  //   console.log('workflowStatusId:', localStatusId);
+  // }, [context, localStatusId]);
 
   const handleWorkflowClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -104,11 +104,13 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
 
   const canShowWorkflowButton = () => {
     if (!context) return false;
+
     const workflowStatus = getWorkflowStatusById(localStatusId);
     const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
     if (!status || status === "Approved") {
       return false;
     }
+
     switch (status) {
       case "Initial":
       case "Review Changes":
@@ -124,6 +126,14 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
     }
   };
 
+  const canShowWorkflowChip = () => {
+    if (!context) return false;
+    const workflowStatus = getWorkflowStatusById(localStatusId);
+    const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
+    // Show chip for all states where the button is not shown
+    return !canShowWorkflowButton() && status !== "";
+  };
+
   const getWorkflowDialog = () => {
     if (!context?.currentUser?.name) return null;
     const workflowStatus = getWorkflowStatusById(localStatusId);
@@ -136,7 +146,7 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
             open={workflowDialogOpen}
             onClose={() => handleWorkflowClose(false)}
             currentUser={context.currentUser.name}
-            projectClosureId={projectClosure.id}
+            projectClosureId={projectClosure.id || undefined}
             projectId={projectClosure.projectId ? Number(projectClosure.projectId) : undefined}
             onSubmit={async () => await handleWorkflowClose(true)}
             onReviewSent={onProjectClosureUpdated}
@@ -184,22 +194,27 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
     }
   };
 
-  if (!canShowWorkflowButton()) return null;
-
   return (
     <>
-      <Button
-        onClick={handleWorkflowClick}
-        size="small"
-        color="primary"
-        startIcon={<Send />}
-        disabled={!context?.currentUser?.name}
-      >
-        {getWorkflowButtonText(localStatusId)}
-      </Button>
+      {canShowWorkflowButton() ? (
+        <Button
+          onClick={handleWorkflowClick}
+          size="small"
+          color="primary"
+          startIcon={<Send />}
+        >
+          {getWorkflowButtonText(localStatusId)}
+        </Button>
+      ) : (
+        <Chip         
+          label={getWorkflowStatusById(localStatusId)?.status}
+          color="primary"
+          size="medium"
+        />
+      )}
       {workflowDialogOpen && getWorkflowDialog()}
     </>
   );
 };
 
-export default ProjectClosureWorkflow; 
+export default ProjectClosureWorkflow;

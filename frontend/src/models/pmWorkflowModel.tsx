@@ -34,6 +34,7 @@ export interface SendToReviewRequest {
     entityId: number;
     entityType: string;
     assignedToId: string;
+    action: string;
     comments: string;
 }
 

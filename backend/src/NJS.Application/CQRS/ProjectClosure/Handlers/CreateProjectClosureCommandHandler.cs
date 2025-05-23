@@ -1,6 +1,8 @@
 using MediatR;
 using NJS.Application.CQRS.ProjectClosure.Commands;
+using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
+using NJS.Domain.Enums;
 using NJS.Domain.UnitWork;
 using NJS.Repositories.Interfaces;
 using NJS.Repositories.Repositories;
@@ -16,17 +18,19 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IProjectClosureRepository _projectClosureRepository;
-        // Removed ProjectClosureCommentRepository to fix build issues
-        //private readonly IProjectClosureCommentRepository _projectClosureCommentRepository;
+        private readonly IProjectRepository _projectRepository;
+        private readonly ICurrentUserService _currentUserService;
 
         public CreateProjectClosureCommandHandler(
             IUnitOfWork unitOfWork,
-            IProjectClosureRepository projectClosureRepository)
-            //IProjectClosureCommentRepository projectClosureCommentRepository)
+            IProjectClosureRepository projectClosureRepository,
+            IProjectRepository projectRepository,
+            ICurrentUserService currentUserService)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _projectClosureRepository = projectClosureRepository ?? throw new ArgumentNullException(nameof(projectClosureRepository));
-            //_projectClosureCommentRepository = projectClosureCommentRepository ?? throw new ArgumentNullException(nameof(projectClosureCommentRepository));
+            _projectRepository = projectRepository ?? throw new ArgumentNullException(nameof(projectRepository));
+            _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
         }
 
         public async Task<int> Handle(CreateProjectClosureCommand request, CancellationToken cancellationToken)
@@ -57,135 +61,186 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                     ? $"Found existing project closure with ID {existingClosure.Id} for project ID {request.ProjectClosureDto.ProjectId}"
                     : $"Creating a new project closure entry for project ID {request.ProjectClosureDto.ProjectId}");
 
-                // Create new project closure entity
-                var projectClosure = new Domain.Entities.ProjectClosure
+                // Create new project closure entity or update existing
+                Domain.Entities.ProjectClosure projectClosure;
+                bool isNewEntry = false;
+
+                if (existingClosure == null)
                 {
-                    // If existing closure found, use its ID, otherwise set to 0 for new entry
-                    Id = existingClosure?.Id ?? 0,
-                    ProjectId = request.ProjectClosureDto.ProjectId,
-
-                    // Map all properties from DTO, preserving null values
-                    ClientFeedback = request.ProjectClosureDto.ClientFeedback,
-                    SuccessCriteria = request.ProjectClosureDto.SuccessCriteria,
-                    ClientExpectations = request.ProjectClosureDto.ClientExpectations,
-                    OtherStakeholders = request.ProjectClosureDto.OtherStakeholders,
-                    EnvIssues = request.ProjectClosureDto.EnvIssues,
-                    EnvManagement = request.ProjectClosureDto.EnvManagement,
-                    ThirdPartyIssues = request.ProjectClosureDto.ThirdPartyIssues,
-                    ThirdPartyManagement = request.ProjectClosureDto.ThirdPartyManagement,
-                    RiskIssues = request.ProjectClosureDto.RiskIssues,
-                    RiskManagement = request.ProjectClosureDto.RiskManagement,
-                    KnowledgeGoals = request.ProjectClosureDto.KnowledgeGoals,
-                    BaselineComparison = request.ProjectClosureDto.BaselineComparison,
-                    DelayedDeliverables = request.ProjectClosureDto.DelayedDeliverables,
-                    UnforeseeableDelays = request.ProjectClosureDto.UnforeseeableDelays,
-                    BudgetEstimate = request.ProjectClosureDto.BudgetEstimate,
-                    ProfitTarget = request.ProjectClosureDto.ProfitTarget,
-                    ChangeOrders = request.ProjectClosureDto.ChangeOrders,
-                    CloseOutBudget = request.ProjectClosureDto.CloseOutBudget,
-                    ResourceAvailability = request.ProjectClosureDto.ResourceAvailability,
-                    VendorFeedback = request.ProjectClosureDto.VendorFeedback,
-                    ProjectTeamFeedback = request.ProjectClosureDto.ProjectTeamFeedback,
-                    DesignOutputs = request.ProjectClosureDto.DesignOutputs,
-                    ProjectReviewMeetings = request.ProjectClosureDto.ProjectReviewMeetings,
-                    ClientDesignReviews = request.ProjectClosureDto.ClientDesignReviews,
-                    InternalReporting = request.ProjectClosureDto.InternalReporting,
-                    ClientReporting = request.ProjectClosureDto.ClientReporting,
-                    InternalMeetings = request.ProjectClosureDto.InternalMeetings,
-                    ClientMeetings = request.ProjectClosureDto.ClientMeetings,
-                    ExternalMeetings = request.ProjectClosureDto.ExternalMeetings,
-                    PlanUpToDate = request.ProjectClosureDto.PlanUpToDate,
-                    PlanningIssues = request.ProjectClosureDto.PlanningIssues,
-                    PlanningLessons = request.ProjectClosureDto.PlanningLessons,
-                    DesignReview = request.ProjectClosureDto.DesignReview,
-                    TechnicalRequirements = request.ProjectClosureDto.TechnicalRequirements,
-                    InnovativeIdeas = request.ProjectClosureDto.InnovativeIdeas,
-                    SuitableOptions = request.ProjectClosureDto.SuitableOptions,
-                    AdditionalInformation = request.ProjectClosureDto.AdditionalInformation,
-                    DeliverableExpectations = request.ProjectClosureDto.DeliverableExpectations,
-                    StakeholderInvolvement = request.ProjectClosureDto.StakeholderInvolvement,
-                    KnowledgeGoalsAchieved = request.ProjectClosureDto.KnowledgeGoalsAchieved,
-                    TechnicalToolsDissemination = request.ProjectClosureDto.TechnicalToolsDissemination,
-                    SpecialistKnowledgeValue = request.ProjectClosureDto.SpecialistKnowledgeValue,
-                    OtherComments = request.ProjectClosureDto.OtherComments,
-                    TargetCostAccuracyValue = request.ProjectClosureDto.TargetCostAccuracyValue,
-                    TargetCostAccuracy = request.ProjectClosureDto.TargetCostAccuracy,
-                    ChangeControlReviewValue = request.ProjectClosureDto.ChangeControlReviewValue,
-                    ChangeControlReview = request.ProjectClosureDto.ChangeControlReview,
-                    CompensationEventsValue = request.ProjectClosureDto.CompensationEventsValue,
-                    CompensationEvents = request.ProjectClosureDto.CompensationEvents,
-                    ExpenditureProfileValue = request.ProjectClosureDto.ExpenditureProfileValue,
-                    ExpenditureProfile = request.ProjectClosureDto.ExpenditureProfile,
-                    HealthSafetyConcernsValue = request.ProjectClosureDto.HealthSafetyConcernsValue,
-                    HealthSafetyConcerns = request.ProjectClosureDto.HealthSafetyConcerns,
-                    ProgrammeRealisticValue = request.ProjectClosureDto.ProgrammeRealisticValue,
-                    ProgrammeRealistic = request.ProjectClosureDto.ProgrammeRealistic,
-                    ProgrammeUpdatesValue = request.ProjectClosureDto.ProgrammeUpdatesValue,
-                    ProgrammeUpdates = request.ProjectClosureDto.ProgrammeUpdates,
-                    RequiredQualityValue = request.ProjectClosureDto.RequiredQualityValue,
-                    RequiredQuality = request.ProjectClosureDto.RequiredQuality,
-                    OperationalRequirementsValue = request.ProjectClosureDto.OperationalRequirementsValue,
-                    OperationalRequirements = request.ProjectClosureDto.OperationalRequirements,
-                    ConstructionInvolvementValue = request.ProjectClosureDto.ConstructionInvolvementValue,
-                    ConstructionInvolvement = request.ProjectClosureDto.ConstructionInvolvement,
-                    EfficienciesValue = request.ProjectClosureDto.EfficienciesValue,
-                    Efficiencies = request.ProjectClosureDto.Efficiencies,
-                    MaintenanceAgreementsValue = request.ProjectClosureDto.MaintenanceAgreementsValue,
-                    MaintenanceAgreements = request.ProjectClosureDto.MaintenanceAgreements,
-                    AsBuiltManualsValue = request.ProjectClosureDto.AsBuiltManualsValue,
-                    AsBuiltManuals = request.ProjectClosureDto.AsBuiltManuals,
-                    HsFileForwardedValue = request.ProjectClosureDto.HsFileForwardedValue,
-                    HsFileForwarded = request.ProjectClosureDto.HsFileForwarded,
-                    Variations = request.ProjectClosureDto.Variations,
-                    TechnoLegalIssues = request.ProjectClosureDto.TechnoLegalIssues,
-                    ConstructionOther = request.ProjectClosureDto.ConstructionOther,
-                    PlanUseful = request.ProjectClosureDto.PlanUseful,
-                    Hindrances = request.ProjectClosureDto.Hindrances,
-                    ClientPayment = request.ProjectClosureDto.ClientPayment,
-                    BriefAims = request.ProjectClosureDto.BriefAims,
-                    DesignReviewOutputs = request.ProjectClosureDto.DesignReviewOutputs,
-                    ConstructabilityReview = request.ProjectClosureDto.ConstructabilityReview,
-                    Positives = request.ProjectClosureDto.Positives,
-                    LessonsLearned = request.ProjectClosureDto.LessonsLearned,
-
-                    // Removed workflow fields
-
-                    // Audit fields
-                    CreatedAt = request.ProjectClosureDto.CreatedAt != default ? request.ProjectClosureDto.CreatedAt : DateTime.UtcNow,
-                    CreatedBy = request.ProjectClosureDto.CreatedBy ?? "System",
-                    UpdatedAt = request.ProjectClosureDto.UpdatedAt,
-                    UpdatedBy = request.ProjectClosureDto.UpdatedBy
-                };
-
-                Console.WriteLine($"Creating new project closure for project ID {projectClosure.ProjectId}");
-                await _projectClosureRepository.Add(projectClosure);
-                Console.WriteLine($"Successfully created project closure with ID {projectClosure.Id}");
-
-                // Removed comments processing to fix build issues
-                /*
-                // Process comments if any
-                if (request.ProjectClosureDto.ProjectClosureComments != null && request.ProjectClosureDto.ProjectClosureComments.Any())
-                {
-                    Console.WriteLine($"Processing {request.ProjectClosureDto.ProjectClosureComments.Count} comments for project closure ID {projectClosure.Id}");
-
-                    foreach (var commentDto in request.ProjectClosureDto.ProjectClosureComments)
-                    {
-                        var comment = new ProjectClosureComment
-                        {
-                            ProjectClosureId = projectClosure.Id,
-                            Type = commentDto.Type,
-                            Comment = commentDto.Comment,
-                            CreatedAt = DateTime.UtcNow,
-                            CreatedBy = request.ProjectClosureDto.CreatedBy ?? "System"
-                        };
-
-                        await _projectClosureCommentRepository.Add(comment);
-                        Console.WriteLine($"Added comment of type {comment.Type} to project closure ID {projectClosure.Id}");
-                    }
+                    isNewEntry = true;
+                    projectClosure = new Domain.Entities.ProjectClosure();
                 }
-                */
+                else
+                {
+                    projectClosure = existingClosure;
+                }
 
-                return projectClosure.Id;
+                // Map all properties from DTO to the entity
+                projectClosure.ProjectId = request.ProjectClosureDto.ProjectId;
+                projectClosure.ClientFeedback = request.ProjectClosureDto.ClientFeedback;
+                projectClosure.SuccessCriteria = request.ProjectClosureDto.SuccessCriteria;
+                projectClosure.ClientExpectations = request.ProjectClosureDto.ClientExpectations;
+                projectClosure.OtherStakeholders = request.ProjectClosureDto.OtherStakeholders;
+                projectClosure.EnvIssues = request.ProjectClosureDto.EnvIssues;
+                projectClosure.EnvManagement = request.ProjectClosureDto.EnvManagement;
+                projectClosure.ThirdPartyIssues = request.ProjectClosureDto.ThirdPartyIssues;
+                projectClosure.ThirdPartyManagement = request.ProjectClosureDto.ThirdPartyManagement;
+                projectClosure.RiskIssues = request.ProjectClosureDto.RiskIssues;
+                projectClosure.RiskManagement = request.ProjectClosureDto.RiskManagement;
+                projectClosure.KnowledgeGoals = request.ProjectClosureDto.KnowledgeGoals;
+                projectClosure.BaselineComparison = request.ProjectClosureDto.BaselineComparison;
+                projectClosure.DelayedDeliverables = request.ProjectClosureDto.DelayedDeliverables;
+                projectClosure.UnforeseeableDelays = request.ProjectClosureDto.UnforeseeableDelays;
+                projectClosure.BudgetEstimate = request.ProjectClosureDto.BudgetEstimate;
+                projectClosure.ProfitTarget = request.ProjectClosureDto.ProfitTarget;
+                projectClosure.ChangeOrders = request.ProjectClosureDto.ChangeOrders;
+                projectClosure.CloseOutBudget = request.ProjectClosureDto.CloseOutBudget;
+                projectClosure.ResourceAvailability = request.ProjectClosureDto.ResourceAvailability;
+                projectClosure.VendorFeedback = request.ProjectClosureDto.VendorFeedback;
+                projectClosure.ProjectTeamFeedback = request.ProjectClosureDto.ProjectTeamFeedback;
+                projectClosure.DesignOutputs = request.ProjectClosureDto.DesignOutputs;
+                projectClosure.ProjectReviewMeetings = request.ProjectClosureDto.ProjectReviewMeetings;
+                projectClosure.ClientDesignReviews = request.ProjectClosureDto.ClientDesignReviews;
+                projectClosure.InternalReporting = request.ProjectClosureDto.InternalReporting;
+                projectClosure.ClientReporting = request.ProjectClosureDto.ClientReporting;
+                projectClosure.InternalMeetings = request.ProjectClosureDto.InternalMeetings;
+                projectClosure.ClientMeetings = request.ProjectClosureDto.ClientMeetings;
+                projectClosure.ExternalMeetings = request.ProjectClosureDto.ExternalMeetings;
+                projectClosure.PlanUpToDate = request.ProjectClosureDto.PlanUpToDate;
+                projectClosure.PlanningIssues = request.ProjectClosureDto.PlanningIssues;
+                projectClosure.PlanningLessons = request.ProjectClosureDto.PlanningLessons;
+                projectClosure.DesignReview = request.ProjectClosureDto.DesignReview;
+                projectClosure.TechnicalRequirements = request.ProjectClosureDto.TechnicalRequirements;
+                projectClosure.InnovativeIdeas = request.ProjectClosureDto.InnovativeIdeas;
+                projectClosure.SuitableOptions = request.ProjectClosureDto.SuitableOptions;
+                projectClosure.AdditionalInformation = request.ProjectClosureDto.AdditionalInformation;
+                projectClosure.DeliverableExpectations = request.ProjectClosureDto.DeliverableExpectations;
+                projectClosure.StakeholderInvolvement = request.ProjectClosureDto.StakeholderInvolvement;
+                projectClosure.KnowledgeGoalsAchieved = request.ProjectClosureDto.KnowledgeGoalsAchieved;
+                projectClosure.TechnicalToolsDissemination = request.ProjectClosureDto.TechnicalToolsDissemination;
+                projectClosure.SpecialistKnowledgeValue = request.ProjectClosureDto.SpecialistKnowledgeValue;
+                projectClosure.OtherComments = request.ProjectClosureDto.OtherComments;
+                projectClosure.TargetCostAccuracyValue = request.ProjectClosureDto.TargetCostAccuracyValue;
+                projectClosure.TargetCostAccuracy = request.ProjectClosureDto.TargetCostAccuracy;
+                projectClosure.ChangeControlReviewValue = request.ProjectClosureDto.ChangeControlReviewValue;
+                projectClosure.ChangeControlReview = request.ProjectClosureDto.ChangeControlReview;
+                projectClosure.CompensationEventsValue = request.ProjectClosureDto.CompensationEventsValue;
+                projectClosure.CompensationEvents = request.ProjectClosureDto.CompensationEvents;
+                projectClosure.ExpenditureProfileValue = request.ProjectClosureDto.ExpenditureProfileValue;
+                projectClosure.ExpenditureProfile = request.ProjectClosureDto.ExpenditureProfile;
+                projectClosure.HealthSafetyConcernsValue = request.ProjectClosureDto.HealthSafetyConcernsValue;
+                projectClosure.HealthSafetyConcerns = request.ProjectClosureDto.HealthSafetyConcerns;
+                projectClosure.ProgrammeRealisticValue = request.ProjectClosureDto.ProgrammeRealisticValue;
+                projectClosure.ProgrammeRealistic = request.ProjectClosureDto.ProgrammeRealistic;
+                projectClosure.ProgrammeUpdatesValue = request.ProjectClosureDto.ProgrammeUpdatesValue;
+                projectClosure.ProgrammeUpdates = request.ProjectClosureDto.ProgrammeUpdates;
+                projectClosure.RequiredQualityValue = request.ProjectClosureDto.RequiredQualityValue;
+                projectClosure.RequiredQuality = request.ProjectClosureDto.RequiredQuality;
+                projectClosure.OperationalRequirementsValue = request.ProjectClosureDto.OperationalRequirementsValue;
+                projectClosure.OperationalRequirements = request.ProjectClosureDto.OperationalRequirements;
+                projectClosure.ConstructionInvolvementValue = request.ProjectClosureDto.ConstructionInvolvementValue;
+                projectClosure.ConstructionInvolvement = request.ProjectClosureDto.ConstructionInvolvement;
+                projectClosure.EfficienciesValue = request.ProjectClosureDto.EfficienciesValue;
+                projectClosure.Efficiencies = request.ProjectClosureDto.Efficiencies;
+                projectClosure.MaintenanceAgreementsValue = request.ProjectClosureDto.MaintenanceAgreementsValue;
+                projectClosure.MaintenanceAgreements = request.ProjectClosureDto.MaintenanceAgreements;
+                projectClosure.AsBuiltManualsValue = request.ProjectClosureDto.AsBuiltManualsValue;
+                projectClosure.AsBuiltManuals = request.ProjectClosureDto.AsBuiltManuals;
+                projectClosure.HsFileForwardedValue = request.ProjectClosureDto.HsFileForwardedValue;
+                projectClosure.HsFileForwarded = request.ProjectClosureDto.HsFileForwarded;
+                projectClosure.Variations = request.ProjectClosureDto.Variations;
+                projectClosure.TechnoLegalIssues = request.ProjectClosureDto.TechnoLegalIssues;
+                projectClosure.ConstructionOther = request.ProjectClosureDto.ConstructionOther;
+                projectClosure.PlanUseful = request.ProjectClosureDto.PlanUseful;
+                projectClosure.Hindrances = request.ProjectClosureDto.Hindrances;
+                projectClosure.ClientPayment = request.ProjectClosureDto.ClientPayment;
+                projectClosure.BriefAims = request.ProjectClosureDto.BriefAims;
+                projectClosure.DesignReviewOutputs = request.ProjectClosureDto.DesignReviewOutputs;
+                projectClosure.ConstructabilityReview = request.ProjectClosureDto.ConstructabilityReview;
+                projectClosure.Positives = request.ProjectClosureDto.Positives;
+                projectClosure.LessonsLearned = request.ProjectClosureDto.LessonsLearned;
+
+                // Audit fields
+                if (isNewEntry)
+                {
+                    projectClosure.CreatedAt = request.ProjectClosureDto.CreatedAt != default ? request.ProjectClosureDto.CreatedAt : DateTime.UtcNow;
+                    projectClosure.CreatedBy = request.ProjectClosureDto.CreatedBy ?? "System";
+                }
+                else
+                {
+                    projectClosure.UpdatedAt = request.ProjectClosureDto.UpdatedAt ?? DateTime.UtcNow;
+                    projectClosure.UpdatedBy = request.ProjectClosureDto.UpdatedBy ?? _currentUserService.UserId;
+                }
+
+                if (isNewEntry)
+                {
+                    await _projectClosureRepository.Add(projectClosure);
+                }
+                else
+                {
+                    _projectClosureRepository.Update(projectClosure);
+                }
+
+                await _unitOfWork.SaveChangesAsync(); // Commit changes to the database and get the generated ID for new entities
+
+                // After projectClosure entity is saved and its ID is available
+                var project = _projectRepository.GetById(request.ProjectClosureDto.ProjectId); // Await this call
+                var dateNow = DateTime.UtcNow;
+                var histories = new List<Domain.Entities.ProjectClosureWorkflowHistory>();
+
+                // Only add initial histories for new entries
+                if (isNewEntry)
+                {
+                    if (project?.ProjectManagerId is not null)
+                    {
+                        histories.Add(new Domain.Entities.ProjectClosureWorkflowHistory()
+                        {
+                            Action = "Initial",
+                            Comments = "Submitted",
+                            StatusId = (int)PMWorkflowStatusEnum.Initial,
+                            ActionDate = dateNow,
+                            AssignedToId = project.ProjectManagerId,
+                            ProjectClosureId = projectClosure.Id, // Now projectClosure.Id will have the correct value
+                            ActionBy = _currentUserService.UserId
+                        });
+                    }
+
+                    if (project?.SeniorProjectManagerId is not null)
+                    {
+                        histories.Add(new Domain.Entities.ProjectClosureWorkflowHistory()
+                        {
+                            Action = "Initial",
+                            Comments = "Submitted",
+                            StatusId = (int)PMWorkflowStatusEnum.Initial,
+                            ActionDate = dateNow,
+                            AssignedToId = project.SeniorProjectManagerId,
+                            ProjectClosureId = projectClosure.Id, // Now projectClosure.Id will have the correct value
+                            ActionBy = _currentUserService.UserId
+                        });
+                    }
+
+                    if (project?.RegionalManagerId is not null)
+                    {
+                        histories.Add(new Domain.Entities.ProjectClosureWorkflowHistory()
+                        {
+                            Action = "Initial",
+                            Comments = "Submitted",
+                            StatusId = (int)PMWorkflowStatusEnum.Initial,
+                            ActionDate = dateNow,
+                            AssignedToId = project.RegionalManagerId,
+                            ProjectClosureId = projectClosure.Id, // Now projectClosure.Id will have the correct value
+                            ActionBy = _currentUserService.UserId
+                        });
+                    }
+
+                    // Assign the histories to the navigation property of the projectClosure entity
+                    // This assumes EF Core will cascade save these when projectClosure is saved/updated
+                    projectClosure.WorkflowHistories = histories;
+                    _projectClosureRepository.Update(projectClosure); // Mark projectClosure as updated to save histories
+                    await _unitOfWork.SaveChangesAsync(); // Save histories
+                }
+
+                return projectClosure.Id; // Return the ID of the created/updated Project Closure
             }
             catch (InvalidOperationException ex)
             {
@@ -194,7 +249,7 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"Invalid argument in CreateProjectClosureCommandHandler: {ex.Message}");
+                    Console.WriteLine($"Invalid argument in CreateProjectClosureCommandHandler: {ex.Message}");
                 throw; // Re-throw the exception to be caught by the controller
             }
             catch (Exception ex)
