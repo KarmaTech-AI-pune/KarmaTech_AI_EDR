@@ -76,7 +76,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
           let projectResponse = await projectApi.getById(projectId.toString());
           if (decision === 'approve') {
             // Send to approval to RM or RD
-            response = await pmWorkflowApi.sendToApprovalBySPM({
+            response = await pmWorkflowApi.sendToApproval({
               entityId: projectClosureId,
               entityType: 'ProjectClosure',
               action: "Approval",
@@ -85,13 +85,13 @@ const DecideReview: React.FC<DecideReviewProps> = ({
             });
           } else {
             // Request changes sent back to project manager
-            response = await pmWorkflowApi.rejectBySPM({
+            response = await pmWorkflowApi.requestChanges({
               entityId: projectClosureId,
               entityType: 'ProjectClosure',
               action: "Reject",
               assignedToId: projectResponse.projectManagerId,
               comments: comments || `Changes requested by ${currentUser}`,
-              decisionType: 'Review'
+              isApprovalChanges: false,
             });
           }
 

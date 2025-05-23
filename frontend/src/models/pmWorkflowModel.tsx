@@ -43,6 +43,7 @@ export interface SendToApprovalRequest {
     entityType: string;
     assignedToId: string;
     comments: string;
+    action: string;
 }
 
 export interface RequestChangesRequest {
@@ -51,10 +52,13 @@ export interface RequestChangesRequest {
     comments: string;
     isApprovalChanges: boolean;
     assignedToId?: string; // Optional assignedToId for specifying who to assign to
+    action: string;
 }
 
 export interface ApproveRequest {
     entityId: number;
     entityType: string;
     comments: string;
+    action: string;
+    assignedToId?: string;
 }

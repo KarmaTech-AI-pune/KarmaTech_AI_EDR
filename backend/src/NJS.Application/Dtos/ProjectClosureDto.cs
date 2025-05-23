@@ -165,7 +165,8 @@ namespace NJS.Application.Dtos
             set => LessonsLearned = JsonHelper.SerializeStringList(value);
         }
 
-        // Removed workflow fields
+        // Workflow fields
+        public int WorkflowStatusId { get; set; } = 1; // Default to Initial status
 
         // Audit fields
         public DateTime CreatedAt { get; set; }
