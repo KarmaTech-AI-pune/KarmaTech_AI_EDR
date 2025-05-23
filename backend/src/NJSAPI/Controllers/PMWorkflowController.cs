@@ -34,7 +34,7 @@ namespace NJSAPI.Controllers
         /// <param name="command">The command containing the document details</param>
         /// <returns>The workflow status after sending for review</returns>
         [HttpPost("sendToReview")]
-        //[Authorize(Roles = "Project Manager")] // Only PM can send for review
+        [Authorize(Roles = "Project Manager,Admin")] // Only PM can send for review
         [ProducesResponseType(typeof(PMWorkflowDto), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
@@ -75,7 +75,8 @@ namespace NJSAPI.Controllers
         /// </summary>
         /// <param name="command">The command containing the document details</param>
         /// <returns>The workflow status after sending for approval</returns>
-        [HttpPost("sendToApproval")]       
+        [HttpPost("sendToApproval")]
+        [Authorize(Roles = "Senior Project Manager,Admin")] // Only SPM can send for approval
         [ProducesResponseType(typeof(PMWorkflowDto), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
@@ -117,7 +118,7 @@ namespace NJSAPI.Controllers
         /// <param name="command">The command containing the document details</param>
         /// <returns>The workflow status after requesting changes</returns>
         [HttpPost("requestChanges")]
-         // SPM or RM/RD can request changes
+        [Authorize(Roles = "Senior Project Manager,Regional Manager,Regional Director,Admin")] // SPM or RM/RD can request changes
         [ProducesResponseType(typeof(PMWorkflowDto), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
@@ -154,11 +155,12 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
-        /// // Only RM/RD can approve Approves a document
+        /// Approves a document - Only RM/RD can approve
         /// </summary>
         /// <param name="command">The command containing the document details</param>
         /// <returns>The workflow status after approval</returns>
-        [HttpPost("approve")]       
+        [HttpPost("approve")]
+        [Authorize(Roles = "Regional Manager,Regional Director,Admin")] // Only RM/RD can approve
         [ProducesResponseType(typeof(PMWorkflowDto), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
@@ -166,11 +168,19 @@ namespace NJSAPI.Controllers
         {
             try
             {
+                Console.WriteLine($"PMWorkflowController.Approve called with command: {command?.EntityType} {command?.EntityId}");
+                Console.WriteLine($"Action: {command?.Action}, AssignedToId: {command?.AssignedToId ?? "null"}");
+                Console.WriteLine($"Comments: {command?.Comments ?? "null"}");
+
                 var result = await _mediator.Send(command);
+                Console.WriteLine($"Approval successful. Result: {result?.Status ?? "null"}");
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error in PMWorkflowController.Approve: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+
                 // Return a default response for Swagger
                 if (!HttpContext.Request.Headers.ContainsKey("Authorization"))
                 {

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState} from 'react';
 import { 
     Dialog, 
     DialogTitle, 
@@ -15,11 +15,9 @@ import {
     RadioGroup,
     FormControlLabel,
     Radio,
-    Box
 } from '@mui/material';
-import { projectManagementAppContext } from '../../App';
 import { pmWorkflowApi } from '../../api/pmWorkflowApi';
-import { userApi } from '../../api/userApi';
+import * as userApi from '../../services/userApi';
 
 interface DecideReviewDialogProps {
     open: boolean;
@@ -42,7 +40,7 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
     const [rmrdUsers, setRmrdUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const context = useContext(projectManagementAppContext);
+
     
     React.useEffect(() => {
         if (open && decision === 'approve') {
@@ -54,7 +52,10 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
         setLoading(true);
         try {
             // Get users with RM or RD role
-            const users = await userApi.getUsersByRoles(['RegionalManager', 'RegionalDirector']);
+            // Fetch users with each role separately and combine them
+            const rmUsers = await userApi.getUsersByRole('RegionalManager');
+            const rdUsers = await userApi.getUsersByRole('RegionalDirector');
+            const users = [...rmUsers, ...rdUsers];
             setRmrdUsers(users);
             
             // If there's only one RM/RD, select them automatically

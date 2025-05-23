@@ -1,5 +1,5 @@
 import { Button, Chip } from '@mui/material';
-import { Label, Send } from '@mui/icons-material';
+import { Send } from '@mui/icons-material';
 import { useState, useContext, useEffect } from 'react';
 import { projectManagementAppContext } from '../../App';
 import { ChangeControl } from '../../models';

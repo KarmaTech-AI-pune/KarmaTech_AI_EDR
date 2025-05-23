@@ -8,6 +8,8 @@ namespace NJS.Domain.Entities
     {
         [Key]
         public int Id { get; set; }
+        public int WBSTaskMonthlyHourHeaderId { get; set; }
+        public WBSTaskMonthlyHourHeader WBSTaskMonthlyHourHeader { get; set; }
 
         [Required]
         public int WBSTaskId { get; set; }

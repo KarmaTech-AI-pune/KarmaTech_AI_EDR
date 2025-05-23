@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { OpportunityTrackingWorkflow } from './OpportunityTrackingWorkflow';
 import { projectManagementAppContext } from '../../App';
@@ -102,7 +101,14 @@ describe('OpportunityTrackingWorkflow Component - Edge Cases and Error Handling'
     canApproveBD: true,
     setCanApproveBD: vi.fn(),
     canSubmitForApproval: true,
-    setCanSubmitForApproval: vi.fn()
+    setCanSubmitForApproval: vi.fn(),
+    // Add missing properties for project workflow
+    canProjectSubmitForReview: true,
+    setProjectCanSubmitForReview: vi.fn(),
+    canProjectSubmitForApproval: true,
+    setProjectCanSubmitForApproval: vi.fn(),
+    canProjectCanApprove: true,
+    setProjectCanApprove: vi.fn()
   };
 
   // Sample opportunity data with proper OpportunityHistory

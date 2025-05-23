@@ -96,7 +96,7 @@ namespace NJS.Domain.Entities
         public int? OpportunityTrackingId { get; set; }
         public virtual OpportunityTracking OpportunityTracking { get; set; }
 
-        public virtual ICollection<ProjectResource> ProjectResources { get; set; }
+        public virtual ICollection<ProjectResource> ProjectResources { get; set; }       
 
         [Required]
         public DateTime CreatedAt { get; set; }

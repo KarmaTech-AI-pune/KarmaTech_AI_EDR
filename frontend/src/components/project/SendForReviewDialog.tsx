@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Dialog, 
     DialogTitle, 
@@ -13,9 +13,8 @@ import {
     CircularProgress,
     Typography
 } from '@mui/material';
-import { projectManagementAppContext } from '../../App';
 import { pmWorkflowApi } from '../../api/pmWorkflowApi';
-import { userApi } from '../../api/userApi';
+import * as userApi from '../../services/userApi';
 
 interface SendForReviewDialogProps {
     open: boolean;
@@ -37,7 +36,7 @@ const SendForReviewDialog: React.FC<SendForReviewDialogProps> = ({
     const [spmUsers, setSpmUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const context = useContext(projectManagementAppContext);
+
     
     useEffect(() => {
         if (open) {
