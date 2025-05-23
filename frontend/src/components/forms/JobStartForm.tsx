@@ -4,7 +4,8 @@ import JobstartTime from './jobstartFormComponent/JobstartTime'
 import EstimatedExpenses from './jobstartFormComponent/EstimatedExpenses'
 import JobstartGrandTotal from './jobstartFormComponent/JobstartGrandTotal'
 import JobstartSummary from './jobstartFormComponent/JobstartSummary'
-import { Container, Box, Paper, Typography, CircularProgress, Alert, Snackbar } from '@mui/material'
+import JobStartFormHeader from './jobstartFormComponent/JobStartFormHeader'
+import { Container, Box, Paper, CircularProgress, Alert, Snackbar } from '@mui/material'
 import { getWBSResourceData, submitJobStartForm, updateJobStartForm, getJobStartFormByProjectId } from '../../services/jobStartFormApi'
 import { WBSResource } from '../../types/jobStartFormTypes'
 import { CustomRow } from './jobstartFormComponent/TableTemplate'
@@ -97,6 +98,8 @@ const JobStartForm: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false)
   const [isUpdating, setIsUpdating] = useState<boolean>(false)
   const [formId, setFormId] = useState<number | null>(null)
+  const [editMode, setEditMode] = useState<boolean>(true)
+  const [formStatus, setFormStatus] = useState<string>('Initial')
 
   // State for snackbar
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false)
@@ -134,6 +137,15 @@ const JobStartForm: React.FC = () => {
                 : existingFormData.formId)
             }
             setIsUpdating(true)
+
+            // Set form status if available
+            if (existingFormData.status) {
+              setFormStatus(existingFormData.status)
+              // If form is in review or approved, disable edit mode
+              if (['Sent for Review', 'Sent for Approval', 'Approved', 'Review Changes', 'Approval Changes'].includes(existingFormData.status)) {
+                setEditMode(false)
+              }
+            }
 
             // Set summary data
             setSummaryData({
@@ -299,6 +311,20 @@ const JobStartForm: React.FC = () => {
     setSnackbarOpen(false)
   }
 
+  // Handler for edit mode toggle
+  const handleEditModeToggle = () => {
+    setEditMode(!editMode);
+  };
+
+  // Handler for status update
+  const handleStatusUpdate = (newStatus: string) => {
+    setFormStatus(newStatus);
+    // If form is in review or approved, disable edit mode
+    if (['Sent for Review', 'Sent for Approval', 'Approved', 'Review Changes', 'Approval Changes'].includes(newStatus)) {
+      setEditMode(false);
+    }
+  };
+
   // Handler for form submission
   const handleSubmit = async () => {
     if (!projectId) {
@@ -426,17 +452,15 @@ const JobStartForm: React.FC = () => {
               borderRadius: 1
             }}
           >
-            <Typography
-              variant="h5"
-              gutterBottom
-              sx={{
-                color: '#1976d2',
-                fontWeight: 500,
-                mb: 3
-              }}
-            >
-              PMD1. Job Start Form
-            </Typography>
+            <JobStartFormHeader
+              title="PMD1. Job Start Form"
+              projectId={projectId}
+              formId={formId}
+              status={formStatus}
+              editMode={editMode}
+              onEditModeToggle={handleEditModeToggle}
+              onStatusUpdate={handleStatusUpdate}
+            />
 
             {loading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
@@ -505,7 +529,10 @@ const JobStartForm: React.FC = () => {
                 <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
                   <LoadingButton
                     onClick={handleSubmit}
-                    disabled={submitting}
+                    disabled={
+                      submitting ||
+                      ['Sent for Review', 'Sent for Approval', 'Approved'].includes(formStatus)
+                    }
                     loading={submitting}
                     text={isUpdating ? 'Update Form' : 'Submit Form'}
                     loadingText={isUpdating ? 'Updating...' : 'Submitting...'}
