@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import PMWorkflowButton from '../PMWorkflowButton';
 import { projectManagementAppContext } from '../../../App';
@@ -13,10 +12,15 @@ const mockContext = {
   }
 };
 
+interface MockProps {
+  open: boolean;
+  onClose: () => void;
+}
+
 // Mock the dialog components
 jest.mock('../SendForReviewDialog', () => ({
   __esModule: true,
-  default: ({ open, onClose }) => (
+  default: ({ open, onClose } : MockProps) => (
     open ? <div data-testid="send-for-review-dialog">
       <button onClick={onClose}>Close</button>
     </div> : null
@@ -25,7 +29,7 @@ jest.mock('../SendForReviewDialog', () => ({
 
 jest.mock('../DecideReviewDialog', () => ({
   __esModule: true,
-  default: ({ open, onClose }) => (
+  default: ({ open, onClose } : MockProps) => (
     open ? <div data-testid="decide-review-dialog">
       <button onClick={onClose}>Close</button>
     </div> : null
@@ -34,7 +38,7 @@ jest.mock('../DecideReviewDialog', () => ({
 
 jest.mock('../DecideApprovalDialog', () => ({
   __esModule: true,
-  default: ({ open, onClose }) => (
+  default: ({ open, onClose } : MockProps) => (
     open ? <div data-testid="decide-approval-dialog">
       <button onClick={onClose}>Close</button>
     </div> : null

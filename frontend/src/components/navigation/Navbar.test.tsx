@@ -16,7 +16,7 @@ vi.mock('../../dummyapi/authApi', () => ({
 
 // Mock Material UI components that might cause issues in tests
 vi.mock('@mui/material/Menu', () => ({
-  default: ({ children, open }: { children: React.ReactNode, open: boolean }) => 
+  default: ({ children, open }: { children: React.ReactNode, open: boolean }) =>
     open ? <div data-testid="menu">{children}</div> : null
 }));
 
@@ -24,7 +24,7 @@ describe('Navbar Component', () => {
   // Mock context values
   const mockSetScreenState = vi.fn();
   const mockSetIsAuthenticated = vi.fn();
-  
+
   const defaultContextValue = {
     screenState: 'Dashboard',
     setScreenState: mockSetScreenState,
@@ -78,7 +78,13 @@ describe('Navbar Component', () => {
     canApproveBD: true,
     setCanApproveBD: vi.fn(),
     canSubmitForApproval: true,
-    setCanSubmitForApproval: vi.fn()
+    setCanSubmitForApproval: vi.fn(),
+    canProjectSubmitForReview: true,
+    setProjectCanSubmitForReview: vi.fn(),
+    canProjectSubmitForApproval: true,
+    setProjectCanSubmitForApproval: vi.fn(),
+    canProjectCanApprove: true,
+    setProjectCanApprove: vi.fn()
   };
 
   // Helper function to render with context
@@ -92,7 +98,7 @@ describe('Navbar Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Default mock implementation for getCurrentUser
     vi.mocked(authApi.getCurrentUser).mockResolvedValue({
       id: 'user1',
@@ -113,7 +119,7 @@ describe('Navbar Component', () => {
 
   it('renders the logo', () => {
     renderWithContext();
-    
+
     // Check for logo image
     const logoImage = screen.getAllByAltText('NJSEI ISO 9000');
     expect(logoImage.length).toBeGreaterThan(0); // Should have at least one logo (mobile or desktop)
@@ -139,18 +145,18 @@ describe('Navbar Component', () => {
         ]
       }
     });
-    
+
     renderWithContext();
-    
+
     // First, wait for the API call to be made
     await waitFor(() => {
       expect(authApi.getCurrentUser).toHaveBeenCalled();
     });
-    
+
     // Then, wait for the navigation links to appear
     const bdLink = await screen.findByTestId('desktop-nav-business-development', {}, { timeout: 3000 });
     expect(bdLink).toBeInTheDocument();
-    
+
     const pmLink = await screen.findByTestId('desktop-nav-project-management', {}, { timeout: 3000 });
     expect(pmLink).toBeInTheDocument();
   });
@@ -172,14 +178,14 @@ describe('Navbar Component', () => {
         permissions: []
       }
     });
-    
+
     renderWithContext();
-    
+
     // Wait for permissions check to complete
     await waitFor(() => {
       expect(authApi.getCurrentUser).toHaveBeenCalled();
     });
-    
+
     // Verify navigation links are not present
     expect(screen.queryByText('Business Development')).not.toBeInTheDocument();
     expect(screen.queryByText('Project Management')).not.toBeInTheDocument();
@@ -202,9 +208,9 @@ describe('Navbar Component', () => {
         permissions: [PermissionType.SYSTEM_ADMIN]
       }
     });
-    
+
     renderWithContext();
-    
+
     // Wait for permissions check to complete
     await waitFor(() => {
       // Look for the admin icon (AdminPanelSettingsIcon)
@@ -230,30 +236,30 @@ describe('Navbar Component', () => {
         permissions: [PermissionType.VIEW_PROJECT] // Not admin
       }
     });
-    
+
     renderWithContext();
-    
+
     // Wait for permissions check to complete
     await waitFor(() => {
       expect(authApi.getCurrentUser).toHaveBeenCalled();
     });
-    
+
     // Verify admin icon is not present
     expect(screen.queryByLabelText('Admin Panel')).not.toBeInTheDocument();
   });
 
   it('opens user menu when avatar is clicked', async () => {
     renderWithContext();
-    
+
     // Find and click the avatar
     const avatar = screen.getByAltText('Test User');
     fireEvent.click(avatar);
-    
+
     // Check that the menu is open
     await waitFor(() => {
       const menu = screen.getByTestId('menu');
       expect(menu).toBeInTheDocument();
-      
+
       // Check for menu items
       expect(screen.getByText('Profile')).toBeInTheDocument();
       expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -265,19 +271,19 @@ describe('Navbar Component', () => {
   it('calls logout function when logout menu item is clicked', async () => {
     // Mock successful logout
     vi.mocked(authApi.logout).mockResolvedValue(undefined);
-    
+
     renderWithContext();
-    
+
     // Open the user menu
     const avatar = screen.getByAltText('Test User');
     fireEvent.click(avatar);
-    
+
     // Wait for menu to open and click logout
     await waitFor(() => {
       const logoutMenuItem = screen.getByText('Logout');
       fireEvent.click(logoutMenuItem);
     });
-    
+
     // Verify logout was called and state was updated
     await waitFor(() => {
       expect(authApi.logout).toHaveBeenCalled();
@@ -288,11 +294,11 @@ describe('Navbar Component', () => {
 
   it('navigates to correct screen when logo is clicked', () => {
     renderWithContext();
-    
+
     // Find and click the logo
     const logoImages = screen.getAllByAltText('NJSEI ISO 9000');
     fireEvent.click(logoImages[0]); // Click the first logo (could be mobile or desktop)
-    
+
     // Verify navigation to Dashboard
     expect(mockSetScreenState).toHaveBeenCalledWith('Dashboard');
   });
@@ -314,21 +320,21 @@ describe('Navbar Component', () => {
         permissions: [PermissionType.VIEW_BUSINESS_DEVELOPMENT]
       }
     });
-    
+
     renderWithContext();
-    
+
     // First, wait for the API call to be made
     await waitFor(() => {
       expect(authApi.getCurrentUser).toHaveBeenCalled();
     });
-    
+
     // Then, wait for the Business Development link to appear
     const bdLink = await screen.findByTestId('desktop-nav-business-development', {}, { timeout: 3000 });
     expect(bdLink).toBeInTheDocument();
-    
+
     // Click the link
     fireEvent.click(bdLink);
-    
+
     // Verify navigation
     expect(mockSetScreenState).toHaveBeenCalledWith('Business Development');
   });
@@ -350,15 +356,15 @@ describe('Navbar Component', () => {
         permissions: [PermissionType.SYSTEM_ADMIN]
       }
     });
-    
+
     renderWithContext();
-    
+
     // Wait for admin icon to be rendered and click it
     await waitFor(() => {
       const adminIcon = screen.getByLabelText('Admin Panel');
       fireEvent.click(adminIcon);
     });
-    
+
     // Verify navigation to Admin Panel
     expect(mockSetScreenState).toHaveBeenCalledWith('Admin Panel');
   });
@@ -367,23 +373,23 @@ describe('Navbar Component', () => {
     // Mock console.error to prevent test output pollution
     const originalConsoleError = console.error;
     console.error = vi.fn();
-    
+
     // Mock failed logout
     const logoutError = new Error('Logout failed');
     vi.mocked(authApi.logout).mockRejectedValue(logoutError);
-    
+
     renderWithContext();
-    
+
     // Open the user menu
     const avatar = screen.getByAltText('Test User');
     fireEvent.click(avatar);
-    
+
     // Wait for menu to open and click logout
     await waitFor(() => {
       const logoutMenuItem = screen.getByText('Logout');
       fireEvent.click(logoutMenuItem);
     });
-    
+
     // Verify error was logged
     await waitFor(() => {
       expect(console.error).toHaveBeenCalledWith('Logout failed:', logoutError);
@@ -391,7 +397,7 @@ describe('Navbar Component', () => {
       expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
       expect(mockSetScreenState).not.toHaveBeenCalledWith('Login');
     });
-    
+
     // Restore console.error
     console.error = originalConsoleError;
   });
