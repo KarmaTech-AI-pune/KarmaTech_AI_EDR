@@ -1,14 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
-  Button,
   styled,
   CircularProgress
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
 import { ProjectTrackingWorkflow } from '../../common/ProjectTrackingWorkflow';
-import { projectManagementAppContext } from '../../../App';
 import { TaskType } from '../../../types/wbs';
 import { jobStartFormHeaderApi } from '../../../services/jobStartFormHeaderApi';
 
@@ -37,11 +34,8 @@ const JobStartFormHeader: React.FC<JobStartFormHeaderProps> = ({
   projectId,
   formId,
   status = 'Initial',
-  editMode,
-  onEditModeToggle,
   onStatusUpdate
 }) => {
-  const { user } = useContext(projectManagementAppContext);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<string>(status);
   const [headerLoaded, setHeaderLoaded] = useState<boolean>(false);

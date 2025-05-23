@@ -91,8 +91,6 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
       return;
     }
 
-    const { canSubmitForReview, canSubmitForApproval, canApprove } = userPermissions;
-
     // Simplified button visibility logic using the normalized status and permissions
     switch (normalizedStatus) {
       case WorkflowStatus.INITIAL:

@@ -5,7 +5,7 @@ import EstimatedExpenses from './jobstartFormComponent/EstimatedExpenses'
 import JobstartGrandTotal from './jobstartFormComponent/JobstartGrandTotal'
 import JobstartSummary from './jobstartFormComponent/JobstartSummary'
 import JobStartFormHeader from './jobstartFormComponent/JobStartFormHeader'
-import { Container, Box, Paper, CircularProgress, Alert, Snackbar } from '@mui/material'
+import { Container, Box, Paper, CircularProgress, Alert, Snackbar, Typography } from '@mui/material'
 import { getWBSResourceData, submitJobStartForm, updateJobStartForm, getJobStartFormByProjectId } from '../../services/jobStartFormApi'
 import { WBSResource } from '../../types/jobStartFormTypes'
 import { CustomRow } from './jobstartFormComponent/TableTemplate'
@@ -455,7 +455,7 @@ const JobStartForm: React.FC = () => {
             <JobStartFormHeader
               title="PMD1. Job Start Form"
               projectId={projectId}
-              formId={formId}
+              formId={formId !== null ? formId : undefined}
               status={formStatus}
               editMode={editMode}
               onEditModeToggle={handleEditModeToggle}

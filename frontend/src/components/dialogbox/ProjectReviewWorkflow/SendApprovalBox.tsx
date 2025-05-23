@@ -44,7 +44,6 @@ const SendApprovalBox: React.FC<SendApprovalBoxProps> = ({
     open,
     onClose,
     status = WorkflowStatus.SENT_FOR_REVIEW,
-    projectId,
     onSubmit,
     entityId,
     entityType = "Project",

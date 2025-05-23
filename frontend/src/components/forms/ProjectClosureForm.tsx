@@ -743,7 +743,6 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
         // Reset state variables
         setExistingClosureId(null);
-        setClosureId(undefined);
 
         // Show success message
         alert('Project closure deleted successfully!');

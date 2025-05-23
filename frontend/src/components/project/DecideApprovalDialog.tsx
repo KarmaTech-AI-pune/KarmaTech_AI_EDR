@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -13,7 +13,6 @@ import {
     Radio,
     FormControl
 } from '@mui/material';
-import { projectManagementAppContext } from '../../App';
 import { pmWorkflowApi } from '../../api/pmWorkflowApi';
 
 interface DecideApprovalDialogProps {
@@ -34,7 +33,6 @@ const DecideApprovalDialog: React.FC<DecideApprovalDialogProps> = ({
     const [decision, setDecision] = useState('');
     const [comments, setComments] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const context = useContext(projectManagementAppContext);
 
     const handleSubmit = async () => {
         if (!comments) {
