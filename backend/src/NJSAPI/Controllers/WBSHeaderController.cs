@@ -17,10 +17,12 @@ namespace NJSAPI.Controllers
     public class WBSHeaderController : ControllerBase
     {
         private readonly ProjectManagementContext _context;
+        private readonly ILogger<WBSHeaderController> _logger;
 
-        public WBSHeaderController(ProjectManagementContext context)
+        public WBSHeaderController(ProjectManagementContext context, ILogger<WBSHeaderController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         /// <summary>
@@ -109,7 +111,7 @@ namespace NJSAPI.Controllers
             };
 
             // Log the status retrieval for debugging
-            Console.WriteLine($"WBS Header {header.Id} status: {latestHistory.StatusId} - Enum: {statusName} - Friendly: {userFriendlyStatus}");
+            _logger.LogInformation($"WBS Header {header.Id} status: {latestHistory.StatusId} - Enum: {statusName} - Friendly: {userFriendlyStatus}");
 
             return Ok(new
             {

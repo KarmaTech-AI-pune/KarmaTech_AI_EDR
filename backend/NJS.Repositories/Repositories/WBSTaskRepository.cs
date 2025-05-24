@@ -1,21 +1,20 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {
     public class WBSTaskRepository : IWBSTaskRepository
     {
         private readonly ProjectManagementContext _context;
+        private readonly ILogger<WBSTaskRepository> _logger;
 
-        public WBSTaskRepository(ProjectManagementContext context)
+        public WBSTaskRepository(ProjectManagementContext context, ILogger<WBSTaskRepository> logger)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _logger = logger;
         }
 
         public async Task<int> AddAsync(WBSTask task)
@@ -56,9 +55,7 @@ namespace NJS.Repositories.Repositories
         {
             // Use Include to load related entities
             return await _context.WBSTasks
-                                 .Include(t => t.UserWBSTasks) // Include user assignments
-                                 // .Include(t => t.MonthlyHours) // Optionally include other details if needed
-                                 // .Include(t => t.Children) // Optionally include children
+                                 .Include(t => t.UserWBSTasks) 
                                  .FirstOrDefaultAsync(t => t.Id == id);
         }
 
@@ -82,9 +79,9 @@ namespace NJS.Repositories.Repositories
             // Use Include to load related entities, specifically UserWBSTasks for the handler
             return await _context.WBSTasks
                                  .Where(t => t.WorkBreakdownStructureId == wbsId)
-                                 .Include(t => t.UserWBSTasks) // Crucial include for the handler
-                                 // .Include(t => t.MonthlyHours) // Optionally include other details
-                                 .OrderBy(t => t.DisplayOrder) // Example ordering
+                                 .Include(t => t.UserWBSTasks) 
+                               
+                                 .OrderBy(t => t.DisplayOrder) 
                                  .ToListAsync();
         }
 
@@ -103,7 +100,7 @@ namespace NJS.Repositories.Repositories
             {
                 // Handle concurrency conflicts if necessary
                 // Log the error, rethrow, or implement conflict resolution strategy
-                Console.WriteLine($"Concurrency error updating WBSTask {task.Id}: {ex.Message}");
+                _logger.LogInformation($"Concurrency error updating WBSTask {task.Id}: {ex.Message}");
                 throw;
             }
         }
