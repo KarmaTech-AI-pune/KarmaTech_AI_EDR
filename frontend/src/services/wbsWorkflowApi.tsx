@@ -1,5 +1,5 @@
 import { axiosInstance } from './axiosConfig';
-import { PMWorkflowHistory } from '../models';
+import { PMWorkflowHistory } from '../models/pmWorkflowModel';
 
 export interface SendToReviewRequest {
   entityId: number;

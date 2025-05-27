@@ -65,7 +65,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
     setWorkflowDialogOpen(true);
   };
 
-  const handleWorkflowClose = async (success: boolean = false, updatedOpp?: OpportunityTracking) => {
+  const handleWorkflowClose = async (success: boolean = false, _updatedOpp?: OpportunityTracking) => {
     setWorkflowDialogOpen(false);
     if (success) {
       // Update status immediately for instant feedback

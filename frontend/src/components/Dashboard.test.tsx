@@ -68,7 +68,13 @@ describe('Dashboard Component', () => {
     canApproveBD: false,
     setCanApproveBD: vi.fn(),
     canSubmitForApproval: false,
-    setCanSubmitForApproval: vi.fn()
+    setCanSubmitForApproval: vi.fn(),
+    canProjectSubmitForReview: false,
+    setProjectCanSubmitForReview: vi.fn(),
+    canProjectSubmitForApproval: false,
+    setProjectCanSubmitForApproval: vi.fn(),
+    canProjectCanApprove: false,
+    setProjectCanApprove: vi.fn()
   })
 
   beforeEach(() => {
@@ -77,51 +83,51 @@ describe('Dashboard Component', () => {
 
   it('renders the dashboard with user name', () => {
     const mockContext = createMockContext()
-    
+
     render(
       <projectManagementAppContext.Provider value={mockContext}>
         <Dashboard />
       </projectManagementAppContext.Provider>
     )
-    
+
     expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument()
   })
 
   it('renders ProjectManagement when user has VIEW_PROJECT permission', () => {
     const mockContext = createMockContext([PermissionType.VIEW_PROJECT])
-    
+
     render(
       <projectManagementAppContext.Provider value={mockContext}>
         <Dashboard />
       </projectManagementAppContext.Provider>
     )
-    
+
     expect(screen.getByTestId('project-management')).toBeInTheDocument()
     expect(screen.queryByTestId('business-development')).not.toBeInTheDocument()
   })
 
   it('renders BusinessDevelopment when user does not have VIEW_PROJECT permission', () => {
     const mockContext = createMockContext([PermissionType.VIEW_BUSINESS_DEVELOPMENT])
-    
+
     render(
       <projectManagementAppContext.Provider value={mockContext}>
         <Dashboard />
       </projectManagementAppContext.Provider>
     )
-    
+
     expect(screen.getByTestId('business-development')).toBeInTheDocument()
     expect(screen.queryByTestId('project-management')).not.toBeInTheDocument()
   })
 
   it('renders all required dashboard components', () => {
     const mockContext = createMockContext()
-    
+
     render(
       <projectManagementAppContext.Provider value={mockContext}>
         <Dashboard />
       </projectManagementAppContext.Provider>
     )
-    
+
     expect(screen.getByTestId('resource-management')).toBeInTheDocument()
     expect(screen.getByTestId('reports-list')).toBeInTheDocument()
     expect(screen.getByTestId('notification-center')).toBeInTheDocument()
@@ -130,13 +136,13 @@ describe('Dashboard Component', () => {
   it('displays generic "User" when currentUser name is not available', () => {
     const mockContext = createMockContext()
     mockContext.currentUser.name = ''
-    
+
     render(
       <projectManagementAppContext.Provider value={mockContext}>
         <Dashboard />
       </projectManagementAppContext.Provider>
     )
-    
+
     expect(screen.getByText(/Welcome, User!/i)).toBeInTheDocument()
   })
 })

@@ -52,6 +52,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEntityWorkflowStrategy, ChangeControlWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategy, ProjectClosureWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategy, WBSWorkflowStrategy>();
+            services.AddScoped<IEntityWorkflowStrategy, JobStartFormWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
 
 

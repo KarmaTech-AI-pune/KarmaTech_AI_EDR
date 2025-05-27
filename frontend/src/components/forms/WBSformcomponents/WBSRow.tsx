@@ -330,11 +330,11 @@ const WBSRow: React.FC<WBSRowProps> = ({
       <TableCell>
         {row.level === 3 ? (
           <StyledSelect
-            value={row.unit || ''}
+            value={formType === 'manpower' ? 'month' : (row.unit || '')}
             onChange={(e) => onUnitChange(row.id, e.target.value as string)}
             size="small"
             sx={{ bgcolor: 'background.paper' }}
-            disabled={editMode} // Only disable in edit mode, allow for both ODC and Manpower
+            disabled={editMode || formType === 'manpower'} // Always disable for manpower form
           >
             <MenuItem value="">Select Unit</MenuItem>
             {unitOptions.map(unit => (

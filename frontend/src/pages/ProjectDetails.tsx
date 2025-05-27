@@ -44,7 +44,8 @@ import EngineeringIcon from '@mui/icons-material/Engineering';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { Project, OpportunityTracking } from '../models';
 import { projectManagementAppContext } from '../App';
-import { getUserById } from '../dummyapi/database/dummyusers';
+// import { getUserById } from '../dummyapi/database/dummyusers';
+import { getUserById } from '../services/userApi';
 import {
   WorkBreakdownStructureForm,
   JobStartForm,
@@ -101,11 +102,51 @@ export const ProjectDetails: React.FC = () => {
   const [formsOpen, setFormsOpen] = useState(false);
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const [expandedForm, setExpandedForm] = useState<string | null>(null);
+  const [managerNames, setManagerNames] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     setIsLoading(false);
     setError(null)
   }, []);
+
+  // Fetch manager data when the component loads or when the selected project changes
+  useEffect(() => {
+    const fetchManagerData = async () => {
+      if (!context?.selectedProject) return;
+
+      const project = context.selectedProject as Project;
+      const managerIds = [
+        project.projectManagerId,
+        project.seniorProjectManagerId,
+        project.regionalManagerId
+      ].filter(Boolean); // Filter out any undefined or empty IDs
+
+      if (managerIds.length === 0) return;
+
+      try {
+        const fetchedNames: {[key: string]: string} = {};
+
+        // Fetch each manager's data
+        for (const id of managerIds) {
+          try {
+            const userData = await getUserById(id);
+            if (userData) {
+              fetchedNames[id] = userData.name;
+            }
+          } catch (err) {
+            console.error(`Error fetching user with ID ${id}:`, err);
+            fetchedNames[id] = 'Not assigned';
+          }
+        }
+
+        setManagerNames(fetchedNames);
+      } catch (err) {
+        console.error('Error fetching manager data:', err);
+      }
+    };
+
+    fetchManagerData();
+  }, [context?.selectedProject]);
 
   if (!context) {
     return (
@@ -154,8 +195,8 @@ export const ProjectDetails: React.FC = () => {
   };
 
   const getManagerName = (managerId: string) => {
-    const user = getUserById(managerId);
-    return user ? user.name : 'Not assigned';
+    if (!managerId) return 'Not assigned';
+    return managerNames[managerId] || 'Loading...';
   };
 
   const formSections = [

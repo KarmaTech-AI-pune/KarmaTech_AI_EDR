@@ -1,6 +1,6 @@
 import { Send } from "@mui/icons-material";
 import { Button } from "@mui/material";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useMemo } from "react";
 import ReviewBox from "../dialogbox/ProjectReviewWorkflow/ReviewBox";
 import SendApprovalBox from "../dialogbox/ProjectReviewWorkflow/SendApprovalBox";
 import { wbsWorkflowApi } from "../../services/wbsWorkflowApi";
@@ -8,6 +8,28 @@ import { projectManagementAppContext } from "../../App";
 import { TaskType } from "../../types/wbs";
 import { PermissionType } from "../../models/permissionTypeModel";
 import { PMWorkflowHistory } from "../../models/pmWorkflowModel";
+
+// Define workflow status enum to replace string comparisons
+enum WorkflowStatus {
+  INITIAL = "Initial",
+  SENT_FOR_REVIEW = "Sent for Review",
+  REVIEW_CHANGES = "Review Changes",
+  SENT_FOR_APPROVAL = "Sent for Approval",
+  APPROVAL_CHANGES = "Approval Changes",
+  APPROVED = "Approved"
+}
+
+// Define workflow action types
+type WorkflowAction = "Review" | "Approval" | "Reject" | "Approved";
+
+// Define the workflow payload type
+interface WorkflowPayload {
+  entityId: number;
+  entityType: string;
+  assignedToId: string;
+  comments: string;
+  action: WorkflowAction;
+}
 
 interface ProjectTrackingWorkflowProps {
   projectId: string;
@@ -31,101 +53,64 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [canShowButton, setCanShowButton] = useState(false);
 
-  // Check user roles
-  const isPM = context?.currentUser?.roles?.some(role => role.name === 'Project Manager') || false;
-  const isSPM = context?.currentUser?.roles?.some(role => role.name === 'Senior Project Manager') || false;
-  const isRMRD = context?.currentUser?.roles?.some(role =>
-    role.name === 'Regional Manager' || role.name === 'Regional Director'
-  ) || false;
+  // Normalize the workflow status
+  const normalizedStatus = useMemo(() => {
+    const statusLower = status?.toLowerCase() || '';
+    
+    if (statusLower.includes('initial')) return WorkflowStatus.INITIAL;
+    if (statusLower.includes('sent for review')) return WorkflowStatus.SENT_FOR_REVIEW;
+    if (statusLower.includes('review changes')) return WorkflowStatus.REVIEW_CHANGES;
+    if (statusLower.includes('sent for approval')) return WorkflowStatus.SENT_FOR_APPROVAL;
+    if (statusLower.includes('approval changes')) return WorkflowStatus.APPROVAL_CHANGES;
+    if (statusLower.includes('approved')) return WorkflowStatus.APPROVED;
+    
+    // Default to initial if no match
+    return WorkflowStatus.INITIAL;
+  }, [status]);
 
-  // Log user roles for debugging
-  console.log("User roles:", context?.currentUser?.roles);
+  // Extract permission checks using memoization to avoid recalculating
+  const userPermissions = useMemo(() => {
+    // Check permissions
+    const permissions = context?.currentUser?.roleDetails?.permissions || [];
+    const canSubmitForReview = permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_REVIEW);
+    const canSubmitForApproval = permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_APPROVAL) || 
+                                permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL);
+    const canApprove = permissions.includes(PermissionType.APPROVE_PROJECT);
 
-  // Check permissions
-  const canSubmitForReview = context?.currentUser?.roleDetails?.permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_REVIEW) || false;
-
-  // Check for both SUBMIT_PROJECT_FOR_APPROVAL and SUBMIT_FOR_APPROVAL permissions
-  // This is because SPMs have SUBMIT_FOR_APPROVAL but not SUBMIT_PROJECT_FOR_APPROVAL
-  const canSubmitForApproval =
-    context?.currentUser?.roleDetails?.permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_APPROVAL) ||
-    context?.currentUser?.roleDetails?.permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL) ||
-    false;
-
-  const canApprove = context?.currentUser?.roleDetails?.permissions.includes(PermissionType.APPROVE_PROJECT) || false;
-
-  // Log permissions for debugging
-  console.log("User permissions:", {
-    canSubmitForReview,
-    canSubmitForApproval,
-    canApprove,
-    hasSubmitProjectForApproval: context?.currentUser?.roleDetails?.permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_APPROVAL),
-    hasSubmitForApproval: context?.currentUser?.roleDetails?.permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL),
-    allPermissions: context?.currentUser?.roleDetails?.permissions
-  });
-
-  // Determine if button should be shown based on status and user role/permissions
-  useEffect(() => {
-    // Normalize status for case-insensitive comparison
-    const normalizedStatus = status?.toLowerCase() || '';
-
-    console.log("ProjectTrackingWorkflow - Status:", status);
-    console.log("ProjectTrackingWorkflow - Normalized Status:", normalizedStatus);
-    console.log("ProjectTrackingWorkflow - User Roles:", {
-      isPM,
-      isSPM,
-      isRMRD,
+    return {
       canSubmitForReview,
       canSubmitForApproval,
       canApprove
-    });
-    console.log("ProjectTrackingWorkflow - Entity ID:", entityId);
+    };
+  }, [context?.currentUser]);
 
-    // Check if the status contains the key phrases rather than exact matching
-    const isInitialOrReviewChanges = normalizedStatus.includes('initial') || normalizedStatus.includes('review changes');
-    const isSentForReview = normalizedStatus.includes('sent for review');
-    const isApprovalChanges = normalizedStatus.includes('approval changes');
-    const isSentForApproval = normalizedStatus.includes('sent for approval');
-    const isApproved = normalizedStatus.includes('approved');
-
-    console.log("Status checks:", {
-      isInitialOrReviewChanges,
-      isSentForReview,
-      isApprovalChanges,
-      isSentForApproval,
-      isApproved
-    });
-
-    // Determine button visibility based on status and role/permissions
-    if (isApproved) {
-      // For "Approved" status, never show the button
+  // Determine if button should be shown based on status and user permissions
+  useEffect(() => {
+    if (!entityId) {
       setCanShowButton(false);
-      console.log("Button visibility for Approved: false (button should be hidden)");
+      return;
     }
-    else if (isInitialOrReviewChanges) {
-      setCanShowButton(isPM && canSubmitForReview);
-      console.log("Button visibility for Initial/Review Changes:", isPM && canSubmitForReview);
+
+    // Simplified button visibility logic using the normalized status and permissions
+    switch (normalizedStatus) {
+      case WorkflowStatus.INITIAL:
+      case WorkflowStatus.REVIEW_CHANGES:
+        setCanShowButton(userPermissions.canSubmitForReview);
+        break;
+      case WorkflowStatus.SENT_FOR_REVIEW:
+      case WorkflowStatus.APPROVAL_CHANGES:
+        setCanShowButton(userPermissions.canSubmitForApproval);
+        break;
+      case WorkflowStatus.SENT_FOR_APPROVAL:
+        setCanShowButton(userPermissions.canApprove);
+        break;
+      case WorkflowStatus.APPROVED:
+        setCanShowButton(false);
+        break;
+      default:
+        setCanShowButton(false);
     }
-    else if (isSentForReview) {
-      // For "Sent for Review" status, show the button if the user is an SPM
-      // This is a special case to ensure SPMs can see the "Decide Review" button
-      setCanShowButton(isSPM);
-      console.log("Button visibility for Sent for Review:", isSPM, "isSPM:", isSPM);
-    }
-    else if (isApprovalChanges) {
-      // For "Approval Changes" status, show the button if the user is an SPM
-      // This is a special case to ensure SPMs can see the "Decide Review" button
-      setCanShowButton(isSPM);
-      console.log("Button visibility for Approval Changes:", isSPM, "isSPM:", isSPM);
-    }
-    else if (isSentForApproval) {
-      setCanShowButton(isRMRD && canApprove);
-      console.log("Button visibility for Sent for Approval:", isRMRD && canApprove);
-    }
-    else {
-      console.log("ProjectTrackingWorkflow - Unhandled status:", status);
-      setCanShowButton(false);
-    }
-  }, [status, isPM, isSPM, isRMRD, canSubmitForReview, canSubmitForApproval, canApprove, entityId]);
+  }, [normalizedStatus, userPermissions, entityId]);
 
   const handleWorkflowClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -136,6 +121,7 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
     setWorkflowDialogOpen(false);
   };
 
+  // Optimized for clarity: directly uses permission checks to control workflow actions
   const handleSubmit = async (payload: any) => {
     if (!entityId) {
       console.error("Entity ID is required for workflow actions");
@@ -148,70 +134,51 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
       let response: PMWorkflowHistory | undefined;
 
       // Prepare the request based on the action
-      const request = {
+      const request: WorkflowPayload = {
         entityId,
         entityType,
         assignedToId: payload.AssignedTo,
-        comments: payload.comments || "", // Changed from comment to comments to match backend expectation
+        comments: payload.comments || "",
         action: payload.Action
       };
-
 
       // Call the appropriate API endpoint based on the action
       switch (payload.Action) {
         case "Review":
           response = await wbsWorkflowApi.sendToReview(request);
-          console.log("Send to Review response:", response);
-          if (onStatusUpdate) onStatusUpdate("Sent for Review");
+          if (onStatusUpdate) onStatusUpdate(WorkflowStatus.SENT_FOR_REVIEW);
           break;
         case "Approval":
           response = await wbsWorkflowApi.sendToApproval(request);
-          console.log("Send to Approval response:", response);
-          if (onStatusUpdate) onStatusUpdate("Sent for Approval");
+          if (onStatusUpdate) onStatusUpdate(WorkflowStatus.SENT_FOR_APPROVAL);
           break;
         case "Reject":
-          // Make sure we're passing the assignedToId correctly
-          console.log("Reject payload:", payload);
-          console.log("Reject request:", request);
-
           response = await wbsWorkflowApi.requestChanges({
             entityId: request.entityId,
             entityType: request.entityType,
             comments: request.comments,
-            assignedToId: payload.AssignedTo, // Explicitly use the AssignedTo from the payload
-            isApprovalChanges: status === "Sent for Approval",
+            assignedToId: payload.AssignedTo,
+            isApprovalChanges: normalizedStatus === WorkflowStatus.SENT_FOR_APPROVAL,
             action: "Reject"
           });
-          console.log("Request Changes response:", response);
-          if (onStatusUpdate) onStatusUpdate(status === "Sent for Approval" ? "Approval Changes" : "Review Changes");
+          if (onStatusUpdate) {
+            onStatusUpdate(normalizedStatus === WorkflowStatus.SENT_FOR_APPROVAL 
+              ? WorkflowStatus.APPROVAL_CHANGES 
+              : WorkflowStatus.REVIEW_CHANGES);
+          }
           break;
         case "Approved":
-          try {
-            response = await wbsWorkflowApi.approve(request);
-            if (onStatusUpdate) onStatusUpdate("Approved");
-          } catch (error: any) {
-            console.error("Error in approve API call:", error);
-            // Try to get more details about the error
-            if (error.response) {
-              console.error("Error response data:", error.response.data);
-              console.error("Error response status:", error.response.status);
-              console.error("Error response headers:", error.response.headers);
-            }
-            throw error;
-          }
+          response = await wbsWorkflowApi.approve(request);
+          if (onStatusUpdate) onStatusUpdate(WorkflowStatus.APPROVED);
           break;
         default:
           console.error("Unknown action:", payload.Action);
       }
 
-      console.log("Workflow response:", response);
-
       // Refresh the status after a successful workflow action
       setTimeout(() => {
-        if (onStatusUpdate) {
-          console.log("Refreshing status after workflow action");
-          // This will trigger a refresh in the parent component
-          onStatusUpdate(response?.status || "");
+        if (onStatusUpdate && response?.status) {
+          onStatusUpdate(response.status);
         }
       }, 1000);
     } catch (error) {
@@ -223,107 +190,76 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
     }
   };
 
+  // Get button text based on current status
   const getWorkflowButtonText = () => {
-    // Normalize status for case-insensitive comparison
-    const normalizedStatus = status?.toLowerCase() || '';
-    console.log("Getting button text for status:", status, "normalized:", normalizedStatus);
-
-    // Check if the status contains the key phrases rather than exact matching
-    if (normalizedStatus.includes('initial') || normalizedStatus.includes('review changes')) {
-      return "Send for Review";
-    }
-    else if (normalizedStatus.includes('sent for review')) {
-      return "Decide Review";
-    }
-    else if (normalizedStatus.includes('approval changes')) {
-      return "Decide Review";
-    }
-    else if (normalizedStatus.includes('sent for approval')) {
-      return "Decide Approval";
-    }
-    else {
-      console.log("Using default button text for status:", status);
-      return "Send for Review";
+    switch (normalizedStatus) {
+      case WorkflowStatus.INITIAL:
+      case WorkflowStatus.REVIEW_CHANGES:
+        return "Send for Review";
+      case WorkflowStatus.SENT_FOR_REVIEW:
+      case WorkflowStatus.APPROVAL_CHANGES:
+        return "Decide Review";
+      case WorkflowStatus.SENT_FOR_APPROVAL:
+        return "Decide Approval";
+      default:
+        return "Send for Review";
     }
   };
 
+  // Get the appropriate dialog based on current status
   const getWorkflowDialog = () => {
-    // Normalize status for case-insensitive comparison
-    const normalizedStatus = status?.toLowerCase() || '';
-    console.log("Getting workflow dialog for status:", status, "normalized:", normalizedStatus);
-
-    // Check if the status contains the key phrases rather than exact matching
-    if (normalizedStatus.includes('initial') || normalizedStatus.includes('review changes')) {
-      console.log("Showing ReviewBox for Initial/Review Changes");
-      return (
-        <ReviewBox
-          open={workflowDialogOpen}
-          onClose={handleWorkflowClose}
-          onSubmit={handleSubmit}
-          entityId={entityId}
-          entityType={entityType}
-          formType={formType}
-        />
-      );
-    }
-    else if (normalizedStatus.includes('sent for review')) {
-      console.log("Showing SendApprovalBox for Sent for Review");
-      return (
-        <SendApprovalBox
-          open={workflowDialogOpen}
-          onClose={handleWorkflowClose}
-          onSubmit={handleSubmit}
-          status="Sent for Review"
-          projectId={projectId}
-          entityId={entityId}
-          entityType={entityType}
-          formType={formType}
-        />
-      );
-    }
-    else if (normalizedStatus.includes('approval changes')) {
-      console.log("Showing SendApprovalBox for Approval Changes");
-      return (
-        <SendApprovalBox
-          open={workflowDialogOpen}
-          onClose={handleWorkflowClose}
-          onSubmit={handleSubmit}
-          status="Sent for Review"
-          projectId={projectId}
-          entityId={entityId}
-          entityType={entityType}
-          formType={formType}
-        />
-      );
-    }
-    else if (normalizedStatus.includes('sent for approval')) {
-      console.log("Showing SendApprovalBox for Sent for Approval");
-      return (
-        <SendApprovalBox
-          open={workflowDialogOpen}
-          onClose={handleWorkflowClose}
-          onSubmit={handleSubmit}
-          status="Sent for Approval"
-          projectId={projectId}
-          entityId={entityId}
-          entityType={entityType}
-          formType={formType}
-        />
-      );
-    }
-    else {
-      // Default to ReviewBox for any unhandled status
-      console.log("Showing default ReviewBox for unhandled status:", status);
-      return (
-        <ReviewBox
-          open={workflowDialogOpen}
-          onClose={handleWorkflowClose}
-          onSubmit={handleSubmit}
-          entityId={entityId}
-          entityType={entityType}
-          formType={formType}
-        />
-      );
+    switch (normalizedStatus) {
+      case WorkflowStatus.INITIAL:
+      case WorkflowStatus.REVIEW_CHANGES:
+        return (
+          <ReviewBox
+            open={workflowDialogOpen}
+            onClose={handleWorkflowClose}
+            onSubmit={handleSubmit}
+            entityId={entityId}
+            entityType={entityType}
+            formType={formType}
+          />
+        );
+      case WorkflowStatus.SENT_FOR_REVIEW:
+      case WorkflowStatus.APPROVAL_CHANGES:
+        return (
+          <SendApprovalBox
+            open={workflowDialogOpen}
+            onClose={handleWorkflowClose}
+            onSubmit={handleSubmit}
+            status={WorkflowStatus.SENT_FOR_REVIEW}
+            projectId={projectId}
+            entityId={entityId}
+            entityType={entityType}
+            formType={formType}
+          />
+        );
+      case WorkflowStatus.SENT_FOR_APPROVAL:
+        return (
+          <SendApprovalBox
+            open={workflowDialogOpen}
+            onClose={handleWorkflowClose}
+            onSubmit={handleSubmit}
+            status={WorkflowStatus.SENT_FOR_APPROVAL}
+            projectId={projectId}
+            entityId={entityId}
+            entityType={entityType}
+            formType={formType}
+          />
+        );
+      default:
+        // Default to ReviewBox for any unhandled status
+        return (
+          <ReviewBox
+            open={workflowDialogOpen}
+            onClose={handleWorkflowClose}
+            onSubmit={handleSubmit}
+            entityId={entityId}
+            entityType={entityType}
+            formType={formType}
+          />
+        );
     }
   };
 
@@ -336,6 +272,7 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
           size="small"
           color="primary"
           startIcon={<Send />}
+          disabled={isSubmitting}
         >
           {getWorkflowButtonText()}
         </Button>
