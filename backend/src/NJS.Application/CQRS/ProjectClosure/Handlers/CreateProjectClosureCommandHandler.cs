@@ -172,16 +172,9 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                     projectClosure.UpdatedBy = request.ProjectClosureDto.UpdatedBy ?? _currentUserService.UserId;
                 }
 
-                if (isNewEntry)
-                {
-                    await _projectClosureRepository.Add(projectClosure);
-                }
-                else
-                {
-                    _projectClosureRepository.Update(projectClosure);
-                }
+               
 
-                await _unitOfWork.SaveChangesAsync(); // Commit changes to the database and get the generated ID for new entities
+               // await _unitOfWork.SaveChangesAsync(); // Commit changes to the database and get the generated ID for new entities
 
                 // After projectClosure entity is saved and its ID is available
                 var project = _projectRepository.GetById(request.ProjectClosureDto.ProjectId); // Await this call
@@ -236,7 +229,15 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                     // Assign the histories to the navigation property of the projectClosure entity
                     // This assumes EF Core will cascade save these when projectClosure is saved/updated
                     projectClosure.WorkflowHistories = histories;
-                    _projectClosureRepository.Update(projectClosure); // Mark projectClosure as updated to save histories
+                    if (isNewEntry)
+                    {
+                        await _projectClosureRepository.Add(projectClosure);
+                    }
+                    else
+                    {
+                        _projectClosureRepository.Update(projectClosure);
+                    }
+                    //_projectClosureRepository.Update(projectClosure); // Mark projectClosure as updated to save histories
                     await _unitOfWork.SaveChangesAsync(); // Save histories
                 }
 

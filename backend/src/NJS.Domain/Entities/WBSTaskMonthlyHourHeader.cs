@@ -13,7 +13,7 @@ namespace NJS.Domain.Entities
         public TaskType? TaskType { get; set; }
 
         // Status tracking
-        public int StatusId { get; set; } = (int)PMWorkflowStatusEnum.Initial; // Default to Initial
+        public int StatusId { get; set; } //= (int)PMWorkflowStatusEnum.Initial; // Default to Initial
 
         [ForeignKey("StatusId")]
         public PMWorkflowStatus Status { get; set; }
