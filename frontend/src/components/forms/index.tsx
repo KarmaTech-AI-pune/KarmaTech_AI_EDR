@@ -4,7 +4,7 @@ export { default as InputRegisterForm } from './InputRegisterForm';
 export { default as CorrespondenceForm } from './CorrespondenceForm';
 export { default as CheckReviewForm } from './CheckReviewForm';
 export { default as ChangeControlForm } from './ChangeControlForm';
-export { MonthlyProgressForm } from './MonthlyProgressForm';
+export { MonthlyProgressForm } from './MonthlyProgresscomponents/MonthlyProgressForm';
 export { default as ProjectClosureForm } from './ProjectClosureForm';
 export { default as FormsOverview } from './FormsOverview';
 export { FeasibilityStudyForm } from './FeasibilityStudyForm';
