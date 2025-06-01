@@ -29,7 +29,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
-  const [canSubmitForReview, setCanSubmitForReview] = useState(false);
+  // [canSubmitForReview, setCanSubmitForReview] = useState(false);
   const [canReviewBD, setCanReviewBD] = useState(false);
   const [canApproveBD, setCanApproveBD] = useState(false);
   const [canSubmitForApproval, setCanSubmitForApproval] = useState(false);
@@ -48,7 +48,7 @@ function App() {
           setCurrentUser(null);
           setCanEditOpportunity(false);
           setCanDeleteOpportunity(false);
-          setCanSubmitForReview(false);
+          //setCanSubmitForReview(false);
           setCanReviewBD(false);
           setCanApproveBD(false);
           setProjectCanSubmitForReview(false)
@@ -96,7 +96,7 @@ function App() {
         console.error('Error checking user permissions:', err as Error);
         setCanEditOpportunity(false);
         setCanDeleteOpportunity(false);
-        setCanSubmitForReview(false);
+       // setCanSubmitForReview(false);
         setCanReviewBD(false);
         setCanApproveBD(false);
         setProjectCanSubmitForReview(false)

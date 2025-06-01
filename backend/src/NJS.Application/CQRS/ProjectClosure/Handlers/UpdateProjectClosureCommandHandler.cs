@@ -1,28 +1,20 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using NJS.Application.CQRS.ProjectClosure.Commands;
-using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using NJS.Repositories.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.ProjectClosure.Handlers
 {
     public class UpdateProjectClosureCommandHandler : IRequestHandler<UpdateProjectClosureCommand, bool>
     {
         private readonly IProjectClosureRepository _projectClosureRepository;
-        // Removed ProjectClosureCommentRepository to fix build issues
-        //private readonly IProjectClosureCommentRepository _projectClosureCommentRepository;
+        private readonly ILogger<UpdateProjectClosureCommandHandler> _logger;
 
         public UpdateProjectClosureCommandHandler(
-            IProjectClosureRepository projectClosureRepository)
-            //IProjectClosureCommentRepository projectClosureCommentRepository)
+            IProjectClosureRepository projectClosureRepository, ILogger<UpdateProjectClosureCommandHandler> logger)
         {
             _projectClosureRepository = projectClosureRepository ?? throw new ArgumentNullException(nameof(projectClosureRepository));
-            //_projectClosureCommentRepository = projectClosureCommentRepository ?? throw new ArgumentNullException(nameof(projectClosureCommentRepository));
+            _logger = logger;
         }
 
         public async Task<bool> Handle(UpdateProjectClosureCommand request, CancellationToken cancellationToken)
@@ -30,24 +22,20 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
             if (request.ProjectClosureDto == null)
                 throw new ArgumentNullException(nameof(request.ProjectClosureDto), "Project Closure data cannot be null");
 
-            // Validate required fields
             if (request.ProjectClosureDto.Id <= 0)
                 throw new ArgumentException("Invalid Id", nameof(request.ProjectClosureDto.Id));
 
             try
             {
-                // Get existing project closure
                 var existingClosure = await _projectClosureRepository.GetById(request.ProjectClosureDto.Id);
                 if (existingClosure == null)
                     throw new InvalidOperationException($"Project closure with ID {request.ProjectClosureDto.Id} not found");
 
-                // Log the existing entity
-                Console.WriteLine($"Found existing project closure with ID {existingClosure.Id} for update");
+                _logger.LogInformation($"Found existing project closure with ID {existingClosure} for update", existingClosure.Id);
 
-                // Create a new entity with the same ID to ensure we're updating the existing record
                 var updatedClosure = new Domain.Entities.ProjectClosure
                 {
-                    Id = existingClosure.Id, // Keep the same ID
+                    Id = existingClosure.Id, 
                     ProjectId = request.ProjectClosureDto.ProjectId,
                     ClientFeedback = request.ProjectClosureDto.ClientFeedback,
                     SuccessCriteria = request.ProjectClosureDto.SuccessCriteria,
@@ -132,58 +120,27 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                     Positives = request.ProjectClosureDto.Positives,
                     LessonsLearned = request.ProjectClosureDto.LessonsLearned,
 
-                    // Preserve original creation metadata
                     CreatedAt = existingClosure.CreatedAt,
                     CreatedBy = existingClosure.CreatedBy,
 
-                    // Update audit fields
                     UpdatedAt = DateTime.UtcNow,
                     UpdatedBy = request.ProjectClosureDto.UpdatedBy ?? "System"
                 };
 
-                // Update the entity in the repository
                 _projectClosureRepository.Update(updatedClosure);
 
-                Console.WriteLine($"Successfully updated project closure with ID {updatedClosure.Id}");
-                return true; // Return true to indicate successful update
+                _logger.LogInformation($"Successfully updated project closure with ID {updatedClosure.Id}");
+                return true; 
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating project closure: {ex.Message}");
+                _logger.LogError($"Error updating project closure: {ex.Message}");
                 if (ex.InnerException != null)
                 {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    _logger.LogError($"Inner exception: {ex.InnerException.Message}");
                 }
                 throw;
             }
-
-            // Removed comments handling to fix build issues
-            /*
-            // Handle comments
-            if (request.ProjectClosureDto.ProjectClosureComments != null)
-            {
-                // First, delete all existing comments for this project closure
-                await _projectClosureCommentRepository.DeleteByProjectClosureId(existingClosure.Id);
-
-                // Then add the new comments
-                foreach (var commentDto in request.ProjectClosureDto.ProjectClosureComments)
-                {
-                    var comment = new ProjectClosureComment
-                    {
-                        ProjectClosureId = existingClosure.Id,
-                        Type = commentDto.Type,
-                        Comment = commentDto.Comment,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = request.ProjectClosureDto.UpdatedBy ?? existingClosure.CreatedBy ?? "System"
-                    };
-
-                    await _projectClosureCommentRepository.Add(comment);
-                    Console.WriteLine($"Added comment of type {comment.Type} to project closure ID {existingClosure.Id}");
-                }
-            }
-            */
-
-            return true;
         }
     }
 }

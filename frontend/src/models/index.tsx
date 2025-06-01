@@ -112,5 +112,6 @@ export type { ChangeControl } from './changeControlModel';
 export type { InwardRow } from './inwardRowModel';
 export type { OutwardRow } from './outwardRowModel';
 export type { ProjectClosureRow } from './projectClosureRowModel';
+export type { WorkflowHistory } from './projectClosureRowModel';
 export type { ProjectClosureComment } from './projectClosureCommentModel';
 export type { InputRegisterRow } from './inputRegisterRowModel';

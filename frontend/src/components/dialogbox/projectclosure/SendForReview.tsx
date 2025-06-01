@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Dialog,
   DialogTitle,
   DialogContent,
@@ -15,23 +15,23 @@ import {
 } from '@mui/material';
 import { AuthUser } from '../../../models/userModel';
 import { getUsersByRole, getUserById } from '../../../services/userApi';
-import { changeControlApi } from '../../../services/changeControlApi';
 import { projectApi } from '../../../services/projectApi';
+import { pmWorkflowApi } from '../../../api/pmWorkflowApi';
 
 interface SendForReviewProps {
   open: boolean;
   onClose: () => void;
-  changeControlId?: number;
+  projectClosureId?: number;
   projectId?: number;
   currentUser: string | undefined;
   onSubmit?: () => void;
   onReviewSent?: () => void;
 }
 
-const SendForReview: React.FC<SendForReviewProps> = ({ 
-  open, 
-  onClose, 
-  changeControlId,
+const SendForReview: React.FC<SendForReviewProps> = ({
+  open,
+  onClose,
+  projectClosureId,
   projectId,
   currentUser,
   onSubmit,
@@ -48,20 +48,20 @@ const SendForReview: React.FC<SendForReviewProps> = ({
         console.log('Fetching Senior Project Managers...');
         const seniorProjectManagers = await getUsersByRole('Senior Project Manager');
         console.log('Senior Project Managers fetched:', seniorProjectManagers);
-        
+
         // Specifically log the names you're expecting
         const managerNames = seniorProjectManagers.map(rm => rm.name);
         console.log('RSenior Project Manager Names:', managerNames);
-        
+
         setReviewers(seniorProjectManagers);
-        
+
         // If no managers found, set an error
         if (seniorProjectManagers.length === 0) {
           setError('No Senior Project Manager found');
         }
       } catch (fetchError: unknown) {
-        const errorMessage = fetchError instanceof Error 
-          ? fetchError.message 
+        const errorMessage = fetchError instanceof Error
+          ? fetchError.message
           : 'Failed to fetch Senior Project Managers';
         console.error('Error fetching Senior Project Managers:', fetchError);
         setError(errorMessage);
@@ -69,13 +69,13 @@ const SendForReview: React.FC<SendForReviewProps> = ({
     };
 
     const checkManager = async () => {
-      if (changeControlId && projectId) {
+      if (projectClosureId && projectId) {
         try {
-          
-          // Check if there's an existing review manager for this change control
+
+          // Check if there's an existing review manager for this project
           const response = await projectApi.getById(projectId.toString());
           const workflowData = response;
-          
+
           if (workflowData && workflowData.seniorProjectManagerId) {
             const managerUser = await getUserById(workflowData.seniorProjectManagerId);
             if (managerUser) {
@@ -86,8 +86,8 @@ const SendForReview: React.FC<SendForReviewProps> = ({
             }
           }
         } catch (err: unknown) {
-          const errorMessage = err instanceof Error 
-            ? err.message 
+          const errorMessage = err instanceof Error
+            ? err.message
             : 'Failed to retrieve manager information';
           console.error('Error checking manager:', err);
           setError(errorMessage);
@@ -97,7 +97,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
 
     fetchReviewers();
     checkManager();
-  }, [changeControlId, projectId]);
+  }, [projectClosureId, projectId]);
 
   const handleReviewerChange = (event: SelectChangeEvent<string>) => {
     setSelectedReviewer(event.target.value);
@@ -116,8 +116,8 @@ const SendForReview: React.FC<SendForReviewProps> = ({
       return;
     }
 
-    if (!changeControlId) {
-      setError('Change Control ID is missing');
+    if (!projectClosureId) {
+      setError('Project Closure ID is missing');
       return;
     }
 
@@ -132,28 +132,25 @@ const SendForReview: React.FC<SendForReviewProps> = ({
     }
 
     try {
-        ;
       // Find selected reviewer details
       const selectedReviewerDetails = reviewers.find(r => r.id === selectedReviewer);
       if (!selectedReviewerDetails) {
         throw new Error('Selected reviewer not found');
       }
 
-      // Send the change control for review
-   
-      await changeControlApi.sendToReview({
-        entityId: changeControlId,
-        entityType: 'ChangeControl',
+      // Send the project closure for review
+      await pmWorkflowApi.sendToReview({
+        entityId: projectClosureId,
+        entityType: 'ProjectClosure',
         assignedToId: selectedReviewer,
-        action:"Review",
+        action: "Review",
         comments: `Sent for review by ${currentUser}`
       });
 
-    
       // Reset dialog state
       setSelectedReviewer('');
       setError(null);
-      
+
       // Call callbacks in correct order with await to ensure proper sequence
       if (onSubmit) {
         await onSubmit(); // Wait for status update in parent
@@ -163,8 +160,8 @@ const SendForReview: React.FC<SendForReviewProps> = ({
       }
       onClose();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
+      const errorMessage = err instanceof Error
+        ? err.message
         : 'Failed to send for review';
       setError(errorMessage);
       console.error(err);
@@ -182,8 +179,8 @@ const SendForReview: React.FC<SendForReviewProps> = ({
   };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleCancel}
       maxWidth="sm"
       fullWidth
@@ -213,13 +210,13 @@ const SendForReview: React.FC<SendForReviewProps> = ({
     >
       <DialogTitle>Senior Project Manager</DialogTitle>
       <DialogContent onClick={stopEventPropagation}>
-        <FormControl 
-          fullWidth 
-          margin="normal" 
+        <FormControl
+          fullWidth
+          margin="normal"
           error={!!error}
         >
           {manager ? (
-            <div style={{ 
+            <div style={{
               fontSize: '16px',
               padding: '8px 0',
               textAlign: 'center'
@@ -239,8 +236,8 @@ const SendForReview: React.FC<SendForReviewProps> = ({
                 }}
               >
                 {reviewers.map((reviewer) => (
-                  <MenuItem 
-                    key={reviewer.id} 
+                  <MenuItem
+                    key={reviewer.id}
                     value={reviewer.id}
                     onClick={stopEventPropagation}
                   >
@@ -250,7 +247,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
               </Select>
             </>
           )}
-          
+
           {error && (
             <FormHelperText error>
               {error}
@@ -262,9 +259,9 @@ const SendForReview: React.FC<SendForReviewProps> = ({
         <Button onClick={handleCancel} color="inherit">
           Cancel
         </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained" 
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
           color="primary"
           disabled={!selectedReviewer}
         >

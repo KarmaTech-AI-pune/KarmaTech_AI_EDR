@@ -2,11 +2,6 @@ using MediatR;
 using NJS.Application.CQRS.ProjectClosure.Queries;
 using NJS.Application.Dtos;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.ProjectClosure.Handlers
 {
@@ -113,21 +108,17 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                 CreatedBy = pc.CreatedBy ?? "",
                 UpdatedAt = pc.UpdatedAt,
                 UpdatedBy = pc.UpdatedBy ?? "",
-
-                // Removed comments mapping to fix build issues
-                /*
-                ProjectClosureComments = pc.Comments?.Select(c => new ProjectClosureCommentDto
+                WorkflowHistory = pc.WorkflowHistories?.OrderByDescending(x => x.ActionDate).Select(wh => new ProjectClosureWorkflowHistoryDto
                 {
-                    Id = c.Id,
-                    ProjectClosureId = c.ProjectClosureId,
-                    Type = c.Type,
-                    Comment = c.Comment,
-                    CreatedAt = c.CreatedAt,
-                    CreatedBy = c.CreatedBy,
-                    UpdatedAt = c.UpdatedAt,
-                    UpdatedBy = c.UpdatedBy
-                }).ToList() ?? new List<ProjectClosureCommentDto>()
-                */
+                    Id = wh.Id,
+                    ProjectClosureId = wh.ProjectClosureId,
+                    StatusId = wh.StatusId,
+                    ActionBy = wh.ActionBy,
+                    ActionDate = wh.ActionDate,
+                    Comments = wh.Comments,
+                    Action = wh.Action,
+                    AssignedToId = wh.AssignedToId                    
+                }).FirstOrDefault()
             }).ToList();
         }
     }

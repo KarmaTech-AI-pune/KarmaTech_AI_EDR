@@ -24,8 +24,13 @@ export const pmWorkflowApi = {
         return response.data;
     },
     
-    approve: async (request: ApproveRequest): Promise<PMWorkflowHistory> => {
+    approvedByRDOrRM: async (request: ApproveRequest): Promise<PMWorkflowHistory> => {
         const response = await axiosInstance.post('/api/PMWorkflow/approve', request);
+        return response.data;
+    },
+
+    rejectByRDOrRM: async (request: RequestChangesRequest): Promise<PMWorkflowHistory> => {
+        const response = await axiosInstance.post('/api/PMWorkflow/requestChanges', request);
         return response.data;
     },
     

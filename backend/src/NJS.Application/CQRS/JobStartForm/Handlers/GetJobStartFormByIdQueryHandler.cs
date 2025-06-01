@@ -1,12 +1,8 @@
 using MediatR;
 using NJS.Application.CQRS.JobStartForm.Queries;
 using NJS.Application.Dtos;
-using System.Threading;
-using System.Threading.Tasks;
 using NJS.Domain.UnitWork;
-using NJS.Domain.Entities;
-using System.Linq;
-using Microsoft.EntityFrameworkCore; // Add for Include
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Application.CQRS.JobStartForm.Handlers
 {
@@ -21,19 +17,17 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
 
         public async Task<JobStartFormDto> Handle(GetJobStartFormByIdQuery query, CancellationToken cancellationToken)
         {
-            // Use generic repository and include Selections and Resources
             var jobStartForm = await _unitOfWork.GetRepository<NJS.Domain.Entities.JobStartForm>()
-                                                .Query() // Start queryable
-                                                .Include(jsf => jsf.Selections) // Include related selections
-                                                .Include(jsf => jsf.Resources) // Include related resources
+                                                .Query() 
+                                                .Include(jsf => jsf.Selections)
+                                                .Include(jsf => jsf.Resources) 
                                                 .FirstOrDefaultAsync(jsf => jsf.FormId == query.FormId, cancellationToken); // Updated to query.FormId
 
             if (jobStartForm == null)
             {
-                return null; // Or throw NotFoundException
+                return null!; 
             }
 
-            // Map entity to DTO, including selections
             return new JobStartFormDto
             {
                 FormId = jobStartForm.FormId,

@@ -1,13 +1,8 @@
 using MediatR;
 using NJS.Application.CQRS.JobStartForm.Queries;
 using NJS.Application.Dtos;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using NJS.Domain.UnitWork;
-using NJS.Domain.Entities;
-using System.Linq;
-using Microsoft.EntityFrameworkCore; // Add for Include/ToListAsync
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Application.CQRS.JobStartForm.Handlers
 {
@@ -22,7 +17,6 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
 
         public async Task<IEnumerable<JobStartFormDto>> Handle(GetJobStartFormByProjectIdQuery query, CancellationToken cancellationToken)
         {
-            // Use generic repository, filter by ProjectId, include Selections
             var jobStartForms = await _unitOfWork.GetRepository<NJS.Domain.Entities.JobStartForm>()
                                                 .Query()
                                                 .Where(jsf => jsf.ProjectId == query.ProjectId)

@@ -12,12 +12,12 @@ import {
 } from '@mui/material';
 import { getUserById } from '../../../services/userApi';
 import { projectApi } from '../../../services/projectApi';
-import { changeControlApi } from '../../../services/changeControlApi';
+import { pmWorkflowApi } from '../../../api/pmWorkflowApi';
 
 interface SendForApprovalProps {
   open: boolean;
   onClose: () => void;
-  changeControlId?: number;
+  projectClosureId?: number;
   projectId?: number;
   currentUser: string | undefined;
   onSubmit?: () => void;
@@ -26,12 +26,13 @@ interface SendForApprovalProps {
 const SendForApproval: React.FC<SendForApprovalProps> = ({
   open,
   onClose,
-  changeControlId,
+  projectClosureId,
   projectId,
   currentUser,
   onSubmit
 }) => {
   const [selectedApprover, setSelectedApprover] = useState<string>('');
+ // const [approvers, setApprovers] = useState<AuthUser[]>([]);
   const [comments, setComments] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [manager, setManager] = useState<string | null>(null);
@@ -39,17 +40,15 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   useEffect(() => {
 
     const checkManager = async () => {
-      ;
-      if (changeControlId && projectId) {
+      if (projectClosureId && projectId) {
         try {
-          // Check if there's an existing approval manager for this change control
+          // Check if there's an existing approval manager for this project
           const response = await projectApi.getById(projectId.toString());
           const workflowData = response;
 
           if (workflowData && workflowData.regionalManagerId) {
             const managerUser = await getUserById(workflowData.regionalManagerId);
             if (managerUser) {
-              ;
               setManager(managerUser.name);
               setSelectedApprover(workflowData.regionalManagerId);
             } else {
@@ -65,10 +64,14 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
         }
       }
     };
-    
-    checkManager();
-  }, [changeControlId, projectId]);
 
+    checkManager();
+  }, [projectClosureId, projectId]);
+
+  // const handleApproverChange = (event: SelectChangeEvent<string>) => {
+  //   setSelectedApprover(event.target.value);
+  //   setError(null);
+  // };
 
   const handleCommentsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setComments(event.target.value);
@@ -87,8 +90,8 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       return;
     }
 
-    if (!changeControlId) {
-      setError('Change Control ID is missing');
+    if (!projectClosureId) {
+      setError('Project Closure ID is missing');
       return;
     }
 
@@ -102,15 +105,15 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
       return;
     }
 
-    try {      
+    try {
 
-      // Send the change control for approval
-      await changeControlApi.sendToApprovalBySPM({
-        entityId: changeControlId,
-        entityType: 'ChangeControl',
-        action: "Approval",
+      // Send the project closure for approval
+      await pmWorkflowApi.sendToApproval({
+        entityId: projectClosureId,
+        entityType: 'ProjectClosure',
         assignedToId: selectedApprover,
-        comments: comments || `Reviewed  and sent for approval by ${currentUser}`
+        action:"Approval",
+        comments: comments || `Reviewed and sent for approval by ${currentUser}`
       });
 
       // Reset dialog state

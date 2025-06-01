@@ -45,9 +45,6 @@ namespace NJS.Repositories.Repositories
         {
             if (changeControl == null) throw new ArgumentNullException(nameof(changeControl));
 
-            // Check if we need to reset the identity seed before adding a new entry
-            await ResetIdentitySeedAsync();
-
             // Set creation timestamp
             changeControl.CreatedAt = DateTime.Now;
 
