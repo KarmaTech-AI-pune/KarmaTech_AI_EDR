@@ -74,7 +74,8 @@ const SendForReviewDialog: React.FC<SendForReviewDialogProps> = ({
                 entityId,
                 entityType,
                 assignedToId,
-                comments
+                comments,
+                action: ''
             });
 
             onWorkflowUpdated();

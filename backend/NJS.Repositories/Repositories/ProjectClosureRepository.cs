@@ -27,6 +27,7 @@ namespace NJS.Repositories.Repositories
         public async Task<IEnumerable<ProjectClosure>> GetAll()
         {
             return await _repository.Query()
+                .Include(x => x.WorkflowHistories)
                 .ToListAsync()
                 .ConfigureAwait(false);
         }
@@ -34,6 +35,7 @@ namespace NJS.Repositories.Repositories
         public async Task<ProjectClosure> GetById(int id)
         {
             return await _repository.Query()
+                .Include(x => x.WorkflowHistories)
                 .FirstOrDefaultAsync(pc => pc.Id == id)
                 .ConfigureAwait(false);
         }
@@ -41,13 +43,15 @@ namespace NJS.Repositories.Repositories
         public async Task<ProjectClosure> GetByProjectId(int projectId)
         {
             return await _repository.Query()
+                .Include(x => x.WorkflowHistories)
                 .FirstOrDefaultAsync(pc => pc.ProjectId == projectId)
                 .ConfigureAwait(false);
         }
 
         public async Task<IEnumerable<ProjectClosure>> GetAllByProjectId(int projectId)
         {
-            return await _repository.Query().Include(x=>x.WorkflowHistories)
+            return await _repository.Query()
+                .Include(x=>x.WorkflowHistories)
                 .Where(pc => pc.ProjectId == projectId)
                 .OrderByDescending(pc => pc.CreatedAt)
                 .ToListAsync()
@@ -123,10 +127,10 @@ namespace NJS.Repositories.Repositories
 
                 // If no existing closure, create a new one
                 // Explicitly set ID to 0 to ensure the database generates a new ID
-                projectClosure.Id = 0;
+               // projectClosure.Id = 0;
 
                 // Reset the identity seed to ensure we get the next available ID
-                await ResetIdentitySeedAsync();
+               // await ResetIdentitySeedAsync();
 
                 _logger.LogInformation("Creating new project closure entry");
 

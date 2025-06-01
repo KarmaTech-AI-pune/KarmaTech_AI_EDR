@@ -60,6 +60,8 @@ const DecideApprovalDialog: React.FC<DecideApprovalDialogProps> = ({
                     comments,
                     isApprovalChanges: true,
                     assignedToId: project.seniorProjectManagerId // Assign to SPM
+                    ,
+                    action: ''
                 });
             }
 

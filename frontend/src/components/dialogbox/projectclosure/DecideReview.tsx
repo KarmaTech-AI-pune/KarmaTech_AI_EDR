@@ -24,7 +24,7 @@ interface DecideReviewProps {
   projectClosureId?: number;
   projectId?: number;
   currentUser: string;
-  onDecisionMade?: () => void;
+   onDecisionMade?: () => void;
 }
 
 const DecideReview: React.FC<DecideReviewProps> = ({
@@ -71,12 +71,11 @@ const DecideReview: React.FC<DecideReviewProps> = ({
       return;
     }
 
-    try {
-          let response;
-          let projectResponse = await projectApi.getById(projectId.toString());
+    try {        
+             let projectResponse = await projectApi.getById(projectId.toString());
           if (decision === 'approve') {
             // Send to approval to RM or RD
-            response = await pmWorkflowApi.sendToApproval({
+          await pmWorkflowApi.sendToApproval({
               entityId: projectClosureId,
               entityType: 'ProjectClosure',
               action: "Approval",
@@ -85,7 +84,7 @@ const DecideReview: React.FC<DecideReviewProps> = ({
             });
           } else {
             // Request changes sent back to project manager
-            response = await pmWorkflowApi.requestChanges({
+          await pmWorkflowApi.requestChanges({
               entityId: projectClosureId,
               entityType: 'ProjectClosure',
               action: "Reject",

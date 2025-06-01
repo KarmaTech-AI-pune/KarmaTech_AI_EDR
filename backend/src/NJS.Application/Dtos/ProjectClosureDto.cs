@@ -173,8 +173,8 @@ namespace NJS.Application.Dtos
         public string CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string UpdatedBy { get; set; }
-
-        public ProjectClosureWorkflowHistoryDto WorkflowHistory { get; set; }
+       
+        public ProjectClosureWorkflowHistoryDto? WorkflowHistory { get; set; }
 
         // Removed ProjectClosureComments to fix build issues
         // public List<ProjectClosureCommentDto> ProjectClosureComments { get; set; } = new List<ProjectClosureCommentDto>();

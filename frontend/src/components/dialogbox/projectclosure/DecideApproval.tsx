@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { pmWorkflowApi } from '../../../api/pmWorkflowApi';
 import { projectApi } from '../../../services/projectApi';
-import { ProjectClosureRow } from '../../../models/projectClosureRowModel';
+//import { ProjectClosureRow } from '../../../models/projectClosureRowModel';
 
 interface DecideApprovalProps {
   open: boolean;
@@ -24,9 +24,7 @@ interface DecideApprovalProps {
   projectClosureId?: number;
   projectId?: number;
   currentUser: string;
-  onSubmit?: () => void;
-  onProjectClosureUpdated?: (updatedClosure: ProjectClosureRow) => void;
-  projectClosure: ProjectClosureRow;
+  onSubmit?: () => void; 
 }
 
 const DecideApproval: React.FC<DecideApprovalProps> = ({
@@ -35,9 +33,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
   projectClosureId,
   projectId,
   currentUser,
-  onSubmit,
-  onProjectClosureUpdated,
-  projectClosure
+  onSubmit    
 }) => {
   const [decision, setDecision] = useState<string>('');
   const [comments, setComments] = useState<string>('');
@@ -79,41 +75,23 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
          let projectResponse = await projectApi.getById(projectId.toString());
          if (decision === 'approve') {
            // Approve and final the result
-           const response = await pmWorkflowApi.approvedByRDOrRM({
+           await pmWorkflowApi.approvedByRDOrRM({
              entityId: projectClosureId,
              entityType: 'ProjectClosure',
              action: "Approved",
              comments: comments || `Approved by ${currentUser}`,
              assignedToId: projectResponse.regionalManagerId
-           });
-           // Update the project closure with the new workflow status
-           if (onProjectClosureUpdated) {
-             // Keep all existing fields and only update the workflow status
-             const updatedClosure = {
-               ...projectClosure,
-               workflowStatusId: 6 // Approved status
-             };
-             await onProjectClosureUpdated(updatedClosure);
-           }
+           });          
          } else {
            // Request changes sent back to SPM
-           const response = await pmWorkflowApi.rejectByRDOrRM({
+           await pmWorkflowApi.rejectByRDOrRM({
              entityId: projectClosureId,
              entityType: 'ProjectClosure',
              action: "Approval Changes",
              comments: comments || `Changes requested by ${currentUser}`,
              assignedToId: projectResponse.seniorProjectManagerId,
              isApprovalChanges: true
-           });
-           // Update the project closure with the new workflow status
-           if (onProjectClosureUpdated) {
-             // Keep all existing fields and only update the workflow status
-             const updatedClosure = {
-               ...projectClosure,
-               workflowStatusId: 5 // Approval Changes status
-             };
-             await onProjectClosureUpdated(updatedClosure);
-           }
+           });           
           
          }
 

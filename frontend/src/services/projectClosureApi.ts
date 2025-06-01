@@ -17,7 +17,7 @@ export interface ProjectClosureWithMetadata extends ProjectClosureRow {
 // Create a new project closure
 export const createProjectClosure = async (projectClosure: ProjectClosureRow, comments?: ProjectClosureComment[]): Promise<any> => {
   try {
-    debugger;
+    ;
     // Ensure projectId is a valid number
     let projectIdAsNumber: number;
 
@@ -211,41 +211,22 @@ export const getAllProjectClosures = async (): Promise<ProjectClosureWithMetadat
       ...item,
       // Ensure dates are properly formatted
       createdAt: item.createdAt || new Date().toISOString(),
-      updatedAt: item.updatedAt || null,
-      // Ensure required fields have default values if missing
+      updatedAt: item.updatedAt || null,      
       createdBy: item.createdBy || 'System',
       updatedBy: item.updatedBy || ''
     }));
 
     return formattedData;
   } catch (error) {
-    console.error('Error fetching project closures:', error);
-
-    // Enhanced error logging
-    // if (axios.isAxiosError(error)) {
-    //   if (error.response) {
-    //     console.error('Server responded with error:', {
-    //       status: error.response.status,
-    //       statusText: error.response.statusText,
-    //       data: error.response.data
-    //     });
-    //   } else if (error.request) {
-    //     console.error('No response received from server. Is the backend running?');
-    //   } else {
-    //     console.error('Error setting up request:', error.message);
-    //   }
-    // }
-
-    // Return empty array instead of throwing to prevent UI crashes
-    return [];
+   throw error;
   }
 };
 
 // Get project closure by ID
 export const getProjectClosureById = async (id: number): Promise<ProjectClosureWithMetadata> => {
-  try {
-   // const response = await axios.get(`${API_URL}/${id}`);
+  try {   
     const response = await axiosInstance.get(`api/ProjectClosure/${id}`);
+    ;
     return response.data;
   } catch (error) {
     console.error(`Error fetching project closure with ID ${id}:`, error);
@@ -268,41 +249,10 @@ export const getProjectClosureByProjectId = async (projectId: number): Promise<P
 // Get all project closures for a specific project
 export const getAllProjectClosuresByProjectId = async (projectId: number): Promise<ProjectClosureWithMetadata[]> => {
   try {
-   // console.log(`Fetching all project closures for project ID ${projectId} from: ${API_URL}/project/${projectId}/all`);
-    //const response = await axios.get(`${API_URL}/project/${projectId}/all`);
-    const response = await axiosInstance.get(`api/ProjectClosure/project/${projectId}/all`);
-    console.log(`Project closures for project ID ${projectId} fetched successfully:`, response.data);
-
-    // If the response is empty or not an array, return an empty array
-    if (!response.data || !Array.isArray(response.data)) {
-      console.warn(`Response data for project ID ${projectId} is not an array or is empty:`, response.data);
-      return [];
-    }
+    const response = await axiosInstance.get(`api/ProjectClosure/project/${projectId}/all`);   
 
     return response.data;
-  } catch (error) {
-    console.error(`Error fetching all project closures for project ID ${projectId}:`, error);
-
-    // Enhanced error logging
-    // if (axios.isAxiosError(error)) {
-    //   if (error.response) {
-    //     console.error('Server responded with error:', {
-    //       status: error.response.status,
-    //       data: error.response.data,
-    //       url: `${API_URL}/project/${projectId}/all`
-    //     });
-
-    //     // If the project doesn't exist, return an empty array instead of throwing
-    //     if (error.response.status === 404) {
-    //       console.warn(`Project with ID ${projectId} not found. Returning empty array.`);
-    //       return [];
-    //     }
-    //   } else if (error.request) {
-    //     console.error('No response received from server');
-    //   } else {
-    //     console.error('Error setting up request:', error.message);
-    //   }
-    // }
+  } catch (error) {   
 
     throw error;
   }
@@ -488,8 +438,7 @@ export const deleteProjectClosure = async (id: number): Promise<void> => {
         try {
           console.log(`Delete attempt ${4 - retries} for ID ${id}`);
          // const response = await axios.delete(`${API_URL}/${id}`);
-          const response = await axiosInstance.delete(`ProjectClosure/${id}`);
-          console.log(`Delete response status: ${response.status}`);
+          const response = await axiosInstance.delete(`api/ProjectClosure/${id}`);         
           console.log(`Delete response data:`, response.data);
 
           // If we get here, the delete was successful
@@ -497,15 +446,7 @@ export const deleteProjectClosure = async (id: number): Promise<void> => {
         } catch (error) {
           lastError = error;
           console.warn(`Delete attempt ${4 - retries} failed:`, error);
-          retries--;
-
-          // If this is a 404 error, treat it as success for any ID (not just 0)
-          // if (axios.isAxiosError(error) && error.response?.status === 404) {
-          //   console.log(`Project closure with ID ${id} not found, treating as success`);
-          //   return; // Return successfully even though the item wasn't found
-          // }
-
-          // Wait a bit before retrying
+          retries--;          
           if (retries > 0) {
             await new Promise(resolve => setTimeout(resolve, 500));
           }
@@ -518,61 +459,11 @@ export const deleteProjectClosure = async (id: number): Promise<void> => {
       } else if (lastError) {
         throw lastError;
       }
-    } catch (axiosError) {
-      // Handle specific error cases
-      // if (axios.isAxiosError(axiosError)) {
-      //   if (axiosError.response?.status === 404) {
-      //     // Not found - treat as success since the item doesn't exist anymore
-      //     console.warn(`Project closure with ID ${id} not found, but continuing as if deleted`);
-      //     return; // Return successfully even though the item wasn't found
-      //   }
-
-      //   // For other status codes, provide detailed error information
-      //   if (axiosError.response) {
-      //     console.error('Error response status:', axiosError.response.status);
-      //     console.error('Error response data:', axiosError.response.data);
-      //   }
-      // }
-
-      // Re-throw for other errors
+    } catch (axiosError) {      
       throw axiosError;
     }
-  } catch (error) {
-    console.error(`Error deleting project closure with ID ${id}:`, error);
-
-    // Handle specific error responses from the API
-    // if (axios.isAxiosError(error)) {
-    //   if (error.response) {
-    //     // The request was made and the server responded with a status code
-    //     // that falls out of the range of 2xx
-    //     const status = error.response.status;
-    //     const errorData = error.response.data;
-
-    //     console.error('Full error response:', error.response);
-    //     console.error('Error response data:', JSON.stringify(errorData, null, 2));
-    //     console.error('Error response status:', status);
-
-    //     if (status === 400) {
-    //       // Bad request - invalid ID
-    //       throw new Error(errorData.message || `Invalid project closure ID: ${id}`);
-    //     } else if (status === 404) {
-    //       // Not found - but we'll treat this as a success since the item doesn't exist anymore
-    //       console.warn(`Project closure with ID ${id} not found, but continuing as if deleted`);
-    //       return; // Return successfully even though the item wasn't found
-    //     } else {
-    //       // Other server errors
-    //       throw new Error(errorData.message || `Server error while deleting project closure with ID ${id}`);
-    //     }
-    //   } else if (error.request) {
-    //     // The request was made but no response was received
-    //     console.error('No response received from server');
-    //     throw new Error('No response received from server. Please check your network connection.');
-    //   }
-    // }
-
-    // For non-Axios errors or unhandled cases
+  } catch (error) {   
     throw error;
   }
 };
 
-// Workflow functions removed

@@ -39,7 +39,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   useEffect(() => {
 
     const checkManager = async () => {
-      debugger;
+      ;
       if (changeControlId && projectId) {
         try {
           // Check if there's an existing approval manager for this change control
@@ -49,7 +49,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
           if (workflowData && workflowData.regionalManagerId) {
             const managerUser = await getUserById(workflowData.regionalManagerId);
             if (managerUser) {
-              debugger;
+              ;
               setManager(managerUser.name);
               setSelectedApprover(workflowData.regionalManagerId);
             } else {

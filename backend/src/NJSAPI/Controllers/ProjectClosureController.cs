@@ -5,13 +5,8 @@ using NJS.Application.CQRS.ProjectClosure.Commands;
 using NJS.Application.CQRS.ProjectClosure.Queries;
 using NJS.Application.CQRS.Projects.Queries;
 using NJS.Application.Dtos;
-using NJS.Application.Helpers;
-using NJS.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
+using System.Text.Json.Nodes;
 
 namespace NJSAPI.Controllers
 {
@@ -21,10 +16,12 @@ namespace NJSAPI.Controllers
     public class ProjectClosureController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ILogger<ProjectClosureController> _logger;
 
-        public ProjectClosureController(IMediator mediator)
+        public ProjectClosureController(IMediator mediator, ILogger<ProjectClosureController> logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -84,9 +81,13 @@ namespace NJSAPI.Controllers
         {
             try
             {
-                // Convert dynamic to JSON string then to ProjectClosureDto
                 string jsonString = JsonSerializer.Serialize(requestData);
-                var projectClosureDto = JsonSerializer.Deserialize<ProjectClosureDto>(jsonString, new JsonSerializerOptions
+                var jsonDoc = JsonNode.Parse(jsonString);
+                jsonDoc?.AsObject().Remove("WorkflowHistory");
+
+                var cleanedJson = jsonDoc?.ToJsonString();
+              
+                var projectClosureDto = JsonSerializer.Deserialize<ProjectClosureDto>(cleanedJson, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
@@ -132,7 +133,7 @@ namespace NJSAPI.Controllers
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine($"Error processing comment: {ex.Message}");
+                                _logger.LogInformation($"Error processing comment: {ex.Message}");
                                 // Continue with the next comment
                             }
                         }
@@ -143,8 +144,7 @@ namespace NJSAPI.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error processing comments: {ex.Message}");
-                        // Continue with the request even if comments processing fails
+                        _logger.LogError($"Error processing comments: {ex.Message}");
                     }
                 }
 
@@ -154,7 +154,7 @@ namespace NJSAPI.Controllers
                 // Ensure ProjectId is valid
                 if (projectClosureDto.ProjectId <= 0)
                 {
-                    Console.WriteLine($"Invalid ProjectId received: {projectClosureDto.ProjectId}");
+                    _logger.LogError($"Invalid ProjectId received: {projectClosureDto.ProjectId}");
                     return BadRequest(new { message = "Invalid ProjectId. ProjectId must be a positive number." });
                 }
 
@@ -164,7 +164,7 @@ namespace NJSAPI.Controllers
 
                 if (project == null)
                 {
-                    Console.WriteLine($"Project with ID {projectClosureDto.ProjectId} does not exist");
+                    _logger.LogInformation($"Project with ID {projectClosureDto.ProjectId} does not exist");
 
                     // Get available projects to suggest
                     var projectsQuery = new GetAllProjectsQuery();
@@ -183,9 +183,8 @@ namespace NJSAPI.Controllers
                     }
                 }
 
-                Console.WriteLine($"Project found: {project.Name} (ID: {project.Id})");
+                _logger.LogInformation($"Project found: {project.Name} (ID: {project.Id})");
 
-                // Only set CreatedBy and CreatedAt if they're not provided
                 if (string.IsNullOrEmpty(projectClosureDto.CreatedBy))
                 {
                     projectClosureDto.CreatedBy = User.Identity?.Name ?? "System";
@@ -196,11 +195,8 @@ namespace NJSAPI.Controllers
                     projectClosureDto.CreatedAt = DateTime.UtcNow;
                 }
 
-                // Preserve UpdatedBy and UpdatedAt from the request
+                _logger.LogInformation($"Creating project closure for project ID {projectClosureDto.ProjectId}");
 
-                Console.WriteLine($"Creating project closure for project ID {projectClosureDto.ProjectId}");
-
-                // Make a deep copy of the DTO to preserve the original values
                 var originalDto = new ProjectClosureDto
                 {
                     Id = projectClosureDto.Id,
@@ -271,23 +267,17 @@ namespace NJSAPI.Controllers
                 // If an entry already exists, use its ID
                 if (existingClosure != null)
                 {
-                    Console.WriteLine($"Found existing project closure with ID {existingClosure.Id} for project ID {projectClosureDto.ProjectId}");
+                    _logger.LogInformation($"Found existing project closure with ID {existingClosure.Id} for project ID {projectClosureDto.ProjectId}");
                     projectClosureDto.Id = existingClosure.Id;
                     originalDto.Id = existingClosure.Id;
                 }
-                else
-                {
-                    // Otherwise, ensure the ID is not set in the DTO for a new entry
-                    projectClosureDto.Id = 0;
-                }
+                
 
                 var command = new CreateProjectClosureCommand(projectClosureDto);
                 var id = await _mediator.Send(command);
 
-                // Update the ID in the original DTO to match the one assigned by the database
                 originalDto.Id = id;
 
-                // Determine the appropriate message based on whether we created or updated
                 string message = existingClosure != null
                     ? "Project closure updated successfully"
                     : "Project closure created successfully";
@@ -300,16 +290,13 @@ namespace NJSAPI.Controllers
             }
             catch (InvalidOperationException ex) when (ex.Message.Contains("does not exist"))
             {
-                // Handle the case when the project doesn't exist
-                Console.WriteLine($"Project does not exist: {ex.Message}");
+                _logger.LogError($"Project does not exist: {ex.Message}");
                 return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                // Log the full exception details
-                Console.WriteLine($"Error creating project closure: {ex.ToString()}");
+                _logger.LogError($"Error creating project closure: {ex.ToString()}");
 
-                // Return a more detailed error message
                 return StatusCode(500, new {
                     message = "An error occurred while creating the project closure.",
                     error = ex.Message,
@@ -384,8 +371,7 @@ namespace NJSAPI.Controllers
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine($"Error processing comment: {ex.Message}");
-                                // Continue with the next comment
+                                _logger.LogError($"Error processing comment: {ex.Message}");
                             }
                         }
 
@@ -395,15 +381,14 @@ namespace NJSAPI.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error processing comments: {ex.Message}");
-                        // Continue with the request even if comments processing fails
+                        _logger.LogError($"Error processing comments: {ex.Message}");
                     }
                 }
 
                 // Ensure ProjectId is valid
                 if (projectClosureDto.ProjectId <= 0)
                 {
-                    Console.WriteLine($"Invalid ProjectId received in update: {projectClosureDto.ProjectId}");
+                    _logger.LogInformation($"Invalid ProjectId received in update: {projectClosureDto.ProjectId}");
                     return BadRequest(new { message = "Invalid ProjectId. ProjectId must be a positive number." });
                 }
 
@@ -413,7 +398,7 @@ namespace NJSAPI.Controllers
 
                 if (project == null)
                 {
-                    Console.WriteLine($"Project with ID {projectClosureDto.ProjectId} does not exist");
+                    _logger.LogInformation($"Project with ID {projectClosureDto.ProjectId} does not exist");
 
                     // Get available projects to suggest
                     var projectsQuery = new GetAllProjectsQuery();
@@ -432,7 +417,7 @@ namespace NJSAPI.Controllers
                     }
                 }
 
-                Console.WriteLine($"Project found for update: {project.Name} (ID: {project.Id})");
+                _logger.LogInformation($"Project found for update: {project.Name} (ID: {project.Id})");
 
                 // Make a deep copy of the DTO to preserve the original values
                 var originalDto = new ProjectClosureDto
@@ -503,7 +488,7 @@ namespace NJSAPI.Controllers
                 projectClosureDto.UpdatedAt = DateTime.UtcNow;
 
                 // Log the data being sent to the command
-                Console.WriteLine($"Sending update command for project closure ID {id} with ProjectId {projectClosureDto.ProjectId}");
+                _logger.LogInformation($"Sending update command for project closure ID {id} with ProjectId {projectClosureDto.ProjectId}");
 
                 var command = new UpdateProjectClosureCommand(projectClosureDto);
                 var result = await _mediator.Send(command);
@@ -536,12 +521,12 @@ namespace NJSAPI.Controllers
         {
             try
             {
-                Console.WriteLine($"ProjectClosureController: Received delete request for ID {id}");
+                _logger.LogInformation($"ProjectClosureController: Received delete request for ID {id}");
 
                 // Validate ID - allow ID 0 since it's a valid ID in our system
                 if (id < 0)
                 {
-                    Console.WriteLine($"Invalid project closure ID: {id}");
+                    _logger.LogInformation($"Invalid project closure ID: {id}");
                     return BadRequest(new { message = $"Invalid project closure ID: {id}. ID must be a non-negative number." });
                 }
 
@@ -555,24 +540,24 @@ namespace NJSAPI.Controllers
                 // Check the result
                 if (!result)
                 {
-                    Console.WriteLine($"Project closure with ID {id} not found");
+                    _logger.LogInformation($"Project closure with ID {id} not found");
                     return NotFound(new { message = $"Project closure with ID {id} not found" });
                 }
 
                 // Return success with content
-                Console.WriteLine($"Successfully deleted project closure with ID {id}");
+                _logger.LogInformation($"Successfully deleted project closure with ID {id}");
                 return Ok(new { message = $"Project closure with ID {id} deleted successfully" });
             }
             catch (ArgumentException ex)
             {
                 // Handle invalid arguments (like invalid ID format)
-                Console.WriteLine($"Bad request in Delete: {ex.Message}");
+                _logger.LogError($"Bad request in Delete: {ex.Message}");
                 return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
                 // Handle unexpected errors
-                Console.WriteLine($"Error deleting project closure: {ex.Message}");
+                _logger.LogError($"Error deleting project closure: {ex.Message}");
                 return StatusCode(500, new {
                     message = "An error occurred while deleting the project closure",
                     error = ex.Message,
@@ -613,7 +598,7 @@ namespace NJSAPI.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting available projects: {ex.Message}");
+                _logger.LogError($"Error getting available projects: {ex.Message}");
                 return StatusCode(500, new { message = "Error retrieving available projects", error = ex.Message });
             }
         }

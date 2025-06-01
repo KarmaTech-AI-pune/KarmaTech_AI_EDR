@@ -1,16 +1,10 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using NJS.Application.CQRS.ProjectClosure.Commands;
 using NJS.Application.Services.IContract;
-using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using NJS.Domain.UnitWork;
 using NJS.Repositories.Interfaces;
-using NJS.Repositories.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.ProjectClosure.Handlers
 {
@@ -20,17 +14,20 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
         private readonly IProjectClosureRepository _projectClosureRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly ILogger<CreateProjectClosureCommandHandler> _logger;
 
         public CreateProjectClosureCommandHandler(
             IUnitOfWork unitOfWork,
             IProjectClosureRepository projectClosureRepository,
             IProjectRepository projectRepository,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            ILogger<CreateProjectClosureCommandHandler> logger)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _projectClosureRepository = projectClosureRepository ?? throw new ArgumentNullException(nameof(projectClosureRepository));
             _projectRepository = projectRepository ?? throw new ArgumentNullException(nameof(projectRepository));
             _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
+            _logger = logger;
         }
 
         public async Task<int> Handle(CreateProjectClosureCommand request, CancellationToken cancellationToken)
@@ -57,9 +54,6 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                 // Check if a project closure already exists for this project
                 var existingClosure = await _projectClosureRepository.GetByProjectId(request.ProjectClosureDto.ProjectId);
 
-                Console.WriteLine(existingClosure != null
-                    ? $"Found existing project closure with ID {existingClosure.Id} for project ID {request.ProjectClosureDto.ProjectId}"
-                    : $"Creating a new project closure entry for project ID {request.ProjectClosureDto.ProjectId}");
 
                 // Create new project closure entity or update existing
                 Domain.Entities.ProjectClosure projectClosure;
@@ -172,9 +166,9 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                     projectClosure.UpdatedBy = request.ProjectClosureDto.UpdatedBy ?? _currentUserService.UserId;
                 }
 
-               
 
-               // await _unitOfWork.SaveChangesAsync(); // Commit changes to the database and get the generated ID for new entities
+
+                // await _unitOfWork.SaveChangesAsync(); // Commit changes to the database and get the generated ID for new entities
 
                 // After projectClosure entity is saved and its ID is available
                 var project = _projectRepository.GetById(request.ProjectClosureDto.ProjectId); // Await this call
@@ -225,46 +219,37 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                             ActionBy = _currentUserService.UserId
                         });
                     }
-
-                    // Assign the histories to the navigation property of the projectClosure entity
-                    // This assumes EF Core will cascade save these when projectClosure is saved/updated
                     projectClosure.WorkflowHistories = histories;
-                    if (isNewEntry)
-                    {
-                        await _projectClosureRepository.Add(projectClosure);
-                    }
-                    else
-                    {
-                        _projectClosureRepository.Update(projectClosure);
-                    }
-                    //_projectClosureRepository.Update(projectClosure); // Mark projectClosure as updated to save histories
-                    await _unitOfWork.SaveChangesAsync(); // Save histories
-                }
 
-                return projectClosure.Id; // Return the ID of the created/updated Project Closure
+                    await _projectClosureRepository.Add(projectClosure);
+
+
+
+                }
+                else
+                {
+                    _projectClosureRepository.Update(projectClosure);
+                }
+                await _unitOfWork.SaveChangesAsync();
+
+                return projectClosure.Id;
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"Validation error in CreateProjectClosureCommandHandler: {ex.Message}");
-                throw; // Re-throw the exception to be caught by the controller
+                _logger.LogError($"Validation error in CreateProjectClosureCommandHandler: {ex.Message}");
+                throw;
             }
             catch (ArgumentException ex)
             {
-                    Console.WriteLine($"Invalid argument in CreateProjectClosureCommandHandler: {ex.Message}");
-                throw; // Re-throw the exception to be caught by the controller
+                _logger.LogError($"Invalid argument in CreateProjectClosureCommandHandler: {ex.Message}");
+                throw;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Unexpected error in CreateProjectClosureCommandHandler: {ex.ToString()}");
+                _logger.LogError($"Unexpected error in CreateProjectClosureCommandHandler: {ex}");
 
-                // Check if it's a database-related exception
-                if (ex.InnerException != null && ex.InnerException.Message.Contains("FK_ProjectClosures_Projects_ProjectId"))
-                {
-                    // Convert database constraint error to a more user-friendly message
-                    throw new InvalidOperationException($"Project with ID {request.ProjectClosureDto.ProjectId} does not exist", ex);
-                }
 
-                throw; // Re-throw the exception to be caught by the controller
+                throw;
             }
         }
     }

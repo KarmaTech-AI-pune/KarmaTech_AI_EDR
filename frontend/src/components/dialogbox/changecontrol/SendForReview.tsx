@@ -132,7 +132,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
     }
 
     try {
-        debugger;
+        ;
       // Find selected reviewer details
       const selectedReviewerDetails = reviewers.find(r => r.id === selectedReviewer);
       if (!selectedReviewerDetails) {

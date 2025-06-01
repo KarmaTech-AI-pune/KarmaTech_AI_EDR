@@ -87,14 +87,16 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
                     entityId,
                     entityType,
                     assignedToId,
-                    comments
+                    comments,
+                    action: 'approve'
                 });
             } else {
                 await pmWorkflowApi.requestChanges({
                     entityId,
                     entityType,
                     comments,
-                    isApprovalChanges: false
+                    isApprovalChanges: false,
+                    action: 'Reject'
                 });
             }
 

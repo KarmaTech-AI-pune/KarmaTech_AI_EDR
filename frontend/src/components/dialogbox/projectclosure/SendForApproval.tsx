@@ -6,16 +6,11 @@ import {
   DialogActions,
   Button,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
   FormHelperText,
   TextField,
   Backdrop
 } from '@mui/material';
-import { AuthUser } from '../../../models/userModel';
-import { getUsersByRole, getUserById } from '../../../services/userApi';
+import { getUserById } from '../../../services/userApi';
 import { projectApi } from '../../../services/projectApi';
 import { pmWorkflowApi } from '../../../api/pmWorkflowApi';
 
@@ -37,7 +32,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   onSubmit
 }) => {
   const [selectedApprover, setSelectedApprover] = useState<string>('');
-  const [approvers, setApprovers] = useState<AuthUser[]>([]);
+ // const [approvers, setApprovers] = useState<AuthUser[]>([]);
   const [comments, setComments] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [manager, setManager] = useState<string | null>(null);
@@ -73,10 +68,10 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
     checkManager();
   }, [projectClosureId, projectId]);
 
-  const handleApproverChange = (event: SelectChangeEvent<string>) => {
-    setSelectedApprover(event.target.value);
-    setError(null);
-  };
+  // const handleApproverChange = (event: SelectChangeEvent<string>) => {
+  //   setSelectedApprover(event.target.value);
+  //   setError(null);
+  // };
 
   const handleCommentsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setComments(event.target.value);

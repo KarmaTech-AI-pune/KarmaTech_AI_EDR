@@ -46,18 +46,16 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
 }) => {
   const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
   const [localStatusId, setLocalStatusId] = useState<number>(
-    projectClosure.currectHistory.statusId || 1
+    projectClosure.workflowHistory?.statusId || 1
   );
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
-    setLocalStatusId(projectClosure.currectHistory.statusId || 1);
-  }, [projectClosure.currectHistory.statusId]);
+    ;
+    setLocalStatusId(projectClosure.workflowHistory?.statusId || 1);
+  }, [projectClosure.workflowHistory?.statusId,localStatusId]);
 
-  // useEffect(() => {
-  //   console.log('canProjectSubmitForReview:', context?.canProjectSubmitForReview);
-  //   console.log('workflowStatusId:', localStatusId);
-  // }, [context, localStatusId]);
+
 
   const handleWorkflowClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -67,12 +65,13 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
   const handleWorkflowClose = async (success: boolean = false, updatedClosure?: ProjectClosureRow) => {
     setWorkflowDialogOpen(false);
     if (success) {
+      
       // Update status immediately for instant feedback
-      const nextStatusId = (projectClosure.currectHistory.statusId || 1) + 1;
+      const nextStatusId = (projectClosure.workflowHistory?.statusId || 1);
       setLocalStatusId(nextStatusId);
       if (onProjectClosureUpdated) {
         try {
-          await onProjectClosureUpdated(updatedClosure);
+          onProjectClosureUpdated(updatedClosure);
         } catch (error) {
           console.error(error);
         }
@@ -83,6 +82,7 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
   const getWorkflowButtonText = (workflowId: number) => {
     const workflowStatus = getWorkflowStatusById(workflowId);
     const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
+    ;
     switch (status) {
       case "Initial":
       case "Review Changes":
@@ -125,14 +125,7 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
         return false;
     }
   };
-
-  const canShowWorkflowChip = () => {
-    if (!context) return false;
-    const workflowStatus = getWorkflowStatusById(localStatusId);
-    const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
-    // Show chip for all states where the button is not shown
-    return !canShowWorkflowButton() && status !== "";
-  };
+  
 
   const getWorkflowDialog = () => {
     if (!context?.currentUser?.name) return null;
@@ -162,7 +155,7 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
               projectClosureId={projectClosure.id}
               projectId={projectClosure.projectId ? Number(projectClosure.projectId) : undefined}
               currentUser={context?.currentUser.name}
-              onSubmit={async () => await handleWorkflowClose(true)}
+              onSubmit={async () => await handleWorkflowClose(true)}             
             />
           );
         } else if (context?.canProjectSubmitForApproval) {

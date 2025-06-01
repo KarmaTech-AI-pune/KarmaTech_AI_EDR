@@ -151,5 +151,16 @@ export interface ProjectClosureRow {
     lessonsLearned?: string | null;
     planningIssues?: string | null;
     planningLessons?: string | null;
-    currectHistory?:any;
+    workflowHistory?:WorkflowHistory
+  }
+
+  export interface WorkflowHistory {
+      id: number;
+      projectClosureId: number;
+      actionDate: Date;
+      comments: string;
+      statusId: number;
+      action: string;
+      actionBy: string;
+      assignedToId: string;
   }
