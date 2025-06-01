@@ -115,7 +115,21 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                 CreatedAt = pc.CreatedAt,
                 CreatedBy = pc.CreatedBy ?? "",
                 UpdatedAt = pc.UpdatedAt,
-                UpdatedBy = pc.UpdatedBy ?? ""
+                UpdatedBy = pc.UpdatedBy ?? "",
+
+                WorkflowHistory = pc.WorkflowHistories.OrderByDescending(x=>x.ActionDate).Select(wh => new ProjectClosureWorkflowHistoryDto
+                {
+                    Id = wh.Id,
+                    ProjectClosureId = wh.ProjectClosureId,
+                    StatusId = wh.StatusId,
+                    ActionBy = wh.ActionBy,
+                    ActionDate = wh.ActionDate,
+                    Comments = wh.Comments,
+                    Action = wh.Action,
+                    AssignedToId = wh.AssignedToId,
+                    Status = wh.Status.Status                    
+                }).FirstOrDefault()
+
             }).ToList();
         }
     }

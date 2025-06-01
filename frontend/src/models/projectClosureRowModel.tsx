@@ -151,4 +151,5 @@ export interface ProjectClosureRow {
     lessonsLearned?: string | null;
     planningIssues?: string | null;
     planningLessons?: string | null;
+    currectHistory?:any;
   }

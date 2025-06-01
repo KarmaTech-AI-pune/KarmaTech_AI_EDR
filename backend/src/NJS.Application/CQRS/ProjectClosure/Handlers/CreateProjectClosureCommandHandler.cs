@@ -164,7 +164,7 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                 if (isNewEntry)
                 {
                     projectClosure.CreatedAt = request.ProjectClosureDto.CreatedAt != default ? request.ProjectClosureDto.CreatedAt : DateTime.UtcNow;
-                    projectClosure.CreatedBy = request.ProjectClosureDto.CreatedBy ?? "System";
+                    projectClosure.CreatedBy = request.ProjectClosureDto.CreatedBy ?? _currentUserService.UserId;
                 }
                 else
                 {

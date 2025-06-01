@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.ProjectClosure.Commands;
 using NJS.Application.CQRS.ProjectClosure.Queries;
@@ -16,6 +17,7 @@ namespace NJSAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectClosureController : ControllerBase
     {
         private readonly IMediator _mediator;

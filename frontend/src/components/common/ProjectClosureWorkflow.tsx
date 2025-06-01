@@ -46,13 +46,13 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
 }) => {
   const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
   const [localStatusId, setLocalStatusId] = useState<number>(
-    projectClosure.workflowStatusId || 1
+    projectClosure.currectHistory.statusId || 1
   );
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
-    setLocalStatusId(projectClosure.workflowStatusId || 1);
-  }, [projectClosure.workflowStatusId]);
+    setLocalStatusId(projectClosure.currectHistory.statusId || 1);
+  }, [projectClosure.currectHistory.statusId]);
 
   // useEffect(() => {
   //   console.log('canProjectSubmitForReview:', context?.canProjectSubmitForReview);
@@ -68,7 +68,7 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
     setWorkflowDialogOpen(false);
     if (success) {
       // Update status immediately for instant feedback
-      const nextStatusId = (projectClosure.workflowStatusId || 1) + 1;
+      const nextStatusId = (projectClosure.currectHistory.statusId || 1) + 1;
       setLocalStatusId(nextStatusId);
       if (onProjectClosureUpdated) {
         try {

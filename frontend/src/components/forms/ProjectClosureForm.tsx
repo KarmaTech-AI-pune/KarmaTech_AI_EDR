@@ -154,7 +154,8 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     positives: '',
     lessonsLearned: '',
     planningIssues: '',
-    planningLessons: ''
+    planningLessons: '',
+    currectHistory: null,
   });
 
   const [comments, setComments] = useState<ProjectClosureComment[]>([]);
@@ -723,8 +724,8 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
       console.log(`Deleting project closure with ID: ${idToDelete}`);
 
       // Log the API URL that will be called
-      const apiUrl = `http://localhost:5245/api/ProjectClosure/${idToDelete}`;
-      console.log(`API URL for delete: ${apiUrl}`);
+     // const apiUrl = `http://localhost:5245/api/ProjectClosure/${idToDelete}`;
+     // console.log(`API URL for delete: ${apiUrl}`);
 
       // Add a network request monitor
       console.log('Network request about to be sent...');
@@ -770,7 +771,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
         // Reset state variables
         setExistingClosureId(null);
-        setClosureId(undefined);
+      //  setClosureId(undefined);
 
         // Show success message
         alert('Project closure deleted successfully!');

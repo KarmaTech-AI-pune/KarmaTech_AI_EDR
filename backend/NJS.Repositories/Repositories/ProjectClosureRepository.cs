@@ -47,7 +47,7 @@ namespace NJS.Repositories.Repositories
 
         public async Task<IEnumerable<ProjectClosure>> GetAllByProjectId(int projectId)
         {
-            return await _repository.Query()
+            return await _repository.Query().Include(x=>x.WorkflowHistories)
                 .Where(pc => pc.ProjectId == projectId)
                 .OrderByDescending(pc => pc.CreatedAt)
                 .ToListAsync()

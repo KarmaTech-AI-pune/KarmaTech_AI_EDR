@@ -1,8 +1,8 @@
-import axios from 'axios';
+import { axiosInstance } from './axiosConfig';
 import { ProjectClosureRow } from '../models/projectClosureRowModel';
 import { ProjectClosureComment } from '../models/projectClosureCommentModel';
 
-const API_URL = 'http://localhost:5245/api/ProjectClosure';
+//const API_URL = 'http://localhost:5245/api/ProjectClosure';
 
 // Type for project closure with additional fields
 export interface ProjectClosureWithMetadata extends ProjectClosureRow {
@@ -17,6 +17,7 @@ export interface ProjectClosureWithMetadata extends ProjectClosureRow {
 // Create a new project closure
 export const createProjectClosure = async (projectClosure: ProjectClosureRow, comments?: ProjectClosureComment[]): Promise<any> => {
   try {
+    debugger;
     // Ensure projectId is a valid number
     let projectIdAsNumber: number;
 
@@ -151,11 +152,7 @@ export const createProjectClosure = async (projectClosure: ProjectClosureRow, co
 
       console.log('Final data being sent to API:', dataToSend);
 
-      const response = await axios.post(API_URL, dataToSend, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await axiosInstance.post('api/ProjectClosure',dataToSend);
       console.log('Project closure creation response:', response.data);
 
       // If the response contains an ID, fetch the complete project closure
@@ -171,49 +168,7 @@ export const createProjectClosure = async (projectClosure: ProjectClosureRow, co
 
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        const status = error.response.status;
-        const errorData = error.response.data;
-
-        console.error('Full error response:', error.response);
-        console.error('Error response data:', JSON.stringify(errorData, null, 2));
-        console.error('Error response status:', status);
-
-        // Handle specific error responses
-        if (status === 400) {
-          // Extract the error message
-          const errorMessage = errorData.message || 'Invalid request';
-          console.error('Server validation error:', errorMessage);
-
-          // Check for specific error types
-          if (errorMessage.includes('Project with ID') && errorMessage.includes('does not exist')) {
-            throw new Error(`The project ID ${projectIdAsNumber} does not exist in the database. Please select a valid project.`);
-          } else if (errorMessage.includes('Invalid ProjectId')) {
-            throw new Error(`Invalid project ID: ${projectIdAsNumber}. Please select a valid project.`);
-          } else if (errorData.innerError && errorData.innerError.includes('PRIMARY KEY constraint')) {
-            console.error('Primary key constraint violation:', errorData.innerError);
-
-            // Extract the duplicate key value from the error message
-            const keyMatch = errorData.innerError.match(/The duplicate key value is \((\d+)\)/);
-            const duplicateKey = keyMatch ? keyMatch[1] : 'unknown';
-
-            throw new Error(`A project closure with ID ${duplicateKey} already exists. The system will automatically assign a new ID.`);
-          } else {
-            // Log more details about the request that failed
-            console.error('Request that failed:', {
-              url: API_URL,
-              method: 'POST',
-              data: formattedData
-            });
-            throw new Error(`${errorMessage}. Please check the console for more details.`);
-          }
-        } else {
-          console.error('Server error response:', errorData);
-          throw new Error(errorData.message || 'Error creating project closure');
-        }
-      }
-      console.error('Non-Axios error:', error);
-      throw error;
+       throw error;
     }
   } catch (error) {
     console.error('Error creating project closure:', error);
@@ -224,16 +179,10 @@ export const createProjectClosure = async (projectClosure: ProjectClosureRow, co
 // Get all project closures
 export const getAllProjectClosures = async (): Promise<ProjectClosureWithMetadata[]> => {
   try {
-    console.log('Fetching all project closures from:', API_URL);
+    //console.log('Fetching all project closures from:', API_URL);
 
     // Set a timeout to ensure we don't wait forever
-    const response = await axios.get(API_URL, {
-      timeout: 10000,
-      headers: {
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache'
-      }
-    });
+    const response = await axiosInstance.get('api/ProjectClosure');
 
     console.log('Project closures API response status:', response.status);
 
@@ -273,19 +222,19 @@ export const getAllProjectClosures = async (): Promise<ProjectClosureWithMetadat
     console.error('Error fetching project closures:', error);
 
     // Enhanced error logging
-    if (axios.isAxiosError(error)) {
-      if (error.response) {
-        console.error('Server responded with error:', {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data
-        });
-      } else if (error.request) {
-        console.error('No response received from server. Is the backend running?');
-      } else {
-        console.error('Error setting up request:', error.message);
-      }
-    }
+    // if (axios.isAxiosError(error)) {
+    //   if (error.response) {
+    //     console.error('Server responded with error:', {
+    //       status: error.response.status,
+    //       statusText: error.response.statusText,
+    //       data: error.response.data
+    //     });
+    //   } else if (error.request) {
+    //     console.error('No response received from server. Is the backend running?');
+    //   } else {
+    //     console.error('Error setting up request:', error.message);
+    //   }
+    // }
 
     // Return empty array instead of throwing to prevent UI crashes
     return [];
@@ -295,7 +244,8 @@ export const getAllProjectClosures = async (): Promise<ProjectClosureWithMetadat
 // Get project closure by ID
 export const getProjectClosureById = async (id: number): Promise<ProjectClosureWithMetadata> => {
   try {
-    const response = await axios.get(`${API_URL}/${id}`);
+   // const response = await axios.get(`${API_URL}/${id}`);
+    const response = await axiosInstance.get(`api/ProjectClosure/${id}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching project closure with ID ${id}:`, error);
@@ -306,7 +256,8 @@ export const getProjectClosureById = async (id: number): Promise<ProjectClosureW
 // Get project closure by project ID (returns the first one found)
 export const getProjectClosureByProjectId = async (projectId: number): Promise<ProjectClosureWithMetadata> => {
   try {
-    const response = await axios.get(`${API_URL}/project/${projectId}`);
+   // const response = await axios.get(`${API_URL}/project/${projectId}`);
+    const response = await axiosInstance.get(`api/ProjectClosure/project/${projectId}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching project closure for project ID ${projectId}:`, error);
@@ -317,8 +268,9 @@ export const getProjectClosureByProjectId = async (projectId: number): Promise<P
 // Get all project closures for a specific project
 export const getAllProjectClosuresByProjectId = async (projectId: number): Promise<ProjectClosureWithMetadata[]> => {
   try {
-    console.log(`Fetching all project closures for project ID ${projectId} from: ${API_URL}/project/${projectId}/all`);
-    const response = await axios.get(`${API_URL}/project/${projectId}/all`);
+   // console.log(`Fetching all project closures for project ID ${projectId} from: ${API_URL}/project/${projectId}/all`);
+    //const response = await axios.get(`${API_URL}/project/${projectId}/all`);
+    const response = await axiosInstance.get(`api/ProjectClosure/project/${projectId}/all`);
     console.log(`Project closures for project ID ${projectId} fetched successfully:`, response.data);
 
     // If the response is empty or not an array, return an empty array
@@ -332,25 +284,25 @@ export const getAllProjectClosuresByProjectId = async (projectId: number): Promi
     console.error(`Error fetching all project closures for project ID ${projectId}:`, error);
 
     // Enhanced error logging
-    if (axios.isAxiosError(error)) {
-      if (error.response) {
-        console.error('Server responded with error:', {
-          status: error.response.status,
-          data: error.response.data,
-          url: `${API_URL}/project/${projectId}/all`
-        });
+    // if (axios.isAxiosError(error)) {
+    //   if (error.response) {
+    //     console.error('Server responded with error:', {
+    //       status: error.response.status,
+    //       data: error.response.data,
+    //       url: `${API_URL}/project/${projectId}/all`
+    //     });
 
-        // If the project doesn't exist, return an empty array instead of throwing
-        if (error.response.status === 404) {
-          console.warn(`Project with ID ${projectId} not found. Returning empty array.`);
-          return [];
-        }
-      } else if (error.request) {
-        console.error('No response received from server');
-      } else {
-        console.error('Error setting up request:', error.message);
-      }
-    }
+    //     // If the project doesn't exist, return an empty array instead of throwing
+    //     if (error.response.status === 404) {
+    //       console.warn(`Project with ID ${projectId} not found. Returning empty array.`);
+    //       return [];
+    //     }
+    //   } else if (error.request) {
+    //     console.error('No response received from server');
+    //   } else {
+    //     console.error('Error setting up request:', error.message);
+    //   }
+    // }
 
     throw error;
   }
@@ -491,55 +443,22 @@ export const updateProjectClosure = async (id: number, projectClosure: ProjectCl
       };
 
       console.log('Final data being sent to API for update:', JSON.stringify(dataToSend, null, 2));
-      console.log(`Sending PUT request to ${API_URL}/${id}`);
+      //console.log(`Sending PUT request to ${API_URL}/${id}`);
 
-      const response = await axios.put(`${API_URL}/${id}`, dataToSend, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
+      // const response = await axios.put(`${API_URL}/${id}`, dataToSend, {
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   }
+      // });
+          
+      const response= await axiosInstance.put(`api/ProjectClosure/${id}`,dataToSend)
       console.log('Update response:', response.status, response.data);
 
       if (response.status !== 200) {
         console.warn(`Unexpected response status: ${response.status}`);
       }
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        const status = error.response.status;
-        const errorData = error.response.data;
-
-        console.error('Full error response:', error.response);
-        console.error('Error response data:', JSON.stringify(errorData, null, 2));
-        console.error('Error response status:', status);
-
-        // Handle specific error responses
-        if (status === 400) {
-          // Extract the error message
-          const errorMessage = errorData.message || 'Invalid request';
-          console.error('Server validation error:', errorMessage);
-
-          // Check for specific error types
-          if (errorMessage.includes('Project with ID') && errorMessage.includes('does not exist')) {
-            throw new Error(`The project ID ${projectIdAsNumber} does not exist in the database. Please select a valid project.`);
-          } else if (errorMessage.includes('Invalid ProjectId')) {
-            throw new Error(`Invalid project ID: ${projectIdAsNumber}. Please select a valid project.`);
-          } else {
-            // Log more details about the request that failed
-            console.error('Request that failed:', {
-              url: `${API_URL}/${id}`,
-              method: 'PUT',
-              data: formattedData
-            });
-            throw new Error(`${errorMessage}. Please check the console for more details.`);
-          }
-        } else if (status === 404) {
-          throw new Error(`Project closure with ID ${id} not found.`);
-        } else {
-          console.error('Server error response:', errorData);
-          throw new Error(errorData.message || `Error updating project closure with ID ${id}`);
-        }
-      }
+      
       console.error('Non-Axios error:', error);
       throw error;
     }
@@ -568,7 +487,8 @@ export const deleteProjectClosure = async (id: number): Promise<void> => {
       while (retries > 0 && !success) {
         try {
           console.log(`Delete attempt ${4 - retries} for ID ${id}`);
-          const response = await axios.delete(`${API_URL}/${id}`);
+         // const response = await axios.delete(`${API_URL}/${id}`);
+          const response = await axiosInstance.delete(`ProjectClosure/${id}`);
           console.log(`Delete response status: ${response.status}`);
           console.log(`Delete response data:`, response.data);
 
@@ -580,10 +500,10 @@ export const deleteProjectClosure = async (id: number): Promise<void> => {
           retries--;
 
           // If this is a 404 error, treat it as success for any ID (not just 0)
-          if (axios.isAxiosError(error) && error.response?.status === 404) {
-            console.log(`Project closure with ID ${id} not found, treating as success`);
-            return; // Return successfully even though the item wasn't found
-          }
+          // if (axios.isAxiosError(error) && error.response?.status === 404) {
+          //   console.log(`Project closure with ID ${id} not found, treating as success`);
+          //   return; // Return successfully even though the item wasn't found
+          // }
 
           // Wait a bit before retrying
           if (retries > 0) {
@@ -600,19 +520,19 @@ export const deleteProjectClosure = async (id: number): Promise<void> => {
       }
     } catch (axiosError) {
       // Handle specific error cases
-      if (axios.isAxiosError(axiosError)) {
-        if (axiosError.response?.status === 404) {
-          // Not found - treat as success since the item doesn't exist anymore
-          console.warn(`Project closure with ID ${id} not found, but continuing as if deleted`);
-          return; // Return successfully even though the item wasn't found
-        }
+      // if (axios.isAxiosError(axiosError)) {
+      //   if (axiosError.response?.status === 404) {
+      //     // Not found - treat as success since the item doesn't exist anymore
+      //     console.warn(`Project closure with ID ${id} not found, but continuing as if deleted`);
+      //     return; // Return successfully even though the item wasn't found
+      //   }
 
-        // For other status codes, provide detailed error information
-        if (axiosError.response) {
-          console.error('Error response status:', axiosError.response.status);
-          console.error('Error response data:', axiosError.response.data);
-        }
-      }
+      //   // For other status codes, provide detailed error information
+      //   if (axiosError.response) {
+      //     console.error('Error response status:', axiosError.response.status);
+      //     console.error('Error response data:', axiosError.response.data);
+      //   }
+      // }
 
       // Re-throw for other errors
       throw axiosError;
@@ -621,34 +541,34 @@ export const deleteProjectClosure = async (id: number): Promise<void> => {
     console.error(`Error deleting project closure with ID ${id}:`, error);
 
     // Handle specific error responses from the API
-    if (axios.isAxiosError(error)) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        const status = error.response.status;
-        const errorData = error.response.data;
+    // if (axios.isAxiosError(error)) {
+    //   if (error.response) {
+    //     // The request was made and the server responded with a status code
+    //     // that falls out of the range of 2xx
+    //     const status = error.response.status;
+    //     const errorData = error.response.data;
 
-        console.error('Full error response:', error.response);
-        console.error('Error response data:', JSON.stringify(errorData, null, 2));
-        console.error('Error response status:', status);
+    //     console.error('Full error response:', error.response);
+    //     console.error('Error response data:', JSON.stringify(errorData, null, 2));
+    //     console.error('Error response status:', status);
 
-        if (status === 400) {
-          // Bad request - invalid ID
-          throw new Error(errorData.message || `Invalid project closure ID: ${id}`);
-        } else if (status === 404) {
-          // Not found - but we'll treat this as a success since the item doesn't exist anymore
-          console.warn(`Project closure with ID ${id} not found, but continuing as if deleted`);
-          return; // Return successfully even though the item wasn't found
-        } else {
-          // Other server errors
-          throw new Error(errorData.message || `Server error while deleting project closure with ID ${id}`);
-        }
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('No response received from server');
-        throw new Error('No response received from server. Please check your network connection.');
-      }
-    }
+    //     if (status === 400) {
+    //       // Bad request - invalid ID
+    //       throw new Error(errorData.message || `Invalid project closure ID: ${id}`);
+    //     } else if (status === 404) {
+    //       // Not found - but we'll treat this as a success since the item doesn't exist anymore
+    //       console.warn(`Project closure with ID ${id} not found, but continuing as if deleted`);
+    //       return; // Return successfully even though the item wasn't found
+    //     } else {
+    //       // Other server errors
+    //       throw new Error(errorData.message || `Server error while deleting project closure with ID ${id}`);
+    //     }
+    //   } else if (error.request) {
+    //     // The request was made but no response was received
+    //     console.error('No response received from server');
+    //     throw new Error('No response received from server. Please check your network connection.');
+    //   }
+    // }
 
     // For non-Axios errors or unhandled cases
     throw error;
