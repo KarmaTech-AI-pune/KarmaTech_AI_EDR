@@ -7,7 +7,6 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import SendIcon from '@mui/icons-material/Send';
 import { ProjectTrackingWorkflow } from '../../common/ProjectTrackingWorkflow';
 import { projectManagementAppContext } from '../../../App';
 import { TaskType } from '../../../types/wbs';
@@ -31,10 +30,11 @@ interface WBSHeaderProps {
   formType?: TaskType;
 }
 
-interface WBSHeaderStatus {
-  id: number;
-  status: string;
-}
+// Removed unused interface
+// interface WBSHeaderStatus {
+//   id: number;
+//   status: string;
+// }
 
 const WBSHeader: React.FC<WBSHeaderProps> = ({
   title,

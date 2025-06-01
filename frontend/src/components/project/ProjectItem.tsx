@@ -212,10 +212,10 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">
-                <strong>Client:</strong> {project.clientName} ({project.typeOfClient})
+                <strong>Client:</strong> {project.clientName} {project.typeOfClient ? `(${project.typeOfClient})` : ''}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Office:</strong> {project.office} ({project.region})
+                <strong>Office:</strong> {project.office} {project.region ? `(${project.region})` : ''}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -223,7 +223,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
                 <strong>Type:</strong> {project.typeOfJob} | <strong>Sector:</strong> {project.sector}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Cost:</strong> {project.currency} {project.estimatedCost.toLocaleString()} ({project.feeType})
+                <strong>Cost:</strong> {project.currency} {project.estimatedCost.toLocaleString()} {project.feeType ? `(${project.feeType})` : ''}
               </Typography>
             </Grid>
           </Grid>

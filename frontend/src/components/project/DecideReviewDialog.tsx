@@ -1,23 +1,21 @@
-import React, { useState, useContext } from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    TextField,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
+import React, { useState} from 'react';
+import { 
+    Dialog, 
+    DialogTitle, 
+    DialogContent, 
+    DialogActions, 
+    Button, 
+    TextField, 
+    FormControl, 
+    InputLabel, 
+    Select, 
+    MenuItem, 
     CircularProgress,
     Typography,
     RadioGroup,
     FormControlLabel,
     Radio,
-    Box
 } from '@mui/material';
-import { projectManagementAppContext } from '../../App';
 import { pmWorkflowApi } from '../../api/pmWorkflowApi';
 import * as userApi from '../../services/userApi';
 
@@ -42,8 +40,8 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
     const [rmrdUsers, setRmrdUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const context = useContext(projectManagementAppContext);
 
+    
     React.useEffect(() => {
         if (open && decision === 'approve') {
             loadRMRDUsers();
@@ -54,21 +52,12 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
         setLoading(true);
         try {
             // Get users with RM or RD role
+            // Fetch users with each role separately and combine them
             const rmUsers = await userApi.getUsersByRole('RegionalManager');
             const rdUsers = await userApi.getUsersByRole('RegionalDirector');
-
-            // Combine the users from both roles, avoiding duplicates
-            const combinedUsers = [...rmUsers];
-
-            // Add RD users that aren't already in the combined list
-            rdUsers.forEach(rdUser => {
-                if (!combinedUsers.some(user => user.id === rdUser.id)) {
-                    combinedUsers.push(rdUser);
-                }
-            });
-
-            setRmrdUsers(combinedUsers);
-
+            const users = [...rmUsers, ...rdUsers];
+            setRmrdUsers(users);
+            
             // If there's only one RM/RD, select them automatically
             if (combinedUsers.length === 1) {
                 setAssignedToId(combinedUsers[0].id);

@@ -199,6 +199,12 @@ describe("OpportunityForm Component", () => {
     setCanApproveBD: vi.fn(),
     canSubmitForApproval: false,
     setCanSubmitForApproval: vi.fn(),
+    canProjectSubmitForReview: false,
+    setProjectCanSubmitForReview: vi.fn(),
+    canProjectSubmitForApproval: false,
+    setProjectCanSubmitForApproval: vi.fn(),
+    canProjectCanApprove: false,
+    setProjectCanApprove: vi.fn(),
   };
 
   // Setup before each test

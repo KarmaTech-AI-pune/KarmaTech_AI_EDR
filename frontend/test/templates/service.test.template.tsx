@@ -1,4 +1,4 @@
-import { ServiceNamePlaceholder } from '../../services/ServiceNamePlaceholder';
+import { ServiceNamePlaceholder } from '../../src/services/ServiceNamePlaceholder';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 

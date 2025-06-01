@@ -47,7 +47,7 @@ namespace NJS.Repositories.Repositories
             // Check if we need to reset the identity seed before adding a new entry
             await ResetIdentitySeedAsync();
 
-            checkReview.CreatedAt = DateTime.UtcNow;
+            checkReview.CreatedAt = DateTime.Now;
 
             _context.CheckReviews.Add(checkReview);
             await _context.SaveChangesAsync();
@@ -65,7 +65,7 @@ namespace NJS.Repositories.Repositories
 
             // Update the entity
             _context.Entry(existingReview).CurrentValues.SetValues(checkReview);
-            existingReview.UpdatedAt = DateTime.UtcNow;
+            existingReview.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
         }

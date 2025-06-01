@@ -35,7 +35,7 @@ namespace NJS.Repositories.Repositories
 
         public async Task<Settings> AddAsync(Settings settings)
         {
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             //settings.CreatedAt = now;
             //settings.UpdatedAt = now;
             

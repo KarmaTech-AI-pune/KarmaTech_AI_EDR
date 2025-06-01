@@ -21,8 +21,8 @@ namespace NJS.Repositories.Repositories
         public async Task<OpportunityTracking> AddAsync(OpportunityTracking opportunityTracking)
         {
             // Set audit fields
-            opportunityTracking.CreatedAt = DateTime.UtcNow;
-            opportunityTracking.UpdatedAt = DateTime.UtcNow;
+            opportunityTracking.CreatedAt = DateTime.Now;
+            opportunityTracking.UpdatedAt = DateTime.Now;
 
             _context.OpportunityTrackings.Add(opportunityTracking);
             await _context.SaveChangesAsync();
@@ -53,7 +53,7 @@ namespace NJS.Repositories.Repositories
             var existingOpportunity = await GetByIdAsync(opportunityTracking.Id);
 
             // Update audit fields
-            opportunityTracking.UpdatedAt = DateTime.UtcNow;
+            opportunityTracking.UpdatedAt = DateTime.Now;
 
             // Update all properties
             _context.Entry(existingOpportunity).CurrentValues.SetValues(opportunityTracking);

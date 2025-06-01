@@ -47,6 +47,8 @@ namespace NJS.Domain.Database
         public DbSet<JobStartForm> JobStartForms { get; set; }
         public DbSet<JobStartFormSelection> JobStartFormSelections { get; set; } // Add DbSet for Selections
         public DbSet<JobStartFormResource> JobStartFormResources { get; set; } // Add DbSet for Resources
+        public DbSet<JobStartFormHeader> JobStartFormHeaders { get; set; }
+        public DbSet<JobStartFormHistory> JobStartFormHistories { get; set; }
         public DbSet<InputRegister> InputRegisters { get; set; }
         public DbSet<CorrespondenceInward> CorrespondenceInwards { get; set; }
         public DbSet<CorrespondenceOutward> CorrespondenceOutwards { get; set; }
@@ -179,7 +181,7 @@ namespace NJS.Domain.Database
                 .WithMany(p => p.WBSHistories)
                 .HasForeignKey(ph => ph.WBSTaskMonthlyHourHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
-           
+
             modelBuilder.Entity<WBSHistory>()
                 .HasOne(ph => ph.ActionUser)
                 .WithMany().HasForeignKey(ph => ph.ActionBy);
@@ -634,6 +636,73 @@ namespace NJS.Domain.Database
                 .WithMany(h => h.MonthlyHours)
                 .HasForeignKey(m => m.WBSTaskMonthlyHourHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure JobStartFormHeader entity
+            modelBuilder.Entity<JobStartFormHeader>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Create indexes for faster lookups
+                entity.HasIndex(e => e.FormId);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.StatusId);
+
+                // Configure relationship with JobStartForm
+                entity.HasOne(h => h.JobStartForm)
+                      .WithOne(f => f.Header)
+                      .HasForeignKey<JobStartFormHeader>(h => h.FormId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure relationship with Project
+                entity.HasOne(h => h.Project)
+                      .WithMany()
+                      .HasForeignKey(h => h.ProjectId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure relationship with PMWorkflowStatus
+                entity.HasOne(h => h.Status)
+                      .WithMany()
+                      .HasForeignKey(h => h.StatusId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configure JobStartFormHistory entity
+            modelBuilder.Entity<JobStartFormHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Action).IsRequired();
+                entity.Property(e => e.Comments).IsRequired(false);
+
+                // Create indexes for faster lookups
+                entity.HasIndex(e => e.JobStartFormHeaderId);
+                entity.HasIndex(e => e.StatusId);
+                entity.HasIndex(e => e.ActionBy);
+
+                // Configure relationship with JobStartFormHeader
+                entity.HasOne(h => h.JobStartFormHeader)
+                      .WithMany(h => h.JobStartFormHistories)
+                      .HasForeignKey(h => h.JobStartFormHeaderId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure relationship with PMWorkflowStatus
+                entity.HasOne(h => h.Status)
+                      .WithMany()
+                      .HasForeignKey(h => h.StatusId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure relationship with User (ActionBy)
+                entity.HasOne(h => h.ActionUser)
+                      .WithMany()
+                      .HasForeignKey(h => h.ActionBy)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure relationship with User (AssignedTo)
+                entity.HasOne(h => h.AssignedTo)
+                      .WithMany()
+                      .HasForeignKey(h => h.AssignedToId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+            });
             // Removed ProjectClosureComment entity configuration to fix build issues
             /*
             modelBuilder.Entity<ProjectClosureComment>(entity =>

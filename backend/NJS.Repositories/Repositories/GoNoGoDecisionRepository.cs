@@ -134,7 +134,7 @@ namespace NJS.Repositories.Repositories
                 throw new Exception("GoNoGo decision header not found");
 
             version.VersionNumber = (header.Versions?.Count() ?? 0) + 1;
-            version.CreatedAt = DateTime.UtcNow;
+            version.CreatedAt = DateTime.Now;
             version.Status = header.Versions?.Any() != true
                 ? GoNoGoVersionStatus.BDM_PENDING
                 : GetNextVersionStatus(header.VersionStatus.Value);
@@ -190,7 +190,7 @@ namespace NJS.Repositories.Repositories
                 throw new Exception("Header not found");
 
             version.ApprovedBy = approver;
-            version.ApprovedAt = DateTime.UtcNow;
+            version.ApprovedAt = DateTime.Now;
             version.Comments = comments;
 
             var nextStatus = GetNextVersionStatus(version.Status);

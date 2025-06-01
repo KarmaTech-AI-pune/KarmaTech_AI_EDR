@@ -1,19 +1,18 @@
-import React, { useState, useEffect, useContext } from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    TextField,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
+import React, { useState, useEffect } from 'react';
+import { 
+    Dialog, 
+    DialogTitle, 
+    DialogContent, 
+    DialogActions, 
+    Button, 
+    TextField, 
+    FormControl, 
+    InputLabel, 
+    Select, 
+    MenuItem, 
     CircularProgress,
     Typography
 } from '@mui/material';
-import { projectManagementAppContext } from '../../App';
 import { pmWorkflowApi } from '../../api/pmWorkflowApi';
 import * as userApi from '../../services/userApi';
 
@@ -37,8 +36,8 @@ const SendForReviewDialog: React.FC<SendForReviewDialogProps> = ({
     const [spmUsers, setSpmUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const context = useContext(projectManagementAppContext);
 
+    
     useEffect(() => {
         if (open) {
             loadSPMUsers();

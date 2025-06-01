@@ -47,6 +47,9 @@ namespace NJS.Domain.Entities
         // Navigation property for related resources
         public virtual ICollection<JobStartFormResource> Resources { get; set; } = new List<JobStartFormResource>();
 
+        // Navigation property for header (workflow status)
+        public virtual JobStartFormHeader Header { get; set; }
+
         // Audit fields
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedDate { get; set; }
