@@ -35,6 +35,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import BusinessIcon from '@mui/icons-material/Business';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import { useParams, useNavigate } from 'react-router-dom';
 import { projectManagementAppContext } from '../App';
 import { OpportunityTracking } from '../models';
 import { OpportunityForm } from '../components/forms/OpportunityForm';
@@ -45,6 +46,7 @@ import { opportunityApi } from '../dummyapi/opportunityApi';
 import { HistoryWidget } from '../components/widgets/HistoryWidget';
 import { getOpportunityHistoriesByOpportunityId } from '../dummyapi/dummyOpportunityHistoryApi';
 import { OpportunityHistory } from '../models';
+import { useAppNavigation } from '../hooks/useAppNavigation';
 // import { getWorkflowStatusById } from '../dummyapi/database/dummyOpporunityWorkflow';
 
 const DRAWER_WIDTH = 280;
@@ -83,6 +85,8 @@ const InfoItem: React.FC<{ label: string; value: string | number | undefined }> 
 );
 
 export const BusinessDevelopmentDetails: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState('overview');
@@ -91,39 +95,45 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const [histories, setHistories] = useState<OpportunityHistory[]>([]);
   const [refreshed, setRefreshed] = useState(false);
+  const [opportunity, setOpportunity] = useState<OpportunityTracking | null>(null);
   const context = useContext(projectManagementAppContext);
   const { goNoGoDecisionStatus, goNoGoVersionNumber, setGoNoGoDecisionStatus, setGoNoGoVersionNumber } = context || {};
-  const opportunity = context?.selectedProject as OpportunityTracking;
+  const navigation = useAppNavigation();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        if (opportunity) {
-          const historyData = await getOpportunityHistoriesByOpportunityId(opportunity.id ?? 0);
-          setHistories(historyData);
-          // Reset the refresh trigger after data is fetched
-          setRefreshed(false);
+        if (id) {
+          const opportunityData = await opportunityApi.getById(parseInt(id));
+          if (opportunityData) {
+            setOpportunity(opportunityData as OpportunityTracking);
+            const historyData = await getOpportunityHistoriesByOpportunityId(parseInt(id));
+            setHistories(historyData);
+          } else {
+            setError('Opportunity not found');
+          }
+        } else {
+          setError('No opportunity ID provided');
         }
+        setRefreshed(false);
       } catch (err) {
-        console.error('Error fetching histories:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch histories');
+        console.error('Error fetching data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch data');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [opportunity, refreshed]); // Add refreshed to dependencies
+  }, [id, refreshed]);
 
   const handleOpportunityUpdate = async () => {
-    if (opportunity && context?.setSelectedProject) {
+    if (id) {
       try {
-        const updatedOpportunity = await opportunityApi.getById(opportunity.id || 0);
+        const updatedOpportunity = await opportunityApi.getById(parseInt(id));
         if (updatedOpportunity) {
-          // Use type assertion to match expected type
-          context.setSelectedProject(updatedOpportunity as OpportunityTracking); // Line 124
-          // Trigger refresh after opportunity is updated
+          setOpportunity(updatedOpportunity as OpportunityTracking);
           setRefreshed(true);
         }
       } catch (error) {
@@ -133,22 +143,15 @@ export const BusinessDevelopmentDetails: React.FC = () => {
   };
 
   const handleGoNoGoClick = () => {
-    if (context?.setScreenState) {
-      context.setScreenState("GoNoGo Form");
+    if (opportunity) {
+      navigation.navigateToGoNoGoForm(opportunity);
     }
   };
 
   const handleBidPrepClick = () => {
-    if (context?.setScreenState) {
-      context.setScreenState("Bid Preparation Form");
+    if (opportunity) {
+      navigation.navigateToBidPreparation(opportunity);
     }
-    
-    // Log the current state for debugging
-    console.log("Bid Preparation Form clicked", {
-      goNoGoDecisionStatus,
-      goNoGoVersionNumber,
-      isEnabled: goNoGoDecisionStatus === "GO" && goNoGoVersionNumber === 3
-    });
   };
 
   const handleSectionClick = (section: string) => {
@@ -323,7 +326,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
             );
           case 'goNoGo':
             return (
-              <GoNoGoForm 
+              <GoNoGoForm
                 onDecisionStatusChange={(status, versionNumber) => {
                   if (setGoNoGoDecisionStatus && setGoNoGoVersionNumber) {
                     setGoNoGoDecisionStatus(status);
@@ -428,7 +431,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                   <InfoItem label="Client Sector" value={opportunity.clientSector} />
                   <InfoItem label="Operation" value={opportunity.operation} />
                   <InfoItem label="Status" value={opportunity.status} />
-               
+
                 {/* <Chip
                   label={`Workflow: ${opportunity.currentHistory
                       ? Array.isArray(opportunity.currentHistory)
@@ -459,11 +462,11 @@ export const BusinessDevelopmentDetails: React.FC = () => {
               {/* Financial Info */}
               <Grid item xs={12} md={6}>
                 <InfoCard title="Financial Details" icon={<AttachMoneyIcon />}>
-                  <InfoItem 
-                    label="Capital Value" 
-                    value={formatCurrency(opportunity.capitalValue, opportunity.currency || 'USD')} 
+                  <InfoItem
+                    label="Capital Value"
+                    value={formatCurrency(opportunity.capitalValue, opportunity.currency || 'USD')}
                   />
-                  <Chip 
+                  <Chip
                     label={opportunity.currency || 'USD'}
                     size="small"
                     color="primary"
@@ -482,9 +485,9 @@ export const BusinessDevelopmentDetails: React.FC = () => {
 
               {/* History Widget */}
               <Grid item xs={12}>
-                <HistoryWidget 
-                  histories={histories} 
-                  title={`History - ${opportunity.workName}`} 
+                <HistoryWidget
+                  histories={histories}
+                  title={`History - ${opportunity.workName}`}
                 />
               </Grid>
             </Grid>
@@ -515,8 +518,8 @@ export const BusinessDevelopmentDetails: React.FC = () => {
 
   return (
     <>
-    <Box 
-      sx={{ 
+    <Box
+      sx={{
         display: 'flex',
         minHeight: `calc(100vh - ${NAVBAR_HEIGHT})`,
         pt: `${NAVBAR_HEIGHT}`,
@@ -602,7 +605,7 @@ export const BusinessDevelopmentDetails: React.FC = () => {
                         <ListItemIcon>
                           {item.icon}
                         </ListItemIcon>
-                        <ListItemText 
+                        <ListItemText
                           primary={item.title}
                           primaryTypographyProps={{
                             variant: 'body2',
