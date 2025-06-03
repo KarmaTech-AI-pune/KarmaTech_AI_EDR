@@ -1,19 +1,26 @@
-import { useContext } from 'react';
+import { useContext, lazy } from 'react';
 import { RouteObject, Outlet, useLocation, Navigate } from 'react-router-dom';
-import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails, AdminPanel } from '../pages';
-import { Dashboard } from '../components/Dashboard';
-import { ResourceManagement } from '../components/ResourceManagement';
-import GoNoGoForm from '../components/forms/GoNoGoForm';
-import BidPreparationForm from '../components/forms/BidPreparationForm';
+import LoginScreen from '../pages/LoginScreen';
 import ProtectedRoute from './ProtectedRoute.tsx';
 import { PermissionType } from '../models';
-import { Navbar } from '../components/navigation/Navbar';
 import { LoadingProvider } from '../context/LoadingContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType } from '../types';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import NotFound from '../components/NotFound';
+
+const Home = lazy(() => import('../pages/Home'));
+const NotFound = lazy(() => import('../components/NotFound'));
+const Dashboard = lazy(() => import('../components/Dashboard'));
+const Navbar = lazy(() => import('../components/navigation/Navbar'));
+const ProjectDetails = lazy(() => import('../pages/ProjectDetails'));
+const GoNoGoForm = lazy(() => import('../components/forms/GoNoGoForm'));
+const BidPreparationForm = lazy(() => import('../components/forms/BidPreparationForm'));
+const BusinessDevelopment = lazy(() => import('../pages/BusinessDevelopment'));
+const BusinessDevelopmentDetails = lazy(() => import('../pages/BusinessDevelopmentDetails'));
+const ProjectManagement = lazy(() => import('../pages/ProjectManagement'));
+const ResourceManagement = lazy(() => import('../components/ResourceManagement'));
+const AdminPanel = lazy(() => import('../pages/AdminPanel'));
 
 // Layout component that includes Navbar
 const Layout = () => {
@@ -141,3 +148,5 @@ export const routes: RouteObject[] = [
     ],
   },
 ];
+
+  export default routes;

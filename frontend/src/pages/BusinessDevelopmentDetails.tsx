@@ -645,3 +645,5 @@ export const BusinessDevelopmentDetails: React.FC = () => {
     </>
   );
 };
+
+export default BusinessDevelopmentDetails;

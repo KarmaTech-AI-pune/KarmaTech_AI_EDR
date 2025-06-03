@@ -179,3 +179,5 @@ export const LoginScreen: React.FC = () => {
         </Box>
     );
 };
+
+export default LoginScreen;
