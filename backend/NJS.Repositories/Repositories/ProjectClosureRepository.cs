@@ -27,6 +27,7 @@ namespace NJS.Repositories.Repositories
         public async Task<IEnumerable<ProjectClosure>> GetAll()
         {
             return await _repository.Query()
+                .Include(x => x.WorkflowHistories)
                 .ToListAsync()
                 .ConfigureAwait(false);
         }
@@ -34,6 +35,7 @@ namespace NJS.Repositories.Repositories
         public async Task<ProjectClosure> GetById(int id)
         {
             return await _repository.Query()
+                .Include(x => x.WorkflowHistories)
                 .FirstOrDefaultAsync(pc => pc.Id == id)
                 .ConfigureAwait(false);
         }
@@ -41,6 +43,7 @@ namespace NJS.Repositories.Repositories
         public async Task<ProjectClosure> GetByProjectId(int projectId)
         {
             return await _repository.Query()
+                .Include(x => x.WorkflowHistories)
                 .FirstOrDefaultAsync(pc => pc.ProjectId == projectId)
                 .ConfigureAwait(false);
         }
@@ -48,6 +51,7 @@ namespace NJS.Repositories.Repositories
         public async Task<IEnumerable<ProjectClosure>> GetAllByProjectId(int projectId)
         {
             return await _repository.Query()
+                .Include(x=>x.WorkflowHistories)
                 .Where(pc => pc.ProjectId == projectId)
                 .OrderByDescending(pc => pc.CreatedAt)
                 .ToListAsync()
@@ -111,7 +115,7 @@ namespace NJS.Repositories.Repositories
                     projectClosure.CreatedBy = existingClosure.CreatedBy;
 
                     // Set update metadata
-                    projectClosure.UpdatedAt = DateTime.UtcNow;
+                    projectClosure.UpdatedAt = DateTime.Now;
                     projectClosure.UpdatedBy = projectClosure.UpdatedBy ?? "System";
 
                     // Update the existing entry instead of creating a new one
@@ -123,10 +127,10 @@ namespace NJS.Repositories.Repositories
 
                 // If no existing closure, create a new one
                 // Explicitly set ID to 0 to ensure the database generates a new ID
-                projectClosure.Id = 0;
+               // projectClosure.Id = 0;
 
                 // Reset the identity seed to ensure we get the next available ID
-                await ResetIdentitySeedAsync();
+               // await ResetIdentitySeedAsync();
 
                 _logger.LogInformation("Creating new project closure entry");
 
@@ -138,7 +142,7 @@ namespace NJS.Repositories.Repositories
 
                 if (projectClosure.CreatedAt == default)
                 {
-                    projectClosure.CreatedAt = DateTime.UtcNow;
+                    projectClosure.CreatedAt = DateTime.Now;
                 }
 
                 // Log all the values being saved
@@ -177,12 +181,12 @@ namespace NJS.Repositories.Repositories
 
                 if (projectClosure.CreatedAt == default)
                 {
-                    projectClosure.CreatedAt = DateTime.UtcNow;
+                    projectClosure.CreatedAt = DateTime.Now;
                 }
 
                 if (projectClosure.UpdatedAt == null)
                 {
-                    projectClosure.UpdatedAt = DateTime.UtcNow;
+                    projectClosure.UpdatedAt = DateTime.Now;
                 }
 
                 // Explicitly detach any existing entity with the same ID

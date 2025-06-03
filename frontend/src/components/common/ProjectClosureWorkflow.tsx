@@ -2,13 +2,13 @@ import { Button, Chip } from '@mui/material';
 import { Send } from '@mui/icons-material';
 import { useState, useContext, useEffect } from 'react';
 import { projectManagementAppContext } from '../../App';
-import { ChangeControl } from '../../models';
+import { ProjectClosureRow } from '../../models/projectClosureRowModel';
 import {
   SendForReview,
   DecideReview,
   SendForApproval,
   DecideApproval
-} from '../dialogbox/changecontrol';
+} from '../dialogbox/projectclosure';
 
 interface WorkflowStatus {
   id: number;
@@ -16,7 +16,6 @@ interface WorkflowStatus {
   status: string;
 }
 
-// Type guard to check if workflow status is valid
 const isValidWorkflowStatus = (status: unknown): status is WorkflowStatus => {
   return status !== null &&
     typeof status === 'object' &&
@@ -24,7 +23,6 @@ const isValidWorkflowStatus = (status: unknown): status is WorkflowStatus => {
     typeof (status as Record<string, unknown>).status === 'string';
 };
 
-// Helper function to get workflow status by ID
 const getWorkflowStatusById = (statusId: number): WorkflowStatus | null => {
   const statuses: Record<number, WorkflowStatus> = {
     1: { id: 1, name: 'Initial', status: 'Initial' },
@@ -34,43 +32,46 @@ const getWorkflowStatusById = (statusId: number): WorkflowStatus | null => {
     5: { id: 5, name: 'Approval Changes', status: 'Approval Changes' },
     6: { id: 6, name: 'Approved', status: 'Approved' }
   };
-
   return statuses[statusId] || null;
 };
 
-type CCWProps = {
-  onChangeControlUpdated?: ((updatedChangeControl?: ChangeControl) => void) | undefined;
-  changeControl: ChangeControl & { statusId?: number };
+type PCWProps = {
+  onProjectClosureUpdated?: ((updatedClosure?: ProjectClosureRow) => void) | undefined;
+  projectClosure: ProjectClosureRow & { workflowStatusId?: number; id?: number; };
 }
 
-export const ChangeControlWorkflow: React.FC<CCWProps> = ({
-  onChangeControlUpdated,
-  changeControl
+export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
+  onProjectClosureUpdated,
+  projectClosure
 }) => {
   const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
   const [localStatusId, setLocalStatusId] = useState<number>(
-    changeControl.workflowHistory?.statusId || 1
+    projectClosure.workflowHistory?.statusId || 1
   );
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
-    setLocalStatusId(changeControl.workflowHistory?.statusId || 1);
-  }, [changeControl.workflowHistory?.statusId]);
+    ;
+    setLocalStatusId(projectClosure.workflowHistory?.statusId || 1);
+  }, [projectClosure.workflowHistory?.statusId,localStatusId]);
+
+
 
   const handleWorkflowClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setWorkflowDialogOpen(true);
   };
 
-  const handleWorkflowClose = async (success: boolean = false, updatedCC?: ChangeControl) => {
+  const handleWorkflowClose = async (success: boolean = false, updatedClosure?: ProjectClosureRow) => {
     setWorkflowDialogOpen(false);
     if (success) {
+      
       // Update status immediately for instant feedback
-      const nextStatusId = (changeControl.workflowStatusId || 1) + 1;
+      const nextStatusId = (projectClosure.workflowHistory?.statusId || 1);
       setLocalStatusId(nextStatusId);
-      if (onChangeControlUpdated) {
+      if (onProjectClosureUpdated) {
         try {
-          await onChangeControlUpdated(updatedCC);
+          onProjectClosureUpdated(updatedClosure);
         } catch (error) {
           console.error(error);
         }
@@ -102,7 +103,6 @@ export const ChangeControlWorkflow: React.FC<CCWProps> = ({
   };
 
   const canShowWorkflowButton = () => {
-    ;
     if (!context) return false;
 
     const workflowStatus = getWorkflowStatusById(localStatusId);
@@ -125,13 +125,12 @@ export const ChangeControlWorkflow: React.FC<CCWProps> = ({
         return false;
     }
   };
+  
 
   const getWorkflowDialog = () => {
     if (!context?.currentUser?.name) return null;
-
     const workflowStatus = getWorkflowStatusById(localStatusId);
     const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
- ;
     switch (status) {
       case "Initial":
       case "Review Changes":
@@ -140,10 +139,10 @@ export const ChangeControlWorkflow: React.FC<CCWProps> = ({
             open={workflowDialogOpen}
             onClose={() => handleWorkflowClose(false)}
             currentUser={context.currentUser.name}
-            changeControlId={changeControl.id}
-            projectId={changeControl.projectId}
+            projectClosureId={projectClosure.id || undefined}
+            projectId={projectClosure.projectId ? Number(projectClosure.projectId) : undefined}
             onSubmit={async () => await handleWorkflowClose(true)}
-            onReviewSent={onChangeControlUpdated}
+            onReviewSent={onProjectClosureUpdated}
           />
         );
       case "Approval Changes":
@@ -153,19 +152,19 @@ export const ChangeControlWorkflow: React.FC<CCWProps> = ({
             <DecideApproval
               open={workflowDialogOpen}
               onClose={() => handleWorkflowClose(false)}
-              changeControlId={changeControl.id}
-              projectId={changeControl.projectId}
+              projectClosureId={projectClosure.id}
+              projectId={projectClosure.projectId ? Number(projectClosure.projectId) : undefined}
               currentUser={context?.currentUser.name}
-              onSubmit={async () => await handleWorkflowClose(true)}
+              onSubmit={async () => await handleWorkflowClose(true)}             
             />
           );
-        } else if (context?.canSubmitForApproval) {
+        } else if (context?.canProjectSubmitForApproval) {
           return (
             <SendForApproval
               open={workflowDialogOpen}
               onClose={() => handleWorkflowClose(false)}
-              changeControlId={changeControl.id}
-              projectId={changeControl.projectId}
+              projectClosureId={projectClosure.id}
+              projectId={projectClosure.projectId ? Number(projectClosure.projectId) : undefined}
               currentUser={context?.currentUser.name}
               onSubmit={async () => await handleWorkflowClose(true)}
             />
@@ -177,20 +176,10 @@ export const ChangeControlWorkflow: React.FC<CCWProps> = ({
           <DecideReview
             open={workflowDialogOpen}
             onClose={() => handleWorkflowClose(false)}
-            changeControlId={changeControl.id}
-            projectId={changeControl.projectId}
+            projectClosureId={projectClosure.id}
+            projectId={projectClosure.projectId ? Number(projectClosure.projectId) : undefined}
             currentUser={context.currentUser.name}
-            onDecisionMade={async (updatedChangeControl) => {
-              // If we have the updated change control, use it
-              if (updatedChangeControl) {
-                await handleWorkflowClose(true, updatedChangeControl);
-              } else {
-                // Fallback to original behavior
-                const nextStatusId = (changeControl.workflowStatusId || 1) + 1;
-                setLocalStatusId(nextStatusId);
-                await handleWorkflowClose(true);
-              }
-            }}
+            onDecisionMade={async () => await handleWorkflowClose(true)}
           />
         );
       default:
@@ -218,7 +207,7 @@ export const ChangeControlWorkflow: React.FC<CCWProps> = ({
       )}
       {workflowDialogOpen && getWorkflowDialog()}
     </>
-  )
-}
+  );
+};
 
-export default ChangeControlWorkflow;
+export default ProjectClosureWorkflow;

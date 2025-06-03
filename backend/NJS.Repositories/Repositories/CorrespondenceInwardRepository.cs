@@ -45,7 +45,7 @@ namespace NJS.Repositories.Repositories
                 await ResetIdentitySeedAsync();
 
                 // Set creation timestamp
-                correspondenceInward.CreatedAt = DateTime.UtcNow;
+                correspondenceInward.CreatedAt = DateTime.Now;
 
                 // Don't set the ID - let the database assign it automatically
 
@@ -71,7 +71,7 @@ namespace NJS.Repositories.Repositories
         {
             if (correspondenceInward == null) throw new ArgumentNullException(nameof(correspondenceInward));
 
-            correspondenceInward.UpdatedAt = DateTime.UtcNow;
+            correspondenceInward.UpdatedAt = DateTime.Now;
 
             _context.Entry(correspondenceInward).State = EntityState.Modified;
             await _context.SaveChangesAsync();

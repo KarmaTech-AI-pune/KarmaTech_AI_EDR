@@ -165,15 +165,32 @@ namespace NJS.Application.Dtos
             set => LessonsLearned = JsonHelper.SerializeStringList(value);
         }
 
-        // Removed workflow fields
+        // Workflow fields
+        public int WorkflowStatusId { get; set; } = 1; // Default to Initial status
 
         // Audit fields
         public DateTime CreatedAt { get; set; }
         public string CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string UpdatedBy { get; set; }
+       
+        public ProjectClosureWorkflowHistoryDto? WorkflowHistory { get; set; }
 
         // Removed ProjectClosureComments to fix build issues
         // public List<ProjectClosureCommentDto> ProjectClosureComments { get; set; } = new List<ProjectClosureCommentDto>();
+    }
+
+    public class ProjectClosureWorkflowHistoryDto
+    {
+        public int Id { get; set; }
+        public int ProjectClosureId { get; set; }
+        public DateTime ActionDate { get; set; }
+        public string Comments { get; set; }
+        public string Status { get; set; }
+        public int StatusId { get; set; }
+        public string Action { get; set; }
+        public string ActionBy { get; set; }
+        public string AssignedToId { get; set; }
+
     }
 }

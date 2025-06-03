@@ -21,7 +21,7 @@ export const ROLES: Record<string, RoleDefinition> = {
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
       PermissionType.REVIEW_BUSINESS_DEVELOPMENT,
       PermissionType.APPROVE_BUSINESS_DEVELOPMENT,
-      PermissionType.SUBMIT_FOR_REVIEW,
+      PermissionType.REVIEW_BUSINESS_DEVELOPMENT,
       PermissionType.SUBMIT_FOR_APPROVAL,
 
       PermissionType.SYSTEM_ADMIN
@@ -76,7 +76,7 @@ export const ROLES: Record<string, RoleDefinition> = {
       PermissionType.EDIT_BUSINESS_DEVELOPMENT,
       PermissionType.DELETE_BUSINESS_DEVELOPMENT,
       PermissionType.VIEW_BUSINESS_DEVELOPMENT,
-      PermissionType.SUBMIT_FOR_REVIEW
+      PermissionType.REVIEW_BUSINESS_DEVELOPMENT
     ]
   },
   "Subject Matter Expert": {

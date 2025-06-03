@@ -14,25 +14,26 @@ import {
   Box,
   Backdrop
 } from '@mui/material';
+import { pmWorkflowApi } from '../../../api/pmWorkflowApi';
 import { projectApi } from '../../../services/projectApi';
-import { changeControlApi } from '../../../services/changeControlApi';
+//import { ProjectClosureRow } from '../../../models/projectClosureRowModel';
 
 interface DecideApprovalProps {
   open: boolean;
   onClose: () => void;
-  changeControlId?: number;
+  projectClosureId?: number;
   projectId?: number;
   currentUser: string;
-  onSubmit?: () => void;
+  onSubmit?: () => void; 
 }
 
 const DecideApproval: React.FC<DecideApprovalProps> = ({
   open,
   onClose,
-  changeControlId,
+  projectClosureId,
   projectId,
   currentUser,
-  onSubmit
+  onSubmit    
 }) => {
   const [decision, setDecision] = useState<string>('');
   const [comments, setComments] = useState<string>('');
@@ -60,8 +61,8 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       return;
     }
 
-    if (!changeControlId) {
-      setError('Change Control ID is missing');
+    if (!projectClosureId) {
+      setError('Project Closure ID is missing');
       return;
     }
 
@@ -70,28 +71,29 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       return;
     }
 
-    try {
-      let projectResponse = await projectApi.getById(projectId.toString());
-      if (decision === 'approve') {
-        // Approve and final the result
-        await changeControlApi.approvedByRDOrRM({
-          entityId: changeControlId,
-          entityType: 'ChangeControl',
-          action: "Approved",
-          comments: comments || `Approved by ${currentUser}`,
-          assignedToId: projectResponse.regionalManagerId
-        });
-      } else {
-        // Request changes sent back to SPM (not PM)
-        await changeControlApi.rejectByRDOrRM({
-          entityId: changeControlId,
-          entityType: 'ChangeControl',
-          action: "Approval Changes",
-          comments: comments || `Changes requested by ${currentUser}`,
-          assignedToId: projectResponse.seniorProjectManagerId, // Explicitly assign to SPM
-        });
-       
-      }
+    try {     
+         let projectResponse = await projectApi.getById(projectId.toString());
+         if (decision === 'approve') {
+           // Approve and final the result
+           await pmWorkflowApi.approvedByRDOrRM({
+             entityId: projectClosureId,
+             entityType: 'ProjectClosure',
+             action: "Approved",
+             comments: comments || `Approved by ${currentUser}`,
+             assignedToId: projectResponse.regionalManagerId
+           });          
+         } else {
+           // Request changes sent back to SPM
+           await pmWorkflowApi.rejectByRDOrRM({
+             entityId: projectClosureId,
+             entityType: 'ProjectClosure',
+             action: "Approval Changes",
+             comments: comments || `Changes requested by ${currentUser}`,
+             assignedToId: projectResponse.seniorProjectManagerId,
+             isApprovalChanges: true
+           });           
+          
+         }
 
       // Reset dialog state
       setDecision('');
@@ -100,7 +102,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
 
       // Call the callback
       if (onSubmit) {
-        await onSubmit();
+        onSubmit();
       }
 
       onClose();
@@ -151,7 +153,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       <DialogContent onClick={stopEventPropagation}>
         <Box sx={{ mt: 2 }}>
           <Typography variant="body1" gutterBottom>
-            Please review the change control and make a final decision:
+            Please review the project closure form and make a final decision:
           </Typography>
 
           <FormControl component="fieldset" sx={{ mt: 2 }} error={!!error && !decision}>

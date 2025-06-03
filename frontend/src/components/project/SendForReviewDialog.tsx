@@ -43,14 +43,14 @@ const SendForReviewDialog: React.FC<SendForReviewDialogProps> = ({
             loadSPMUsers();
         }
     }, [open]);
-    
+
     const loadSPMUsers = async () => {
         setLoading(true);
         try {
             // Get users with SPM role
             const users = await userApi.getUsersByRole('SeniorProjectManager');
             setSpmUsers(users);
-            
+
             // If there's only one SPM, select them automatically
             if (users.length === 1) {
                 setAssignedToId(users[0].id);
@@ -61,22 +61,23 @@ const SendForReviewDialog: React.FC<SendForReviewDialogProps> = ({
             setLoading(false);
         }
     };
-    
+
     const handleSubmit = async () => {
         if (!assignedToId) {
             alert('Please select a Senior Project Manager');
             return;
         }
-        
+
         setSubmitting(true);
         try {
             await pmWorkflowApi.sendToReview({
                 entityId,
                 entityType,
                 assignedToId,
-                comments
+                comments,
+                action: ''
             });
-            
+
             onWorkflowUpdated();
         } catch (error) {
             console.error('Error sending for review:', error);
@@ -85,13 +86,13 @@ const SendForReviewDialog: React.FC<SendForReviewDialogProps> = ({
             setSubmitting(false);
         }
     };
-    
+
     const handleClose = () => {
         setComments('');
         setAssignedToId('');
         onClose();
     };
-    
+
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
             <DialogTitle>Send for Review</DialogTitle>
@@ -103,7 +104,7 @@ const SendForReviewDialog: React.FC<SendForReviewDialogProps> = ({
                         <Typography variant="body1" gutterBottom>
                             Send this form to a Senior Project Manager for review.
                         </Typography>
-                        
+
                         <FormControl fullWidth margin="normal">
                             <InputLabel id="spm-select-label">Senior Project Manager</InputLabel>
                             <Select
@@ -120,7 +121,7 @@ const SendForReviewDialog: React.FC<SendForReviewDialogProps> = ({
                                 ))}
                             </Select>
                         </FormControl>
-                        
+
                         <TextField
                             label="Comments"
                             multiline
@@ -138,10 +139,10 @@ const SendForReviewDialog: React.FC<SendForReviewDialogProps> = ({
                 <Button onClick={handleClose} disabled={submitting}>
                     Cancel
                 </Button>
-                <Button 
-                    onClick={handleSubmit} 
-                    color="primary" 
-                    variant="contained" 
+                <Button
+                    onClick={handleSubmit}
+                    color="primary"
+                    variant="contained"
                     disabled={loading || submitting || !assignedToId}
                 >
                     {submitting ? <CircularProgress size={24} /> : 'Send for Review'}

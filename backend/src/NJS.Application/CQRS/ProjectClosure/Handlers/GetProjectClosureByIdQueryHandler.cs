@@ -2,11 +2,6 @@ using MediatR;
 using NJS.Application.CQRS.ProjectClosure.Queries;
 using NJS.Application.Dtos;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.ProjectClosure.Handlers
 {
@@ -23,9 +18,8 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
         {
             var projectClosure = await _projectClosureRepository.GetById(request.Id);
             if (projectClosure == null)
-                return null;
+                return null!;
 
-            // Create a new DTO and ensure all string fields are initialized with empty string if null
             var dto = new ProjectClosureDto
             {
                 Id = projectClosure.Id,
@@ -116,21 +110,18 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                 CreatedBy = projectClosure.CreatedBy ?? "",
                 UpdatedAt = projectClosure.UpdatedAt,
                 UpdatedBy = projectClosure.UpdatedBy ?? "",
-
-                // Removed comments mapping to fix build issues
-                /*
-                ProjectClosureComments = projectClosure.Comments?.Select(c => new ProjectClosureCommentDto
+                WorkflowHistory = projectClosure.WorkflowHistories.OrderByDescending(x => x.ActionDate).Select(wh => new ProjectClosureWorkflowHistoryDto
                 {
-                    Id = c.Id,
-                    ProjectClosureId = c.ProjectClosureId,
-                    Type = c.Type,
-                    Comment = c.Comment,
-                    CreatedAt = c.CreatedAt,
-                    CreatedBy = c.CreatedBy,
-                    UpdatedAt = c.UpdatedAt,
-                    UpdatedBy = c.UpdatedBy
-                }).ToList() ?? new List<ProjectClosureCommentDto>()
-                */
+                    Id = wh.Id,
+                    ProjectClosureId = wh.ProjectClosureId,
+                    StatusId = wh.StatusId,
+                    ActionBy = wh.ActionBy,
+                    ActionDate = wh.ActionDate,
+                    Comments = wh.Comments,
+                    Action = wh.Action,
+                    AssignedToId = wh.AssignedToId,                   
+                }).FirstOrDefault()
+                               
             };
 
             return dto;
