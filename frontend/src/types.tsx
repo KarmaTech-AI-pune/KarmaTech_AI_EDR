@@ -16,8 +16,6 @@ export interface UserWithRole extends User {
 }
 
 export interface projectManagementAppContextType {
-    screenState: string;
-    setScreenState: (state: string) => void;
     isAuthenticated: boolean;
     setIsAuthenticated: (auth: boolean) => void;
     user: User | null;

@@ -1,9 +1,9 @@
-import { 
+import {
   ListItem,
-  Typography, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
   DialogActions,
   Box,
   Grid,
@@ -22,11 +22,12 @@ import { OpportunityForm } from '../forms/OpportunityForm';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../models';
+import { useAppNavigation } from '../../hooks/useAppNavigation';
 
-export const OpportunityItem: React.FC<OpportunityItemProps> = ({ 
-  opportunity, 
-  onOpportunityDeleted, 
-  onOpportunityUpdated 
+export const OpportunityItem: React.FC<OpportunityItemProps> = ({
+  opportunity,
+  onOpportunityDeleted,
+  onOpportunityUpdated
 }) => {
   // Add state to track the current opportunity
   const [currentOpportunity, setCurrentOpportunity] = useState<OpportunityTracking>(opportunity);
@@ -54,6 +55,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
   const context = useContext(projectManagementAppContext);
+  const navigation = useAppNavigation();
 
   // Update current opportunity when the prop changes
   useEffect(() => {
@@ -63,7 +65,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   useEffect(() => {
     const checkUserPermissions = async () => {
       const user = await authApi.getCurrentUser();
-      
+
       if (!user) {
         setCanEditOpportunity(false);
         setCanDeleteOpportunity(false);
@@ -157,16 +159,13 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   };
 
   const handleOpportunityClick = () => {
-    if (context?.setScreenState && context?.setSelectedProject) {
-      context.setSelectedProject(currentOpportunity);
-      context.setScreenState("Business Development Details");
-    }
+    navigation.navigateToBusinessDevelopmentDetails(currentOpportunity);
   };
 
   return (
     <>
-      <ListItem 
-        sx={{ 
+      <ListItem
+        sx={{
           bgcolor: 'background.paper',
           border: '1px solid',
           borderColor: 'divider',
@@ -184,28 +183,28 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
       >
         <Box sx={{ width: '100%' }}>
           {/* Header Section */}
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'flex-start',
-            mb: 2 
+            mb: 2
           }}>
-            <Typography variant="h6" sx={{ 
+            <Typography variant="h6" sx={{
               color: 'primary.main',
               fontWeight: 600
             }}>
               {currentOpportunity.workName || 'Unnamed Opportunity'}
             </Typography>
-            
-            <Box sx={{ 
-              display: 'flex', 
+
+            <Box sx={{
+              display: 'flex',
               gap: 1
             }}>
               {canEditOpportunity && (
-                <Button 
+                <Button
                   size="small"
                   onClick={handleEditClick}
-                  sx={{ 
+                  sx={{
                     minWidth: 'auto',
                     p: 1,
                     color: 'primary.main'
@@ -215,10 +214,10 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                 </Button>
               )}
               {canDeleteOpportunity && (
-                <Button 
+                <Button
                   size="small"
                   onClick={handleDeleteClick}
-                  sx={{ 
+                  sx={{
                     minWidth: 'auto',
                     p: 1,
                     color: 'error.main'
@@ -241,10 +240,10 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
                 <Typography variant="body2" color="text.secondary">
                   <strong>Operation:</strong> {currentOpportunity.operation || 'Not specified'}
                 </Typography>
-                
+
               </Box>
             </Grid>
-            
+
             {/* Right Column */}
             <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -261,7 +260,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             </Grid>
           </Grid>
 
-          <Box sx={{ 
+          <Box sx={{
             mt: 1,
           }}>
               <Chip
@@ -281,7 +280,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             </Box>
 
           {/* Workflow Section */}
-          <Box sx={{ 
+          <Box sx={{
             mt: 1,
             display: 'flex',
             justifyContent: 'space-between',
@@ -292,7 +291,7 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             </Box>
 
             <Box>
-              <OpportunityTrackingWorkflow 
+              <OpportunityTrackingWorkflow
                 opportunity={currentOpportunity}
                 onOpportunityUpdated={handleOpportunityUpdate}
               />
@@ -312,14 +311,14 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
         </DialogActions>
       </Dialog>
 
-      <Dialog 
-        open={editDialogOpen} 
+      <Dialog
+        open={editDialogOpen}
         onClose={handleEditClose}
         maxWidth="md"
         fullWidth
       >
         <DialogContent>
-          <OpportunityForm 
+          <OpportunityForm
             onSubmit={handleEditSubmit}
             project={currentOpportunity}
           />

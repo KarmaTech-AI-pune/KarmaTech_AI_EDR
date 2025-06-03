@@ -20,6 +20,7 @@ import { Project, GoNoGoDecision, GoNoGoStatus} from '../../models';
 import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../models';
+import { useAppNavigation } from '../../hooks/useAppNavigation';
 
 interface GoNoGoWidgetProps {
   projectId: number;
@@ -43,16 +44,17 @@ const criteriaNames = {
 
 const scoreFields = Object.keys(criteriaNames);
 
-const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({ 
-  projectId, 
+const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
+  projectId,
   project
 }) => {
   const context = useContext(projectManagementAppContext);
+  const navigation = useAppNavigation();
   const [goNoGoDecision, setGoNoGoDecision] = useState<GoNoGoDecision | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isScoresExpanded, setIsScoresExpanded] = useState(true);
-  
+
   // Permission states
   const [canViewBusinessDevelopment, setCanViewBusinessDevelopment] = useState(false);
   const [canEditBusinessDevelopment, setCanEditBusinessDevelopment] = useState(false);
@@ -60,7 +62,7 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
   useEffect(() => {
     const checkUserPermissions = async () => {
       const user = await authApi.getCurrentUser();
-      
+
       if (!user) {
         setCanViewBusinessDevelopment(false);
         setCanEditBusinessDevelopment(false);
@@ -90,7 +92,7 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
 
       try {
         const data = await goNoGoApi.getByProjectId(projectId.toString());
-        
+
         if (data && Object.keys(data).length > 0) {
           setGoNoGoDecision(data);
         } else {
@@ -110,15 +112,14 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
   const navigateToForm = () => {
     if (!canEditBusinessDevelopment) return;
 
-    if (!context?.setCurrentGoNoGoDecision || !context?.setSelectedProject || !context?.setScreenState) {
-      console.error('One or more context methods are not available');
+    if (!context?.setCurrentGoNoGoDecision) {
+      console.error('setCurrentGoNoGoDecision method not available');
       return;
     }
 
     try {
       context.setCurrentGoNoGoDecision(goNoGoDecision);
-      context.setSelectedProject(project);
-      context.setScreenState("Go/No Go Decision");
+      navigation.navigateToGoNoGoForm(project);
     } catch (error) {
       console.error('Error during navigation:', error);
     }
@@ -127,28 +128,28 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
   const getDecisionStatusDetails = (status: GoNoGoStatus) => {
     switch (status) {
       case GoNoGoStatus.Green:
-        return { 
-          text: 'GO [Green]', 
-          color: '#4caf50', 
-          icon: <CheckCircleIcon color="success" /> 
+        return {
+          text: 'GO [Green]',
+          color: '#4caf50',
+          icon: <CheckCircleIcon color="success" />
         };
       case GoNoGoStatus.Amber:
-        return { 
-          text: 'GO [Amber]', 
-          color: '#ff9800', 
-          icon: <CheckCircleIcon color="warning" /> 
+        return {
+          text: 'GO [Amber]',
+          color: '#ff9800',
+          icon: <CheckCircleIcon color="warning" />
         };
       case GoNoGoStatus.Red:
-        return { 
-          text: 'NO GO [Red]', 
-          color: '#f44336', 
-          icon: <CancelIcon color="error" /> 
+        return {
+          text: 'NO GO [Red]',
+          color: '#f44336',
+          icon: <CancelIcon color="error" />
         };
       default:
-        return { 
-          text: 'NO GO [Red]', 
-          color: '#f44336', 
-          icon: <CancelIcon color="error" /> 
+        return {
+          text: 'NO GO [Red]',
+          color: '#f44336',
+          icon: <CancelIcon color="error" />
         };
     }
   };
@@ -157,7 +158,7 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
   // (rendering logic, etc.)
 
   // If project is in opportunity phase, only show the button
-  
+
 
   if (loading) {
     return <Box sx={{ p: 3 }}>Loading Go/No-Go decision data...</Box>;
@@ -250,14 +251,14 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <Typography variant="body1" sx={{ mr: 2 }}>
-                  Total Score: 
+                  Total Score:
                 </Typography>
-                <Chip 
-                  label={goNoGoDecision.totalScore} 
+                <Chip
+                  label={goNoGoDecision.totalScore}
                   color={
-                    goNoGoDecision.status === GoNoGoStatus.Green ? 'success' : 
+                    goNoGoDecision.status === GoNoGoStatus.Green ? 'success' :
                     goNoGoDecision.status === GoNoGoStatus.Amber ? 'warning' : 'error'
-                  } 
+                  }
                 />
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -265,12 +266,12 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
                   Decision Status:
                 </Typography>
                 {status.icon}
-                <Typography 
-                  variant="body1" 
-                  sx={{ 
-                    color: status.color, 
-                    fontWeight: 'bold', 
-                    ml: 1 
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: status.color,
+                    fontWeight: 'bold',
+                    ml: 1
                   }}
                 >
                   {status.text}
@@ -304,27 +305,27 @@ const GoNoGoWidget: React.FC<GoNoGoWidgetProps> = ({
             <Grid container spacing={2} sx={{ mt: 1 }}>
               {scoreFields.map((field) => {
                 const score = goNoGoDecision[field as keyof GoNoGoDecision] as number;
-                
+
                 return (
                   <Grid item xs={12} sm={6} md={4} key={field}>
-                    <Tooltip 
-                      title={`Score: ${score}`} 
+                    <Tooltip
+                      title={`Score: ${score}`}
                       placement="top"
                     >
-                      <Chip 
+                      <Chip
                         label={`${criteriaNames[field as keyof typeof criteriaNames]}: ${score}`}
                         color={
-                          score >= 8 ? 'success' : 
+                          score >= 8 ? 'success' :
                           score >= 5 ? 'warning' : 'error'
                         }
                         variant="outlined"
-                        sx={{ 
-                          width: '100%', 
+                        sx={{
+                          width: '100%',
                           justifyContent: 'space-between',
-                          '& .MuiChip-label': { 
-                            width: '100%', 
-                            display: 'flex', 
-                            justifyContent: 'space-between' 
+                          '& .MuiChip-label': {
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'space-between'
                           }
                         }}
                       />

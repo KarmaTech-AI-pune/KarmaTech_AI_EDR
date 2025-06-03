@@ -1,23 +1,15 @@
-import { ReactElement } from 'react';
 import { projectManagementAppContextType, UserWithRole  } from './types'
 import { User} from './models'
 import { Project, OpportunityTracking } from "./models"
 import { GoNoGoDecision } from "./models/goNoGoDecisionModel"
 import { createContext, useState, useEffect } from 'react'
-import { Home, ProjectDetails, LoginScreen, BusinessDevelopment, ProjectManagement, BusinessDevelopmentDetails, AdminPanel } from './pages'
-import { Navbar } from './components/navigation/Navbar'
-import { Dashboard } from './components/Dashboard'
-import { ResourceManagement } from './components/ResourceManagement'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { authApi } from './services/authApi'
 import { PermissionType } from './models'
-import GoNoGoForm from './components/forms/GoNoGoForm'
-import BidPreparationForm from './components/forms/BidPreparationForm'
-import { LoadingProvider } from './context/LoadingContext';
-import LoadingSpinner from './components/LoadingSpinner';
+import { routes } from './routes/RouteConfig';
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
 function App() {
-  const [screenState, setScreenState] = useState<string>("Login")
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -29,7 +21,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
-  // [canSubmitForReview, setCanSubmitForReview] = useState(false);
+  const [canSubmitForReview, setCanSubmitForReview] = useState(false);
   const [canReviewBD, setCanReviewBD] = useState(false);
   const [canApproveBD, setCanApproveBD] = useState(false);
   const [canSubmitForApproval, setCanSubmitForApproval] = useState(false);
@@ -37,18 +29,18 @@ function App() {
   const [canProjectSubmitForReview, setProjectCanSubmitForReview] = useState(false);
   const [canProjectSubmitForApproval, setProjectCanSubmitForApproval] = useState(false);
   const [canProjectCanApprove, setProjectCanApprove] = useState(false);
-  
+
 
   useEffect(() => {
     const checkUserPermissions = async () => {
       try {
         const user = await authApi.getCurrentUser();
-        
+
         if (!user) {
           setCurrentUser(null);
           setCanEditOpportunity(false);
           setCanDeleteOpportunity(false);
-          //setCanSubmitForReview(false);
+          setCanSubmitForReview(false);
           setCanReviewBD(false);
           setCanApproveBD(false);
           setProjectCanSubmitForReview(false)
@@ -56,7 +48,7 @@ function App() {
           setProjectCanApprove(false)
           return;
         }
- 
+
         setCurrentUser(user);
 
         if (user.roleDetails) {
@@ -66,9 +58,9 @@ function App() {
           setCanDeleteOpportunity(
             user.roleDetails.permissions.includes(PermissionType.DELETE_BUSINESS_DEVELOPMENT)
           );
-          //setCanSubmitForReview(
-            //user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
-          //);
+          setCanSubmitForReview(
+            user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
+          );
           setCanSubmitForApproval(
             user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL)
           );
@@ -78,7 +70,7 @@ function App() {
           setCanApproveBD(
             user.roleDetails.permissions.includes(PermissionType.APPROVE_BUSINESS_DEVELOPMENT)
           );
-          
+
           //project approval workflow permissions
           setProjectCanSubmitForReview(
             user.roleDetails.permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_REVIEW)
@@ -96,7 +88,7 @@ function App() {
         console.error('Error checking user permissions:', err as Error);
         setCanEditOpportunity(false);
         setCanDeleteOpportunity(false);
-       // setCanSubmitForReview(false);
+        setCanSubmitForReview(false);
         setCanReviewBD(false);
         setCanApproveBD(false);
         setProjectCanSubmitForReview(false)
@@ -104,7 +96,7 @@ function App() {
         setProjectCanApprove(false)
       }
     };
-    
+
     checkUserPermissions();
   }, [user]);
 
@@ -112,13 +104,12 @@ function App() {
     const checkAuth = async () => {
       try {
         const isValid = await authApi.checkAuth();
-        
+
         if (isValid) {
           const userData = await authApi.getCurrentUser();
           if (userData) {
             setUser(userData);
             setIsAuthenticated(true);
-            setScreenState("Home");
           } else {
             handleLogout();
           }
@@ -130,7 +121,7 @@ function App() {
         setIsLoading(false);
       }
     };
-    
+
     checkAuth();
   }, []);
 
@@ -138,98 +129,64 @@ function App() {
     authApi.logout();
     setUser(null);
     setIsAuthenticated(false);
-    setScreenState("Login");
     setSelectedProject(null);
     setCurrentGoNoGoDecision(null);
   };
 
-  const screenArray: { [key: string]: ReactElement } = {
-    "Login": <LoginScreen />,
-    "Home": <Home />,
-    "Dashboard": <Dashboard />,
-    "Business Development": <BusinessDevelopment />,
-    "Project Management": <ProjectManagement />,
-    "Resources": <ResourceManagement />,
-    "Project Details": <ProjectDetails />,
-    "Business Development Details": <BusinessDevelopmentDetails />,
-    "Bid Preparation Form" : <BidPreparationForm/>,
-    "GoNoGo Form" : selectedProject ? (
-      <GoNoGoForm 
-        onDecisionStatusChange={(status, versionNumber) => {
-          // Update the current decision based on the status
-          if (currentGoNoGoDecision) {
-            const updatedDecision = { ...currentGoNoGoDecision, status: status === "GO" ? 1 : 0 };
-            setCurrentGoNoGoDecision(updatedDecision);
-          }
-          
-          // Update the Go/No Go decision status and version number
-          setGoNoGoDecisionStatus(status);
-          setGoNoGoVersionNumber(versionNumber);
-          
-          // Navigate back to Business Development Details
-          setScreenState("Business Development Details");
-        }}
-      />
-    ) : <div>No project selected</div>,
-    "Admin Panel": <AdminPanel />,
-  };
-
   if (isLoading) {
     return (
-      <span style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
+      <span style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
       }}>
         Loading...
       </span>
     );
   }
 
+  const contextValue = {
+    isAuthenticated,
+    setIsAuthenticated,
+    user,
+    setUser,
+    handleLogout,
+    selectedProject,
+    setSelectedProject,
+    currentGoNoGoDecision,
+    setCurrentGoNoGoDecision,
+    goNoGoDecisionStatus,
+    setGoNoGoDecisionStatus,
+    goNoGoVersionNumber,
+    setGoNoGoVersionNumber,
+    currentUser,
+    setCurrentUser,
+    canEditOpportunity,
+    setCanEditOpportunity,
+    canDeleteOpportunity,
+    setCanDeleteOpportunity,
+    canSubmitForReview,
+    setCanSubmitForReview,
+    canReviewBD,
+    setCanReviewBD,
+    canApproveBD,
+    setCanApproveBD,
+    canSubmitForApproval,
+    setCanSubmitForApproval,
+    canProjectSubmitForReview,
+    setProjectCanSubmitForReview,
+    canProjectSubmitForApproval,
+    setProjectCanSubmitForApproval,
+    canProjectCanApprove,
+    setProjectCanApprove,
+  };
+
+  const router = createBrowserRouter(routes);
+
   return (
-    <projectManagementAppContext.Provider value={{
-      screenState, 
-      setScreenState, 
-      isAuthenticated, 
-      setIsAuthenticated,
-      user,
-      setUser,
-      handleLogout,
-      selectedProject,
-      setSelectedProject,
-      currentGoNoGoDecision,
-      setCurrentGoNoGoDecision,
-      goNoGoDecisionStatus,
-      setGoNoGoDecisionStatus,
-      goNoGoVersionNumber,
-      setGoNoGoVersionNumber,
-      currentUser,
-      setCurrentUser,
-      canEditOpportunity,
-      setCanEditOpportunity,
-      canDeleteOpportunity,
-      setCanDeleteOpportunity,
-      //canSubmitForReview,
-      //setCanSubmitForReview,
-      canReviewBD,
-      setCanReviewBD,
-      canApproveBD,
-      setCanApproveBD,
-      canSubmitForApproval,
-      setCanSubmitForApproval,
-      canProjectSubmitForReview, 
-      setProjectCanSubmitForReview,
-      canProjectSubmitForApproval, 
-      setProjectCanSubmitForApproval,
-      canProjectCanApprove, 
-      setProjectCanApprove,
-    }}>
-      <LoadingProvider>
-        <LoadingSpinner />
-        {isAuthenticated && <Navbar />}
-        {screenArray[screenState]}
-      </LoadingProvider>
+    <projectManagementAppContext.Provider value={contextValue}>
+      <RouterProvider router={router} />
     </projectManagementAppContext.Provider>
   );
 }

@@ -39,13 +39,13 @@ import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Project, OpportunityTracking } from '../models';
 import { projectManagementAppContext } from '../App';
-// import { getUserById } from '../dummyapi/database/dummyusers';
 import { getUserById } from '../services/userApi';
+import { projectApi } from '../services/projectApi';
 import {
   WorkBreakdownStructureForm,
   JobStartForm,
@@ -94,6 +94,8 @@ const InfoItem: React.FC<{ label: string; value: string | number | undefined }> 
 );
 
 export const ProjectDetails: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const context = useContext(projectManagementAppContext);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,30 +105,49 @@ export const ProjectDetails: React.FC = () => {
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const [expandedForm, setExpandedForm] = useState<string | null>(null);
   const [managerNames, setManagerNames] = useState<{[key: string]: string}>({});
+  const [project, setProject] = useState<Project | null>(null);
 
   useEffect(() => {
-    setIsLoading(false);
-    setError(null)
-  }, []);
+    const fetchProjectData = async () => {
+      try {
+        setIsLoading(true);
+        if (id) {
+          const projectData = await projectApi.getById(parseInt(id));
+          if (projectData) {
+            setProject(projectData as Project);
+          } else {
+            setError('Project not found');
+          }
+        } else {
+          setError('No project ID provided');
+        }
+      } catch (err) {
+        console.error('Error fetching project:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch project');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Fetch manager data when the component loads or when the selected project changes
+    fetchProjectData();
+  }, [id]);
+
+  // Fetch manager data when the project data is loaded
   useEffect(() => {
     const fetchManagerData = async () => {
-      if (!context?.selectedProject) return;
+      if (!project) return;
 
-      const project = context.selectedProject as Project;
       const managerIds = [
         project.projectManagerId,
         project.seniorProjectManagerId,
         project.regionalManagerId
-      ].filter(Boolean); // Filter out any undefined or empty IDs
+      ].filter(Boolean);
 
       if (managerIds.length === 0) return;
 
       try {
         const fetchedNames: {[key: string]: string} = {};
 
-        // Fetch each manager's data
         for (const id of managerIds) {
           try {
             const userData = await getUserById(id);
@@ -146,12 +167,28 @@ export const ProjectDetails: React.FC = () => {
     };
 
     fetchManagerData();
-  }, [context?.selectedProject]);
+  }, [project]);
 
-  if (!context) {
+  if (isLoading) {
+    return (
+      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (error) {
     return (
       <Container>
-        <Alert severity="error">Context not available</Alert>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
+
+  if (!project) {
+    return (
+      <Container>
+        <Alert severity="warning">No project selected</Alert>
       </Container>
     );
   }
@@ -287,30 +324,6 @@ export const ProjectDetails: React.FC = () => {
     },
   ];
 
-  if (!context.selectedProject) {
-    return (
-      <Container>
-        <Alert severity="warning">No project selected</Alert>
-      </Container>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-        <CircularProgress />
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container>
-        <Alert severity="error">{error}</Alert>
-      </Container>
-    );
-  }
-
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
   };
@@ -348,8 +361,6 @@ export const ProjectDetails: React.FC = () => {
       }
       return <FormsOverview onFormSelect={handleFormClick} />;
     }
-
-    const project = context.selectedProject as Project;
 
     switch (selectedSection) {
       case 'overview':
@@ -608,7 +619,7 @@ export const ProjectDetails: React.FC = () => {
       >
         <Box sx={{ p: 3 }}>
           <Typography variant="h4" gutterBottom>
-            {getProjectTitle(context.selectedProject)}
+            {getProjectTitle(project)}
           </Typography>
           {renderContent()}
         </Box>

@@ -2,10 +2,11 @@ import React, { useContext } from 'react'; // Import useContext
 import { Box, Typography, Paper, Link as MuiLink } from '@mui/material'; // Import MuiLink for styling
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'; // Import an icon
 import { projectManagementAppContext } from '../App'; // Import the context
+import { useAppNavigation } from '../hooks/useAppNavigation';
 
 export const AlertsPanel: React.FC = () => {
   const context = useContext(projectManagementAppContext); // Get context
-  const setScreenState = context?.setScreenState; // Get setScreenState function
+  const navigation = useAppNavigation();
 
   // Updated placeholder data with new titles
   const alerts = [
@@ -14,18 +15,14 @@ export const AlertsPanel: React.FC = () => {
   ];
 
   const handleAlertClick = () => {
-    if (setScreenState) {
-      setScreenState("Business Development"); // Navigate to Business Development page
-    } else {
-      console.error("setScreenState function not found in context");
-    }
+    navigation.navigateToBusinessDevelopment();
   };
 
   return (
-    <Paper 
+    <Paper
       elevation={2} // Slightly reduced elevation
-      sx={{ 
-        p: 2, 
+      sx={{
+        p: 2,
         backgroundColor: '#fffbe6', // Light yellow background
         color: '#5f4300', // Dark amber text color for contrast
         border: '1px solid #ffe58f', // Light amber border
@@ -46,14 +43,14 @@ export const AlertsPanel: React.FC = () => {
           const description = parts.length > 1 ? `:${parts.slice(1).join(':')}` : ''; // Join back in case of multiple colons
 
           return (
-            <MuiLink 
-              key={alert.id} 
+            <MuiLink
+              key={alert.id}
               component="button" // Render as a button for accessibility
-              variant="body2" 
+              variant="body2"
               onClick={handleAlertClick}
-              sx={{ 
+              sx={{
                 display: 'block', // Ensure links are block elements
-                mb: 1, 
+                mb: 1,
                 color: '#5f4300', // Ensure text color matches
                 textAlign: 'left', // Align text left
                 textDecoration: 'none', // Remove default underline
