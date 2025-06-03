@@ -1,175 +1,237 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  Component,
+} from "react";
 import {
-    Box,
-    Tab,
-    Tabs,
-    Paper,
-    Typography,
-    Container,
-    Alert,
-    Snackbar
-} from '@mui/material';
-import { FormWrapper } from '../FormWrapper';
-// import { TabContent, NavigationButtons } from './components';
-import { TabContent } from './TabContent';
-import { NavigationButtons } from './NavigationButtons';
-import { useFormState } from '../../../hooks/MontlyProgress/useFormState';
-import { getCurrentMonthYear, formatCurrency } from '../../../utils/MonthlyProgress/monthlyProgressUtils';
+  Box,
+  Tab,
+  Tabs,
+  Paper,
+  Typography,
+  Container,
+  Alert,
+  Snackbar,
+} from "@mui/material";
+import { FormWrapper } from "../FormWrapper";
+import { Form, FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  MonthlyProgressSchema,
+  MonthlyProgressSchemaType,
+} from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import {
+  FinancialDetailsTab,
+  ContractAndCostsTab,
+  BudgetAndScheduleTab,
+  ManpowerPlanningTab,
+  ProgressReviewDeliverables,
+  ChangeOrdersTab,
+  ActionsTab,
+} from "./index";
+import {
+  getCurrentMonthYear,
+  formatCurrency,
+} from "../../../utils/MonthlyProgress/monthlyProgressUtils";
+import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
+import FormHeader from "./FormHeader";
+import FormFooter from "./FormFooter";
+import RenderComponent from "./RenderComponent";
 
-// Constants
-const TABS = [
-    { id: 0, label: 'Financial Details' },
-    { id: 1, label: 'Contract & Costs' },
-    { id: 2, label: 'Budget & Schedule' },
-    { id: 3, label: 'Manpower Planning' },
-    { id: 4, label: 'Progress Review Deliverables' },
-    { id: 5, label: 'Change Orders' },
-    { id: 6, label: 'Actions' }
-] as const;
+export type tab = {
+  id: string | number;
+  label: string;
+  component: React.JSX.Element;
+  inputs: (keyof MonthlyProgressSchemaType)[];
+};
+
+const tabs = [
+  {
+    id: "1",
+    label: "Financial Details",
+    component: <FinancialDetailsTab />,
+    inputs: [
+      "net",
+      "serviceTax",
+      "feeTotal",
+      "odcs",
+      "staff",
+      "BudgetSubTotal",
+    ],
+  },
+  {
+    id: "2",
+    label: "Contract & Costs",
+    component: <ContractAndCostsTab />,
+    inputs: [
+      "lumpsum",
+      "timeAndExpense",
+      "percentage",
+      "actualOdcs",
+      "actualStaff",
+      "actualSubtotal",
+    ],
+  },
+  {
+    id: "3",
+    label: "Budget & Schedule",
+    component: <BudgetAndScheduleTab />,
+    inputs: [
+      "dateOfIssueWOLOI",
+      "completionDateAsPerContract",
+      "completionDateAsPerExtension",
+      "expectedCompletionDate",
+      "completeOnCosts",
+      "completeOnEV",
+      "spi",
+    ],
+  },
+  {
+    id: "4",
+    label: "Manpower Planning",
+    component: <ManpowerPlanningTab />,
+    inputs: ["manpowerPlanning", "manpowerTotal"],
+  },
+  {
+    id: "5",
+    label: "Progress Review Deliverables",
+    component: <ProgressReviewDeliverables />,
+    inputs: ["progressDeliverable"],
+  },
+  {
+    id: "6",
+    label: "Change Orders",
+    component: <ChangeOrdersTab />,
+    inputs: ["changeOrder"],
+  },
+  {
+    id: "7",
+    label: "Actions",
+    component: <ActionsTab />,
+    inputs: ["lastMonthActions", "currentMonthActions"],
+  },
+] satisfies tab[];
 
 const SAVE_DELAY = 1000;
 const SNACKBAR_DURATION = 3000;
 
 // Main component
 export const MonthlyProgressForm: React.FC = () => {
-    const [tabValue, setTabValue] = useState(0);
-    const { data: formData, isLoading, showSuccess, updateFormData, setLoading, setShowSuccess } = useFormState();
+  const form = useForm<MonthlyProgressSchemaType>({
+    resolver: zodResolver(MonthlyProgressSchema),
+    defaultValues: {
+      net: 0,
+      serviceTax: 0,
+      feeTotal: 0,
+      odcs: 0,
+      staff: 0,
+      BudgetSubTotal: 0,
+      lumpsum: false,
+      timeAndExpense: false,
+      percentage: 0,
+      actualOdcs: 0,
+      actualStaff: 0,
+      actualSubtotal: 0,
+      dateOfIssueWOLOI: new Date(),
+      completionDateAsPerContract: new Date(),
+      completionDateAsPerExtension: new Date(),
+      expectedCompletionDate: new Date(),
+      completeOnCosts: 0,
+      completeOnEV: 0,
+      spi: 0,
+      manpowerPlanning: [],
+      manpowerTotal: 0,
+      changeOrder: [],
+      lastMonthActions: [],
+      currentMonthActions: [],
+      progressDeliverable: [],
+    },
+    mode: "all",
+  });
 
-    // Use ref to prevent re-creating the date string on every render
-    const currentMonthYear = useRef(getCurrentMonthYear()).current;
 
-    // Memoized handlers
-    const handleTabChange = useCallback((_: React.SyntheticEvent, newValue: number) => {
-        setTabValue(newValue);
-    }, []);
+  // Use ref to prevent re-creating the date string on every render
+  const currentMonthYear = useRef(getCurrentMonthYear()).current;
 
-    const handlePrevious = useCallback(() => {
-        setTabValue(prev => Math.max(0, prev - 1));
-    }, []);
+  
 
-    const handleNext = useCallback(() => {
-        setTabValue(prev => Math.min(TABS.length - 1, prev + 1));
-    }, []);
+  const onSubmit = (data: MonthlyProgressSchemaType) => {
+    console.log(data);
+  };
 
-    const handleSave = useCallback(async () => {
-        setLoading(true);
-        try {
-            // Simulate API call - replace with actual API call
-            await new Promise(resolve => setTimeout(resolve, SAVE_DELAY));
-            setShowSuccess(true);
-        } catch (error) {
-            console.error('Error saving form:', error);
-            // Add error handling here
-        } finally {
-            setLoading(false);
-        }
-    }, [setLoading, setShowSuccess]);
+  const containerStyles = useMemo(
+    () => ({
+      width: "100%",
+      maxHeight: "calc(100vh - 200px)",
+      overflowY: "auto",
+      overflowX: "hidden",
+      pr: 1,
+      pb: 4,
+    }),
+    []
+  );
 
-    const handleSnackbarClose = useCallback(() => {
-        setShowSuccess(false);
-    }, [setShowSuccess]);
+  return (
+    <FormWrapper>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box sx={containerStyles}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: "1px solid #e0e0e0",
+              borderRadius: 1,
+            }}
+          >
+            <Typography
+              variant="h5"
+              gutterBottom
+              sx={{
+                color: "#1976d2",
+                fontWeight: 500,
+                mb: 3,
+              }}
+            >
+              PMD7. Monthly Progress Review - {currentMonthYear}
+            </Typography>
 
-    // Memoized styles
-    const tabsStyles = useMemo(() => ({
-        '& .MuiTab-root': {
-            textTransform: 'none',
-            fontWeight: 500,
-            color: '#666',
-            minWidth: 120,
-            '&.Mui-selected': {
-                color: '#1976d2'
-            }
-        },
-        '& .MuiTabs-indicator': {
-            backgroundColor: '#1976d2'
-        }
-    }), []);
-
-    const containerStyles = useMemo(() => ({
-        width: '100%',
-        maxHeight: 'calc(100vh - 200px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        pr: 1,
-        pb: 4
-    }), []);
-
-    return (
-        <FormWrapper>
-            <Container maxWidth="xl" sx={{ py: 3 }}>
-                <Box sx={containerStyles}>
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            p: 3,
-                            border: '1px solid #e0e0e0',
-                            borderRadius: 1
-                        }}
+            <Box>
+              <FormControlsProvider tabs={tabs}>
+                <FormProvider {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <Box
+                      sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}
                     >
-                        <Typography
-                            variant="h5"
-                            gutterBottom
-                            sx={{
-                                color: '#1976d2',
-                                fontWeight: 500,
-                                mb: 3
-                            }}
-                        >
-                            PMD7. Monthly Progress Review - {currentMonthYear}
-                        </Typography>
+                      <FormHeader tabs={tabs} />
+                    </Box>
 
-                        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                            <Tabs
-                                value={tabValue}
-                                onChange={handleTabChange}
-                                variant="scrollable"
-                                scrollButtons="auto"
-                                allowScrollButtonsMobile
-                                sx={tabsStyles}
-                            >
-                                {TABS.map(tab => (
-                                    <Tab
-                                        key={tab.id}
-                                        label={tab.label}
-                                        id={`tab-${tab.id}`}
-                                        aria-controls={`tabpanel-${tab.id}`}
-                                    />
-                                ))}
-                            </Tabs>
-                        </Box>
+                    <RenderComponent tabs={tabs} />
 
-                        <TabContent
-                            tabValue={tabValue}
-                            formData={formData}
-                            handleInputChange={updateFormData}
-                            formatCurrency={formatCurrency}
-                        />
+                    <FormFooter tabs={tabs} />
+                  </form>
+                </FormProvider>
+              </FormControlsProvider>
+            </Box>
+          </Paper>
 
-                        <NavigationButtons
-                            tabValue={tabValue}
-                            isLoading={isLoading}
-                            onPrevious={handlePrevious}
-                            onNext={handleNext}
-                            onSave={handleSave}
-                        />
-                    </Paper>
-
-                    <Snackbar
-                        open={showSuccess}
-                        autoHideDuration={SNACKBAR_DURATION}
-                        onClose={handleSnackbarClose}
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                    >
-                        <Alert
-                            severity="success"
-                            variant="filled"
-                            sx={{ backgroundColor: '#1976d2' }}
-                        >
-                            Review saved successfully!
-                        </Alert>
-                    </Snackbar>
-                </Box>
-            </Container>
-        </FormWrapper>
-    );
+          <Snackbar
+            // open={showSuccess}
+            autoHideDuration={SNACKBAR_DURATION}
+            // onClose={handleSnackbarClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          >
+            <Alert
+              severity="success"
+              variant="filled"
+              sx={{ backgroundColor: "#1976d2" }}
+            >
+              Review saved successfully!
+            </Alert>
+          </Snackbar>
+        </Box>
+      </Container>
+    </FormWrapper>
+  );
 };
