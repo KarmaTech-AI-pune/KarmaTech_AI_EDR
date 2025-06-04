@@ -16,8 +16,6 @@ export interface UserWithRole extends User {
 }
 
 export interface projectManagementAppContextType {
-    screenState: string;
-    setScreenState: (state: string) => void;
     isAuthenticated: boolean;
     setIsAuthenticated: (auth: boolean) => void;
     user: User | null;
@@ -37,8 +35,8 @@ export interface projectManagementAppContextType {
     setCanEditOpportunity: (can: boolean) => void;
     canDeleteOpportunity: boolean;
     setCanDeleteOpportunity: (can: boolean) => void;
-    canSubmitForReview: boolean;
-    setCanSubmitForReview: (can: boolean) => void;
+    //canSubmitForReview: boolean;
+    //setCanSubmitForReview: (can: boolean) => void;
     canReviewBD: boolean;
     setCanReviewBD: (can: boolean) => void;
     canApproveBD: boolean;

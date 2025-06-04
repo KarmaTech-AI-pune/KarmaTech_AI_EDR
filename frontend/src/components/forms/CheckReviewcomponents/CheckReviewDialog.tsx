@@ -17,7 +17,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  FormHelperText,
   SelectChangeEvent
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -61,6 +60,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
     activityName: '',
     objective: '',
     references: '',
+    documentNumber: '',
+    documentName: '',
     fileName: '',
     qualityIssues: '',
     completion: 'N',
@@ -71,14 +72,14 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
     checker: ''
   });
 
-  const [users, setUsers] = useState<User[]>([]);
+  const [_users, setUsers] = useState<User[]>([]);
   const context = useContext(projectManagementAppContext);
   const [activityOptions, setActivityOptions] = useState<string[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [loadingEmployees, setLoadingEmployees] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [employeesError, setEmployeesError] = useState<string | null>(null);
+  const [_loading, setLoading] = useState<boolean>(false);
+  const [_loadingEmployees, setLoadingEmployees] = useState<boolean>(false);
+  const [_error, setError] = useState<string | null>(null);
+  const [_employeesError, setEmployeesError] = useState<string | null>(null);
   const [activityToUserMap, setActivityToUserMap] = useState<Map<string, string>>(new Map());
 
   // Fetch WBS data and users when dialog opens
@@ -238,6 +239,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
         activityName: editData.activityName,
         objective: editData.objective,
         references: editData.references || '',
+        documentNumber: editData.documentNumber || '',
+        documentName: editData.documentName || '',
         fileName: editData.fileName || '',
         qualityIssues: editData.qualityIssues || '',
         completion: editData.completion,
@@ -253,6 +256,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
         activityName: '',
         objective: '',
         references: '',
+        documentNumber: '',
+        documentName: '',
         fileName: '',
         qualityIssues: '',
         completion: 'N',
@@ -271,6 +276,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
       activityName: '',
       objective: '',
       references: '',
+      documentNumber: '',
+      documentName: '',
       fileName: '',
       qualityIssues: '',
       completion: 'N',
@@ -406,6 +413,42 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
             </Grid>
           </Grid>
         </Box>
+
+        <Box sx={{ mb: 4 }}>
+          <Typography sx={sectionTitleStyle}>
+            Document Details
+          </Typography>
+          <Grid container spacing = {2}>
+            <Grid item xs={12} md={6}>
+              <TextField 
+              label="Document Number"
+              value={formData.documentNumber}
+              name='documentNumber'
+              onChange={handleTextFieldChange}
+              fullWidth
+              type="text"
+                inputProps={{ 
+                  inputMode: 'numeric', 
+                  pattern: '[0-9]*',
+                  onInput: (e: React.FormEvent<HTMLInputElement>) => {
+                    e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
+                  }
+                }}
+              sx={textFieldStyle}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Document Name"
+                value={formData.documentName}
+                name='documentName'
+                onChange={handleTextFieldChange}
+                fullWidth
+                sx={textFieldStyle}
+              />
+            </Grid>
+          </Grid>
+          </Box>
 
         <Box sx={{ mb: 4 }}>
           <Typography sx={sectionTitleStyle}>

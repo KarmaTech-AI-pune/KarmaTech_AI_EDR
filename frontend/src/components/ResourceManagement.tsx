@@ -47,3 +47,5 @@ export const ResourceManagement = () => {
     </Box>
   );
 };
+
+export default ResourceManagement;

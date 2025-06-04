@@ -5,7 +5,7 @@ export const changeControlApi = {
 
     sendToReview: async (command: any) => {
         try {
-            debugger;
+            ;
             const response = await axiosInstance.post(`api/PMWorkflow/sendtoreview`, command);
             return response.data;
         }
@@ -17,7 +17,7 @@ export const changeControlApi = {
 
     sendToApprovalBySPM: async (command: any) => {
         try {
-            debugger;
+            ;
             const response = await axiosInstance.post(`api/PMWorkflow/sendToApproval`, command);
             return response.data;
         }
@@ -29,7 +29,7 @@ export const changeControlApi = {
 
     rejectBySPM: async (command: any) => {
         try {
-            debugger;
+            ;
             const response = await axiosInstance.post(`api/PMWorkflow/requestChanges`, command);
             return response.data;
         }
@@ -42,7 +42,7 @@ export const changeControlApi = {
 
     approvedByRDOrRM: async (command: any) => {
         try {
-            debugger;
+            ;
             const response = await axiosInstance.post(`api/PMWorkflow/approve`, command);
             return response.data;
         }
@@ -54,7 +54,7 @@ export const changeControlApi = {
     
     rejectByRDOrRM: async (command: any) => {
         try {
-            debugger;
+            ;
             const response = await axiosInstance.post(`api/PMWorkflow/requestChanges`, command);
             return response.data;
         }

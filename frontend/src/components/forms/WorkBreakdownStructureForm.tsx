@@ -104,9 +104,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           totalCost: task.totalCost || 0,
           parentId: task.parentId,
           taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
-          // Map ResourceUnit to unit field
-          // Use optional chaining and nullish coalescing for safe access
-          unit: task.resourceUnit ?? ''
+          // For Manpower tasks, always set unit to 'month'; for ODC tasks, use resourceUnit or empty string
+          unit: isOdcTask ? (task.resourceUnit ?? '') : 'month'
         };
       });
 
@@ -426,7 +425,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       totalCost: 0,
       parentId: parentId || null,
       taskType: formType === 'manpower' ? TaskType.Manpower : TaskType.ODC, // Set taskType based on formType
-      unit: '' // Initialize unit field
+      unit: formType === 'manpower' ? 'month' : '' // Set 'month' as default for manpower, empty for ODC
     };
 
     // For ODC form, ensure odcHours and odc are initialized to 0
@@ -506,12 +505,15 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
     if (!row) return;
 
-    // Handle unit selection for both forms
+    // For manpower form, we don't allow changing the unit (it's always 'month')
+    if (formType === 'manpower') return;
+
+    // Handle unit selection for ODC form only
     setRowsFunc(prevRows => prevRows.map(r => {
       if (r.id === rowId) {
         return {
           ...r,
-          unit: unitValue // Store unit value for both form types
+          unit: unitValue
         };
       }
       return r;
@@ -767,6 +769,10 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
       // Update lastUpdateTime to trigger the useEffect to reload data
       setLastUpdateTime(Date.now()); // This will call loadWBSData again
+      
+      // Reload the WBS data to refresh the status
+      await loadWBSData(projectId);
+      
       // Toggle edit mode after successful save
       if (formType === 'manpower') {
         setIsManpowerEditing(!isManpowerEditing);
@@ -836,6 +842,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
            editMode={formType === 'manpower' ? isManpowerEditing : isOdcEditing} // Use form-specific state
            onEditModeToggle={() => formType === 'manpower' ? setIsManpowerEditing(!isManpowerEditing) : setIsOdcEditing(!isOdcEditing)}
            onAddMonth={addNewMonth}
+           formType={formType === 'manpower'? TaskType.Manpower: TaskType.ODC}          
          />
       </Paper>
 

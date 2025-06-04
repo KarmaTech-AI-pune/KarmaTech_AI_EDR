@@ -23,6 +23,17 @@ export interface ActionItem {
     priority?: 'H' | 'M' | 'L';
 }
 
+export interface DeliverableItem {
+    milestone: string;
+    dueDateContract: string;
+    dueDatePlanned: string;
+    achievedDate: string;
+    paymentDue: number | null;
+    invoiceDate: string;
+    paymentReceivedDate: string;
+    comments: string;
+}
+
 export interface MonthlyReviewModel {
     fees: {
         net: number | null;
@@ -83,6 +94,7 @@ export interface MonthlyReviewModel {
     };
     lastMonthActions: ActionItem[];
     currentMonthActions: ActionItem[];
+    deliverables: DeliverableItem[];
 }
 
 export const initialManpowerData: ManpowerWorkItem[] = [
@@ -256,6 +268,18 @@ export const initialFormState: MonthlyReviewModel = {
             date: "",
             comments: "",
             priority: "H"
+        }
+    ],
+    deliverables: [
+        {
+            milestone: "",
+            dueDateContract: "",
+            dueDatePlanned: "",
+            achievedDate: "",
+            paymentDue: null,
+            invoiceDate: "",
+            paymentReceivedDate: "",
+            comments: ""
         }
     ]
 };

@@ -14,7 +14,6 @@ import {
   Box,
   Backdrop
 } from '@mui/material';
-import { axiosInstance } from '../../../services/axiosConfig';
 import { projectApi } from '../../../services/projectApi';
 import { changeControlApi } from '../../../services/changeControlApi';
 
@@ -71,7 +70,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
       return;
     }
 
-    try {     
+    try {
       let projectResponse = await projectApi.getById(projectId.toString());
       if (decision === 'approve') {
         // Approve and final the result
@@ -83,36 +82,31 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
           assignedToId: projectResponse.regionalManagerId
         });
       } else {
-        // Request changes sent back to SPM
+        // Request changes sent back to SPM (not PM)
         await changeControlApi.rejectByRDOrRM({
           entityId: changeControlId,
           entityType: 'ChangeControl',
           action: "Approval Changes",
-          comments: comments || `Approved by ${currentUser}`,
-          assignedToId: projectResponse.seniorProjectManagerId,
+          comments: comments || `Changes requested by ${currentUser}`,
+          assignedToId: projectResponse.seniorProjectManagerId, // Explicitly assign to SPM
         });
-        // await axiosInstance.post(`/api/projects/${projectId}/changecontrols/${changeControlId}/workflow/requestchanges`, {
-        //   entityId: changeControlId,
-        //   entityType: 'ChangeControl',
-        //   comments: comments || `Changes requested by ${currentUser}`,
-        //   decisionType: 'Approval Changes'
-        // });
+       
       }
 
       // Reset dialog state
       setDecision('');
       setComments('');
       setError(null);
-      
+
       // Call the callback
       if (onSubmit) {
         await onSubmit();
       }
-      
+
       onClose();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
+      const errorMessage = err instanceof Error
+        ? err.message
         : 'Failed to submit approval decision';
       setError(errorMessage);
       console.error('Error submitting approval decision:', err);
@@ -159,7 +153,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
           <Typography variant="body1" gutterBottom>
             Please review the change control and make a final decision:
           </Typography>
-          
+
           <FormControl component="fieldset" sx={{ mt: 2 }} error={!!error && !decision}>
             <RadioGroup
               aria-label="approval-decision"
@@ -167,19 +161,19 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
               value={decision}
               onChange={handleDecisionChange}
             >
-              <FormControlLabel 
-                value="approve" 
-                control={<Radio />} 
-                label="Approve" 
+              <FormControlLabel
+                value="approve"
+                control={<Radio />}
+                label="Approve"
               />
-              <FormControlLabel 
-                value="requestChanges" 
-                control={<Radio />} 
-                label="Request changes" 
+              <FormControlLabel
+                value="requestChanges"
+                control={<Radio />}
+                label="Request changes"
               />
             </RadioGroup>
           </FormControl>
-          
+
           <TextField
             label="Comments"
             multiline
@@ -190,7 +184,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
             onChange={handleCommentsChange}
             placeholder="Add your comments here (optional)"
           />
-          
+
           {error && (
             <Typography color="error" variant="body2" sx={{ mt: 2 }}>
               {error}

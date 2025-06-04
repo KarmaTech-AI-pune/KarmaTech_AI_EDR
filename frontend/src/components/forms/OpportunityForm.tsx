@@ -13,9 +13,7 @@ import {
   Divider,
   Box,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+
 import { projectManagementAppContext } from '../../App';
 import {projectManagementAppContextType } from '../../types';
 
@@ -79,7 +77,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       const getUniqueManagers = (users: AuthUser[]) => {
         // Create a Map with user ID as key to ensure uniqueness
         const uniqueManagersMap = new Set<{ id: string; name: string }>();
-        
+
         // Add each user to the map, overwriting any duplicates
         users.forEach(user => {
           // Ensure we have valid data
@@ -87,7 +85,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
             uniqueManagersMap.add({id: user.id, name: user.name})
           }
         });
-        
+
         // Convert to array and sort by name
         return Array.from(uniqueManagersMap.values())
       };
@@ -97,13 +95,13 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         const bdManagerUsers = await getUsersByRole('Business Development Manager');
         const uniqueBdManagers = getUniqueManagers(bdManagerUsers);
         setBdManagers(uniqueBdManagers);
-        
+
         // Fetch and set Review Managers
         const regionalManagerUsers = await getUsersByRole('Regional Manager');
         const regionalDirectorUsers = await getUsersByRole('Regional Director');
         const uniqueReviewers = getUniqueManagers(regionalManagerUsers);
         setReviewManagers(uniqueReviewers);
-        
+
         // Combine both arrays and get unique managers
         const allApproverUsers = [...regionalManagerUsers, ...regionalDirectorUsers];
         const uniqueApprovers = getUniqueManagers(allApproverUsers);
@@ -116,6 +114,38 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     fetchManagers();
   }, [context.user, project]);
 
+  // Helper function to format date values to YYYY-MM-DD string format
+  const formatDateForInput = (dateValue: Date | string | undefined): string => {
+    if (!dateValue) return '';
+
+    try {
+      // Handle string dates
+      if (typeof dateValue === 'string') {
+        // Return if already in YYYY-MM-DD format
+        if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) return dateValue;
+        // Extract date part from ISO string
+        if (dateValue.includes('T')) return dateValue.split('T')[0];
+      }
+
+      // For Date objects or other string formats, create a new date without timezone conversion
+      const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+
+      // Add one day to compensate for timezone issues
+      const adjustedDate = new Date(date);
+      adjustedDate.setDate(adjustedDate.getDate());
+
+      // Format as YYYY-MM-DD
+      const year = adjustedDate.getFullYear();
+      const month = String(adjustedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(adjustedDate.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
+  };
+
   useEffect(() => {
     if (project) {
       setFormData({
@@ -123,9 +153,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         bidManagerId: project.bidManagerId || '',
         reviewManagerId: project.reviewManagerId,
         approvalManagerId: project.approvalManagerId,
-        dateOfSubmission: project.dateOfSubmission || undefined,
-        likelyStartDate: project.likelyStartDate || undefined,
-       
+        dateOfSubmission: formatDateForInput(project.dateOfSubmission),
+        likelyStartDate: formatDateForInput(project.likelyStartDate),
       });
     }
   }, [project]);
@@ -146,12 +175,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     }));
   };
 
-  const handleDateChange = (field: 'dateOfSubmission' | 'likelyStartDate') => (value: Date | null) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value ? value.toISOString().split('T')[0] : null,
-    }));
-  };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -455,28 +479,28 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DatePicker
-                      label="Date of Submission"
-                      value={formData.dateOfSubmission && formData.dateOfSubmission !== "" ? new Date(formData.dateOfSubmission) : null}
-                      onChange={handleDateChange('dateOfSubmission')}
-                      format="dd/MM/yyyy"
-                      // maxDate={new Date()}
-                      slotProps={{ textField: { fullWidth: true } }}
-                    />
-                  </LocalizationProvider>
+                  <TextField
+                    fullWidth
+                    label="Date of Submission"
+                    name="dateOfSubmission"
+                    type="date"
+                    value={formData.dateOfSubmission || ''}
+                    onChange={handleChange}
+                    required
+                    InputLabelProps={{ shrink: true }}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DatePicker
-                      label="Likely Start Date"
-                      value={formData.likelyStartDate && formData.likelyStartDate !== "" ? new Date(formData.likelyStartDate) : null}
-                      onChange={handleDateChange('likelyStartDate')}
-                      format="dd/MM/yyyy"
-                      // maxDate={new Date()}
-                      slotProps={{ textField: { fullWidth: true } }}
-                    />
-                  </LocalizationProvider>
+                  <TextField
+                    fullWidth
+                    label="Likely Start Date"
+                    name="likelyStartDate"
+                    type="date"
+                    value={formData.likelyStartDate || ''}
+                    onChange={handleChange}
+                    required
+                    InputLabelProps={{ shrink: true }}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField

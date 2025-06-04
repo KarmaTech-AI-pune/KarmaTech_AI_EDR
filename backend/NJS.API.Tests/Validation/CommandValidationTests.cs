@@ -174,7 +174,7 @@ namespace NJS.API.Tests.Validation
             Assert.Contains("Name", requiredFieldError.MemberNames);
 
             // Display the error message
-            Console.WriteLine($"Property: {string.Join(", ", requiredFieldError.MemberNames)}, Error: {requiredFieldError.ErrorMessage}");
+            //Console.WriteLine($"Property: {string.Join(", ", requiredFieldError.MemberNames)}, Error: {requiredFieldError.ErrorMessage}");
         }
 
         [Fact]

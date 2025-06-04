@@ -35,8 +35,10 @@ import {
   ProjectClosureWithMetadata
 } from '../../services/projectClosureApi';
 import { projectManagementAppContext } from '../../App';
-import { ProjectClosureRow, ProjectClosureComment, Project } from "../../models";
+import { ProjectClosureRow, ProjectClosureComment, Project,WorkflowHistory } from "../../models";
 import { FormWrapper } from './FormWrapper';
+import { PMWorkflowStatus } from '../../models/pmWorkflowModel';
+import ProjectClosureWorkflow from '../common/ProjectClosureWorkflow';
 
 interface ProjectClosureFormProps {
   onSubmit?: () => void;
@@ -63,6 +65,9 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
       }
     });
   };
+
+  // State for workflow status
+  const [workflowStatus, setWorkflowStatus] = useState<number>(PMWorkflowStatus.Initial);
 
   const [formData, setFormData] = useState<ProjectClosureRow>({
     projectId: '',
@@ -148,7 +153,8 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     positives: '',
     lessonsLearned: '',
     planningIssues: '',
-    planningLessons: ''
+    planningLessons: '',
+    workflowHistory: {} as WorkflowHistory,
   });
 
   const [comments, setComments] = useState<ProjectClosureComment[]>([]);
@@ -156,53 +162,52 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (selectedProject) {
-      // Ensure project ID is a valid number
-      const projectId = selectedProject.id;
+  // useEffect(() => {
+  //   if (selectedProject) {
+  //     // Ensure project ID is a valid number
+  //     const projectId = selectedProject.id;
 
-      // Validate project ID
-      if (!projectId || isNaN(parseInt(projectId.toString(), 10))) {
-        console.error('Invalid project ID from selected project:', projectId);
-        // Don't set an invalid project ID
-        return;
-      }
+  //     // Validate project ID
+  //     if (!projectId || isNaN(parseInt(projectId.toString(), 10))) {
+  //       console.error('Invalid project ID from selected project:', projectId);
+  //       // Don't set an invalid project ID
+  //       return;
+  //     }
 
-      // Convert to number and back to string to ensure it's a valid numeric string
-      const validProjectId = parseInt(projectId.toString(), 10).toString();
-      console.log('Setting valid project ID:', validProjectId);
+  //     // Convert to number and back to string to ensure it's a valid numeric string
+  //     const validProjectId = parseInt(projectId.toString(), 10).toString();
+  //     console.log('Setting valid project ID:', validProjectId);
 
-      // Use the actual project ID from the selected project
-      console.log('Using project ID from selected project:', validProjectId);
+  //     // Use the actual project ID from the selected project
+  //     console.log('Using project ID from selected project:', validProjectId);
 
-      setFormData(prev => ({ ...prev, projectId: validProjectId }));
-    }
-  }, [selectedProject]);
+  //     setFormData(prev => ({ ...prev, projectId: validProjectId }));
+  //   }
+  // }, [selectedProject]);
 
   // State to track the existing project closure ID if found
   const [existingClosureId, setExistingClosureId] = useState<number | null>(null);
 
   // Debug log when closureId or existingClosureId changes
-  useEffect(() => {
-    console.log('Debug - closureId:', closureId);
-    console.log('Debug - existingClosureId:', existingClosureId);
-    console.log('Debug - Should show delete button:', !!(closureId || existingClosureId));
+  // useEffect(() => {  
 
-    // Force reset existingClosureId if we're in create mode (no closureId provided)
-    if (!closureId && !context?.selectedProject?.id) {
-      console.log('Resetting existingClosureId in create mode');
-      setExistingClosureId(null);
-    }
-  }, [closureId, existingClosureId, context?.selectedProject?.id]);
+  //   // Force reset existingClosureId if we're in create mode (no closureId provided)
+  //   if (!closureId && !context?.selectedProject?.id) {
+  //     console.log('Resetting existingClosureId in create mode');
+  //     setExistingClosureId(null);
+  //   }
+  // }, [closureId, existingClosureId, context?.selectedProject?.id]);
 
   // Load data based on closureId if provided, otherwise try to find by project ID
   useEffect(() => {
     const loadExistingData = async () => {
       try {
+        ;
         // If closureId is provided, load that specific closure
         if (closureId) {
           console.log(`Loading project closure data for ID ${closureId}`);
           const existingClosure = await getProjectClosureById(closureId);
+          
           if (existingClosure) {
             console.log('Found project closure by ID:', existingClosure);
             // Log a sample of fields to check empty values
@@ -443,6 +448,11 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
         isEnvIssuesEmpty: processedData.envIssues === ''
       });
 
+      // Set workflow status if available
+      if (existingClosure.workflowHistory) {
+        setWorkflowStatus(existingClosure.workflowHistory?.statusId);
+      }
+
       // Set the form data with the processed values
       setFormData({
         projectId: existingClosure.projectId,
@@ -529,15 +539,16 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
         positives: processedData.positives,
         lessonsLearned: processedData.lessonsLearned,
         planningIssues: processedData.planningIssues,
-        planningLessons: processedData.planningLessons
+        planningLessons: processedData.planningLessons,
+        workflowHistory:existingClosure.workflowHistory
       });
 
       // Log the processed data for debugging
       console.log('Processed form data:', processedData);
     };
 
-    loadExistingData();
-  }, [closureId, selectedProject?.id]);
+    loadExistingData();   
+  }, [closureId, selectedProject?.id,workflowStatus]);
 
   const handleInputChange = (field: keyof ProjectClosureRow) => (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -566,21 +577,33 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     await handleSave();
   };
 
-  // Handle delete project closure
+ 
+  const handleWorkflowUpdated = async () => {
+    try {
+      // Refresh the project closure data to get the updated workflow status
+      const idToRefresh = closureId || existingClosureId;
+      if (idToRefresh) {
+        const refreshedClosure = await getProjectClosureById(idToRefresh);
+        if (refreshedClosure && refreshedClosure.workflowHistory) {
+          setWorkflowStatus(refreshedClosure.workflowHistory?.statusId);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing workflow status:', error);
+    }
+  };
+
   const handleDelete = async () => {
     console.log('handleDelete function called');
 
     // Get the ID to delete
-    const idToDelete = closureId || existingClosureId;
-    console.log(`ID to delete: ${idToDelete}, type: ${typeof idToDelete}`);
-    console.log(`closureId: ${closureId}, existingClosureId: ${existingClosureId}`);
+    const idToDelete = closureId || existingClosureId;  
 
     // Close the confirmation dialog
     setDeleteConfirmOpen(false);
 
     // Function to clear all form fields
-    const clearFormFields = () => {
-      console.log('Clearing all form fields');
+    const clearFormFields = () => {     
 
       // Clear all form fields
       setFormData({
@@ -676,35 +699,19 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
       setExistingClosureId(null);
     };
 
-    if (!idToDelete && idToDelete !== 0) {
-      // If there's no ID to delete, it means we're trying to delete a new form
-      // Just clear all the fields instead of showing an error
-      console.log('No ID to delete, just clearing the form');
+    if (!idToDelete && idToDelete !== 0) {     
 
       // Clear the form
       clearFormFields();
-
-      // Show success message
+     
       alert('Form cleared successfully');
       return;
     }
 
-    try {
-      // Set loading state if needed
-      // setLoading(true);
-
-      console.log(`Deleting project closure with ID: ${idToDelete}`);
-
-      // Log the API URL that will be called
-      const apiUrl = `http://localhost:5245/api/ProjectClosure/${idToDelete}`;
-      console.log(`API URL for delete: ${apiUrl}`);
-
-      // Add a network request monitor
-      console.log('Network request about to be sent...');
+    try {     
 
       // Force the ID to be a number
-      const numericId = Number(idToDelete);
-      console.log(`Converting ID to number: ${numericId}`);
+      const numericId = Number(idToDelete);     
 
       // Call the API function with retry logic
       let deleteSuccess = false;
@@ -712,52 +719,42 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
       // Try up to 3 times to delete
       for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          console.log(`Delete attempt ${attempt} for ID ${numericId}`);
-          await deleteProjectClosure(numericId);
-          console.log(`Project closure with ID: ${numericId} deleted successfully on attempt ${attempt}`);
+        try {        
+          await deleteProjectClosure(numericId);        
           deleteSuccess = true;
           break; // Exit the loop if successful
-        } catch (error) {
-          console.warn(`Delete attempt ${attempt} failed:`, error);
+        } catch (error) {        
           deleteError = error;
 
           // If it's a 404 error, treat it as success
-          if (axios.isAxiosError(error) && error.response?.status === 404) {
-            console.log(`Project closure with ID ${numericId} not found, treating as success`);
+          if (axios.isAxiosError(error) && error.response?.status === 404) {           
             deleteSuccess = true;
             break;
           }
 
           // Wait a bit before retrying
-          if (attempt < 3) {
-            console.log(`Waiting before retry ${attempt + 1}...`);
+          if (attempt < 3) {          
             await new Promise(resolve => setTimeout(resolve, 500));
           }
         }
       }
 
-      if (deleteSuccess) {
-        // Clear the form after successful deletion
+      if (deleteSuccess) {       
         clearFormFields();
 
-        // Reset state variables
+      
         setExistingClosureId(null);
-        setClosureId(undefined);
-
-        // Show success message
+     
         alert('Project closure deleted successfully!');
-
-        // Call the onSubmit callback if provided to handle navigation
+      
         if (onSubmit) {
           onSubmit();
-          return; // Exit early if we have an onSubmit handler
+          return; 
         }
       } else if (deleteError) {
-        throw deleteError; // Re-throw the last error
+        throw deleteError; 
       }
-    } catch (error: any) {
-      console.error('Error deleting project closure:', error);
+    } catch (error: any) {      
 
       // More detailed error logging
       if (axios.isAxiosError(error)) {
@@ -769,8 +766,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
         });
 
         // If it's a 404 error, treat it as success
-        if (error.response?.status === 404) {
-          console.log('Entity not found, treating as successful deletion');
+        if (error.response?.status === 404) {       
 
           // Clear the form
           clearFormFields();
@@ -792,8 +788,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
   };
 
   const handleSave = async () => {
-    if (!selectedProject) {
-      console.error('No project selected');
+    if (!selectedProject) {   
       alert('Error: No project selected. Please select a project before saving.');
       return;
     }
@@ -810,8 +805,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
       }
 
       // Convert to a valid numeric project ID
-      let projectId = parseInt(rawProjectId.toString(), 10);
-      console.log('Project ID converted to number:', projectId, typeof projectId);
+      let projectId = parseInt(rawProjectId.toString(), 10);   
 
       // Additional validation to ensure it's a positive integer
       if (projectId <= 0) {
@@ -820,25 +814,20 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
         return;
       }
 
-      // Use the actual project ID from the selected project
-      console.log('Using project ID from selected project:', projectId);
+     
 
       // Validate project ID in form data
       if (formData.projectId !== projectId.toString()) {
         console.warn('Project ID mismatch between selected project and form data. Correcting...');
         // Update form data with the correct project ID
         setFormData(prev => ({ ...prev, projectId: projectId.toString() }));
-      }
-
-      // Set loading state or show a spinner if needed
-      console.log('Saving project closure for project ID:', projectId);
+      }     
 
       try {
         // If we have a closureId from props or found an existing one for this project, update it
         const idToUpdate = closureId || existingClosureId;
 
-        if (idToUpdate) {
-          console.log('Updating existing project closure with ID:', idToUpdate);
+        if (idToUpdate) {       
 
           // Get the existing closure to preserve its metadata
           const existingClosure = await getProjectClosureById(idToUpdate);
@@ -857,17 +846,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             return acc;
           }, {} as Record<string, any>);
 
-          // Log the formatted data to verify empty strings are preserved
-          console.log('Formatted data sample for update:', {
-            clientFeedback: formattedData.clientFeedback,
-            successCriteria: formattedData.successCriteria,
-            envIssues: formattedData.envIssues,
-            // Check if empty strings are preserved
-            isClientFeedbackEmpty: formattedData.clientFeedback === '',
-            isSuccessCriteriaEmpty: formattedData.successCriteria === '',
-            isEnvIssuesEmpty: formattedData.envIssues === ''
-          });
-
+         
           // Ensure all boolean fields are properly set
           // Construction section fields
           const booleanFields = [
@@ -920,12 +899,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             if (formattedData[field] === undefined || formattedData[field] === null) {
               missingFields[field] = '';
             }
-          });
-
-          console.log('Project ID before update:', projectId, typeof projectId);
-
-          // Update existing project closure
-          console.log(`Updating project closure with ID: ${idToUpdate} and ProjectId: ${projectId}`);
+          });        
 
           const updateData = {
             ...existingClosure, // Start with all existing fields
@@ -937,31 +911,26 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             createdAt: existingClosure.createdAt,
             createdBy: existingClosure.createdBy || '',
             updatedAt: new Date().toISOString(),
-            updatedBy: 'System'
+            updatedBy: 'System',
+            // Keep existing workflow status
+            workflowStatusId: existingClosure.workflowHistory?.statusId || PMWorkflowStatus.Initial
           } as ProjectClosureWithMetadata;
 
           console.log('Update data being sent to API:', JSON.stringify(updateData, null, 2));
 
           await updateProjectClosure(
             idToUpdate,
-            updateData,
-            // Pass the comments array
+            updateData,          
             comments
-          );
+          );   
 
-          console.log('Successfully updated project closure');
-
-          // Update the existingClosureId in case we found it by project ID
+        
           if (!closureId && !existingClosureId) {
-            console.log('Setting existingClosureId after update:', idToUpdate);
+         
             setExistingClosureId(idToUpdate);
           }
         } else {
-          // Create a new project closure entry
-          console.log('Creating new project closure');
-
-          // Create new project closure with proper data formatting
-          // Sanitize string values and preserve empty strings
+         
           const formattedData = Object.entries(formData).reduce((acc, [key, value]) => {
             // If the value is null, set it to empty string
             if (value === null) {
@@ -974,18 +943,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             }
             return acc;
           }, {} as Record<string, any>);
-
-          // Log the formatted data to verify empty strings are preserved
-          console.log('Formatted data sample for create:', {
-            clientFeedback: formattedData.clientFeedback,
-            successCriteria: formattedData.successCriteria,
-            envIssues: formattedData.envIssues,
-            // Check if empty strings are preserved
-            isClientFeedbackEmpty: formattedData.clientFeedback === '',
-            isSuccessCriteriaEmpty: formattedData.successCriteria === '',
-            isEnvIssuesEmpty: formattedData.envIssues === ''
-          });
-
+        
           // Ensure all boolean fields are properly set
           // Construction section fields
           const booleanFields = [
@@ -1052,10 +1010,11 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             // These fields are required by the interface but will be overridden by the backend
             createdBy: '',
             updatedAt: null,
-            updatedBy: ''
+            updatedBy: '',
+            // Set initial workflow status
+            workflowStatusId: PMWorkflowStatus.Initial
           } as ProjectClosureRow;
-
-          console.log('Sending data without ID field:', dataToSend);
+       
 
           const result = await createProjectClosure(dataToSend, comments);
 
@@ -1067,14 +1026,10 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
           console.log('Successfully created project closure:', result);
         }
-
-        // Dialog removed - no need to close it
-
-        // Show success message
+       
         alert('Project closure saved successfully!');
 
-        // Call the onSubmit callback if provided
-        // This will handle navigation in the parent component
+      
         onSubmit?.();
       } catch (error: any) {
         console.error('Error saving project closure:', error);
@@ -1087,9 +1042,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
           )) {
           // Show a more user-friendly error message for project ID validation errors
           alert(`Error: ${error.message}`);
-        } else if (error.message && error.message.includes('PRIMARY KEY constraint')) {
-          // Handle primary key constraint violation
-          console.log('Primary key constraint violation detected, retrying without ID...');
+        } else if (error.message && error.message.includes('PRIMARY KEY constraint')) {         
 
           // Try again without specifying an ID
           try {
@@ -1109,9 +1062,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
                 // Keep empty strings as is
                 (dataToRetry as any)[key] = value === null ? '' : value;
               }
-            });
-
-            console.log('Retrying with data (no ID):', dataToRetry);
+            });        
 
             const result = await createProjectClosure(dataToRetry, comments);
 
@@ -1153,7 +1104,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
               }
             });
 
-            console.log('Retrying with data (no ID):', dataToRetry);
+          
 
             const result = await createProjectClosure(dataToRetry, comments);
 
@@ -1165,7 +1116,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             // Call the onSubmit callback if provided
             onSubmit?.();
           } catch (retryError: any) {
-            console.error('Error on retry:', retryError);
+         
             alert('Error saving project closure: ' + (retryError.message || 'Unknown error'));
           }
         } else {
@@ -1336,7 +1287,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             borderRadius: 1
           }}
         >
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography
               variant="h5"
               gutterBottom
@@ -1348,6 +1299,12 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             >
               PMD8. Project Closure Form
             </Typography>
+
+            {/* Workflow Approval Button */}
+            <ProjectClosureWorkflow
+              projectClosure={{ ...formData, id: closureId || existingClosureId || undefined, workflowStatusId: workflowStatus }}
+              onProjectClosureUpdated={handleWorkflowUpdated}
+            />
           </Box>
 
           <form onSubmit={handleSubmit}>

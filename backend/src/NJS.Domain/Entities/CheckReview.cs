@@ -24,6 +24,12 @@ namespace NJS.Domain.Entities
         [StringLength(255)]
         public string ActivityName { get; set; }
 
+        [StringLength(255)]
+        public string DocumentNumber { get; set; }
+
+        [StringLength(255)]
+        public string DocumentName { get; set; }
+
         [Required]
         [StringLength(500)]
         public string Objective { get; set; }
@@ -50,8 +56,14 @@ namespace NJS.Domain.Entities
         [StringLength(500)]
         public string ActionTaken { get; set; }
 
+        [StringLength(255)]
+        public string Maker { get; set; }
+
+        [StringLength(255)]
+        public string Checker { get; set; }
+
         // Audit fields
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string CreatedBy { get; set; }
         public string UpdatedBy { get; set; }

@@ -1,21 +1,20 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {
     public class CorrespondenceInwardRepository : ICorrespondenceInwardRepository
     {
         private readonly ProjectManagementContext _context;
+        private readonly ILogger<CorrespondenceInwardRepository> _logger;
 
-        public CorrespondenceInwardRepository(ProjectManagementContext context)
+        public CorrespondenceInwardRepository(ProjectManagementContext context, ILogger<CorrespondenceInwardRepository> logger)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _logger = logger;
         }
 
         public async Task<IEnumerable<CorrespondenceInward>> GetAllAsync()
@@ -46,23 +45,23 @@ namespace NJS.Repositories.Repositories
                 await ResetIdentitySeedAsync();
 
                 // Set creation timestamp
-                correspondenceInward.CreatedAt = DateTime.UtcNow;
+                correspondenceInward.CreatedAt = DateTime.Now;
 
                 // Don't set the ID - let the database assign it automatically
 
                 _context.CorrespondenceInwards.Add(correspondenceInward);
                 await _context.SaveChangesAsync();
 
-                Console.WriteLine($"Added correspondence inward with ID: {correspondenceInward.Id}");
+                _logger.LogInformation($"Added correspondence inward with ID: {correspondenceInward.Id}");
 
                 return correspondenceInward.Id;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error adding correspondence inward: {ex.Message}");
+                _logger.LogInformation($"Error adding correspondence inward: {ex.Message}");
                 if (ex.InnerException != null)
                 {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    _logger.LogInformation($"Inner exception: {ex.InnerException.Message}");
                 }
                 throw;
             }
@@ -72,7 +71,7 @@ namespace NJS.Repositories.Repositories
         {
             if (correspondenceInward == null) throw new ArgumentNullException(nameof(correspondenceInward));
 
-            correspondenceInward.UpdatedAt = DateTime.UtcNow;
+            correspondenceInward.UpdatedAt = DateTime.Now;
 
             _context.Entry(correspondenceInward).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -87,19 +86,19 @@ namespace NJS.Repositories.Repositories
                 {
                     _context.CorrespondenceInwards.Remove(correspondenceInward);
                     await _context.SaveChangesAsync();
-                    Console.WriteLine($"Deleted correspondence inward with ID: {id}");
+                    _logger.LogInformation($"Deleted correspondence inward with ID: {id}");
                 }
                 else
                 {
-                    Console.WriteLine($"No correspondence inward found with ID: {id}");
+                    _logger.LogInformation($"No correspondence inward found with ID: {id}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error deleting correspondence inward: {ex.Message}");
+                _logger.LogInformation($"Error deleting correspondence inward: {ex.Message}");
                 if (ex.InnerException != null)
                 {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    _logger.LogInformation($"Inner exception: {ex.InnerException.Message}");
                 }
                 throw;
             }
