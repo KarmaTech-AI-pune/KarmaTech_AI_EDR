@@ -1,15 +1,15 @@
 import React, { useState} from 'react';
-import { 
-    Dialog, 
-    DialogTitle, 
-    DialogContent, 
-    DialogActions, 
-    Button, 
-    TextField, 
-    FormControl, 
-    InputLabel, 
-    Select, 
-    MenuItem, 
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
     CircularProgress,
     Typography,
     RadioGroup,
@@ -41,7 +41,7 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    
+
     React.useEffect(() => {
         if (open && decision === 'approve') {
             loadRMRDUsers();
@@ -57,10 +57,10 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
             const rdUsers = await userApi.getUsersByRole('RegionalDirector');
             const users = [...rmUsers, ...rdUsers];
             setRmrdUsers(users);
-            
+
             // If there's only one RM/RD, select them automatically
-            if (combinedUsers.length === 1) {
-                setAssignedToId(combinedUsers[0].id);
+            if (users.length === 1) {
+                setAssignedToId(users[0].id);
             }
         } catch (error) {
             console.error('Error loading RM/RD users:', error);

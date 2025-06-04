@@ -15,11 +15,10 @@ import { BDChips } from '../common/BDChips';
 import { OpportunityTrackingWorkflow } from '../common/OpportunityTrackingWorkflow';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { OpportunityItemProps } from '../../types';
-import { useState, useContext, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { OpportunityTracking } from '../../models';
 import { OpportunityForm } from '../forms/OpportunityForm';
-import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../models';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
@@ -54,7 +53,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
-  const context = useContext(projectManagementAppContext);
   const navigation = useAppNavigation();
 
   // Update current opportunity when the prop changes

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, ReactNode } from 'react';
+import React, { useEffect, useState, ReactNode } from 'react';
 import {
   Container,
   Typography,
@@ -41,9 +41,8 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Project, OpportunityTracking } from '../models';
-import { projectManagementAppContext } from '../App';
 import { getUserById } from '../services/userApi';
 import { projectApi } from '../services/projectApi';
 import {
@@ -95,8 +94,6 @@ const InfoItem: React.FC<{ label: string; value: string | number | undefined }> 
 
 export const ProjectDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const context = useContext(projectManagementAppContext);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState('overview');
@@ -112,7 +109,7 @@ export const ProjectDetails: React.FC = () => {
       try {
         setIsLoading(true);
         if (id) {
-          const projectData = await projectApi.getById(parseInt(id));
+          const projectData = await projectApi.getById(id);
           if (projectData) {
             setProject(projectData as Project);
           } else {

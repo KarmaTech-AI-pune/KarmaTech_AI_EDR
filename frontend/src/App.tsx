@@ -58,9 +58,9 @@ function App() {
           setCanDeleteOpportunity(
             user.roleDetails.permissions.includes(PermissionType.DELETE_BUSINESS_DEVELOPMENT)
           );
-          setCanSubmitForReview(
-            user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
-          );
+          // setCanSubmitForReview(
+          //   user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_REVIEW)
+          // );
           setCanSubmitForApproval(
             user.roleDetails.permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL)
           );

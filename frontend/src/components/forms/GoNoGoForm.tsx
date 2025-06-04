@@ -348,7 +348,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     } finally {
       setIsLoading(false);
     }
-  }, [context?.user?.name, context?.setScreenState, onDecisionStatusChange, loadVersions]);
+  }, [context?.user?.name, onDecisionStatusChange, loadVersions]);
 
 
 const canEditForm = useCallback((): boolean => {
