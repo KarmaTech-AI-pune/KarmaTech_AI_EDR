@@ -26,11 +26,11 @@ import {
   FinancialDetailsTab,
   ContractAndCostsTab,
   CostToCompleteAndEAC,
-  BudgetAndScheduleTab,
+  ScheduleTab,
   ManpowerPlanningTab,
   ProgressReviewDeliverables,
   ChangeOrdersTab,
-  ActionsTab,
+  ActionsTab
 } from "./index";
 import {
   getCurrentMonthYear,
@@ -89,8 +89,8 @@ const tabs = [
   },
   {
     id: "4",
-    label: "Budget & Schedule",
-    component: <BudgetAndScheduleTab />,
+    label: "Schedule",
+    component: <ScheduleTab />,
     inputs: [
       "dateOfIssueWOLOI",
       "completionDateAsPerContract",
