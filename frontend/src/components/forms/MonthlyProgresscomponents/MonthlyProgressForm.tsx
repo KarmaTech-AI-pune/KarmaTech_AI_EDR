@@ -16,7 +16,7 @@ import {
   Snackbar,
 } from "@mui/material";
 import { FormWrapper } from "../FormWrapper";
-import { Form, FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   MonthlyProgressSchema,
@@ -30,7 +30,8 @@ import {
   ManpowerPlanningTab,
   ProgressReviewDeliverables,
   ChangeOrdersTab,
-  ActionsTab
+  LastMonthActionsTab,
+  CurrentMonthActionsTab,
 } from "./index";
 import {
   getCurrentMonthYear,
@@ -40,6 +41,7 @@ import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
 import RenderComponent from "./RenderComponent";
+
 
 export type tab = {
   id: string | number;
@@ -119,9 +121,15 @@ const tabs = [
   },
   {
     id: "8",
-    label: "Actions",
-    component: <ActionsTab />,
-    inputs: ["lastMonthActions", "currentMonthActions"],
+    label: "Last Month Actions",
+    component: <LastMonthActionsTab />,
+    inputs: ["lastMonthActions"],
+  },
+  {
+    id: "9",
+    label: "Current Month Actions",
+    component: <CurrentMonthActionsTab />,
+    inputs: ["currentMonthActions"],
   },
 ] satisfies tab[];
 
