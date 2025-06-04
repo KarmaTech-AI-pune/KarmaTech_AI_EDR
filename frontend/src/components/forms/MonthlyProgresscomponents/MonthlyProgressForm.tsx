@@ -25,6 +25,7 @@ import {
 import {
   FinancialDetailsTab,
   ContractAndCostsTab,
+  CostToCompleteAndEAC,
   BudgetAndScheduleTab,
   ManpowerPlanningTab,
   ProgressReviewDeliverables,
@@ -56,8 +57,8 @@ const tabs = [
       "net",
       "serviceTax",
       "feeTotal",
-      "odcs",
-      "staff",
+      "budgetOdcs",
+      "budgetStaff",
       "BudgetSubTotal",
     ],
   },
@@ -76,6 +77,18 @@ const tabs = [
   },
   {
     id: "3",
+    label: "CTC & EAC",
+    component: <CostToCompleteAndEAC/>,
+    inputs: [
+      "ctcODC",
+      "ctcStaff",
+      "ctcSubtotal",
+      "totalEAC",
+      "grossProfitPercentage",
+    ]
+  },
+  {
+    id: "4",
     label: "Budget & Schedule",
     component: <BudgetAndScheduleTab />,
     inputs: [
@@ -83,31 +96,29 @@ const tabs = [
       "completionDateAsPerContract",
       "completionDateAsPerExtension",
       "expectedCompletionDate",
-      "completeOnCosts",
-      "completeOnEV",
-      "spi",
+      "completeOnCosts"
     ],
   },
   {
-    id: "4",
+    id: "5",
     label: "Manpower Planning",
     component: <ManpowerPlanningTab />,
     inputs: ["manpowerPlanning", "manpowerTotal"],
   },
   {
-    id: "5",
+    id: "6",
     label: "Progress Review Deliverables",
     component: <ProgressReviewDeliverables />,
     inputs: ["progressDeliverable"],
   },
   {
-    id: "6",
+    id: "7",
     label: "Change Orders",
     component: <ChangeOrdersTab />,
     inputs: ["changeOrder"],
   },
   {
-    id: "7",
+    id: "8",
     label: "Actions",
     component: <ActionsTab />,
     inputs: ["lastMonthActions", "currentMonthActions"],

@@ -1,7 +1,7 @@
 import React from "react";
 import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
-import { Box, Grid, Paper, TextField, Typography, Tooltip } from "@mui/material";
+import { Grid, Paper, TextField, Typography } from "@mui/material";
 import { formatCurrency } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
 
 const FinancialDetailsTab: React.FC = () => {
@@ -10,8 +10,8 @@ const FinancialDetailsTab: React.FC = () => {
     // Watch for calculation fields
     const net = watch("net");
     const serviceTax = watch("serviceTax");
-    const odcs = watch("odcs");
-    const staff = watch("staff");
+    const odcs = watch("budgetOdcs");
+    const staff = watch("budgetStaff");
 
     // Auto-calculate totals
     React.useEffect(() => {
@@ -28,11 +28,12 @@ const FinancialDetailsTab: React.FC = () => {
         }
     }, [odcs, staff, setValue]);
 
+
     return (
         <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
                 <Paper elevation={1} sx={{ p: 2 }}>
-                    <Typography variant="h6" gutterBottom>Fees</Typography>
+                    <Typography variant="h6" gutterBottom color="primary">Fees</Typography>
                     <Controller
                         name="net"
                         control={control}
@@ -58,7 +59,6 @@ const FinancialDetailsTab: React.FC = () => {
                                 <TextField
                                     fullWidth
                                     label="Service Tax (%)"
-                                    type="text"
                                     error={!!errors.serviceTax}
                                     helperText={errors.serviceTax?.message || ''}
                                     {...field}
@@ -95,17 +95,17 @@ const FinancialDetailsTab: React.FC = () => {
 
             <Grid item xs={12} md={6}>
                 <Paper elevation={1} sx={{ p: 2 }}>
-                    <Typography variant="h6" gutterBottom>Budget Costs</Typography>
+                    <Typography variant="h6" gutterBottom color="primary">Budget Costs</Typography>
                     <Controller
-                        name="odcs"
+                        name="budgetOdcs"
                         control={control}
                         render={({ field }) => (
                                 <TextField
                                     fullWidth
                                     label="ODCs"
                                     type="text"
-                                    error={!!errors.odcs}
-                                    helperText={errors.odcs?.message || ''}
+                                    error={!!errors.budgetOdcs}
+                                    helperText={errors.budgetOdcs?.message || ''}
                                     {...field}
                                     value={field.value || ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
@@ -114,7 +114,7 @@ const FinancialDetailsTab: React.FC = () => {
                         )}
                     />
                     <Controller
-                        name="staff"
+                        name="budgetStaff"
                         control={control}
                         render={({ field }) => (
                         
@@ -122,8 +122,8 @@ const FinancialDetailsTab: React.FC = () => {
                                     fullWidth
                                     label="Staff"
                                     type="text"
-                                    error={!!errors.staff}
-                                    helperText={errors.staff?.message || ''}
+                                    error={!!errors.budgetStaff}
+                                    helperText={errors.budgetStaff?.message || ''}
                                     {...field}
                                     value={field.value || ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
