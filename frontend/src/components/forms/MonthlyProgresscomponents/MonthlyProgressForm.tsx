@@ -133,25 +133,28 @@ export const MonthlyProgressForm: React.FC = () => {
   const form = useForm<MonthlyProgressSchemaType>({
     resolver: zodResolver(MonthlyProgressSchema),
     defaultValues: {
-      net: 0,
-      serviceTax: 0,
-      feeTotal: 0,
-      odcs: 0,
-      staff: 0,
-      BudgetSubTotal: 0,
+      net: null,
+      serviceTax: null,
+      feeTotal: null,
+      budgetOdcs: null,
+      budgetStaff: null,
+      BudgetSubTotal: null,
       lumpsum: false,
       timeAndExpense: false,
-      percentage: 0,
-      actualOdcs: 0,
-      actualStaff: 0,
-      actualSubtotal: 0,
+      percentage: null,
+      actualOdcs: null,
+      actualStaff: null,
+      actualSubtotal: null,
+      ctcODC: null,
+      ctcStaff: null,
+      ctcSubtotal: null,
+      totalEAC: null,
+      grossProfitPercentage: null,
       dateOfIssueWOLOI: new Date(),
       completionDateAsPerContract: new Date(),
       completionDateAsPerExtension: new Date(),
       expectedCompletionDate: new Date(),
-      completeOnCosts: 0,
-      completeOnEV: 0,
-      spi: 0,
+      completeOnCosts: null,
       manpowerPlanning: [],
       manpowerTotal: 0,
       changeOrder: [],
@@ -166,7 +169,7 @@ export const MonthlyProgressForm: React.FC = () => {
   // Use ref to prevent re-creating the date string on every render
   const currentMonthYear = useRef(getCurrentMonthYear()).current;
 
-  
+
 
   const onSubmit = (data: MonthlyProgressSchemaType) => {
     console.log(data);
