@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using NJS.Application.Services.IContract; // Add this line
 
 namespace NJSAPI.Controllers
 {
@@ -16,10 +17,12 @@ namespace NJSAPI.Controllers
     public class CheckReviewController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ICurrentUserService _currentUserService; // Inject ICurrentUserService
 
-        public CheckReviewController(IMediator mediator)
+        public CheckReviewController(IMediator mediator, ICurrentUserService currentUserService) // Update constructor
         {
             _mediator = mediator;
+            _currentUserService = currentUserService; // Assign
         }
 
         [HttpGet]
@@ -86,9 +89,9 @@ namespace NJSAPI.Controllers
                     return BadRequest("CheckReview data is null.");
                 }
 
-                // Get the username from the authenticated user or use "System" as fallback
-                command.CreatedBy = User.Identity?.IsAuthenticated == true ?
-                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
+                // Use the new service to get the current user's name
+                command.CreatedBy = _currentUserService.IsAuthenticated ?
+                    _currentUserService.UserName ?? "System" :
                     "System";
 
                 var result = await _mediator.Send(command);
@@ -116,9 +119,9 @@ namespace NJSAPI.Controllers
                     return BadRequest("Mismatched CheckReview ID.");
                 }
 
-                // Get the username from the authenticated user or use "System" as fallback
-                command.UpdatedBy = User.Identity?.IsAuthenticated == true ?
-                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
+                // Use the new service to get the current user's name for UpdatedBy
+                command.UpdatedBy = _currentUserService.IsAuthenticated ?
+                    _currentUserService.UserName ?? "System" :
                     "System";
 
                 var result = await _mediator.Send(command);

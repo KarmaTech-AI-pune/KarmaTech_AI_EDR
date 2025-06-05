@@ -47,7 +47,7 @@ public class CheckReviewStatusEmailNotificationHandler : INotificationHandler<Ch
         return status switch
         {
             PMWorkflowStatusEnum.SentForReview => $"Check Review Request: {checkReviewName}",
-            PMWorkflowStatusEnum.Initial => $"Check Review created: {checkReviewName}",
+            PMWorkflowStatusEnum.Initial => $"Check Review Update: {checkReviewName}", // More generic for updates
             PMWorkflowStatusEnum.ApprovalChanges => $"Check Review rejected: {checkReviewName}", // Assuming ApprovalChanges means rejection in this context
             PMWorkflowStatusEnum.ReviewChanges => $"Check Review changes requested: {checkReviewName}",
             PMWorkflowStatusEnum.SentForApproval => $"Check Review Sent for Approval: {checkReviewName}",
@@ -61,7 +61,7 @@ public class CheckReviewStatusEmailNotificationHandler : INotificationHandler<Ch
         var statusAction = notification.NewStatus switch
         {
             PMWorkflowStatusEnum.SentForReview => "sent for review",
-            PMWorkflowStatusEnum.Initial => "under preparation",
+            PMWorkflowStatusEnum.Initial => "updated", // More generic for updates
             PMWorkflowStatusEnum.ApprovalChanges => "rejected",
             PMWorkflowStatusEnum.Approved => "approved",
             PMWorkflowStatusEnum.ReviewChanges => "changes requested",

@@ -10,6 +10,7 @@ using NJS.Domain.Enums; // For PMWorkflowStatusEnum
 using Microsoft.EntityFrameworkCore; // For .Include() and .FirstOrDefaultAsync()
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore.Storage; // For IExecutionStrategy
+using NJS.Application.Services.IContract; // For ICurrentUserService
 
 namespace NJS.Application.CQRS.CheckReview.Handlers
 {
@@ -18,12 +19,14 @@ namespace NJS.Application.CQRS.CheckReview.Handlers
         private readonly ProjectManagementContext _context;
         private readonly IMediator _mediator;
         private readonly ILogger<CreateCheckReviewCommandHandler> _logger;
+        private readonly ICurrentUserService _currentUserService; // Inject ICurrentUserService
 
-        public CreateCheckReviewCommandHandler(ProjectManagementContext context, IMediator mediator, ILogger<CreateCheckReviewCommandHandler> logger)
+        public CreateCheckReviewCommandHandler(ProjectManagementContext context, IMediator mediator, ILogger<CreateCheckReviewCommandHandler> logger, ICurrentUserService currentUserService)
         {
             _context = context;
             _mediator = mediator;
             _logger = logger;
+            _currentUserService = currentUserService; // Assign injected service
         }
 
         public async Task<CheckReviewDto> Handle(CreateCheckReviewCommand request, CancellationToken cancellationToken)
@@ -89,7 +92,8 @@ namespace NJS.Application.CQRS.CheckReview.Handlers
             // Retrieve Maker, Checker, and CreatedBy user details for email notification
             var makerUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == checkReview.Maker, cancellationToken);
             var checkerUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == checkReview.Checker, cancellationToken);
-            var createdByUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.CreatedBy, cancellationToken);
+            // Fetch createdByUser by UserName, as request.CreatedBy now holds the username string
+            var createdByUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == request.CreatedBy, cancellationToken);
 
             var recipientEmails = new List<string>();
             if (makerUser != null && !string.IsNullOrEmpty(makerUser.Email))
@@ -103,15 +107,15 @@ namespace NJS.Application.CQRS.CheckReview.Handlers
 
             var recipientEmailString = string.Join(",", recipientEmails);
             
-            // Determine the actionBy name for the email content
-            var actionByName = createdByUser?.UserName ?? request.CreatedBy; // Use UserName if available, otherwise fallback to ID
+            // Determine the actionBy name for the email content using CurrentUserService
+            var actionByName = _currentUserService.UserName ?? createdByUser?.UserName ?? request.CreatedBy; // Prefer current user, then created by user, then fallback to ID
 
             // Publish notification for email functionality
             if (!string.IsNullOrEmpty(recipientEmailString))
             {
                 await _mediator.Publish(new CheckReviewStatusEmailNotification(
                     checkReview,
-                    actionByName, // ActionBy - now user's name
+                    actionByName, // ActionBy - now user's name from CurrentUserService
                     request.ActionTaken ?? string.Empty, // Comments - using ActionTaken as comments, ensure not null
                     recipientEmailString, // Dynamic RecipientEmail
                     PMWorkflowStatusEnum.Initial // NewStatus for creation
