@@ -65,6 +65,7 @@ const ProgressReviewDeliverables: React.FC = () => {
     return new Date(dateString);
   };
 
+
   return (
     <Box>
       <Paper elevation={1} sx={{ p: 2 }}>
@@ -95,32 +96,20 @@ const ProgressReviewDeliverables: React.FC = () => {
           </Button>
         </Box>
 
-        {fields.length === 0 ? (
-          <Box sx={{
-            textAlign: 'center',
-            py: 4,
-            color: 'text.secondary',
-            border: '2px dashed #e0e0e0',
-            borderRadius: 1
-          }}>
-            <Typography variant="body1">
-              No deliverables added yet. Click "Add Deliverable" to get started.
-            </Typography>
-          </Box>
-        ) : (
-          <TableContainer component={Paper} variant="outlined">
-            <Table size="small">
+        
+          <TableContainer>
+            <Table sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                  <TableCell sx={{ fontWeight: 'bold', minWidth: 150 }}>Milestone</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', minWidth: 130 }}>Due Date (Contract)</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', minWidth: 130 }}>Due Date (Planned)</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', minWidth: 130 }}>Achieved Date</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', minWidth: 120 }}>Payment Due</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', minWidth: 130 }}>Invoice Date</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', minWidth: 150 }}>Payment Received Date</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', minWidth: 150 }}>Comments</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', width: 60 }}>Actions</TableCell>
+                <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 600, backgroundColor: '#f5f5f5', border: 'none' } }}>
+                  <TableCell sx={{ minWidth: 150 }}>Milestone</TableCell>
+                  <TableCell>Due Date (Contract)</TableCell>
+                  <TableCell>Due Date (Planned)</TableCell>
+                  <TableCell>Achieved Date</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>Payment Due</TableCell>
+                  <TableCell>Invoice Date</TableCell>
+                  <TableCell>Payment Received Date</TableCell>
+                  <TableCell sx={{ minWidth: 150 }}>Comments</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -304,10 +293,18 @@ const ProgressReviewDeliverables: React.FC = () => {
                     </TableCell>
                   </TableRow>
                 ))}
+                {fields.length === 0 && (
+                <TableRow sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
+                  <TableCell colSpan={9} align="center">
+                    <Typography variant="body2" color="textSecondary">
+                      No deliverables added yet. Click "Add Deliverable" to get started.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
               </TableBody>
             </Table>
           </TableContainer>
-        )}
       </Paper>
     </Box>
   );

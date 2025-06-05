@@ -90,7 +90,7 @@ const ManpowerPlanningTab: React.FC = () => {
             <TableHead>
               <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 600, backgroundColor: '#f5f5f5', border: 'none' } }}>
                 <TableCell>Work Assignment</TableCell>
-                <TableCell>Assignee</TableCell>
+                <TableCell sx={{ minWidth: 150 }}>Assignee</TableCell>
                 <TableCell>Planned</TableCell>
                 <TableCell>Consumed</TableCell>
                 <TableCell>Balance</TableCell>
@@ -146,7 +146,7 @@ const ManpowerPlanningTab: React.FC = () => {
                             <TextField
                               {...params}
                               size="small"
-                              placeholder="Add assignees"
+                              placeholder="Add assignee"
                               error={!!errors.manpowerPlanning?.[index]?.assignee}
                               helperText={errors.manpowerPlanning?.[index]?.assignee?.message}
                               sx={textFieldStyle}
