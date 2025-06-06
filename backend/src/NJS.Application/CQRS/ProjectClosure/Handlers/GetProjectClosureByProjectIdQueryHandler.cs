@@ -2,11 +2,6 @@ using MediatR;
 using NJS.Application.CQRS.ProjectClosure.Queries;
 using NJS.Application.Dtos;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.ProjectClosure.Handlers
 {
@@ -23,7 +18,7 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
         {
             var projectClosure = await _projectClosureRepository.GetByProjectId(request.ProjectId);
             if (projectClosure == null)
-                return null;
+                return null!;
 
             return new ProjectClosureDto
             {
@@ -114,7 +109,18 @@ namespace NJS.Application.CQRS.ProjectClosure.Handlers
                 CreatedAt = projectClosure.CreatedAt,
                 CreatedBy = projectClosure.CreatedBy,
                 UpdatedAt = projectClosure.UpdatedAt,
-                UpdatedBy = projectClosure.UpdatedBy
+                UpdatedBy = projectClosure.UpdatedBy,
+                WorkflowHistory = projectClosure.WorkflowHistories?.OrderByDescending(x => x.ActionDate).Select(wh => new ProjectClosureWorkflowHistoryDto
+                {
+                    Id = wh.Id,
+                    ProjectClosureId = wh.ProjectClosureId,
+                    StatusId = wh.StatusId,
+                    ActionBy = wh.ActionBy,
+                    ActionDate = wh.ActionDate,
+                    Comments = wh.Comments,
+                    Action = wh.Action,
+                    AssignedToId = wh.AssignedToId,
+                }).FirstOrDefault()
             };
         }
     }

@@ -2,14 +2,14 @@ import { ListItem, Typography, Dialog, DialogTitle, DialogContent, DialogActions
 import { Button } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { ProjectItemProps, ProjectFormData } from '../../types/index';
-import { useState, useContext, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { projectApi } from '../../services/projectApi';
 import { ProjectInitForm } from '../forms/ProjectInitForm';
-import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../services/authApi';
 import { getUsersByRole } from '../../services/userApi';
 import { PermissionType } from '../../models';
 import { AuthUser } from '../../models/userModel';
+import { useAppNavigation } from '../../hooks/useAppNavigation';
 
 export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDeleted, onProjectUpdated }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -19,7 +19,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
   const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
   const [projectManagers, setProjectManagers] = useState<{id: string, name: string}[]>([]);
   const [seniorProjectManagers, setSeniorProjectManagers] = useState<{id: string, name: string}[]>([]);
-  const context = useContext(projectManagementAppContext);
+  const navigation = useAppNavigation();
 
   useEffect(() => {
     const checkUserPermissions = async () => {
@@ -180,10 +180,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
   };
 
   const handleProjectClick = () => {
-    if (context?.setScreenState && context?.setSelectedProject) {
-      context.setSelectedProject(project);
-      context.setScreenState("Project Details");
-    }
+    navigation.navigateToProjectDetails(project);
   };
 
   return (
@@ -212,10 +209,10 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">
-                <strong>Client:</strong> {project.clientName} ({project.typeOfClient})
+                <strong>Client:</strong> {project.clientName} {project.typeOfClient ? `(${project.typeOfClient})` : ''}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Office:</strong> {project.office} ({project.region})
+                <strong>Office:</strong> {project.office} {project.region ? `(${project.region})` : ''}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -223,7 +220,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
                 <strong>Type:</strong> {project.typeOfJob} | <strong>Sector:</strong> {project.sector}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Cost:</strong> {project.currency} {project.estimatedCost.toLocaleString()} ({project.feeType})
+                <strong>Cost:</strong> {project.currency} {project.estimatedCost.toLocaleString()} {project.feeType ? `(${project.feeType})` : ''}
               </Typography>
             </Grid>
           </Grid>

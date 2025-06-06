@@ -5,6 +5,8 @@ export interface ProjectClosureRow {
     createdBy?: string;
     updatedAt?: string | null;
     updatedBy?: string | null;
+    // Workflow fields
+    workflowStatusId?: number;
     // Section A: Overall Project Delivery
     clientFeedback: string | null;
     successCriteria: string | null;
@@ -149,4 +151,16 @@ export interface ProjectClosureRow {
     lessonsLearned?: string | null;
     planningIssues?: string | null;
     planningLessons?: string | null;
+    workflowHistory?:WorkflowHistory
+  }
+
+  export interface WorkflowHistory {
+      id: number;
+      projectClosureId: number;
+      actionDate: Date;
+      comments: string;
+      statusId: number;
+      action: string;
+      actionBy: string;
+      assignedToId: string;
   }

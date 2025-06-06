@@ -17,7 +17,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  FormHelperText,
   SelectChangeEvent
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -73,14 +72,14 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
     checker: ''
   });
 
-  const [users, setUsers] = useState<User[]>([]);
+  const [_users, setUsers] = useState<User[]>([]);
   const context = useContext(projectManagementAppContext);
   const [activityOptions, setActivityOptions] = useState<string[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [loadingEmployees, setLoadingEmployees] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [employeesError, setEmployeesError] = useState<string | null>(null);
+  const [_loading, setLoading] = useState<boolean>(false);
+  const [_loadingEmployees, setLoadingEmployees] = useState<boolean>(false);
+  const [_error, setError] = useState<string | null>(null);
+  const [_employeesError, setEmployeesError] = useState<string | null>(null);
   const [activityToUserMap, setActivityToUserMap] = useState<Map<string, string>>(new Map());
 
   // Fetch WBS data and users when dialog opens
@@ -240,8 +239,10 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
         activityName: editData.activityName,
         objective: editData.objective,
         references: editData.references || '',
+
          documentNumber: editData.documentNumber || '', // Ensure documentNumber is always a string
         documentName: editData.documentName || '',     // Ensure documentName is always a string
+
         fileName: editData.fileName || '',
         qualityIssues: editData.qualityIssues || '',
         completion: editData.completion,
@@ -257,8 +258,10 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
         activityName: '',
         objective: '',
         references: '',
+
          documentNumber: '', // Initialize for new forms
         documentName: '',   // Initialize for new forms
+
         fileName: '',
         qualityIssues: '',
         completion: 'N',

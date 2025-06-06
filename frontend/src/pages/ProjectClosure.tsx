@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Container } from '@mui/material';
-import ProjectClosureList from '../components/projects/projectClosure/ProjectClosureList';
+import ProjectClosureList from '../components/project/projectClosure/ProjectClosureList';
 
 export const ProjectClosure: React.FC = () => {
   return (

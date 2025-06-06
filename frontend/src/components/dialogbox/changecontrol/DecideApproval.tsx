@@ -14,7 +14,6 @@ import {
   Box,
   Backdrop
 } from '@mui/material';
-import { axiosInstance } from '../../../services/axiosConfig';
 import { projectApi } from '../../../services/projectApi';
 import { changeControlApi } from '../../../services/changeControlApi';
 
@@ -91,12 +90,7 @@ const DecideApproval: React.FC<DecideApprovalProps> = ({
           comments: comments || `Changes requested by ${currentUser}`,
           assignedToId: projectResponse.seniorProjectManagerId, // Explicitly assign to SPM
         });
-        // await axiosInstance.post(`/api/projects/${projectId}/changecontrols/${changeControlId}/workflow/requestchanges`, {
-        //   entityId: changeControlId,
-        //   entityType: 'ChangeControl',
-        //   comments: comments || `Changes requested by ${currentUser}`,
-        //   decisionType: 'Approval Changes'
-        // });
+       
       }
 
       // Reset dialog state

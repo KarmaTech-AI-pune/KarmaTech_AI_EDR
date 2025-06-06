@@ -11,8 +11,8 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { ProjectManagementProjectList } from '../components/projects/ProjectManagementProjectList';
-import { ProjectInitializationDialog } from '../components/projects/ProjectInitializationDialog';
+import { ProjectManagementProjectList } from '../components/project/ProjectManagementProjectList.tsx';
+import { ProjectInitializationDialog } from '../components/project/ProjectInitializationDialog.tsx';
 import { Pagination } from '../components/Pagination';
 //import { authApi } from '../dummyapi/authApi';
 import { projectApi } from '../services/projectApi';
@@ -73,7 +73,6 @@ export const ProjectManagement: React.FC = () => {
   useEffect(() => {
     const checkUserPermissions = async () => {
       try {
-        debugger;
         const user = await authApi.getCurrentUser();
 
         if (!user) {

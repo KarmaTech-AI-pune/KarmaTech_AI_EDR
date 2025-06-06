@@ -65,7 +65,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
     setWorkflowDialogOpen(true);
   };
 
-  const handleWorkflowClose = async (success: boolean = false, updatedOpp?: OpportunityTracking) => {
+  const handleWorkflowClose = async (success: boolean = false, _updatedOpp?: OpportunityTracking) => {
     setWorkflowDialogOpen(false);
     if (success) {
       // Update status immediately for instant feedback
@@ -117,9 +117,9 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
     switch (status) {
       case "Initial":
       case "Review Changes":
-        return context.canSubmitForReview;
-      case "Sent for Review":
         return context.canReviewBD;
+      case "Sent for Review":
+        return context.canSubmitForApproval;
       case "Approval Changes":
         return context.canSubmitForApproval;
       case "Sent for Approval":

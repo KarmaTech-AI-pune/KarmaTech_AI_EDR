@@ -43,7 +43,7 @@ namespace NJS.Repositories.Repositories
             // Check if we need to reset the identity seed before adding a new entry
             await ResetIdentitySeedAsync();
 
-            inputRegister.CreatedAt = DateTime.UtcNow;
+            inputRegister.CreatedAt = DateTime.Now;
 
             _context.InputRegisters.Add(inputRegister);
             await _context.SaveChangesAsync();
@@ -55,7 +55,7 @@ namespace NJS.Repositories.Repositories
         {
             if (inputRegister == null) throw new ArgumentNullException(nameof(inputRegister));
 
-            inputRegister.UpdatedAt = DateTime.UtcNow;
+            inputRegister.UpdatedAt = DateTime.Now;
 
             _context.Entry(inputRegister).State = EntityState.Modified;
             // Prevent changing the creation date

@@ -29,6 +29,7 @@ export interface SimpleJobStartFormData {
   preparedBy?: string;
   selections?: any[];
   resources?: JobStartFormResourceData[];
+  status?: string; // Added for workflow status
 }
 
 // Interface for JobStartFormResourceData

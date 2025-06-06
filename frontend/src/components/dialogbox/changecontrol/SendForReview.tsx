@@ -132,7 +132,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
     }
 
     try {
-        debugger;
+        ;
       // Find selected reviewer details
       const selectedReviewerDetails = reviewers.find(r => r.id === selectedReviewer);
       if (!selectedReviewerDetails) {
@@ -149,13 +149,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
         comments: `Sent for review by ${currentUser}`
       });
 
-    //   await axiosInstance.post(`/api/projects/${projectId}/changecontrols/${changeControlId}/workflow/sendtoreview`, {
-    //     entityId: changeControlId,
-    //     entityType: 'ChangeControl',
-    //     assignedToId: selectedReviewer,
-    //     comments: `Sent for review by ${currentUser}`
-    //   });
-
+    
       // Reset dialog state
       setSelectedReviewer('');
       setError(null);

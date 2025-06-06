@@ -47,7 +47,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
 
       if(opportunityId){
         let res =  await opportunityApi.getById(opportunityId)
-      debugger;
+      ;
         if(res.approvalManagerId)
         {
           let directorUser = await getUserById(res.approvalManagerId)

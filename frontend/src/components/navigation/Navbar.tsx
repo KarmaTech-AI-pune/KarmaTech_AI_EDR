@@ -19,11 +19,13 @@ import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../models';
+import { useAppNavigation } from '../../hooks/useAppNavigation';
 
 export const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-  const { setScreenState, setIsAuthenticated, user } = useContext(projectManagementAppContext) as projectManagementAppContextType
+  const { setIsAuthenticated, user } = useContext(projectManagementAppContext) as projectManagementAppContextType;
+  const navigation = useAppNavigation();
 
   // Pages based on permissions
   const [pages, setPages] = useState<string[]>([]);
@@ -32,7 +34,7 @@ export const Navbar = () => {
   useEffect(() => {
     const checkUserPermissions = async () => {
       const currentUser = await authApi.getCurrentUser();
-      
+
       // If no user is logged in, clear pages
       if (!currentUser || !currentUser.roleDetails) {
         setPages([]);
@@ -78,23 +80,32 @@ export const Navbar = () => {
   };
 
   const handleNavClick = (page: string) => {
-    setScreenState(page);
+    switch (page) {
+      case 'Business Development':
+        navigation.navigateToBusinessDevelopment();
+        break;
+      case 'Project Management':
+        navigation.navigateToProjectManagement();
+        break;
+      default:
+        break;
+    }
     handleCloseNavMenu();
   };
 
   const handleLogoClick = () => {
-    setScreenState('Dashboard');
+    navigation.navigateToDashboard();
   };
 
   const handleAdminClick = () => {
-    setScreenState('Admin Panel');
+    navigation.navigateToAdmin();
   };
 
   const handleLogout = async () => {
     try {
       await authApi.logout();
       setIsAuthenticated(false);
-      setScreenState('Login');
+      navigation.navigateToLogin();
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -102,14 +113,14 @@ export const Navbar = () => {
   };
 
   const LogoComponent = () => (
-    <Box 
+    <Box
       onClick={handleLogoClick}
       style={{ cursor: 'pointer' }}
       sx={{ height: '50px', display: 'flex', alignItems: 'center' }}
     >
-      <img 
-        src="/logo-final.png" 
-        alt="NJSEI ISO 9000" 
+      <img
+        src="/logo-final.png"
+        alt="NJSEI ISO 9000"
         style={{
           height: '100%',
           width: 'auto',
@@ -120,9 +131,9 @@ export const Navbar = () => {
   );
 
   return (
-    <AppBar 
-      position="fixed" 
-      sx={{ 
+    <AppBar
+      position="fixed"
+      sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
         background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
         boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .3)'
@@ -185,9 +196,9 @@ export const Navbar = () => {
                 key={page}
                 onClick={() => handleNavClick(page)}
                 data-testid={`desktop-nav-${page.replace(/\s+/g, '-').toLowerCase()}`}
-                sx={{ 
-                  my: 2, 
-                  color: 'white', 
+                sx={{
+                  my: 2,
+                  color: 'white',
                   display: 'block',
                   mx: 1,
                   px: 2,
@@ -215,11 +226,11 @@ export const Navbar = () => {
           {/* User Menu */}
           <Box sx={{ flexGrow: 0 }}>
             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-              <Avatar 
-                alt={user?.name || 'User'} 
+              <Avatar
+                alt={user?.name || 'User'}
                 src={user?.avatar}
-                sx={{ 
-                  width: 40, 
+                sx={{
+                  width: 40,
                   height: 40,
                   bgcolor: 'primary.light',
                   border: '2px solid white'
@@ -266,3 +277,5 @@ export const Navbar = () => {
     </AppBar>
   );
 };
+
+export default Navbar;

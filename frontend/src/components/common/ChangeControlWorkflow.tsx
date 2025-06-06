@@ -1,5 +1,5 @@
 import { Button, Chip } from '@mui/material';
-import { Label, Send } from '@mui/icons-material';
+import { Send } from '@mui/icons-material';
 import { useState, useContext, useEffect } from 'react';
 import { projectManagementAppContext } from '../../App';
 import { ChangeControl } from '../../models';
@@ -81,7 +81,7 @@ export const ChangeControlWorkflow: React.FC<CCWProps> = ({
   const getWorkflowButtonText = (workflowId: number) => {
     const workflowStatus = getWorkflowStatusById(workflowId);
     const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
-    debugger;
+    ;
     switch (status) {
       case "Initial":
       case "Review Changes":
@@ -102,7 +102,7 @@ export const ChangeControlWorkflow: React.FC<CCWProps> = ({
   };
 
   const canShowWorkflowButton = () => {
-    debugger;
+    ;
     if (!context) return false;
 
     const workflowStatus = getWorkflowStatusById(localStatusId);
@@ -131,7 +131,7 @@ export const ChangeControlWorkflow: React.FC<CCWProps> = ({
 
     const workflowStatus = getWorkflowStatusById(localStatusId);
     const status = isValidWorkflowStatus(workflowStatus) ? workflowStatus.status : '';
- debugger;
+ ;
     switch (status) {
       case "Initial":
       case "Review Changes":

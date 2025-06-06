@@ -1,14 +1,8 @@
-using System;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using MediatR;
 using NJS.Domain.Entities;
 using NJS.Domain.UnitWork;
 using NJS.Repositories.Interfaces;
 using NJS.Application.CQRS.JobStartForm.Commands;
-using NJS.Application.Dtos;
-using System.Linq;
 
 namespace NJS.Application.CQRS.JobStartForm.Handlers
 {
@@ -32,18 +26,12 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
             if (request.JobStartForm == null)
                 throw new ArgumentNullException(nameof(request.JobStartForm), "Job Start Form cannot be null");
 
-            // Validate required fields
             if (request.JobStartForm.ProjectId <= 0)
                 throw new ArgumentException("Invalid ProjectId", nameof(request.JobStartForm.ProjectId));
 
-            // Prevent creating with existing FormID
             if (request.JobStartForm.FormId != 0)
                 throw new ArgumentException("FormID must not be provided for new entries. Use update instead.");
 
-            // Removed check for existing form and update logic. This handler only creates.
-            // If an existing form needs update, a separate Update command/handler should be used.
-
-            // Create new form
             var jobStartForm = new NJS.Domain.Entities.JobStartForm
             {
                 ProjectId = request.JobStartForm.ProjectId,
@@ -52,22 +40,19 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                 Description = request.JobStartForm.Description ?? string.Empty,
                 StartDate = request.JobStartForm.StartDate,
                 PreparedBy = request.JobStartForm.PreparedBy ?? string.Empty,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.Now,
 
-                // Map calculated summary fields directly (Manual Mapping)
                 TotalTimeCost = request.JobStartForm.TotalTimeCost,
                 TotalExpenses = request.JobStartForm.TotalExpenses,
                 ServiceTaxAmount = request.JobStartForm.ServiceTaxAmount,
                 ServiceTaxPercentage = request.JobStartForm.ServiceTaxPercentage,
 
-                // Map other financial fields
                 GrandTotal = request.JobStartForm.GrandTotal,
                 ProjectFees = request.JobStartForm.ProjectFees,
                 TotalProjectFees = request.JobStartForm.TotalProjectFees,
                 Profit = request.JobStartForm.Profit
             };
 
-            // Add selections if any, with null checks
             if (request.JobStartForm.Selections?.Any() == true)
             {
                 foreach (var selection in request.JobStartForm.Selections)
@@ -82,7 +67,6 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                 }
             }
 
-            // Add resources if any, with null checks
             if (request.JobStartForm.Resources?.Any() == true)
             {
                 foreach (var resource in request.JobStartForm.Resources)
@@ -90,20 +74,19 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                     jobStartForm.Resources.Add(new JobStartFormResource
                     {
                         WBSTaskId = resource.WBSTaskId,
-                        TaskType = resource.TaskType, // 0 = Manpower/Time, 1 = ODC/Expenses
+                        TaskType = resource.TaskType, 
                         Description = resource.Description ?? string.Empty,
                         Rate = resource.Rate,
                         Units = resource.Units,
                         BudgetedCost = resource.BudgetedCost,
                         Remarks = resource.Remarks ?? string.Empty,
-                        EmployeeName = resource.EmployeeName ?? string.Empty, // For Manpower resources
-                        Name = resource.Name ?? string.Empty, // For ODC resources
-                        CreatedDate = DateTime.UtcNow
+                        EmployeeName = resource.EmployeeName ?? string.Empty, 
+                        Name = resource.Name ?? string.Empty, 
+                        CreatedDate = DateTime.Now
                     });
                 }
             }
 
-            // Add to repository and save
             await _jobStartFormRepository.AddAsync(jobStartForm);
             await _unitOfWork.SaveChangesAsync();
 

@@ -45,11 +45,8 @@ namespace NJS.Repositories.Repositories
         {
             if (changeControl == null) throw new ArgumentNullException(nameof(changeControl));
 
-            // Check if we need to reset the identity seed before adding a new entry
-            await ResetIdentitySeedAsync();
-
             // Set creation timestamp
-            changeControl.CreatedAt = DateTime.UtcNow;
+            changeControl.CreatedAt = DateTime.Now;
 
             _context.ChangeControls.Add(changeControl);
             await _context.SaveChangesAsync();
@@ -67,7 +64,7 @@ namespace NJS.Repositories.Repositories
 
             // Update timestamp
             changeControl.CreatedAt = existingEntity.CreatedAt; // Preserve original creation date
-            changeControl.UpdatedAt = DateTime.UtcNow;
+            changeControl.UpdatedAt = DateTime.Now;
 
             _context.Entry(existingEntity).CurrentValues.SetValues(changeControl);
             await _context.SaveChangesAsync();

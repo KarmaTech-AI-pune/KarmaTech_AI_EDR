@@ -1,28 +1,30 @@
 import { useState, useContext  } from 'react'
-import { 
-    TextField, 
-    Button, 
-    Card, 
-    CardContent, 
-    Typography, 
-    Box, 
+import {
+    TextField,
+    Button,
+    Card,
+    CardContent,
+    Typography,
+    Box,
     Alert,
     Container
 } from '@mui/material';
 import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
+import { useAppNavigation } from '../hooks/useAppNavigation';
 
 export const LoginScreen: React.FC = () => {
     const [email, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { setScreenState, setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
+    const { setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
+    const navigation = useAppNavigation();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        
+
         const credentials: Credentials = {
             email,
             password
@@ -30,14 +32,14 @@ export const LoginScreen: React.FC = () => {
 
         try {
             const result = await authApi.login(credentials);
-            
+
             if (result.success && result.token && result.user) {
                 localStorage.setItem('token', result.token);
-                const storedToken = localStorage.getItem('token');               
+                const storedToken = localStorage.getItem('token');
                 if (storedToken) {
                     setUser(result.user);
                     setIsAuthenticated(true);
-                    setScreenState('Home');
+                    navigation.navigateToHome();
                 } else {
                     setError('Failed to set authentication token');
                 }
@@ -51,30 +53,30 @@ export const LoginScreen: React.FC = () => {
     };
 
     return (
-        <Box 
-            display="flex" 
+        <Box
+            display="flex"
             flexDirection="column"
-            justifyContent="center" 
-            alignItems="center" 
+            justifyContent="center"
+            alignItems="center"
             minHeight="100vh"
             bgcolor="#f5f5f5"
             padding={3}
         >
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 4 }}>
                 <Box sx={{ mb: 3 }}>
-                    <img 
-                        src="/logo-final.png" 
-                        alt="NJSEI Logo" 
-                        style={{ 
+                    <img
+                        src="/logo-final.png"
+                        alt="NJSEI Logo"
+                        style={{
                             maxWidth: '200px',
                             marginBottom: '1rem'
-                        }} 
+                        }}
                     />
                 </Box>
-                <Typography 
-                    variant="h4" 
-                    component="h1" 
-                    sx={{ 
+                <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={{
                         mb: 1,
                         fontWeight: 'bold',
                         color: '#1976d2'
@@ -82,19 +84,19 @@ export const LoginScreen: React.FC = () => {
                 >
                     NJSEI ISO 9000 Forms Project Management Application
                 </Typography>
-                <Typography 
-                    variant="h6" 
-                    sx={{ 
+                <Typography
+                    variant="h6"
+                    sx={{
                         mb: 4,
                         color: '#666'
                     }}
                 >
-                    Version 1.8.2
+                    Version 1.10.4
                 </Typography>
             </Container>
 
-            <Card 
-                sx={{ 
+            <Card
+                sx={{
                     maxWidth: 450,
                     width: '100%',
                     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
@@ -113,7 +115,7 @@ export const LoginScreen: React.FC = () => {
                             margin="normal"
                             value={email}
                             onChange={(e) => setUsername(e.target.value)}
-                            sx={{ 
+                            sx={{
                                 mb: 2,
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: 1
@@ -128,20 +130,20 @@ export const LoginScreen: React.FC = () => {
                             margin="normal"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            sx={{ 
+                            sx={{
                                 mb: 3,
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: 1
                                 }
                             }}
                         />
-                        <Button 
-                            type="submit" 
-                            fullWidth 
-                            variant="contained" 
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
                             color="primary"
                             size="large"
-                            sx={{ 
+                            sx={{
                                 mt: 2,
                                 mb: 2,
                                 py: 1.5,
@@ -161,12 +163,12 @@ export const LoginScreen: React.FC = () => {
                 </CardContent>
             </Card>
             {error && (
-                <Alert 
-                    severity="error" 
-                    sx={{ 
-                        position: 'fixed', 
-                        bottom: 16, 
-                        right: 16, 
+                <Alert
+                    severity="error"
+                    sx={{
+                        position: 'fixed',
+                        bottom: 16,
+                        right: 16,
                         maxWidth: 300,
                         boxShadow: 2
                     }}
@@ -177,3 +179,5 @@ export const LoginScreen: React.FC = () => {
         </Box>
     );
 };
+
+export default LoginScreen;
