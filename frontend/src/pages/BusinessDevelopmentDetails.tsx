@@ -35,7 +35,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import BusinessIcon from '@mui/icons-material/Business';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { projectManagementAppContext } from '../App';
 import { OpportunityTracking } from '../models';
 import { OpportunityForm } from '../components/forms/OpportunityForm';
@@ -86,7 +86,6 @@ const InfoItem: React.FC<{ label: string; value: string | number | undefined }> 
 
 export const BusinessDevelopmentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState('overview');

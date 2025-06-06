@@ -1,11 +1,9 @@
-import React, { useContext } from 'react'; // Import useContext
+import React from 'react'; 
 import { Box, Typography, Paper, Link as MuiLink } from '@mui/material'; // Import MuiLink for styling
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'; // Import an icon
-import { projectManagementAppContext } from '../App'; // Import the context
 import { useAppNavigation } from '../hooks/useAppNavigation';
 
 export const AlertsPanel: React.FC = () => {
-  const context = useContext(projectManagementAppContext); // Get context
   const navigation = useAppNavigation();
 
   // Updated placeholder data with new titles

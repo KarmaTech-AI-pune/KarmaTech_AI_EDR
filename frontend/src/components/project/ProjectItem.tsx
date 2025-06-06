@@ -2,10 +2,9 @@ import { ListItem, Typography, Dialog, DialogTitle, DialogContent, DialogActions
 import { Button } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { ProjectItemProps, ProjectFormData } from '../../types/index';
-import { useState, useContext, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { projectApi } from '../../services/projectApi';
 import { ProjectInitForm } from '../forms/ProjectInitForm';
-import { projectManagementAppContext } from '../../App';
 import { authApi } from '../../services/authApi';
 import { getUsersByRole } from '../../services/userApi';
 import { PermissionType } from '../../models';
@@ -20,7 +19,6 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
   const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
   const [projectManagers, setProjectManagers] = useState<{id: string, name: string}[]>([]);
   const [seniorProjectManagers, setSeniorProjectManagers] = useState<{id: string, name: string}[]>([]);
-  const context = useContext(projectManagementAppContext);
   const navigation = useAppNavigation();
 
   useEffect(() => {

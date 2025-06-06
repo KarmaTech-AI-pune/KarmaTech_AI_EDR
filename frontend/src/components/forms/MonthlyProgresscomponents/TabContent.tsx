@@ -8,7 +8,7 @@ import {
     ContractAndCostsTab, 
     FinancialDetailsTab, 
     ManpowerPlanningTab,
-    ProgressReviewDeliverables
+    // ProgressReviewDeliverables
 } from '../MonthlyProgresscomponents';
 import { TabPanel } from '../MonthlyProgresscomponents/TabPanel';
 
@@ -48,11 +48,11 @@ export const TabContent = memo<TabContentProps>(({
             formData={formData}
             handleInputChange={handleInputChange}
         />,
-        <ProgressReviewDeliverables 
-            key="deliverables"
-            formData={formData}
-            handleInputChange={handleInputChange}
-        />,
+        // <ProgressReviewDeliverables 
+        //     key="deliverables"
+        //     formData={formData}
+        //     handleInputChange={handleInputChange}
+        // />,
         <ChangeOrdersTab 
             key="change-orders"
             formData={formData}
