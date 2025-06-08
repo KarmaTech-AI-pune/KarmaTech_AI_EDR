@@ -14,7 +14,7 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Require authentication for all endpoints
+    [Authorize] 
     public class CorrespondenceController : ControllerBase
     {
         private readonly IMediator _mediator;

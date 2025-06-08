@@ -1,5 +1,5 @@
 import { Send } from "@mui/icons-material";
-import { Button } from "@mui/material";
+import { Button, Chip } from "@mui/material";
 import { useContext, useState, useEffect, useMemo } from "react";
 import ReviewBox from "../dialogbox/ProjectReviewWorkflow/ReviewBox";
 import SendApprovalBox from "../dialogbox/ProjectReviewWorkflow/SendApprovalBox";
@@ -8,6 +8,13 @@ import { projectManagementAppContext } from "../../App";
 import { TaskType } from "../../types/wbs";
 import { PermissionType } from "../../models/permissionTypeModel";
 import { PMWorkflowHistory } from "../../models/pmWorkflowModel";
+
+interface WorkflowDisplayStatus {
+  statusId: number;
+  name: string;
+  status: string;
+}
+
 
 // Define workflow status enum to replace string comparisons
 enum WorkflowStatus {
@@ -33,6 +40,7 @@ interface WorkflowPayload {
 
 interface ProjectTrackingWorkflowProps {
   projectId: string;
+  statusId: number;
   status: string;
   entityId?: number;
   entityType?: string;
@@ -42,6 +50,7 @@ interface ProjectTrackingWorkflowProps {
 
 export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = ({
   projectId,
+  statusId,
   status,
   entityId,
   entityType = "Project",
@@ -66,7 +75,7 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
     
     // Default to initial if no match
     return WorkflowStatus.INITIAL;
-  }, [status]);
+  }, [status,statusId]);
 
   // Extract permission checks using memoization to avoid recalculating
   const userPermissions = useMemo(() => {
@@ -190,8 +199,10 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
     }
   };
 
+  
   // Get button text based on current status
   const getWorkflowButtonText = () => {
+
     switch (normalizedStatus) {
       case WorkflowStatus.INITIAL:
       case WorkflowStatus.REVIEW_CHANGES:
@@ -205,6 +216,19 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
         return "Send for Review";
     }
   };
+
+  const getWorkflowStatusById = (statusId: number): WorkflowDisplayStatus | null => {
+  const statuses: Record<number, WorkflowDisplayStatus> = {
+    1: { statusId: 1, name: 'Initial', status: 'Initial' },
+    2: { statusId: 2, name: 'Sent for Review', status: 'Sent for Review' },
+    3: { statusId: 3, name: 'Review Changes', status: 'Review Changes' },
+    4: { statusId: 4, name: 'Sent for Approval', status: 'Sent for Approval' },
+    5: { statusId: 5, name: 'Approval Changes', status: 'Approval Changes' },
+    6: { statusId: 6, name: 'Approved', status: 'Approved' }
+  };
+  return statuses[statusId] || null;
+};
+
 
   // Get the appropriate dialog based on current status
   const getWorkflowDialog = () => {
@@ -265,7 +289,7 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
 
   return (
     <>
-      {canShowButton && (
+      {canShowButton ? (
         <Button
           onClick={handleWorkflowClick}
           variant="outlined"
@@ -276,8 +300,15 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
         >
           {getWorkflowButtonText()}
         </Button>
+      ):(
+        <Chip         
+          label={getWorkflowStatusById(statusId)?.status}
+          color="primary"
+          size="medium"
+        />
       )}
       {workflowDialogOpen && getWorkflowDialog()}
     </>
   );
+   
 };

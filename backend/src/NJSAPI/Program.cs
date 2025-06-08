@@ -5,6 +5,7 @@ using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using NJSAPI.Extensions;
+using NLog.Web;
 
 internal class Program
 {
@@ -78,13 +79,12 @@ internal class Program
         });
 
         builder.Services.AddCompression();
-
+        builder.Host.UseNLog();
         var app = builder.Build();
-
 
         app.UseSwagger();
         app.UseSwaggerUI();      
-
+      
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");
         app.UseResponseCompression();

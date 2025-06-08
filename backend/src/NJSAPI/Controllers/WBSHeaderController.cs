@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NJS.Application.Dtos;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
@@ -58,47 +59,48 @@ namespace NJSAPI.Controllers
         [HttpGet("{taskType}/status")]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(404)]
-        public async Task<ActionResult<object>> GetWBSHeaderStatus(int projectId, TaskType taskType)
+        public async Task<ActionResult<WbsWorkflowDto>> GetWBSHeaderStatus(int projectId, TaskType taskType)
         {
             var header = await _context.Set<WBSTaskMonthlyHourHeader>()
-                .Include(h => h.WBSHistories)
+                .Include(h => h.WBSHistories.OrderByDescending(h => h.ActionDate))
                 .ThenInclude(h => h.Status)
                 .FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskType);
 
             if (header == null)
             {
-                return NotFound($"WBS header not found for project {projectId} and task type {taskType}");
+               return Ok(header);
             }
 
-            // Check if the header has a direct status (for approved headers)
             if (header.StatusId == (int)PMWorkflowStatusEnum.Approved)
             {
-                // For approved headers, use the direct status
-                Console.WriteLine($"WBS Header {header.Id} is APPROVED (using direct status)");
+                _logger.LogInformation($"WBS Header {header.Id} is APPROVED (using direct status)");
 
-                return Ok(new
+                var result = new WbsWorkflowDto
                 {
-                    id = header.Id,
-                    statusId = (int)PMWorkflowStatusEnum.Approved,
-                    status = "Approved"
-                });
+                    Id = header.Id,
+                    StatusId = header.StatusId,
+                    Status = "Approved"
+                };
+                return Ok(result);
             }
 
-            // Get the latest history entry
             var latestHistory = header.WBSHistories
                 .OrderByDescending(h => h.ActionDate)
                 .FirstOrDefault();
 
             if (latestHistory == null)
             {
-                Console.WriteLine($"WBS Header {header.Id} has no history entries, returning Initial status");
-                return Ok(new { id = header.Id, statusId = 1, status = "Initial" });
+                _logger.LogInformation($"WBS Header {header.Id} has no history entries, returning Initial status");
+                return Ok(new WbsWorkflowDto
+                {
+                    Id = header.Id,
+                    StatusId =1,
+                    Status = "Initial"
+                });
             }
 
-            // Get the status name from the enum
             string statusName = Enum.GetName(typeof(PMWorkflowStatusEnum), latestHistory.StatusId) ?? "Initial";
 
-            // Map the enum name to a user-friendly status name
             string userFriendlyStatus = statusName switch
             {
                 "Initial" => "Initial",
@@ -110,14 +112,13 @@ namespace NJSAPI.Controllers
                 _ => "Initial"
             };
 
-            // Log the status retrieval for debugging
             _logger.LogInformation($"WBS Header {header.Id} status: {latestHistory.StatusId} - Enum: {statusName} - Friendly: {userFriendlyStatus}");
 
-            return Ok(new
+            return Ok(new WbsWorkflowDto
             {
-                id = header.Id,
-                statusId = latestHistory.StatusId,
-                status = userFriendlyStatus
+                Id = header.Id,
+                StatusId = latestHistory.StatusId,
+                Status = userFriendlyStatus
             });
         }
     }
