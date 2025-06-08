@@ -1,27 +1,25 @@
 
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.ChangeControl.Commands;
 using NJS.Application.CQRS.ChangeControl.Queries;
 using NJS.Application.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace NJSAPI.Controllers
 {
     [Route("api/projects/{projectId}/changecontrols")]
     [ApiController]
-    // [Authorize] - Temporarily removed for testing
+    [Authorize]
     public class ChangeControlController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ILogger<ChangeControlController> _logger;
 
-        public ChangeControlController(IMediator mediator)
+        public ChangeControlController(IMediator mediator, ILogger<ChangeControlController> logger)
         {
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+            _logger = logger;
         }
 
         // GET: api/projects/{projectId}/changecontrols
@@ -84,8 +82,6 @@ namespace NJSAPI.Controllers
                     return BadRequest(new { message = "Change control data is null." });
                 }
 
-                // Log the received data for debugging
-                Console.WriteLine($"Received change control data: {System.Text.Json.JsonSerializer.Serialize(changeControlDto)}");
 
                 // Validate required fields
                 if (string.IsNullOrWhiteSpace(changeControlDto.Originator))
@@ -98,10 +94,8 @@ namespace NJSAPI.Controllers
                     return BadRequest(new { message = "Description is required." });
                 }
 
-                // Ensure the project ID in the route matches the one in the DTO
                 if (changeControlDto.ProjectId != projectId)
                 {
-                    // Fix the project ID to match the route
                     changeControlDto.ProjectId = projectId;
                 }
 
@@ -144,25 +138,22 @@ namespace NJSAPI.Controllers
         {
             try
             {
+                
                 if (changeControlDto == null)
                 {
                     return BadRequest(new { message = "Change control data is null." });
                 }
 
-                // Ensure the IDs match
                 if (id != changeControlDto.Id)
                 {
                     return BadRequest(new { message = "ID mismatch between route and request body." });
                 }
 
-                // Ensure the project ID in the route matches the one in the DTO
                 if (changeControlDto.ProjectId != projectId)
                 {
                     return BadRequest(new { message = "Project ID mismatch between route and request body." });
                 }
 
-                // Log the received data for debugging
-                Console.WriteLine($"Received update change control data: {System.Text.Json.JsonSerializer.Serialize(changeControlDto)}");
 
                 // Validate required fields
                 if (string.IsNullOrWhiteSpace(changeControlDto.Originator))

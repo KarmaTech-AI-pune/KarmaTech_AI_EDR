@@ -4,9 +4,6 @@ using NJS.Application.Dtos;
 using NJS.Application.CQRS.JobStartForm.Commands;
 using NJS.Application.CQRS.JobStartForm.Queries;
 using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http; // Added for StatusCodes
 using Microsoft.AspNetCore.Authorization; // Added
 
 namespace NJSAPI.Controllers
