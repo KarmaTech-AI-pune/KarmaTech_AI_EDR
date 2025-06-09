@@ -1,14 +1,9 @@
 import React, {
-  useState,
-  useCallback,
   useMemo,
   useRef,
-  Component,
 } from "react";
 import {
   Box,
-  Tab,
-  Tabs,
   Paper,
   Typography,
   Container,
@@ -28,6 +23,7 @@ import {
   CostToCompleteAndEAC,
   ScheduleTab,
   ManpowerPlanningTab,
+  BudgetRevenueTab,
   ProgressReviewDeliverables,
   ChangeOrdersTab,
   LastMonthActionsTab,
@@ -103,30 +99,38 @@ const tabs = [
   },
   {
     id: "5",
+    label: "Budget Revenue",
+    component: <BudgetRevenueTab/>,
+    inputs: [
+     "budgetTable"
+    ],
+  },
+  {
+    id: "6",
     label: "Manpower Planning",
     component: <ManpowerPlanningTab />,
     inputs: ["manpowerPlanning", "manpowerTotal"],
   },
   {
-    id: "6",
+    id: "7",
     label: "Progress Review Deliverables",
     component: <ProgressReviewDeliverables />,
     inputs: ["progressDeliverable"],
   },
   {
-    id: "7",
+    id: "8",
     label: "Change Orders",
     component: <ChangeOrdersTab />,
     inputs: ["changeOrder"],
   },
   {
-    id: "8",
+    id: "9",
     label: "Last Month Actions",
     component: <LastMonthActionsTab />,
     inputs: ["lastMonthActions"],
   },
   {
-    id: "9",
+    id: "10",
     label: "Current Month Actions",
     component: <CurrentMonthActionsTab />,
     inputs: ["currentMonthActions"],
