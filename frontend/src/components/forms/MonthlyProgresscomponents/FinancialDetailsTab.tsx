@@ -1,71 +1,159 @@
-import React from 'react';
-import {
-    Grid,
-    Paper,
-    Typography
-} from '@mui/material';
-import { InputField } from './InputField';
-import { MonthlyReviewModel } from '../../../models/monthlyReviewModel';
+import React from "react";
+import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { Controller, useFormContext } from "react-hook-form";
+import { Grid, Paper, TextField, Typography } from "@mui/material";
+import { formatCurrency } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
 
-interface FinancialDetailsTabProps {
-    formData: MonthlyReviewModel;
-    handleInputChange: (path: string, value: any) => void;
-    formatCurrency: (value: number | null) => string;
-}
+const FinancialDetailsTab: React.FC = () => {
+    const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
 
-export const FinancialDetailsTab: React.FC<FinancialDetailsTabProps> = ({
-    formData,
-    handleInputChange,
-    formatCurrency
-}) => {
+    // Watch for calculation fields
+    const net = watch("net");
+    const serviceTax = watch("serviceTax");
+    const odcs = watch("budgetOdcs");
+    const staff = watch("budgetStaff");
+
+    // Auto-calculate totals
+    React.useEffect(() => {
+        if (net != null && serviceTax != null) {
+            const feeTotal = net + (net * serviceTax / 100);
+            setValue("feeTotal", feeTotal);
+        }
+    }, [net, serviceTax, setValue]);
+
+    React.useEffect(() => {
+        if (odcs != null && staff != null) {
+            const budgetSubTotal = odcs + staff;
+            setValue("BudgetSubTotal", budgetSubTotal);
+        }
+    }, [odcs, staff, setValue]);
+
+
     return (
         <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
                 <Paper elevation={1} sx={{ p: 2 }}>
-                    <Typography variant="h6" gutterBottom>Fees</Typography>
-                    <InputField
-                        label="Net"
-                        value={formData.fees.net}
-                        onChange={(value) => handleInputChange('fees.net', value)}
-                        tooltip="Net fee amount before tax"
+                    <Typography variant="h6" gutterBottom color="primary">Fees</Typography>
+                    <Controller
+                        name="net"
+                        control={control}
+                        render={({ field }) => (
+                                <TextField
+                                    fullWidth
+                                    label="Net"
+                                    type="text"
+                                    {...field}
+                                    error={!!errors.net}
+                                    helperText={errors.net?.message || ''}
+                                    value={field.value || ''}
+                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                    sx={{ mb: 2 }}
+                                />
+                        )}
                     />
-                    <InputField
-                        label="Service Tax (%)"
-                        value={formData.fees.serviceTax}
-                        onChange={(value) => handleInputChange('fees.serviceTax', value)}
-                        tooltip="Applicable service tax percentage"
+                    <Controller
+                        name="serviceTax"
+                        control={control}
+                        render={({ field }) => (
+                        
+                                <TextField
+                                    fullWidth
+                                    label="Service Tax (%)"
+                                    error={!!errors.serviceTax}
+                                    helperText={errors.serviceTax?.message || ''}
+                                    {...field}
+                                    value={field.value || ''}
+                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                    slotProps={{
+                                        htmlInput: { min: 0, max: 100, step: 0.01 }
+                                    }}
+                                    sx={{ mb: 2 }}
+                                />
+                        )}
                     />
-                    <InputField
-                        label="Total"
-                        value={formData.fees.total != null ? formatCurrency(formData.fees.total) : ''}
-                        readOnly
-                        tooltip="Automatically calculated total including tax"
+                    <Controller
+                        name="feeTotal"
+                        control={control}
+                        render={({ field }) => (
+                                <TextField
+                                    fullWidth
+                                    label="Total"
+                                    type="text"
+                                    error={!!errors.feeTotal}
+                                    helperText={errors.feeTotal?.message || ''}
+                                    {...field}
+                                    value={field.value != null ? formatCurrency(field.value) : ''}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                    sx={{ mb: 2 }}
+                                />
+                        )}
                     />
                 </Paper>
             </Grid>
+
             <Grid item xs={12} md={6}>
                 <Paper elevation={1} sx={{ p: 2 }}>
-                    <Typography variant="h6" gutterBottom>Budget Costs</Typography>
-                    <InputField
-                        label="ODCs"
-                        value={formData.budgetCosts.odcs}
-                        onChange={(value) => handleInputChange('budgetCosts.odcs', value)}
-                        tooltip="Other Direct Costs"
+                    <Typography variant="h6" gutterBottom color="primary">Budget Costs</Typography>
+                    <Controller
+                        name="budgetOdcs"
+                        control={control}
+                        render={({ field }) => (
+                                <TextField
+                                    fullWidth
+                                    label="ODCs"
+                                    type="text"
+                                    error={!!errors.budgetOdcs}
+                                    helperText={errors.budgetOdcs?.message || ''}
+                                    {...field}
+                                    value={field.value || ''}
+                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                    sx={{ mb: 2 }}
+                                />
+                        )}
                     />
-                    <InputField
-                        label="Staff"
-                        value={formData.budgetCosts.staff}
-                        onChange={(value) => handleInputChange('budgetCosts.staff', value)}
-                        tooltip="Staff-related costs"
+                    <Controller
+                        name="budgetStaff"
+                        control={control}
+                        render={({ field }) => (
+                        
+                                <TextField
+                                    fullWidth
+                                    label="Staff"
+                                    type="text"
+                                    error={!!errors.budgetStaff}
+                                    helperText={errors.budgetStaff?.message || ''}
+                                    {...field}
+                                    value={field.value || ''}
+                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                    sx={{ mb: 2 }}
+                                />
+                        )}
                     />
-                    <InputField
-                        label="Sub Total"
-                        value={formData.budgetCosts.subTotal != null ? formatCurrency(formData.budgetCosts.subTotal) : ''}
-                        readOnly
-                        tooltip="Automatically calculated subtotal"
+                    <Controller
+                        name="BudgetSubTotal"
+                        control={control}
+                        render={({ field }) => (
+                                <TextField
+                                    fullWidth
+                                    label="Sub Total"
+                                    type="text"
+                                    error={!!errors.BudgetSubTotal}
+                                    helperText={errors.BudgetSubTotal?.message || ''}
+                                    {...field}
+                                    value={field.value != null ? formatCurrency(field.value) : ''}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                    sx={{ mb: 2 }}
+                                />
+                        )}
                     />
                 </Paper>
             </Grid>
         </Grid>
     );
 };
+
+export default FinancialDetailsTab;
