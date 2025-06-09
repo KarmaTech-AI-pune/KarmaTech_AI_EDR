@@ -51,14 +51,7 @@ const tabs = [
     id: "1",
     label: "Financial Details",
     component: <FinancialDetailsTab />,
-    inputs: [
-      "net",
-      "serviceTax",
-      "feeTotal",
-      "budgetOdcs",
-      "budgetStaff",
-      "BudgetSubTotal",
-    ],
+    inputs: ["financialDetails"],
   },
   {
     id: "2",

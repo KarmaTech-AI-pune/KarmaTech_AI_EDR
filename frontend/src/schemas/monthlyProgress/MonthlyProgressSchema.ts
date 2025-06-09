@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+const financialDetailsSchema = z.object({
+    net: z.number().nullable(),
+    serviceTax: z.number().min(0).max(100).nullable(),
+    feeTotal: z.number().nullable(),
+    budgetOdcs: z.number().nullable(),
+    budgetStaff: z.number().nullable(),
+    BudgetSubTotal: z.number().nullable()
+})
+
 const manpowerSchema = z.object({
     workAssignment: z.string(),
     assignee: z.string().array(),
@@ -102,12 +111,7 @@ const BudgetTableSchema = z.object({
 });
 
 export const MonthlyProgressSchema = z.object({
-    net: z.number().nullable(),
-    serviceTax: z.number().min(0).max(100).nullable(),
-    feeTotal: z.number().nullable(),
-    budgetOdcs: z.number().nullable(),
-    budgetStaff: z.number().nullable(),
-    BudgetSubTotal: z.number().nullable(),
+    financialDetails : financialDetailsSchema,
     lumpsum: z.boolean(),
     timeAndExpense: z.boolean(),
     percentage: z.number().min(0).max(100).nullable(),

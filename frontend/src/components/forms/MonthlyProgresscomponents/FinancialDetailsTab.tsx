@@ -8,23 +8,23 @@ const FinancialDetailsTab: React.FC = () => {
     const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
 
     // Watch for calculation fields
-    const net = watch("net");
-    const serviceTax = watch("serviceTax");
-    const odcs = watch("budgetOdcs");
-    const staff = watch("budgetStaff");
+    const net = watch("financialDetails.net");
+    const serviceTax = watch("financialDetails.serviceTax");
+    const odcs = watch("financialDetails.budgetOdcs");
+    const staff = watch("financialDetails.budgetStaff");
 
     // Auto-calculate totals
     React.useEffect(() => {
         if (net != null && serviceTax != null) {
             const feeTotal = net + (net * serviceTax / 100);
-            setValue("feeTotal", feeTotal);
+            setValue("financialDetails.feeTotal", feeTotal);
         }
     }, [net, serviceTax, setValue]);
 
     React.useEffect(() => {
         if (odcs != null && staff != null) {
             const budgetSubTotal = odcs + staff;
-            setValue("BudgetSubTotal", budgetSubTotal);
+            setValue("financialDetails.BudgetSubTotal", budgetSubTotal);
         }
     }, [odcs, staff, setValue]);
 
@@ -35,7 +35,7 @@ const FinancialDetailsTab: React.FC = () => {
                 <Paper elevation={1} sx={{ p: 2 }}>
                     <Typography variant="h6" gutterBottom color="primary">Fees</Typography>
                     <Controller
-                        name="net"
+                        name="financialDetails.net"
                         control={control}
                         render={({ field }) => (
                                 <TextField
@@ -43,8 +43,8 @@ const FinancialDetailsTab: React.FC = () => {
                                     label="Net"
                                     type="text"
                                     {...field}
-                                    error={!!errors.net}
-                                    helperText={errors.net?.message || ''}
+                                    error={!!errors.financialDetails?.net}
+                                    helperText={errors.financialDetails?.net?.message || ''}
                                     value={field.value || ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                                     sx={{ mb: 2 }}
@@ -52,15 +52,15 @@ const FinancialDetailsTab: React.FC = () => {
                         )}
                     />
                     <Controller
-                        name="serviceTax"
+                        name="financialDetails.serviceTax"
                         control={control}
                         render={({ field }) => (
                         
                                 <TextField
                                     fullWidth
                                     label="Service Tax (%)"
-                                    error={!!errors.serviceTax}
-                                    helperText={errors.serviceTax?.message || ''}
+                                    error={!!errors.financialDetails?.serviceTax}
+                                    helperText={errors.financialDetails?.serviceTax?.message || ''}
                                     {...field}
                                     value={field.value || ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
@@ -72,15 +72,15 @@ const FinancialDetailsTab: React.FC = () => {
                         )}
                     />
                     <Controller
-                        name="feeTotal"
+                        name="financialDetails.feeTotal"
                         control={control}
                         render={({ field }) => (
                                 <TextField
                                     fullWidth
                                     label="Total"
                                     type="text"
-                                    error={!!errors.feeTotal}
-                                    helperText={errors.feeTotal?.message || ''}
+                                    error={!!errors.financialDetails?.feeTotal}
+                                    helperText={errors.financialDetails?.feeTotal?.message || ''}
                                     {...field}
                                     value={field.value != null ? formatCurrency(field.value) : ''}
                                     InputProps={{
@@ -97,15 +97,15 @@ const FinancialDetailsTab: React.FC = () => {
                 <Paper elevation={1} sx={{ p: 2 }}>
                     <Typography variant="h6" gutterBottom color="primary">Budget Costs</Typography>
                     <Controller
-                        name="budgetOdcs"
+                        name="financialDetails.budgetOdcs"
                         control={control}
                         render={({ field }) => (
                                 <TextField
                                     fullWidth
                                     label="ODCs"
                                     type="text"
-                                    error={!!errors.budgetOdcs}
-                                    helperText={errors.budgetOdcs?.message || ''}
+                                    error={!!errors.financialDetails?.budgetOdcs}
+                                    helperText={errors.financialDetails?.budgetOdcs?.message || ''}
                                     {...field}
                                     value={field.value || ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
@@ -114,7 +114,7 @@ const FinancialDetailsTab: React.FC = () => {
                         )}
                     />
                     <Controller
-                        name="budgetStaff"
+                        name="financialDetails.budgetStaff"
                         control={control}
                         render={({ field }) => (
                         
@@ -122,8 +122,8 @@ const FinancialDetailsTab: React.FC = () => {
                                     fullWidth
                                     label="Staff"
                                     type="text"
-                                    error={!!errors.budgetStaff}
-                                    helperText={errors.budgetStaff?.message || ''}
+                                    error={!!errors.financialDetails?.budgetStaff}
+                                    helperText={errors.financialDetails?.budgetStaff?.message || ''}
                                     {...field}
                                     value={field.value || ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
@@ -132,15 +132,15 @@ const FinancialDetailsTab: React.FC = () => {
                         )}
                     />
                     <Controller
-                        name="BudgetSubTotal"
+                        name="financialDetails.BudgetSubTotal"
                         control={control}
                         render={({ field }) => (
                                 <TextField
                                     fullWidth
                                     label="Sub Total"
                                     type="text"
-                                    error={!!errors.BudgetSubTotal}
-                                    helperText={errors.BudgetSubTotal?.message || ''}
+                                    error={!!errors.financialDetails?.BudgetSubTotal}
+                                    helperText={errors.financialDetails?.BudgetSubTotal?.message || ''}
                                     {...field}
                                     value={field.value != null ? formatCurrency(field.value) : ''}
                                     InputProps={{
