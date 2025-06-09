@@ -15,9 +15,11 @@ namespace NJS.Application.Extensions
             services.AddMediatR(cfg =>
             {
                 cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+                cfg.RegisterServicesFromAssembly(typeof(IMonthlyProgressRepository).Assembly); // Register repository assembly
             });
 
             services.AddScoped<IProjectRepository, ProjectRepository>();
+            services.AddScoped<IMonthlyProgressRepository, MonthlyProgressRepository>(); // Added for Monthly Progress module
             services.AddScoped<IScoringDescriptionRepository, ScoringDescriptionRepository>();
             services.AddScoped<IScoringDescriptionService, ScoringDescriptionService>();
             services.AddScoped<IFeasibilityStudyRepository, FeasibilityStudyRepository>();
