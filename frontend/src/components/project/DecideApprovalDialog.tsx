@@ -43,10 +43,11 @@ const DecideApprovalDialog: React.FC<DecideApprovalDialogProps> = ({
         setSubmitting(true);
         try {
             if (decision === 'approve') {
-                await pmWorkflowApi.approve({
+                await pmWorkflowApi.approvedByRDOrRM({
                     entityId,
                     entityType,
-                    comments
+                    comments,
+                    action: 'Approve'
                 });
             } else {
                 // Get the project to find the SPM ID
@@ -59,9 +60,8 @@ const DecideApprovalDialog: React.FC<DecideApprovalDialogProps> = ({
                     entityType,
                     comments,
                     isApprovalChanges: true,
-                    assignedToId: project.seniorProjectManagerId // Assign to SPM
-                    ,
-                    action: ''
+                    assignedToId: project.seniorProjectManagerId?.toString() || '', // Assign to SPM
+                    action: 'Request Changes'
                 });
             }
 

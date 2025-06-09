@@ -147,8 +147,6 @@ describe("OpportunityForm Component", () => {
 
   // Mock context
   const mockContext: projectManagementAppContextType = {
-    screenState: "dashboard",
-    setScreenState: vi.fn(),
     isAuthenticated: true,
     setIsAuthenticated: vi.fn(),
     user: {
