@@ -74,6 +74,10 @@ namespace NJS.Domain.Database
         public DbSet<ChangeOrder> ChangeOrders { get; set; }
         public DbSet<LastMonthAction> LastMonthActions { get; set; }
         public DbSet<CurrentMonthAction> CurrentMonthActions { get; set; }
+        public DbSet<BudgetTable> BudgetTables { get; set; }
+        public DbSet<OriginalBudget> OriginalBudgets { get; set; }
+        public DbSet<CurrentBudgetInMIS> CurrentBudgetInMIS { get; set; }
+        public DbSet<PercentCompleteOnCosts> PercentCompleteOnCosts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -101,29 +105,49 @@ namespace NJS.Domain.Database
                 .HasForeignKey<Schedule>(s => s.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.ManpowerPlanning)
-                .WithOne(mp => mp.MonthlyProgress)
-                .HasForeignKey<ManpowerPlanning>(mp => mp.MonthlyProgressId);
+                .HasMany(mp => mp.ManpowerEntries)
+                .WithOne(mpe => mpe.MonthlyProgress)
+                .HasForeignKey(mpe => mpe.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.ProgressDeliverable)
+                .HasMany(mp => mp.ProgressDeliverables)
                 .WithOne(pd => pd.MonthlyProgress)
-                .HasForeignKey<ProgressDeliverable>(pd => pd.MonthlyProgressId);
+                .HasForeignKey(pd => pd.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.ChangeOrder)
+                .HasMany(mp => mp.ChangeOrders)
                 .WithOne(co => co.MonthlyProgress)
-                .HasForeignKey<ChangeOrder>(co => co.MonthlyProgressId);
+                .HasForeignKey(co => co.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.LastMonthAction)
+                .HasMany(mp => mp.LastMonthActions)
                 .WithOne(lma => lma.MonthlyProgress)
-                .HasForeignKey<LastMonthAction>(lma => lma.MonthlyProgressId);
+                .HasForeignKey(lma => lma.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.CurrentMonthAction)
+                .HasMany(mp => mp.CurrentMonthActions)
                 .WithOne(cma => cma.MonthlyProgress)
-                .HasForeignKey<CurrentMonthAction>(cma => cma.MonthlyProgressId);
+                .HasForeignKey(cma => cma.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.BudgetTable)
+                .WithOne(bt => bt.MonthlyProgress)
+                .HasForeignKey<BudgetTable>(bt => bt.MonthlyProgressId);
+
+            modelBuilder.Entity<BudgetTable>()
+                .HasOne(bt => bt.OriginalBudget)
+                .WithOne(ob => ob.BudgetTable)
+                .HasForeignKey<OriginalBudget>(ob => ob.BudgetTableId);
+
+            modelBuilder.Entity<BudgetTable>()
+                .HasOne(bt => bt.CurrentBudgetInMIS)
+                .WithOne(cb => cb.BudgetTable)
+                .HasForeignKey<CurrentBudgetInMIS>(cb => cb.BudgetTableId);
+
+            modelBuilder.Entity<BudgetTable>()
+                .HasOne(bt => bt.PercentCompleteOnCosts)
+                .WithOne(pcc => pcc.BudgetTable)
+                .HasForeignKey<PercentCompleteOnCosts>(pcc => pcc.BudgetTableId);
 
             // Configure Identity tables
             modelBuilder.Entity<IdentityUserLogin<string>>(entity =>

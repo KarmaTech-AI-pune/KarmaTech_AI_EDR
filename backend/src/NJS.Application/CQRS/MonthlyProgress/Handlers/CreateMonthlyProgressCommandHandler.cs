@@ -38,8 +38,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 } : null,
                 ContractAndCost = request.MonthlyProgress.ContractAndCost != null ? new ContractAndCost
                 {
-                    LumpSum = request.MonthlyProgress.ContractAndCost.LumpSum,
-                    TimeAndExpense = request.MonthlyProgress.ContractAndCost.TimeAndExpense,
+                    ContractType = request.MonthlyProgress.ContractAndCost.ContractType,
                     Percentage = request.MonthlyProgress.ContractAndCost.Percentage,
                     ActualOdcs = request.MonthlyProgress.ContractAndCost.ActualOdcs,
                     ActualStaff = request.MonthlyProgress.ContractAndCost.ActualStaff,
@@ -60,48 +59,53 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     CompletionDateAsPerExtension = request.MonthlyProgress.Schedule.CompletionDateAsPerExtension,
                     ExpectedCompletionDate = request.MonthlyProgress.Schedule.ExpectedCompletionDate
                 } : null,
-                ManpowerPlanning = request.MonthlyProgress.ManpowerPlanning != null ? new ManpowerPlanning
-                {
-                    WorkAssignment = request.MonthlyProgress.ManpowerPlanning.WorkAssignment,
-                    Assignee = request.MonthlyProgress.ManpowerPlanning.Assignee,
-                    Planned = request.MonthlyProgress.ManpowerPlanning.Planned,
-                    Consumed = request.MonthlyProgress.ManpowerPlanning.Consumed,
-                    Balance = request.MonthlyProgress.ManpowerPlanning.Balance,
-                    NextMonthPlanning = request.MonthlyProgress.ManpowerPlanning.NextMonthPlanning,
-                    ManpowerComments = request.MonthlyProgress.ManpowerPlanning.ManpowerComments
-                } : null,
-                ProgressDeliverable = request.MonthlyProgress.ProgressDeliverable != null ? new ProgressDeliverable
-                {
-                    Milestone = request.MonthlyProgress.ProgressDeliverable.Milestone,
-                    DueDateContract = request.MonthlyProgress.ProgressDeliverable.DueDateContract,
-                    DueDatePlanned = request.MonthlyProgress.ProgressDeliverable.DueDatePlanned,
-                    AchievedDate = request.MonthlyProgress.ProgressDeliverable.AchievedDate,
-                    PaymentDue = request.MonthlyProgress.ProgressDeliverable.PaymentDue,
-                    InvoiceDate = request.MonthlyProgress.ProgressDeliverable.InvoiceDate,
-                    PaymentReceivedDate = request.MonthlyProgress.ProgressDeliverable.PaymentReceivedDate,
-                    DeliverableComments = request.MonthlyProgress.ProgressDeliverable.DeliverableComments
-                } : null,
-                ChangeOrder = request.MonthlyProgress.ChangeOrder != null ? new ChangeOrder
-                {
-                    ContractTotal = request.MonthlyProgress.ChangeOrder.ContractTotal,
-                    Cost = request.MonthlyProgress.ChangeOrder.Cost,
-                    Fee = request.MonthlyProgress.ChangeOrder.Fee,
-                    SummaryDetails = request.MonthlyProgress.ChangeOrder.SummaryDetails,
-                    Status = request.MonthlyProgress.ChangeOrder.Status
-                } : null,
-                LastMonthAction = request.MonthlyProgress.LastMonthAction != null ? new LastMonthAction
-                {
-                    LMactions = request.MonthlyProgress.LastMonthAction.LMactions,
-                    LMAdate = request.MonthlyProgress.LastMonthAction.LMAdate,
-                    LMAcomments = request.MonthlyProgress.LastMonthAction.LMAcomments
-                } : null,
-                CurrentMonthAction = request.MonthlyProgress.CurrentMonthAction != null ? new CurrentMonthAction
-                {
-                    CMactions = request.MonthlyProgress.CurrentMonthAction.CMactions,
-                    CMAdate = request.MonthlyProgress.CurrentMonthAction.CMAdate,
-                    CMAcomments = request.MonthlyProgress.CurrentMonthAction.CMAcomments,
-                    CMApriority = request.MonthlyProgress.CurrentMonthAction.CMApriority
-                } : null
+                ManpowerEntries = request.MonthlyProgress.ManpowerEntries != null ?
+                    request.MonthlyProgress.ManpowerEntries.Select(mp => new ManpowerPlanning
+                    {
+                        WorkAssignment = mp.WorkAssignment,
+                        Assignee = mp.AssigneesJson,
+                        Planned = mp.Planned ?? 0m,
+                        Consumed = mp.Consumed ?? 0m,
+                        Balance = mp.Balance ?? 0m,
+                        NextMonthPlanning = mp.NextMonthPlanning ?? 0m,
+                        ManpowerComments = mp.ManpowerComments
+                    }).ToList() : new List<ManpowerPlanning>(),
+                ProgressDeliverables = request.MonthlyProgress.ProgressDeliverables != null ?
+                    request.MonthlyProgress.ProgressDeliverables.Select(pd => new ProgressDeliverable
+                    {
+                        Milestone = pd.Milestone,
+                        DueDateContract = pd.DueDateContract,
+                        DueDatePlanned = pd.DueDatePlanned,
+                        AchievedDate = pd.AchievedDate,
+                        PaymentDue = pd.PaymentDue,
+                        InvoiceDate = pd.InvoiceDate,
+                        PaymentReceivedDate = pd.PaymentReceivedDate,
+                        DeliverableComments = pd.DeliverableComments
+                    }).ToList() : new List<ProgressDeliverable>(),
+                ChangeOrders = request.MonthlyProgress.ChangeOrders != null ?
+                    request.MonthlyProgress.ChangeOrders.Select(co => new ChangeOrder
+                    {
+                        ContractTotal = co.ContractTotal,
+                        Cost = co.Cost,
+                        Fee = co.Fee,
+                        SummaryDetails = co.SummaryDetails,
+                        Status = co.Status
+                    }).ToList() : new List<ChangeOrder>(),
+                LastMonthActions = request.MonthlyProgress.LastMonthActions != null ?
+                    request.MonthlyProgress.LastMonthActions.Select(lma => new LastMonthAction
+                    {
+                        LMactions = lma.LMactions,
+                        LMAdate = lma.LMAdate,
+                        LMAcomments = lma.LMAcomments
+                    }).ToList() : new List<LastMonthAction>(),
+                CurrentMonthActions = request.MonthlyProgress.CurrentMonthActions != null ?
+                    request.MonthlyProgress.CurrentMonthActions.Select(cma => new CurrentMonthAction
+                    {
+                        CMactions = cma.CMactions,
+                        CMAdate = cma.CMAdate,
+                        CMAcomments = cma.CMAcomments,
+                        CMApriority = cma.CMApriority
+                    }).ToList() : new List<CurrentMonthAction>()
             };
 
             await _monthlyProgressRepository.AddAsync(monthlyProgressEntity);

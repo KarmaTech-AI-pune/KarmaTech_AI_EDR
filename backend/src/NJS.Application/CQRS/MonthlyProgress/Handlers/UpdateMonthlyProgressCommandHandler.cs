@@ -61,8 +61,6 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 {
                     existingMonthlyProgress.ContractAndCost = new ContractAndCost();
                 }
-                existingMonthlyProgress.ContractAndCost.LumpSum = request.MonthlyProgress.ContractAndCost.LumpSum;
-                existingMonthlyProgress.ContractAndCost.TimeAndExpense = request.MonthlyProgress.ContractAndCost.TimeAndExpense;
                 existingMonthlyProgress.ContractAndCost.Percentage = request.MonthlyProgress.ContractAndCost.Percentage;
                 existingMonthlyProgress.ContractAndCost.ActualOdcs = request.MonthlyProgress.ContractAndCost.ActualOdcs;
                 existingMonthlyProgress.ContractAndCost.ActualStaff = request.MonthlyProgress.ContractAndCost.ActualStaff;
@@ -108,96 +106,255 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 existingMonthlyProgress.Schedule = null;
             }
 
-            // Update ManpowerPlanning
-            if (request.MonthlyProgress.ManpowerPlanning != null)
+            // Update ManpowerEntries (collection)
+            if (request.MonthlyProgress.ManpowerEntries != null)
             {
-                if (existingMonthlyProgress.ManpowerPlanning == null)
+                if (existingMonthlyProgress.ManpowerEntries == null)
                 {
-                    existingMonthlyProgress.ManpowerPlanning = new ManpowerPlanning();
+                    existingMonthlyProgress.ManpowerEntries = new List<ManpowerPlanning>();
                 }
-                existingMonthlyProgress.ManpowerPlanning.WorkAssignment = request.MonthlyProgress.ManpowerPlanning.WorkAssignment;
-                existingMonthlyProgress.ManpowerPlanning.Assignee = request.MonthlyProgress.ManpowerPlanning.Assignee;
-                existingMonthlyProgress.ManpowerPlanning.Planned = request.MonthlyProgress.ManpowerPlanning.Planned;
-                existingMonthlyProgress.ManpowerPlanning.Consumed = request.MonthlyProgress.ManpowerPlanning.Consumed;
-                existingMonthlyProgress.ManpowerPlanning.Balance = request.MonthlyProgress.ManpowerPlanning.Balance;
-                existingMonthlyProgress.ManpowerPlanning.NextMonthPlanning = request.MonthlyProgress.ManpowerPlanning.NextMonthPlanning;
-                existingMonthlyProgress.ManpowerPlanning.ManpowerComments = request.MonthlyProgress.ManpowerPlanning.ManpowerComments;
+
+                // Remove entries not present in the request
+                var manpowerEntriesToRemove = existingMonthlyProgress.ManpowerEntries
+                    .Where(existingEntry => !request.MonthlyProgress.ManpowerEntries.Any(dto => dto.WorkAssignment == existingEntry.WorkAssignment))
+                    .ToList();
+
+                foreach (var entryToRemove in manpowerEntriesToRemove)
+                {
+                    existingMonthlyProgress.ManpowerEntries.Remove(entryToRemove);
+                }
+
+                foreach (var manpowerDto in request.MonthlyProgress.ManpowerEntries)
+                {
+                    var existingEntry = existingMonthlyProgress.ManpowerEntries.FirstOrDefault(e => e.WorkAssignment == manpowerDto.WorkAssignment);
+
+                    if (existingEntry == null)
+                    {
+                        // Add new entry
+                        existingMonthlyProgress.ManpowerEntries.Add(new ManpowerPlanning
+                        {
+                            WorkAssignment = manpowerDto.WorkAssignment,
+                            Assignee = manpowerDto.AssigneesJson, // Map AssigneesJson to Assignee
+                            Planned = manpowerDto.Planned ?? 0,
+                            Consumed = manpowerDto.Consumed ?? 0,
+                            Balance = manpowerDto.Balance ?? 0,
+                            NextMonthPlanning = manpowerDto.NextMonthPlanning ?? 0,
+                            ManpowerComments = manpowerDto.ManpowerComments
+                        });
+                    }
+                    else
+                    {
+                        // Update existing entry
+                        existingEntry.Assignee = manpowerDto.AssigneesJson;
+                        existingEntry.Planned = manpowerDto.Planned ?? existingEntry.Planned;
+                        existingEntry.Consumed = manpowerDto.Consumed ?? existingEntry.Consumed;
+                        existingEntry.Balance = manpowerDto.Balance ?? existingEntry.Balance;
+                        existingEntry.NextMonthPlanning = manpowerDto.NextMonthPlanning ?? existingEntry.NextMonthPlanning;
+                        existingEntry.ManpowerComments = manpowerDto.ManpowerComments;
+                    }
+                }
             }
-            else if (existingMonthlyProgress.ManpowerPlanning != null)
+            else if (existingMonthlyProgress.ManpowerEntries != null)
             {
-                existingMonthlyProgress.ManpowerPlanning = null;
+                existingMonthlyProgress.ManpowerEntries.Clear();
+            }
+            existingMonthlyProgress.ManpowerTotal = request.MonthlyProgress.ManpowerTotal;
+
+            // Update ProgressDeliverables (collection)
+            if (request.MonthlyProgress.ProgressDeliverables != null)
+            {
+                if (existingMonthlyProgress.ProgressDeliverables == null)
+                {
+                    existingMonthlyProgress.ProgressDeliverables = new List<ProgressDeliverable>();
+                }
+
+                // Remove entries not present in the request
+                var deliverablesToRemove = existingMonthlyProgress.ProgressDeliverables
+                    .Where(existingEntry => !request.MonthlyProgress.ProgressDeliverables.Any(dto => dto.Milestone == existingEntry.Milestone))
+                    .ToList();
+
+                foreach (var entryToRemove in deliverablesToRemove)
+                {
+                    existingMonthlyProgress.ProgressDeliverables.Remove(entryToRemove);
+                }
+
+                foreach (var deliverableDto in request.MonthlyProgress.ProgressDeliverables)
+                {
+                    var existingEntry = existingMonthlyProgress.ProgressDeliverables.FirstOrDefault(e => e.Milestone == deliverableDto.Milestone);
+
+                    if (existingEntry == null)
+                    {
+                        // Add new entry
+                        existingMonthlyProgress.ProgressDeliverables.Add(new ProgressDeliverable
+                        {
+                            Milestone = deliverableDto.Milestone,
+                            DueDateContract = deliverableDto.DueDateContract,
+                            DueDatePlanned = deliverableDto.DueDatePlanned,
+                            AchievedDate = deliverableDto.AchievedDate,
+                            PaymentDue = deliverableDto.PaymentDue,
+                            InvoiceDate = deliverableDto.InvoiceDate,
+                            PaymentReceivedDate = deliverableDto.PaymentReceivedDate,
+                            DeliverableComments = deliverableDto.DeliverableComments
+                        });
+                    }
+                    else
+                    {
+                        // Update existing entry
+                        existingEntry.DueDateContract = deliverableDto.DueDateContract;
+                        existingEntry.DueDatePlanned = deliverableDto.DueDatePlanned;
+                        existingEntry.AchievedDate = deliverableDto.AchievedDate;
+                        existingEntry.PaymentDue = deliverableDto.PaymentDue;
+                        existingEntry.InvoiceDate = deliverableDto.InvoiceDate;
+                        existingEntry.PaymentReceivedDate = deliverableDto.PaymentReceivedDate;
+                        existingEntry.DeliverableComments = deliverableDto.DeliverableComments;
+                    }
+                }
+            }
+            else if (existingMonthlyProgress.ProgressDeliverables != null)
+            {
+                existingMonthlyProgress.ProgressDeliverables.Clear();
             }
 
-            // Update ProgressDeliverable
-            if (request.MonthlyProgress.ProgressDeliverable != null)
+            // Update ChangeOrders (collection)
+            if (request.MonthlyProgress.ChangeOrders != null)
             {
-                if (existingMonthlyProgress.ProgressDeliverable == null)
+                if (existingMonthlyProgress.ChangeOrders == null)
                 {
-                    existingMonthlyProgress.ProgressDeliverable = new ProgressDeliverable();
+                    existingMonthlyProgress.ChangeOrders = new List<ChangeOrder>();
                 }
-                existingMonthlyProgress.ProgressDeliverable.Milestone = request.MonthlyProgress.ProgressDeliverable.Milestone;
-                existingMonthlyProgress.ProgressDeliverable.DueDateContract = request.MonthlyProgress.ProgressDeliverable.DueDateContract;
-                existingMonthlyProgress.ProgressDeliverable.DueDatePlanned = request.MonthlyProgress.ProgressDeliverable.DueDatePlanned;
-                existingMonthlyProgress.ProgressDeliverable.AchievedDate = request.MonthlyProgress.ProgressDeliverable.AchievedDate;
-                existingMonthlyProgress.ProgressDeliverable.PaymentDue = request.MonthlyProgress.ProgressDeliverable.PaymentDue;
-                existingMonthlyProgress.ProgressDeliverable.InvoiceDate = request.MonthlyProgress.ProgressDeliverable.InvoiceDate;
-                existingMonthlyProgress.ProgressDeliverable.PaymentReceivedDate = request.MonthlyProgress.ProgressDeliverable.PaymentReceivedDate;
-                existingMonthlyProgress.ProgressDeliverable.DeliverableComments = request.MonthlyProgress.ProgressDeliverable.DeliverableComments;
+
+                // Remove entries not present in the request
+                var changeOrdersToRemove = existingMonthlyProgress.ChangeOrders
+                    .Where(existingEntry => !request.MonthlyProgress.ChangeOrders.Any(dto => dto.SummaryDetails == existingEntry.SummaryDetails))
+                    .ToList();
+
+                foreach (var entryToRemove in changeOrdersToRemove)
+                {
+                    existingMonthlyProgress.ChangeOrders.Remove(entryToRemove);
+                }
+
+                foreach (var changeOrderDto in request.MonthlyProgress.ChangeOrders)
+                {
+                    var existingEntry = existingMonthlyProgress.ChangeOrders.FirstOrDefault(e => e.SummaryDetails == changeOrderDto.SummaryDetails);
+
+                    if (existingEntry == null)
+                    {
+                        // Add new entry
+                        existingMonthlyProgress.ChangeOrders.Add(new ChangeOrder
+                        {
+                            ContractTotal = changeOrderDto.ContractTotal,
+                            Cost = changeOrderDto.Cost,
+                            Fee = changeOrderDto.Fee,
+                            SummaryDetails = changeOrderDto.SummaryDetails,
+                            Status = changeOrderDto.Status
+                        });
+                    }
+                    else
+                    {
+                        // Update existing entry
+                        existingEntry.ContractTotal = changeOrderDto.ContractTotal;
+                        existingEntry.Cost = changeOrderDto.Cost;
+                        existingEntry.Fee = changeOrderDto.Fee;
+                        existingEntry.SummaryDetails = changeOrderDto.SummaryDetails;
+                        existingEntry.Status = changeOrderDto.Status;
+                    }
+                }
             }
-            else if (existingMonthlyProgress.ProgressDeliverable != null)
+            else if (existingMonthlyProgress.ChangeOrders != null)
             {
-                existingMonthlyProgress.ProgressDeliverable = null;
+                existingMonthlyProgress.ChangeOrders.Clear();
             }
 
-            // Update ChangeOrder
-            if (request.MonthlyProgress.ChangeOrder != null)
+            // Update LastMonthActions (collection)
+            if (request.MonthlyProgress.LastMonthActions != null)
             {
-                if (existingMonthlyProgress.ChangeOrder == null)
+                if (existingMonthlyProgress.LastMonthActions == null)
                 {
-                    existingMonthlyProgress.ChangeOrder = new ChangeOrder();
+                    existingMonthlyProgress.LastMonthActions = new List<LastMonthAction>();
                 }
-                existingMonthlyProgress.ChangeOrder.ContractTotal = request.MonthlyProgress.ChangeOrder.ContractTotal;
-                existingMonthlyProgress.ChangeOrder.Cost = request.MonthlyProgress.ChangeOrder.Cost;
-                existingMonthlyProgress.ChangeOrder.Fee = request.MonthlyProgress.ChangeOrder.Fee;
-                existingMonthlyProgress.ChangeOrder.SummaryDetails = request.MonthlyProgress.ChangeOrder.SummaryDetails;
-                existingMonthlyProgress.ChangeOrder.Status = request.MonthlyProgress.ChangeOrder.Status;
+
+                // Remove entries not present in the request
+                var lastMonthActionsToRemove = existingMonthlyProgress.LastMonthActions
+                    .Where(existingEntry => !request.MonthlyProgress.LastMonthActions.Any(dto => dto.LMactions == existingEntry.LMactions))
+                    .ToList();
+
+                foreach (var entryToRemove in lastMonthActionsToRemove)
+                {
+                    existingMonthlyProgress.LastMonthActions.Remove(entryToRemove);
+                }
+
+                foreach (var lastMonthActionDto in request.MonthlyProgress.LastMonthActions)
+                {
+                    var existingEntry = existingMonthlyProgress.LastMonthActions.FirstOrDefault(e => e.LMactions == lastMonthActionDto.LMactions);
+
+                    if (existingEntry == null)
+                    {
+                        // Add new entry
+                        existingMonthlyProgress.LastMonthActions.Add(new LastMonthAction
+                        {
+                            LMactions = lastMonthActionDto.LMactions,
+                            LMAdate = lastMonthActionDto.LMAdate,
+                            LMAcomments = lastMonthActionDto.LMAcomments
+                        });
+                    }
+                    else
+                    {
+                        // Update existing entry
+                        existingEntry.LMAdate = lastMonthActionDto.LMAdate;
+                        existingEntry.LMAcomments = lastMonthActionDto.LMAcomments;
+                    }
+                }
             }
-            else if (existingMonthlyProgress.ChangeOrder != null)
+            else if (existingMonthlyProgress.LastMonthActions != null)
             {
-                existingMonthlyProgress.ChangeOrder = null;
+                existingMonthlyProgress.LastMonthActions.Clear();
             }
 
-            // Update LastMonthAction
-            if (request.MonthlyProgress.LastMonthAction != null)
+            // Update CurrentMonthActions (collection)
+            if (request.MonthlyProgress.CurrentMonthActions != null)
             {
-                if (existingMonthlyProgress.LastMonthAction == null)
+                if (existingMonthlyProgress.CurrentMonthActions == null)
                 {
-                    existingMonthlyProgress.LastMonthAction = new LastMonthAction();
+                    existingMonthlyProgress.CurrentMonthActions = new List<CurrentMonthAction>();
                 }
-                existingMonthlyProgress.LastMonthAction.LMactions = request.MonthlyProgress.LastMonthAction.LMactions;
-                existingMonthlyProgress.LastMonthAction.LMAdate = request.MonthlyProgress.LastMonthAction.LMAdate;
-                existingMonthlyProgress.LastMonthAction.LMAcomments = request.MonthlyProgress.LastMonthAction.LMAcomments;
-            }
-            else if (existingMonthlyProgress.LastMonthAction != null)
-            {
-                existingMonthlyProgress.LastMonthAction = null;
-            }
 
-            // Update CurrentMonthAction
-            if (request.MonthlyProgress.CurrentMonthAction != null)
-            {
-                if (existingMonthlyProgress.CurrentMonthAction == null)
+                // Remove entries not present in the request
+                var currentMonthActionsToRemove = existingMonthlyProgress.CurrentMonthActions
+                    .Where(existingEntry => !request.MonthlyProgress.CurrentMonthActions.Any(dto => dto.CMactions == existingEntry.CMactions))
+                    .ToList();
+
+                foreach (var entryToRemove in currentMonthActionsToRemove)
                 {
-                    existingMonthlyProgress.CurrentMonthAction = new CurrentMonthAction();
+                    existingMonthlyProgress.CurrentMonthActions.Remove(entryToRemove);
                 }
-                existingMonthlyProgress.CurrentMonthAction.CMactions = request.MonthlyProgress.CurrentMonthAction.CMactions;
-                existingMonthlyProgress.CurrentMonthAction.CMAdate = request.MonthlyProgress.CurrentMonthAction.CMAdate;
-                existingMonthlyProgress.CurrentMonthAction.CMAcomments = request.MonthlyProgress.CurrentMonthAction.CMAcomments;
-                existingMonthlyProgress.CurrentMonthAction.CMApriority = request.MonthlyProgress.CurrentMonthAction.CMApriority;
+
+                foreach (var currentMonthActionDto in request.MonthlyProgress.CurrentMonthActions)
+                {
+                    var existingEntry = existingMonthlyProgress.CurrentMonthActions.FirstOrDefault(e => e.CMactions == currentMonthActionDto.CMactions);
+
+                    if (existingEntry == null)
+                    {
+                        // Add new entry
+                        existingMonthlyProgress.CurrentMonthActions.Add(new CurrentMonthAction
+                        {
+                            CMactions = currentMonthActionDto.CMactions,
+                            CMAdate = currentMonthActionDto.CMAdate,
+                            CMAcomments = currentMonthActionDto.CMAcomments,
+                            CMApriority = currentMonthActionDto.CMApriority
+                        });
+                    }
+                    else
+                    {
+                        // Update existing entry
+                        existingEntry.CMAdate = currentMonthActionDto.CMAdate;
+                        existingEntry.CMAcomments = currentMonthActionDto.CMAcomments;
+                        existingEntry.CMApriority = currentMonthActionDto.CMApriority;
+                    }
+                }
             }
-            else if (existingMonthlyProgress.CurrentMonthAction != null)
+            else if (existingMonthlyProgress.CurrentMonthActions != null)
             {
-                existingMonthlyProgress.CurrentMonthAction = null;
+                existingMonthlyProgress.CurrentMonthActions.Clear();
             }
 
             await _monthlyProgressRepository.UpdateAsync(existingMonthlyProgress);
