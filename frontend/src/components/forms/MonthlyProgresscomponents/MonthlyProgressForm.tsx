@@ -63,13 +63,7 @@ const tabs = [
     id: "3",
     label: "CTC & EAC",
     component: <CostToCompleteAndEAC/>,
-    inputs: [
-      "ctcODC",
-      "ctcStaff",
-      "ctcSubtotal",
-      "totalEAC",
-      "grossProfitPercentage",
-    ]
+    inputs: ["ctcAndEac"]
   },
   {
     id: "4",
@@ -163,11 +157,13 @@ export const MonthlyProgressForm: React.FC = () => {
           profitPercentage: 0
         }
       },
+      ctcAndEac: {
       ctcODC: null,
       ctcStaff: null,
       ctcSubtotal: null,
       totalEAC: null,
       grossProfitPercentage: null,
+      },
       dateOfIssueWOLOI: new Date(),
       completionDateAsPerContract: new Date(),
       completionDateAsPerExtension: new Date(),
