@@ -9,6 +9,16 @@ const financialDetailsSchema = z.object({
     BudgetSubTotal: z.number().nullable()
 })
 
+const contractAndCostSchema = z.object({
+    contractType: z.enum(['lumpsum', 'timeAndExpense'], {
+    required_error: "Please select a contract type"
+  }),
+    percentage: z.number().min(0).max(100).nullable(),
+    actualOdcs: z.number().nullable(),
+    actualStaff: z.number().nullable(),
+    actualSubtotal: z.number().nullable(),
+})
+
 const manpowerSchema = z.object({
     workAssignment: z.string(),
     assignee: z.string().array(),
@@ -54,7 +64,7 @@ const currentMonthActionSchema = z.object({
 // Budget Table Schema
 const BudgetRowSchema = z.object({
     revenueFee: z
-        .string()
+        .number()
         .min(1, "Revenue/Fee is required")
         .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
             message: "Revenue/Fee must be a valid positive number"
@@ -62,7 +72,7 @@ const BudgetRowSchema = z.object({
         .transform((val) => Number(val)),
     
     cost: z
-        .string()
+        .number()
         .min(1, "Cost is required")
         .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
             message: "Cost must be a valid positive number"
@@ -70,7 +80,7 @@ const BudgetRowSchema = z.object({
         .transform((val) => Number(val)),
     
     profitPercentage: z
-        .string()
+        .number()
         .min(1, "Profit percentage is required")
         .refine((val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100, {
             message: "Profit percentage must be between 0 and 100"
@@ -85,7 +95,7 @@ const BudgetTableSchema = z.object({
     
     percentCompleteOnCosts: z.object({
         revenueFee: z
-            .string()
+            .number()
             .min(1, "Revenue/Fee completion percentage is required")
             .refine((val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100, {
                 message: "Revenue/Fee completion must be between 0 and 100"
@@ -93,7 +103,7 @@ const BudgetTableSchema = z.object({
             .transform((val) => Number(val)),
         
         cost: z
-            .string()
+            .number()
             .min(1, "Cost completion percentage is required")
             .refine((val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100, {
                 message: "Cost completion must be between 0 and 100"
@@ -101,7 +111,7 @@ const BudgetTableSchema = z.object({
             .transform((val) => Number(val)),
         
         profitPercentage: z
-            .string()
+            .number()
             .min(1, "Profit completion percentage is required")
             .refine((val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100, {
                 message: "Profit completion must be between 0 and 100"
@@ -111,13 +121,8 @@ const BudgetTableSchema = z.object({
 });
 
 export const MonthlyProgressSchema = z.object({
-    financialDetails : financialDetailsSchema,
-    lumpsum: z.boolean(),
-    timeAndExpense: z.boolean(),
-    percentage: z.number().min(0).max(100).nullable(),
-    actualOdcs: z.number().nullable(),
-    actualStaff: z.number().nullable(),
-    actualSubtotal: z.number().nullable(),
+    financialDetails: financialDetailsSchema,
+    contractAndCost: contractAndCostSchema,
     ctcODC: z.number().nullable(),
     ctcStaff: z.number().nullable(),
     ctcSubtotal: z.number().nullable(),

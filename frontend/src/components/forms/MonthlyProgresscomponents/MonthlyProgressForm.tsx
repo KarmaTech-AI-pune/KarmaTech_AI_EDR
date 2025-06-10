@@ -57,14 +57,7 @@ const tabs = [
     id: "2",
     label: "Contract & Costs",
     component: <ContractAndCostsTab />,
-    inputs: [
-      "lumpsum",
-      "timeAndExpense",
-      "percentage",
-      "actualOdcs",
-      "actualStaff",
-      "actualSubtotal",
-    ],
+    inputs: ["contractAndCost"],
   },
   {
     id: "3",
@@ -138,18 +131,38 @@ export const MonthlyProgressForm: React.FC = () => {
   const form = useForm<MonthlyProgressSchemaType>({
     resolver: zodResolver(MonthlyProgressSchema),
     defaultValues: {
-      net: null,
-      serviceTax: null,
-      feeTotal: null,
-      budgetOdcs: null,
-      budgetStaff: null,
-      BudgetSubTotal: null,
-      lumpsum: false,
-      timeAndExpense: false,
-      percentage: null,
-      actualOdcs: null,
-      actualStaff: null,
-      actualSubtotal: null,
+      financialDetails: {
+        net: null,
+        serviceTax: null,
+        feeTotal: null,
+        budgetOdcs: null,
+        budgetStaff: null,
+        BudgetSubTotal: null,
+      },
+      contractAndCost: {
+        contractType: "lumpsum", // Default to lumpsum
+        percentage: null,
+        actualOdcs: null,
+        actualStaff: null,
+        actualSubtotal: null,
+      },
+      budgetTable: {
+        originalBudget: {
+          revenueFee: 0,
+          cost: 0,
+          profitPercentage: 0
+        },
+        currentBudgetInMIS: {
+          revenueFee: 0,
+          cost: 0,
+          profitPercentage: 0
+        },
+        percentCompleteOnCosts: {
+          revenueFee: 0,
+          cost: 0,
+          profitPercentage: 0
+        }
+      },
       ctcODC: null,
       ctcStaff: null,
       ctcSubtotal: null,

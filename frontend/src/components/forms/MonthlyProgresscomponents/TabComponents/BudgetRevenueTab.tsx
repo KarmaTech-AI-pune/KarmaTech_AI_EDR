@@ -68,7 +68,7 @@ const BudgetRevenueTab: React.FC = () => {
                         type="number"
                         placeholder="Revenue/Fee"
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                         error={!!errors.budgetTable?.originalBudget?.revenueFee}
                         helperText={errors.budgetTable?.originalBudget?.revenueFee?.message}
                         sx={textFieldStyle}
@@ -88,7 +88,7 @@ const BudgetRevenueTab: React.FC = () => {
                         type="number"
                         placeholder="Cost"
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                         error={!!errors.budgetTable?.originalBudget?.cost}
                         helperText={errors.budgetTable?.originalBudget?.cost?.message}
                         sx={textFieldStyle}
@@ -108,7 +108,7 @@ const BudgetRevenueTab: React.FC = () => {
                         type="number"
                         placeholder="Profit(%)"
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
                         error={!!errors.budgetTable?.originalBudget?.profitPercentage}
                         helperText={errors.budgetTable?.originalBudget?.profitPercentage?.message}
                         sx={textFieldStyle}
@@ -138,7 +138,7 @@ const BudgetRevenueTab: React.FC = () => {
                         type="number"
                         placeholder="Revenue/Fee"
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
                         error={!!errors.budgetTable?.currentBudgetInMIS?.revenueFee}
                         helperText={errors.budgetTable?.currentBudgetInMIS?.revenueFee?.message}
                         sx={textFieldStyle}
@@ -158,7 +158,7 @@ const BudgetRevenueTab: React.FC = () => {
                         type="number"
                         placeholder="Cost"
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
                         error={!!errors.budgetTable?.currentBudgetInMIS?.cost}
                         helperText={errors.budgetTable?.currentBudgetInMIS?.cost?.message}
                         sx={textFieldStyle}
@@ -178,7 +178,7 @@ const BudgetRevenueTab: React.FC = () => {
                         type="number"
                         placeholder="Profit(%)"
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
                         error={!!errors.budgetTable?.currentBudgetInMIS?.profitPercentage}
                         helperText={errors.budgetTable?.currentBudgetInMIS?.profitPercentage?.message}
                         sx={textFieldStyle}
@@ -208,7 +208,7 @@ const BudgetRevenueTab: React.FC = () => {
                         type="number"
                         placeholder="Revenue/Fee %"
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
                         error={!!errors.budgetTable?.percentCompleteOnCosts?.revenueFee}
                         helperText={errors.budgetTable?.percentCompleteOnCosts?.revenueFee?.message}
                         sx={textFieldStyle}
@@ -231,7 +231,7 @@ const BudgetRevenueTab: React.FC = () => {
                         type="number"
                         placeholder="Cost %"
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
                         error={!!errors.budgetTable?.percentCompleteOnCosts?.cost}
                         helperText={errors.budgetTable?.percentCompleteOnCosts?.cost?.message}
                         sx={textFieldStyle}
@@ -254,7 +254,7 @@ const BudgetRevenueTab: React.FC = () => {
                         type="number"
                         placeholder="Profit %"
                         value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
                         error={!!errors.budgetTable?.percentCompleteOnCosts?.profitPercentage}
                         helperText={errors.budgetTable?.percentCompleteOnCosts?.profitPercentage?.message}
                         sx={textFieldStyle}
