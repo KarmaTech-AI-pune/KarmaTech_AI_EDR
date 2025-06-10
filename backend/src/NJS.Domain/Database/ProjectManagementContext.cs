@@ -63,9 +63,67 @@ namespace NJS.Domain.Database
         public DbSet<ChangeControlWorkflowHistory> ChangeControlWorkflowHistories { get; set; }
         public DbSet<ProjectClosureWorkflowHistory> ProjectClosureWorkflowHistories { get; set; }
 
+        // Monthly Progress entities
+        public DbSet<MonthlyProgress> MonthlyProgresses { get; set; }
+        public DbSet<FinancialDetails> FinancialDetails { get; set; }
+        public DbSet<ContractAndCost> ContractAndCosts { get; set; }
+        public DbSet<CTCEAC> CTCEACs { get; set; }
+        public DbSet<Schedule> Schedules { get; set; }
+        public DbSet<ManpowerPlanning> ManpowerPlannings { get; set; }
+        public DbSet<ProgressDeliverable> ProgressDeliverables { get; set; }
+        public DbSet<ChangeOrder> ChangeOrders { get; set; }
+        public DbSet<LastMonthAction> LastMonthActions { get; set; }
+        public DbSet<CurrentMonthAction> CurrentMonthActions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure one-to-one relationships with MonthlyProgress
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.FinancialDetails)
+                .WithOne(fd => fd.MonthlyProgress)
+                .HasForeignKey<FinancialDetails>(fd => fd.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.ContractAndCost)
+                .WithOne(cc => cc.MonthlyProgress)
+                .HasForeignKey<ContractAndCost>(cc => cc.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.CTCEAC)
+                .WithOne(cte => cte.MonthlyProgress)
+                .HasForeignKey<CTCEAC>(cte => cte.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.Schedule)
+                .WithOne(s => s.MonthlyProgress)
+                .HasForeignKey<Schedule>(s => s.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.ManpowerPlanning)
+                .WithOne(mp => mp.MonthlyProgress)
+                .HasForeignKey<ManpowerPlanning>(mp => mp.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.ProgressDeliverable)
+                .WithOne(pd => pd.MonthlyProgress)
+                .HasForeignKey<ProgressDeliverable>(pd => pd.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.ChangeOrder)
+                .WithOne(co => co.MonthlyProgress)
+                .HasForeignKey<ChangeOrder>(co => co.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.LastMonthAction)
+                .WithOne(lma => lma.MonthlyProgress)
+                .HasForeignKey<LastMonthAction>(lma => lma.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.CurrentMonthAction)
+                .WithOne(cma => cma.MonthlyProgress)
+                .HasForeignKey<CurrentMonthAction>(cma => cma.MonthlyProgressId);
 
             // Configure Identity tables
             modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
