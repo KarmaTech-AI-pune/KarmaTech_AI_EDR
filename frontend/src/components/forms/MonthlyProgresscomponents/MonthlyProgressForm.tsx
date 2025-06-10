@@ -83,7 +83,7 @@ const tabs = [
     id: "6",
     label: "Manpower Planning",
     component: <ManpowerPlanningTab />,
-    inputs: ["manpowerPlanning", "manpowerTotal"],
+    inputs: ["manpowerPlanning"],
   },
   {
     id: "7",
@@ -164,9 +164,15 @@ export const MonthlyProgressForm: React.FC = () => {
       completionDateAsPerExtension: new Date(),
       expectedCompletionDate: new Date(),
       },
-      completeOnCosts: null,
-      manpowerPlanning: [],
-      manpowerTotal: 0,
+      manpowerPlanning: {
+        manpower: [],
+        manpowerTotal: {
+          plannedTotal: 0,
+          consumedTotal: 0,
+          balanceTotal: 0,
+          nextMonthPlanningTotal: 0,
+        }
+      },
       changeOrder: [],
       lastMonthActions: [],
       currentMonthActions: [],
