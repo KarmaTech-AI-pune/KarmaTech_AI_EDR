@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
 import {
@@ -14,13 +14,16 @@ const ContractAndCostsTab: React.FC = () => {
   const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
 
   // Watch actual costs to calculate subtotal
-  const actualOdcs = watch('actualOdcs') || 0;
-  const actualStaff = watch('actualStaff') || 0;
+  const actualOdcs = watch('contractAndCost.actualOdcs') || 0;
+  const actualStaff = watch('contractAndCost.actualStaff') || 0;
   const calculatedSubtotal = actualOdcs + actualStaff;
+  
+  // Watch contract type
+  const contractType = watch('contractAndCost.contractType');
 
   // Update the actualSubtotal field whenever the calculated value changes
-  React.useEffect(() => {
-    setValue('actualSubtotal', calculatedSubtotal);
+  useEffect(() => {
+    setValue('contractAndCost.actualSubtotal', calculatedSubtotal);
   }, [calculatedSubtotal, setValue]);
 
   // Common text field styles following the application pattern
@@ -45,50 +48,42 @@ const ContractAndCostsTab: React.FC = () => {
             Contract Type
           </Typography>
 
-          <Controller
-            name="lumpsum"
-            control={control}
-            render={({ field }) => (
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                      sx={{
-                        '&.Mui-checked': {
-                          color: '#1869DA'
-                        }
-                      }}
-                    />
-                  }
-                  label="Lumpsum"
-                />
-            )}
-          />
+<FormControlLabel
+  control={
+    <Checkbox
+      checked={contractType === 'lumpsum'}
+      onChange={() => {
+        setValue('contractAndCost.contractType', 'lumpsum');
+      }}
+      sx={{
+        '&.Mui-checked': {
+          color: '#1869DA'
+        }
+      }}
+    />
+  }
+  label="Lumpsum"
+/>
+
+<FormControlLabel
+  control={
+    <Checkbox
+      checked={contractType === 'timeAndExpense'}
+      onChange={() => {
+        setValue('contractAndCost.contractType', 'timeAndExpense');
+      }}
+      sx={{
+        '&.Mui-checked': {
+          color: '#1869DA'
+        }
+      }}
+    />
+  }
+  label="Time & Expense"
+/>
 
           <Controller
-            name="timeAndExpense"
-            control={control}
-            render={({ field }) => (
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                      sx={{
-                        '&.Mui-checked': {
-                          color: '#1869DA'
-                        }
-                      }}
-                    />
-                  }
-                  label="Time & Expense"
-                />
-            )}
-          />
-
-          <Controller
-            name="percentage"
+            name="contractAndCost.percentage"
             control={control}
             render={({ field }) => (
                 <TextField
@@ -97,8 +92,8 @@ const ContractAndCostsTab: React.FC = () => {
                   type="number"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                  error={!!errors.percentage}
-                  helperText={errors.percentage?.message || ''}
+                  error={!!errors.contractAndCost?.percentage}
+                  helperText={errors.contractAndCost?.percentage?.message || ''}
                   sx={textFieldStyle}
                   margin="normal"
                 />
@@ -114,7 +109,7 @@ const ContractAndCostsTab: React.FC = () => {
           </Typography>
 
           <Controller
-            name="actualOdcs"
+            name="contractAndCost.actualOdcs"
             control={control}
             render={({ field }) => (
                 <TextField
@@ -123,8 +118,8 @@ const ContractAndCostsTab: React.FC = () => {
                   type="number"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                  error={!!errors.actualOdcs}
-                  helperText={errors.actualOdcs?.message || ''}
+                  error={!!errors.contractAndCost?.actualOdcs}
+                  helperText={errors.contractAndCost?.actualOdcs?.message || ''}
                   sx={textFieldStyle}
                   margin="normal"
                 />
@@ -132,7 +127,7 @@ const ContractAndCostsTab: React.FC = () => {
           />
 
           <Controller
-            name="actualStaff"
+            name="contractAndCost.actualStaff"
             control={control}
             render={({ field }) => (
                 <TextField
@@ -141,8 +136,8 @@ const ContractAndCostsTab: React.FC = () => {
                   type="number"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                  error={!!errors.actualStaff}
-                  helperText={errors.actualStaff?.message || ''}
+                  error={!!errors.contractAndCost?.actualStaff}
+                  helperText={errors.contractAndCost?.actualStaff?.message || ''}
                   sx={textFieldStyle}
                   margin="normal"
                 />
@@ -150,7 +145,7 @@ const ContractAndCostsTab: React.FC = () => {
           />
 
           <Controller
-            name="actualSubtotal"
+            name="contractAndCost.actualSubtotal"
             control={control}
             render={() => (
                 <TextField

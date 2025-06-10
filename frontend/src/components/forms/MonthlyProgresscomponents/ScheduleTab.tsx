@@ -49,7 +49,7 @@ const ScheduleTab: React.FC = () => {
       <Grid item xs={12} md={6}>
 
           <Controller
-            name="dateOfIssueWOLOI"
+            name="schedule.dateOfIssueWOLOI"
             control={control}
             render={({ field }) => (
                 <TextField
@@ -58,8 +58,8 @@ const ScheduleTab: React.FC = () => {
                   type="date"
                   value={formatDateForInput(field.value)}
                   onChange={(e) => field.onChange(parseDateFromInput(e.target.value))}
-                  error={!!errors.dateOfIssueWOLOI}
-                  helperText={errors.dateOfIssueWOLOI?.message || ''}
+                  error={!!errors.schedule?.dateOfIssueWOLOI}
+                  helperText={errors.schedule?.dateOfIssueWOLOI?.message || ''}
                   sx={textFieldStyle}
                   margin="normal"
                   slotProps={{
@@ -72,7 +72,7 @@ const ScheduleTab: React.FC = () => {
           />
 
           <Controller
-            name="completionDateAsPerContract"
+            name="schedule.completionDateAsPerContract"
             control={control}
             render={({ field }) => (
                 <TextField
@@ -81,8 +81,8 @@ const ScheduleTab: React.FC = () => {
                   type="date"
                   value={formatDateForInput(field.value)}
                   onChange={(e) => field.onChange(parseDateFromInput(e.target.value))}
-                  error={!!errors.completionDateAsPerContract}
-                  helperText={errors.completionDateAsPerContract?.message || ''}
+                  error={!!errors.schedule?.completionDateAsPerContract}
+                  helperText={errors.schedule?.completionDateAsPerContract?.message || ''}
                   sx={textFieldStyle}
                   margin="normal"
                   slotProps={{
@@ -98,7 +98,7 @@ const ScheduleTab: React.FC = () => {
 
       <Grid item xs={12} md={6}>
         <Controller
-            name="completionDateAsPerExtension"
+            name="schedule.completionDateAsPerExtension"
             control={control}
             render={({ field }) => (
                 <TextField
@@ -107,8 +107,8 @@ const ScheduleTab: React.FC = () => {
                   type="date"
                   value={formatDateForInput(field.value)}
                   onChange={(e) => field.onChange(parseDateFromInput(e.target.value))}
-                  error={!!errors.completionDateAsPerExtension}
-                  helperText={errors.completionDateAsPerExtension?.message || ''}
+                  error={!!errors.schedule?.completionDateAsPerExtension}
+                  helperText={errors.schedule?.completionDateAsPerExtension?.message || ''}
                   sx={textFieldStyle}
                   margin="normal"
                   slotProps={{
@@ -121,7 +121,7 @@ const ScheduleTab: React.FC = () => {
           />
 
           <Controller
-            name="expectedCompletionDate"
+            name="schedule.expectedCompletionDate"
             control={control}
             render={({ field }) => (
                 <TextField
@@ -130,8 +130,8 @@ const ScheduleTab: React.FC = () => {
                   type="date"
                   value={formatDateForInput(field.value)}
                   onChange={(e) => field.onChange(parseDateFromInput(e.target.value))}
-                  error={!!errors.expectedCompletionDate}
-                  helperText={errors.expectedCompletionDate?.message || ''}
+                  error={!!errors.schedule?.expectedCompletionDate}
+                  helperText={errors.schedule?.expectedCompletionDate?.message || ''}
                   sx={textFieldStyle}
                   margin="normal"
                   slotProps={{

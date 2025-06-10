@@ -7,12 +7,12 @@ import React from "react";
 const CostToCompleteAndEAC: React.FC = () => {
   const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
 
-  const ctcODC = watch('ctcODC') || 0;
-  const ctcStaff = watch('ctcStaff') || 0;
+  const ctcODC = watch('ctcAndEac.ctcODC') || 0;
+  const ctcStaff = watch('ctcAndEac.ctcStaff') || 0;
   const calculatedSubtotal = ctcODC + ctcStaff;
 
   React.useEffect(() => {
-    setValue('ctcSubtotal', calculatedSubtotal);
+    setValue('ctcAndEac.ctcSubtotal', calculatedSubtotal);
   }, [calculatedSubtotal, setValue]);
 
   return (
@@ -24,7 +24,7 @@ const CostToCompleteAndEAC: React.FC = () => {
                   </Typography>
 
                   <Controller
-                      name="ctcODC"
+                      name="ctcAndEac.ctcODC"
                       control={control}
                       render={({ field }) => (
                           <TextField
@@ -33,15 +33,15 @@ const CostToCompleteAndEAC: React.FC = () => {
                               type="number"
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              error={!!errors.ctcODC}
-                              helperText={errors.ctcODC?.message || ''}
+                              error={!!errors.ctcAndEac?.ctcODC}
+                              helperText={errors.ctcAndEac?.ctcODC?.message || ''}
                               sx={{ mb: 2 }}
                           />
                       )}
                   />
 
                   <Controller
-                      name="ctcStaff"
+                      name="ctcAndEac.ctcStaff"
                       control={control}
                       render={({ field }) => (
                           <TextField
@@ -50,14 +50,14 @@ const CostToCompleteAndEAC: React.FC = () => {
                               type="number"
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              error={!!errors.ctcStaff}
-                              helperText={errors.ctcStaff?.message || ''}
+                              error={!!errors.ctcAndEac?.ctcStaff}
+                              helperText={errors.ctcAndEac?.ctcStaff?.message || ''}
                               sx={{ mb: 2 }}
                           />
                       )}
                   />
                   <Controller
-                      name="ctcSubtotal"
+                      name="ctcAndEac.ctcSubtotal"
                       control={control}
                       render={({ field }) => (
                           <TextField
@@ -66,8 +66,8 @@ const CostToCompleteAndEAC: React.FC = () => {
                               type="number"
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              error={!!errors.ctcSubtotal}
-                              helperText={errors.ctcSubtotal?.message || ''}
+                              error={!!errors.ctcAndEac?.ctcSubtotal}
+                              helperText={errors.ctcAndEac?.ctcSubtotal?.message || ''}
                               inputProps={{
                                   readOnly: true,
                               }}
@@ -84,7 +84,7 @@ const CostToCompleteAndEAC: React.FC = () => {
                   </Typography>
 
                   <Controller
-                      name="totalEAC"
+                      name="ctcAndEac.totalEAC"
                       control={control}
                       render={({ field }) => (
                           <TextField
@@ -93,15 +93,15 @@ const CostToCompleteAndEAC: React.FC = () => {
                               type="number"
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              error={!!errors.totalEAC}
-                              helperText={errors.totalEAC?.message || ''}
+                              error={!!errors.ctcAndEac?.totalEAC}
+                              helperText={errors.ctcAndEac?.totalEAC?.message || ''}
                               sx={{ mb: 2 }}
                           />
                       )}
                   />
 
                   <Controller
-                      name="grossProfitPercentage"
+                      name="ctcAndEac.grossProfitPercentage"
                       control={control}
                       render={({ field }) => (
                           <TextField
@@ -110,8 +110,8 @@ const CostToCompleteAndEAC: React.FC = () => {
                               type="number"
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              error={!!errors.grossProfitPercentage}
-                              helperText={errors.grossProfitPercentage?.message || ''}
+                              error={!!errors.ctcAndEac?.grossProfitPercentage}
+                              helperText={errors.ctcAndEac?.grossProfitPercentage?.message || ''}
                               sx={{ mb: 2 }}
                           />
                       )}

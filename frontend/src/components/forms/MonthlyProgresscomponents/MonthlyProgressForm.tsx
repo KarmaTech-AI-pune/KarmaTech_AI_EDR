@@ -1,14 +1,9 @@
 import React, {
-  useState,
-  useCallback,
   useMemo,
   useRef,
-  Component,
 } from "react";
 import {
   Box,
-  Tab,
-  Tabs,
   Paper,
   Typography,
   Container,
@@ -28,6 +23,7 @@ import {
   CostToCompleteAndEAC,
   ScheduleTab,
   ManpowerPlanningTab,
+  BudgetRevenueTab,
   ProgressReviewDeliverables,
   ChangeOrdersTab,
   LastMonthActionsTab,
@@ -55,78 +51,60 @@ const tabs = [
     id: "1",
     label: "Financial Details",
     component: <FinancialDetailsTab />,
-    inputs: [
-      "net",
-      "serviceTax",
-      "feeTotal",
-      "budgetOdcs",
-      "budgetStaff",
-      "BudgetSubTotal",
-    ],
+    inputs: ["financialDetails"],
   },
   {
     id: "2",
     label: "Contract & Costs",
     component: <ContractAndCostsTab />,
-    inputs: [
-      "lumpsum",
-      "timeAndExpense",
-      "percentage",
-      "actualOdcs",
-      "actualStaff",
-      "actualSubtotal",
-    ],
+    inputs: ["contractAndCost"],
   },
   {
     id: "3",
     label: "CTC & EAC",
     component: <CostToCompleteAndEAC/>,
-    inputs: [
-      "ctcODC",
-      "ctcStaff",
-      "ctcSubtotal",
-      "totalEAC",
-      "grossProfitPercentage",
-    ]
+    inputs: ["ctcAndEac"]
   },
   {
     id: "4",
     label: "Schedule",
     component: <ScheduleTab />,
-    inputs: [
-      "dateOfIssueWOLOI",
-      "completionDateAsPerContract",
-      "completionDateAsPerExtension",
-      "expectedCompletionDate",
-      "completeOnCosts"
-    ],
+    inputs: ["schedule"],
   },
   {
     id: "5",
-    label: "Manpower Planning",
-    component: <ManpowerPlanningTab />,
-    inputs: ["manpowerPlanning", "manpowerTotal"],
+    label: "Budget Revenue",
+    component: <BudgetRevenueTab/>,
+    inputs: [
+     "budgetTable"
+    ],
   },
   {
     id: "6",
+    label: "Manpower Planning",
+    component: <ManpowerPlanningTab />,
+    inputs: ["manpowerPlanning"],
+  },
+  {
+    id: "7",
     label: "Progress Review Deliverables",
     component: <ProgressReviewDeliverables />,
     inputs: ["progressDeliverable"],
   },
   {
-    id: "7",
+    id: "8",
     label: "Change Orders",
     component: <ChangeOrdersTab />,
     inputs: ["changeOrder"],
   },
   {
-    id: "8",
+    id: "9",
     label: "Last Month Actions",
     component: <LastMonthActionsTab />,
     inputs: ["lastMonthActions"],
   },
   {
-    id: "9",
+    id: "10",
     label: "Current Month Actions",
     component: <CurrentMonthActionsTab />,
     inputs: ["currentMonthActions"],
@@ -141,30 +119,60 @@ export const MonthlyProgressForm: React.FC = () => {
   const form = useForm<MonthlyProgressSchemaType>({
     resolver: zodResolver(MonthlyProgressSchema),
     defaultValues: {
-      net: null,
-      serviceTax: null,
-      feeTotal: null,
-      budgetOdcs: null,
-      budgetStaff: null,
-      BudgetSubTotal: null,
-      lumpsum: false,
-      timeAndExpense: false,
-      percentage: null,
-      actualOdcs: null,
-      actualStaff: null,
-      actualSubtotal: null,
+      financialDetails: {
+        net: null,
+        serviceTax: null,
+        feeTotal: null,
+        budgetOdcs: null,
+        budgetStaff: null,
+        BudgetSubTotal: null,
+      },
+      contractAndCost: {
+        contractType: "lumpsum", // Default to lumpsum
+        percentage: null,
+        actualOdcs: null,
+        actualStaff: null,
+        actualSubtotal: null,
+      },
+      budgetTable: {
+        originalBudget: {
+          revenueFee: 0,
+          cost: 0,
+          profitPercentage: 0
+        },
+        currentBudgetInMIS: {
+          revenueFee: 0,
+          cost: 0,
+          profitPercentage: 0
+        },
+        percentCompleteOnCosts: {
+          revenueFee: 0,
+          cost: 0,
+          profitPercentage: 0
+        }
+      },
+      ctcAndEac: {
       ctcODC: null,
       ctcStaff: null,
       ctcSubtotal: null,
       totalEAC: null,
       grossProfitPercentage: null,
-      dateOfIssueWOLOI: new Date(),
+      },
+      schedule: {
+        dateOfIssueWOLOI: new Date(),
       completionDateAsPerContract: new Date(),
       completionDateAsPerExtension: new Date(),
       expectedCompletionDate: new Date(),
-      completeOnCosts: null,
-      manpowerPlanning: [],
-      manpowerTotal: 0,
+      },
+      manpowerPlanning: {
+        manpower: [],
+        manpowerTotal: {
+          plannedTotal: 0,
+          consumedTotal: 0,
+          balanceTotal: 0,
+          nextMonthPlanningTotal: 0,
+        }
+      },
       changeOrder: [],
       lastMonthActions: [],
       currentMonthActions: [],
