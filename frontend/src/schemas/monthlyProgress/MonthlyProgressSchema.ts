@@ -27,6 +27,13 @@ const ctcAndEacSchema = z.object({
     grossProfitPercentage: z.number().nullable(),
 })
 
+const scheduleSchema = z.object({
+    dateOfIssueWOLOI: z.date(),
+    completionDateAsPerContract: z.date(),
+    completionDateAsPerExtension: z.date(),
+    expectedCompletionDate: z.date(),
+})
+
 const manpowerSchema = z.object({
     workAssignment: z.string(),
     assignee: z.string().array(),
@@ -132,10 +139,7 @@ export const MonthlyProgressSchema = z.object({
     financialDetails: financialDetailsSchema,
     contractAndCost: contractAndCostSchema,
     ctcAndEac: ctcAndEacSchema,
-    dateOfIssueWOLOI: z.date(),
-    completionDateAsPerContract: z.date(),
-    completionDateAsPerExtension: z.date(),
-    expectedCompletionDate: z.date(),
+    schedule: scheduleSchema,
     completeOnCosts: z.number().nullable(),
     budgetTable: BudgetTableSchema,
     manpowerPlanning: z.array(manpowerSchema),

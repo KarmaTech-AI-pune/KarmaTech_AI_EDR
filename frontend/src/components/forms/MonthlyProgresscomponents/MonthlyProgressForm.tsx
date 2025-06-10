@@ -69,13 +69,7 @@ const tabs = [
     id: "4",
     label: "Schedule",
     component: <ScheduleTab />,
-    inputs: [
-      "dateOfIssueWOLOI",
-      "completionDateAsPerContract",
-      "completionDateAsPerExtension",
-      "expectedCompletionDate",
-      "completeOnCosts"
-    ],
+    inputs: ["schedule"],
   },
   {
     id: "5",
@@ -164,10 +158,12 @@ export const MonthlyProgressForm: React.FC = () => {
       totalEAC: null,
       grossProfitPercentage: null,
       },
-      dateOfIssueWOLOI: new Date(),
+      schedule: {
+        dateOfIssueWOLOI: new Date(),
       completionDateAsPerContract: new Date(),
       completionDateAsPerExtension: new Date(),
       expectedCompletionDate: new Date(),
+      },
       completeOnCosts: null,
       manpowerPlanning: [],
       manpowerTotal: 0,
