@@ -357,6 +357,67 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 existingMonthlyProgress.CurrentMonthActions.Clear();
             }
 
+            // Update BudgetTable
+            if (request.MonthlyProgress.BudgetTable != null)
+            {
+                if (existingMonthlyProgress.BudgetTable == null)
+                {
+                    existingMonthlyProgress.BudgetTable = new BudgetTable();
+                }
+
+                // Update OriginalBudget
+                if (request.MonthlyProgress.BudgetTable.OriginalBudget != null)
+                {
+                    if (existingMonthlyProgress.BudgetTable.OriginalBudget == null)
+                    {
+                        existingMonthlyProgress.BudgetTable.OriginalBudget = new OriginalBudget();
+                    }
+                    existingMonthlyProgress.BudgetTable.OriginalBudget.RevenueFee = request.MonthlyProgress.BudgetTable.OriginalBudget.RevenueFee;
+                    existingMonthlyProgress.BudgetTable.OriginalBudget.Cost = request.MonthlyProgress.BudgetTable.OriginalBudget.Cost;
+                    existingMonthlyProgress.BudgetTable.OriginalBudget.ProfitPercentage = request.MonthlyProgress.BudgetTable.OriginalBudget.ProfitPercentage;
+                }
+                else if (existingMonthlyProgress.BudgetTable.OriginalBudget != null)
+                {
+                    existingMonthlyProgress.BudgetTable.OriginalBudget = null;
+                }
+
+                // Update CurrentBudgetInMIS
+                if (request.MonthlyProgress.BudgetTable.CurrentBudgetInMIS != null)
+                {
+                    if (existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS == null)
+                    {
+                        existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS = new CurrentBudgetInMIS();
+                    }
+                    existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS.RevenueFee = request.MonthlyProgress.BudgetTable.CurrentBudgetInMIS.RevenueFee;
+                    existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS.Cost = request.MonthlyProgress.BudgetTable.CurrentBudgetInMIS.Cost;
+                    existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS.ProfitPercentage = request.MonthlyProgress.BudgetTable.CurrentBudgetInMIS.ProfitPercentage;
+                }
+                else if (existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS != null)
+                {
+                    existingMonthlyProgress.BudgetTable.CurrentBudgetInMIS = null;
+                }
+
+                // Update PercentCompleteOnCosts
+                if (request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts != null)
+                {
+                    if (existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts == null)
+                    {
+                        existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts = new PercentCompleteOnCosts();
+                    }
+                    existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts.RevenueFee = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.RevenueFee;
+                    existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts.Cost = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.Cost;
+                    existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts.ProfitPercentage = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.ProfitPercentage;
+                }
+                else if (existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts != null)
+                {
+                    existingMonthlyProgress.BudgetTable.PercentCompleteOnCosts = null;
+                }
+            }
+            else if (existingMonthlyProgress.BudgetTable != null)
+            {
+                existingMonthlyProgress.BudgetTable = null;
+            }
+
             await _monthlyProgressRepository.UpdateAsync(existingMonthlyProgress);
 
             return true;

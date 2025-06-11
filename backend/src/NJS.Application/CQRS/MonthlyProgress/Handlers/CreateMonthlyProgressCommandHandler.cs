@@ -105,7 +105,28 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                         CMAdate = cma.CMAdate,
                         CMAcomments = cma.CMAcomments,
                         CMApriority = cma.CMApriority
-                    }).ToList() : new List<CurrentMonthAction>()
+                    }).ToList() : new List<CurrentMonthAction>(),
+                BudgetTable = request.MonthlyProgress.BudgetTable != null ? new BudgetTable
+                {
+                    OriginalBudget = request.MonthlyProgress.BudgetTable.OriginalBudget != null ? new OriginalBudget
+                    {
+                        RevenueFee = request.MonthlyProgress.BudgetTable.OriginalBudget.RevenueFee,
+                        Cost = request.MonthlyProgress.BudgetTable.OriginalBudget.Cost,
+                        ProfitPercentage = request.MonthlyProgress.BudgetTable.OriginalBudget.ProfitPercentage
+                    } : null,
+                    CurrentBudgetInMIS = request.MonthlyProgress.BudgetTable.CurrentBudgetInMIS != null ? new CurrentBudgetInMIS
+                    {
+                        RevenueFee = request.MonthlyProgress.BudgetTable.CurrentBudgetInMIS.RevenueFee,
+                        Cost = request.MonthlyProgress.BudgetTable.CurrentBudgetInMIS.Cost,
+                        ProfitPercentage = request.MonthlyProgress.BudgetTable.CurrentBudgetInMIS.ProfitPercentage
+                    } : null,
+                    PercentCompleteOnCosts = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts != null ? new PercentCompleteOnCosts
+                    {
+                        RevenueFee = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.RevenueFee,
+                        Cost = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.Cost,
+                        ProfitPercentage = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.ProfitPercentage
+                    } : null
+                } : null
             };
 
             await _monthlyProgressRepository.AddAsync(monthlyProgressEntity);

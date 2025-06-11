@@ -108,7 +108,28 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     CMAdate = cma.CMAdate,
                     CMAcomments = cma.CMAcomments,
                     CMApriority = cma.CMApriority
-                }).ToList()
+                }).ToList(),
+                BudgetTable = monthlyProgressEntity.BudgetTable != null ? new BudgetTableDto
+                {
+                    OriginalBudget = monthlyProgressEntity.BudgetTable.OriginalBudget != null ? new OriginalBudgetDto
+                    {
+                        RevenueFee = monthlyProgressEntity.BudgetTable.OriginalBudget.RevenueFee,
+                        Cost = monthlyProgressEntity.BudgetTable.OriginalBudget.Cost,
+                        ProfitPercentage = monthlyProgressEntity.BudgetTable.OriginalBudget.ProfitPercentage
+                    } : null,
+                    CurrentBudgetInMIS = monthlyProgressEntity.BudgetTable.CurrentBudgetInMIS != null ? new CurrentBudgetInMISDto
+                    {
+                        RevenueFee = monthlyProgressEntity.BudgetTable.CurrentBudgetInMIS.RevenueFee,
+                        Cost = monthlyProgressEntity.BudgetTable.CurrentBudgetInMIS.Cost,
+                        ProfitPercentage = monthlyProgressEntity.BudgetTable.CurrentBudgetInMIS.ProfitPercentage
+                    } : null,
+                    PercentCompleteOnCosts = monthlyProgressEntity.BudgetTable.PercentCompleteOnCosts != null ? new PercentCompleteOnCostsDto
+                    {
+                        RevenueFee = monthlyProgressEntity.BudgetTable.PercentCompleteOnCosts.RevenueFee,
+                        Cost = monthlyProgressEntity.BudgetTable.PercentCompleteOnCosts.Cost,
+                        ProfitPercentage = monthlyProgressEntity.BudgetTable.PercentCompleteOnCosts.ProfitPercentage
+                    } : null
+                } : null
             };
         }
     }
