@@ -402,6 +402,7 @@ namespace NJS.Domain.Database
             {
                 entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
                 entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
+                entity.Property(ut => ut.ResourceRole).IsRequired(false); // Explicitly configure ResourceRole
             });
 
             // Configure WorkBreakdownStructure entity

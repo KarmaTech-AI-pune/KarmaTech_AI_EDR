@@ -105,7 +105,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           parentId: task.parentId,
           taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
           // For Manpower tasks, always set unit to 'month'; for ODC tasks, use resourceUnit or empty string
-          unit: isOdcTask ? (task.resourceUnit ?? '') : 'month'
+          unit: isOdcTask ? (task.resourceUnit ?? '') : 'month',
+          resource_role: task.resource_role ?? null // Map resource_role from API response
         };
       });
 
@@ -425,7 +426,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       totalCost: 0,
       parentId: parentId || null,
       taskType: formType === 'manpower' ? TaskType.Manpower : TaskType.ODC, // Set taskType based on formType
-      unit: formType === 'manpower' ? 'month' : '' // Set 'month' as default for manpower, empty for ODC
+      unit: formType === 'manpower' ? 'month' : '', // Set 'month' as default for manpower, empty for ODC
+      resource_role: null // Initialize resource_role for new rows
     };
 
     // For ODC form, ensure odcHours and odc are initialized to 0
@@ -514,6 +516,19 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         return {
           ...r,
           unit: unitValue
+        };
+      }
+      return r;
+    }));
+  };
+
+  const handleResourceRoleChange = (rowId: string, value: string) => {
+    const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+    setRowsFunc(prevRows => prevRows.map(r => {
+      if (r.id === rowId) {
+        return {
+          ...r,
+          resource_role: value
         };
       }
       return r;
@@ -869,6 +884,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           onCostRateChange={handleCostRateChange}
           onHoursChange={handleHoursChange}
           onODCChange={handleODCChange}
+          onResourceRoleChange={handleResourceRoleChange} // Pass the new handler
         />
       </Paper>
 

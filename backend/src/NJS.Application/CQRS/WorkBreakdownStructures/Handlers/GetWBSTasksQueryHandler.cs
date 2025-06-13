@@ -59,6 +59,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 ResourceName = t.TaskType == TaskType.ODC ? t.UserWBSTasks?.FirstOrDefault()?.Name : null,
                 // Map ResourceUnit for both Manpower and ODC tasks
                 ResourceUnit = t.UserWBSTasks?.FirstOrDefault()?.Unit,
+                ResourceRole = t.UserWBSTasks?.FirstOrDefault()?.ResourceRole ?? string.Empty,
 
                 // Common for both types
                 CostRate = t.UserWBSTasks?.FirstOrDefault()?.CostRate ?? 0,

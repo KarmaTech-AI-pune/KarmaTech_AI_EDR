@@ -95,7 +95,8 @@ export const WBSStructureAPI = {
           DisplayOrder: 0,
           EstimatedBudget: 0,
           StartDate: null,
-          EndDate: null
+          EndDate: null,
+          ResourceRole: row.resource_role // Add ResourceRole to the payload
         };
       };
 

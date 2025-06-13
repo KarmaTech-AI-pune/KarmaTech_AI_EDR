@@ -39,6 +39,8 @@ namespace NJS.Domain.Entities
         [StringLength(100)]
         public string UpdatedBy { get; set; }
 
+        public string? ResourceRole { get; set; }
+
         // Navigation properties
         [ForeignKey(nameof(UserId))]
         public User User { get; set; }

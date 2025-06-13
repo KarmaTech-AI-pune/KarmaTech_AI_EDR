@@ -26,6 +26,7 @@ export interface WBSRowData {
   unit?: string;
   resourceName?: string | null;
   resourceUnit?: string | null;
+  resource_role: string | null; // Changed to allow null, matching usage in form
 }
 
 export interface WBSChildTotals {
