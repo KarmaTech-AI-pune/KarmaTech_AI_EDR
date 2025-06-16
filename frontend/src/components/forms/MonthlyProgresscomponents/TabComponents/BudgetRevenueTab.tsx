@@ -28,6 +28,18 @@ const BudgetRevenueTab: React.FC = () => {
       '&.Mui-focused fieldset': {
         borderColor: '#1869DA',
       }
+    },
+    // Hide number input arrows
+    '& input[type=number]': {
+      '-moz-appearance': 'textfield',
+    },
+    '& input[type=number]::-webkit-outer-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
+    },
+    '& input[type=number]::-webkit-inner-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
     }
   };
 
@@ -69,6 +81,7 @@ const BudgetRevenueTab: React.FC = () => {
                         placeholder="Revenue/Fee"
                         value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         error={!!errors.budgetTable?.originalBudget?.revenueFee}
                         helperText={errors.budgetTable?.originalBudget?.revenueFee?.message}
                         sx={textFieldStyle}
@@ -89,6 +102,7 @@ const BudgetRevenueTab: React.FC = () => {
                         placeholder="Cost"
                         value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         error={!!errors.budgetTable?.originalBudget?.cost}
                         helperText={errors.budgetTable?.originalBudget?.cost?.message}
                         sx={textFieldStyle}
@@ -109,6 +123,7 @@ const BudgetRevenueTab: React.FC = () => {
                         placeholder="Profit(%)"
                         value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         error={!!errors.budgetTable?.originalBudget?.profitPercentage}
                         helperText={errors.budgetTable?.originalBudget?.profitPercentage?.message}
                         sx={textFieldStyle}
@@ -139,6 +154,7 @@ const BudgetRevenueTab: React.FC = () => {
                         placeholder="Revenue/Fee"
                         value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         error={!!errors.budgetTable?.currentBudgetInMIS?.revenueFee}
                         helperText={errors.budgetTable?.currentBudgetInMIS?.revenueFee?.message}
                         sx={textFieldStyle}
@@ -159,6 +175,7 @@ const BudgetRevenueTab: React.FC = () => {
                         placeholder="Cost"
                         value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         error={!!errors.budgetTable?.currentBudgetInMIS?.cost}
                         helperText={errors.budgetTable?.currentBudgetInMIS?.cost?.message}
                         sx={textFieldStyle}
@@ -179,6 +196,7 @@ const BudgetRevenueTab: React.FC = () => {
                         placeholder="Profit(%)"
                         value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         error={!!errors.budgetTable?.currentBudgetInMIS?.profitPercentage}
                         helperText={errors.budgetTable?.currentBudgetInMIS?.profitPercentage?.message}
                         sx={textFieldStyle}
@@ -209,6 +227,7 @@ const BudgetRevenueTab: React.FC = () => {
                         placeholder="Revenue/Fee %"
                         value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         error={!!errors.budgetTable?.percentCompleteOnCosts?.revenueFee}
                         helperText={errors.budgetTable?.percentCompleteOnCosts?.revenueFee?.message}
                         sx={textFieldStyle}
@@ -232,6 +251,7 @@ const BudgetRevenueTab: React.FC = () => {
                         placeholder="Cost %"
                         value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         error={!!errors.budgetTable?.percentCompleteOnCosts?.cost}
                         helperText={errors.budgetTable?.percentCompleteOnCosts?.cost?.message}
                         sx={textFieldStyle}
@@ -255,6 +275,7 @@ const BudgetRevenueTab: React.FC = () => {
                         placeholder="Profit %"
                         value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         error={!!errors.budgetTable?.percentCompleteOnCosts?.profitPercentage}
                         helperText={errors.budgetTable?.percentCompleteOnCosts?.profitPercentage?.message}
                         sx={textFieldStyle}

@@ -146,7 +146,6 @@ const ManpowerPlanningTab: React.FC = () => {
   // Fetch manpower resources data
   useEffect(() => {
     const fetchManpowerData = async () => {
-      console.log("prjctid", projectId)
       if (!projectId) {
         setError("Project ID is not available. Please select a project.");
         return;
@@ -158,7 +157,6 @@ const ManpowerPlanningTab: React.FC = () => {
       try {
         // Fetch data from API using the project ID from context
         const data = await MonthlyProgressAPI.getManpowerResources(projectId);
-        console.log("Fetched manpower data:", data);
         
         // Transform API data to form format
         if (data?.resources && data.resources.length > 0) {
