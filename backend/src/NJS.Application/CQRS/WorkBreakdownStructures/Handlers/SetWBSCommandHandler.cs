@@ -131,6 +131,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         taskEntity.ParentId = null;
                         pendingParentUpdates[taskEntity] = dto.ParentFrontendTempId;
                     }
+                    else if (dto.ParentId.HasValue)
+                    {
+                        taskEntity.ParentId = dto.ParentId;
+                    }
                 }
 
                 allTasks.Add(taskEntity);
