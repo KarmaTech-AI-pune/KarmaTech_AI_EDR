@@ -31,7 +31,6 @@ import {
 } from "./index";
 import {
   getCurrentMonthYear,
-  formatCurrency,
 } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
 import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
 import FormHeader from "./FormHeader";
@@ -111,7 +110,6 @@ const tabs = [
   },
 ] satisfies tab[];
 
-const SAVE_DELAY = 1000;
 const SNACKBAR_DURATION = 3000;
 
 // Main component

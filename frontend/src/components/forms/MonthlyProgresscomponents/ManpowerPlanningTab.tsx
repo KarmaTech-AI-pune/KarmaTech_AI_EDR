@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState, useContext } from "react";
 import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { MonthlyProgressAPI } from "../../../services/monthlyProgressApi";
+import { MonthlyProgressAPI, MonthlyHourDto } from "../../../services/monthlyProgressApi";
 import { projectManagementAppContext } from "../../../App";
 import {
   Box,
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -66,7 +65,7 @@ const ManpowerPlanningTab: React.FC = () => {
   };
 
   // Helper function to get current and next month hours from monthlyHours array
-  const getMonthlyHours = (monthlyHours) => {
+  const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
     const currentDate = new Date();
     const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
     const currentYear = currentDate.getFullYear();
