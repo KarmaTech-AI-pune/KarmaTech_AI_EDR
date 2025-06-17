@@ -138,7 +138,7 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
           {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
-        {!isLoading && wbsHeaderId && projectId && (
+        {editMode && !isLoading && wbsHeaderId && projectId && (
             <ProjectTrackingWorkflow
               projectId={projectId.toString()}
               status={status}

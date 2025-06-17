@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState, useContext } from "react";
 import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressAPI, MonthlyHourDto } from "../../../services/monthlyProgressApi";
+import { projectManagementAppContext } from "../../../App";
 import {
   Box,
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -13,18 +14,20 @@ import {
   TextField,
   Paper,
   Typography,
-  IconButton,
-  Chip,
-  Autocomplete,
-  Divider
+  CircularProgress,
+  Alert
 } from "@mui/material";
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
 
 const ManpowerPlanningTab: React.FC = () => {
   const { control, formState: { errors }, setValue } = useFormContext<MonthlyProgressSchemaType>();
+  const context = useContext(projectManagementAppContext);
+  const projectId = context?.selectedProject?.id?.toString();
+  
+  // State for API data loading
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, replace } = useFieldArray({
     control,
     name: "manpowerPlanning.manpower"
   });
@@ -46,7 +49,44 @@ const ManpowerPlanningTab: React.FC = () => {
       '&.Mui-focused fieldset': {
         borderColor: '#1869DA',
       }
+    },
+    // Hide number input arrows
+    '& input[type=number]': {
+      '-moz-appearance': 'textfield',
+    },
+    '& input[type=number]::-webkit-outer-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
+    },
+    '& input[type=number]::-webkit-inner-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
     }
+  };
+
+  // Helper function to get current and next month hours from monthlyHours array
+  const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
+    const currentYear = currentDate.getFullYear();
+    
+    const nextDate = new Date(currentDate);
+    nextDate.setMonth(nextDate.getMonth() + 1);
+    const nextMonth = nextDate.toLocaleString('default', { month: 'long' });
+    const nextYear = nextDate.getFullYear();
+    
+    const currentMonthData = monthlyHours?.find(item => 
+      item.month === currentMonth && item.year === currentYear
+    );
+    
+    const nextMonthData = monthlyHours?.find(item => 
+      item.month === nextMonth && item.year === nextYear
+    );
+    
+    return {
+      currentMonthHours: currentMonthData?.plannedHours || 0,
+      nextMonthHours: nextMonthData?.plannedHours || 0
+    };
   };
 
   // Calculate totals using useMemo to avoid unnecessary recalculations
@@ -101,24 +141,53 @@ const ManpowerPlanningTab: React.FC = () => {
       });
     }
   }, [totals, setValue, manpowerEntries]);
+  
+  // Fetch manpower resources data
+  useEffect(() => {
+    const fetchManpowerData = async () => {
+      if (!projectId) {
+        setError("Project ID is not available. Please select a project.");
+        return;
+      }
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch data from API using the project ID from context
+        const data = await MonthlyProgressAPI.getManpowerResources(projectId);
+        
+        // Transform API data to form format
+        if (data?.resources && data.resources.length > 0) {
+          const formData = data.resources.map(resource => {
+            const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.monthlyHours);
+            
+            return {
+              workAssignment: resource.taskTitle,
+              assignee: resource.employeeName,
+              planned: currentMonthHours,
+              consumed: 0,
+              balance: currentMonthHours,
+              nextMonthPlanning: nextMonthHours,
+              manpowerComments: ""
+            };
+          });
+          
+          replace(formData);
+        }
+        
+      } catch (err) {
+        console.error("Error fetching manpower data:", err);
+        setError("Failed to load manpower resources. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchManpowerData();
+  }, [projectId, replace]);
 
-  // Add new manpower planning row
-  const addManpowerRow = () => {
-    append({
-      workAssignment: "",
-      assignee: [],
-      planned: null,
-      consumed: null,
-      balance: null,
-      nextMonthPlanning: null,
-      manpowerComments: ""
-    });
-  };
 
-  // Remove manpower planning row
-  const removeManpowerRow = (index: number) => {
-    remove(index);
-  };
 
   return (
     <Box>
@@ -127,22 +196,22 @@ const ManpowerPlanningTab: React.FC = () => {
           <Typography variant="h6" color="primary">
             Manpower Planning
           </Typography>
-          <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={addManpowerRow}
-            sx={{
-              borderColor: '#1869DA',
-              color: '#1869DA',
-              '&:hover': {
-                borderColor: '#1869DA',
-                backgroundColor: 'rgba(24, 105, 218, 0.04)'
-              }
-            }}
-          >
-            Add Row
-          </Button>
         </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        {isLoading && (
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <CircularProgress size={20} sx={{ mr: 1 }} />
+            <Typography variant="body2" color="textSecondary">
+              Loading data...
+            </Typography>
+          </Box>
+        )}
 
         <TableContainer> 
           <Table sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
@@ -155,7 +224,6 @@ const ManpowerPlanningTab: React.FC = () => {
                 <TableCell align="center">Balance</TableCell>
                 <TableCell align="center">Next Month Planning</TableCell>
                 <TableCell>Comments</TableCell>
-                <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -175,6 +243,7 @@ const ManpowerPlanningTab: React.FC = () => {
                           error={!!errors.manpowerPlanning?.manpower?.[index]?.workAssignment}
                           helperText={errors.manpowerPlanning?.manpower?.[index]?.workAssignment?.message}
                           sx={textFieldStyle}
+                          InputProps={{ readOnly: true }}
                         />
                       )}
                     />
@@ -184,33 +253,16 @@ const ManpowerPlanningTab: React.FC = () => {
                       name={`manpowerPlanning.manpower.${index}.assignee`}
                       control={control}
                       render={({ field }) => (
-                        <Autocomplete
-                          multiple
-                          freeSolo
-                          options={[]}
-                          value={field.value || []}
-                          onChange={(_, newValue) => field.onChange(newValue)}
-                          renderTags={(value, getTagProps) =>
-                            value.map((option, index) => (
-                              <Chip
-                                variant="outlined"
-                                label={option}
-                                size="small"
-                                {...getTagProps({ index })}
-                                key={index}
-                              />
-                            ))
-                          }
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              size="small"
-                              placeholder="Add assignee"
-                              error={!!errors.manpowerPlanning?.manpower?.[index]?.assignee}
-                              helperText={errors.manpowerPlanning?.manpower?.[index]?.assignee?.message}
-                              sx={textFieldStyle}
-                            />
-                          )}
+                        <TextField
+                          {...field}
+                          fullWidth
+                          size="small"
+                          placeholder="Assignee"
+                          value={field.value || ''}
+                          error={!!errors.manpowerPlanning?.manpower?.[index]?.assignee}
+                          helperText={errors.manpowerPlanning?.manpower?.[index]?.assignee?.message}
+                          sx={textFieldStyle}
+                          InputProps={{ readOnly: true }}
                         />
                       )}
                     />
@@ -240,7 +292,9 @@ const ManpowerPlanningTab: React.FC = () => {
                           error={!!errors.manpowerPlanning?.manpower?.[index]?.planned}
                           helperText={errors.manpowerPlanning?.manpower?.[index]?.planned?.message}
                           sx={textFieldStyle}
-                          inputProps={{ min: 0 }}
+                          inputProps={{ min: 0 ,
+                            readOnly: true
+                          }}
                         />
                       )}
                     />
@@ -267,6 +321,7 @@ const ManpowerPlanningTab: React.FC = () => {
                               setValue(`manpowerPlanning.manpower.${index}.balance`, planned - value);
                             }
                           }}
+                          onWheel={(e) => (e.target as HTMLInputElement).blur()}
                           error={!!errors.manpowerPlanning?.manpower?.[index]?.consumed}
                           helperText={errors.manpowerPlanning?.manpower?.[index]?.consumed?.message}
                           sx={textFieldStyle}
@@ -319,7 +374,9 @@ const ManpowerPlanningTab: React.FC = () => {
                           error={!!errors.manpowerPlanning?.manpower?.[index]?.nextMonthPlanning}
                           helperText={errors.manpowerPlanning?.manpower?.[index]?.nextMonthPlanning?.message}
                           sx={textFieldStyle}
-                          inputProps={{ min: 0 }}
+                          inputProps={{ min: 0,
+                            readOnly: true 
+                           }}
                         />
                       )}
                     />
@@ -342,30 +399,10 @@ const ManpowerPlanningTab: React.FC = () => {
                       )}
                     />
                   </TableCell>
-                  <TableCell>
-                    <IconButton
-                      onClick={() => removeManpowerRow(index)}
-                      color="error"
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
                 </TableRow>
               ))}
-              {fields.length === 0 && (
-                <TableRow sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
-                  <TableCell colSpan={8} align="center">
-                    <Typography variant="body2" color="textSecondary">
-                      No manpower planning entries. Click "Add Row" to get started.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
               
-              {/* Total Row */}
-              {fields.length > 0 && (
-                <>
+                
                   <TableRow sx={{ 
                     backgroundColor: '#f5f5f5',
                     '& .MuiTableCell-root': { 
@@ -400,8 +437,7 @@ const ManpowerPlanningTab: React.FC = () => {
                     <TableCell></TableCell>
                     <TableCell></TableCell>
                   </TableRow>
-                </>
-              )}
+                
             </TableBody>
           </Table>
         </TableContainer>

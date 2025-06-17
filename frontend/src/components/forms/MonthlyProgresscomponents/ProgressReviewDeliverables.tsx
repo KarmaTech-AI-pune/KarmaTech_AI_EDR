@@ -37,6 +37,18 @@ const ProgressReviewDeliverables: React.FC = () => {
       '&.Mui-focused fieldset': {
         borderColor: '#1869DA',
       }
+    },
+     // Hide number input arrows
+    '& input[type=number]': {
+      '-moz-appearance': 'textfield',
+    },
+    '& input[type=number]::-webkit-outer-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
+    },
+    '& input[type=number]::-webkit-inner-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
     }
   };
 
@@ -208,6 +220,7 @@ const ProgressReviewDeliverables: React.FC = () => {
                             placeholder="Amount"
                             value={controllerField.value || ''}
                             onChange={(e) => controllerField.onChange(e.target.value ? Number(e.target.value) : null)}
+                            onWheel={(e) => (e.target as HTMLInputElement).blur()}
                             error={!!errors.progressDeliverable?.[index]?.paymentDue}
                             helperText={errors.progressDeliverable?.[index]?.paymentDue?.message}
                             sx={textFieldStyle}

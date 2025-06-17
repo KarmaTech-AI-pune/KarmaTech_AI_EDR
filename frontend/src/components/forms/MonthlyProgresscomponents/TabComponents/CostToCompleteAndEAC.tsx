@@ -15,6 +15,31 @@ const CostToCompleteAndEAC: React.FC = () => {
     setValue('ctcAndEac.ctcSubtotal', calculatedSubtotal);
   }, [calculatedSubtotal, setValue]);
 
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 1,
+      backgroundColor: '#fff',
+      '&:hover fieldset': {
+        borderColor: '#1869DA',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#1869DA',
+      }
+    },
+    // Hide number input arrows
+    '& input[type=number]': {
+      '-moz-appearance': 'textfield',
+    },
+    '& input[type=number]::-webkit-outer-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
+    },
+    '& input[type=number]::-webkit-inner-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
+    }
+  };
+
   return (
       <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
@@ -33,9 +58,11 @@ const CostToCompleteAndEAC: React.FC = () => {
                               type="number"
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
                               error={!!errors.ctcAndEac?.ctcODC}
                               helperText={errors.ctcAndEac?.ctcODC?.message || ''}
-                              sx={{ mb: 2 }}
+                              sx={textFieldStyle}
+                              margin="normal"
                           />
                       )}
                   />
@@ -50,9 +77,11 @@ const CostToCompleteAndEAC: React.FC = () => {
                               type="number"
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
                               error={!!errors.ctcAndEac?.ctcStaff}
                               helperText={errors.ctcAndEac?.ctcStaff?.message || ''}
-                              sx={{ mb: 2 }}
+                              sx={textFieldStyle}
+                              margin="normal"
                           />
                       )}
                   />
@@ -66,12 +95,14 @@ const CostToCompleteAndEAC: React.FC = () => {
                               type="number"
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
                               error={!!errors.ctcAndEac?.ctcSubtotal}
                               helperText={errors.ctcAndEac?.ctcSubtotal?.message || ''}
                               inputProps={{
                                   readOnly: true,
                               }}
-                              sx={{ mb: 2 }}
+                              sx={textFieldStyle}
+                              margin="normal"
                           />
                       )}
                   />
@@ -93,9 +124,11 @@ const CostToCompleteAndEAC: React.FC = () => {
                               type="number"
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
                               error={!!errors.ctcAndEac?.totalEAC}
                               helperText={errors.ctcAndEac?.totalEAC?.message || ''}
-                              sx={{ mb: 2 }}
+                              sx={textFieldStyle}
+                              margin="normal"
                           />
                       )}
                   />
@@ -110,9 +143,11 @@ const CostToCompleteAndEAC: React.FC = () => {
                               type="number"
                               value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
                               error={!!errors.ctcAndEac?.grossProfitPercentage}
                               helperText={errors.ctcAndEac?.grossProfitPercentage?.message || ''}
-                              sx={{ mb: 2 }}
+                              sx={textFieldStyle}
+                              margin="normal"
                           />
                       )}
                   />
