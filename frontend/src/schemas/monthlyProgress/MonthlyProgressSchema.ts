@@ -36,7 +36,7 @@ const scheduleSchema = z.object({
 
 const manpowerSchema = z.object({
   workAssignment: z.string(),
-  assignee: z.string().array(),
+  assignee: z.string(),
   planned: z.number().nullable(),
   consumed: z.number().nullable(),
   balance: z.number().nullable(),

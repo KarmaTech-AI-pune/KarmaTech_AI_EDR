@@ -35,7 +35,7 @@ const FormHeader = ({ tabs }: { tabs: tab[] }) => {
     <Box>
       <Tabs
         value={currentPageIndex}
-        onChange={(event, newValue) => {
+        onChange={(_event, newValue) => {
           setpage(newValue);
           trigger(tabs[newValue].inputs);
         }}

@@ -37,6 +37,18 @@ const ContractAndCostsTab: React.FC = () => {
       '&.Mui-focused fieldset': {
         borderColor: '#1869DA',
       }
+    },
+     // Hide number input arrows
+    '& input[type=number]': {
+      '-moz-appearance': 'textfield',
+    },
+    '& input[type=number]::-webkit-outer-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
+    },
+    '& input[type=number]::-webkit-inner-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
     }
   };
 
@@ -92,6 +104,7 @@ const ContractAndCostsTab: React.FC = () => {
                   type="number"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors.contractAndCost?.percentage}
                   helperText={errors.contractAndCost?.percentage?.message || ''}
                   sx={textFieldStyle}
@@ -118,6 +131,7 @@ const ContractAndCostsTab: React.FC = () => {
                   type="number"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors.contractAndCost?.actualOdcs}
                   helperText={errors.contractAndCost?.actualOdcs?.message || ''}
                   sx={textFieldStyle}
@@ -136,6 +150,7 @@ const ContractAndCostsTab: React.FC = () => {
                   type="number"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors.contractAndCost?.actualStaff}
                   helperText={errors.contractAndCost?.actualStaff?.message || ''}
                   sx={textFieldStyle}
