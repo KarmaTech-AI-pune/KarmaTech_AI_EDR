@@ -26,6 +26,8 @@ import {
   BudgetRevenueTab,
   ProgressReviewDeliverables,
   ChangeOrdersTab,
+  ProgrammeScheduleTab,
+  EarlyWarningsTab,
   LastMonthActionsTab,
   CurrentMonthActionsTab,
 } from "./index";
@@ -98,12 +100,24 @@ const tabs = [
   },
   {
     id: "9",
+    label: "Programme Schedule",
+    component: <ProgrammeScheduleTab />,
+    inputs: ["programmeSchedule"],
+  },
+  {
+    id: "10",
+    label: "Early Warnings",
+    component: <EarlyWarningsTab />,
+    inputs: ["earlyWarnings"],
+  },
+  {
+    id: "11",
     label: "Last Month Actions",
     component: <LastMonthActionsTab />,
     inputs: ["lastMonthActions"],
   },
   {
-    id: "10",
+    id: "12",
     label: "Current Month Actions",
     component: <CurrentMonthActionsTab />,
     inputs: ["currentMonthActions"],
@@ -171,10 +185,12 @@ export const MonthlyProgressForm: React.FC = () => {
           nextMonthPlanningTotal: 0,
         }
       },
+      progressDeliverable: [],
       changeOrder: [],
+      programmeSchedule: [],
+      earlyWarnings: [],
       lastMonthActions: [],
       currentMonthActions: [],
-      progressDeliverable: [],
     },
     mode: "all",
   });

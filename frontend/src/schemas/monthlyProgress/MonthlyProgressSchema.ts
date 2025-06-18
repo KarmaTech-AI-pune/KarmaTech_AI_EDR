@@ -34,58 +34,6 @@ const scheduleSchema = z.object({
   expectedCompletionDate: z.date(),
 });
 
-const manpowerSchema = z.object({
-  workAssignment: z.string(),
-  assignee: z.string(),
-  planned: z.number().nullable(),
-  consumed: z.number().nullable(),
-  balance: z.number().nullable(),
-  nextMonthPlanning: z.number().nullable(),
-  manpowerComments: z.string(),
-});
-
-const manpowerPlanningSchema = z.object({
-  manpower: z.array(manpowerSchema),
-  manpowerTotal: z.object({
-    plannedTotal: z.number().nullable(),
-    consumedTotal: z.number().nullable(),
-    balanceTotal: z.number().nullable(),
-    nextMonthPlanningTotal: z.number().nullable(),
-  }),
-});
-
-const progressDeliverableSchema = z.object({
-  milestone: z.string(),
-  dueDateContract: z.date(),
-  dueDatePlanned: z.date(),
-  achievedDate: z.date(),
-  paymentDue: z.number().nullable(),
-  invoiceDate: z.date(),
-  paymentReceivedDate: z.date(),
-  deliverableComments: z.string(),
-});
-
-const changeOrderSchema = z.object({
-  contractTotal: z.number().nullable(),
-  cost: z.number().nullable(),
-  fee: z.number().nullable(),
-  summaryDetails: z.string(),
-  status: z.enum(["Proposed", "Submitted", "Approved"]),
-});
-
-const lastMonthActionSchema = z.object({
-  LMactions: z.string(),
-  LMAdate: z.date(),
-  LMAcomments: z.string(),
-});
-
-const currentMonthActionSchema = z.object({
-  CMactions: z.string(),
-  CMAdate: z.date(),
-  CMAcomments: z.string(),
-  CMApriority: z.enum(["H", "M", "L"]).nullable(),
-});
-
 // Budget Table Schema
 const BudgetRowSchema = z.object({
   revenueFee: z
@@ -157,6 +105,66 @@ const BudgetTableSchema = z.object({
   }),
 });
 
+const manpowerSchema = z.object({
+  workAssignment: z.string(),
+  assignee: z.string(),
+  planned: z.number().nullable(),
+  consumed: z.number().nullable(),
+  balance: z.number().nullable(),
+  nextMonthPlanning: z.number().nullable(),
+  manpowerComments: z.string(),
+});
+
+const manpowerPlanningSchema = z.object({
+  manpower: z.array(manpowerSchema),
+  manpowerTotal: z.object({
+    plannedTotal: z.number().nullable(),
+    consumedTotal: z.number().nullable(),
+    balanceTotal: z.number().nullable(),
+    nextMonthPlanningTotal: z.number().nullable(),
+  }),
+});
+
+const progressDeliverableSchema = z.object({
+  milestone: z.string(),
+  dueDateContract: z.date(),
+  dueDatePlanned: z.date(),
+  achievedDate: z.date(),
+  paymentDue: z.number().nullable(),
+  invoiceDate: z.date(),
+  paymentReceivedDate: z.date(),
+  deliverableComments: z.string(),
+});
+
+const changeOrderSchema = z.object({
+  contractTotal: z.number().nullable(),
+  cost: z.number().nullable(),
+  fee: z.number().nullable(),
+  summaryDetails: z.string(),
+  status: z.enum(["Proposed", "Submitted", "Approved"]),
+});
+
+const lastMonthActionSchema = z.object({
+  LMactions: z.string(),
+  LMAdate: z.date(),
+  LMAcomments: z.string(),
+});
+
+const currentMonthActionSchema = z.object({
+  CMactions: z.string(),
+  CMAdate: z.date(),
+  CMAcomments: z.string(),
+  CMApriority: z.enum(["H", "M", "L"]).nullable(),
+});
+
+const programmeScheduleSchema = z.object({
+  ProgrammeDescription: z.string()
+})
+
+const earlyWarningsSchema = z.object({
+  WarningsDescription: z.string()
+})
+
 export const MonthlyProgressSchema = z.object({
   financialDetails: financialDetailsSchema,
   contractAndCost: contractAndCostSchema,
@@ -166,6 +174,8 @@ export const MonthlyProgressSchema = z.object({
   manpowerPlanning: manpowerPlanningSchema,
   progressDeliverable: z.array(progressDeliverableSchema),
   changeOrder: z.array(changeOrderSchema),
+  programmeSchedule: z.array(programmeScheduleSchema),
+  earlyWarnings: z.array(earlyWarningsSchema),
   lastMonthActions: z.array(lastMonthActionSchema),
   currentMonthActions: z.array(currentMonthActionSchema),
 });
