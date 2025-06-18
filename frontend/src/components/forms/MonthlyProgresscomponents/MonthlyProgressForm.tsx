@@ -72,6 +72,12 @@ const tabs = [
   },
   {
     id: "5",
+    label: "Progress Review Deliverables",
+    component: <ProgressReviewDeliverables />,
+    inputs: ["progressDeliverable"],
+  },
+  {
+    id: "6",
     label: "Budget Revenue",
     component: <BudgetRevenueTab/>,
     inputs: [
@@ -79,16 +85,10 @@ const tabs = [
     ],
   },
   {
-    id: "6",
+    id: "7",
     label: "Manpower Planning",
     component: <ManpowerPlanningTab />,
     inputs: ["manpowerPlanning"],
-  },
-  {
-    id: "7",
-    label: "Progress Review Deliverables",
-    component: <ProgressReviewDeliverables />,
-    inputs: ["progressDeliverable"],
   },
   {
     id: "8",

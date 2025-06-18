@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState, useContext } from "react";
 import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { MonthlyProgressAPI, MonthlyHourDto } from "../../../services/monthlyProgressApi";
-import { projectManagementAppContext } from "../../../App";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressAPI, MonthlyHourDto } from "../../../../services/monthlyProgressApi";
+import { projectManagementAppContext } from "../../../../App";
 import {
   Box,
   Table,
@@ -197,12 +197,6 @@ const ManpowerPlanningTab: React.FC = () => {
             Manpower Planning
           </Typography>
         </Box>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
 
         {isLoading && (
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

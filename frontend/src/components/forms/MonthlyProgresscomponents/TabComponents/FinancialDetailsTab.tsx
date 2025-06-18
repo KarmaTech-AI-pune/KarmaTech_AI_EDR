@@ -1,10 +1,10 @@
 import React, { useEffect, useContext } from "react";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
 import { Grid, Paper, TextField, Typography, CircularProgress } from "@mui/material";
-import { formatCurrency } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
-import { projectManagementAppContext } from "../../../App";
-import { getJobStartFormByProjectId, getWBSResourceData } from "../../../services/jobStartFormApi";
+import { formatCurrency } from "../../../../utils/MonthlyProgress/monthlyProgressUtils";
+import { projectManagementAppContext } from "../../../../App";
+import { getJobStartFormByProjectId, getWBSResourceData } from "../../../../services/jobStartFormApi";
 
 const FinancialDetailsTab: React.FC = () => {
     const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
