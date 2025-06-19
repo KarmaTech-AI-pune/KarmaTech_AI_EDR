@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
+using NJS.Domain.Enums; // Added for PMWorkflowStatusEnum
+using System.Linq; // Already present, but good to note
 
 namespace NJS.Repositories.Repositories
 {
@@ -15,6 +17,39 @@ namespace NJS.Repositories.Repositories
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger;
+        }
+
+        public async Task<List<WorkBreakdownStructure>> GetApprovedWBSAsync(int? projectId)
+        {
+            _logger.LogInformation("Fetching approved WBS from repository for ProjectId: {ProjectId}", projectId);
+            try
+            {
+                var query = _context.WorkBreakdownStructures
+                    .Include(wbs => wbs.Tasks)
+                        .ThenInclude(task => task.MonthlyHours)
+                            .ThenInclude(mh => mh.WBSTaskMonthlyHourHeader) // Include header for status check
+                    .Include(wbs => wbs.Tasks) // Re-include Tasks to chain another ThenInclude
+                        .ThenInclude(task => task.UserWBSTasks)
+                            .ThenInclude(uwt => uwt.User) // Include User entity for user details
+                    .Where(wbs => wbs.Tasks.Any(task =>
+                        task.MonthlyHours.Any(mh =>
+                            mh.WBSTaskMonthlyHourHeader != null &&
+                            mh.WBSTaskMonthlyHourHeader.StatusId == (int)PMWorkflowStatusEnum.Approved)));
+
+                if (projectId.HasValue)
+                {
+                    query = query.Where(wbs => wbs.ProjectId == projectId.Value);
+                }
+
+                var result = await query.ToListAsync();
+                _logger.LogInformation("Successfully retrieved {Count} approved WBS entries from repository.", result.Count);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching approved WBS from repository for ProjectId: {ProjectId}", projectId);
+                throw; // Re-throw to be handled by higher layers
+            }
         }
 
         public async Task<int> AddAsync(WBSTask task)

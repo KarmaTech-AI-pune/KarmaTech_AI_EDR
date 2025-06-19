@@ -182,5 +182,30 @@ namespace NJSAPI.Controllers
                     new { error = "An unexpected error occurred while retrieving manpower resources." });
             }
         }
+
+        /// <summary>
+        /// Gets approved Work Breakdown Structures for a project.
+        /// </summary>
+        /// <param name="projectId">The ID of the project (optional).</param>
+        /// <returns>A list of approved WBS structures.</returns>
+        [HttpGet("Approved")]
+        [ProducesResponseType(typeof(List<WBSDetailsDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetApprovedWBS([FromQuery] int? projectId)
+        {
+            _logger.LogInformation("Received request for GetApprovedWBS for ProjectId: {ProjectId}", projectId);
+            try
+            {
+                var query = new GetApprovedWBSQuery { ProjectId = projectId };
+                var result = await _mediator.Send(query);
+                _logger.LogInformation("Successfully returned approved WBS data for ProjectId: {ProjectId}", projectId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting approved WBS for ProjectId: {ProjectId}", projectId);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving approved WBS data.");
+            }
+        }
     }
 }
