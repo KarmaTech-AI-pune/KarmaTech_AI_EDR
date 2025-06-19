@@ -58,16 +58,16 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         EndDate = task.EndDate,
                         TaskType = task.TaskType,
                         // Re-adding properties as per user request to map all fields in WBSTaskDto
-                        AssignedUserId = null, // Not directly available from WBSTask entity
-                        AssignedUserName = null, // Not directly available from WBSTask entity
-                        CostRate = 0, // Not directly available from WBSTask entity
-                        ResourceName = null, // Not directly available from WBSTask entity
-                        ResourceUnit = null, // Not directly available from WBSTask entity
+                        AssignedUserId = task.UserWBSTasks.FirstOrDefault()?.UserId,
+                        AssignedUserName = task.UserWBSTasks.FirstOrDefault()?.User?.Name, // Use Name from User entity
+                        CostRate = task.UserWBSTasks.FirstOrDefault()?.User?.StandardRate ?? 0, // Use StandardRate from User entity
+                        ResourceName = task.UserWBSTasks.FirstOrDefault()?.User?.Name, // Assuming ResourceName is the user's name from User entity
+                        ResourceUnit = task.UserWBSTasks.FirstOrDefault()?.Unit, // Assuming ResourceUnit is the unit from UserWBSTask
                         MonthlyHours = new List<MonthlyHourDto>(),
-                        TotalHours = 0, // Not directly available from WBSTask entity
-                        TotalCost = 0, // Not directly available from WBSTask entity
-                        FrontendTempId = null, // Not directly available from WBSTask entity
-                        ParentFrontendTempId = null // Not directly available from WBSTask entity
+                        TotalHours = task.MonthlyHours.Sum(mh => mh.PlannedHours), // Calculate total hours
+                        TotalCost = (decimal)task.MonthlyHours.Sum(mh => mh.PlannedHours) * (task.UserWBSTasks.FirstOrDefault()?.User?.StandardRate ?? 0), // Calculate total cost using StandardRate from User entity
+                        FrontendTempId = null, // FrontendTempId is not part of the entity, keep null
+                        ParentFrontendTempId = null // ParentFrontendTempId is not part of the entity, keep null
                     };
 
                     foreach (var monthlyHour in task.MonthlyHours)
