@@ -15,5 +15,6 @@ namespace NJS.Repositories.Interfaces
         Task UpdateAsync(WBSTask task);
         Task DeleteAsync(int id);
         Task<bool> ExistsAsync(int id);
+        Task<List<WorkBreakdownStructure>> GetApprovedWBSAsync(int? projectId); // New method for approved WBS
     }
 }
