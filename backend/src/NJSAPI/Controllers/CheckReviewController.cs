@@ -4,10 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.CheckReview.Commands;
 using NJS.Application.CQRS.CheckReview.Queries;
 using NJS.Application.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
+using NJS.Application.Services.IContract;
 
 namespace NJSAPI.Controllers
 {
@@ -16,19 +13,20 @@ namespace NJSAPI.Controllers
     public class CheckReviewController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ICurrentUserService _currentUserService;
 
-        public CheckReviewController(IMediator mediator)
+        public CheckReviewController(IMediator mediator, ICurrentUserService currentUserService) // Update constructor
         {
             _mediator = mediator;
+            _currentUserService = currentUserService; 
         }
 
         [HttpGet]
-        [AllowAnonymous] // Allow anonymous access for testing
+        [AllowAnonymous] 
         public async Task<ActionResult<IEnumerable<CheckReviewDto>>> GetAll()
         {
             try
             {
-                // For now, we don't have a GetAll query, so we'll return an empty list
                 return Ok(new List<CheckReviewDto>());
             }
             catch (Exception ex)
@@ -38,7 +36,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        [AllowAnonymous] // Allow anonymous access for testing
+        [AllowAnonymous] 
         public async Task<ActionResult<CheckReviewDto>> GetById(int id)
         {
             try
@@ -60,7 +58,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("project/{projectId}")]
-        [AllowAnonymous] // Allow anonymous access for testing
+        [AllowAnonymous] 
         public async Task<ActionResult<IEnumerable<CheckReviewDto>>> GetByProject(int projectId)
         {
             try
@@ -76,7 +74,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous] // Allow anonymous access for testing
+        [AllowAnonymous]
         public async Task<ActionResult<CheckReviewDto>> Create([FromBody] CreateCheckReviewCommand command)
         {
             try
@@ -86,9 +84,9 @@ namespace NJSAPI.Controllers
                     return BadRequest("CheckReview data is null.");
                 }
 
-                // Get the username from the authenticated user or use "System" as fallback
-                command.CreatedBy = User.Identity?.IsAuthenticated == true ?
-                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
+                // Use the new service to get the current user's name
+                command.CreatedBy = _currentUserService.IsAuthenticated ?
+                    _currentUserService.UserName ?? "System" :
                     "System";
 
                 var result = await _mediator.Send(command);
@@ -116,9 +114,9 @@ namespace NJSAPI.Controllers
                     return BadRequest("Mismatched CheckReview ID.");
                 }
 
-                // Get the username from the authenticated user or use "System" as fallback
-                command.UpdatedBy = User.Identity?.IsAuthenticated == true ?
-                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
+                // Use the new service to get the current user's name for UpdatedBy
+                command.UpdatedBy = _currentUserService.IsAuthenticated ?
+                    _currentUserService.UserName ?? "System" :
                     "System";
 
                 var result = await _mediator.Send(command);

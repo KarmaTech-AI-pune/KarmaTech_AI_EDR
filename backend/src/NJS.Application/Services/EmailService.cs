@@ -129,7 +129,7 @@ public class EmailService : IEmailService
     {
         var email = new MimeMessage();
         email.From.Add(new MailboxAddress(_emailSettings.FromName, _emailSettings.FromEmail));
-        email.To.Add(MailboxAddress.Parse(message.To));
+       email.To.AddRange(InternetAddressList.Parse(message.To));
         email.Subject = message.Subject;
 
         var builder = new BodyBuilder();

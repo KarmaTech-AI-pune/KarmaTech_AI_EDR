@@ -4,6 +4,8 @@ using System.Text;
 using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
 using Microsoft.AspNetCore.Authorization;
+using NJSAPI.Extensions;
+using NLog.Web;
 
 internal class Program
 {
@@ -11,8 +13,9 @@ internal class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         // Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddHttpContextAccessor();
+        builder.Services.AddControllers();
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddLogging();
 
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
@@ -20,7 +23,7 @@ builder.Services.AddHttpContextAccessor();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-       
+
         // Add CORS services
         builder.Services.AddCors(options =>
         {
@@ -59,10 +62,10 @@ builder.Services.AddHttpContextAccessor();
         {
             options.AddPolicy("RequireAdminRole", policy =>
                 policy.RequireRole("Admin"));
-                
+
             options.AddPolicy("RequireManagerRole", policy =>
                 policy.RequireRole("Manager"));
-                
+
             options.AddPolicy("RequireUserRole", policy =>
                 policy.RequireRole("User"));
 
@@ -75,16 +78,16 @@ builder.Services.AddHttpContextAccessor();
                 .Build();
         });
 
+        builder.Services.AddCompression();
+        builder.Host.UseNLog();
         var app = builder.Build();
 
+        app.UseSwagger();
+        app.UseSwaggerUI();      
       
-            app.UseSwagger();
-            app.UseSwaggerUI();
-      
-
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");
-
+        app.UseResponseCompression();
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();

@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
 using NJS.Application.Dtos;
 using NJS.Domain.Entities;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace NJSAPI.Controllers
 {

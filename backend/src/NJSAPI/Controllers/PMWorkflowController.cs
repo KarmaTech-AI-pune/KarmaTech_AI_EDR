@@ -22,10 +22,12 @@ namespace NJSAPI.Controllers
     public class PMWorkflowController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ILogger<PMWorkflowController> _logger;
 
-        public PMWorkflowController(IMediator mediator)
+        public PMWorkflowController(IMediator mediator, ILogger<PMWorkflowController> logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -129,8 +131,9 @@ namespace NJSAPI.Controllers
                 var result = await _mediator.Send(command);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, $"Unable to send the request {ex.Message}");
                 // Return a default response for Swagger
                 if (!HttpContext.Request.Headers.ContainsKey("Authorization"))
                 {
@@ -168,18 +171,13 @@ namespace NJSAPI.Controllers
         {
             try
             {
-                Console.WriteLine($"PMWorkflowController.Approve called with command: {command?.EntityType} {command?.EntityId}");
-                Console.WriteLine($"Action: {command?.Action}, AssignedToId: {command?.AssignedToId ?? "null"}");
-                Console.WriteLine($"Comments: {command?.Comments ?? "null"}");
 
                 var result = await _mediator.Send(command);
-                Console.WriteLine($"Approval successful. Result: {result?.Status ?? "null"}");
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in PMWorkflowController.Approve: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                _logger.LogError(ex, $"Unable to send the request ro approve {ex.Message}");
 
                 // Return a default response for Swagger
                 if (!HttpContext.Request.Headers.ContainsKey("Authorization"))
@@ -222,8 +220,10 @@ namespace NJSAPI.Controllers
                 var result = await _mediator.Send(query);
                 return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, $"Unable to send the request to GetWorkflowHistory {ex.Message}");
+
                 // Return a default response for Swagger
                 if (!HttpContext.Request.Headers.ContainsKey("Authorization"))
                 {

@@ -30,12 +30,6 @@ interface WBSHeaderProps {
   formType?: TaskType;
 }
 
-// Removed unused interface
-// interface WBSHeaderStatus {
-//   id: number;
-//   status: string;
-// }
-
 const WBSHeader: React.FC<WBSHeaderProps> = ({
   title,
   editMode,
@@ -47,6 +41,7 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
   const projectId = context?.selectedProject?.id;
   const [wbsHeaderId, setWbsHeaderId] = useState<number | null>(null);
   const [status, setStatus] = useState<string>("Initial");
+  const [statusId, setStatusId] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
 
@@ -58,9 +53,10 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
       // Fetch the WBS header status using the API
       const headerStatus = await wbsHeaderApi.getWBSHeaderStatus(Number(projectId), formType);
 
+      
       if (headerStatus) {
         setWbsHeaderId(headerStatus.id);
-
+       setStatusId(headerStatus.statusId);
         // Map status ID to status string
         const statusMap: { [key: number]: string } = {
           1: "Initial",
@@ -142,10 +138,11 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
           {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
-        {!isLoading && wbsHeaderId && projectId && (
+        {editMode && !isLoading && wbsHeaderId && projectId && (
             <ProjectTrackingWorkflow
               projectId={projectId.toString()}
               status={status}
+              statusId={statusId}
               entityId={wbsHeaderId}
               entityType="WBS"
               formType={formType}

@@ -239,8 +239,10 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
         activityName: editData.activityName,
         objective: editData.objective,
         references: editData.references || '',
-        documentNumber: editData.documentNumber || '',
-        documentName: editData.documentName || '',
+
+         documentNumber: editData.documentNumber || '', // Ensure documentNumber is always a string
+        documentName: editData.documentName || '',     // Ensure documentName is always a string
+
         fileName: editData.fileName || '',
         qualityIssues: editData.qualityIssues || '',
         completion: editData.completion,
@@ -250,14 +252,16 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
         maker: editData.maker || '',
         checker: editData.checker || ''
       });
-    } else {
+    } else { 
       // Reset form when not editing
       setFormData({
         activityName: '',
         objective: '',
         references: '',
-        documentNumber: '',
-        documentName: '',
+
+         documentNumber: '', // Initialize for new forms
+        documentName: '',   // Initialize for new forms
+
         fileName: '',
         qualityIssues: '',
         completion: 'N',
