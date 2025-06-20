@@ -121,7 +121,7 @@ const JobStartFormHeader: React.FC<JobStartFormHeaderProps> = ({
               entityType="JobStartForm"
               formType={TaskType.Manpower}
               onStatusUpdate={handleStatusUpdate}
-            />
+                        />
           )}
         </Box>
       </StyledHeaderBox>

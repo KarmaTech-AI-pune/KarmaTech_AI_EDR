@@ -6,13 +6,14 @@ using NJS.Application.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using NJSAPI.Extensions;
 using NLog.Web;
+using Microsoft.Extensions.Options;
+using NJSAPI.Configurations;
 
 internal class Program
 {
     private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        // Add services to the container.
         builder.Services.AddControllers();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddLogging();
@@ -20,11 +21,9 @@ internal class Program
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
 
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddConfiguredSwagger(builder.Configuration);
 
-        // Add CORS services
         builder.Services.AddCors(options =>
         {
             var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
@@ -83,8 +82,13 @@ internal class Program
         var app = builder.Build();
 
         app.UseSwagger();
-        app.UseSwaggerUI();      
-      
+        app.UseSwaggerUI(options =>
+        {
+            var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
+            options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", swaggerSettings.Title);
+        });
+
+
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");
         app.UseResponseCompression();
@@ -92,7 +96,7 @@ internal class Program
         app.UseAuthentication();
         app.UseAuthorization();
         app.SeedApplicationData();
-        app.MapControllers(); // This line maps controller routes
+        app.MapControllers(); 
 
         app.Run();
     }
