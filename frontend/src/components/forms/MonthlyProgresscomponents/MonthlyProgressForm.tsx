@@ -1,6 +1,7 @@
 import React, {
   useMemo,
   useRef,
+  useState, // Add useState import
 } from "react";
 import {
   Box,
@@ -11,12 +12,14 @@ import {
   Snackbar,
 } from "@mui/material";
 import { FormWrapper } from "../FormWrapper";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   MonthlyProgressSchema,
   MonthlyProgressSchemaType,
 } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressAPI } from "../../../services/monthlyProgressApi"; // Add this import
+import { useProject } from "../../../context/ProjectContext"; // Add this import
 import {
   FinancialDetailsTab,
   ContractAndCostsTab,
@@ -159,8 +162,7 @@ export const MonthlyProgressForm: React.FC = () => {
         },
         percentCompleteOnCosts: {
           revenueFee: 0,
-          cost: 0,
-          profitPercentage: 0
+          cost: 0
         }
       },
       ctcAndEac: {
@@ -195,14 +197,36 @@ export const MonthlyProgressForm: React.FC = () => {
     mode: "all",
   });
 
+  const { projectId } = useProject(); // Get projectId from context
+
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Use ref to prevent re-creating the date string on every render
   const currentMonthYear = useRef(getCurrentMonthYear()).current;
 
+  const onSubmit: SubmitHandler<MonthlyProgressSchemaType> = async (data) => {
 
+    if (!projectId) {
+      setErrorMessage("Project ID is not available. Cannot submit form.");
+      setShowError(true);
+      return;
+    }
 
-  const onSubmit = (data: MonthlyProgressSchemaType) => {
-    console.log(data);
+    try {
+      // You might want to show a loading indicator here
+      await MonthlyProgressAPI.submitMonthlyProgress(projectId, data);
+      setShowSuccess(true);
+      setShowError(false); // Ensure error snackbar is hidden on success
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      setErrorMessage(error.message || 'An unexpected error occurred during submission.');
+      setShowError(true);
+      setShowSuccess(false); // Ensure success snackbar is hidden on error
+    } finally {
+      // Hide loading indicator here if implemented
+    }
   };
 
   const containerStyles = useMemo(
@@ -261,9 +285,9 @@ export const MonthlyProgressForm: React.FC = () => {
           </Paper>
 
           <Snackbar
-            // open={showSuccess}
+            open={showSuccess}
             autoHideDuration={SNACKBAR_DURATION}
-            // onClose={handleSnackbarClose}
+            onClose={() => setShowSuccess(false)}
             anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           >
             <Alert
@@ -272,6 +296,22 @@ export const MonthlyProgressForm: React.FC = () => {
               sx={{ backgroundColor: "#1976d2" }}
             >
               Review saved successfully!
+            </Alert>
+          </Snackbar>
+
+          {/* New Snackbar for error messages */}
+          <Snackbar
+            open={showError}
+            autoHideDuration={SNACKBAR_DURATION}
+            onClose={() => setShowError(false)}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          >
+            <Alert
+              severity="error"
+              variant="filled"
+              sx={{ backgroundColor: "#d32f2f" }} // Red color for error
+            >
+              Error: {errorMessage}
             </Alert>
           </Snackbar>
         </Box>
