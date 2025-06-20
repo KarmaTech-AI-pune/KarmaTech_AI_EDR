@@ -1,15 +1,13 @@
 import React, {
   useMemo,
   useRef,
-  useState, // Add useState import
+  useState,
 } from "react";
 import {
   Box,
   Paper,
   Typography,
   Container,
-  Alert,
-  Snackbar,
 } from "@mui/material";
 import { FormWrapper } from "../FormWrapper";
 import { FormProvider, useForm, SubmitHandler } from "react-hook-form";
@@ -18,8 +16,8 @@ import {
   MonthlyProgressSchema,
   MonthlyProgressSchemaType,
 } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { MonthlyProgressAPI } from "../../../services/monthlyProgressApi"; // Add this import
-import { useProject } from "../../../context/ProjectContext"; // Add this import
+import { MonthlyProgressAPI } from "../../../services/monthlyProgressApi";
+import { useProject } from "../../../context/ProjectContext";
 import {
   FinancialDetailsTab,
   ContractAndCostsTab,
@@ -41,6 +39,7 @@ import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
 import RenderComponent from "./RenderComponent";
+import NotificationSnackbar from "../../widgets/NotificationSnackbar"; // Import NotificationSnackbar
 
 
 export type tab = {
@@ -127,7 +126,6 @@ const tabs = [
   },
 ] satisfies tab[];
 
-const SNACKBAR_DURATION = 3000;
 
 // Main component
 export const MonthlyProgressForm: React.FC = () => {
@@ -197,11 +195,17 @@ export const MonthlyProgressForm: React.FC = () => {
     mode: "all",
   });
 
-  const { projectId } = useProject(); // Get projectId from context
+  const { projectId } = useProject();
 
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showError, setShowError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [snackbarState, setSnackbarState] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error', // Explicitly type severity
+  });
+
+  const handleCloseSnackbar = () => {
+    setSnackbarState({ ...snackbarState, open: false });
+  };
 
   // Use ref to prevent re-creating the date string on every render
   const currentMonthYear = useRef(getCurrentMonthYear()).current;
@@ -209,21 +213,29 @@ export const MonthlyProgressForm: React.FC = () => {
   const onSubmit: SubmitHandler<MonthlyProgressSchemaType> = async (data) => {
 
     if (!projectId) {
-      setErrorMessage("Project ID is not available. Cannot submit form.");
-      setShowError(true);
+      setSnackbarState({
+        open: true,
+        message: "Project ID is not available. Cannot submit form.",
+        severity: 'error',
+      });
       return;
     }
 
     try {
       // You might want to show a loading indicator here
       await MonthlyProgressAPI.submitMonthlyProgress(projectId, data);
-      setShowSuccess(true);
-      setShowError(false); // Ensure error snackbar is hidden on success
+      setSnackbarState({
+        open: true,
+        message: "Review saved successfully!",
+        severity: 'success',
+      });
     } catch (error: any) {
       console.error("Submission error:", error);
-      setErrorMessage(error.message || 'An unexpected error occurred during submission.');
-      setShowError(true);
-      setShowSuccess(false); // Ensure success snackbar is hidden on error
+      setSnackbarState({
+        open: true,
+        message: error.message || 'An unexpected error occurred during submission.',
+        severity: 'error',
+      });
     } finally {
       // Hide loading indicator here if implemented
     }
@@ -284,36 +296,12 @@ export const MonthlyProgressForm: React.FC = () => {
             </Box>
           </Paper>
 
-          <Snackbar
-            open={showSuccess}
-            autoHideDuration={SNACKBAR_DURATION}
-            onClose={() => setShowSuccess(false)}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          >
-            <Alert
-              severity="success"
-              variant="filled"
-              sx={{ backgroundColor: "#1976d2" }}
-            >
-              Review saved successfully!
-            </Alert>
-          </Snackbar>
-
-          {/* New Snackbar for error messages */}
-          <Snackbar
-            open={showError}
-            autoHideDuration={SNACKBAR_DURATION}
-            onClose={() => setShowError(false)}
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          >
-            <Alert
-              severity="error"
-              variant="filled"
-              sx={{ backgroundColor: "#d32f2f" }} // Red color for error
-            >
-              Error: {errorMessage}
-            </Alert>
-          </Snackbar>
+          <NotificationSnackbar
+            open={snackbarState.open}
+            message={snackbarState.message}
+            severity={snackbarState.severity}
+            onClose={handleCloseSnackbar}
+          />
         </Box>
       </Container>
     </FormWrapper>
