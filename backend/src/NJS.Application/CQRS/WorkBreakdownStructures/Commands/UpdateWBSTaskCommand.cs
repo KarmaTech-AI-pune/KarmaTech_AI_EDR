@@ -8,7 +8,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Commands
     /// </summary>
     public class UpdateWBSTaskCommand : IRequest<Unit>
     {
-        // ProjectId might be useful for authorization or ensuring task belongs to the correct WBS
         public int ProjectId { get; }
         public int TaskId { get; }
         public WBSTaskDto TaskDto { get; }
@@ -18,7 +17,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Commands
             ProjectId = projectId;
             TaskId = taskId;
             TaskDto = taskDto;
-            // Ensure the ID in the DTO matches the TaskId from the route
             TaskDto.Id = taskId;
         }
     }

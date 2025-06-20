@@ -340,6 +340,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _context.Set<WBSTaskMonthlyHourHeader>().Add(header);
                 await _unitOfWork.SaveChangesAsync();
             }
+
             var temp = _context.WBSHistories.Where(x => x.WBSTaskMonthlyHourHeaderId == header.Id);
             if (!temp.Any())
             {

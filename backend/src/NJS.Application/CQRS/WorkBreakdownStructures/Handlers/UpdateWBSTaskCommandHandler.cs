@@ -4,13 +4,7 @@ using NJS.Application.CQRS.WorkBreakdownStructures.Commands;
 using NJS.Application.Dtos;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
-using NJS.Domain.Enums; // Add import for WBSTaskLevel
 using NJS.Domain.UnitWork;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
@@ -18,9 +12,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
     {
         private readonly ProjectManagementContext _context;
         private readonly IUnitOfWork _unitOfWork;
-
-        // TODO: Inject ICurrentUserService or similar
-        private readonly string _currentUser = "System"; // Placeholder
+        private readonly string _currentUser = "System";
 
         public UpdateWBSTaskCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork)
         {
@@ -30,86 +22,69 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         public async Task<Unit> Handle(UpdateWBSTaskCommand request, CancellationToken cancellationToken)
         {
-            // --- 1. Find the task to update, including related data ---
             var taskEntity = await _context.WBSTasks
-                .Include(t => t.WorkBreakdownStructure) // Include WBS to check ProjectId
+                .Include(t => t.WorkBreakdownStructure) 
                 .Include(t => t.UserWBSTasks)
                 .Include(t => t.MonthlyHours)
                 .FirstOrDefaultAsync(t => t.Id == request.TaskId && !t.IsDeleted, cancellationToken);
 
             if (taskEntity == null)
             {
-                // throw new NotFoundException(nameof(WBSTask), request.TaskId);
                 throw new Exception($"WBSTask with ID {request.TaskId} not found.");
             }
 
-            // --- 2. Verify task belongs to the correct project's WBS ---
             if (taskEntity.WorkBreakdownStructure == null || taskEntity.WorkBreakdownStructure.ProjectId != request.ProjectId)
             {
-                // Or throw an authorization/forbidden exception
                 throw new Exception($"Task {request.TaskId} does not belong to Project {request.ProjectId}.");
             }
 
-            // --- 3. Map updated properties from DTO ---
             var taskDto = request.TaskDto;
             taskEntity.Title = taskDto.Title;
             taskEntity.Description = taskDto.Description;
-            taskEntity.Level = taskDto.Level; // No cast needed now
-            taskEntity.ParentId = taskDto.ParentId; // Consider validating ParentId exists within the same WBS
+            taskEntity.Level = taskDto.Level; 
+            taskEntity.ParentId = taskDto.ParentId; 
             taskEntity.DisplayOrder = taskDto.DisplayOrder;
             taskEntity.EstimatedBudget = taskDto.EstimatedBudget;
             taskEntity.StartDate = taskDto.StartDate;
             taskEntity.EndDate = taskDto.EndDate;
-            taskEntity.TaskType = taskDto.TaskType; // Update TaskType
+            taskEntity.TaskType = taskDto.TaskType; 
             taskEntity.UpdatedAt = DateTime.UtcNow;
-            taskEntity.UpdatedBy = _currentUser;
-            // IsDeleted should not be updated here; use a separate Delete command
-
-            // --- 4. Update User Assignment and Monthly Hours ---
-            // Using copied helper methods (could be refactored later)
+            taskEntity.UpdatedBy = _currentUser;           
             UpdateUserAssignment(taskEntity, taskDto);
-            UpdateMonthlyHours(taskEntity, taskDto);
-
-            // --- 5. Save Changes ---
-            // EF Core tracks changes to taskEntity and its related collections
+            UpdateMonthlyHours(request.ProjectId, taskDto.TaskType,taskEntity, taskDto);
+           
             await _unitOfWork.SaveChangesAsync();
 
             return Unit.Value;
         }
-
-        // --- Helper methods copied from SetWBSCommandHandler ---
-        // (Consider refactoring into a shared service/utility class later)
+       
 
         private void UpdateUserAssignment(WBSTask taskEntity, WBSTaskDto taskDto)
         {
             var existingUserTask = taskEntity.UserWBSTasks.FirstOrDefault();
 
-            // Handle Manpower tasks
             if (taskEntity.TaskType == TaskType.Manpower)
             {
-                // Only proceed if UserId is not null/empty
                 if (!string.IsNullOrEmpty(taskDto.AssignedUserId))
                 {
                     if (existingUserTask != null)
                     {
-                        // Update existing assignment for Manpower task
                         existingUserTask.UserId = taskDto.AssignedUserId;
-                        existingUserTask.Name = null; // Reset Name for Manpower tasks
+                        existingUserTask.Name = null; 
                         existingUserTask.CostRate = taskDto.CostRate;
                         existingUserTask.Unit = taskDto.ResourceUnit;
-                        existingUserTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
-                        existingUserTask.TotalCost = (decimal)existingUserTask.TotalHours * existingUserTask.CostRate;
+                        existingUserTask.TotalHours = taskDto.MonthlyHours.Sum(mh => mh.PlannedHours);
+                        existingUserTask.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate;
                         existingUserTask.UpdatedAt = DateTime.UtcNow;
                         existingUserTask.UpdatedBy = _currentUser;
                     }
                     else
                     {
-                        // Create new assignment for Manpower task
                         var newUserTask = new UserWBSTask
                         {
                             WBSTask = taskEntity,
                             UserId = taskDto.AssignedUserId,
-                            Name = null, // No Name for Manpower tasks
+                            Name = null, 
                             CostRate = taskDto.CostRate,
                             Unit = taskDto.ResourceUnit,
                             TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
@@ -122,7 +97,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 }
                 else if (existingUserTask != null)
                 {
-                    // Remove existing assignment if no valid UserId
                     _context.UserWBSTasks.Remove(existingUserTask);
                 }
             }
@@ -170,32 +144,48 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
         }
 
-        private void UpdateMonthlyHours(WBSTask taskEntity, WBSTaskDto taskDto)
+        private WBSTaskMonthlyHourHeader GetMonthlyHourHeader(int projectId, TaskType taskType)
         {
-            // Simple approach: Remove existing and add new ones
+            var header =  _context.Set<WBSTaskMonthlyHourHeader>()
+                   .FirstOrDefault(h => h.ProjectId == projectId && h.TaskType == taskType);
 
-            // Remove existing
+            return header!;
+        }
+        private void UpdateMonthlyHours(int projectId, TaskType taskType,WBSTask taskEntity, WBSTaskDto taskDto)
+        {
+
+            var header =  GetMonthlyHourHeader(projectId, taskType);           
+
             var existingMonthlyHours = taskEntity.MonthlyHours.ToList();
-            foreach (var existingHour in existingMonthlyHours)
-            {
-                _context.Set<WBSTaskMonthlyHour>().Remove(existingHour);
-            }
-            // taskEntity.MonthlyHours.Clear(); // Let EF Core manage the collection state after Remove
 
-            // Add new ones from DTO
+            var existing = taskEntity.MonthlyHours.ToDictionary(m => (m.Year, m.Month, m.WBSTaskMonthlyHourHeaderId));
+
             foreach (var mhDto in taskDto.MonthlyHours)
             {
-                var newMh = new WBSTaskMonthlyHour
+                var key = (mhDto.Year.ToString(), mhDto.Month, header.Id);
+                if (existing.TryGetValue(key, out var existingMh))
                 {
-                    WBSTask = taskEntity,
-                    Year = mhDto.Year.ToString(),
-                    Month = mhDto.Month,
-                    PlannedHours = mhDto.PlannedHours,
-                    CreatedAt = DateTime.UtcNow, // Should this be UpdatedAt? Or track separately? Using CreatedAt for now.
-                    CreatedBy = _currentUser
-                };
-                taskEntity.MonthlyHours.Add(newMh); // Add to the navigation property collection
-            }
+                    existingMh.PlannedHours = mhDto.PlannedHours;
+                    existingMh.UpdatedAt = DateTime.UtcNow;
+                    existingMh.UpdatedBy = _currentUser;
+                }
+                else
+                {
+                    var newMh = new WBSTaskMonthlyHour
+                    {
+                        WBSTask = taskEntity,
+                        WBSTaskMonthlyHourHeader = header,
+                        WBSTaskMonthlyHourHeaderId = header.Id,
+                        Year = mhDto.Year.ToString(),
+                        Month = mhDto.Month,
+                        PlannedHours = mhDto.PlannedHours,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = _currentUser
+                    };
+                    taskEntity.MonthlyHours.Add(newMh);
+                    header.MonthlyHours.Add(newMh);
+                }
+            }            
 
             // Recalculate TotalHours/Cost on the UserWBSTask if it exists
             var userTask = taskEntity.UserWBSTasks.FirstOrDefault();
@@ -203,7 +193,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             {
                 userTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
                 userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate;
-                userTask.UpdatedAt = DateTime.UtcNow; // Update timestamp on user task as well
+                userTask.UpdatedAt = DateTime.UtcNow;
                 userTask.UpdatedBy = _currentUser;
             }
         }
