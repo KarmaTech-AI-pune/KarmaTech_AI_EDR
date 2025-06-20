@@ -363,7 +363,7 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
-                    label="Storage Path"
+                    label="Form of Storage"
                     value={formData.storagePath}
                     onChange={handleChange('storagePath')}
                     sx={textFieldStyle}
@@ -488,7 +488,7 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
-                    label="Storage Path"
+                    label="Form of Storage"
                     value={formData.storagePath}
                     onChange={handleChange('storagePath')}
                     sx={textFieldStyle}

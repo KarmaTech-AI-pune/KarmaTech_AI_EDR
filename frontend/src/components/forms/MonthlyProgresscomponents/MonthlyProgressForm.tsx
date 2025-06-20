@@ -1,175 +1,265 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, {
+  useMemo,
+  useRef,
+} from "react";
 import {
-    Box,
-    Tab,
-    Tabs,
-    Paper,
-    Typography,
-    Container,
-    Alert,
-    Snackbar
-} from '@mui/material';
-import { FormWrapper } from '../FormWrapper';
-// import { TabContent, NavigationButtons } from './components';
-import { TabContent } from './TabContent';
-import { NavigationButtons } from './NavigationButtons';
-import { useFormState } from '../../../hooks/MontlyProgress/useFormState';
-import { getCurrentMonthYear, formatCurrency } from '../../../utils/MonthlyProgress/monthlyProgressUtils';
+  Box,
+  Paper,
+  Typography,
+  Container,
+  Alert,
+  Snackbar,
+} from "@mui/material";
+import { FormWrapper } from "../FormWrapper";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  MonthlyProgressSchema,
+  MonthlyProgressSchemaType,
+} from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import {
+  FinancialDetailsTab,
+  ContractAndCostsTab,
+  CostToCompleteAndEAC,
+  ScheduleTab,
+  ManpowerPlanningTab,
+  BudgetRevenueTab,
+  ProgressReviewDeliverables,
+  ChangeOrdersTab,
+  LastMonthActionsTab,
+  CurrentMonthActionsTab,
+} from "./index";
+import {
+  getCurrentMonthYear,
+} from "../../../utils/MonthlyProgress/monthlyProgressUtils";
+import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
+import FormHeader from "./FormHeader";
+import FormFooter from "./FormFooter";
+import RenderComponent from "./RenderComponent";
 
-// Constants
-const TABS = [
-    { id: 0, label: 'Financial Details' },
-    { id: 1, label: 'Contract & Costs' },
-    { id: 2, label: 'Budget & Schedule' },
-    { id: 3, label: 'Manpower Planning' },
-    { id: 4, label: 'Progress Review Deliverables' },
-    { id: 5, label: 'Change Orders' },
-    { id: 6, label: 'Actions' }
-] as const;
 
-const SAVE_DELAY = 1000;
+export type tab = {
+  id: string | number;
+  label: string;
+  component: React.JSX.Element;
+  inputs: (keyof MonthlyProgressSchemaType)[];
+};
+
+const tabs = [
+  {
+    id: "1",
+    label: "Financial Details",
+    component: <FinancialDetailsTab />,
+    inputs: ["financialDetails"],
+  },
+  {
+    id: "2",
+    label: "Contract & Costs",
+    component: <ContractAndCostsTab />,
+    inputs: ["contractAndCost"],
+  },
+  {
+    id: "3",
+    label: "CTC & EAC",
+    component: <CostToCompleteAndEAC/>,
+    inputs: ["ctcAndEac"]
+  },
+  {
+    id: "4",
+    label: "Schedule",
+    component: <ScheduleTab />,
+    inputs: ["schedule"],
+  },
+  {
+    id: "5",
+    label: "Budget Revenue",
+    component: <BudgetRevenueTab/>,
+    inputs: [
+     "budgetTable"
+    ],
+  },
+  {
+    id: "6",
+    label: "Manpower Planning",
+    component: <ManpowerPlanningTab />,
+    inputs: ["manpowerPlanning"],
+  },
+  {
+    id: "7",
+    label: "Progress Review Deliverables",
+    component: <ProgressReviewDeliverables />,
+    inputs: ["progressDeliverable"],
+  },
+  {
+    id: "8",
+    label: "Change Orders",
+    component: <ChangeOrdersTab />,
+    inputs: ["changeOrder"],
+  },
+  {
+    id: "9",
+    label: "Last Month Actions",
+    component: <LastMonthActionsTab />,
+    inputs: ["lastMonthActions"],
+  },
+  {
+    id: "10",
+    label: "Current Month Actions",
+    component: <CurrentMonthActionsTab />,
+    inputs: ["currentMonthActions"],
+  },
+] satisfies tab[];
+
 const SNACKBAR_DURATION = 3000;
 
 // Main component
 export const MonthlyProgressForm: React.FC = () => {
-    const [tabValue, setTabValue] = useState(0);
-    const { data: formData, isLoading, showSuccess, updateFormData, setLoading, setShowSuccess } = useFormState();
-
-    // Use ref to prevent re-creating the date string on every render
-    const currentMonthYear = useRef(getCurrentMonthYear()).current;
-
-    // Memoized handlers
-    const handleTabChange = useCallback((_: React.SyntheticEvent, newValue: number) => {
-        setTabValue(newValue);
-    }, []);
-
-    const handlePrevious = useCallback(() => {
-        setTabValue(prev => Math.max(0, prev - 1));
-    }, []);
-
-    const handleNext = useCallback(() => {
-        setTabValue(prev => Math.min(TABS.length - 1, prev + 1));
-    }, []);
-
-    const handleSave = useCallback(async () => {
-        setLoading(true);
-        try {
-            // Simulate API call - replace with actual API call
-            await new Promise(resolve => setTimeout(resolve, SAVE_DELAY));
-            setShowSuccess(true);
-        } catch (error) {
-            console.error('Error saving form:', error);
-            // Add error handling here
-        } finally {
-            setLoading(false);
-        }
-    }, [setLoading, setShowSuccess]);
-
-    const handleSnackbarClose = useCallback(() => {
-        setShowSuccess(false);
-    }, [setShowSuccess]);
-
-    // Memoized styles
-    const tabsStyles = useMemo(() => ({
-        '& .MuiTab-root': {
-            textTransform: 'none',
-            fontWeight: 500,
-            color: '#666',
-            minWidth: 120,
-            '&.Mui-selected': {
-                color: '#1976d2'
-            }
+  const form = useForm<MonthlyProgressSchemaType>({
+    resolver: zodResolver(MonthlyProgressSchema),
+    defaultValues: {
+      financialDetails: {
+        net: null,
+        serviceTax: null,
+        feeTotal: null,
+        budgetOdcs: null,
+        budgetStaff: null,
+        BudgetSubTotal: null,
+      },
+      contractAndCost: {
+        contractType: "lumpsum", // Default to lumpsum
+        percentage: null,
+        actualOdcs: null,
+        actualStaff: null,
+        actualSubtotal: null,
+      },
+      budgetTable: {
+        originalBudget: {
+          revenueFee: 0,
+          cost: 0,
+          profitPercentage: 0
         },
-        '& .MuiTabs-indicator': {
-            backgroundColor: '#1976d2'
+        currentBudgetInMIS: {
+          revenueFee: 0,
+          cost: 0,
+          profitPercentage: 0
+        },
+        percentCompleteOnCosts: {
+          revenueFee: 0,
+          cost: 0,
+          profitPercentage: 0
         }
-    }), []);
+      },
+      ctcAndEac: {
+      ctcODC: null,
+      ctcStaff: null,
+      ctcSubtotal: null,
+      totalEAC: null,
+      grossProfitPercentage: null,
+      },
+      schedule: {
+        dateOfIssueWOLOI: new Date(),
+      completionDateAsPerContract: new Date(),
+      completionDateAsPerExtension: new Date(),
+      expectedCompletionDate: new Date(),
+      },
+      manpowerPlanning: {
+        manpower: [],
+        manpowerTotal: {
+          plannedTotal: 0,
+          consumedTotal: 0,
+          balanceTotal: 0,
+          nextMonthPlanningTotal: 0,
+        }
+      },
+      changeOrder: [],
+      lastMonthActions: [],
+      currentMonthActions: [],
+      progressDeliverable: [],
+    },
+    mode: "all",
+  });
 
-    const containerStyles = useMemo(() => ({
-        width: '100%',
-        maxHeight: 'calc(100vh - 200px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        pr: 1,
-        pb: 4
-    }), []);
 
-    return (
-        <FormWrapper>
-            <Container maxWidth="xl" sx={{ py: 3 }}>
-                <Box sx={containerStyles}>
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            p: 3,
-                            border: '1px solid #e0e0e0',
-                            borderRadius: 1
-                        }}
+  // Use ref to prevent re-creating the date string on every render
+  const currentMonthYear = useRef(getCurrentMonthYear()).current;
+
+
+
+  const onSubmit = (data: MonthlyProgressSchemaType) => {
+    console.log(data);
+  };
+
+  const containerStyles = useMemo(
+    () => ({
+      width: "100%",
+      maxHeight: "calc(100vh - 200px)",
+      overflowY: "auto",
+      overflowX: "hidden",
+      pr: 1,
+      pb: 4,
+    }),
+    []
+  );
+
+  return (
+    <FormWrapper>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box sx={containerStyles}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              border: "1px solid #e0e0e0",
+              borderRadius: 1,
+            }}
+          >
+            <Typography
+              variant="h5"
+              gutterBottom
+              sx={{
+                color: "#1976d2",
+                fontWeight: 500,
+                mb: 3,
+              }}
+            >
+              PMD7. Monthly Progress Review - {currentMonthYear}
+            </Typography>
+
+            <Box>
+              <FormControlsProvider tabs={tabs}>
+                <FormProvider {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <Box
+                      sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}
                     >
-                        <Typography
-                            variant="h5"
-                            gutterBottom
-                            sx={{
-                                color: '#1976d2',
-                                fontWeight: 500,
-                                mb: 3
-                            }}
-                        >
-                            PMD7. Monthly Progress Review - {currentMonthYear}
-                        </Typography>
+                      <FormHeader tabs={tabs} />
+                    </Box>
 
-                        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                            <Tabs
-                                value={tabValue}
-                                onChange={handleTabChange}
-                                variant="scrollable"
-                                scrollButtons="auto"
-                                allowScrollButtonsMobile
-                                sx={tabsStyles}
-                            >
-                                {TABS.map(tab => (
-                                    <Tab
-                                        key={tab.id}
-                                        label={tab.label}
-                                        id={`tab-${tab.id}`}
-                                        aria-controls={`tabpanel-${tab.id}`}
-                                    />
-                                ))}
-                            </Tabs>
-                        </Box>
+                    <RenderComponent tabs={tabs} />
 
-                        <TabContent
-                            tabValue={tabValue}
-                            formData={formData}
-                            handleInputChange={updateFormData}
-                            formatCurrency={formatCurrency}
-                        />
+                    <FormFooter tabs={tabs} />
+                  </form>
+                </FormProvider>
+              </FormControlsProvider>
+            </Box>
+          </Paper>
 
-                        <NavigationButtons
-                            tabValue={tabValue}
-                            isLoading={isLoading}
-                            onPrevious={handlePrevious}
-                            onNext={handleNext}
-                            onSave={handleSave}
-                        />
-                    </Paper>
-
-                    <Snackbar
-                        open={showSuccess}
-                        autoHideDuration={SNACKBAR_DURATION}
-                        onClose={handleSnackbarClose}
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                    >
-                        <Alert
-                            severity="success"
-                            variant="filled"
-                            sx={{ backgroundColor: '#1976d2' }}
-                        >
-                            Review saved successfully!
-                        </Alert>
-                    </Snackbar>
-                </Box>
-            </Container>
-        </FormWrapper>
-    );
+          <Snackbar
+            // open={showSuccess}
+            autoHideDuration={SNACKBAR_DURATION}
+            // onClose={handleSnackbarClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          >
+            <Alert
+              severity="success"
+              variant="filled"
+              sx={{ backgroundColor: "#1976d2" }}
+            >
+              Review saved successfully!
+            </Alert>
+          </Snackbar>
+        </Box>
+      </Container>
+    </FormWrapper>
+  );
 };
