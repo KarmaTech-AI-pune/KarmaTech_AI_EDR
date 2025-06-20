@@ -263,28 +263,7 @@ const BudgetRevenueTab: React.FC = () => {
                   />
                 </TableCell>
                 <TableCell>
-                  <Controller
-                    name="budgetTable.percentCompleteOnCosts.profitPercentage"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        size="small"
-                        type="number"
-                        placeholder="Profit %"
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
-                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                        error={!!errors.budgetTable?.percentCompleteOnCosts?.profitPercentage}
-                        helperText={errors.budgetTable?.percentCompleteOnCosts?.profitPercentage?.message}
-                        sx={textFieldStyle}
-                        InputProps={{
-                          endAdornment: '%'
-                        }}
-                      />
-                    )}
-                  />
+                  
                 </TableCell>
               </TableRow>
             </TableBody>
