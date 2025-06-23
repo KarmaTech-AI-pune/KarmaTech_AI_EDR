@@ -30,6 +30,9 @@ const CostToCompleteAndEAC: React.FC = () => {
 
   useEffect(() => {
     setValue('ctcAndEac.grossProfitPercentage', grossProfitPercentage);
+    setValue('budgetTable.currentBudgetInMIS.profitPercentage',grossProfitPercentage)
+    setValue('ctcAndEac.totalEAC', totalEAC)
+    setValue('budgetTable.currentBudgetInMIS.cost', totalEAC)
   }, [grossProfitPercentage, setValue, net, totalEAC]);
 
   // Track if values have been manually overridden
@@ -58,7 +61,6 @@ const CostToCompleteAndEAC: React.FC = () => {
   // Update subtotal and totalEAC when CTC values change
   useEffect(() => {
     setValue('ctcAndEac.ctcSubtotal', calculatedSubtotal);
-    setValue('ctcAndEac.totalEAC', totalEAC);
   }, [calculatedSubtotal, totalEAC, setValue]);
 
   // Reset override flags when form is reset or new data is loaded
@@ -66,7 +68,6 @@ const CostToCompleteAndEAC: React.FC = () => {
     const currentCtcODC = getValues('ctcAndEac.ctcODC');
     const currentCtcStaff = getValues('ctcAndEac.ctcStaff');
 
-    setValue('ctcAndEac.grossProfitPercentage', grossProfitPercentage);
     
     // If values are null or undefined, reset override flags
     if (currentCtcODC == null) {

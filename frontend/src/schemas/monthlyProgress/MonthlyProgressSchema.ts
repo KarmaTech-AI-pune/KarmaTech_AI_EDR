@@ -55,12 +55,6 @@ const BudgetRowSchema = z.object({
   profitPercentage: z
     .number()
     .min(1, "Profit percentage is required")
-    .refine(
-      (val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100,
-      {
-        message: "Profit percentage must be between 0 and 100",
-      }
-    )
     .transform((val) => Number(val)),
 });
 

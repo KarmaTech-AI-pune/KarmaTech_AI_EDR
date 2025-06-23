@@ -5,6 +5,7 @@ import { Grid, Paper, TextField, Typography, CircularProgress } from "@mui/mater
 import { formatCurrency } from "../../../../utils/MonthlyProgress/monthlyProgressUtils";
 import { projectManagementAppContext } from "../../../../App";
 import { getJobStartFormByProjectId, getWBSResourceData } from "../../../../services/jobStartFormApi";
+import JobstartGrandTotal from "../../jobstartFormComponent/JobstartGrandTotal";
 
 const FinancialDetailsTab: React.FC = () => {
     const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
@@ -34,6 +35,10 @@ const FinancialDetailsTab: React.FC = () => {
                         // Extract values and set them in the form
                         setValue("financialDetails.net", jobStartForm.projectFees || null);
                         setValue("financialDetails.serviceTax", jobStartForm.serviceTaxPercentage || null);
+                        setValue("budgetTable.originalBudget.cost", jobStartForm.profit || 0)
+                        setValue("budgetTable.originalBudget.revenueFee", jobStartForm.projectFees || 0)
+                        setValue("budgetTable.originalBudget.profitPercentage", jobStartForm.projectFees || 0)
+                        setValue("budgetTable.currentBudgetInMIS.revenueFee", jobStartForm.projectFees || 0)
                     }
                 } catch (error) {
                     console.error("Error fetching Job Start Form data:", error);
