@@ -32,7 +32,7 @@ const FinancialDetailsTab: React.FC = () => {
                     if (data && Array.isArray(data) && data.length > 0) {
                         const jobStartForm = data[0];
                         // Extract values and set them in the form
-                        setValue("financialDetails.net", jobStartForm.grandTotal || null);
+                        setValue("financialDetails.net", jobStartForm.projectFees || null);
                         setValue("financialDetails.serviceTax", jobStartForm.serviceTaxPercentage || null);
                     }
                 } catch (error) {
@@ -129,6 +129,9 @@ const FinancialDetailsTab: React.FC = () => {
                                     helperText={errors.financialDetails?.net?.message || ''}
                                     value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
                                     sx={{ mb: 2 }}
                                 />
                         )}
@@ -146,8 +149,8 @@ const FinancialDetailsTab: React.FC = () => {
                                     {...field}
                                     value={field.value || ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                                    slotProps={{
-                                        htmlInput: { min: 0, max: 100, step: 0.01 }
+                                    InputProps={{
+                                        readOnly: true,
                                     }}
                                     sx={{ mb: 2 }}
                                 />
@@ -191,6 +194,9 @@ const FinancialDetailsTab: React.FC = () => {
                                     {...field}
                                     value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
                                     sx={{ mb: 2 }}
                                 />
                         )}
@@ -209,6 +215,9 @@ const FinancialDetailsTab: React.FC = () => {
                                     {...field}
                                     value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
                                     sx={{ mb: 2 }}
                                 />
                         )}
