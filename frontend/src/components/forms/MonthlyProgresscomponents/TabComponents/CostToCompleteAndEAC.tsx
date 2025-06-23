@@ -3,12 +3,13 @@ import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/M
 import { Grid, Paper, TextField, Typography } from "@mui/material";
 import React, { useEffect } from "react";
 import textFieldStyle from "../../../../theme/textFieldStyle";
-
+import { calculateGrossPercentage } from "../../../../utils/calculations";
 
 const CostToCompleteAndEAC: React.FC = () => {
   const { control, formState: { errors }, watch, setValue, getValues } = useFormContext<MonthlyProgressSchemaType>();
 
   // Watch budget values from financialDetails
+  const net = watch('financialDetails.net') || 0;
   const budgetOdcs = watch('financialDetails.budgetOdcs');
   const budgetStaff = watch('financialDetails.budgetStaff');
   
@@ -16,6 +17,7 @@ const CostToCompleteAndEAC: React.FC = () => {
   const actualOdcs = watch('contractAndCost.actualOdcs');
   const actualStaff = watch('contractAndCost.actualStaff');
   const actualSubtotal = watch('contractAndCost.actualSubtotal') || 0;
+  
 
   // Watch CTC values
   const ctcODC = watch('ctcAndEac.ctcODC');
@@ -24,6 +26,11 @@ const CostToCompleteAndEAC: React.FC = () => {
   // Calculate subtotal based on current CTC values
   const calculatedSubtotal = (ctcODC || 0) + (ctcStaff || 0);
   const totalEAC = actualSubtotal + calculatedSubtotal;
+  const grossProfitPercentage = calculateGrossPercentage(net, totalEAC);
+
+  useEffect(() => {
+    setValue('ctcAndEac.grossProfitPercentage', grossProfitPercentage);
+  }, [grossProfitPercentage, setValue, net, totalEAC]);
 
   // Track if values have been manually overridden
   const [odcOverridden, setOdcOverridden] = React.useState<boolean>(false);
@@ -58,6 +65,8 @@ const CostToCompleteAndEAC: React.FC = () => {
   useEffect(() => {
     const currentCtcODC = getValues('ctcAndEac.ctcODC');
     const currentCtcStaff = getValues('ctcAndEac.ctcStaff');
+
+    setValue('ctcAndEac.grossProfitPercentage', grossProfitPercentage);
     
     // If values are null or undefined, reset override flags
     if (currentCtcODC == null) {
@@ -154,7 +163,7 @@ const CostToCompleteAndEAC: React.FC = () => {
                   <Controller
                       name="ctcAndEac.totalEAC"
                       control={control}
-                      render={({ field }) => (
+                      render={() => (
                           <TextField
                               fullWidth
                               label="Total EAC"
@@ -174,14 +183,15 @@ const CostToCompleteAndEAC: React.FC = () => {
                   <Controller
                       name="ctcAndEac.grossProfitPercentage"
                       control={control}
-                      render={({ field }) => (
+                      render={() => (
                           <TextField
                               fullWidth
                               label="Gross Profit %"
                               type="number"
-                              value={field.value || ''}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                              value={grossProfitPercentage}
+                              InputProps={{
+                                  readOnly: true,
+                              }}
                               error={!!errors.ctcAndEac?.grossProfitPercentage}
                               helperText={errors.ctcAndEac?.grossProfitPercentage?.message || ''}
                               sx={textFieldStyle}
