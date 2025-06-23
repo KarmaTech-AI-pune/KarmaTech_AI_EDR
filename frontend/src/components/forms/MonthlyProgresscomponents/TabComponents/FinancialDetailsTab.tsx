@@ -127,7 +127,7 @@ const FinancialDetailsTab: React.FC = () => {
                                     {...field}
                                     error={!!errors.financialDetails?.net}
                                     helperText={errors.financialDetails?.net?.message || ''}
-                                    value={field.value || ''}
+                                    value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                                     sx={{ mb: 2 }}
                                 />
@@ -189,7 +189,7 @@ const FinancialDetailsTab: React.FC = () => {
                                     error={!!errors.financialDetails?.budgetOdcs}
                                     helperText={errors.financialDetails?.budgetOdcs?.message || ''}
                                     {...field}
-                                    value={field.value || ''}
+                                    value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                                     sx={{ mb: 2 }}
                                 />
@@ -207,7 +207,7 @@ const FinancialDetailsTab: React.FC = () => {
                                     error={!!errors.financialDetails?.budgetStaff}
                                     helperText={errors.financialDetails?.budgetStaff?.message || ''}
                                     {...field}
-                                    value={field.value || ''}
+                                    value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                                     sx={{ mb: 2 }}
                                 />
