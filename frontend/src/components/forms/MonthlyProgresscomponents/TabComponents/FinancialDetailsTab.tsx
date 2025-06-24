@@ -5,7 +5,6 @@ import { Grid, Paper, TextField, Typography, CircularProgress } from "@mui/mater
 import { formatCurrency } from "../../../../utils/MonthlyProgress/monthlyProgressUtils";
 import { projectManagementAppContext } from "../../../../App";
 import { getJobStartFormByProjectId, getWBSResourceData } from "../../../../services/jobStartFormApi";
-import JobstartGrandTotal from "../../jobstartFormComponent/JobstartGrandTotal";
 
 const FinancialDetailsTab: React.FC = () => {
     const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();

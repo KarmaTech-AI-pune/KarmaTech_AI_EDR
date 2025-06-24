@@ -1,6 +1,11 @@
 import { SxProps } from '@mui/material';
+import { SystemStyleObject } from '@mui/system';
 
-const textFieldStyle: SxProps = {
+type TextFieldStyle = SxProps & {
+  [key: string]: SystemStyleObject | undefined;
+};
+
+const textFieldStyle: TextFieldStyle = {
   '& .MuiOutlinedInput-root': {
     borderRadius: 1,
     backgroundColor: '#fff',
@@ -9,7 +14,7 @@ const textFieldStyle: SxProps = {
     },
     '&.Mui-focused fieldset': {
       borderColor: '#1869DA',
-    }
+    },
   },
   // Hide number input arrows
   '& input[type=number]': {

@@ -152,7 +152,7 @@ const ContractAndCostsTab: React.FC = () => {
                   sx={{
                     ...textFieldStyle,
                     '& .MuiOutlinedInput-root': {
-                      ...textFieldStyle['& .MuiOutlinedInput-root'],
+                      ...(textFieldStyle?.['& .MuiOutlinedInput-root'] ? textFieldStyle['& .MuiOutlinedInput-root'] : {}),
                       backgroundColor: '#f5f5f5',
                     }
                   }}

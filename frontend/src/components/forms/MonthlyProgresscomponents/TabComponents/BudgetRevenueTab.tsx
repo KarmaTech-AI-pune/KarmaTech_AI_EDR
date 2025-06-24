@@ -2,7 +2,6 @@ import React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
 import textFieldStyle from '../../../../theme/textFieldStyle';
-import { formatCurrency } from '../../../../utils/MonthlyProgress/monthlyProgressUtils';
 import {
   Box,
   Table,
