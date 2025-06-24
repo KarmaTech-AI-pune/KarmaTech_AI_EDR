@@ -91,7 +91,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#666'
                     }}
                 >
-                    Version 1.10.6
+                    Version 1.11.7
                 </Typography>
             </Container>
 

@@ -3,7 +3,7 @@ import { useFormControls } from "../../../hooks/MontlyProgress/useForm";
 import { tab } from "./MonthlyProgressForm";
 import { useFormContext } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { Box, Button, CircularProgress } from "@mui/material";
+import { Box, Button } from "@mui/material";
 
 const FormFooter = ({ tabs }: { tabs: tab[] }) => {
   const {
@@ -16,13 +16,38 @@ const FormFooter = ({ tabs }: { tabs: tab[] }) => {
   } = useFormControls();
   const { trigger } = useFormContext<MonthlyProgressSchemaType>();
 
+  // Handle Next button click with proper validation
+  const handleNextClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent form submission
+    e.stopPropagation(); // Stop event bubbling
+    
+    try {
+      // Validate current tab before moving to next
+      const isValid = await trigger(tabs[currentPageIndex].inputs);
+      if (isValid) {
+        handleNext();
+      } else {
+        console.log('Validation failed for current tab');
+      }
+    } catch (error) {
+      console.error('Validation error:', error);
+    }
+  };
+
+  // Handle Back button click
+  const handleBackClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent form submission
+    e.stopPropagation(); // Stop event bubbling
+    handleBack();
+  };
+
   if (isFinalPage) {
     return (
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3, gap: 2 }}>
-        
         <Button
+          type="button" 
           variant="outlined"
-          onClick={handleBack}
+          onClick={handleBackClick}
           disabled={!hasPreviousPage}
           sx={{
             borderColor: "#1976d2",
@@ -33,11 +58,11 @@ const FormFooter = ({ tabs }: { tabs: tab[] }) => {
             },
           }}
         >
-            Back
+          Back
         </Button>
         
         <Button
-          type="submit"
+          type="submit" 
           variant="contained"
           sx={{
             backgroundColor: "#1976d2",
@@ -52,11 +77,12 @@ const FormFooter = ({ tabs }: { tabs: tab[] }) => {
     );
   }
 
-  return(
+  return (
     <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3, gap: 2 }}>
       <Button
+        type="button" 
         variant="outlined"
-        onClick={handleBack}
+        onClick={handleBackClick}
         disabled={!hasPreviousPage}
         sx={{
           borderColor: "#1976d2",
@@ -70,14 +96,9 @@ const FormFooter = ({ tabs }: { tabs: tab[] }) => {
         Back
       </Button>
       <Button
+        type="button" // Explicitly set as button type - THIS IS THE KEY FIX
         variant="contained"
-        onClick={
-            async () => {
-              await trigger(tabs[currentPageIndex + 1].inputs);
-              handleNext();
-            }
-          }
-        // onClick={handleNext}
+        onClick={handleNextClick}
         disabled={!hasNextPage}
         sx={{
           backgroundColor: "#1976d2",
@@ -89,7 +110,7 @@ const FormFooter = ({ tabs }: { tabs: tab[] }) => {
         Next
       </Button>
     </Box>
-  )
+  );
 };
 
 export default FormFooter;

@@ -1,6 +1,6 @@
 import React from "react";
 import { Controller, useFormContext, useFieldArray } from "react-hook-form";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import {
   Box,
   Button,
@@ -41,6 +41,18 @@ const ChangeOrdersTab: React.FC = () => {
       '&.Mui-focused fieldset': {
         borderColor: '#1869DA',
       }
+    },
+     // Hide number input arrows
+    '& input[type=number]': {
+      '-moz-appearance': 'textfield',
+    },
+    '& input[type=number]::-webkit-outer-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
+    },
+    '& input[type=number]::-webkit-inner-spin-button': {
+      '-webkit-appearance': 'none',
+      margin: 0,
     }
   };
 
@@ -112,6 +124,7 @@ const ChangeOrdersTab: React.FC = () => {
                           placeholder="Contract Total"
                           value={field.value || ''}
                           onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                          onWheel={(e) => (e.target as HTMLInputElement).blur()}
                           error={!!errors.changeOrder?.[index]?.contractTotal}
                           helperText={errors.changeOrder?.[index]?.contractTotal?.message}
                           sx={textFieldStyle}
@@ -132,6 +145,7 @@ const ChangeOrdersTab: React.FC = () => {
                           placeholder="Cost"
                           value={field.value || ''}
                           onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                          onWheel={(e) => (e.target as HTMLInputElement).blur()}
                           error={!!errors.changeOrder?.[index]?.cost}
                           helperText={errors.changeOrder?.[index]?.cost?.message}
                           sx={textFieldStyle}
@@ -152,6 +166,7 @@ const ChangeOrdersTab: React.FC = () => {
                           placeholder="Fee"
                           value={field.value || ''}
                           onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                          onWheel={(e) => (e.target as HTMLInputElement).blur()}
                           error={!!errors.changeOrder?.[index]?.fee}
                           helperText={errors.changeOrder?.[index]?.fee?.message}
                           sx={textFieldStyle}

@@ -74,6 +74,10 @@ namespace NJS.Domain.Database
         public DbSet<ChangeOrder> ChangeOrders { get; set; }
         public DbSet<LastMonthAction> LastMonthActions { get; set; }
         public DbSet<CurrentMonthAction> CurrentMonthActions { get; set; }
+        public DbSet<BudgetTable> BudgetTables { get; set; }
+        public DbSet<OriginalBudget> OriginalBudgets { get; set; }
+        public DbSet<CurrentBudgetInMIS> CurrentBudgetInMIS { get; set; }
+        public DbSet<PercentCompleteOnCosts> PercentCompleteOnCosts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -101,29 +105,93 @@ namespace NJS.Domain.Database
                 .HasForeignKey<Schedule>(s => s.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.ManpowerPlanning)
-                .WithOne(mp => mp.MonthlyProgress)
-                .HasForeignKey<ManpowerPlanning>(mp => mp.MonthlyProgressId);
+                .HasMany(mp => mp.ManpowerEntries)
+                .WithOne(mpe => mpe.MonthlyProgress)
+                .HasForeignKey(mpe => mpe.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.ProgressDeliverable)
+                .HasMany(mp => mp.ProgressDeliverables)
                 .WithOne(pd => pd.MonthlyProgress)
-                .HasForeignKey<ProgressDeliverable>(pd => pd.MonthlyProgressId);
+                .HasForeignKey(pd => pd.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.ChangeOrder)
+                .HasMany(mp => mp.ChangeOrders)
                 .WithOne(co => co.MonthlyProgress)
-                .HasForeignKey<ChangeOrder>(co => co.MonthlyProgressId);
+                .HasForeignKey(co => co.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.LastMonthAction)
+                .HasMany(mp => mp.LastMonthActions)
                 .WithOne(lma => lma.MonthlyProgress)
-                .HasForeignKey<LastMonthAction>(lma => lma.MonthlyProgressId);
+                .HasForeignKey(lma => lma.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.CurrentMonthAction)
+                .HasMany(mp => mp.CurrentMonthActions)
                 .WithOne(cma => cma.MonthlyProgress)
-                .HasForeignKey<CurrentMonthAction>(cma => cma.MonthlyProgressId);
+                .HasForeignKey(cma => cma.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.BudgetTable)
+                .WithOne(bt => bt.MonthlyProgress)
+                .HasForeignKey<BudgetTable>(bt => bt.MonthlyProgressId);
+
+            modelBuilder.Entity<BudgetTable>()
+                .HasOne(bt => bt.OriginalBudget)
+                .WithOne(ob => ob.BudgetTable)
+                .HasForeignKey<OriginalBudget>(ob => ob.BudgetTableId);
+
+            modelBuilder.Entity<BudgetTable>()
+                .HasOne(bt => bt.CurrentBudgetInMIS)
+                .WithOne(cb => cb.BudgetTable)
+                .HasForeignKey<CurrentBudgetInMIS>(cb => cb.BudgetTableId);
+
+            modelBuilder.Entity<BudgetTable>()
+                .HasOne(pcc => pcc.PercentCompleteOnCosts)
+                .WithOne(pcc => pcc.BudgetTable)
+                .HasForeignKey<PercentCompleteOnCosts>(pcc => pcc.BudgetTableId);
+
+            // Configure decimal precisions for Monthly Progress related entities
+            modelBuilder.Entity<ContractAndCost>().Property(e => e.Percentage).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(e => e.ActualOdcs).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(e => e.ActualStaff).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(e => e.ActualSubtotal).HasPrecision(18, 2);
+
+            modelBuilder.Entity<CurrentBudgetInMIS>().Property(e => e.Cost).HasPrecision(18, 2);
+            modelBuilder.Entity<CurrentBudgetInMIS>().Property(e => e.ProfitPercentage).HasPrecision(18, 2);
+            modelBuilder.Entity<CurrentBudgetInMIS>().Property(e => e.RevenueFee).HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialDetails>().Property(e => e.BudgetOdcs).HasPrecision(18, 2);
+            modelBuilder.Entity<FinancialDetails>().Property(e => e.BudgetStaff).HasPrecision(18, 2);
+            modelBuilder.Entity<FinancialDetails>().Property(e => e.BudgetSubTotal).HasPrecision(18, 2);
+            modelBuilder.Entity<FinancialDetails>().Property(e => e.FeeTotal).HasPrecision(18, 2);
+            modelBuilder.Entity<FinancialDetails>().Property(e => e.Net).HasPrecision(18, 2);
+            modelBuilder.Entity<FinancialDetails>().Property(e => e.ServiceTax).HasPrecision(18, 2);
+
+            modelBuilder.Entity<ManpowerPlanning>().Property(e => e.Balance).HasPrecision(18, 2);
+            modelBuilder.Entity<ManpowerPlanning>().Property(e => e.Consumed).HasPrecision(18, 2);
+            modelBuilder.Entity<ManpowerPlanning>().Property(e => e.NextMonthPlanning).HasPrecision(18, 2);
+            modelBuilder.Entity<ManpowerPlanning>().Property(e => e.Planned).HasPrecision(18, 2);
+
+            modelBuilder.Entity<MonthlyProgress>().Property(e => e.ManpowerTotal).HasPrecision(18, 2);
+
+            modelBuilder.Entity<OriginalBudget>().Property(e => e.Cost).HasPrecision(18, 2);
+            modelBuilder.Entity<OriginalBudget>().Property(e => e.ProfitPercentage).HasPrecision(18, 2);
+            modelBuilder.Entity<OriginalBudget>().Property(e => e.RevenueFee).HasPrecision(18, 2);
+
+            modelBuilder.Entity<PercentCompleteOnCosts>().Property(e => e.Cost).HasPrecision(18, 2);
+            modelBuilder.Entity<PercentCompleteOnCosts>().Property(e => e.ProfitPercentage).HasPrecision(18, 2);
+            modelBuilder.Entity<PercentCompleteOnCosts>().Property(e => e.RevenueFee).HasPrecision(18, 2);
+
+            modelBuilder.Entity<ProgressDeliverable>().Property(e => e.PaymentDue).HasPrecision(18, 2);
+
+            modelBuilder.Entity<CTCEAC>().Property(e => e.CtcODC).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(e => e.CtcStaff).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(e => e.CtcSubtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(e => e.GrossProfitPercentage).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(e => e.TotalEAC).HasPrecision(18, 2);
+
+            modelBuilder.Entity<ChangeOrder>().Property(e => e.ContractTotal).HasPrecision(18, 2);
+            modelBuilder.Entity<ChangeOrder>().Property(e => e.Cost).HasPrecision(18, 2);
+            modelBuilder.Entity<ChangeOrder>().Property(e => e.Fee).HasPrecision(18, 2);
 
             // Configure Identity tables
             modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
@@ -783,6 +851,26 @@ namespace NJS.Domain.Database
                       .OnDelete(DeleteBehavior.Cascade);
             });
             */
+
+            // Seed data for OpportunityStatuses
+            modelBuilder.Entity<OpportunityStatus>().HasData(
+                new OpportunityStatus { Id = 1, Status = "Initial" },
+                new OpportunityStatus { Id = 2, Status = "Sent for Review" },
+                new OpportunityStatus { Id = 3, Status = "Review Changes" },
+                new OpportunityStatus { Id = 4, Status = "Sent for Approval" },
+                new OpportunityStatus { Id = 5, Status = "Approval Changes" },
+                new OpportunityStatus { Id = 6, Status = "Approved" }
+            );
+
+            // Seed data for PMWorkflowStatuses
+            modelBuilder.Entity<PMWorkflowStatus>().HasData(
+                new PMWorkflowStatus { Id = 1, Status = "Initial" },
+                new PMWorkflowStatus { Id = 2, Status = "Sent for Review" },
+                new PMWorkflowStatus { Id = 3, Status = "Review Changes" },
+                new PMWorkflowStatus { Id = 4, Status = "Sent for Approval" },
+                new PMWorkflowStatus { Id = 5, Status = "Approval Changes" },
+                new PMWorkflowStatus { Id = 6, Status = "Approved" }
+            );
         }
     }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
 import {
   Grid,
@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
+import textFieldStyle from "../../../../theme/textFieldStyle";
 
 const ContractAndCostsTab: React.FC = () => {
   const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
@@ -26,20 +27,7 @@ const ContractAndCostsTab: React.FC = () => {
     setValue('contractAndCost.actualSubtotal', calculatedSubtotal);
   }, [calculatedSubtotal, setValue]);
 
-  // Common text field styles following the application pattern
-  const textFieldStyle = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 1,
-      backgroundColor: '#fff',
-      '&:hover fieldset': {
-        borderColor: '#1869DA',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#1869DA',
-      }
-    }
-  };
-
+ 
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={6}>
@@ -92,6 +80,7 @@ const ContractAndCostsTab: React.FC = () => {
                   type="number"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors.contractAndCost?.percentage}
                   helperText={errors.contractAndCost?.percentage?.message || ''}
                   sx={textFieldStyle}
@@ -118,6 +107,7 @@ const ContractAndCostsTab: React.FC = () => {
                   type="number"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors.contractAndCost?.actualOdcs}
                   helperText={errors.contractAndCost?.actualOdcs?.message || ''}
                   sx={textFieldStyle}
@@ -136,6 +126,7 @@ const ContractAndCostsTab: React.FC = () => {
                   type="number"
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors.contractAndCost?.actualStaff}
                   helperText={errors.contractAndCost?.actualStaff?.message || ''}
                   sx={textFieldStyle}
@@ -161,7 +152,7 @@ const ContractAndCostsTab: React.FC = () => {
                   sx={{
                     ...textFieldStyle,
                     '& .MuiOutlinedInput-root': {
-                      ...textFieldStyle['& .MuiOutlinedInput-root'],
+                      ...(textFieldStyle?.['& .MuiOutlinedInput-root'] ? textFieldStyle['& .MuiOutlinedInput-root'] : {}),
                       backgroundColor: '#f5f5f5',
                     }
                   }}

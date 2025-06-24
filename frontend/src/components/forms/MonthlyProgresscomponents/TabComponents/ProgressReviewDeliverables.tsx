@@ -1,6 +1,7 @@
 import React from "react";
 import { Controller, useFormContext, useFieldArray } from "react-hook-form";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import textFieldStyle from "../../../../theme/textFieldStyle";
 import {
   Box,
   Button,
@@ -25,20 +26,6 @@ const ProgressReviewDeliverables: React.FC = () => {
     control,
     name: "progressDeliverable"
   });
-
-  // Common text field styles following the application pattern
-  const textFieldStyle = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 1,
-      backgroundColor: '#fff',
-      '&:hover fieldset': {
-        borderColor: '#1869DA',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#1869DA',
-      }
-    }
-  };
 
   // Add new progress deliverable row
   const addDeliverableRow = () => {
@@ -208,6 +195,7 @@ const ProgressReviewDeliverables: React.FC = () => {
                             placeholder="Amount"
                             value={controllerField.value || ''}
                             onChange={(e) => controllerField.onChange(e.target.value ? Number(e.target.value) : null)}
+                            onWheel={(e) => (e.target as HTMLInputElement).blur()}
                             error={!!errors.progressDeliverable?.[index]?.paymentDue}
                             helperText={errors.progressDeliverable?.[index]?.paymentDue?.message}
                             sx={textFieldStyle}

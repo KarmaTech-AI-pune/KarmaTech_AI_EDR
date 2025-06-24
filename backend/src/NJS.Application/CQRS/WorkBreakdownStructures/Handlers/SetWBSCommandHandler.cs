@@ -131,6 +131,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         taskEntity.ParentId = null;
                         pendingParentUpdates[taskEntity] = dto.ParentFrontendTempId;
                     }
+                    else if (dto.ParentId.HasValue)
+                    {
+                        taskEntity.ParentId = dto.ParentId;
+                    }
                 }
 
                 allTasks.Add(taskEntity);
@@ -336,6 +340,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _context.Set<WBSTaskMonthlyHourHeader>().Add(header);
                 await _unitOfWork.SaveChangesAsync();
             }
+
             var temp = _context.WBSHistories.Where(x => x.WBSTaskMonthlyHourHeaderId == header.Id);
             if (!temp.Any())
             {

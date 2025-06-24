@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Controller, useFormContext, useFieldArray } from 'react-hook-form';
-import { MonthlyProgressSchemaType } from '../../../schemas/monthlyProgress/MonthlyProgressSchema';
+import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
 
 const LastMonthActionsTab: React.FC = () => {
   const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();

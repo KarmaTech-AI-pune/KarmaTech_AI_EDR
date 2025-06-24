@@ -29,6 +29,22 @@ interface JobStartFormHeaderProps {
   onStatusUpdate: (newStatus: string) => void;
 }
 
+// Helper function to map status string to statusId
+const getStatusId = (status: string): number => {
+  const statusMap: Record<string, number> = {
+    'Initial': 1,
+    'Sent for Review': 2,
+    'Review Changes': 3,
+    'Sent for Approval': 4,
+    'Approval Changes': 5,
+    'Approved': 6
+  };
+  
+  // Normalize status string and find match
+  const normalizedStatus = status?.trim() || 'Initial';
+  return statusMap[normalizedStatus] || 1; // Default to 1 (Initial) if not found
+};
+
 const JobStartFormHeader: React.FC<JobStartFormHeaderProps> = ({
   title,
   projectId,
@@ -38,7 +54,7 @@ const JobStartFormHeader: React.FC<JobStartFormHeaderProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<string>(status);
-  const [headerLoaded, setHeaderLoaded] = useState<boolean>(false);
+  const [currentStatusId, setCurrentStatusId] = useState<number>(getStatusId(status));
 
   // Fetch the current status when the component mounts or when formId changes
   useEffect(() => {
@@ -51,13 +67,18 @@ const JobStartFormHeader: React.FC<JobStartFormHeaderProps> = ({
       try {
         const headerStatus = await jobStartFormHeaderApi.getJobStartFormHeaderStatus(projectId, formId);
         setCurrentStatus(headerStatus.status);
-        setHeaderLoaded(true);
+        
+        // Set statusId - either from API response or map from status string
+        const statusId = headerStatus.statusId || getStatusId(headerStatus.status);
+        setCurrentStatusId(statusId);
+        
         // Update parent component with the current status
         onStatusUpdate(headerStatus.status);
       } catch (error) {
         console.error('Error fetching JobStartForm header status:', error);
         // If we can't fetch the status, use the provided status
         setCurrentStatus(status);
+        setCurrentStatusId(getStatusId(status));
       } finally {
         setIsLoading(false);
       }
@@ -68,6 +89,7 @@ const JobStartFormHeader: React.FC<JobStartFormHeaderProps> = ({
 
   const handleStatusUpdate = (newStatus: string) => {
     setCurrentStatus(newStatus);
+    setCurrentStatusId(getStatusId(newStatus));
     onStatusUpdate(newStatus);
   };
 
@@ -88,36 +110,19 @@ const JobStartFormHeader: React.FC<JobStartFormHeaderProps> = ({
           {isLoading && (
             <CircularProgress size={20} sx={{ ml: 2 }} />
           )}
-          {!isLoading && headerLoaded && (
-            <Typography
-              variant="body2"
-              sx={{
-                ml: 2,
-                backgroundColor: currentStatus === 'Approved' ? '#e6f7e6' : '#f5f5f5',
-                color: currentStatus === 'Approved' ? '#2e7d32' :
-                       currentStatus.includes('Changes') ? '#d32f2f' : '#1976d2',
-                fontWeight: 500,
-                px: 1.5,
-                py: 0.5,
-                borderRadius: 1
-              }}
-            >
-              {currentStatus}
-            </Typography>
-          )}
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
           {!isLoading && formId && projectId && (
             <ProjectTrackingWorkflow
               projectId={projectId.toString()}
+              statusId={currentStatusId}
               status={currentStatus}
               entityId={Number(formId)}
               entityType="JobStartForm"
               formType={TaskType.Manpower}
               onStatusUpdate={handleStatusUpdate}
-            />
+                        />
           )}
-
         </Box>
       </StyledHeaderBox>
     </>

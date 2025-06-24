@@ -1,22 +1,23 @@
 import React, {
   useMemo,
   useRef,
+  useState,
 } from "react";
 import {
   Box,
   Paper,
   Typography,
   Container,
-  Alert,
-  Snackbar,
 } from "@mui/material";
 import { FormWrapper } from "../FormWrapper";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   MonthlyProgressSchema,
   MonthlyProgressSchemaType,
 } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressAPI } from "../../../services/monthlyProgressApi";
+import { useProject } from "../../../context/ProjectContext";
 import {
   FinancialDetailsTab,
   ContractAndCostsTab,
@@ -26,17 +27,19 @@ import {
   BudgetRevenueTab,
   ProgressReviewDeliverables,
   ChangeOrdersTab,
+  ProgrammeScheduleTab,
+  EarlyWarningsTab,
   LastMonthActionsTab,
   CurrentMonthActionsTab,
 } from "./index";
 import {
   getCurrentMonthYear,
-  formatCurrency,
 } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
 import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
 import RenderComponent from "./RenderComponent";
+import NotificationSnackbar from "../../widgets/NotificationSnackbar"; // Import NotificationSnackbar
 
 
 export type tab = {
@@ -73,6 +76,12 @@ const tabs = [
   },
   {
     id: "5",
+    label: "Progress Review Deliverables",
+    component: <ProgressReviewDeliverables />,
+    inputs: ["progressDeliverable"],
+  },
+  {
+    id: "6",
     label: "Budget Revenue",
     component: <BudgetRevenueTab/>,
     inputs: [
@@ -80,16 +89,10 @@ const tabs = [
     ],
   },
   {
-    id: "6",
+    id: "7",
     label: "Manpower Planning",
     component: <ManpowerPlanningTab />,
     inputs: ["manpowerPlanning"],
-  },
-  {
-    id: "7",
-    label: "Progress Review Deliverables",
-    component: <ProgressReviewDeliverables />,
-    inputs: ["progressDeliverable"],
   },
   {
     id: "8",
@@ -99,20 +102,30 @@ const tabs = [
   },
   {
     id: "9",
+    label: "Programme Schedule",
+    component: <ProgrammeScheduleTab />,
+    inputs: ["programmeSchedule"],
+  },
+  {
+    id: "10",
+    label: "Early Warnings",
+    component: <EarlyWarningsTab />,
+    inputs: ["earlyWarnings"],
+  },
+  {
+    id: "11",
     label: "Last Month Actions",
     component: <LastMonthActionsTab />,
     inputs: ["lastMonthActions"],
   },
   {
-    id: "10",
+    id: "12",
     label: "Current Month Actions",
     component: <CurrentMonthActionsTab />,
     inputs: ["currentMonthActions"],
   },
 ] satisfies tab[];
 
-const SAVE_DELAY = 1000;
-const SNACKBAR_DURATION = 3000;
 
 // Main component
 export const MonthlyProgressForm: React.FC = () => {
@@ -147,8 +160,7 @@ export const MonthlyProgressForm: React.FC = () => {
         },
         percentCompleteOnCosts: {
           revenueFee: 0,
-          cost: 0,
-          profitPercentage: 0
+          cost: 0
         }
       },
       ctcAndEac: {
@@ -173,22 +185,60 @@ export const MonthlyProgressForm: React.FC = () => {
           nextMonthPlanningTotal: 0,
         }
       },
+      progressDeliverable: [],
       changeOrder: [],
+      programmeSchedule: [],
+      earlyWarnings: [],
       lastMonthActions: [],
       currentMonthActions: [],
-      progressDeliverable: [],
     },
     mode: "all",
   });
 
+  const { projectId } = useProject();
+
+  const [snackbarState, setSnackbarState] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error', // Explicitly type severity
+  });
+
+  const handleCloseSnackbar = () => {
+    setSnackbarState({ ...snackbarState, open: false });
+  };
 
   // Use ref to prevent re-creating the date string on every render
   const currentMonthYear = useRef(getCurrentMonthYear()).current;
 
+  const onSubmit: SubmitHandler<MonthlyProgressSchemaType> = async (data) => {
 
+    if (!projectId) {
+      setSnackbarState({
+        open: true,
+        message: "Project ID is not available. Cannot submit form.",
+        severity: 'error',
+      });
+      return;
+    }
 
-  const onSubmit = (data: MonthlyProgressSchemaType) => {
-    console.log(data);
+    try {
+      // You might want to show a loading indicator here
+      await MonthlyProgressAPI.submitMonthlyProgress(projectId, data);
+      setSnackbarState({
+        open: true,
+        message: "Review saved successfully!",
+        severity: 'success',
+      });
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      setSnackbarState({
+        open: true,
+        message: error.message || 'An unexpected error occurred during submission.',
+        severity: 'error',
+      });
+    } finally {
+      // Hide loading indicator here if implemented
+    }
   };
 
   const containerStyles = useMemo(
@@ -246,20 +296,12 @@ export const MonthlyProgressForm: React.FC = () => {
             </Box>
           </Paper>
 
-          <Snackbar
-            // open={showSuccess}
-            autoHideDuration={SNACKBAR_DURATION}
-            // onClose={handleSnackbarClose}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          >
-            <Alert
-              severity="success"
-              variant="filled"
-              sx={{ backgroundColor: "#1976d2" }}
-            >
-              Review saved successfully!
-            </Alert>
-          </Snackbar>
+          <NotificationSnackbar
+            open={snackbarState.open}
+            message={snackbarState.message}
+            severity={snackbarState.severity}
+            onClose={handleCloseSnackbar}
+          />
         </Box>
       </Container>
     </FormWrapper>

@@ -13,10 +13,12 @@ namespace NJS.Domain.Entities
         public ContractAndCost ContractAndCost { get; set; }
         public CTCEAC CTCEAC { get; set; }
         public Schedule Schedule { get; set; }
-        public ManpowerPlanning ManpowerPlanning { get; set; }
-        public ProgressDeliverable ProgressDeliverable { get; set; }
-        public ChangeOrder ChangeOrder { get; set; }
-        public LastMonthAction LastMonthAction { get; set; }
-        public CurrentMonthAction CurrentMonthAction { get; set; }
+        public ICollection<ManpowerPlanning> ManpowerEntries { get; set; }
+        public decimal ManpowerTotal { get; set; } // Added based on latest feedback
+        public ICollection<ProgressDeliverable> ProgressDeliverables { get; set; }
+        public ICollection<ChangeOrder> ChangeOrders { get; set; }
+        public ICollection<LastMonthAction> LastMonthActions { get; set; }
+        public ICollection<CurrentMonthAction> CurrentMonthActions { get; set; }
+        public BudgetTable BudgetTable { get; set; }
     }
 }
