@@ -1,6 +1,7 @@
 import React from "react";
 import { Controller, useFormContext, useFieldArray } from "react-hook-form";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import textFieldStyle from "../../../../theme/textFieldStyle";
 import {
   Box,
   Button,
@@ -25,32 +26,6 @@ const ProgressReviewDeliverables: React.FC = () => {
     control,
     name: "progressDeliverable"
   });
-
-  // Common text field styles following the application pattern
-  const textFieldStyle = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 1,
-      backgroundColor: '#fff',
-      '&:hover fieldset': {
-        borderColor: '#1869DA',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#1869DA',
-      }
-    },
-     // Hide number input arrows
-    '& input[type=number]': {
-      '-moz-appearance': 'textfield',
-    },
-    '& input[type=number]::-webkit-outer-spin-button': {
-      '-webkit-appearance': 'none',
-      margin: 0,
-    },
-    '& input[type=number]::-webkit-inner-spin-button': {
-      '-webkit-appearance': 'none',
-      margin: 0,
-    }
-  };
 
   // Add new progress deliverable row
   const addDeliverableRow = () => {

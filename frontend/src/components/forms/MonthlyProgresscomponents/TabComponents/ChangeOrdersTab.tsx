@@ -1,6 +1,6 @@
 import React from "react";
 import { Controller, useFormContext, useFieldArray } from "react-hook-form";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import {
   Box,
   Button,

@@ -1,5 +1,5 @@
 import React from "react";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
 import {
   Box,

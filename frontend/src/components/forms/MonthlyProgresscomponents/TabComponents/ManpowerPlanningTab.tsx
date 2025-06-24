@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState, useContext } from "react";
 import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { MonthlyProgressAPI, MonthlyHourDto } from "../../../services/monthlyProgressApi";
-import { projectManagementAppContext } from "../../../App";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressAPI, MonthlyHourDto } from "../../../../services/monthlyProgressApi";
+import { projectManagementAppContext } from "../../../../App";
+import textFieldStyle from "../../../../theme/textFieldStyle";
 import {
   Box,
   Table,
@@ -14,8 +15,7 @@ import {
   TextField,
   Paper,
   Typography,
-  CircularProgress,
-  Alert
+  CircularProgress
 } from "@mui/material";
 
 const ManpowerPlanningTab: React.FC = () => {
@@ -25,7 +25,7 @@ const ManpowerPlanningTab: React.FC = () => {
   
   // State for API data loading
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   const { fields, replace } = useFieldArray({
     control,
@@ -38,31 +38,7 @@ const ManpowerPlanningTab: React.FC = () => {
     name: "manpowerPlanning.manpower"
   });
 
-  // Common text field styles following the application pattern
-  const textFieldStyle = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 1,
-      backgroundColor: '#fff',
-      '&:hover fieldset': {
-        borderColor: '#1869DA',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#1869DA',
-      }
-    },
-    // Hide number input arrows
-    '& input[type=number]': {
-      '-moz-appearance': 'textfield',
-    },
-    '& input[type=number]::-webkit-outer-spin-button': {
-      '-webkit-appearance': 'none',
-      margin: 0,
-    },
-    '& input[type=number]::-webkit-inner-spin-button': {
-      '-webkit-appearance': 'none',
-      margin: 0,
-    }
-  };
+
 
   // Helper function to get current and next month hours from monthlyHours array
   const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
@@ -197,12 +173,6 @@ const ManpowerPlanningTab: React.FC = () => {
             Manpower Planning
           </Typography>
         </Box>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
 
         {isLoading && (
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -350,7 +320,7 @@ const ManpowerPlanningTab: React.FC = () => {
                           sx={{
                             ...textFieldStyle,
                             '& .MuiOutlinedInput-root': {
-                              ...textFieldStyle['& .MuiOutlinedInput-root'],
+                              ...(textFieldStyle?.['& .MuiOutlinedInput-root'] ? textFieldStyle['& .MuiOutlinedInput-root'] : {}),
                               backgroundColor: '#f9f9f9',
                             }
                           }}
