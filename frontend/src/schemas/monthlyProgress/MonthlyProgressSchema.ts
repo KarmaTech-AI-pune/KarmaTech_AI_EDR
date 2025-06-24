@@ -34,6 +34,62 @@ const scheduleSchema = z.object({
   expectedCompletionDate: z.date(),
 });
 
+// Budget Table Schema
+const BudgetRowSchema = z.object({
+  revenueFee: z
+    .number()
+    .min(1, "Revenue/Fee is required")
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Revenue/Fee must be a valid positive number",
+    })
+    .transform((val) => Number(val)),
+
+  cost: z
+    .number()
+    .min(1, "Cost is required")
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Cost must be a valid positive number",
+    })
+    .transform((val) => Number(val)),
+
+  profitPercentage: z
+    .number()
+    .min(1, "Profit percentage is required")
+    .transform((val) => Number(val)),
+});
+
+const BudgetTableSchema = z.object({
+  originalBudget: BudgetRowSchema,
+
+  currentBudgetInMIS: BudgetRowSchema,
+
+  percentCompleteOnCosts: z.object({
+    revenueFee: z
+      .number()
+      .min(1, "Revenue/Fee completion percentage is required")
+      .refine(
+        (val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100,
+        {
+          message: "Revenue/Fee completion must be between 0 and 100",
+        }
+      )
+      .transform((val) => Number(val)),
+
+    cost: z
+      .number()
+      .min(1, "Cost completion percentage is required")
+      .refine(
+        (val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100,
+        {
+          message: "Cost completion must be between 0 and 100",
+        }
+      )
+      .transform((val) => Number(val)),
+
+    
+  }),
+});
+
 const manpowerSchema = z.object({
   workAssignment: z.string(),
   assignee: z.string(),
@@ -86,76 +142,13 @@ const currentMonthActionSchema = z.object({
   CMApriority: z.enum(["H", "M", "L"]).nullable(),
 });
 
-// Budget Table Schema
-const BudgetRowSchema = z.object({
-  revenueFee: z
-    .number()
-    .min(1, "Revenue/Fee is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
-      message: "Revenue/Fee must be a valid positive number",
-    })
-    .transform((val) => Number(val)),
+const programmeScheduleSchema = z.object({
+  ProgrammeDescription: z.string()
+})
 
-  cost: z
-    .number()
-    .min(1, "Cost is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
-      message: "Cost must be a valid positive number",
-    })
-    .transform((val) => Number(val)),
-
-  profitPercentage: z
-    .number()
-    .min(1, "Profit percentage is required")
-    .refine(
-      (val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100,
-      {
-        message: "Profit percentage must be between 0 and 100",
-      }
-    )
-    .transform((val) => Number(val)),
-});
-
-const BudgetTableSchema = z.object({
-  originalBudget: BudgetRowSchema,
-
-  currentBudgetInMIS: BudgetRowSchema,
-
-  percentCompleteOnCosts: z.object({
-    revenueFee: z
-      .number()
-      .min(1, "Revenue/Fee completion percentage is required")
-      .refine(
-        (val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100,
-        {
-          message: "Revenue/Fee completion must be between 0 and 100",
-        }
-      )
-      .transform((val) => Number(val)),
-
-    cost: z
-      .number()
-      .min(1, "Cost completion percentage is required")
-      .refine(
-        (val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100,
-        {
-          message: "Cost completion must be between 0 and 100",
-        }
-      )
-      .transform((val) => Number(val)),
-
-    profitPercentage: z
-      .number()
-      .min(1, "Profit completion percentage is required")
-      .refine(
-        (val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100,
-        {
-          message: "Profit completion must be between 0 and 100",
-        }
-      )
-      .transform((val) => Number(val)),
-  }),
-});
+const earlyWarningsSchema = z.object({
+  WarningsDescription: z.string()
+})
 
 export const MonthlyProgressSchema = z.object({
   financialDetails: financialDetailsSchema,
@@ -166,6 +159,8 @@ export const MonthlyProgressSchema = z.object({
   manpowerPlanning: manpowerPlanningSchema,
   progressDeliverable: z.array(progressDeliverableSchema),
   changeOrder: z.array(changeOrderSchema),
+  programmeSchedule: z.array(programmeScheduleSchema),
+  earlyWarnings: z.array(earlyWarningsSchema),
   lastMonthActions: z.array(lastMonthActionSchema),
   currentMonthActions: z.array(currentMonthActionSchema),
 });

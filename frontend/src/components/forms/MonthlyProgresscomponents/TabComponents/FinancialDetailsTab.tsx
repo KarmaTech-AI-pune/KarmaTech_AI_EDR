@@ -1,10 +1,11 @@
 import React, { useEffect, useContext } from "react";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
 import { Grid, Paper, TextField, Typography, CircularProgress } from "@mui/material";
-import { formatCurrency } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
-import { projectManagementAppContext } from "../../../App";
-import { getJobStartFormByProjectId, getWBSResourceData } from "../../../services/jobStartFormApi";
+import { formatCurrency } from "../../../../utils/MonthlyProgress/monthlyProgressUtils";
+import { projectManagementAppContext } from "../../../../App";
+import { getJobStartFormByProjectId, getWBSResourceData } from "../../../../services/jobStartFormApi";
+import JobstartGrandTotal from "../../jobstartFormComponent/JobstartGrandTotal";
 
 const FinancialDetailsTab: React.FC = () => {
     const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
@@ -32,8 +33,12 @@ const FinancialDetailsTab: React.FC = () => {
                     if (data && Array.isArray(data) && data.length > 0) {
                         const jobStartForm = data[0];
                         // Extract values and set them in the form
-                        setValue("financialDetails.net", jobStartForm.grandTotal || null);
+                        setValue("financialDetails.net", jobStartForm.projectFees || null);
                         setValue("financialDetails.serviceTax", jobStartForm.serviceTaxPercentage || null);
+                        setValue("budgetTable.originalBudget.cost", jobStartForm.profit || 0)
+                        setValue("budgetTable.originalBudget.revenueFee", jobStartForm.projectFees || 0)
+                        setValue("budgetTable.originalBudget.profitPercentage", jobStartForm.projectFees || 0)
+                        setValue("budgetTable.currentBudgetInMIS.revenueFee", jobStartForm.projectFees || 0)
                     }
                 } catch (error) {
                     console.error("Error fetching Job Start Form data:", error);
@@ -127,8 +132,11 @@ const FinancialDetailsTab: React.FC = () => {
                                     {...field}
                                     error={!!errors.financialDetails?.net}
                                     helperText={errors.financialDetails?.net?.message || ''}
-                                    value={field.value || ''}
+                                    value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
                                     sx={{ mb: 2 }}
                                 />
                         )}
@@ -146,8 +154,8 @@ const FinancialDetailsTab: React.FC = () => {
                                     {...field}
                                     value={field.value || ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                                    slotProps={{
-                                        htmlInput: { min: 0, max: 100, step: 0.01 }
+                                    InputProps={{
+                                        readOnly: true,
                                     }}
                                     sx={{ mb: 2 }}
                                 />
@@ -189,8 +197,11 @@ const FinancialDetailsTab: React.FC = () => {
                                     error={!!errors.financialDetails?.budgetOdcs}
                                     helperText={errors.financialDetails?.budgetOdcs?.message || ''}
                                     {...field}
-                                    value={field.value || ''}
+                                    value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
                                     sx={{ mb: 2 }}
                                 />
                         )}
@@ -207,8 +218,11 @@ const FinancialDetailsTab: React.FC = () => {
                                     error={!!errors.financialDetails?.budgetStaff}
                                     helperText={errors.financialDetails?.budgetStaff?.message || ''}
                                     {...field}
-                                    value={field.value || ''}
+                                    value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
                                     sx={{ mb: 2 }}
                                 />
                         )}
