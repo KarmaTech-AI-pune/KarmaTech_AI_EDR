@@ -898,6 +898,26 @@ namespace NJS.Domain.Database
                       .OnDelete(DeleteBehavior.Cascade);
             });
             */
+
+            // Seed data for OpportunityStatuses
+            modelBuilder.Entity<OpportunityStatus>().HasData(
+                new OpportunityStatus { Id = 1, Status = "Initial" },
+                new OpportunityStatus { Id = 2, Status = "Sent for Review" },
+                new OpportunityStatus { Id = 3, Status = "Review Changes" },
+                new OpportunityStatus { Id = 4, Status = "Sent for Approval" },
+                new OpportunityStatus { Id = 5, Status = "Approval Changes" },
+                new OpportunityStatus { Id = 6, Status = "Approved" }
+            );
+
+            // Seed data for PMWorkflowStatuses
+            modelBuilder.Entity<PMWorkflowStatus>().HasData(
+                new PMWorkflowStatus { Id = 1, Status = "Initial" },
+                new PMWorkflowStatus { Id = 2, Status = "Sent for Review" },
+                new PMWorkflowStatus { Id = 3, Status = "Review Changes" },
+                new PMWorkflowStatus { Id = 4, Status = "Sent for Approval" },
+                new PMWorkflowStatus { Id = 5, Status = "Approval Changes" },
+                new PMWorkflowStatus { Id = 6, Status = "Approved" }
+            );
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.ResponseCompression;
+using NJSAPI.Configurations;
 using System.IO.Compression;
 
 namespace NJSAPI.Extensions
@@ -15,15 +16,25 @@ namespace NJSAPI.Extensions
             });
             services.Configure<BrotliCompressionProviderOptions>(options =>
             {
-                options.Level = CompressionLevel.Optimal;
+                options.Level = CompressionLevel.Fastest;
             });
 
             services.Configure<GzipCompressionProviderOptions>(options =>
             {
-                options.Level = CompressionLevel.Optimal;
+                options.Level = CompressionLevel.Fastest;
             });
 
            return services;
+        }
+
+        public static IServiceCollection AddConfiguredSwagger(this IServiceCollection services, IConfiguration configuration)
+        {
+            
+            services.Configure<SwaggerSettings>(configuration.GetSection("Swagger"));
+            services.AddSwaggerGen();
+            services.ConfigureOptions<ConfigureSwaggerOptions>();
+
+            return services;
         }
     }
 }
