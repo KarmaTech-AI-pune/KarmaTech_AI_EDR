@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
 using NJS.Application.Dtos;
 using NJS.Domain.Entities;
+using NJS.Application.CQRS.WorkBreakdownStructures.Commands;
 
 namespace NJSAPI.Controllers
 {
@@ -72,6 +73,62 @@ namespace NJSAPI.Controllers
             var query = new GetWBSLevel3OptionsQuery { Level2Value = level2Value, FormType = formType };
             var result = await _mediator.Send(query);
             return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<WBSOptionDto>> CreateWBSOption(WBSOptionDto request)
+        {
+            var command = new CreateWBSOptionCommand
+            {
+                Label = request.Label,
+                Level = request.Level,
+                ParentValue = request.ParentValue,
+                FormType = request.FormType
+            };
+
+            var result = await _mediator.Send(command);
+            return CreatedAtAction(nameof(GetWBSOptions), new { id = result.Id }, result);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<WBSOptionDto>> UpdateWBSOption(int id, WBSOptionDto request)
+        {
+            if (id != request.Id)
+            {
+                return BadRequest();
+            }
+
+            var command = new UpdateWBSOptionCommand
+            {
+                Id = id,
+                Label = request.Label,
+                Level = request.Level,
+                ParentValue = request.ParentValue,
+                FormType = request.FormType
+            };
+
+            var result = await _mediator.Send(command);
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<bool>> DeleteWBSOption(int id)
+        {
+            var command = new DeleteWBSOptionCommand { Id = id };
+            var result = await _mediator.Send(command);
+
+            if (!result)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
         }
     }
 }
