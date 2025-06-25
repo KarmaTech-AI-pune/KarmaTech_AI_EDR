@@ -101,6 +101,7 @@ namespace NJSAPI.Controllers
             var command = new UpdateWBSOptionCommand
             {
                 Id = id,
+                Value = request.Value,
                 Label = request.Label,
                 Level = request.Level,
                 ParentValue = request.ParentValue,

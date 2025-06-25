@@ -26,13 +26,13 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 return null; // Or throw an exception
             }
 
+            wbsOption.Value = request.Value;
             wbsOption.Label = request.Label;
             wbsOption.Level = request.Level;
             wbsOption.ParentValue = request.ParentValue;
             wbsOption.FormType = (NJS.Domain.Entities.FormType)request.FormType;
-            wbsOption.Value = request.Label;
 
-            _wbsOptionRepository.UpdateAsync(wbsOption);
+            await _wbsOptionRepository.UpdateAsync(wbsOption);
 
             return new WBSOptionDto
             {
