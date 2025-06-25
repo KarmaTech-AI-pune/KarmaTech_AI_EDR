@@ -137,9 +137,13 @@ export const ProjectHeaderWidget: React.FC<ProjectHeaderWidgetProps> = ({ projec
                                     <Typography variant="subtitle2" color="textSecondary">End Date</Typography>
                                     <Typography variant="body1">{formatDate(project.endDate)}</Typography>
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={6}>
                                     <Typography variant="subtitle2" color="textSecondary">Estimated Cost</Typography>
                                     <Typography variant="body1">{formatCurrency(project.estimatedCost)}</Typography>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="subtitle2" color="textSecondary">Fee Type</Typography>
+                                    <Typography variant="body1">{project.feeType || 'Not specified'}</Typography>
                                 </Grid>
                             </Grid>
                         </Grid>

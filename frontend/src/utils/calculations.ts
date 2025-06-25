@@ -40,4 +40,17 @@ export const percentageCalculation = (percent: number, total: number, decimalPla
  * const product = multiplyCalculation(2, 3, 4); // returns 24
  * const percent = percentageCalculation(25, 100); // returns 25.00
  * const percent2 = percentageCalculation(1, 3, 1); // returns 33.3
- */ 
+ */
+
+/**
+ * Calculates the gross profit percentage given a net fee and total EAC.
+ * @param net - The net fee.
+ * @param totalEAC - The total EAC.
+ * @param decimalPlaces - Optional number of decimal places (default: 2).
+ * @returns The gross profit percentage.
+ */
+export const calculateGrossPercentage = (net: number, value: number, decimalPlaces: number = 2): number => {
+  if (net === 0) return 0; // Avoid division by zero
+  const grossProfit = ((net - value) / net) * 100;
+  return Number(grossProfit.toFixed(decimalPlaces));
+};

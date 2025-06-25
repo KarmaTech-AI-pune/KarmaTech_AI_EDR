@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { MonthlyProgressSchemaType } from "../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
 import {
   Grid,
@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
+import textFieldStyle from "../../../../theme/textFieldStyle";
 
 const ContractAndCostsTab: React.FC = () => {
   const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
@@ -26,32 +27,7 @@ const ContractAndCostsTab: React.FC = () => {
     setValue('contractAndCost.actualSubtotal', calculatedSubtotal);
   }, [calculatedSubtotal, setValue]);
 
-  // Common text field styles following the application pattern
-  const textFieldStyle = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 1,
-      backgroundColor: '#fff',
-      '&:hover fieldset': {
-        borderColor: '#1869DA',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#1869DA',
-      }
-    },
-     // Hide number input arrows
-    '& input[type=number]': {
-      '-moz-appearance': 'textfield',
-    },
-    '& input[type=number]::-webkit-outer-spin-button': {
-      '-webkit-appearance': 'none',
-      margin: 0,
-    },
-    '& input[type=number]::-webkit-inner-spin-button': {
-      '-webkit-appearance': 'none',
-      margin: 0,
-    }
-  };
-
+ 
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={6}>
@@ -176,7 +152,7 @@ const ContractAndCostsTab: React.FC = () => {
                   sx={{
                     ...textFieldStyle,
                     '& .MuiOutlinedInput-root': {
-                      ...textFieldStyle['& .MuiOutlinedInput-root'],
+                      ...(textFieldStyle?.['& .MuiOutlinedInput-root'] ? textFieldStyle['& .MuiOutlinedInput-root'] : {}),
                       backgroundColor: '#f5f5f5',
                     }
                   }}

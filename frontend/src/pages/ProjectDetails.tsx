@@ -423,7 +423,7 @@ export const ProjectDetails: React.FC = () => {
                       value={formatCurrency(project.budget, project.currency)}
                     />
                   )}
-                  <InfoItem label="Fee Type" value={project.feeType} />
+                  <InfoItem label="Fee Type" value={project.fundingStream} />
                   <Chip
                     label={project.currency}
                     size="small"
