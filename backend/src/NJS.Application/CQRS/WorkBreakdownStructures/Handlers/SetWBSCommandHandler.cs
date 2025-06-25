@@ -183,9 +183,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     userTask.TotalCost = totalCost;
                     userTask.UpdatedAt = DateTime.UtcNow;
                     userTask.UpdatedBy = _currentUser;
-                    if (!string.IsNullOrEmpty(dto.ResourceRole) || (userTask.UserId != dto.AssignedUserId && userTask.Name != dto.ResourceName))
+                    if (!string.IsNullOrEmpty(dto.ResourceRoleId) || (userTask.UserId != dto.AssignedUserId && userTask.Name != dto.ResourceName))
                     {
-                        userTask.ResourceRole = dto.ResourceRole;
+                        userTask.ResourceRoleId = dto.ResourceRoleId;
                     }
                 }
                 else
@@ -201,7 +201,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalCost = totalCost,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser,
-                        ResourceRole = dto.ResourceRole
+                        ResourceRoleId = dto.ResourceRoleId
                     });
                 }
             }
@@ -217,9 +217,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     userTask.TotalCost = totalCost;
                     userTask.UpdatedAt = DateTime.UtcNow;
                     userTask.UpdatedBy = _currentUser;
-                    if (!string.IsNullOrEmpty(dto.ResourceRole) || (userTask.UserId != dto.AssignedUserId && userTask.Name != dto.ResourceName))
+                    if (!string.IsNullOrEmpty(dto.ResourceRoleId) || (userTask.UserId != dto.AssignedUserId && userTask.Name != dto.ResourceName))
                     {
-                        userTask.ResourceRole = dto.ResourceRole;
+                        userTask.ResourceRoleId = dto.ResourceRoleId;
                     }
                 }
                 else
@@ -235,7 +235,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalCost = totalCost,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser,
-                        ResourceRole = dto.ResourceRole
+                        ResourceRoleId = dto.ResourceRoleId
                     });
                 }
             }

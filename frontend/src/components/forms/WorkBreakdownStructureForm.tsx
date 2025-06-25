@@ -106,7 +106,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
           // For Manpower tasks, always set unit to 'month'; for ODC tasks, use resourceUnit or empty string
           unit: isOdcTask ? (task.resourceUnit ?? '') : 'month',
-          resource_role: task.resource_role ?? null // Map resource_role from API response
+          resource_role: task.resourceRoleId ?? null, // Map resource_role from API response (backend sends resourceRoleId)
+          resource_role_name: task.resourceRoleName ?? null // Map resource role name for display
         };
       });
 
@@ -427,7 +428,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       parentId: parentId || null,
       taskType: formType === 'manpower' ? TaskType.Manpower : TaskType.ODC, // Set taskType based on formType
       unit: formType === 'manpower' ? 'month' : '', // Set 'month' as default for manpower, empty for ODC
-      resource_role: null // Initialize resource_role for new rows
+      resource_role: null, // Initialize resource_role for new rows
+      resource_role_name: null // Initialize resource_role_name for new rows
     };
 
     // For ODC form, ensure odcHours and odc are initialized to 0
@@ -524,11 +526,16 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleResourceRoleChange = (rowId: string, value: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+    // Find the role name for the selected role ID
+    const selectedRole = roles.find(role => role.id === value);
+    const roleName = selectedRole ? selectedRole.name : null;
+
     setRowsFunc(prevRows => prevRows.map(r => {
       if (r.id === rowId) {
         return {
           ...r,
-          resource_role: value
+          resource_role: value,
+          resource_role_name: roleName
         };
       }
       return r;

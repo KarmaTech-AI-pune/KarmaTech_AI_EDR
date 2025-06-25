@@ -121,7 +121,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser,
-                        ResourceRole = taskDto.ResourceRole // Add ResourceRole
+                        ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
                     };
                     taskEntity.UserWBSTasks.Add(newUserTask);
                 }
@@ -144,7 +144,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser,
-                        ResourceRole = taskDto.ResourceRole // Add ResourceRole
+                        ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
                     };
                     taskEntity.UserWBSTasks.Add(newUserTask);
                 }

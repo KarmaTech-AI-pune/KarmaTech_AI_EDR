@@ -448,7 +448,23 @@ namespace NJS.Domain.Database
             {
                 entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
                 entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
-                entity.Property(ut => ut.ResourceRole).IsRequired(false); // Explicitly configure ResourceRole
+                entity.Property(ut => ut.ResourceRoleId).IsRequired(false); // Explicitly configure ResourceRoleId
+
+                // Configure relationships
+                entity.HasOne(ut => ut.WBSTask)
+                      .WithMany(t => t.UserWBSTasks)
+                      .HasForeignKey(ut => ut.WBSTaskId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ut => ut.User)
+                      .WithMany(u => u.UserWBSTasks)
+                      .HasForeignKey(ut => ut.UserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(ut => ut.ResourceRole)
+                      .WithMany()
+                      .HasForeignKey(ut => ut.ResourceRoleId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             // Configure WorkBreakdownStructure entity

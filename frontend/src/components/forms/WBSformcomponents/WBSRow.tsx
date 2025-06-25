@@ -119,6 +119,9 @@ const WBSRow: React.FC<WBSRowProps> = ({
   const rateTooltip = selectedRole ? `Min Rate: ${selectedRole.min_rate}` : '';
   const employeesForRole = employees;
 
+  // Find the selected resource role for display
+  const selectedResourceRole = row.resource_role ? roles.find(r => r.id === row.resource_role) : undefined;
+
   const getMonthlyHours = (month: string): string => {
     const [monthName, yearStr] = month.split(' ');
     const year = `20${yearStr}`;
@@ -219,10 +222,20 @@ const WBSRow: React.FC<WBSRowProps> = ({
                 size="small"
                 sx={{ bgcolor: 'background.paper' }}
                 disabled={editMode}
+                displayEmpty
+                renderValue={(selected) => {
+                  if (!selected) return 'Select Resource Role';
+                  // First try to use the stored role name, then lookup by ID
+                  if (row.resource_role_name) {
+                    return row.resource_role_name;
+                  }
+                  const role = roles.find(r => r.id === selected);
+                  return role ? role.name : 'Select Resource Role';
+                }}
               >
                 <MenuItem value="">Select Resource Role</MenuItem>
                 {roles.map(role => (
-                  <MenuItem key={role.id} value={role.name}>
+                  <MenuItem key={role.id} value={role.id}>
                     {role.name}
                   </MenuItem>
                 ))}

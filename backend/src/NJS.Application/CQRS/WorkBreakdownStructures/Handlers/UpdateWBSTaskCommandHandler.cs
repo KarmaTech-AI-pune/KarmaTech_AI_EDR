@@ -77,7 +77,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         existingUserTask.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate;
                         existingUserTask.UpdatedAt = DateTime.UtcNow;
                         existingUserTask.UpdatedBy = _currentUser;
-                        existingUserTask.ResourceRole = taskDto.ResourceRole; // Update ResourceRole
+                        existingUserTask.ResourceRoleId = taskDto.ResourceRoleId; // Update ResourceRoleId
                     }
                     else
                     {
@@ -92,7 +92,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
                             CreatedAt = DateTime.UtcNow,
                             CreatedBy = _currentUser,
-                            ResourceRole = taskDto.ResourceRole // Add ResourceRole
+                            ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
                         };
                         taskEntity.UserWBSTasks.Add(newUserTask);
                     }
@@ -119,7 +119,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         existingUserTask.TotalCost = (decimal)existingUserTask.TotalHours * existingUserTask.CostRate;
                         existingUserTask.UpdatedAt = DateTime.UtcNow;
                         existingUserTask.UpdatedBy = _currentUser;
-                        existingUserTask.ResourceRole = taskDto.ResourceRole; // Update ResourceRole
+                        existingUserTask.ResourceRoleId = taskDto.ResourceRoleId; // Update ResourceRoleId
                     }
                     else
                     {
@@ -135,7 +135,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
                             CreatedAt = DateTime.UtcNow,
                             CreatedBy = _currentUser,
-                            ResourceRole = taskDto.ResourceRole // Add ResourceRole
+                            ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
                         };
                         taskEntity.UserWBSTasks.Add(newUserTask);
                     }
