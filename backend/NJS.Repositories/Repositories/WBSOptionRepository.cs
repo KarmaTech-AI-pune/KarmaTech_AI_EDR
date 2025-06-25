@@ -63,5 +63,37 @@ namespace NJS.Repositories.Repositories
                 .AsNoTracking()
                 .ToListAsync();
         }
+
+        public async Task<WBSOption> AddAsync(WBSOption wbsOption)
+        {
+            await _context.WBSOptions.AddAsync(wbsOption);
+            await _context.SaveChangesAsync();
+            return wbsOption;
+        }
+
+        public async Task<WBSOption> UpdateAsync(WBSOption wbsOption)
+        {
+            _context.Entry(wbsOption).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return wbsOption;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var wbsOption = await _context.WBSOptions.FindAsync(id);
+            if (wbsOption == null)
+            {
+                return false;
+            }
+
+            _context.WBSOptions.Remove(wbsOption);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<WBSOption> GetByIdAsync(int id)
+        {
+            return await _context.WBSOptions.FindAsync(id);
+        }
     }
 }

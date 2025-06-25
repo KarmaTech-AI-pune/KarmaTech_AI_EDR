@@ -12,5 +12,9 @@ namespace NJS.Repositories.Interfaces
         Task<IEnumerable<WBSOption>> GetByFormTypeAsync(FormType formType);
         Task<IEnumerable<WBSOption>> GetByLevelAndFormTypeAsync(int level, FormType formType);
         Task<IEnumerable<WBSOption>> GetByLevelParentAndFormTypeAsync(int level, string parentValue, FormType formType);
+        Task<WBSOption> AddAsync(WBSOption wbsOption);
+        Task<WBSOption> UpdateAsync(WBSOption wbsOption);
+        Task<bool> DeleteAsync(int id);
+        Task<WBSOption> GetByIdAsync(int id);
     }
 }
