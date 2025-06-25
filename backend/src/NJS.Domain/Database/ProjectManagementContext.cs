@@ -72,6 +72,8 @@ namespace NJS.Domain.Database
         public DbSet<ManpowerPlanning> ManpowerPlannings { get; set; }
         public DbSet<ProgressDeliverable> ProgressDeliverables { get; set; }
         public DbSet<ChangeOrder> ChangeOrders { get; set; }
+        public DbSet<ProgrammeSchedule> ProgrammeSchedules { get; set; }
+        public DbSet<EarlyWarning> EarlyWarnings { get; set; }
         public DbSet<LastMonthAction> LastMonthActions { get; set; }
         public DbSet<CurrentMonthAction> CurrentMonthActions { get; set; }
         public DbSet<BudgetTable> BudgetTables { get; set; }
@@ -82,6 +84,12 @@ namespace NJS.Domain.Database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure MonthlyProgress to Project relationship
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.Project)
+                .WithMany()
+                .HasForeignKey(mp => mp.ProjectId);
 
             // Configure one-to-one relationships with MonthlyProgress
             modelBuilder.Entity<MonthlyProgress>()
@@ -128,6 +136,16 @@ namespace NJS.Domain.Database
                 .HasMany(mp => mp.CurrentMonthActions)
                 .WithOne(cma => cma.MonthlyProgress)
                 .HasForeignKey(cma => cma.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasMany(mp => mp.ProgrammeSchedules)
+                .WithOne(ps => ps.MonthlyProgress)
+                .HasForeignKey(ps => ps.MonthlyProgressId);
+
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasMany(mp => mp.EarlyWarnings)
+                .WithOne(ew => ew.MonthlyProgress)
+                .HasForeignKey(ew => ew.MonthlyProgressId);
 
             modelBuilder.Entity<MonthlyProgress>()
                 .HasOne(mp => mp.BudgetTable)
@@ -178,7 +196,6 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OriginalBudget>().Property(e => e.RevenueFee).HasPrecision(18, 2);
 
             modelBuilder.Entity<PercentCompleteOnCosts>().Property(e => e.Cost).HasPrecision(18, 2);
-            modelBuilder.Entity<PercentCompleteOnCosts>().Property(e => e.ProfitPercentage).HasPrecision(18, 2);
             modelBuilder.Entity<PercentCompleteOnCosts>().Property(e => e.RevenueFee).HasPrecision(18, 2);
 
             modelBuilder.Entity<ProgressDeliverable>().Property(e => e.PaymentDue).HasPrecision(18, 2);

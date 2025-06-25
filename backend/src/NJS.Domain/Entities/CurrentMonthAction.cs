@@ -10,6 +10,6 @@ namespace NJS.Domain.Entities
         public string CMactions { get; set; }
         public DateTime CMAdate { get; set; }
         public string CMAcomments { get; set; }
-        public string CMApriority { get; set; }
+        public string? CMApriority { get; set; }
     }
 }

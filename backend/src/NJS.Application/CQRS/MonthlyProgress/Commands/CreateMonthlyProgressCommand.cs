@@ -5,6 +5,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Commands
 {
     public class CreateMonthlyProgressCommand : IRequest<int>
     {
-        public MonthlyProgressDto MonthlyProgress { get; set; }
+        public int ProjectId { get; set; }
+        public CreateMonthlyProgressDto MonthlyProgress { get; set; }
     }
 }

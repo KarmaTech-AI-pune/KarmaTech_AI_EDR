@@ -6,6 +6,8 @@ namespace NJS.Domain.Entities
     public class MonthlyProgress
     {
         public int Id { get; set; }
+        public int ProjectId { get; set; }
+        public Project Project { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
         // Navigation properties for related entities
@@ -19,6 +21,8 @@ namespace NJS.Domain.Entities
         public ICollection<ChangeOrder> ChangeOrders { get; set; }
         public ICollection<LastMonthAction> LastMonthActions { get; set; }
         public ICollection<CurrentMonthAction> CurrentMonthActions { get; set; }
+        public ICollection<ProgrammeSchedule> ProgrammeSchedules { get; set; }
+        public ICollection<EarlyWarning> EarlyWarnings { get; set; }
         public BudgetTable BudgetTable { get; set; }
     }
 }
