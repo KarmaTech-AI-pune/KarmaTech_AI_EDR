@@ -1,10 +1,11 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.CheckReview.Queries;
 using NJS.Application.DTOs;
 using NJS.Domain.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Application.CQRS.CheckReview.Handlers
 {
@@ -20,6 +21,7 @@ namespace NJS.Application.CQRS.CheckReview.Handlers
         public async Task<CheckReviewDto> Handle(GetCheckReviewByIdQuery request, CancellationToken cancellationToken)
         {
             var checkReview = await _context.CheckReviews
+                .AsNoTracking()
                 .FirstOrDefaultAsync(cr => cr.Id == request.Id, cancellationToken);
 
             if (checkReview == null)
