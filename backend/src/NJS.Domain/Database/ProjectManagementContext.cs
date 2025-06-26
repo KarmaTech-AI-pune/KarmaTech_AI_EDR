@@ -520,7 +520,6 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OriginalBudget>().Property(ob => ob.RevenueFee).HasPrecision(18, 2);
 
             modelBuilder.Entity<PercentCompleteOnCosts>().Property(pcc => pcc.Cost).HasPrecision(18, 2);
-            modelBuilder.Entity<PercentCompleteOnCosts>().Property(pcc => pcc.ProfitPercentage).HasPrecision(18, 2);
             modelBuilder.Entity<PercentCompleteOnCosts>().Property(pcc => pcc.RevenueFee).HasPrecision(18, 2);
 
             modelBuilder.Entity<ProgressDeliverable>().Property(pd => pd.PaymentDue).HasPrecision(18, 2);
