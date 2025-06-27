@@ -40,8 +40,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             return options
                 .Select(o => new WBSOptionDto
                 {
+                    Id = o.Id,
                     Value = o.Value,
-                    Label = o.Label
+                    Label = o.Label,
+                    Level = o.Level,
+                    ParentValue = o.ParentValue,
+                    FormType = (int)o.FormType
                 })
                 .ToList();
         }

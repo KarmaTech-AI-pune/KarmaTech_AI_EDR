@@ -38,8 +38,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     .Where(o => o.Level == 1)
                     .Select(o => new WBSOptionDto
                     {
+                        Id = o.Id,
                         Value = o.Value,
-                        Label = o.Label
+                        Label = o.Label,
+                        Level = o.Level,
+                        ParentValue = o.ParentValue,
+                        FormType = (int)o.FormType
                     })
                     .ToList(),
 
@@ -47,8 +51,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     .Where(o => o.Level == 2)
                     .Select(o => new WBSOptionDto
                     {
+                        Id = o.Id,
                         Value = o.Value,
-                        Label = o.Label
+                        Label = o.Label,
+                        Level = o.Level,
+                        ParentValue = o.ParentValue,
+                        FormType = (int)o.FormType
                     })
                     .ToList(),
 
@@ -59,8 +67,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         g => g.Key ?? string.Empty,
                         g => g.Select(o => new WBSOptionDto
                         {
+                            Id = o.Id,
                             Value = o.Value,
-                            Label = o.Label
+                            Label = o.Label,
+                            Level = o.Level,
+                            ParentValue = o.ParentValue,
+                            FormType = (int)o.FormType
                         }).ToList()
                     )
             };
