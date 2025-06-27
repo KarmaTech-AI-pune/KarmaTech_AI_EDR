@@ -106,8 +106,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
           // For Manpower tasks, always set unit to 'month'; for ODC tasks, use resourceUnit or empty string
           unit: isOdcTask ? (task.resourceUnit ?? '') : 'month',
-          resource_role: task.resourceRoleId ?? null, // Map resource_role from API response (backend sends resourceRoleId)
-          resource_role_name: task.resourceRoleName ?? null // Map resource role name for display
+          resource_role: task.resource_role ?? null, // Map resource_role from API response (backend sends resourceRoleId)
+          resource_role_name: task.resource_role_name ?? null // Map resource role name for display
         };
       });
 

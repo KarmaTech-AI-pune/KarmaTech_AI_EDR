@@ -105,7 +105,6 @@ const WBSRow: React.FC<WBSRowProps> = ({
   stickyColumn,
   onDelete,
   onLevelChange,
-  onRoleChange,
   onUnitChange,
   onEmployeeChange,
   onCostRateChange,
@@ -120,7 +119,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
   const employeesForRole = employees;
 
   // Find the selected resource role for display
-  const selectedResourceRole = row.resource_role ? roles.find(r => r.id === row.resource_role) : undefined;
+  // const selectedResourceRole = row.resource_role ? roles.find(r => r.id === row.resource_role) : undefined;
 
   const getMonthlyHours = (month: string): string => {
     const [monthName, yearStr] = month.split(' ');
