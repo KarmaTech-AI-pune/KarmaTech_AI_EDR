@@ -303,6 +303,9 @@ namespace NJS.Domain.Extensions
 
                 // Seed WBSOptions if they don't exist
                 await SeedWBSOptionsAsync(context);
+
+                // Seed Scoring Tables if they don't exist
+                await SeedScoringTablesAsync(context);
             }
             catch (Exception)
             {
@@ -492,6 +495,163 @@ namespace NJS.Domain.Extensions
             else
             {
                 Console.WriteLine("WBSOptions table already has data, skipping insert");
+            }
+        }
+
+        private static async Task SeedScoringTablesAsync(ProjectManagementContext context)
+        {
+            // Seed OpportunityStatuses
+            if (!context.OpportunityStatuses.Any())
+            {
+                Console.WriteLine("OpportunityStatuses table is empty, inserting data...");
+                var opportunityStatuses = new List<OpportunityStatus>
+                {
+                    new OpportunityStatus { Status = "Initial" },
+                    new OpportunityStatus { Status = "Sent for Review" },
+                    new OpportunityStatus { Status = "Review Changes" },
+                    new OpportunityStatus { Status = "Sent for Approval" },
+                    new OpportunityStatus { Status = "Approval Changes" },
+                    new OpportunityStatus { Status = "Approved" }
+                };
+                context.OpportunityStatuses.AddRange(opportunityStatuses);
+                await context.SaveChangesAsync();
+                Console.WriteLine("OpportunityStatuses data inserted successfully");
+            }
+            else
+            {
+                Console.WriteLine("OpportunityStatuses table already has data, skipping insert");
+            }
+
+            // Seed ScoringCriteria
+            if (!context.ScoringCriteria.Any())
+            {
+                Console.WriteLine("ScoringCriteria table is empty, inserting data...");
+                var scoringCriteria = new List<ScoringCriteria>
+                {
+                    new ScoringCriteria { Label = "marketingPlan", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "clientRelationship", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "projectKnowledge", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "technicalEligibility", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "financialEligibility", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "keyStaffAvailability", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "projectCompetition", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "competitionPosition", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "futureWorkPotential", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "projectProfitability", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "projectSchedule", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false },
+                    new ScoringCriteria { Label = "bidTimeAndCosts", ByWhom = "", ByDate = "", Comments = "", Score = 0, ShowComments = false }
+                };
+                context.ScoringCriteria.AddRange(scoringCriteria);
+                await context.SaveChangesAsync();
+                Console.WriteLine("ScoringCriteria data inserted successfully");
+            }
+            else
+            {
+                Console.WriteLine("ScoringCriteria table already has data, skipping insert");
+            }
+
+            // Seed ScoreRange
+            if (!context.ScoreRange.Any())
+            {
+                Console.WriteLine("ScoreRange table is empty, inserting data...");
+                var scoreRanges = new List<ScoreRange>
+                {
+                    new ScoreRange { value = 10, label = "10 - Excellent", range = "high" },
+                    new ScoreRange { value = 9, label = "9 - Excellent", range = "high" },
+                    new ScoreRange { value = 8, label = "8 - Excellent", range = "high" },
+                    new ScoreRange { value = 7, label = "7 - Good", range = "medium" },
+                    new ScoreRange { value = 6, label = "6 - Good", range = "medium" },
+                    new ScoreRange { value = 5, label = "5 - Good", range = "medium" },
+                    new ScoreRange { value = 4, label = "4 - Poor", range = "low" },
+                    new ScoreRange { value = 3, label = "3 - Poor", range = "low" },
+                    new ScoreRange { value = 2, label = "2 - Poor", range = "low" },
+                    new ScoreRange { value = 1, label = "1 - Poor", range = "low" }
+                };
+                context.ScoreRange.AddRange(scoreRanges);
+                await context.SaveChangesAsync();
+                Console.WriteLine("ScoreRange data inserted successfully");
+            }
+            else
+            {
+                Console.WriteLine("ScoreRange table already has data, skipping insert");
+            }
+
+            // Seed ScoringDescription
+            if (!context.ScoringDescription.Any())
+            {
+                Console.WriteLine("ScoringDescription table is empty, inserting data...");
+                var scoringDescriptions = new List<ScoringDescriptions>
+                {
+                    new ScoringDescriptions { Label = "marketingPlan" },
+                    new ScoringDescriptions { Label = "clientRelationship" },
+                    new ScoringDescriptions { Label = "projectKnowledge" },
+                    new ScoringDescriptions { Label = "technicalEligibility" },
+                    new ScoringDescriptions { Label = "financialEligibility" },
+                    new ScoringDescriptions { Label = "keyStaffAvailability" },
+                    new ScoringDescriptions { Label = "projectCompetition" },
+                    new ScoringDescriptions { Label = "competitionPosition" },
+                    new ScoringDescriptions { Label = "futureWorkPotential" },
+                    new ScoringDescriptions { Label = "projectProfitability" },
+                    new ScoringDescriptions { Label = "projectSchedule" },
+                    new ScoringDescriptions { Label = "bidTimeAndCosts" }
+                };
+                context.ScoringDescription.AddRange(scoringDescriptions);
+                await context.SaveChangesAsync();
+                Console.WriteLine("ScoringDescription data inserted successfully");
+            }
+            else
+            {
+                Console.WriteLine("ScoringDescription table already has data, skipping insert");
+            }
+
+            // Seed ScoringDescriptionSummarry (simplified approach)
+            if (!context.ScoringDescriptionSummarry.Any())
+            {
+                Console.WriteLine("ScoringDescriptionSummarry table is empty, inserting data...");
+                var scoringDescriptionSummaries = new List<ScoringDescriptionSummarry>
+                {
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 1, High = "Fits well with marketing strategy", Medium = "Fits somewhat into the marketing strategy", Low = "Does not fit with marketing strategy" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 2, High = "Excellent relationships, no past problem projects", Medium = "Fair/good relationships, some project problems", Low = "Strained relationship(s), problem project(s), selectability questionable" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 3, High = "Strategic project, excellent knowledge of project development", Medium = "Known about project, but some knowledge of project development", Low = "Knew nothing about project prior to receipt of RFQ/RFP" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 4, High = "Meets all criteria on its own", Medium = "Need of JV or some support to meet the criteria", Low = "Does not meet qualification criteria" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 5, High = "Meets all criteria on its own", Medium = "Need of JV or some support to meet the criteria", Low = "Does not meet qualification criteria" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 6, High = "All competent key staff available", Medium = "Most competent key staff available but some outsourcing required", Low = "Major outsourcing required" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 7, High = "NJS has inside track, and competition is manageable", Medium = "NJS faces formidable competition, and have limited intelligence on it", Low = "Project appears to be wired for competition" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 8, High = "NJS qualifications are technically superior", Medium = "Qualifications are equivalent to competition, or we may have a slight edge", Low = "NJS qualifications are lower to the competition" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 9, High = "Project will lead to future work", Medium = "Possible future work", Low = "One-time project, no future work" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 10, High = "Good profit potential", Medium = "Competitive pricing, Moderate potential profit", Low = "Risky and may lead to little/no profit" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 11, High = "More than adequate, project will not adversely impact other projects", Medium = "Adequate, other projects may be adversely impacted", Low = "Not adequate, other projects will be adversely impacted" },
+                    new ScoringDescriptionSummarry { ScoringDescriptionID = 12, High = "Favorable", Medium = "Reasonable", Low = "Constrained" }
+                };
+                context.ScoringDescriptionSummarry.AddRange(scoringDescriptionSummaries);
+                await context.SaveChangesAsync();
+                Console.WriteLine("ScoringDescriptionSummarry data inserted successfully");
+            }
+            else
+            {
+                Console.WriteLine("ScoringDescriptionSummarry table already has data, skipping insert");
+            }
+
+            // Seed PMWorkflowStatuses
+            if (!context.PMWorkflowStatuses.Any())
+            {
+                Console.WriteLine("PMWorkflowStatuses table is empty, inserting data...");
+                var pmWorkflowStatuses = new List<PMWorkflowStatus>
+                {
+                    new PMWorkflowStatus { Status = "Initial" },
+                    new PMWorkflowStatus { Status = "Sent for Review" },
+                    new PMWorkflowStatus { Status = "Review Changes" },
+                    new PMWorkflowStatus { Status = "Sent for Approval" },
+                    new PMWorkflowStatus { Status = "Approval Changes" },
+                    new PMWorkflowStatus { Status = "Approved" }
+                };
+                context.PMWorkflowStatuses.AddRange(pmWorkflowStatuses);
+                await context.SaveChangesAsync();
+                Console.WriteLine("PMWorkflowStatuses data inserted successfully");
+            }
+            else
+            {
+                Console.WriteLine("PMWorkflowStatuses table already has data, skipping insert");
             }
         }
     }
