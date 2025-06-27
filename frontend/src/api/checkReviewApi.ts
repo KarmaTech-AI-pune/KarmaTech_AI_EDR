@@ -1,7 +1,7 @@
-import axios from 'axios';
+import { axiosInstance } from '../services/axiosConfig';
 import { CheckReviewRow } from '../models';
 
-const API_URL = 'http://localhost:5245/api/checkreview';
+const API_ENDPOINT = '/api/checkreview';
 
 // Create a new check review
 export const createCheckReview = async (checkReview: Omit<CheckReviewRow, 'id'>): Promise<CheckReviewRow> => {
@@ -15,7 +15,7 @@ export const createCheckReview = async (checkReview: Omit<CheckReviewRow, 'id'>)
     };
 
     console.log('Sending check review data to backend:', formattedData);
-    const response = await axios.post(API_URL, formattedData);
+    const response = await axiosInstance.post(API_ENDPOINT, formattedData);
     return response.data;
   } catch (error) {
     console.error('Error creating check review:', error);
@@ -29,7 +29,7 @@ export const getCheckReviewsByProject = async (projectId: string): Promise<Check
     // Convert projectId to integer for backend
     const parsedProjectId = parseInt(projectId);
     console.log(`Fetching check reviews for project ID: ${parsedProjectId}`);
-    const response = await axios.get(`${API_URL}/project/${parsedProjectId}`);
+    const response = await axiosInstance.get(`${API_ENDPOINT}/project/${parsedProjectId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching check reviews:', error);
@@ -43,7 +43,7 @@ export const getCheckReview = async (id: string): Promise<CheckReviewRow> => {
     // Convert id to integer for backend
     const parsedId = parseInt(id);
     console.log(`Fetching check review with ID: ${parsedId}`);
-    const response = await axios.get(`${API_URL}/${parsedId}`);
+    const response = await axiosInstance.get(`${API_ENDPOINT}/${parsedId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching check review:', error);
@@ -65,7 +65,7 @@ export const updateCheckReview = async (id: string, updatedReview: Partial<Check
     };
 
     console.log(`Updating check review with ID: ${id}`, formattedData);
-    const response = await axios.put(`${API_URL}/${id}`, formattedData);
+    const response = await axiosInstance.put(`${API_ENDPOINT}/${id}`, formattedData);
     return response.data;
   } catch (error) {
     console.error('Error updating check review:', error);
@@ -90,10 +90,10 @@ export const deleteCheckReview = async (id: string): Promise<boolean> => {
       // Try to find the review by activityNo
       try {
         console.log(`Attempting to find review by activityNo: ${id}`);
-        const response = await axios.get(`${API_URL}/by-activity-no/${id}`);
+        const response = await axiosInstance.get(`${API_ENDPOINT}/by-activity-no/${id}`);
         if (response.data && response.data.id) {
           console.log(`Found review with ID: ${response.data.id} for activityNo: ${id}`);
-          const deleteResponse = await axios.delete(`${API_URL}/${response.data.id}`);
+          const deleteResponse = await axiosInstance.delete(`${API_ENDPOINT}/${response.data.id}`);
           console.log('Delete response:', deleteResponse);
           return true;
         }
@@ -107,9 +107,9 @@ export const deleteCheckReview = async (id: string): Promise<boolean> => {
     console.log(`Deleting check review with ID: ${parsedId}`);
 
     // Add more detailed logging
-    console.log(`DELETE request to: ${API_URL}/${parsedId}`);
+    console.log(`DELETE request to: ${API_ENDPOINT}/${parsedId}`);
 
-    const response = await axios.delete(`${API_URL}/${parsedId}`);
+    const response = await axiosInstance.delete(`${API_ENDPOINT}/${parsedId}`);
     console.log('Delete response:', response);
     return true;
   } catch (error: any) {

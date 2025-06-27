@@ -89,6 +89,7 @@ interface WBSRowProps {
   onCostRateChange: (id: string, value: string) => void;
   onHoursChange: (id: string, month: string, value: string) => void;
   onODCChange: (id: string, value: string) => void;
+  onResourceRoleChange: (id: string, value: string) => void; // New prop for resource_role
 }
 
 const WBSRow: React.FC<WBSRowProps> = ({
@@ -104,18 +105,21 @@ const WBSRow: React.FC<WBSRowProps> = ({
   stickyColumn,
   onDelete,
   onLevelChange,
-  onRoleChange,
   onUnitChange,
   onEmployeeChange,
   onCostRateChange,
   onHoursChange,
   onODCChange,
+  onResourceRoleChange, // Destructure new prop
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown visibility
   const roleId = row.role ? row.role : null;
   const selectedRole = roleId !== null ? roles.find(r => r.id === roleId) : undefined;
   const rateTooltip = selectedRole ? `Min Rate: ${selectedRole.min_rate}` : '';
   const employeesForRole = employees;
+
+  // Find the selected resource role for display
+  // const selectedResourceRole = row.resource_role ? roles.find(r => r.id === row.resource_role) : undefined;
 
   const getMonthlyHours = (month: string): string => {
     const [monthName, yearStr] = month.split(' ');
@@ -210,15 +214,25 @@ const WBSRow: React.FC<WBSRowProps> = ({
       ) : (
         <>
           <TableCell>
-            {row.level === 3 ? (
+            {row.level === 3 && formType === 'manpower' ? (
               <StyledSelect
-                value={row.role || ''}
-                onChange={(e) => onRoleChange(row.id, e.target.value as string)}
+                value={row.resource_role || ''}
+                onChange={(e) => onResourceRoleChange(row.id, e.target.value as string)}
                 size="small"
                 sx={{ bgcolor: 'background.paper' }}
                 disabled={editMode}
+                displayEmpty
+                renderValue={(selected) => {
+                  if (!selected) return 'Select Resource Role';
+                  // First try to use the stored role name, then lookup by ID
+                  if (row.resource_role_name) {
+                    return row.resource_role_name;
+                  }
+                  const role = roles.find(r => r.id === selected);
+                  return role ? role.name : 'Select Resource Role';
+                }}
               >
-                <MenuItem value="">Select Role</MenuItem>
+                <MenuItem value="">Select Resource Role</MenuItem>
                 {roles.map(role => (
                   <MenuItem key={role.id} value={role.id}>
                     {role.name}
@@ -230,14 +244,14 @@ const WBSRow: React.FC<WBSRowProps> = ({
             )}
           </TableCell>
           <TableCell>
-            {row.level === 3 ? (
+            {row.level === 3 && formType === 'manpower' ? (
               <Autocomplete
                 options={employeesForRole}
                 getOptionLabel={(option) => option.name}
                 value={employeesForRole.find(emp => emp.id === row.name) || null}
                 open={isDropdownOpen} // Control open state
                 popupIcon={null} // Remove the dropdown arrow icon
-            onInputChange={(_event, value, reason) => {
+                onInputChange={(_event, value, reason) => {
                   // Open only on actual input, not on focus/clear/reset
                   if (reason === 'input') {
                     setIsDropdownOpen(!!value); // Open if there's text, close if empty
@@ -248,11 +262,11 @@ const WBSRow: React.FC<WBSRowProps> = ({
                   setIsDropdownOpen(false); // Close after selection
                 }}
                 onClose={() => setIsDropdownOpen(false)} // Close when clicking away
-                disabled={!row.role || editMode}
+                disabled={editMode}
                 size="small"
                 slotProps={{
                   listbox: {
-                sx: {
+                    sx: {
                       // Hide scrollbar for Webkit browsers
                       '&::-webkit-scrollbar': {
                         display: 'none',
@@ -262,32 +276,32 @@ const WBSRow: React.FC<WBSRowProps> = ({
                       // Hide scrollbar for IE/Edge (older versions)
                       msOverflowStyle: 'none',
                     }
-              }
+                  }
                 }}
                 sx={{
-              bgcolor: 'background.paper',
-              width: '100%',
-              '& .MuiAutocomplete-inputRoot': {
-                paddingRight: '0 !important' // Remove any right padding from the input root
-              }
-            }}
+                  bgcolor: 'background.paper',
+                  width: '100%',
+                  '& .MuiAutocomplete-inputRoot': {
+                    paddingRight: '0 !important' // Remove any right padding from the input root
+                  }
+                }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     placeholder="Select Name"
                     sx={{
                       '& .MuiInputBase-root': {
-                    height: '40px',
-                    padding: '0 0 0 6px', // Removed right padding
-                    width: '100%' // Ensure full width is used
-                  },
+                        height: '40px',
+                        padding: '0 0 0 6px', // Removed right padding
+                        width: '100%' // Ensure full width is used
+                      },
                       '& .MuiAutocomplete-input': {
-                    padding: '7.5px 0 7.5px 6px !important', // Removed right padding
-                    textOverflow: 'initial', // Prevent text truncation
-                    whiteSpace: 'normal', // Allow text to wrap if needed
-                    width: '100%', // Use full width
-                    fontSize: '0.875rem' // Slightly smaller font to fit more text
-                  }
+                        padding: '7.5px 0 7.5px 6px !important', // Removed right padding
+                        textOverflow: 'initial', // Prevent text truncation
+                        whiteSpace: 'normal', // Allow text to wrap if needed
+                        width: '100%', // Use full width
+                        fontSize: '0.875rem' // Slightly smaller font to fit more text
+                      }
                     }}
                   />
                 )}

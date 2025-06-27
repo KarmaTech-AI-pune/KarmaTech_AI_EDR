@@ -39,11 +39,16 @@ namespace NJS.Domain.Entities
         [StringLength(100)]
         public string UpdatedBy { get; set; }
 
-        // Navigation properties
-        [ForeignKey(nameof(UserId))]
-        public User User { get; set; }
+        public string? ResourceRoleId { get; set; }
 
-        [ForeignKey(nameof(WBSTaskId))]
-        public WBSTask WBSTask { get; set; }
+        // Navigation properties
+        [ForeignKey("WBSTaskId")]
+        public virtual WBSTask WBSTask { get; set; }
+
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; }
+
+        [ForeignKey("ResourceRoleId")]
+        public virtual Role ResourceRole { get; set; }
     }
 }

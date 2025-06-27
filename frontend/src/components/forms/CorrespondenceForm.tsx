@@ -317,7 +317,7 @@ const CorrespondenceForm: React.FC = () => {
 
       // Get API endpoint based on tab value
       const endpoint = tabValue === 0 ? 'inward' : 'outward';
-      const baseUrl = `http://localhost:5245/api/correspondence/${endpoint}`;
+      const baseUrl = `${import.meta.env.VITE_API_BASE_URL}api/correspondence/${endpoint}`;
 
       // Prepare headers for API request
       const token = localStorage.getItem('token');

@@ -69,6 +69,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             ResourceName = t.TaskType == TaskType.ODC && t.UserWBSTasks.FirstOrDefault() != null
                                 ? t.UserWBSTasks.FirstOrDefault().Name
                                 : null,
+                            ResourceRoleId = t.UserWBSTasks.FirstOrDefault() != null ? t.UserWBSTasks.FirstOrDefault().ResourceRoleId : null,
+                            ResourceRoleName = t.UserWBSTasks.FirstOrDefault() != null && t.UserWBSTasks.FirstOrDefault().ResourceRole != null
+                                ? t.UserWBSTasks.FirstOrDefault().ResourceRole.Name
+                                : null,
 
                             TotalHours = t.TaskType == TaskType.ODC && t.UserWBSTasks.FirstOrDefault() != null
                                 ? t.UserWBSTasks.FirstOrDefault().TotalHours

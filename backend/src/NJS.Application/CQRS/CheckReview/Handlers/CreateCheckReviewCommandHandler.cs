@@ -61,13 +61,6 @@ namespace NJS.Application.CQRS.CheckReview.Handlers
                 {
                     try
                     {
-                        // Validate required fields before saving
-                        if (string.IsNullOrEmpty(checkReview.ActivityName))
-                            throw new ArgumentException("Activity name is required");
-
-                        if (checkReview.ProjectId <= 0)
-                            throw new ArgumentException("Valid project ID is required");
-
                         await _context.CheckReviews.AddAsync(checkReview, cancellationToken);
                         await _context.SaveChangesAsync(cancellationToken);
 

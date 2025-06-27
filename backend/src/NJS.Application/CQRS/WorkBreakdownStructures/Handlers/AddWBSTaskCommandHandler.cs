@@ -44,6 +44,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 throw new Exception($"Active Work Breakdown Structure not found for Project ID {request.ProjectId}. Cannot add task.");
             }
 
+            // Handle ParentId based on task level
+            if (request.TaskDto.Level == WBSTaskLevel.Level1)
+            {
+                request.TaskDto.ParentId = null; // Level 1 tasks do not have a parent
+            }
+
             // Optional: Validate ParentId if provided
             if (request.TaskDto.ParentId.HasValue && !wbs.Tasks.Any(t => t.Id == request.TaskDto.ParentId.Value && !t.IsDeleted))
             {
@@ -73,8 +79,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
             // --- 3. Add User Assignment and Monthly Hours ---
             // Using copied helper methods (could be refactored later)
-            UpdateUserAssignment(taskEntity, taskDto);
-            UpdateMonthlyHours(taskEntity, taskDto);
+            await UpdateUserAssignment(taskEntity, taskDto, cancellationToken);
+            UpdateMonthlyHours(taskEntity, taskDto, wbs.ProjectId);
 
             // --- 4. Add to context and save ---
             _context.WBSTasks.Add(taskEntity);
@@ -87,14 +93,22 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         // --- Helper methods copied from SetWBSCommandHandler ---
         // (Consider refactoring into a shared service/utility class later)
 
-        private void UpdateUserAssignment(WBSTask taskEntity, WBSTaskDto taskDto)
+        private async Task UpdateUserAssignment(WBSTask taskEntity, WBSTaskDto taskDto, CancellationToken cancellationToken)
         {
             // Handle Manpower tasks
             if (taskEntity.TaskType == TaskType.Manpower)
             {
-                // Only proceed if UserId is not null/empty
-                if (!string.IsNullOrEmpty(taskDto.AssignedUserId))
+                // Only proceed if UserId is not null/empty and not a placeholder "string"
+                if (!string.IsNullOrEmpty(taskDto.AssignedUserId) && taskDto.AssignedUserId != "string")
                 {
+                    // Validate if the assigned user exists
+                    var userExists = await _context.Users.AnyAsync(u => u.Id == taskDto.AssignedUserId, cancellationToken);
+
+                    if (!userExists)
+                    {
+                        throw new Exception($"Assigned User with ID '{taskDto.AssignedUserId}' not found. Cannot assign task.");
+                    }
+
                     // Create new assignment for Manpower task
                     var newUserTask = new UserWBSTask
                     {
@@ -106,7 +120,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
                         TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _currentUser
+                        CreatedBy = _currentUser,
+                        ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
                     };
                     taskEntity.UserWBSTasks.Add(newUserTask);
                 }
@@ -128,17 +143,33 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
                         TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _currentUser
+                        CreatedBy = _currentUser,
+                        ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
                     };
                     taskEntity.UserWBSTasks.Add(newUserTask);
                 }
             }
         }
 
-        private void UpdateMonthlyHours(WBSTask taskEntity, WBSTaskDto taskDto)
+        private void UpdateMonthlyHours(WBSTask taskEntity, WBSTaskDto taskDto, int projectId)
         {
-            // This method assumes taskEntity.MonthlyHours is initialized
-            // For a new task, we only need the 'Add new ones' part
+            // Ensure a WBSTaskMonthlyHourHeader exists for this project and task type
+            // Or create a new one if it doesn't exist
+            var monthlyHourHeader = _context.WBSTaskMonthlyHourHeaders
+                .FirstOrDefault(h => h.ProjectId == projectId && h.TaskType == taskEntity.TaskType);
+
+            if (monthlyHourHeader == null)
+            {
+                monthlyHourHeader = new WBSTaskMonthlyHourHeader
+                {
+                    ProjectId = projectId,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = _currentUser,
+                    TaskType = taskEntity.TaskType,
+                    StatusId = (int)PMWorkflowStatusEnum.Initial // Default status
+                };
+                _context.WBSTaskMonthlyHourHeaders.Add(monthlyHourHeader);
+            }
 
             // Add new ones from DTO
             foreach (var mhDto in taskDto.MonthlyHours)
@@ -146,6 +177,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 var newMh = new WBSTaskMonthlyHour
                 {
                     WBSTask = taskEntity, // EF Core should link this
+                    WBSTaskMonthlyHourHeader = monthlyHourHeader, // Link to the header
                     Year = mhDto.Year.ToString(),
                     Month = mhDto.Month,
                     PlannedHours = mhDto.PlannedHours,
@@ -153,7 +185,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     CreatedBy = _currentUser
                 };
                 taskEntity.MonthlyHours.Add(newMh);
-                // Context should track this automatically
             }
 
             // Recalculate TotalHours/Cost on the UserWBSTask if it exists (it should have been added just before)

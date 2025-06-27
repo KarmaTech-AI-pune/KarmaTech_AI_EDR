@@ -1,4 +1,4 @@
-import { axiosInstance, ensureAuthHeader } from './axiosConfig';
+import { axiosInstance, ensureAuthHeader } from './axiosConfig.tsx';
 import { AxiosResponse } from 'axios';
 
 // Define interfaces for the API data

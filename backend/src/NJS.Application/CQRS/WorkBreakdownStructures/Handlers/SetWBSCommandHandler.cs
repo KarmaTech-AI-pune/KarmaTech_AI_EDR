@@ -115,6 +115,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         IsDeleted = false,
                         UserWBSTasks = new List<UserWBSTask>(),
                         MonthlyHours = new List<WBSTaskMonthlyHour>()
+                        
                     };
 
                     _context.WBSTasks.Add(taskEntity);
@@ -182,6 +183,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     userTask.TotalCost = totalCost;
                     userTask.UpdatedAt = DateTime.UtcNow;
                     userTask.UpdatedBy = _currentUser;
+                    if (!string.IsNullOrEmpty(dto.ResourceRoleId) || (userTask.UserId != dto.AssignedUserId && userTask.Name != dto.ResourceName))
+                    {
+                        userTask.ResourceRoleId = dto.ResourceRoleId;
+                    }
                 }
                 else
                 {
@@ -195,7 +200,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalHours = totalHours,
                         TotalCost = totalCost,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _currentUser
+                        CreatedBy = _currentUser,
+                        ResourceRoleId = dto.ResourceRoleId
                     });
                 }
             }
@@ -211,6 +217,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     userTask.TotalCost = totalCost;
                     userTask.UpdatedAt = DateTime.UtcNow;
                     userTask.UpdatedBy = _currentUser;
+                    if (!string.IsNullOrEmpty(dto.ResourceRoleId) || (userTask.UserId != dto.AssignedUserId && userTask.Name != dto.ResourceName))
+                    {
+                        userTask.ResourceRoleId = dto.ResourceRoleId;
+                    }
                 }
                 else
                 {
@@ -224,7 +234,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalHours = totalHours,
                         TotalCost = totalCost,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _currentUser
+                        CreatedBy = _currentUser,
+                        ResourceRoleId = dto.ResourceRoleId
                     });
                 }
             }

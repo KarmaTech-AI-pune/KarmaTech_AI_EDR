@@ -1,17 +1,19 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging; // Corrected for ILogger
+using Microsoft.Extensions.Logging;
 using NJS.Application.CQRS.MonthlyProgress.Commands;
 using NJS.Application.CQRS.MonthlyProgress.Queries;
 using NJS.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace NJSAPI.Controllers
 {
+    [Route("api/projects/{projectId}/monthlyprogress")]
     [ApiController]
-    [Route("api/[controller]")]
+    [Authorize]
     public class MonthlyProgressController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -23,161 +25,145 @@ namespace NJSAPI.Controllers
             _logger = logger; // Assign logger
         }
 
-        /// <summary>
-        /// Creates a new Monthly Progress record.
-        /// </summary>
-        /// <param name="monthlyProgressDto">The Monthly Progress data.</param>
-        /// <returns>A newly created Monthly Progress record ID.</returns>
-        [HttpPost]
-        [ProducesResponseType(typeof(int), 201)] // Created
-        [ProducesResponseType(typeof(string), 400)] // Bad Request
-        [ProducesResponseType(typeof(string), 500)] // Internal Server Error
-        public async Task<IActionResult> CreateMonthlyProgress([FromBody] MonthlyProgressDto monthlyProgressDto)
+        // GET: api/projects/{projectId}/monthlyprogress
+        [HttpGet]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(IEnumerable<MonthlyProgressDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<MonthlyProgressDto>>> GetAllMonthlyProgressByProject(int projectId)
         {
-            if (monthlyProgressDto == null)
-            {
-                _logger.LogWarning("CreateMonthlyProgress: MonthlyProgress data is null.");
-                return BadRequest("MonthlyProgress data is null.");
-            }
-
             try
             {
-                var command = new CreateMonthlyProgressCommand { MonthlyProgress = monthlyProgressDto };
-                var id = await _mediator.Send(command);
-                _logger.LogInformation($"CreateMonthlyProgress: Successfully created MonthlyProgress with ID: {id}");
-                return CreatedAtAction(nameof(GetMonthlyProgressById), new { id = id }, id); // Return ID instead of DTO for CreatedAtAction
+                var query = new GetMonthlyProgressByProjectIdQuery { ProjectId = projectId };
+                var result = await _mediator.Send(query);
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "CreateMonthlyProgress: Error creating MonthlyProgress.");
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                _logger.LogError(ex, "Error getting monthly progress for project {ProjectId}", projectId);
+                return StatusCode(500, new { message = "An error occurred while retrieving monthly progress.", error = ex.Message });
             }
         }
 
-        /// <summary>
-        /// Gets a Monthly Progress record by ID.
-        /// </summary>
-        /// <param name="id">The ID of the Monthly Progress record.</param>
-        /// <returns>The Monthly Progress record.</returns>
+        // GET: api/projects/{projectId}/monthlyprogress/{id}
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(MonthlyProgressDto), 200)] // OK
-        [ProducesResponseType(typeof(string), 404)] // Not Found
-        [ProducesResponseType(typeof(string), 500)] // Internal Server Error
-        public async Task<IActionResult> GetMonthlyProgressById(int id)
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(MonthlyProgressDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<MonthlyProgressDto>> GetMonthlyProgressById(int projectId, int id)
         {
             try
             {
                 var query = new GetMonthlyProgressByIdQuery { Id = id };
-                var monthlyProgress = await _mediator.Send(query);
-
-                if (monthlyProgress == null)
+                var result = await _mediator.Send(query);
+                if (result == null)
                 {
-                    _logger.LogWarning($"GetMonthlyProgressById: MonthlyProgress with ID {id} not found.");
-                    return NotFound($"MonthlyProgress with ID {id} not found.");
+                    return NotFound();
                 }
-                _logger.LogInformation($"GetMonthlyProgressById: Successfully retrieved MonthlyProgress with ID: {id}");
-                return Ok(monthlyProgress);
+                // Optional: Check if result.ProjectId matches projectId from route
+                if (result.ProjectId != projectId)
+                {
+                    return Forbid(); // Or NotFound() depending on desired behavior
+                }
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"GetMonthlyProgressById: Error retrieving MonthlyProgress with ID: {id}.");
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                _logger.LogError(ex, "Error getting monthly progress {Id} for project {ProjectId}", id, projectId);
+                return StatusCode(500, new { message = "An error occurred while retrieving monthly progress.", error = ex.Message });
             }
         }
 
-        /// <summary>
-        /// Gets all Monthly Progress records.
-        /// </summary>
-        /// <returns>A list of Monthly Progress records.</returns>
-        [HttpGet]
-        [ProducesResponseType(typeof(List<MonthlyProgressDto>), 200)] // OK
-        [ProducesResponseType(typeof(string), 500)] // Internal Server Error
-        public async Task<IActionResult> GetAllMonthlyProgress()
+        // POST: api/projects/{projectId}/monthlyprogress
+        [HttpPost]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(MonthlyProgressDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<MonthlyProgressDto>> CreateMonthlyProgress(int projectId, [FromBody] CreateMonthlyProgressDto createDto)
         {
+            if (createDto == null)
+            {
+                return BadRequest("Monthly Progress data is required.");
+            }
+
             try
             {
-                var query = new GetAllMonthlyProgressQuery();
-                var monthlyProgresses = await _mediator.Send(query);
-                _logger.LogInformation("GetAllMonthlyProgress: Successfully retrieved all Monthly Progress records.");
-                return Ok(monthlyProgresses);
+                var command = new CreateMonthlyProgressCommand { ProjectId = projectId, MonthlyProgress = createDto };
+                var newId = await _mediator.Send(command);
+
+                // Fetch the created entity to return it
+                var query = new GetMonthlyProgressByIdQuery { Id = newId };
+                var createdDto = await _mediator.Send(query);
+
+                return CreatedAtAction(nameof(GetMonthlyProgressById), new { projectId = projectId, id = newId }, createdDto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "GetAllMonthlyProgress: Error retrieving all Monthly Progress records.");
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                _logger.LogError(ex, "Error creating monthly progress for project {ProjectId}", projectId);
+                return StatusCode(500, new { message = "An error occurred while creating monthly progress.", error = ex.Message });
             }
         }
 
-        /// <summary>
-        /// Updates an existing Monthly Progress record.
-        /// </summary>
-        /// <param name="id">The ID of the Monthly Progress record to update.</param>
-        /// <param name="monthlyProgressDto">The updated Monthly Progress data.</param>
-        /// <returns>The updated Monthly Progress record.</returns>
+        // PUT: api/projects/{projectId}/monthlyprogress/{id}
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(MonthlyProgressDto), 200)] // OK
-        [ProducesResponseType(typeof(string), 400)] // Bad Request
-        [ProducesResponseType(typeof(string), 404)] // Not Found
-        [ProducesResponseType(typeof(string), 500)] // Internal Server Error
-        public async Task<IActionResult> UpdateMonthlyProgress(int id, [FromBody] MonthlyProgressDto monthlyProgressDto)
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateMonthlyProgress(int projectId, int id, [FromBody] CreateMonthlyProgressDto updateDto)
         {
-            if (monthlyProgressDto == null)
+            if (updateDto == null)
             {
-                _logger.LogWarning($"UpdateMonthlyProgress: MonthlyProgress data is null for ID: {id}.");
-                return BadRequest("MonthlyProgress data is null.");
+                return BadRequest("Invalid request data.");
             }
 
             try
             {
-                var command = new UpdateMonthlyProgressCommand { Id = id, MonthlyProgress = monthlyProgressDto };
-                var result = await _mediator.Send(command);
-
-                if (!result)
+                // Check if the entity exists before sending the update command
+                var checkQuery = new GetMonthlyProgressByIdQuery { Id = id };
+                var existing = await _mediator.Send(checkQuery);
+                if (existing == null || existing.ProjectId != projectId)
                 {
-                    _logger.LogWarning($"UpdateMonthlyProgress: MonthlyProgress with ID {id} not found for update.");
-                    return NotFound($"MonthlyProgress with ID {id} not found.");
+                    return NotFound();
                 }
 
-                // Fetch the updated record to return it
-                var updatedMonthlyProgress = await _mediator.Send(new GetMonthlyProgressByIdQuery { Id = id });
-                _logger.LogInformation($"UpdateMonthlyProgress: Successfully updated MonthlyProgress with ID: {id}");
-                return Ok(updatedMonthlyProgress);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"UpdateMonthlyProgress: Error updating MonthlyProgress with ID: {id}.");
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
+                var command = new UpdateMonthlyProgressCommand { Id = id, MonthlyProgress = updateDto };
+                await _mediator.Send(command);
 
-        /// <summary>
-        /// Deletes a Monthly Progress record by ID.
-        /// </summary>
-        /// <param name="id">The ID of the Monthly Progress record to delete.</param>
-        /// <returns>No content if successful.</returns>
-        [HttpDelete("{id}")]
-        [ProducesResponseType(204)] // No Content
-        [ProducesResponseType(typeof(string), 404)] // Not Found
-        [ProducesResponseType(typeof(string), 500)] // Internal Server Error
-        public async Task<IActionResult> DeleteMonthlyProgress(int id)
-        {
-            try
-            {
-                var command = new DeleteMonthlyProgressCommand { Id = id };
-                var result = await _mediator.Send(command);
-
-                if (!result)
-                {
-                    _logger.LogWarning($"DeleteMonthlyProgress: MonthlyProgress with ID {id} not found for deletion.");
-                    return NotFound($"MonthlyProgress with ID {id} not found.");
-                }
-                _logger.LogInformation($"DeleteMonthlyProgress: Successfully deleted MonthlyProgress with ID: {id}");
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"DeleteMonthlyProgress: Error deleting MonthlyProgress with ID: {id}.");
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                _logger.LogError(ex, "Error updating monthly progress {Id} for project {ProjectId}", id, projectId);
+                return StatusCode(500, new { message = "An error occurred while updating monthly progress.", error = ex.Message });
+            }
+        }
+
+        // DELETE: api/projects/{projectId}/monthlyprogress/{id}
+        [HttpDelete("{id}")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteMonthlyProgress(int projectId, int id)
+        {
+            try
+            {
+                // Optional: Check if the entity exists and belongs to the project before sending the delete command
+                var checkQuery = new GetMonthlyProgressByIdQuery { Id = id };
+                var existing = await _mediator.Send(checkQuery);
+                if (existing == null || existing.ProjectId != projectId)
+                {
+                    return NotFound(); // Or Forbid()
+                }
+
+                var command = new DeleteMonthlyProgressCommand { Id = id };
+                await _mediator.Send(command);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting monthly progress with ID: {Id} for project {ProjectId}", id, projectId);
+                return StatusCode(500, new { message = "An error occurred while deleting monthly progress.", error = ex.Message });
             }
         }
     }
