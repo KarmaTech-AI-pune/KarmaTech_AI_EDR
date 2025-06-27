@@ -1,7 +1,7 @@
 import { axiosInstance } from '../services/axiosConfig';
 import { CheckReviewRow } from '../models';
 
-const API_ENDPOINT = '/checkreview';
+const API_ENDPOINT = '/api/checkreview';
 
 // Create a new check review
 export const createCheckReview = async (checkReview: Omit<CheckReviewRow, 'id'>): Promise<CheckReviewRow> => {
