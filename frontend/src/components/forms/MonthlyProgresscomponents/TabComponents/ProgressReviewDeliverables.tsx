@@ -1,5 +1,5 @@
-import React from "react";
-import { Controller, useFormContext, useFieldArray } from "react-hook-form";
+import React, { useEffect } from "react";
+import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 import {
@@ -15,17 +15,28 @@ import {
   Paper,
   Typography,
   IconButton,
+  TableFooter,
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const ProgressReviewDeliverables: React.FC = () => {
-  const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+  const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "progressDeliverable"
+    name: "progressDeliverable.deliverables"
   });
+
+  const deliverables = watch("progressDeliverable.deliverables");
+
+  useEffect(() => {
+    const total = deliverables?.reduce((acc, curr) => acc + (curr.paymentDue || 0), 0) ?? 0;
+    setValue("progressDeliverable.totalPaymentDue", total);
+  }, [deliverables, setValue]);
+
+  const totalPaymentDue = watch("progressDeliverable.totalPaymentDue");
+
 
   // Add new progress deliverable row
   const addDeliverableRow = () => {
@@ -34,7 +45,7 @@ const ProgressReviewDeliverables: React.FC = () => {
       dueDateContract: new Date(),
       dueDatePlanned: new Date(),
       achievedDate: new Date(),
-      paymentDue: null,
+      paymentDue: 0,
       invoiceDate: new Date(),
       paymentReceivedDate: new Date(),
       deliverableComments: ""
@@ -104,15 +115,15 @@ const ProgressReviewDeliverables: React.FC = () => {
                   <TableRow key={field.id}>
                     <TableCell>
                       <Controller
-                        name={`progressDeliverable.${index}.milestone`}
+                        name={`progressDeliverable.deliverables.${index}.milestone`}
                         control={control}
                         render={({ field: controllerField }) => (
                           <TextField
                             {...controllerField}
                             size="small"
                             placeholder="Enter milestone"
-                            error={!!errors.progressDeliverable?.[index]?.milestone}
-                            helperText={errors.progressDeliverable?.[index]?.milestone?.message}
+                            error={!!errors.progressDeliverable?.deliverables?.[index]?.milestone}
+                            helperText={errors.progressDeliverable?.deliverables?.[index]?.milestone?.message}
                             sx={textFieldStyle}
                           />
                         )}
@@ -120,7 +131,7 @@ const ProgressReviewDeliverables: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Controller
-                        name={`progressDeliverable.${index}.dueDateContract`}
+                        name={`progressDeliverable.deliverables.${index}.dueDateContract`}
                         control={control}
                         render={({ field: controllerField }) => (
                           <TextField
@@ -128,8 +139,8 @@ const ProgressReviewDeliverables: React.FC = () => {
                             size="small"
                             value={formatDateForInput(controllerField.value)}
                             onChange={(e) => controllerField.onChange(parseDateFromInput(e.target.value))}
-                            error={!!errors.progressDeliverable?.[index]?.dueDateContract}
-                            helperText={errors.progressDeliverable?.[index]?.dueDateContract?.message}
+                            error={!!errors.progressDeliverable?.deliverables?.[index]?.dueDateContract}
+                            helperText={errors.progressDeliverable?.deliverables?.[index]?.dueDateContract?.message}
                             sx={textFieldStyle}
                             slotProps={{
                               inputLabel: {
@@ -142,7 +153,7 @@ const ProgressReviewDeliverables: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Controller
-                        name={`progressDeliverable.${index}.dueDatePlanned`}
+                        name={`progressDeliverable.deliverables.${index}.dueDatePlanned`}
                         control={control}
                         render={({ field: controllerField }) => (
                           <TextField
@@ -150,8 +161,8 @@ const ProgressReviewDeliverables: React.FC = () => {
                             size="small"
                             value={formatDateForInput(controllerField.value)}
                             onChange={(e) => controllerField.onChange(parseDateFromInput(e.target.value))}
-                            error={!!errors.progressDeliverable?.[index]?.dueDatePlanned}
-                            helperText={errors.progressDeliverable?.[index]?.dueDatePlanned?.message}
+                            error={!!errors.progressDeliverable?.deliverables?.[index]?.dueDatePlanned}
+                            helperText={errors.progressDeliverable?.deliverables?.[index]?.dueDatePlanned?.message}
                             sx={textFieldStyle}
                             slotProps={{
                               inputLabel: {
@@ -164,7 +175,7 @@ const ProgressReviewDeliverables: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Controller
-                        name={`progressDeliverable.${index}.achievedDate`}
+                        name={`progressDeliverable.deliverables.${index}.achievedDate`}
                         control={control}
                         render={({ field: controllerField }) => (
                           <TextField
@@ -172,8 +183,8 @@ const ProgressReviewDeliverables: React.FC = () => {
                             size="small"
                             value={formatDateForInput(controllerField.value)}
                             onChange={(e) => controllerField.onChange(parseDateFromInput(e.target.value))}
-                            error={!!errors.progressDeliverable?.[index]?.achievedDate}
-                            helperText={errors.progressDeliverable?.[index]?.achievedDate?.message}
+                            error={!!errors.progressDeliverable?.deliverables?.[index]?.achievedDate}
+                            helperText={errors.progressDeliverable?.deliverables?.[index]?.achievedDate?.message}
                             sx={textFieldStyle}
                             slotProps={{
                               inputLabel: {
@@ -186,7 +197,7 @@ const ProgressReviewDeliverables: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Controller
-                        name={`progressDeliverable.${index}.paymentDue`}
+                        name={`progressDeliverable.deliverables.${index}.paymentDue`}
                         control={control}
                         render={({ field: controllerField }) => (
                           <TextField
@@ -196,8 +207,8 @@ const ProgressReviewDeliverables: React.FC = () => {
                             value={controllerField.value}
                             onChange={(e) => controllerField.onChange(e.target.value ? Number(e.target.value) : null)}
                             onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                            error={!!errors.progressDeliverable?.[index]?.paymentDue}
-                            helperText={errors.progressDeliverable?.[index]?.paymentDue?.message}
+                            error={!!errors.progressDeliverable?.deliverables?.[index]?.paymentDue}
+                            helperText={errors.progressDeliverable?.deliverables?.[index]?.paymentDue?.message}
                             sx={textFieldStyle}
                           />
                         )}
@@ -205,7 +216,7 @@ const ProgressReviewDeliverables: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Controller
-                        name={`progressDeliverable.${index}.invoiceDate`}
+                        name={`progressDeliverable.deliverables.${index}.invoiceDate`}
                         control={control}
                         render={({ field: controllerField }) => (
                           <TextField
@@ -213,8 +224,8 @@ const ProgressReviewDeliverables: React.FC = () => {
                             size="small"
                             value={formatDateForInput(controllerField.value)}
                             onChange={(e) => controllerField.onChange(parseDateFromInput(e.target.value))}
-                            error={!!errors.progressDeliverable?.[index]?.invoiceDate}
-                            helperText={errors.progressDeliverable?.[index]?.invoiceDate?.message}
+                            error={!!errors.progressDeliverable?.deliverables?.[index]?.invoiceDate}
+                            helperText={errors.progressDeliverable?.deliverables?.[index]?.invoiceDate?.message}
                             sx={textFieldStyle}
                             slotProps={{
                               inputLabel: {
@@ -227,7 +238,7 @@ const ProgressReviewDeliverables: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Controller
-                        name={`progressDeliverable.${index}.paymentReceivedDate`}
+                        name={`progressDeliverable.deliverables.${index}.paymentReceivedDate`}
                         control={control}
                         render={({ field: controllerField }) => (
                           <TextField
@@ -235,8 +246,8 @@ const ProgressReviewDeliverables: React.FC = () => {
                             size="small"
                             value={formatDateForInput(controllerField.value)}
                             onChange={(e) => controllerField.onChange(parseDateFromInput(e.target.value))}
-                            error={!!errors.progressDeliverable?.[index]?.paymentReceivedDate}
-                            helperText={errors.progressDeliverable?.[index]?.paymentReceivedDate?.message}
+                            error={!!errors.progressDeliverable?.deliverables?.[index]?.paymentReceivedDate}
+                            helperText={errors.progressDeliverable?.deliverables?.[index]?.paymentReceivedDate?.message}
                             sx={textFieldStyle}
                             slotProps={{
                               inputLabel: {
@@ -249,7 +260,7 @@ const ProgressReviewDeliverables: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Controller
-                        name={`progressDeliverable.${index}.deliverableComments`}
+                        name={`progressDeliverable.deliverables.${index}.deliverableComments`}
                         control={control}
                         render={({ field: controllerField }) => (
                           <TextField
@@ -258,8 +269,8 @@ const ProgressReviewDeliverables: React.FC = () => {
                             placeholder="Comments"
                             multiline
                             rows={2}
-                            error={!!errors.progressDeliverable?.[index]?.deliverableComments}
-                            helperText={errors.progressDeliverable?.[index]?.deliverableComments?.message}
+                            error={!!errors.progressDeliverable?.deliverables?.[index]?.deliverableComments}
+                            helperText={errors.progressDeliverable?.deliverables?.[index]?.deliverableComments?.message}
                             sx={textFieldStyle}
                           />
                         )}
@@ -291,6 +302,18 @@ const ProgressReviewDeliverables: React.FC = () => {
                 </TableRow>
               )}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={4} style={{ border: 'none' }} />
+                  <TableCell style={{ border: 'none' }}>
+                    <Typography variant="h6">Total:</Typography>
+                  </TableCell>
+                  <TableCell style={{ border: 'none' }}>
+                    <Typography variant="h6">{totalPaymentDue}</Typography>
+                  </TableCell>
+                  <TableCell colSpan={3} style={{ border: 'none' }} />
+                </TableRow>
+              </TableFooter>
             </Table>
           </TableContainer>
       </Paper>

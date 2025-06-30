@@ -113,7 +113,7 @@ const manpowerPlanningSchema = z.object({
   }),
 });
 
-const progressDeliverableSchema = z.object({
+const deliverableSchema = z.object({
   milestone: z.string(),
   dueDateContract: z.date(),
   dueDatePlanned: z.date(),
@@ -123,6 +123,11 @@ const progressDeliverableSchema = z.object({
   paymentReceivedDate: z.date(),
   deliverableComments: z.string(),
 });
+
+const progressDeliverableSchema = z.object({
+  deliverables: z.array(deliverableSchema),
+  totalPaymentDue: z.number().nullable()
+})
 
 const changeOrderSchema = z.object({
   contractTotal: z.number().nullable(),
@@ -160,7 +165,7 @@ export const MonthlyProgressSchema = z.object({
   schedule: scheduleSchema,
   budgetTable: BudgetTableSchema,
   manpowerPlanning: manpowerPlanningSchema,
-  progressDeliverable: z.array(progressDeliverableSchema),
+  progressDeliverable: progressDeliverableSchema,
   changeOrder: z.array(changeOrderSchema),
   programmeSchedule: z.array(programmeScheduleSchema),
   earlyWarnings: z.array(earlyWarningsSchema),

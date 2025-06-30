@@ -188,7 +188,10 @@ export const MonthlyProgressForm: React.FC = () => {
           nextMonthPlanningTotal: 0,
         }
       },
-      progressDeliverable: [],
+      progressDeliverable: {
+        deliverables: [],
+        totalPaymentDue: 0,
+      },
       changeOrder: [],
       programmeSchedule: [],
       earlyWarnings: [],
