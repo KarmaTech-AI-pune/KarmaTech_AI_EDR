@@ -28,14 +28,18 @@ const ProgressReviewDeliverables: React.FC = () => {
     name: "progressDeliverable.deliverables"
   });
 
-  const deliverables = watch("progressDeliverable.deliverables");
+  const deliverables = useWatch({
+    control,
+    name: "progressDeliverable.deliverables",
+  });
+
+  const totalPaymentDue = deliverables?.reduce((acc, curr) => acc + (curr.paymentDue || 0), 0) ?? 0;
 
   useEffect(() => {
-    const total = deliverables?.reduce((acc, curr) => acc + (curr.paymentDue || 0), 0) ?? 0;
-    setValue("progressDeliverable.totalPaymentDue", total);
-  }, [deliverables, setValue]);
-
-  const totalPaymentDue = watch("progressDeliverable.totalPaymentDue");
+    if (watch('progressDeliverable.totalPaymentDue') !== totalPaymentDue) {
+      setValue("progressDeliverable.totalPaymentDue", totalPaymentDue, { shouldDirty: true });
+    }
+  }, [totalPaymentDue, setValue, watch]);
 
 
   // Add new progress deliverable row
@@ -98,7 +102,7 @@ const ProgressReviewDeliverables: React.FC = () => {
           <TableContainer>
             <Table sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
               <TableHead>
-                <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 600, backgroundColor: '#f5f5f5', border: 'none' } }}>
+                <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 600, backgroundColor: '#dce8f9', border: 'none' } }}>
                   <TableCell sx={{ minWidth: 150 }}>Milestone</TableCell>
                   <TableCell>Due Date (Contract)</TableCell>
                   <TableCell>Due Date (Planned)</TableCell>
@@ -112,7 +116,7 @@ const ProgressReviewDeliverables: React.FC = () => {
               </TableHead>
               <TableBody>
                 {fields.map((field, index) => (
-                  <TableRow key={field.id}>
+                  <TableRow key={field.id} sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
                     <TableCell>
                       <Controller
                         name={`progressDeliverable.deliverables.${index}.milestone`}
@@ -268,7 +272,6 @@ const ProgressReviewDeliverables: React.FC = () => {
                             size="small"
                             placeholder="Comments"
                             multiline
-                            rows={2}
                             error={!!errors.progressDeliverable?.deliverables?.[index]?.deliverableComments}
                             helperText={errors.progressDeliverable?.deliverables?.[index]?.deliverableComments?.message}
                             sx={textFieldStyle}
@@ -302,20 +305,18 @@ const ProgressReviewDeliverables: React.FC = () => {
                 </TableRow>
               )}
               </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={4} style={{ border: 'none' }} />
-                  <TableCell style={{ border: 'none' }}>
-                    <Typography variant="h6">Total:</Typography>
-                  </TableCell>
-                  <TableCell style={{ border: 'none' }}>
-                    <Typography variant="h6">{totalPaymentDue}</Typography>
-                  </TableCell>
-                  <TableCell colSpan={3} style={{ border: 'none' }} />
-                </TableRow>
-              </TableFooter>
             </Table>
           </TableContainer>
+          <Table>
+            <TableFooter>
+              <TableRow sx={{ backgroundColor: '#dce8f9' }}>
+                {/* <TableCell colSpan={4} sx={{ border: 'none' }} /> */}
+                <TableCell sx={{ border: 'none', textAlign: 'right', py:1 }}>
+                  <Typography variant="h6" sx={{ color: 'green', fontWeight: "bold", px:5 }}>Total: {totalPaymentDue}</Typography>
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
       </Paper>
     </Box>
   );
