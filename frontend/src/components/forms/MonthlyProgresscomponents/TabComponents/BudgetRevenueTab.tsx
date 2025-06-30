@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
 import textFieldStyle from '../../../../theme/textFieldStyle';
@@ -16,7 +16,19 @@ import {
 } from '@mui/material';
 
 const BudgetRevenueTab: React.FC = () => {
-  const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+  const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
+
+  const misRevenue = watch('budgetTable.currentBudgetInMIS.revenueFee');
+  const totalPaymentDue = watch('progressDeliverable.totalPaymentDue');
+
+  useEffect(() => {
+    if (misRevenue && totalPaymentDue && totalPaymentDue > 0) {
+      const percentage = (totalPaymentDue / misRevenue ) * 100;
+      setValue('budgetTable.percentCompleteOnCosts.revenueFee', parseFloat(percentage.toFixed(2)));
+    } else {
+      setValue('budgetTable.percentCompleteOnCosts.revenueFee', 0);
+    }
+  }, [misRevenue, totalPaymentDue, setValue]);
 
 
   return (
@@ -204,6 +216,7 @@ const BudgetRevenueTab: React.FC = () => {
                         helperText={errors.budgetTable?.percentCompleteOnCosts?.revenueFee?.message}
                         sx={textFieldStyle}
                         InputProps={{
+                          readOnly: true,
                           endAdornment: '%'
                         }}
                       />
