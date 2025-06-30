@@ -133,19 +133,19 @@ export const MonthlyProgressForm: React.FC = () => {
     resolver: zodResolver(MonthlyProgressSchema),
     defaultValues: {
       financialDetails: {
-        net: null,
-        serviceTax: null,
-        feeTotal: null,
-        budgetOdcs: null,
-        budgetStaff: null,
-        BudgetSubTotal: null,
+        net: 0,
+        serviceTax: 0,
+        feeTotal: 0,
+        budgetOdcs: 0,
+        budgetStaff: 0,
+        BudgetSubTotal: 0,
       },
       contractAndCost: {
         contractType: "lumpsum", // Default to lumpsum
-        percentage: null,
-        actualOdcs: null,
-        actualStaff: null,
-        actualSubtotal: null,
+        percentage: 0,
+        actualOdcs: 0,
+        actualStaff: 0,
+        actualSubtotal: 0,
       },
       budgetTable: {
         originalBudget: {
@@ -164,11 +164,14 @@ export const MonthlyProgressForm: React.FC = () => {
         }
       },
       ctcAndEac: {
-      ctcODC: null,
-      ctcStaff: null,
-      ctcSubtotal: null,
-      totalEAC: null,
-      grossProfitPercentage: null,
+      ctcODC: 0,
+      ctcStaff: 0,
+      ctcSubtotal: 0,
+      actualctcODC: 0,
+      actualCtcStaff: 0,
+      actualCtcSubtotal: 0,
+      totalEAC: 0,
+      grossProfitPercentage: 0,
       },
       schedule: {
         dateOfIssueWOLOI: new Date(),

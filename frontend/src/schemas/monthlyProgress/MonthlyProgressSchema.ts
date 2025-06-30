@@ -23,6 +23,9 @@ const ctcAndEacSchema = z.object({
   ctcODC: z.number().nullable(),
   ctcStaff: z.number().nullable(),
   ctcSubtotal: z.number().nullable(),
+  actualctcODC: z.number().nullable(),
+  actualCtcStaff: z.number().nullable(),
+  actualCtcSubtotal: z.number().nullable(),
   totalEAC: z.number().nullable(),
   grossProfitPercentage: z.number().nullable(),
 });

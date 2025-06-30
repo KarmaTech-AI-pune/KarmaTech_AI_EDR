@@ -78,7 +78,7 @@ const ContractAndCostsTab: React.FC = () => {
                   fullWidth
                   label="Percentage"
                   type="number"
-                  value={field.value || ''}
+                  value={field.value}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors.contractAndCost?.percentage}
@@ -105,7 +105,7 @@ const ContractAndCostsTab: React.FC = () => {
                   fullWidth
                   label="ODCs"
                   type="number"
-                  value={field.value || ''}
+                  value={field.value}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors.contractAndCost?.actualOdcs}
@@ -124,7 +124,7 @@ const ContractAndCostsTab: React.FC = () => {
                   fullWidth
                   label="Staff"
                   type="number"
-                  value={field.value || ''}
+                  value={field.value}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors.contractAndCost?.actualStaff}

@@ -6,7 +6,7 @@ import textFieldStyle from "../../../../theme/textFieldStyle";
 import { calculateGrossPercentage } from "../../../../utils/calculations";
 
 const CostToCompleteAndEAC: React.FC = () => {
-  const { control, formState: { errors }, watch, setValue, getValues } = useFormContext<MonthlyProgressSchemaType>();
+  const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
 
   // Watch budget values from financialDetails
   const net = watch('financialDetails.net') || 0;
@@ -22,9 +22,12 @@ const CostToCompleteAndEAC: React.FC = () => {
   // Watch CTC values
   const ctcODC = watch('ctcAndEac.ctcODC');
   const ctcStaff = watch('ctcAndEac.ctcStaff');
+  const actualctcODC = watch('ctcAndEac.actualctcODC');
+  const actualCtcStaff = watch('ctcAndEac.actualCtcStaff');
   
   // Calculate subtotal based on current CTC values
   const calculatedSubtotal = (ctcODC || 0) + (ctcStaff || 0);
+  const actualCtcSubtotal = (actualctcODC || 0) + (actualCtcStaff || 0);
   const totalEAC = actualSubtotal + calculatedSubtotal;
   const grossProfitPercentage = calculateGrossPercentage(net, totalEAC);
 
@@ -35,53 +38,34 @@ const CostToCompleteAndEAC: React.FC = () => {
     setValue('budgetTable.currentBudgetInMIS.cost', totalEAC)
   }, [grossProfitPercentage, setValue, net, totalEAC]);
 
-  // Track if values have been manually overridden
-  const [odcOverridden, setOdcOverridden] = React.useState<boolean>(false);
-  const [staffOverridden, setStaffOverridden] = React.useState<boolean>(false);
-
   // Calculate CTC values when budget or actual values change
   useEffect(() => {
     // Only calculate if both budget and actual values are available
-    if (budgetOdcs != null && !odcOverridden) {
+    if (budgetOdcs != null) {
       const actualOdcsValue = actualOdcs ?? 0;
       const calculatedCtcODC = budgetOdcs - actualOdcsValue;
       setValue('ctcAndEac.ctcODC', calculatedCtcODC);
     }
-  }, [budgetOdcs, actualOdcs, setValue, odcOverridden]);
+  }, [budgetOdcs, actualOdcs, setValue]);
 
   useEffect(() => {
     // Only calculate if both budget and actual values are available
-    if (budgetStaff != null && !staffOverridden) {
+    if (budgetStaff != null) {
       const actualStaffValue = actualStaff ?? 0;
       const calculatedCtcStaff = budgetStaff - actualStaffValue;
       setValue('ctcAndEac.ctcStaff', calculatedCtcStaff);
     }
-  }, [budgetStaff, actualStaff, setValue, staffOverridden]);
+  }, [budgetStaff, actualStaff, setValue]);
 
   // Update subtotal and totalEAC when CTC values change
   useEffect(() => {
     setValue('ctcAndEac.ctcSubtotal', calculatedSubtotal);
-  }, [calculatedSubtotal, totalEAC, setValue]);
-
-  // Reset override flags when form is reset or new data is loaded
-  useEffect(() => {
-    const currentCtcODC = getValues('ctcAndEac.ctcODC');
-    const currentCtcStaff = getValues('ctcAndEac.ctcStaff');
-
-    
-    // If values are null or undefined, reset override flags
-    if (currentCtcODC == null) {
-      setOdcOverridden(false);
-    }
-    
-    if (currentCtcStaff == null) {
-      setStaffOverridden(false);
-    }
-  }, [getValues]);
+    setValue('ctcAndEac.actualCtcSubtotal', actualCtcSubtotal);
+  }, [calculatedSubtotal, totalEAC, setValue, actualCtcSubtotal]);
 
   return (
       <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={4}>
               <Paper elevation={1} sx={{ p: 2 }}>
                   <Typography variant="h6" gutterBottom color="primary">
                       Costs to Complete
@@ -95,17 +79,19 @@ const CostToCompleteAndEAC: React.FC = () => {
                                   fullWidth
                                   label="ODCs"
                                   type="number"
-                                  value={field.value ?? ''}
+                                  value={field.value}
                                   onChange={(e) => {
                                       const value = e.target.value ? Number(e.target.value) : null;
                                       field.onChange(value);
-                                      setOdcOverridden(true);
                                   }}
                                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                   error={!!errors.ctcAndEac?.ctcODC}
                                   helperText={errors.ctcAndEac?.ctcODC?.message || ''}
                                   sx={textFieldStyle}
                                   margin="normal"
+                                  InputProps={{
+                                      readOnly: true,
+                                  }}
                               />
                       )}
                   />
@@ -118,18 +104,20 @@ const CostToCompleteAndEAC: React.FC = () => {
                                   fullWidth
                                   label="Staff"
                                   type="number"
-                                  value={field.value ?? ''}
+                                  value={field.value}
                                   onChange={(e) => {
                                       const value = e.target.value ? Number(e.target.value) : null;
                                       field.onChange(value);
-                                      setStaffOverridden(true);
                                   }}
                                   onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                   error={!!errors.ctcAndEac?.ctcStaff}
                                   helperText={errors.ctcAndEac?.ctcStaff?.message || ''}
                                   sx={textFieldStyle}
                                   margin="normal"
-                              />                       
+                                  InputProps={{
+                                      readOnly: true,
+                                  }}
+                              />      
                       )}
                   />
                   <Controller
@@ -140,7 +128,7 @@ const CostToCompleteAndEAC: React.FC = () => {
                               fullWidth
                               label="Subtotal"
                               type="number"
-                              value={field.value || ''}
+                              value={field.value}
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                               onWheel={(e) => (e.target as HTMLInputElement).blur()}
                               error={!!errors.ctcAndEac?.ctcSubtotal}
@@ -155,7 +143,79 @@ const CostToCompleteAndEAC: React.FC = () => {
                   />
               </Paper>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={4}>
+              <Paper elevation={1} sx={{ p: 2 }}>
+                  <Typography variant="h6" gutterBottom color="primary">
+                      Actual Cost To Complete
+                  </Typography>
+
+                  <Controller
+                      name="ctcAndEac.actualctcODC"
+                      control={control}
+                      render={({ field }) => (
+                              <TextField
+                                  fullWidth
+                                  label="ODCs"
+                                  type="number"
+                                  value={field.value}
+                                  onChange={(e) => {
+                                      const value = e.target.value ? Number(e.target.value) : null;
+                                      field.onChange(value);
+                                  }}
+                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                  error={!!errors.ctcAndEac?.actualctcODC}
+                                  helperText={errors.ctcAndEac?.actualctcODC?.message || ''}
+                                  sx={textFieldStyle}
+                                  margin="normal"
+                              />
+                      )}
+                  />
+
+                  <Controller
+                      name="ctcAndEac.actualCtcStaff"
+                      control={control}
+                      render={({ field }) => (
+                              <TextField
+                                  fullWidth
+                                  label="Staff"
+                                  type="number"
+                                  value={field.value}
+                                  onChange={(e) => {
+                                      const value = e.target.value ? Number(e.target.value) : null;
+                                      field.onChange(value);
+                                  }}
+                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                  error={!!errors.ctcAndEac?.actualCtcStaff}
+                                  helperText={errors.ctcAndEac?.actualCtcStaff?.message || ''}
+                                  sx={textFieldStyle}
+                                  margin="normal"
+                              />                       
+                      )}
+                  />
+                  <Controller
+                      name="ctcAndEac.actualCtcSubtotal"
+                      control={control}
+                      render={({ field }) => (
+                          <TextField
+                              fullWidth
+                              label="Subtotal"
+                              type="number"
+                              value={field.value}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                              error={!!errors.ctcAndEac?.actualCtcSubtotal}
+                              helperText={errors.ctcAndEac?.actualCtcSubtotal?.message || ''}
+                              inputProps={{
+                                  readOnly: true,
+                              }}
+                              sx={textFieldStyle}
+                              margin="normal"
+                          />
+                      )}
+                  />
+              </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
               <Paper elevation={1} sx={{ p: 2 }}>
                   <Typography variant="h6" gutterBottom color="primary">
                       EAC Estimate

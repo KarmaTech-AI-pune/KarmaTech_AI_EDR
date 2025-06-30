@@ -193,7 +193,7 @@ const ProgressReviewDeliverables: React.FC = () => {
                             type="number"
                             size="small"
                             placeholder="Amount"
-                            value={controllerField.value || ''}
+                            value={controllerField.value}
                             onChange={(e) => controllerField.onChange(e.target.value ? Number(e.target.value) : null)}
                             onWheel={(e) => (e.target as HTMLInputElement).blur()}
                             error={!!errors.progressDeliverable?.[index]?.paymentDue}
