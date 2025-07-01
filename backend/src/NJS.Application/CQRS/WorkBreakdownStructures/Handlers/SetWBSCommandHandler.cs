@@ -40,7 +40,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 .Include(w => w.Tasks.Where(t => !t.IsDeleted))
                     .ThenInclude(t => t.UserWBSTasks)
                 .Include(w => w.Tasks.Where(t => !t.IsDeleted))
-                    .ThenInclude(t => t.MonthlyHours)
+                    .ThenInclude(t => t.PlannedHours)
                 .FirstOrDefaultAsync(w => w.ProjectId == request.ProjectId, cancellationToken);
 
             if (wbs == null)
@@ -78,7 +78,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
             foreach (var dto in request.Tasks)
             {
-                WBSTask taskEntity;
+                WBSTask taskEntity = null!;
                 if (dto.Id > 0 && existingTasksDict.TryGetValue(dto.Id, out taskEntity))
                 {
                     taskEntity.Title = dto.Title;
@@ -95,7 +95,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     taskEntity.IsDeleted = false;
 
                     await UpdateUserAssignment(taskEntity, dto);
-                    await UpdateMonthlyHours(taskEntity, dto);
+                    await UpdatePlannedHours(taskEntity, dto);
                 }
                 else
                 {
@@ -114,15 +114,15 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         CreatedBy = _currentUser,
                         IsDeleted = false,
                         UserWBSTasks = new List<UserWBSTask>(),
-                        MonthlyHours = new List<WBSTaskMonthlyHour>()
-                        
+                        PlannedHours = new List<WBSTaskPlannedHour>()
+
                     };
 
                     _context.WBSTasks.Add(taskEntity);
                     wbs.Tasks.Add(taskEntity);
 
                     await UpdateUserAssignment(taskEntity, dto);
-                    await UpdateMonthlyHours(taskEntity, dto);
+                    await UpdatePlannedHours(taskEntity, dto);
 
                     if (!string.IsNullOrEmpty(dto.FrontendTempId))
                         tempIdToEntityMap[dto.FrontendTempId] = taskEntity;
@@ -168,7 +168,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         private async Task UpdateUserAssignment(WBSTask task, WBSTaskDto dto)
         {
             var userTask = task.UserWBSTasks.FirstOrDefault();
-            var totalHours = task.MonthlyHours.Sum(mh => mh.PlannedHours);
+            var totalHours = task.PlannedHours.Sum(mh => mh.PlannedHours);
             var totalCost = (decimal)totalHours * dto.CostRate;
 
             if (task.TaskType == TaskType.Manpower && !string.IsNullOrEmpty(dto.AssignedUserId))
@@ -245,49 +245,49 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
         }
 
-        private async Task UpdateMonthlyHours(WBSTask task, WBSTaskDto dto)
+        private async Task UpdatePlannedHours(WBSTask task, WBSTaskDto dto)
         {
-            var header = await GetOrCreateMonthlyHourHeader(task.WorkBreakdownStructure.ProjectId, task.TaskType);
-            var existing = task.MonthlyHours.ToDictionary(m => (m.Year, m.Month,m.WBSTaskMonthlyHourHeaderId));
+            var header = await GetOrCreatePlannedHourHeader(task.WorkBreakdownStructure.ProjectId, task.TaskType);
+            var existing = task.PlannedHours.ToDictionary(p => (p.Year, p.Month,p.WBSTaskPlannedHourHeaderId));
 
-            foreach (var mhDto in dto.MonthlyHours)
+            foreach (var phDto in dto.PlannedHours)
             {
-                var key = (mhDto.Year.ToString(), mhDto.Month, header.Id);
-                if (existing.TryGetValue(key, out var existingMh))
+                var key = (phDto.Year.ToString(), phDto.Month, header.Id);
+                if (existing.TryGetValue(key, out var existingPh))
                 {
-                    existingMh.PlannedHours = mhDto.PlannedHours;
-                    existingMh.UpdatedAt = DateTime.UtcNow;
-                    existingMh.UpdatedBy = _currentUser;
+                    existingPh.PlannedHours = phDto.PlannedHours;
+                    existingPh.UpdatedAt = DateTime.UtcNow;
+                    existingPh.UpdatedBy = _currentUser;
                 }
                 else
                 {
-                    var newMh = new WBSTaskMonthlyHour
+                    var newPh = new WBSTaskPlannedHour
                     {
                         WBSTask = task,
-                        WBSTaskMonthlyHourHeader = header,
-                        WBSTaskMonthlyHourHeaderId = header.Id,
-                        Year = mhDto.Year.ToString(),
-                        Month = mhDto.Month,
-                        PlannedHours = mhDto.PlannedHours,
+                        WBSTaskPlannedHourHeader = header,
+                        WBSTaskPlannedHourHeaderId = header.Id,
+                        Year = phDto.Year.ToString(),
+                        Month = phDto.Month,
+                        PlannedHours = phDto.PlannedHours,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser
                     };
-                    task.MonthlyHours.Add(newMh);
-                    header.MonthlyHours.Add(newMh);
+                    task.PlannedHours.Add(newPh);
+                    header.PlannedHours.Add(newPh);
                 }
             }
 
             var userTask = task.UserWBSTasks.FirstOrDefault();
             if (userTask != null)
             {
-                userTask.TotalHours = task.MonthlyHours.Sum(m => m.PlannedHours);
+                userTask.TotalHours = task.PlannedHours.Sum(m => m.PlannedHours);
                 userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate;
             }
         }
 
-        private async Task<WBSTaskMonthlyHourHeader> GetOrCreateMonthlyHourHeader(int projectId, TaskType taskType)
+        private async Task<WBSTaskPlannedHourHeader> GetOrCreatePlannedHourHeader(int projectId, TaskType taskType)
         {
-            var header = await _context.Set<WBSTaskMonthlyHourHeader>()
+            var header = await _context.Set<WBSTaskPlannedHourHeader>()
                 .FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskType);
 
             // Get project information regardless of whether header exists
@@ -337,22 +337,22 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     });
 
                 }
-                header = new WBSTaskMonthlyHourHeader
+                header = new WBSTaskPlannedHourHeader
                 {
-                    ProjectId = projectId,                  
+                    ProjectId = projectId,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = _currentUser,
-                    MonthlyHours = new HashSet<WBSTaskMonthlyHour>(),
+                    PlannedHours = new HashSet<WBSTaskPlannedHour>(),
                     WBSHistories = new List<WBSHistory>(),
                     TaskType=taskType,
                 };
 
                 header.WBSHistories = histories;
-                _context.Set<WBSTaskMonthlyHourHeader>().Add(header);
+                _context.Set<WBSTaskPlannedHourHeader>().Add(header);
                 await _unitOfWork.SaveChangesAsync();
             }
 
-            var temp = _context.WBSHistories.Where(x => x.WBSTaskMonthlyHourHeaderId == header.Id);
+            var temp = _context.WBSHistories.Where(x => x.WBSTaskPlannedHourHeaderId == header.Id);
             if (!temp.Any())
             {
                 if (project.ProjectManagerId is not null)
@@ -365,7 +365,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         ActionDate = DateTime.UtcNow,
                         ActionBy = _userContext.GetCurrentUserId(),
                         AssignedToId = project.ProjectManagerId ,
-                        WBSTaskMonthlyHourHeaderId= header.Id
+                        WBSTaskPlannedHourHeaderId= header.Id
                     });
                 }
                 if (project.SeniorProjectManagerId is not null)
@@ -378,7 +378,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         ActionDate = DateTime.UtcNow,
                         ActionBy = _userContext.GetCurrentUserId(),
                         AssignedToId = project.SeniorProjectManagerId,
-                        WBSTaskMonthlyHourHeaderId = header.Id
+                        WBSTaskPlannedHourHeaderId = header.Id
                     });
                 }
                 if (project.RegionalManagerId is not null)
@@ -391,7 +391,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         ActionDate = DateTime.UtcNow,
                         ActionBy = _userContext.GetCurrentUserId(),
                         AssignedToId = project.RegionalManagerId,
-                        WBSTaskMonthlyHourHeaderId = header.Id
+                        WBSTaskPlannedHourHeaderId = header.Id
                     });
 
                 }

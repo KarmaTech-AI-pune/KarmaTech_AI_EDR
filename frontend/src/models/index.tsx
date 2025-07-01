@@ -104,7 +104,7 @@ export interface RoleDefinition {
 
 export type { WBSTask } from './wbsTaskModel';
 export type { WBSTaskResourceAllocation } from './wbsTaskResourceAllocationModel';
-export type { MonthlyHour } from './monthlyHourModel';
+export type { PlannedHour } from './plannedHourModel';
 export type { resourceRole } from './resourceRoleModel';
 export type { Employee } from './employeeModel';
 export type { CheckReviewRow } from './checkReviewModel';

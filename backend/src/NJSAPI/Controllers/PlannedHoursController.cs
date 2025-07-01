@@ -10,65 +10,65 @@ using System.Threading.Tasks;
 namespace NJSAPI.Controllers
 {
     [ApiController]
-    [Route("api/projects/{projectId}/monthlyhours")]
-    public class MonthlyHoursController : ControllerBase
+    [Route("api/projects/{projectId}/plannedhours")]
+    public class PlannedHoursController : ControllerBase
     {
         private readonly ProjectManagementContext _context;
 
-        public MonthlyHoursController(ProjectManagementContext context)
+        public PlannedHoursController(ProjectManagementContext context)
         {
             _context = context;
         }
 
         /// <summary>
-        /// Get monthly hours for a project
+        /// Get planned hours for a project
         /// </summary>
         /// <param name="projectId">Project ID</param>
-        /// <returns>Monthly hours data</returns>
+        /// <returns>Planned hours data</returns>
         [HttpGet]
-        public async Task<IActionResult> GetMonthlyHours(int projectId)
+        public async Task<IActionResult> GetPlannedHours(int projectId)
         {
             var wbs = await _context.WorkBreakdownStructures
                 .Include(w => w.Tasks)
-                    .ThenInclude(t => t.MonthlyHours)
+                    .ThenInclude(t => t.PlannedHours)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(w => w.ProjectId == projectId && w.IsActive);
 
             if (wbs == null)
             {
-                return Ok(new { monthlyHours = Array.Empty<object>() });
+                return Ok(new { plannedHours = Array.Empty<object>() });
             }
 
-            var monthlyHours = wbs.Tasks
+            var plannedHours = wbs.Tasks
                 .Where(t => !t.IsDeleted)
-                .SelectMany(t => t.MonthlyHours.Select(mh => new
+                .SelectMany(t => t.PlannedHours.Select(ph => new
                 {
                     task_id = t.Id,
-                    year = mh.Year,
-                    month = mh.Month,
-                    planned_hours = mh.PlannedHours,
-                    actual_hours = mh.ActualHours
+                    year = ph.Year,
+                    month = ph.Month,
+                    planned_hours = ph.PlannedHours,
+                    actual_hours = ph.ActualHours
                 }))
                 .ToList();
 
-            return Ok(monthlyHours);
+            return Ok(plannedHours);
         }
 
         /// <summary>
-        /// Update monthly hours for a task
+        /// Update planned hours for a task
         /// </summary>
         /// <param name="projectId">Project ID</param>
         /// <param name="taskId">Task ID</param>
-        /// <param name="data">Monthly hours data</param>
-        /// <returns>Updated monthly hours data</returns>
-        [HttpPut("tasks/{taskId}/monthlyhours")]
-        public async Task<IActionResult> UpdateMonthlyHours(
+        /// <param name="data">Planned hours data</param>
+        /// <returns>Updated planned hours data</returns>
+        [HttpPut("tasks/{taskId}/plannedhours")]
+        public async Task<IActionResult> UpdatePlannedHours(
             int projectId,
             int taskId,
-            [FromBody] UpdateMonthlyHoursRequest data)
+            [FromBody] UpdatePlannedHoursRequest data)
         {
             var task = await _context.WBSTasks
-                .Include(t => t.MonthlyHours)
+                .Include(t => t.PlannedHours)
                 .Include(t => t.UserWBSTasks)
                 .FirstOrDefaultAsync(t => t.Id == taskId &&
                                          t.WorkBreakdownStructure.ProjectId == projectId &&
@@ -79,30 +79,30 @@ namespace NJSAPI.Controllers
                 return NotFound();
             }
 
-            // Remove existing monthly hours
-            foreach (var existingHour in task.MonthlyHours.ToList())
+            // Remove existing planned hours
+            foreach (var existingHour in task.PlannedHours.ToList())
             {
                 _context.Remove(existingHour);
             }
 
-            // Add new monthly hours
-            foreach (var mh in data.MonthlyHours)
+            // Add new planned hours
+            foreach (var ph in data.PlannedHours)
             {
-                var newMonthlyHour = new WBSTaskMonthlyHour
+                var newPlannedHour = new WBSTaskPlannedHour
                 {
                     WBSTaskId = taskId,
-                    Year = mh.Year,
-                    Month = mh.Month,
-                    PlannedHours = mh.PlannedHours,
+                    Year = ph.Year,
+                    Month = ph.Month,
+                    PlannedHours = ph.PlannedHours,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System" // Replace with current user
                 };
 
-                _context.Add(newMonthlyHour);
+                _context.Add(newPlannedHour);
             }
 
             // Update total hours and cost in UserWBSTask
-            var totalHours = data.MonthlyHours.Sum(mh => mh.PlannedHours);
+            var totalHours = data.PlannedHours.Sum(ph => ph.PlannedHours);
             var userTask = task.UserWBSTasks.FirstOrDefault();
 
             if (userTask != null)
@@ -117,22 +117,22 @@ namespace NJSAPI.Controllers
 
             return Ok(new
             {
-                monthly_hours = data.MonthlyHours,
+                planned_hours = data.PlannedHours,
                 total_hours = totalHours,
                 total_cost = userTask?.TotalCost ?? 0
             });
         }
     }
 
-    public class MonthlyHourData
+    public class PlannedHourData
     {
         public string Year { get; set; }
         public string Month { get; set; }
         public double PlannedHours { get; set; }
     }
 
-    public class UpdateMonthlyHoursRequest
+    public class UpdatePlannedHoursRequest
     {
-        public MonthlyHourData[] MonthlyHours { get; set; }
+        public PlannedHourData[] PlannedHours { get; set; }
     }
 }

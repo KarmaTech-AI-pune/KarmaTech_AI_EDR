@@ -111,7 +111,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
     }
 
     const totals = {
-      monthlyHours: {} as { [key: string]: { [key: string]: number } },
+      plannedHours: {} as { [key: string]: { [key: string]: number } },
       totalHours: 0,
       odc: 0,
       odcHours: 0,
@@ -122,12 +122,12 @@ const WBSTable: React.FC<WBSTableProps> = ({
       months.forEach(month => {
         const [monthName, yearStr] = month.split(' ');
         const year = `20${yearStr}`;
-        const monthlyHours = child.monthlyHours[year]?.[monthName] || 0;
+        const monthlyHours = child.plannedHours[year]?.[monthName] || 0;
 
-        if (!totals.monthlyHours[year]) {
-          totals.monthlyHours[year] = {};
+        if (!totals.plannedHours[year]) {
+          totals.plannedHours[year] = {};
         }
-        totals.monthlyHours[year][monthName] = (totals.monthlyHours[year][monthName] || 0) + monthlyHours;
+        totals.plannedHours[year][monthName] = (totals.plannedHours[year][monthName] || 0) + monthlyHours;
       });
 
       totals.totalHours += child.totalHours;

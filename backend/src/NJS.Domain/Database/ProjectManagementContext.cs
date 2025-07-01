@@ -24,8 +24,8 @@ namespace NJS.Domain.Database
         public DbSet<GoNoGoDecision> GoNoGoDecisions { get; set; }
         public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; }
         public DbSet<WBSTask> WBSTasks { get; set; }
-        public DbSet<WBSTaskMonthlyHourHeader> WBSTaskMonthlyHourHeaders { get; set; } // Added
-        public DbSet<WBSTaskMonthlyHour> WBSTaskMonthlyHours { get; set; } // Added
+        public DbSet<WBSTaskPlannedHourHeader> WBSTaskPlannedHourHeaders { get; set; } // Added
+        public DbSet<WBSTaskPlannedHour> WBSTaskPlannedHours { get; set; } // Added
         public DbSet<UserWBSTask> UserWBSTasks { get; set; }
         public DbSet<WBSOption> WBSOptions { get; set; }
         public DbSet<OpportunityTracking> OpportunityTrackings { get; set; }
@@ -322,9 +322,9 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
 
             modelBuilder.Entity<WBSHistory>()
-                .HasOne(ph => ph.WBSTaskMonthlyHourHeader)
+                .HasOne(ph => ph.WBSTaskPlannedHourHeader)
                 .WithMany(p => p.WBSHistories)
-                .HasForeignKey(ph => ph.WBSTaskMonthlyHourHeaderId)
+                .HasForeignKey(ph => ph.WBSTaskPlannedHourHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<WBSHistory>()
@@ -836,10 +836,10 @@ namespace NJS.Domain.Database
                       .IsRequired(false);
             });
 
-            modelBuilder.Entity<WBSTaskMonthlyHour>()
-                .HasOne(m => m.WBSTaskMonthlyHourHeader)
-                .WithMany(h => h.MonthlyHours)
-                .HasForeignKey(m => m.WBSTaskMonthlyHourHeaderId)
+            modelBuilder.Entity<WBSTaskPlannedHour>()
+                .HasOne(m => m.WBSTaskPlannedHourHeader)
+                .WithMany(h => h.PlannedHours)
+                .HasForeignKey(m => m.WBSTaskPlannedHourHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configure JobStartFormHeader entity

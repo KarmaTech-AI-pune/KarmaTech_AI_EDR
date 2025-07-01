@@ -1,5 +1,5 @@
 import { resourceRoles, employees } from '../dummyapi/database/dummyResourceRoles';
-import { wbsTasks, resourceAllocations, monthlyHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options } from '../dummyapi/database/dummyWBSTasks';
+import { wbsTasks, resourceAllocations, plannedHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options } from '../dummyapi/database/dummyWBSTasks';
 import { WBSRowData } from '../types/wbs';
 import { resourceRole, Employee } from '../models';
 
@@ -50,7 +50,7 @@ export const FallbackDataProvider = {
     // Transform tasks to WBSRowData
     return projectTasks.map(task => {
       const allocation = resourceAllocations.find(alloc => alloc.wbs_task_id === task.id);
-      const taskHours = monthlyHours.filter(hour => hour.task_id === task.id);
+      const taskHours = plannedHours.filter(hour => hour.task_id === task.id);
       
       // Transform monthly hours into nested object structure
       const monthlyHoursObj: { [year: string]: { [month: string]: number } } = {};
@@ -68,7 +68,7 @@ export const FallbackDataProvider = {
         role: allocation?.role_id || null,
         name: allocation?.employee_id || null,
         costRate: allocation?.cost_rate || 0,
-        monthlyHours: monthlyHoursObj,
+        plannedHours: monthlyHoursObj,
         odc: allocation?.odc || 0,
         totalHours: allocation?.total_hours || 0,
         totalCost: allocation?.total_cost || 0,
@@ -128,6 +128,6 @@ export const FallbackDataProvider = {
     const taskIds = projectTasks.map(task => task.id);
     
     // Filter monthly hours by task IDs
-    return monthlyHours.filter(hour => taskIds.includes(hour.task_id));
+    return plannedHours.filter(hour => taskIds.includes(hour.task_id));
   }
 };

@@ -74,13 +74,13 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 CreatedBy = _currentUser,
                 IsDeleted = false,
                 UserWBSTasks = new List<UserWBSTask>(),
-                MonthlyHours = new List<WBSTaskMonthlyHour>()
+                PlannedHours = new List<WBSTaskPlannedHour>()
             };
 
-            // --- 3. Add User Assignment and Monthly Hours ---
+            // --- 3. Add User Assignment and Planned Hours ---
             // Using copied helper methods (could be refactored later)
             await UpdateUserAssignment(taskEntity, taskDto, cancellationToken);
-            UpdateMonthlyHours(taskEntity, taskDto, wbs.ProjectId);
+            UpdatePlannedHours(taskEntity, taskDto, wbs.ProjectId);
 
             // --- 4. Add to context and save ---
             _context.WBSTasks.Add(taskEntity);
@@ -117,8 +117,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         Name = null, // No Name for Manpower tasks
                         CostRate = taskDto.CostRate,
                         Unit = taskDto.ResourceUnit,
-                        TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
-                        TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
+                        TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours),
+                        TotalCost = (decimal)taskEntity.PlannedHours.Sum(ph => ph.PlannedHours) * taskDto.CostRate,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser,
                         ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
@@ -140,8 +140,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         Name = taskDto.ResourceName,
                         CostRate = taskDto.CostRate,
                         Unit = taskDto.ResourceUnit,
-                        TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
-                        TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
+                        TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours),
+                        TotalCost = (decimal)taskEntity.PlannedHours.Sum(ph => ph.PlannedHours) * taskDto.CostRate,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser,
                         ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
@@ -151,16 +151,16 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
         }
 
-        private void UpdateMonthlyHours(WBSTask taskEntity, WBSTaskDto taskDto, int projectId)
+        private void UpdatePlannedHours(WBSTask taskEntity, WBSTaskDto taskDto, int projectId)
         {
-            // Ensure a WBSTaskMonthlyHourHeader exists for this project and task type
+            // Ensure a WBSTaskPlannedHourHeader exists for this project and task type
             // Or create a new one if it doesn't exist
-            var monthlyHourHeader = _context.WBSTaskMonthlyHourHeaders
+            var plannedHourHeader = _context.WBSTaskPlannedHourHeaders
                 .FirstOrDefault(h => h.ProjectId == projectId && h.TaskType == taskEntity.TaskType);
 
-            if (monthlyHourHeader == null)
+            if (plannedHourHeader == null)
             {
-                monthlyHourHeader = new WBSTaskMonthlyHourHeader
+                plannedHourHeader = new WBSTaskPlannedHourHeader
                 {
                     ProjectId = projectId,
                     CreatedAt = DateTime.UtcNow,
@@ -168,30 +168,30 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     TaskType = taskEntity.TaskType,
                     StatusId = (int)PMWorkflowStatusEnum.Initial // Default status
                 };
-                _context.WBSTaskMonthlyHourHeaders.Add(monthlyHourHeader);
+                _context.WBSTaskPlannedHourHeaders.Add(plannedHourHeader);
             }
 
             // Add new ones from DTO
-            foreach (var mhDto in taskDto.MonthlyHours)
+            foreach (var phDto in taskDto.PlannedHours)
             {
-                var newMh = new WBSTaskMonthlyHour
+                var newPh = new WBSTaskPlannedHour
                 {
                     WBSTask = taskEntity, // EF Core should link this
-                    WBSTaskMonthlyHourHeader = monthlyHourHeader, // Link to the header
-                    Year = mhDto.Year.ToString(),
-                    Month = mhDto.Month,
-                    PlannedHours = mhDto.PlannedHours,
+                    WBSTaskPlannedHourHeader = plannedHourHeader, // Link to the header
+                    Year = phDto.Year.ToString(),
+                    Month = phDto.Month,
+                    PlannedHours = phDto.PlannedHours,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = _currentUser
                 };
-                taskEntity.MonthlyHours.Add(newMh);
+                taskEntity.PlannedHours.Add(newPh);
             }
 
             // Recalculate TotalHours/Cost on the UserWBSTask if it exists (it should have been added just before)
             var userTask = taskEntity.UserWBSTasks.FirstOrDefault();
             if (userTask != null)
             {
-                userTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
+                userTask.TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours);
                 userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate;
             }
         }

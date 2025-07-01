@@ -1,7 +1,7 @@
-import { wbsTasks as initialWbsTasks, resourceAllocations as initialResourceAllocations, monthlyHours as initialMonthlyHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options} from './database/dummyWBSTasks';
+import { wbsTasks as initialWbsTasks, resourceAllocations as initialResourceAllocations, plannedHours as initialPlannedHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options} from './database/dummyWBSTasks';
 import { resourceRoles as initialResourceRoles, employees as initialEmployees, projectResources as initialProjectResources } from './database/dummyResourceRoles';
 import { WBSRowData } from '../types/wbs';
-import { WBSTask, WBSTaskResourceAllocation, MonthlyHour, resourceRole as ResourceRole, Employee } from "../models";
+import { WBSTask, WBSTaskResourceAllocation, PlannedHour, resourceRole as ResourceRole, Employee } from "../models";
 // Project Resource type definition
 interface ProjectResource {
     id: string;
@@ -13,7 +13,7 @@ interface ProjectResource {
 }
 
 
-interface MonthlyHoursMap {
+interface PlannedHoursMap {
     [year: string]: {
         [month: string]: number;
     };
@@ -22,7 +22,7 @@ interface MonthlyHoursMap {
 // Mutable arrays to track changes
 let wbsTasks = [...initialWbsTasks];
 let resourceAllocations = [...initialResourceAllocations];
-let monthlyHours = [...initialMonthlyHours];
+let plannedHours = [...initialPlannedHours];
 let resourceRoles = [...initialResourceRoles];
 let employees = [...initialEmployees];
 let projectResources = [...initialProjectResources];
@@ -93,7 +93,7 @@ export const WBSTaskAPI = {
             };
 
             const taskIdsToDelete = [taskId, ...getAllChildTaskIds(taskId)];
-            monthlyHours = monthlyHours.filter(
+            plannedHours = plannedHours.filter(
                 hour => !taskIdsToDelete.includes(hour.task_id)
             );
             resourceAllocations = resourceAllocations.filter(
@@ -120,17 +120,17 @@ export const WBSStructureAPI = {
                     alloc.wbs_task_id === task.id
                 );
 
-                const taskHours = monthlyHours.filter(hour => 
+                const taskHours = plannedHours.filter(hour =>
                     hour.task_id === task.id
                 );
 
-                // Transform monthly hours into nested object structure
-                const monthlyHoursObj: MonthlyHoursMap = {};
+                // Transform planned hours into nested object structure
+                const plannedHoursObj: PlannedHoursMap = {};
                 taskHours.forEach(hour => {
-                    if (!monthlyHoursObj[hour.year]) {
-                        monthlyHoursObj[hour.year] = {};
+                    if (!plannedHoursObj[hour.year]) {
+                        plannedHoursObj[hour.year] = {};
                     }
-                    monthlyHoursObj[hour.year][hour.month] = hour.planned_hours;
+                    plannedHoursObj[hour.year][hour.month] = hour.planned_hours;
                 });
 
                 return {
@@ -140,7 +140,7 @@ export const WBSStructureAPI = {
                     role: allocation?.role_id || null,
                     name: allocation?.employee_id || null,
                     costRate: allocation?.cost_rate || 0,
-                    monthlyHours: monthlyHoursObj,
+                    plannedHours: plannedHoursObj,
                     odc: allocation?.odc || 0,
                     totalHours: allocation?.total_hours || 0,
                     totalCost: allocation?.total_cost || 0,
@@ -162,8 +162,8 @@ export const WBSStructureAPI = {
             for (const rowData of wbsData) {
                 let task: WBSTask;
 
-                // Calculate total hours from monthly hours
-                const totalHours = Object.values(rowData.monthlyHours).reduce((sum, yearData) => {
+                // Calculate total hours from planned hours
+                const totalHours = Object.values(rowData.plannedHours).reduce((sum, yearData) => {
                     return sum + Object.values(yearData).reduce((yearSum, hours) => yearSum + hours, 0);
                 }, 0);
 
@@ -228,11 +228,11 @@ export const WBSStructureAPI = {
                     }
                 }
 
-                // Update monthly hours
-                const monthlyHoursData: Partial<MonthlyHour>[] = [];
-                Object.entries(rowData.monthlyHours).forEach(([year, months]) => {
+                // Update planned hours
+                const plannedHoursData: Partial<PlannedHour>[] = [];
+                Object.entries(rowData.plannedHours).forEach(([year, months]) => {
                     Object.entries(months).forEach(([month, hours]) => {
-                        monthlyHoursData.push({
+                        plannedHoursData.push({
                             task_id: task.id,
                             year,
                             month,
@@ -241,8 +241,8 @@ export const WBSStructureAPI = {
                     });
                 });
 
-                await MonthlyHoursAPI.updateMonthlyHours(projectId, task.id, {
-                    monthly_hours: monthlyHoursData
+                await PlannedHoursAPI.updatePlannedHours(projectId, task.id, {
+                    planned_hours: plannedHoursData
                 });
 
                 processedTaskIds.add(task.id);
@@ -316,7 +316,7 @@ export const ResourceAPI = {
                 alloc => taskIds.includes(alloc.wbs_task_id)
             );
 
-            let filteredHours = monthlyHours.filter(
+            let filteredHours = plannedHours.filter(
                 hour => taskIds.includes(hour.task_id)
             );
 
@@ -397,28 +397,28 @@ export const ResourceAPI = {
     }
 };
 
-// Monthly Hours Management
-export const MonthlyHoursAPI = {
-    getMonthlyHoursByProjectId: async (projectId: string): Promise<MonthlyHour[]> => {
+// Planned Hours Management
+export const PlannedHoursAPI = {
+    getPlannedHoursByProjectId: async (projectId: string): Promise<PlannedHour[]> => {
         try {
             const projectTasks = wbsTasks.filter(task => task.project_id === projectId);
             const taskIds = projectTasks.map(task => task.id);
-            return monthlyHours.filter(hour => taskIds.includes(hour.task_id));
+            return plannedHours.filter(hour => taskIds.includes(hour.task_id));
         } catch (error) {
-            console.error('Error getting monthly hours by project:', error);
+            console.error('Error getting planned hours by project:', error);
             throw error;
         }
     },
 
-    updateMonthlyHours: async (projectId: string, taskId: string, data: {
-        monthly_hours: Partial<MonthlyHour>[]
+    updatePlannedHours: async (projectId: string, taskId: string, data: {
+        planned_hours: Partial<PlannedHour>[]
     }): Promise<{
-        monthly_hours: MonthlyHour[],
+        planned_hours: PlannedHour[],
         total_hours: number,
         total_cost: number
     }> => {
         try {
-            const { monthly_hours: newHours } = data;
+            const { planned_hours: newHours } = data;
 
             const task = wbsTasks.find(t => t.id === taskId);
             if (!task) {
@@ -428,11 +428,11 @@ export const MonthlyHoursAPI = {
                 throw new Error('Task not found in project');
             }
 
-            monthlyHours = monthlyHours.filter(h => h.task_id !== taskId);
+            plannedHours = plannedHours.filter(h => h.task_id !== taskId);
 
             const updatedHours = newHours.map(hourData => {
                 if (!hourData.year || !hourData.month || hourData.planned_hours === undefined) {
-                    throw new Error('Missing required fields for monthly hours');
+                    throw new Error('Missing required fields for planned hours');
                 }
                 return {
                     id: hourData.id || Math.random().toString(),
@@ -446,7 +446,7 @@ export const MonthlyHoursAPI = {
                 };
             });
 
-            monthlyHours.push(...updatedHours);
+            plannedHours.push(...updatedHours);
 
             const totalHours = updatedHours.reduce(
                 (sum, h) => sum + h.planned_hours, 0
@@ -471,12 +471,12 @@ export const MonthlyHoursAPI = {
             });
 
             return {
-                monthly_hours: updatedHours,
+                planned_hours: updatedHours,
                 total_hours: totalHours,
                 total_cost: totalCost
             };
         } catch (error) {
-            console.error('Error updating monthly hours:', error);
+            console.error('Error updating planned hours:', error);
             throw error;
         }
     }
@@ -505,7 +505,7 @@ export const WBSOptionsAPI = {
 export const resetData = () => {
     wbsTasks = [...initialWbsTasks];
     resourceAllocations = [...initialResourceAllocations];
-    monthlyHours = [...initialMonthlyHours];
+    plannedHours = [...initialPlannedHours];
     resourceRoles = [...initialResourceRoles];
     employees = [...initialEmployees];
     projectResources = [...initialProjectResources];

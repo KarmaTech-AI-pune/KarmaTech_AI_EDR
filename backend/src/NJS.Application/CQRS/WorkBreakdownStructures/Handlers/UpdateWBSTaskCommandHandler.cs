@@ -23,9 +23,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         public async Task<Unit> Handle(UpdateWBSTaskCommand request, CancellationToken cancellationToken)
         {
             var taskEntity = await _context.WBSTasks
-                .Include(t => t.WorkBreakdownStructure) 
+                .Include(t => t.WorkBreakdownStructure)
                 .Include(t => t.UserWBSTasks)
-                .Include(t => t.MonthlyHours)
+                .Include(t => t.PlannedHours)
                 .FirstOrDefaultAsync(t => t.Id == request.TaskId && !t.IsDeleted, cancellationToken);
 
             if (taskEntity == null)
@@ -51,7 +51,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             taskEntity.UpdatedAt = DateTime.UtcNow;
             taskEntity.UpdatedBy = _currentUser;           
             UpdateUserAssignment(taskEntity, taskDto);
-            UpdateMonthlyHours(request.ProjectId, taskDto.TaskType,taskEntity, taskDto);
+            UpdatePlannedHours(request.ProjectId, taskDto.TaskType,taskEntity, taskDto);
            
             await _unitOfWork.SaveChangesAsync();
 
@@ -73,7 +73,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         existingUserTask.Name = null; 
                         existingUserTask.CostRate = taskDto.CostRate;
                         existingUserTask.Unit = taskDto.ResourceUnit;
-                        existingUserTask.TotalHours = taskDto.MonthlyHours.Sum(mh => mh.PlannedHours);
+                        existingUserTask.TotalHours = taskDto.PlannedHours.Sum(ph => ph.PlannedHours);
                         existingUserTask.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate;
                         existingUserTask.UpdatedAt = DateTime.UtcNow;
                         existingUserTask.UpdatedBy = _currentUser;
@@ -88,8 +88,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             Name = null, 
                             CostRate = taskDto.CostRate,
                             Unit = taskDto.ResourceUnit,
-                            TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
-                            TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
+                            TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours),
+                            TotalCost = (decimal)taskEntity.PlannedHours.Sum(ph => ph.PlannedHours) * taskDto.CostRate,
                             CreatedAt = DateTime.UtcNow,
                             CreatedBy = _currentUser,
                             ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
@@ -115,7 +115,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         existingUserTask.Name = taskDto.ResourceName;
                         existingUserTask.CostRate = taskDto.CostRate;
                         existingUserTask.Unit = taskDto.ResourceUnit;
-                        existingUserTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
+                        existingUserTask.TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours);
                         existingUserTask.TotalCost = (decimal)existingUserTask.TotalHours * existingUserTask.CostRate;
                         existingUserTask.UpdatedAt = DateTime.UtcNow;
                         existingUserTask.UpdatedBy = _currentUser;
@@ -131,8 +131,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             Name = taskDto.ResourceName,
                             CostRate = taskDto.CostRate,
                             Unit = taskDto.ResourceUnit,
-                            TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours),
-                            TotalCost = (decimal)taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours) * taskDto.CostRate,
+                            TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours),
+                            TotalCost = (decimal)taskEntity.PlannedHours.Sum(ph => ph.PlannedHours) * taskDto.CostRate,
                             CreatedAt = DateTime.UtcNow,
                             CreatedBy = _currentUser,
                             ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
@@ -148,54 +148,54 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
         }
 
-        private WBSTaskMonthlyHourHeader GetMonthlyHourHeader(int projectId, TaskType taskType)
+        private WBSTaskPlannedHourHeader GetPlannedHourHeader(int projectId, TaskType taskType)
         {
-            var header =  _context.Set<WBSTaskMonthlyHourHeader>()
+            var header =  _context.Set<WBSTaskPlannedHourHeader>()
                    .FirstOrDefault(h => h.ProjectId == projectId && h.TaskType == taskType);
 
             return header!;
         }
-        private void UpdateMonthlyHours(int projectId, TaskType taskType,WBSTask taskEntity, WBSTaskDto taskDto)
+        private void UpdatePlannedHours(int projectId, TaskType taskType,WBSTask taskEntity, WBSTaskDto taskDto)
         {
 
-            var header =  GetMonthlyHourHeader(projectId, taskType);           
+            var header =  GetPlannedHourHeader(projectId, taskType);
 
-            var existingMonthlyHours = taskEntity.MonthlyHours.ToList();
+            var existingPlannedHours = taskEntity.PlannedHours.ToList();
 
-            var existing = taskEntity.MonthlyHours.ToDictionary(m => (m.Year, m.Month, m.WBSTaskMonthlyHourHeaderId));
+            var existing = taskEntity.PlannedHours.ToDictionary(p => (p.Year, p.Month, p.WBSTaskPlannedHourHeaderId));
 
-            foreach (var mhDto in taskDto.MonthlyHours)
+            foreach (var phDto in taskDto.PlannedHours)
             {
-                var key = (mhDto.Year.ToString(), mhDto.Month, header.Id);
-                if (existing.TryGetValue(key, out var existingMh))
+                var key = (phDto.Year.ToString(), phDto.Month, header.Id);
+                if (existing.TryGetValue(key, out var existingPh))
                 {
-                    existingMh.PlannedHours = mhDto.PlannedHours;
-                    existingMh.UpdatedAt = DateTime.UtcNow;
-                    existingMh.UpdatedBy = _currentUser;
+                    existingPh.PlannedHours = phDto.PlannedHours;
+                    existingPh.UpdatedAt = DateTime.UtcNow;
+                    existingPh.UpdatedBy = _currentUser;
                 }
                 else
                 {
-                    var newMh = new WBSTaskMonthlyHour
+                    var newPh = new WBSTaskPlannedHour
                     {
                         WBSTask = taskEntity,
-                        WBSTaskMonthlyHourHeader = header,
-                        WBSTaskMonthlyHourHeaderId = header.Id,
-                        Year = mhDto.Year.ToString(),
-                        Month = mhDto.Month,
-                        PlannedHours = mhDto.PlannedHours,
+                        WBSTaskPlannedHourHeader = header,
+                        WBSTaskPlannedHourHeaderId = header.Id,
+                        Year = phDto.Year.ToString(),
+                        Month = phDto.Month,
+                        PlannedHours = phDto.PlannedHours,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser
                     };
-                    taskEntity.MonthlyHours.Add(newMh);
-                    header.MonthlyHours.Add(newMh);
+                    taskEntity.PlannedHours.Add(newPh);
+                    header.PlannedHours.Add(newPh);
                 }
-            }            
+            }
 
             // Recalculate TotalHours/Cost on the UserWBSTask if it exists
             var userTask = taskEntity.UserWBSTasks.FirstOrDefault();
             if (userTask != null)
             {
-                userTask.TotalHours = taskEntity.MonthlyHours.Sum(mh => mh.PlannedHours);
+                userTask.TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours);
                 userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate;
                 userTask.UpdatedAt = DateTime.UtcNow;
                 userTask.UpdatedBy = _currentUser;

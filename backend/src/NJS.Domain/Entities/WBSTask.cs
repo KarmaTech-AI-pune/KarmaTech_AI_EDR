@@ -62,7 +62,7 @@ namespace NJS.Domain.Entities
         public WBSTask Parent { get; set; }
 
         public ICollection<WBSTask> Children { get; set; } = new List<WBSTask>();
-        public ICollection<WBSTaskMonthlyHour> MonthlyHours { get; set; } = new List<WBSTaskMonthlyHour>();
+        public ICollection<WBSTaskPlannedHour> PlannedHours { get; set; } = new List<WBSTaskPlannedHour>();
         public ICollection<UserWBSTask> UserWBSTasks { get; set; } = new List<UserWBSTask>();
     }
 }

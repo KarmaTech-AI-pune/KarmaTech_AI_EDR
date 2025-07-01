@@ -31,7 +31,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     .ThenInclude(ut => ut.User)
                 .Include(t => t.UserWBSTasks)
                     .ThenInclude(ut => ut.ResourceRole)
-                .Include(t => t.MonthlyHours)
+                .Include(t => t.PlannedHours)
                 .ToListAsync(cancellationToken);
 
             // Convert to hierarchical DTO structure
@@ -68,12 +68,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 CostRate = t.UserWBSTasks?.FirstOrDefault()?.CostRate ?? 0,
                 TotalHours = t.UserWBSTasks?.FirstOrDefault()?.TotalHours ?? 0,
                 TotalCost = t.UserWBSTasks?.FirstOrDefault()?.TotalCost ?? 0,
-                MonthlyHours = t.MonthlyHours?.Select(mh => new MonthlyHourDto
+                PlannedHours = t.PlannedHours?.Select(ph => new PlannedHourDto
                 {
-                    Year = int.Parse(mh.Year),
-                    Month = mh.Month,
-                    PlannedHours = mh.PlannedHours
-                }).ToList() ?? new List<MonthlyHourDto>(),
+                    Year = int.Parse(ph.Year),
+                    Month = ph.Month,
+                    PlannedHours = ph.PlannedHours
+                }).ToList() ?? new List<PlannedHourDto>(),
                 DisplayOrder = t.DisplayOrder
             }).ToList();
 

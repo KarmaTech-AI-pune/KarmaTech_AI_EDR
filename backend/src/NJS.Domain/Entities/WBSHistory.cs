@@ -18,10 +18,10 @@ namespace NJS.Domain.Entities
         public int Id { get; set; }
 
         [Required]
-        public int WBSTaskMonthlyHourHeaderId { get; set; }
+        public int WBSTaskPlannedHourHeaderId { get; set; }
 
-        [ForeignKey("WBSTaskMonthlyHourHeaderId")]
-        public WBSTaskMonthlyHourHeader WBSTaskMonthlyHourHeader { get; set; }
+        [ForeignKey("WBSTaskPlannedHourHeaderId")]
+        public WBSTaskPlannedHourHeader WBSTaskPlannedHourHeader { get; set; }
 
         [Required]
         public int StatusId { get; set; }

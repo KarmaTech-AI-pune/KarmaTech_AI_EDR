@@ -18,7 +18,7 @@ export interface WBSHeader {
 
 export interface WBSHistory {
   id: number;
-  wbsTaskMonthlyHourHeaderId: number;
+  wbsTaskPlannedHourHeaderId: number;
   statusId: number;
   status: string;
   action: string;

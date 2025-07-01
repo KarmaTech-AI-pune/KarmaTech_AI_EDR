@@ -1,7 +1,7 @@
 import { axiosInstance } from './axiosConfig';
 
 // Define TypeScript interfaces for API response
-export interface MonthlyHourDto {
+export interface PlannedHourDto {
   year: number;
   month: string;
   plannedHours: number;
@@ -17,7 +17,7 @@ export interface ManpowerResourceDto {
   costRate: number;
   totalHours: number;
   totalCost: number;
-  monthlyHours: MonthlyHourDto[];
+  plannedHours: PlannedHourDto[];
 }
 
 export interface ManpowerResourcesResponse {

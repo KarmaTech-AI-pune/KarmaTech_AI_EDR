@@ -1,6 +1,6 @@
 namespace NJS.Application.Dtos
 {
-    public class MonthlyHourDto
+    public class PlannedHourDto
     {
         public int Year { get; set; }
         public string Month { get; set; } // e.g., "January", "February"

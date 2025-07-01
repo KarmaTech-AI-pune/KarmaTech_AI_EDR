@@ -33,11 +33,11 @@ namespace NJSAPI.Controllers
         /// <param name="taskType">The task type (0 for Manpower, 1 for ODC)</param>
         /// <returns>The WBS header with its history</returns>
         [HttpGet("{taskType}")]
-        [ProducesResponseType(typeof(WBSTaskMonthlyHourHeader), 200)]
+        [ProducesResponseType(typeof(WBSTaskPlannedHourHeader), 200)]
         [ProducesResponseType(404)]
-        public async Task<ActionResult<WBSTaskMonthlyHourHeader>> GetWBSHeader(int projectId, TaskType taskType)
+        public async Task<ActionResult<WBSTaskPlannedHourHeader>> GetWBSHeader(int projectId, TaskType taskType)
         {
-            var header = await _context.Set<WBSTaskMonthlyHourHeader>()
+            var header = await _context.Set<WBSTaskPlannedHourHeader>()
                 .Include(h => h.WBSHistories)
                 .ThenInclude(h => h.Status)
                 .FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskType);
@@ -61,7 +61,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(404)]
         public async Task<ActionResult<WbsWorkflowDto>> GetWBSHeaderStatus(int projectId, TaskType taskType)
         {
-            var header = await _context.Set<WBSTaskMonthlyHourHeader>()
+            var header = await _context.Set<WBSTaskPlannedHourHeader>()
                 .Include(h => h.WBSHistories.OrderByDescending(h => h.ActionDate))
                 .ThenInclude(h => h.Status)
                 .FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskType);

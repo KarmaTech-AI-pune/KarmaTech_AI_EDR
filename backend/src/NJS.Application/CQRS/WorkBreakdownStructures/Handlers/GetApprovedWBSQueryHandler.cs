@@ -63,20 +63,20 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         CostRate = task.UserWBSTasks.FirstOrDefault()?.User?.StandardRate ?? 0, // Use StandardRate from User entity
                         ResourceName = task.UserWBSTasks.FirstOrDefault()?.User?.Name, // Assuming ResourceName is the user's name from User entity
                         ResourceUnit = task.UserWBSTasks.FirstOrDefault()?.Unit, // Assuming ResourceUnit is the unit from UserWBSTask
-                        MonthlyHours = new List<MonthlyHourDto>(),
-                        TotalHours = task.MonthlyHours.Sum(mh => mh.PlannedHours), // Calculate total hours
-                        TotalCost = (decimal)task.MonthlyHours.Sum(mh => mh.PlannedHours) * (task.UserWBSTasks.FirstOrDefault()?.User?.StandardRate ?? 0), // Calculate total cost using StandardRate from User entity
+                        PlannedHours = new List<PlannedHourDto>(),
+                        TotalHours = task.PlannedHours.Sum(ph => ph.PlannedHours), // Calculate total hours
+                        TotalCost = (decimal)task.PlannedHours.Sum(ph => ph.PlannedHours) * (task.UserWBSTasks.FirstOrDefault()?.User?.StandardRate ?? 0), // Calculate total cost using StandardRate from User entity
                         FrontendTempId = null, // FrontendTempId is not part of the entity, keep null
                         ParentFrontendTempId = null // ParentFrontendTempId is not part of the entity, keep null
                     };
 
-                    foreach (var monthlyHour in task.MonthlyHours)
+                    foreach (var plannedHour in task.PlannedHours)
                     {
-                        taskDto.MonthlyHours.Add(new MonthlyHourDto
+                        taskDto.PlannedHours.Add(new PlannedHourDto
                         {
-                            Year = int.Parse(monthlyHour.Year), // Convert string to int
-                            Month = monthlyHour.Month,
-                            PlannedHours = monthlyHour.PlannedHours
+                            Year = int.Parse(plannedHour.Year), // Convert string to int
+                            Month = plannedHour.Month,
+                            PlannedHours = plannedHour.PlannedHours
                         });
                     }
                     wbsDto.Tasks.Add(taskDto);

@@ -121,17 +121,17 @@ const WBSRow: React.FC<WBSRowProps> = ({
   // Find the selected resource role for display
   // const selectedResourceRole = row.resource_role ? roles.find(r => r.id === row.resource_role) : undefined;
 
-  const getMonthlyHours = (month: string): string => {
+  const getPlannedHours = (month: string): string => {
     const [monthName, yearStr] = month.split(' ');
     const year = `20${yearStr}`;
-    return (row.monthlyHours[year]?.[monthName] || '').toString();
+    return (row.plannedHours[year]?.[monthName] || '').toString();
   };
 
   const getChildTotalHours = (month: string): string => {
     if (!childTotals) return '';
     const [monthName, yearStr] = month.split(' ');
     const year = `20${yearStr}`;
-    return (childTotals.monthlyHours[year]?.[monthName] || '').toString();
+    return (childTotals.plannedHours[year]?.[monthName] || '').toString();
   };
 
   const WorkDescriptionCell = stickyColumn ? StickyCell : TableCell;
@@ -366,7 +366,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
           {row.level === 3 ? (
             <NumberInput
               type="text"
-              value={getMonthlyHours(month)}
+              value={getPlannedHours(month)}
               onChange={(e) => onHoursChange(row.id, month, e.target.value)}
               min="0"
               max="160"

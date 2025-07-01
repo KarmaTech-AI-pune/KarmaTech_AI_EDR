@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState, useContext } from "react";
 import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { MonthlyProgressAPI, MonthlyHourDto } from "../../../../services/monthlyProgressApi";
+import { MonthlyProgressAPI, PlannedHourDto } from "../../../../services/monthlyProgressApi";
 import { projectManagementAppContext } from "../../../../App";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 import {
@@ -40,8 +40,8 @@ const ManpowerPlanningTab: React.FC = () => {
 
 
 
-  // Helper function to get current and next month hours from monthlyHours array
-  const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
+  // Helper function to get current and next month hours from plannedHours array
+  const getPlannedHours = (plannedHours: PlannedHourDto[]) => {
     const currentDate = new Date();
     const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
     const currentYear = currentDate.getFullYear();
@@ -51,11 +51,11 @@ const ManpowerPlanningTab: React.FC = () => {
     const nextMonth = nextDate.toLocaleString('default', { month: 'long' });
     const nextYear = nextDate.getFullYear();
     
-    const currentMonthData = monthlyHours?.find(item => 
+    const currentMonthData = plannedHours?.find(item =>
       item.month === currentMonth && item.year === currentYear
     );
-    
-    const nextMonthData = monthlyHours?.find(item => 
+
+    const nextMonthData = plannedHours?.find(item =>
       item.month === nextMonth && item.year === nextYear
     );
     
@@ -136,7 +136,7 @@ const ManpowerPlanningTab: React.FC = () => {
         // Transform API data to form format
         if (data?.resources && data.resources.length > 0) {
           const formData = data.resources.map(resource => {
-            const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.monthlyHours);
+            const { currentMonthHours, nextMonthHours } = getPlannedHours(resource.plannedHours);
             
             return {
               workAssignment: resource.taskTitle,
