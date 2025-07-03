@@ -102,5 +102,11 @@ namespace NJS.Repositories.Repositories
                                      .ThenInclude(bt => bt.PercentCompleteOnCosts)
                                  .ToListAsync();
         }
+
+        public async Task UpdateManpowerPlanningAsync(ManpowerPlanning manpowerPlanning)
+        {
+            _context.ManpowerPlannings.Update(manpowerPlanning);
+            await _context.SaveChangesAsync();
+        }
     }
 }
