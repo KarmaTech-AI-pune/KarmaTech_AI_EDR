@@ -3,11 +3,9 @@ import { Box, Paper } from '@mui/material';
 import { useProject } from '../../context/ProjectContext';
 import { GanttChart } from '../project/GanttChart';
 
-interface FormsOverviewProps {
-  onFormSelect?: (formId: string) => void;
-}
+interface FormsOverviewProps {}
 
-const FormsOverview: React.FC<FormsOverviewProps> = ({ onFormSelect }) => {
+const FormsOverview: React.FC<FormsOverviewProps> = () => {
   const { projectId } = useProject();
   return (
     <Paper sx={{ p: 3 }}>

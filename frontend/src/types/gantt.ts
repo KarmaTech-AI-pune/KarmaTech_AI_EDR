@@ -1,7 +1,6 @@
 export interface GanttTask {
   id: string | number;
   text: string;
-  start_date: Date;
   duration: number;
   progress: number;
   parent?: string | number;

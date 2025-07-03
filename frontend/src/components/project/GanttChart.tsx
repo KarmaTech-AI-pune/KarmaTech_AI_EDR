@@ -57,12 +57,6 @@ export const GanttChart: React.FC<GanttChartProps> = ({ projectId }) => {
     align: "center",
     flexGrow: 1,
   },
-  // {
-  //   id: "actions",
-  //   header: "Actions",
-  //   // width: 50,
-  //   align: "center",
-  // },
 ];
 
   if (loading) {
