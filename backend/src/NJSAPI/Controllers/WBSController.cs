@@ -65,9 +65,9 @@ namespace NJSAPI.Controllers
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
         /// <param name="taskDto">The details of the task to add.</param>
-        /// <returns>The created task details or its ID.</returns>
+        /// <returns>The created task details.</returns>
         [HttpPost("tasks")]
-        [ProducesResponseType(typeof(WBSTaskDto), StatusCodes.Status201Created)] // Or just the ID
+        [ProducesResponseType(typeof(WBSTaskDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)] // If WBS not found
         public async Task<ActionResult<WBSTaskDto>> AddTask(int projectId, [FromBody] WBSTaskDto taskDto)
@@ -82,15 +82,10 @@ namespace NJSAPI.Controllers
             }
 
             var command = new AddWBSTaskCommand(projectId, taskDto);
-            var newTaskId = await _mediator.Send(command);
+            var createdTask = await _mediator.Send(command);
 
-            // Optionally, retrieve the created task to return it (requires a GetTaskByIdQuery)
-            // For now, returning the ID in the location header is standard REST practice.
-            // taskDto.Id = newTaskId; // Update DTO with new ID if returning it
-            // return CreatedAtAction(nameof(GetTaskById), new { projectId, taskId = newTaskId }, taskDto);
-
-            // Returning location header with ID
-             return CreatedAtAction(nameof(GetWBS), new { projectId }, new { id = newTaskId }); // Pointing to GetWBS for simplicity, ideally GetTaskById
+            // Return the complete created task data
+            return CreatedAtAction(nameof(GetWBS), new { projectId }, createdTask);
         }
 
         /// <summary>
@@ -99,12 +94,12 @@ namespace NJSAPI.Controllers
         /// <param name="projectId">The ID of the project.</param>
         /// <param name="taskId">The ID of the task to update.</param>
         /// <param name="taskDto">The updated task details.</param>
-        /// <returns>No content if successful.</returns>
+        /// <returns>The updated task data.</returns>
         [HttpPut("tasks/{taskId}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(WBSTaskDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)] // If task or WBS not found
-        public async Task<IActionResult> UpdateTask(int projectId, int taskId, [FromBody] WBSTaskDto taskDto)
+        public async Task<ActionResult<WBSTaskDto>> UpdateTask(int projectId, int taskId, [FromBody] WBSTaskDto taskDto)
         {
             if (taskDto == null)
             {
@@ -117,8 +112,8 @@ namespace NJSAPI.Controllers
             }
 
             var command = new UpdateWBSTaskCommand(projectId, taskId, taskDto);
-            await _mediator.Send(command);
-            return NoContent();
+            var updatedTask = await _mediator.Send(command);
+            return Ok(updatedTask);
         }
 
         /// <summary>
@@ -126,15 +121,15 @@ namespace NJSAPI.Controllers
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
         /// <param name="taskId">The ID of the task to delete.</param>
-        /// <returns>No content if successful.</returns>
+        /// <returns>The deleted task data.</returns>
         [HttpDelete("tasks/{taskId}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)] // If task not found (optional, handler returns success if already deleted)
-        public async Task<IActionResult> DeleteTask(int projectId, int taskId)
+        [ProducesResponseType(typeof(WBSTaskDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)] // If task not found
+        public async Task<ActionResult<WBSTaskDto>> DeleteTask(int projectId, int taskId)
         {
             var command = new DeleteWBSTaskCommand(projectId, taskId);
-            await _mediator.Send(command);
-            return NoContent();
+            var deletedTask = await _mediator.Send(command);
+            return Ok(deletedTask);
         }
 
         // TODO: Consider adding a GetTaskById endpoint if needed for CreatedAtAction links.

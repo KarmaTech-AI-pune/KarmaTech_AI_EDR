@@ -248,33 +248,59 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         private async Task UpdatePlannedHours(WBSTask task, WBSTaskDto dto)
         {
             var header = await GetOrCreatePlannedHourHeader(task.WorkBreakdownStructure.ProjectId, task.TaskType);
-            var existing = task.PlannedHours.ToDictionary(p => (p.Year, p.Month,p.WBSTaskPlannedHourHeaderId));
+
+            // Clear existing planned hours for this task to allow complete replacement
+            var existingPlannedHours = task.PlannedHours.ToList();
+            foreach (var existingPh in existingPlannedHours)
+            {
+                _context.WBSTaskPlannedHours.Remove(existingPh);
+            }
+            task.PlannedHours.Clear();
 
             foreach (var phDto in dto.PlannedHours)
             {
-                var key = (phDto.Year.ToString(), phDto.Month, header.Id);
-                if (existing.TryGetValue(key, out var existingPh))
+                // Context-aware validation for planned hours based on planning type
+                if (phDto.WeekNo.HasValue && phDto.WeekNo.Value > 0)
                 {
-                    existingPh.PlannedHours = phDto.PlannedHours;
-                    existingPh.UpdatedAt = DateTime.UtcNow;
-                    existingPh.UpdatedBy = _currentUser;
+                    // Weekly planning: max 160 hours per week
+                    if (phDto.PlannedHours > 160)
+                    {
+                        throw new ArgumentException("Planned hours cannot exceed 160 hours per week");
+                    }
+                }
+                else if (phDto.Date.HasValue)
+                {
+                    // Daily planning: max 24 hours per day (date is optional but when provided enables daily planning)
+                    if (phDto.PlannedHours > 24)
+                    {
+                        throw new ArgumentException("Planned hours cannot exceed 24 hours per day");
+                    }
                 }
                 else
                 {
-                    var newPh = new WBSTaskPlannedHour
+                    // Monthly planning: max 160 hours per month (default when no date or week specified)
+                    if (phDto.PlannedHours > 160)
                     {
-                        WBSTask = task,
-                        WBSTaskPlannedHourHeader = header,
-                        WBSTaskPlannedHourHeaderId = header.Id,
-                        Year = phDto.Year.ToString(),
-                        Month = phDto.Month,
-                        PlannedHours = phDto.PlannedHours,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _currentUser
-                    };
-                    task.PlannedHours.Add(newPh);
-                    header.PlannedHours.Add(newPh);
+                        throw new ArgumentException("Planned hours cannot exceed 160 hours per month");
+                    }
                 }
+
+                // Create new planned hour entry - allow multiple entries per month/year/task
+                var newPh = new WBSTaskPlannedHour
+                {
+                    WBSTask = task,
+                    WBSTaskPlannedHourHeader = header,
+                    WBSTaskPlannedHourHeaderId = header.Id,
+                    Year = phDto.Year.ToString(),
+                    Month = phDto.MonthNo,
+                    Date = phDto.Date,
+                    WeekNumber = phDto.WeekNo,
+                    PlannedHours = phDto.PlannedHours,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = _currentUser
+                };
+                task.PlannedHours.Add(newPh);
+                header.PlannedHours.Add(newPh);
             }
 
             var userTask = task.UserWBSTasks.FirstOrDefault();

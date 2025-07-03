@@ -69,9 +69,12 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         const transformedPlannedHours: PlannedHours = {};
         if (task.plannedHours && Array.isArray(task.plannedHours)) {
           task.plannedHours.forEach((monthEntry: any) => {
-            if (monthEntry && typeof monthEntry === 'object' && monthEntry.year && monthEntry.month && typeof monthEntry.plannedHours === 'number') {
+            if (monthEntry && typeof monthEntry === 'object' && monthEntry.year && monthEntry.monthNo && typeof monthEntry.plannedHours === 'number') {
               const yearStr = monthEntry.year.toString();
-              const monthName = monthEntry.month;
+              // Convert month number to month name
+              const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+              const monthName = monthNames[monthEntry.monthNo - 1]; // monthNo is 1-based
               if (!transformedPlannedHours[yearStr]) {
                 transformedPlannedHours[yearStr] = {};
               }
@@ -668,6 +671,33 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
             [monthName]: hours
           }
         };
+
+        // Update PlannedHrs array structure for new payload format
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'];
+        const monthNo = monthNames.indexOf(monthName) + 1;
+
+        const newPlannedHrs = row.PlannedHrs ? [...row.PlannedHrs] : [];
+        const existingIndex = newPlannedHrs.findIndex(ph =>
+          ph.year === parseInt(year) && ph.monthno === monthNo
+        );
+
+        if (existingIndex >= 0) {
+          if (hours > 0) {
+            newPlannedHrs[existingIndex].plannedHours = hours;
+          } else {
+            newPlannedHrs.splice(existingIndex, 1);
+          }
+        } else if (hours > 0) {
+          newPlannedHrs.push({
+            year: parseInt(year),
+            monthno: monthNo,
+            date: null, // Date is optional - user can specify if needed
+            weekno: null, // Week is optional - user can specify if needed
+            plannedHours: hours
+          });
+        }
+
         const totalHours = Object.values(newPlannedHours)
           .flatMap(yearHours => Object.values(yearHours))
           .reduce((sum, h) => sum + h, 0);

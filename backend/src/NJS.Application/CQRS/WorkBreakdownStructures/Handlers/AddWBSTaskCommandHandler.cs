@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
-    public class AddWBSTaskCommandHandler : IRequestHandler<AddWBSTaskCommand, int>
+    public class AddWBSTaskCommandHandler : IRequestHandler<AddWBSTaskCommand, WBSTaskDto>
     {
         private readonly ProjectManagementContext _context;
         private readonly IUnitOfWork _unitOfWork;
@@ -28,7 +28,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<int> Handle(AddWBSTaskCommand request, CancellationToken cancellationToken)
+        public async Task<WBSTaskDto> Handle(AddWBSTaskCommand request, CancellationToken cancellationToken)
         {
             // --- 1. Find the active WBS for the project ---
             var wbs = await _context.WorkBreakdownStructures
@@ -86,8 +86,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             _context.WBSTasks.Add(taskEntity);
             await _unitOfWork.SaveChangesAsync();
 
-            // --- 5. Return the new Task ID ---
-            return taskEntity.Id;
+            // --- 5. Return the complete created task ---
+            return await GetCreatedTaskDto(taskEntity.Id, cancellationToken);
         }
 
         // --- Helper methods copied from SetWBSCommandHandler ---
@@ -174,12 +174,40 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             // Add new ones from DTO
             foreach (var phDto in taskDto.PlannedHours)
             {
+                // Context-aware validation for planned hours based on planning type
+                if (phDto.WeekNo.HasValue && phDto.WeekNo.Value > 0)
+                {
+                    // Weekly planning: max 160 hours per week
+                    if (phDto.PlannedHours > 160)
+                    {
+                        throw new ArgumentException("Planned hours cannot exceed 160 hours per week");
+                    }
+                }
+                else if (phDto.Date.HasValue)
+                {
+                    // Daily planning: max 24 hours per day (date is optional but when provided enables daily planning)
+                    if (phDto.PlannedHours > 24)
+                    {
+                        throw new ArgumentException("Planned hours cannot exceed 24 hours per day");
+                    }
+                }
+                else
+                {
+                    // Monthly planning: max 160 hours per month (default when no date or week specified)
+                    if (phDto.PlannedHours > 160)
+                    {
+                        throw new ArgumentException("Planned hours cannot exceed 160 hours per month");
+                    }
+                }
+
                 var newPh = new WBSTaskPlannedHour
                 {
                     WBSTask = taskEntity, // EF Core should link this
                     WBSTaskPlannedHourHeader = plannedHourHeader, // Link to the header
                     Year = phDto.Year.ToString(),
-                    Month = phDto.Month,
+                    Month = phDto.MonthNo,
+                    Date = phDto.Date,
+                    WeekNumber = phDto.WeekNo,
                     PlannedHours = phDto.PlannedHours,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = _currentUser
@@ -194,6 +222,57 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 userTask.TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours);
                 userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate;
             }
+        }
+
+        /// <summary>
+        /// Retrieves the complete task data after creation
+        /// </summary>
+        private async Task<WBSTaskDto> GetCreatedTaskDto(int taskId, CancellationToken cancellationToken)
+        {
+            var taskEntity = await _context.WBSTasks
+                .Include(t => t.UserWBSTasks)
+                    .ThenInclude(ut => ut.User)
+                .Include(t => t.UserWBSTasks)
+                    .ThenInclude(ut => ut.ResourceRole)
+                .Include(t => t.PlannedHours)
+                .FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
+
+            if (taskEntity == null)
+                throw new Exception($"Created task with ID {taskId} not found.");
+
+            var userTask = taskEntity.UserWBSTasks.FirstOrDefault();
+
+            return new WBSTaskDto
+            {
+                Id = taskEntity.Id,
+                WorkBreakdownStructureId = taskEntity.WorkBreakdownStructureId,
+                ParentId = taskEntity.ParentId,
+                Level = taskEntity.Level,
+                Title = taskEntity.Title,
+                Description = taskEntity.Description,
+                DisplayOrder = taskEntity.DisplayOrder,
+                EstimatedBudget = taskEntity.EstimatedBudget,
+                StartDate = taskEntity.StartDate,
+                EndDate = taskEntity.EndDate,
+                TaskType = taskEntity.TaskType,
+                AssignedUserId = userTask?.UserId,
+                AssignedUserName = userTask?.User?.Name ?? userTask?.Name,
+                CostRate = userTask?.CostRate ?? 0,
+                ResourceName = userTask?.Name,
+                ResourceUnit = userTask?.Unit,
+                ResourceRoleId = userTask?.ResourceRoleId,
+                ResourceRoleName = userTask?.ResourceRole?.Name,
+                PlannedHours = taskEntity.PlannedHours.Select(ph => new PlannedHourDto
+                {
+                    Year = int.Parse(ph.Year),
+                    MonthNo = ph.Month,
+                    Date = ph.Date,
+                    WeekNo = ph.WeekNumber,
+                    PlannedHours = ph.PlannedHours
+                }).ToList(),
+                TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours),
+                TotalCost = (decimal)taskEntity.PlannedHours.Sum(ph => ph.PlannedHours) * (userTask?.CostRate ?? 0)
+            };
         }
     }
 }

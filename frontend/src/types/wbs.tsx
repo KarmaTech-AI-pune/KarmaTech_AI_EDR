@@ -8,6 +8,14 @@ export enum TaskType {
   ODC = 1
 }
 
+export interface PlannedHourEntry {
+  year: number;
+  monthno: number;
+  date?: string | null; // Date is optional - can be undefined or null
+  weekno?: number | null; // Week is optional - can be undefined or null
+  plannedHours: number;
+}
+
 export interface WBSRowData {
   id: string;
   level: 1 | 2 | 3;
@@ -15,7 +23,8 @@ export interface WBSRowData {
   role: string | null;
   name: string | null;
   costRate: number;
-  plannedHours: { [key: string]: { [key: string]: number } };
+  plannedHours: { [key: string]: { [key: string]: number } }; // Keep for backward compatibility
+  PlannedHrs?: PlannedHourEntry[]; // New structure for enhanced payload
   odc: number;
   odcHours?: number;
   totalHours: number;

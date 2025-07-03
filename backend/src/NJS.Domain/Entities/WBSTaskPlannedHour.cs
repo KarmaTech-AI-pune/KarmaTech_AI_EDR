@@ -19,8 +19,10 @@ namespace NJS.Domain.Entities
         public string Year { get; set; }
 
         [Required]
-        [StringLength(20)]
-        public string Month { get; set; }
+        public int Month { get; set; } // Changed from string to int (1-12)
+
+        public DateTime? Date { get; set; } // Full date for daily planning
+        public int? WeekNumber { get; set; } // Week number (1-53) for weekly planning
 
         public double PlannedHours { get; set; }
 

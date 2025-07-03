@@ -53,7 +53,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             PlannedHours = t.PlannedHours.Select(ph => new PlannedHourDto
                             {
                                 Year = int.Parse(ph.Year),
-                                Month = ph.Month,
+                                MonthNo = ph.Month,
+                                Date = ph.Date,
+                                WeekNo = ph.WeekNumber,
                                 PlannedHours = ph.PlannedHours
                             }).ToList(),
 

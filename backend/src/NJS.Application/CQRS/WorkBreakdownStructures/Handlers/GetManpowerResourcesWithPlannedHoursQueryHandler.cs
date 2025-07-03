@@ -119,11 +119,13 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                                     .Select(ph => new PlannedHourDto
                                     {
                                         Year = int.TryParse(ph.Year, out var year) ? year : DateTime.Now.Year,
-                                        Month = ph.Month,
+                                        MonthNo = ph.Month,
+                                    Date = ph.Date,
+                                    WeekNo = ph.WeekNumber,
                                         PlannedHours = ph.PlannedHours
                                     })
                                     .OrderBy(ph => ph.Year)
-                                    .ThenBy(ph => GetMonthOrder(ph.Month))
+                                    .ThenBy(ph => GetMonthOrder(ph.MonthNo))
                                     .ToList()
                             };
 
@@ -157,26 +159,11 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         /// <summary>
         /// Gets the month order for sorting purposes.
         /// </summary>
-        /// <param name="monthName">Name of the month.</param>
+        /// <param name="monthNo">Month number (1-12).</param>
         /// <returns>The month order (1-12).</returns>
-        private static int GetMonthOrder(string monthName)
+        private static int GetMonthOrder(int monthNo)
         {
-            return monthName?.ToLowerInvariant() switch
-            {
-                "january" => 1,
-                "february" => 2,
-                "march" => 3,
-                "april" => 4,
-                "may" => 5,
-                "june" => 6,
-                "july" => 7,
-                "august" => 8,
-                "september" => 9,
-                "october" => 10,
-                "november" => 11,
-                "december" => 12,
-                _ => 13 // Unknown months go to the end
-            };
+            return monthNo >= 1 && monthNo <= 12 ? monthNo : 13; // Invalid months go to the end
         }
     }
 }

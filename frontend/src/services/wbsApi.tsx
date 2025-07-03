@@ -32,17 +32,37 @@ export const WBSStructureAPI = {
 
       // Helper function to convert WBSRowData to backend format
       const transformRowToBackendFormat = (row: WBSRowData) => {
-        // Convert monthly hours from object to array format
-        const monthlyHours: Array<{Year: number, Month: string, PlannedHours: number}> = [];
-        Object.entries(row.plannedHours || {}).forEach(([year, months]) => {
-          Object.entries(months).forEach(([month, hours]) => {
-            monthlyHours.push({
-              Year: parseInt(year),
-              Month: month,
-              PlannedHours: hours
+        // Convert planned hours to backend format
+        let plannedHours: Array<{Year: number, MonthNo: number, Day?: string, WeekNo?: number, PlannedHours: number}> = [];
+
+        // Use new PlannedHrs structure if available, otherwise fall back to old plannedHours
+        if (row.PlannedHrs && row.PlannedHrs.length > 0) {
+          plannedHours = row.PlannedHrs.map(ph => ({
+            Year: ph.year,
+            MonthNo: ph.monthno,
+            Date: ph.date || null, // Ensure undefined becomes null for proper JSON serialization
+            WeekNo: ph.weekno || null, // Ensure undefined becomes null for proper JSON serialization
+            PlannedHours: ph.plannedHours
+          }));
+        } else {
+          // Backward compatibility: convert old format
+          Object.entries(row.plannedHours || {}).forEach(([year, months]) => {
+            Object.entries(months).forEach(([month, hours]) => {
+              const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+              const monthNo = monthNames.indexOf(month) + 1;
+              if (monthNo > 0) {
+                plannedHours.push({
+                  Year: parseInt(year),
+                  MonthNo: monthNo,
+                  Date: null, // Date is optional for monthly planning
+                  WeekNo: null, // Week is optional for monthly planning
+                  PlannedHours: hours
+                });
+              }
             });
           });
-        });
+        }
 
         // Check if the current row's ID is temporary
         const isTemporaryId = !row.id || isNaN(parseInt(row.id)) || row.id.length > 10; // More robust check
@@ -89,7 +109,7 @@ export const WBSStructureAPI = {
           ResourceUnit: isOdcTask ? (row.unit || "") : (row.unit || ""),
           TotalHours: row.totalHours,
           TotalCost: row.totalCost,
-          PlannedHours: monthlyHours,
+          PlannedHours: plannedHours,
           TaskType: row.taskType !== undefined ? row.taskType : (row.title.toLowerCase().includes('odc') ? TaskType.ODC : TaskType.Manpower), // Use taskType if set, otherwise infer from title
           Description: "",
           DisplayOrder: 0,

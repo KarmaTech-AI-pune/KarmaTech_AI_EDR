@@ -6,7 +6,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Commands
     /// <summary>
     /// Command to update a specific task within a Work Breakdown Structure.
     /// </summary>
-    public class UpdateWBSTaskCommand : IRequest<Unit>
+    public class UpdateWBSTaskCommand : IRequest<WBSTaskDto>
     {
         public int ProjectId { get; }
         public int TaskId { get; }

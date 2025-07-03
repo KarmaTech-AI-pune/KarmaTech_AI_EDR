@@ -8,7 +8,7 @@ using NJS.Domain.UnitWork;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
-    public class UpdateWBSTaskCommandHandler : IRequestHandler<UpdateWBSTaskCommand, Unit>
+    public class UpdateWBSTaskCommandHandler : IRequestHandler<UpdateWBSTaskCommand, WBSTaskDto>
     {
         private readonly ProjectManagementContext _context;
         private readonly IUnitOfWork _unitOfWork;
@@ -20,7 +20,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Unit> Handle(UpdateWBSTaskCommand request, CancellationToken cancellationToken)
+        public async Task<WBSTaskDto> Handle(UpdateWBSTaskCommand request, CancellationToken cancellationToken)
         {
             var taskEntity = await _context.WBSTasks
                 .Include(t => t.WorkBreakdownStructure)
@@ -55,7 +55,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
            
             await _unitOfWork.SaveChangesAsync();
 
-            return Unit.Value;
+            // Return the complete updated task data
+            return await GetUpdatedTaskDto(taskEntity.Id, cancellationToken);
         }
        
 
@@ -160,35 +161,58 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
             var header =  GetPlannedHourHeader(projectId, taskType);
 
+            // Clear existing planned hours for this task to allow complete replacement
             var existingPlannedHours = taskEntity.PlannedHours.ToList();
-
-            var existing = taskEntity.PlannedHours.ToDictionary(p => (p.Year, p.Month, p.WBSTaskPlannedHourHeaderId));
+            foreach (var existingPh in existingPlannedHours)
+            {
+                _context.WBSTaskPlannedHours.Remove(existingPh);
+            }
+            taskEntity.PlannedHours.Clear();
 
             foreach (var phDto in taskDto.PlannedHours)
             {
-                var key = (phDto.Year.ToString(), phDto.Month, header.Id);
-                if (existing.TryGetValue(key, out var existingPh))
+                // Context-aware validation for planned hours based on planning type
+                if (phDto.WeekNo.HasValue && phDto.WeekNo.Value > 0)
                 {
-                    existingPh.PlannedHours = phDto.PlannedHours;
-                    existingPh.UpdatedAt = DateTime.UtcNow;
-                    existingPh.UpdatedBy = _currentUser;
+                    // Weekly planning: max 160 hours per week
+                    if (phDto.PlannedHours > 160)
+                    {
+                        throw new ArgumentException("Planned hours cannot exceed 160 hours per week");
+                    }
+                }
+                else if (phDto.Date.HasValue)
+                {
+                    // Daily planning: max 24 hours per day (date is optional but when provided enables daily planning)
+                    if (phDto.PlannedHours > 24)
+                    {
+                        throw new ArgumentException("Planned hours cannot exceed 24 hours per day");
+                    }
                 }
                 else
                 {
-                    var newPh = new WBSTaskPlannedHour
+                    // Monthly planning: max 160 hours per month (default when no date or week specified)
+                    if (phDto.PlannedHours > 160)
                     {
-                        WBSTask = taskEntity,
-                        WBSTaskPlannedHourHeader = header,
-                        WBSTaskPlannedHourHeaderId = header.Id,
-                        Year = phDto.Year.ToString(),
-                        Month = phDto.Month,
-                        PlannedHours = phDto.PlannedHours,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _currentUser
-                    };
-                    taskEntity.PlannedHours.Add(newPh);
-                    header.PlannedHours.Add(newPh);
+                        throw new ArgumentException("Planned hours cannot exceed 160 hours per month");
+                    }
                 }
+
+                // Create new planned hour entry - allow multiple entries per month/year/task
+                var newPh = new WBSTaskPlannedHour
+                {
+                    WBSTask = taskEntity,
+                    WBSTaskPlannedHourHeader = header,
+                    WBSTaskPlannedHourHeaderId = header.Id,
+                    Year = phDto.Year.ToString(),
+                    Month = phDto.MonthNo,
+                    Date = phDto.Date, // Optional date field - null for monthly planning, date for daily planning
+                    WeekNumber = phDto.WeekNo, // Optional week number for weekly planning
+                    PlannedHours = phDto.PlannedHours,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = _currentUser
+                };
+                taskEntity.PlannedHours.Add(newPh);
+                header.PlannedHours.Add(newPh);
             }
 
             // Recalculate TotalHours/Cost on the UserWBSTask if it exists
@@ -200,6 +224,59 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 userTask.UpdatedAt = DateTime.UtcNow;
                 userTask.UpdatedBy = _currentUser;
             }
+        }
+
+        /// <summary>
+        /// Retrieves the complete updated task data after modification
+        /// </summary>
+        private async Task<WBSTaskDto> GetUpdatedTaskDto(int taskId, CancellationToken cancellationToken)
+        {
+            var taskEntity = await _context.WBSTasks
+                .Include(t => t.UserWBSTasks)
+                    .ThenInclude(ut => ut.User)
+                .Include(t => t.UserWBSTasks)
+                    .ThenInclude(ut => ut.ResourceRole)
+                .Include(t => t.PlannedHours)
+                .FirstOrDefaultAsync(t => t.Id == taskId && !t.IsDeleted, cancellationToken);
+
+            if (taskEntity == null)
+                throw new Exception($"Updated task with ID {taskId} not found.");
+
+            var userTask = taskEntity.UserWBSTasks.FirstOrDefault();
+
+            return new WBSTaskDto
+            {
+                Id = taskEntity.Id,
+                WorkBreakdownStructureId = taskEntity.WorkBreakdownStructureId,
+                ParentId = taskEntity.ParentId,
+                Level = taskEntity.Level,
+                Title = taskEntity.Title,
+                Description = taskEntity.Description,
+                DisplayOrder = taskEntity.DisplayOrder,
+                EstimatedBudget = taskEntity.EstimatedBudget,
+                StartDate = taskEntity.StartDate,
+                EndDate = taskEntity.EndDate,
+                TaskType = taskEntity.TaskType,
+                AssignedUserId = userTask?.UserId,
+                AssignedUserName = userTask?.User?.UserName ?? userTask?.Name,
+                CostRate = userTask?.CostRate ?? 0,
+                ResourceName = userTask?.Name,
+                ResourceUnit = userTask?.Unit,
+                ResourceRoleId = userTask?.ResourceRoleId,
+                ResourceRoleName = userTask?.ResourceRole?.Name,
+                PlannedHours = taskEntity.PlannedHours.Select(ph => new PlannedHourDto
+                {
+                    Year = int.Parse(ph.Year),
+                    MonthNo = ph.Month,
+                    Date = ph.Date,
+                    WeekNo = ph.WeekNumber,
+                    PlannedHours = ph.PlannedHours
+                }).ToList(),
+                TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours),
+                TotalCost = userTask?.TotalCost ?? 0,
+                FrontendTempId = null,
+                ParentFrontendTempId = null
+            };
         }
     }
 }

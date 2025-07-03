@@ -60,13 +60,14 @@ interface Employee {
 
 import { resourceRole as Role } from "../../../models";
 
-// Define unit options for ODC form
+// Define unit options for both manpower and ODC forms
 const unitOptions = [
+  { value: 'day', label: 'Day' },
+  { value: 'week', label: 'Week' },
+  { value: 'month', label: 'Month' },
   { value: 'nos', label: 'Nos' },
   { value: 'ls', label: 'LS' },
   { value: 'km', label: 'Km' },
-  { value: 'day', label: 'Day' },
-  { value: 'month', label: 'Month' },
   { value: 'year', label: 'Year' }
 ];
 

@@ -75,7 +75,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         taskDto.PlannedHours.Add(new PlannedHourDto
                         {
                             Year = int.Parse(plannedHour.Year), // Convert string to int
-                            Month = plannedHour.Month,
+                            MonthNo = plannedHour.Month,
+                            Date = plannedHour.Date,
+                            WeekNo = plannedHour.WeekNumber,
                             PlannedHours = plannedHour.PlannedHours
                         });
                     }
