@@ -119,8 +119,8 @@ export const Navbar = () => {
       sx={{ height: '50px', display: 'flex', alignItems: 'center' }}
     >
       <img
-        src="/logo-final.png"
-        alt="NJSEI ISO 9000"
+        src="/KarmaTech_logo.jpg"
+        alt="KarmaTech AI"
         style={{
           height: '100%',
           width: 'auto',

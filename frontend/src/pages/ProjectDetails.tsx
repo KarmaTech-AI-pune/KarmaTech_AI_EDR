@@ -354,9 +354,9 @@ export const ProjectDetails: React.FC = () => {
         }
 
         // If still not found, show the forms overview
-        return <FormsOverview onFormSelect={handleFormClick} />;
+        return <FormsOverview />;
       }
-      return <FormsOverview onFormSelect={handleFormClick} />;
+      return <FormsOverview />;
     }
 
     switch (selectedSection) {
