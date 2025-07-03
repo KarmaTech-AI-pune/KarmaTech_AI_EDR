@@ -1,22 +1,28 @@
 import { z } from "zod";
 
-const financialDetailsSchema = z.object({
+const financialAndContractSchema = z.object({
   net: z.number().nullable(),
   serviceTax: z.number().min(0).max(100).nullable(),
   feeTotal: z.number().nullable(),
   budgetOdcs: z.number().nullable(),
   budgetStaff: z.number().nullable(),
   BudgetSubTotal: z.number().nullable(),
-});
-
-const contractAndCostSchema = z.object({
   contractType: z.enum(["lumpsum", "timeAndExpense"], {
     required_error: "Please select a contract type",
   }),
   percentage: z.number().min(0).max(100).nullable(),
-  actualOdcs: z.number().nullable(),
+});
+
+const actualCostSchema = z.object({
+  priorCumulativeOdc: z.number().nullable(),
+  priorCumulativeStaff: z.number().nullable(),
+  priorCumulativeTotal: z.number().nullable(),
+  actualOdc: z.number().nullable(),
   actualStaff: z.number().nullable(),
   actualSubtotal: z.number().nullable(),
+  totalCumulativeOdc: z.number().nullable(),
+  totalCumulativeStaff: z.number().nullable(),
+  totalCumulativeCost: z.number().nullable(),
 });
 
 const ctcAndEacSchema = z.object({
@@ -159,8 +165,8 @@ const earlyWarningsSchema = z.object({
 })
 
 export const MonthlyProgressSchema = z.object({
-  financialDetails: financialDetailsSchema,
-  contractAndCost: contractAndCostSchema,
+  financialAndContractDetails: financialAndContractSchema,
+  actualCost: actualCostSchema,
   ctcAndEac: ctcAndEacSchema,
   schedule: scheduleSchema,
   budgetTable: BudgetTableSchema,

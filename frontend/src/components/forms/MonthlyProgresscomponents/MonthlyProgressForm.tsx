@@ -20,7 +20,7 @@ import { MonthlyProgressAPI } from "../../../services/monthlyProgressApi";
 import { useProject } from "../../../context/ProjectContext";
 import {
   FinancialDetailsTab,
-  ContractAndCostsTab,
+  ActualCost,
   CostToCompleteAndEAC,
   ScheduleTab,
   ManpowerPlanningTab,
@@ -52,15 +52,15 @@ export type tab = {
 const tabs = [
   {
     id: "1",
-    label: "Financial Details",
+    label: "Financial Details & Contract",
     component: <FinancialDetailsTab />,
-    inputs: ["financialDetails"],
+    inputs: ["financialAndContractDetails"],
   },
   {
     id: "2",
-    label: "Contract & Costs",
-    component: <ContractAndCostsTab />,
-    inputs: ["contractAndCost"],
+    label: "Actual Cost",
+    component: <ActualCost />,
+    inputs: ["actualCost"],
   },
   {
     id: "3",
@@ -132,20 +132,26 @@ export const MonthlyProgressForm: React.FC = () => {
   const form = useForm<MonthlyProgressSchemaType>({
     resolver: zodResolver(MonthlyProgressSchema),
     defaultValues: {
-      financialDetails: {
+      financialAndContractDetails: {
         net: 0,
         serviceTax: 0,
         feeTotal: 0,
         budgetOdcs: 0,
         budgetStaff: 0,
         BudgetSubTotal: 0,
-      },
-      contractAndCost: {
         contractType: "lumpsum", // Default to lumpsum
         percentage: 0,
-        actualOdcs: 0,
+      },
+      actualCost: {
+        priorCumulativeOdc: 0,
+        priorCumulativeStaff: 0,
+        priorCumulativeTotal: 0,
+        actualOdc: 0,
         actualStaff: 0,
         actualSubtotal: 0,
+        totalCumulativeOdc: 0,
+        totalCumulativeStaff: 0,
+        totalCumulativeCost: 0
       },
       budgetTable: {
         originalBudget: {

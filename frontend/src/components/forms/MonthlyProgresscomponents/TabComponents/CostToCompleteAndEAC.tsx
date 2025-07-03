@@ -9,14 +9,14 @@ const CostToCompleteAndEAC: React.FC = () => {
   const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
 
   // Watch budget values from financialDetails
-  const net = watch('financialDetails.net') || 0;
-  const budgetOdcs = watch('financialDetails.budgetOdcs');
-  const budgetStaff = watch('financialDetails.budgetStaff');
+  const net = watch('financialAndContractDetails.net') || 0;
+  const budgetOdcs = watch('financialAndContractDetails.budgetOdcs');
+  const budgetStaff = watch('financialAndContractDetails.budgetStaff');
   
   // Watch actual values from contractAndCost
-  const actualOdcs = watch('contractAndCost.actualOdcs');
-  const actualStaff = watch('contractAndCost.actualStaff');
-  const actualSubtotal = watch('contractAndCost.actualSubtotal') || 0;
+  const actualOdcs = watch('actualCost.actualOdc');
+  const actualStaff = watch('actualCost.actualStaff');
+  const actualSubtotal = watch('actualCost.actualSubtotal') || 0;
   
 
   // Watch CTC values

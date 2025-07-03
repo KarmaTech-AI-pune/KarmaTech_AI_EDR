@@ -1,9 +1,10 @@
 import React, { useEffect, useContext } from "react";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
-import { Grid, Paper, TextField, Typography, CircularProgress } from "@mui/material";
+import { Grid, Paper, TextField, Typography, CircularProgress, FormControlLabel, Checkbox } from "@mui/material";
 import { formatCurrency } from "../../../../utils/MonthlyProgress/monthlyProgressUtils";
 import { projectManagementAppContext } from "../../../../App";
+import textFieldStyle from "../../../../theme/textFieldStyle";
 import { getJobStartFormByProjectId, getWBSResourceData } from "../../../../services/jobStartFormApi";
 
 const FinancialDetailsTab: React.FC = () => {
@@ -16,10 +17,11 @@ const FinancialDetailsTab: React.FC = () => {
     const [wbsResourcesError, setWbsResourcesError] = React.useState<string | null>(null);
 
     // Watch for calculation fields
-    const net = watch("financialDetails.net");
-    const serviceTax = watch("financialDetails.serviceTax");
-    const odcs = watch("financialDetails.budgetOdcs");
-    const staff = watch("financialDetails.budgetStaff");
+    const net = watch("financialAndContractDetails.net");
+    const serviceTax = watch("financialAndContractDetails.serviceTax");
+    const odcs = watch("financialAndContractDetails.budgetOdcs");
+    const staff = watch("financialAndContractDetails.budgetStaff");
+    const contractType = watch("financialAndContractDetails.contractType");
 
     // Fetch Job Start Form data when component mounts
     useEffect(() => {
@@ -32,8 +34,8 @@ const FinancialDetailsTab: React.FC = () => {
                     if (data && Array.isArray(data) && data.length > 0) {
                         const jobStartForm = data[0];
                         // Extract values and set them in the form
-                        setValue("financialDetails.net", jobStartForm.projectFees || null);
-                        setValue("financialDetails.serviceTax", jobStartForm.serviceTaxPercentage || null);
+                        setValue("financialAndContractDetails.net", jobStartForm.projectFees || null);
+                        setValue("financialAndContractDetails.serviceTax", jobStartForm.serviceTaxPercentage || null);
                         setValue("budgetTable.originalBudget.cost", jobStartForm.profit || 0)
                         setValue("budgetTable.originalBudget.revenueFee", jobStartForm.projectFees || 0)
                         setValue("budgetTable.originalBudget.profitPercentage", jobStartForm.projectFees || 0)
@@ -74,8 +76,8 @@ const FinancialDetailsTab: React.FC = () => {
                             .reduce((sum: number, allocation: any) => sum + allocation.totalCost, 0);
                         
                         // Set the values in the form
-                        setValue("financialDetails.budgetOdcs", totalODCs);
-                        setValue("financialDetails.budgetStaff", totalStaff);
+                        setValue("financialAndContractDetails.budgetOdcs", totalODCs);
+                        setValue("financialAndContractDetails.budgetStaff", totalStaff);
                     }
                 } catch (error) {
                     console.error("Error fetching WBS resource data:", error);
@@ -93,35 +95,26 @@ const FinancialDetailsTab: React.FC = () => {
     useEffect(() => {
         if (net != null && serviceTax != null) {
             const feeTotal = net + (net * serviceTax / 100);
-            setValue("financialDetails.feeTotal", feeTotal);
+            setValue("financialAndContractDetails.feeTotal", feeTotal);
         }
     }, [net, serviceTax, setValue]);
 
     useEffect(() => {
         if (odcs != null && staff != null) {
             const budgetSubTotal = odcs + staff;
-            setValue("financialDetails.BudgetSubTotal", budgetSubTotal);
+            setValue("financialAndContractDetails.BudgetSubTotal", budgetSubTotal);
         }
     }, [odcs, staff, setValue]);
 
 
     return (
         <Grid container spacing={3}>
-            {(loading || wbsResourcesLoading) && (
-                <Grid item xs={12}>
-                    <CircularProgress size={24} sx={{ ml: 2 }} />
-                </Grid>
-            )}
-            {(error || wbsResourcesError) && (
-                <Grid item xs={12}>
-                    <Typography color="error">{error || wbsResourcesError}</Typography>
-                </Grid>
-            )}
-            <Grid item xs={12} md={6}>
+            
+            <Grid item xs={12} md={4}>
                 <Paper elevation={1} sx={{ p: 2 }}>
                     <Typography variant="h6" gutterBottom color="primary">Fees</Typography>
                     <Controller
-                        name="financialDetails.net"
+                        name="financialAndContractDetails.net"
                         control={control}
                         render={({ field }) => (
                                 <TextField
@@ -129,8 +122,8 @@ const FinancialDetailsTab: React.FC = () => {
                                     label="Net"
                                     type="text"
                                     {...field}
-                                    error={!!errors.financialDetails?.net}
-                                    helperText={errors.financialDetails?.net?.message || ''}
+                                    error={!!errors.financialAndContractDetails?.net}
+                                    helperText={errors.financialAndContractDetails?.net?.message || ''}
                                     value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                                     InputProps={{
@@ -141,15 +134,15 @@ const FinancialDetailsTab: React.FC = () => {
                         )}
                     />
                     <Controller
-                        name="financialDetails.serviceTax"
+                        name="financialAndContractDetails.serviceTax"
                         control={control}
                         render={({ field }) => (
                         
                                 <TextField
                                     fullWidth
                                     label="Service Tax (%)"
-                                    error={!!errors.financialDetails?.serviceTax}
-                                    helperText={errors.financialDetails?.serviceTax?.message || ''}
+                                    error={!!errors.financialAndContractDetails?.serviceTax}
+                                    helperText={errors.financialAndContractDetails?.serviceTax?.message || ''}
                                     {...field}
                                     value={field.value || ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
@@ -161,15 +154,15 @@ const FinancialDetailsTab: React.FC = () => {
                         )}
                     />
                     <Controller
-                        name="financialDetails.feeTotal"
+                        name="financialAndContractDetails.feeTotal"
                         control={control}
                         render={({ field }) => (
                                 <TextField
                                     fullWidth
                                     label="Total"
                                     type="text"
-                                    error={!!errors.financialDetails?.feeTotal}
-                                    helperText={errors.financialDetails?.feeTotal?.message || ''}
+                                    error={!!errors.financialAndContractDetails?.feeTotal}
+                                    helperText={errors.financialAndContractDetails?.feeTotal?.message || ''}
                                     {...field}
                                     value={field.value != null ? formatCurrency(field.value) : ''}
                                     InputProps={{
@@ -182,19 +175,19 @@ const FinancialDetailsTab: React.FC = () => {
                 </Paper>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
                 <Paper elevation={1} sx={{ p: 2 }}>
                     <Typography variant="h6" gutterBottom color="primary">Budget Costs</Typography>
                     <Controller
-                        name="financialDetails.budgetOdcs"
+                        name="financialAndContractDetails.budgetOdcs"
                         control={control}
                         render={({ field }) => (
                                 <TextField
                                     fullWidth
                                     label="ODCs"
                                     type="text"
-                                    error={!!errors.financialDetails?.budgetOdcs}
-                                    helperText={errors.financialDetails?.budgetOdcs?.message || ''}
+                                    error={!!errors.financialAndContractDetails?.budgetOdcs}
+                                    helperText={errors.financialAndContractDetails?.budgetOdcs?.message || ''}
                                     {...field}
                                     value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
@@ -206,7 +199,7 @@ const FinancialDetailsTab: React.FC = () => {
                         )}
                     />
                     <Controller
-                        name="financialDetails.budgetStaff"
+                        name="financialAndContractDetails.budgetStaff"
                         control={control}
                         render={({ field }) => (
                         
@@ -214,8 +207,8 @@ const FinancialDetailsTab: React.FC = () => {
                                     fullWidth
                                     label="Staff"
                                     type="text"
-                                    error={!!errors.financialDetails?.budgetStaff}
-                                    helperText={errors.financialDetails?.budgetStaff?.message || ''}
+                                    error={!!errors.financialAndContractDetails?.budgetStaff}
+                                    helperText={errors.financialAndContractDetails?.budgetStaff?.message || ''}
                                     {...field}
                                     value={field.value != null ? formatCurrency(field.value) : ''}
                                     onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
@@ -227,15 +220,15 @@ const FinancialDetailsTab: React.FC = () => {
                         )}
                     />
                     <Controller
-                        name="financialDetails.BudgetSubTotal"
+                        name="financialAndContractDetails.BudgetSubTotal"
                         control={control}
                         render={({ field }) => (
                                 <TextField
                                     fullWidth
                                     label="Sub Total"
                                     type="text"
-                                    error={!!errors.financialDetails?.BudgetSubTotal}
-                                    helperText={errors.financialDetails?.BudgetSubTotal?.message || ''}
+                                    error={!!errors.financialAndContractDetails?.BudgetSubTotal}
+                                    helperText={errors.financialAndContractDetails?.BudgetSubTotal?.message || ''}
                                     {...field}
                                     value={field.value != null ? formatCurrency(field.value) : ''}
                                     InputProps={{
@@ -246,6 +239,67 @@ const FinancialDetailsTab: React.FC = () => {
                         )}
                     />
                 </Paper>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+                    <Paper elevation={1} sx={{ p: 2 }}>
+                      <Typography variant="h6" gutterBottom color="primary">
+                        Contract Type
+                      </Typography>
+            
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={contractType === 'lumpsum'}
+                  onChange={() => {
+                    setValue('financialAndContractDetails.contractType', 'lumpsum');
+                  }}
+                  sx={{
+                    '&.Mui-checked': {
+                      color: '#1869DA'
+                    }
+                  }}
+                />
+              }
+              label="Lumpsum"
+            />
+            
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={contractType === 'timeAndExpense'}
+                  onChange={() => {
+                    setValue('financialAndContractDetails.contractType', 'timeAndExpense');
+                  }}
+                  sx={{
+                    '&.Mui-checked': {
+                      color: '#1869DA'
+                    }
+                  }}
+                />
+              }
+              label="Time & Expense"
+            />
+            
+                      <Controller
+                        name="financialAndContractDetails.percentage"
+                        control={control}
+                        render={({ field }) => (
+                            <TextField
+                              fullWidth
+                              label="Percentage"
+                              type="number"
+                              value={field.value}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                              error={!!errors.financialAndContractDetails?.percentage}
+                              helperText={errors.financialAndContractDetails?.percentage?.message || ''}
+                              sx={textFieldStyle}
+                              margin="normal"
+                            />
+                        )}
+                      />
+                    </Paper>
             </Grid>
         </Grid>
     );
