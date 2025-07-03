@@ -62,14 +62,15 @@ export const LoginScreen: React.FC = () => {
             bgcolor="#f5f5f5"
             padding={3}
         >
-            <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 4 }}>
-                <Box sx={{ mb: 3 }}>
+            <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
+                <Box sx={{ mb: 1 }}>
                     <img
                         src="/KarmaTech_logo.jpg"
                         alt="KarmaTech AI"
                         style={{
-                            maxWidth: '200px',
-                            marginBottom: '1rem'
+                            maxWidth: '150px',
+                            maxHeight: '150px',
+                            marginBottom: '0.5rem'
                         }}
                     />
                 </Box>
@@ -82,12 +83,12 @@ export const LoginScreen: React.FC = () => {
                         color: '#1976d2'
                     }}
                 >
-                    NJSEI ISO 9000 Forms Project Management Application
+                    KarmaTech AI Project Management Application
                 </Typography>
                 <Typography
                     variant="h6"
                     sx={{
-                        mb: 4,
+                        mb: 1,
                         color: '#666'
                     }}
                 >
