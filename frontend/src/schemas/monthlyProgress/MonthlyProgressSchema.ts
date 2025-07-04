@@ -37,34 +37,34 @@ const ctcAndEacSchema = z.object({
 });
 
 const scheduleSchema = z.object({
-  dateOfIssueWOLOI: z.date(),
-  completionDateAsPerContract: z.date(),
-  completionDateAsPerExtension: z.date(),
-  expectedCompletionDate: z.date(),
+  dateOfIssueWOLOI: z.date().nullable(),
+  completionDateAsPerContract: z.date().nullable(),
+  completionDateAsPerExtension: z.date().nullable(),
+  expectedCompletionDate: z.date().nullable(),
 });
 
 // Budget Table Schema
 const BudgetRowSchema = z.object({
   revenueFee: z
     .number()
-    .min(1, "Revenue/Fee is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+    .nullable()
+    .refine((val) => val === null || (!isNaN(Number(val)) && Number(val) >= 0), {
       message: "Revenue/Fee must be a valid positive number",
     })
-    .transform((val) => Number(val)),
+    .transform((val) => (val === null ? null : Number(val))),
 
   cost: z
     .number()
-    .min(1, "Cost is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+    .nullable()
+    .refine((val) => val === null || (!isNaN(Number(val)) && Number(val) >= 0), {
       message: "Cost must be a valid positive number",
     })
-    .transform((val) => Number(val)),
+    .transform((val) => (val === null ? null : Number(val))),
 
   profitPercentage: z
     .number()
-    .min(1, "Profit percentage is required")
-    .transform((val) => Number(val)),
+    .nullable()
+    .transform((val) => (val === null ? null : Number(val))),
 });
 
 const BudgetTableSchema = z.object({
@@ -75,38 +75,40 @@ const BudgetTableSchema = z.object({
   percentCompleteOnCosts: z.object({
     revenueFee: z
       .number()
-      .min(1, "Revenue/Fee completion percentage is required")
+      .nullable()
       .refine(
-        (val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100,
+        (val) =>
+          val === null ||
+          (!isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100),
         {
           message: "Revenue/Fee completion must be between 0 and 100",
         }
       )
-      .transform((val) => Number(val)),
+      .transform((val) => (val === null ? null : Number(val))),
 
     cost: z
       .number()
-      .min(1, "Cost completion percentage is required")
+      .nullable()
       .refine(
-        (val) => !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100,
+        (val) =>
+          val === null ||
+          (!isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 100),
         {
           message: "Cost completion must be between 0 and 100",
         }
       )
-      .transform((val) => Number(val)),
-
-    
+      .transform((val) => (val === null ? null : Number(val))),
   }),
 });
 
 const manpowerSchema = z.object({
-  workAssignment: z.string(),
-  assignee: z.string(),
+  workAssignment: z.string().nullable(),
+  assignee: z.string().nullable(),
   planned: z.number().nullable(),
   consumed: z.number().nullable(),
   balance: z.number().nullable(),
   nextMonthPlanning: z.number().nullable(),
-  manpowerComments: z.string(),
+  manpowerComments: z.string().nullable(),
 });
 
 const manpowerPlanningSchema = z.object({
@@ -120,14 +122,14 @@ const manpowerPlanningSchema = z.object({
 });
 
 const deliverableSchema = z.object({
-  milestone: z.string(),
-  dueDateContract: z.date(),
-  dueDatePlanned: z.date(),
-  achievedDate: z.date(),
+  milestone: z.string().nullable(),
+  dueDateContract: z.date().nullable(),
+  dueDatePlanned: z.date().nullable(),
+  achievedDate: z.date().nullable(),
   paymentDue: z.number().nullable(),
-  invoiceDate: z.date(),
-  paymentReceivedDate: z.date(),
-  deliverableComments: z.string(),
+  invoiceDate: z.date().nullable(),
+  paymentReceivedDate: z.date().nullable(),
+  deliverableComments: z.string().nullable(),
 });
 
 const progressDeliverableSchema = z.object({
@@ -139,29 +141,29 @@ const changeOrderSchema = z.object({
   contractTotal: z.number().nullable(),
   cost: z.number().nullable(),
   fee: z.number().nullable(),
-  summaryDetails: z.string(),
-  status: z.enum(["Proposed", "Submitted", "Approved"]),
+  summaryDetails: z.string().nullable(),
+  status: z.enum(["Proposed", "Submitted", "Approved"]).nullable(),
 });
 
 const lastMonthActionSchema = z.object({
-  LMactions: z.string(),
-  LMAdate: z.date(),
-  LMAcomments: z.string(),
+  LMactions: z.string().nullable(),
+  LMAdate: z.date().nullable(),
+  LMAcomments: z.string().nullable(),
 });
 
 const currentMonthActionSchema = z.object({
-  CMactions: z.string(),
-  CMAdate: z.date(),
-  CMAcomments: z.string(),
+  CMactions: z.string().nullable(),
+  CMAdate: z.date().nullable(),
+  CMAcomments: z.string().nullable(),
   CMApriority: z.enum(["H", "M", "L"]).nullable(),
 });
 
 const programmeScheduleSchema = z.object({
-  ProgrammeDescription: z.string()
+  ProgrammeDescription: z.string().nullable()
 })
 
 const earlyWarningsSchema = z.object({
-  WarningsDescription: z.string()
+  WarningsDescription: z.string().nullable()
 })
 
 export const MonthlyProgressSchema = z.object({
