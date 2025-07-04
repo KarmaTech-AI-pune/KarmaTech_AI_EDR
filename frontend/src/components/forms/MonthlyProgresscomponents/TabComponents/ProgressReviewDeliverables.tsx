@@ -102,7 +102,7 @@ const ProgressReviewDeliverables: React.FC = () => {
           <TableContainer>
             <Table sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
               <TableHead>
-                <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 600, backgroundColor: '#dce8f9', border: 'none' } }}>
+                <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 600, backgroundColor: '#f5f5f5', border: 'none' } }}>
                   <TableCell sx={{ minWidth: 150 }}>Milestone</TableCell>
                   <TableCell>Due Date (Contract)</TableCell>
                   <TableCell>Due Date (Planned)</TableCell>
@@ -309,8 +309,7 @@ const ProgressReviewDeliverables: React.FC = () => {
           </TableContainer>
           <Table>
             <TableFooter>
-              <TableRow sx={{ backgroundColor: '#dce8f9' }}>
-                {/* <TableCell colSpan={4} sx={{ border: 'none' }} /> */}
+              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                 <TableCell sx={{ border: 'none', textAlign: 'right', py:1 }}>
                   <Typography variant="h6" sx={{ color: 'green', fontWeight: "bold", px:5 }}>Total: {totalPaymentDue}</Typography>
                 </TableCell>
