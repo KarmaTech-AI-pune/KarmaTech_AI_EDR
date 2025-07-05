@@ -49,7 +49,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     ProjectId = request.ProjectId,
                     IsActive = true,
-                    Version = "1.0",
+                    CurrentVersion = "1.0",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = _currentUser,
                     Tasks = new List<WBSTask>()
@@ -58,7 +58,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
             else
             {
-                wbs.Version = CalculateNextVersion(wbs.Version);
+                wbs.CurrentVersion = CalculateNextVersion(wbs.CurrentVersion);
             }
 
             var existingTasksDict = wbs.Tasks.ToDictionary(t => t.Id);

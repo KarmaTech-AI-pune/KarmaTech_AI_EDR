@@ -1,0 +1,66 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using NJS.Domain.Enums;
+
+namespace NJS.Domain.Entities
+{
+    /// <summary>
+    /// Entity to track WBS version history with workflow support
+    /// </summary>
+    public class WBSVersionHistory
+    {
+        public WBSVersionHistory()
+        {
+            CreatedAt = DateTime.UtcNow;
+            TaskVersions = new List<WBSTaskVersionHistory>();
+            WorkflowHistories = new List<WBSVersionWorkflowHistory>();
+        }
+
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int WorkBreakdownStructureId { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public string Version { get; set; }
+
+        [StringLength(1000)]
+        public string Comments { get; set; }
+
+        [Required]
+        public DateTime CreatedAt { get; set; }
+
+        [Required]
+        [StringLength(450)]
+        public string CreatedBy { get; set; }
+
+        // Workflow status tracking
+        public int StatusId { get; set; } = (int)PMWorkflowStatusEnum.Initial;
+
+        [ForeignKey("StatusId")]
+        public PMWorkflowStatus Status { get; set; }
+
+        // Version metadata
+        public bool IsActive { get; set; } = false; // Only one version can be active
+        public bool IsLatest { get; set; } = false; // Latest version flag
+        public DateTime? ApprovedAt { get; set; }
+        public string ApprovedBy { get; set; }
+
+        // Navigation properties
+        [ForeignKey("WorkBreakdownStructureId")]
+        public WorkBreakdownStructure WorkBreakdownStructure { get; set; }
+
+        [ForeignKey("CreatedBy")]
+        public User CreatedByUser { get; set; }
+
+        [ForeignKey("ApprovedBy")]
+        public User ApprovedByUser { get; set; }
+
+        public ICollection<WBSTaskVersionHistory> TaskVersions { get; set; }
+        public ICollection<WBSVersionWorkflowHistory> WorkflowHistories { get; set; }
+    }
+} 

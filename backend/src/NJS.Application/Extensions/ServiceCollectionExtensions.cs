@@ -1,4 +1,4 @@
-﻿﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
 using NJS.Repositories.Interfaces;
@@ -25,6 +25,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IFeasibilityStudyRepository, FeasibilityStudyRepository>();
             services.AddScoped<IWorkBreakdownStructureRepository, WorkBreakdownStructureRepository>();
             services.AddScoped<IWBSTaskRepository, WBSTaskRepository>(); // Add this line
+            services.AddScoped<IWBSVersionRepository, WBSVersionRepository>(); // Add WBS version repository
             services.AddScoped<IWBSOptionRepository, WBSOptionRepository>();
             services.AddScoped<IJobStartFormRepository, JobStartFormRepository>();
             services.AddScoped<IGoNoGoDecisionRepository, GoNoGoDecisionRepository>();
@@ -54,6 +55,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEntityWorkflowStrategy, ChangeControlWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategy, ProjectClosureWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategy, WBSWorkflowStrategy>();
+            services.AddScoped<IEntityWorkflowStrategy, WBSVersionWorkflowStrategy>(); // Add WBS version workflow strategy
             services.AddScoped<IEntityWorkflowStrategy, JobStartFormWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
 

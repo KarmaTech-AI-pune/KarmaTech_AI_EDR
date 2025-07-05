@@ -29,7 +29,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     Id = w.Id,
                     ProjectId = w.ProjectId,
-                    Version = w.Version,
+                    Version = w.CurrentVersion,
                     IsActive = w.IsActive,
                     CreatedAt = w.CreatedAt,
                     CreatedBy = w.CreatedBy,
