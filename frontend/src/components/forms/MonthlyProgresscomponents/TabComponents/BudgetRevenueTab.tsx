@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
-import { calculatePercentageComplete } from '../../../../utils/calculations';
+import { getPercentage } from '../../../../utils/calculations';
 import textFieldStyle from '../../../../theme/textFieldStyle';
 import {
   Box,
@@ -25,7 +25,7 @@ const BudgetRevenueTab: React.FC = () => {
 
   useEffect(() => {
     if (misRevenue && totalPaymentDue) {
-      const percentage = calculatePercentageComplete(totalPaymentDue, misRevenue);
+      const percentage = getPercentage(totalPaymentDue, misRevenue);
       setValue('budgetTable.percentCompleteOnCosts.revenueFee', percentage);
     } else {
       setValue('budgetTable.percentCompleteOnCosts.revenueFee', 0);
@@ -34,7 +34,7 @@ const BudgetRevenueTab: React.FC = () => {
 
   useEffect(() => {
     if (misCost && totalPaymentDue) {
-      const percentage = calculatePercentageComplete(totalPaymentDue, misCost);
+      const percentage = getPercentage(totalPaymentDue, misCost);
       setValue('budgetTable.percentCompleteOnCosts.cost', percentage);
     } else {
       setValue('budgetTable.percentCompleteOnCosts.cost', 0);

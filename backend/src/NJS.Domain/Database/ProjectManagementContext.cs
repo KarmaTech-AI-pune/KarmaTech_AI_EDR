@@ -283,7 +283,8 @@ namespace NJS.Domain.Database
             // Configure decimal precisions
             modelBuilder.Entity<FeasibilityStudy>().Property(f => f.ProbabilityAssessment).HasPrecision(18, 2);
             modelBuilder.Entity<FeasibilityStudy>().Property(f => f.FinancialInformation).HasPrecision(18, 2);
-            modelBuilder.Entity<Project>().Property(f => f.EstimatedCost).HasPrecision(18, 2);
+            modelBuilder.Entity<Project>().Property(f => f.EstimatedProjectCost).HasPrecision(18, 2);
+            modelBuilder.Entity<Project>().Property(f => f.EstimatedProjectFee).HasPrecision(18, 2);
             modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
             modelBuilder.Entity<Role>().ToTable("AspNetRoles");
             modelBuilder.Entity<Permission>();

@@ -44,8 +44,7 @@ export interface Project {
     region: string;
     office: string;
     currency: string;
-    budget: number;
-    fundingStream: string;
+    estimatedProjectFee: number;
     startDate?: string;
     endDate?: string;
     details: string;
@@ -54,11 +53,11 @@ export interface Project {
     seniorProjectManagerId: string;
     regionalManagerId: string;
     projectManagerId: string;
-    estimatedCost: number;
+    estimatedProjectCost: number;
     letterOfAcceptance: boolean;
     opportunityTrackingId: number;   
     feeType:string; 
-
+    percentage?: number;
 }
 
 export interface OpportunityHistory {

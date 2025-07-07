@@ -23,6 +23,7 @@ export interface SimpleJobStartFormData {
   serviceTaxAmount?: number; // Added for compatibility with backend
   totalProjectFees: number;
   profit: number;
+  profitPercentage?: number;
   formTitle?: string;
   description?: string;
   startDate?: string;
@@ -71,6 +72,7 @@ export const submitJobStartForm = async (projectId: number | string, formData: S
     projectFees: formData.projectFees,
     totalProjectFees: formData.totalProjectFees,
     profit: formData.profit,
+    profitPercentage: formData.profitPercentage,
     // Default values for required fields
     formTitle: formData.formTitle || 'Job Start Form',
     description: formData.description || '',
@@ -143,6 +145,7 @@ export const updateJobStartForm = async (projectId: number | string, formId: num
     projectFees: formData.projectFees,
     totalProjectFees: formData.totalProjectFees,
     profit: formData.profit,
+    profitPercentage: formData.profitPercentage,
     formTitle: formData.formTitle || 'Job Start Form',
     description: formData.description || '',
     startDate: formData.startDate || new Date().toISOString(),

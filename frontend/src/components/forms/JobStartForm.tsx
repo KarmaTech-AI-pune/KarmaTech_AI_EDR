@@ -91,7 +91,8 @@ const JobStartForm: React.FC = () => {
     serviceTaxPercentage: 18,
     serviceTaxAmount: 0,
     totalProjectFees: 0,
-    profit: 0
+    profit: 0,
+    profitPercentage: 0
   })
 
   // State for form submission
@@ -153,7 +154,8 @@ const JobStartForm: React.FC = () => {
               serviceTaxPercentage: existingFormData.serviceTaxPercentage || 18,
               serviceTaxAmount: existingFormData.serviceTaxAmount || 0,
               totalProjectFees: existingFormData.totalProjectFees || 0,
-              profit: existingFormData.profit || 0
+              profit: existingFormData.profit || 0,
+              profitPercentage: existingFormData.profitPercentage || 0
             })
 
             // Process existing resources and custom rows
@@ -355,6 +357,7 @@ const JobStartForm: React.FC = () => {
         },
         totalProjectFees: summaryData.totalProjectFees,
         profit: summaryData.profit,
+        profitPercentage: summaryData.profitPercentage,
         // Add resources for backend storage
         resources: [
           // Regular time resources

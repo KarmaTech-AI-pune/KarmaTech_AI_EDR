@@ -57,10 +57,16 @@ namespace NJS.Domain.Entities
 
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal EstimatedCost { get; set; }
+        public decimal EstimatedProjectCost { get; set; }
 
         [Column(TypeName ="decimal(18,2)")]
-        public decimal Budget {  get; set; }
+        public decimal EstimatedProjectFee {  get; set; }
+
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal? Percentage { get; set; }
+
+        [StringLength(1000)]
+        public string? Details { get; set; }
 
         [Required]
         [StringLength(50)]
