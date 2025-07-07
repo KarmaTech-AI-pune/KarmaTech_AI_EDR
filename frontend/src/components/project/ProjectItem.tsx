@@ -220,7 +220,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
                 <strong>Type:</strong> {project.typeOfJob} | <strong>Sector:</strong> {project.sector}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Cost:</strong> {project.currency} {project.estimatedProjectCost.toLocaleString()} {project.feeType ? `(${project.feeType})` : ''}
+                <strong>Cost:</strong> {project.currency} {project.estimatedProjectCost ? project.estimatedProjectCost.toLocaleString() : 'N/A'} {project.feeType ? `(${project.feeType})` : ''}
               </Typography>
             </Grid>
           </Grid>
