@@ -7,10 +7,7 @@ const financialAndContractSchema = z.object({
   budgetOdcs: z.number().nullable(),
   budgetStaff: z.number().nullable(),
   BudgetSubTotal: z.number().nullable(),
-  contractType: z.enum(["lumpsum", "timeAndExpense"], {
-    required_error: "Please select a contract type",
-  }),
-  percentage: z.number().min(0).max(100).nullable(),
+  contractType: z.enum(["lumpsum", "timeAndExpense","percentage"]),
 });
 
 const actualCostSchema = z.object({

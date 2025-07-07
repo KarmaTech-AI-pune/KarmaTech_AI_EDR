@@ -1,7 +1,7 @@
 import React, { useEffect, useContext } from "react";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
-import { Grid, Paper, TextField, Typography, CircularProgress, FormControlLabel, Checkbox } from "@mui/material";
+import { Grid, Paper, TextField, Typography, CircularProgress, FormControlLabel, Checkbox, Box } from "@mui/material";
 import { formatCurrency } from "../../../../utils/MonthlyProgress/monthlyProgressUtils";
 import { projectManagementAppContext } from "../../../../App";
 import textFieldStyle from "../../../../theme/textFieldStyle";
@@ -247,58 +247,59 @@ const FinancialDetailsTab: React.FC = () => {
                         Contract Type
                       </Typography>
             
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={contractType === 'lumpsum'}
-                  onChange={() => {
-                    setValue('financialAndContractDetails.contractType', 'lumpsum');
-                  }}
-                  sx={{
-                    '&.Mui-checked': {
-                      color: '#1869DA'
-                    }
-                  }}
-                />
-              }
-              label="Lumpsum"
-            />
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={contractType === 'lumpsum'}
+                    onChange={() => {
+                      setValue('financialAndContractDetails.contractType', 'lumpsum');
+                    }}
+                    sx={{
+                      '&.Mui-checked': {
+                        color: '#1869DA'
+                      }
+                    }}
+                  />
+                }
+                label="Lumpsum"
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={contractType === 'timeAndExpense'}
+                    onChange={() => {
+                      setValue('financialAndContractDetails.contractType', 'timeAndExpense');
+                    }}
+                    sx={{
+                      '&.Mui-checked': {
+                        color: '#1869DA'
+                      }
+                    }}
+                  />
+                }
+                label="Time & Expense"
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={contractType === 'percentage'}
+                    onChange={() => {
+                      setValue('financialAndContractDetails.contractType', 'percentage');
+                    }}
+                    sx={{
+                      '&.Mui-checked': {
+                        color: '#1869DA'
+                      }
+                    }}
+                  />
+                }
+                label="Percentage"
+              />
+            </Box>
             
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={contractType === 'timeAndExpense'}
-                  onChange={() => {
-                    setValue('financialAndContractDetails.contractType', 'timeAndExpense');
-                  }}
-                  sx={{
-                    '&.Mui-checked': {
-                      color: '#1869DA'
-                    }
-                  }}
-                />
-              }
-              label="Time & Expense"
-            />
-            
-                      <Controller
-                        name="financialAndContractDetails.percentage"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField
-                              fullWidth
-                              label="Percentage"
-                              type="number"
-                              value={field.value}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                              error={!!errors.financialAndContractDetails?.percentage}
-                              helperText={errors.financialAndContractDetails?.percentage?.message || ''}
-                              sx={textFieldStyle}
-                              margin="normal"
-                            />
-                        )}
-                      />
                     </Paper>
             </Grid>
         </Grid>

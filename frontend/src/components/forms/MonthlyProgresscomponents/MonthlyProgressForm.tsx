@@ -140,7 +140,6 @@ export const MonthlyProgressForm: React.FC = () => {
         budgetStaff: 0,
         BudgetSubTotal: 0,
         contractType: "lumpsum", // Default to lumpsum
-        percentage: 0,
       },
       actualCost: {
         priorCumulativeOdc: 0,
