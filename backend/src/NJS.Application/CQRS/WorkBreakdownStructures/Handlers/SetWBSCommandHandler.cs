@@ -8,6 +8,7 @@ using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using NJS.Domain.UnitWork;
 using Microsoft.Extensions.Logging;
+using NJS.Repositories.Interfaces;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
@@ -18,6 +19,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         private readonly IProjectHistoryService _projectHistoryService;
         private readonly IUserContext _userContext;
         private readonly ILogger<SetWBSCommandHandler> _logger;
+        private readonly IWBSVersionRepository _wbsVersionRepository;
         private readonly string _currentUser = "System";
 
         public SetWBSCommandHandler(
@@ -25,13 +27,15 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             IUnitOfWork unitOfWork,
             IProjectHistoryService projectHistoryService,
             IUserContext userContext,
-            ILogger<SetWBSCommandHandler> logger)
+            ILogger<SetWBSCommandHandler> logger,
+            IWBSVersionRepository wbsVersionRepository)
         {
             _context = context;
             _unitOfWork = unitOfWork;
             _projectHistoryService = projectHistoryService;
             _userContext = userContext;
             _logger = logger;
+            _wbsVersionRepository = wbsVersionRepository;
         }
 
         public async Task<Unit> Handle(SetWBSCommand request, CancellationToken cancellationToken)
@@ -51,7 +55,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     IsActive = true,
                     CurrentVersion = "1.0",
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = _currentUser,
+                    CreatedBy = _userContext.GetCurrentUserId()?? _currentUser,
                     Tasks = new List<WBSTask>()
                 };
                 _context.WorkBreakdownStructures.Add(wbs);
@@ -69,7 +73,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             {
                 task.IsDeleted = true;
                 task.UpdatedAt = DateTime.UtcNow;
-                task.UpdatedBy = _currentUser;
+                task.UpdatedBy = _userContext.GetCurrentUserId()??_currentUser;
             }
 
             var tempIdToEntityMap = new Dictionary<string, WBSTask>();
@@ -91,7 +95,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     taskEntity.EndDate = dto.EndDate;
                     taskEntity.TaskType = dto.TaskType;
                     taskEntity.UpdatedAt = DateTime.UtcNow;
-                    taskEntity.UpdatedBy = _currentUser;
+                    taskEntity.UpdatedBy = _userContext.GetCurrentUserId()??_currentUser;
                     taskEntity.IsDeleted = false;
 
                     await UpdateUserAssignment(taskEntity, dto);
@@ -111,7 +115,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         EndDate = dto.EndDate,
                         TaskType = dto.TaskType,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _currentUser,
+                        CreatedBy = _userContext.GetCurrentUserId()??_currentUser,
                         IsDeleted = false,
                         UserWBSTasks = new List<UserWBSTask>(),
                         PlannedHours = new List<WBSTaskPlannedHour>()
@@ -160,7 +164,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             if (requiresSecondSave)
                 await _unitOfWork.SaveChangesAsync();
 
-            
+            // Create a new WBS version after the WBS has been updated
+            await CreateWBSVersionAfterUpdate(wbs, request.Tasks);
 
             return Unit.Value;
         }
@@ -182,7 +187,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     userTask.TotalHours = totalHours;
                     userTask.TotalCost = totalCost;
                     userTask.UpdatedAt = DateTime.UtcNow;
-                    userTask.UpdatedBy = _currentUser;
+                    userTask.UpdatedBy = _userContext.GetCurrentUserId()??_currentUser;
                     if (!string.IsNullOrEmpty(dto.ResourceRoleId) || (userTask.UserId != dto.AssignedUserId && userTask.Name != dto.ResourceName))
                     {
                         userTask.ResourceRoleId = dto.ResourceRoleId;
@@ -200,7 +205,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalHours = totalHours,
                         TotalCost = totalCost,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _currentUser,
+                        CreatedBy = _userContext.GetCurrentUserId()??_currentUser,
                         ResourceRoleId = dto.ResourceRoleId
                     });
                 }
@@ -216,7 +221,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     userTask.TotalHours = totalHours;
                     userTask.TotalCost = totalCost;
                     userTask.UpdatedAt = DateTime.UtcNow;
-                    userTask.UpdatedBy = _currentUser;
+                    userTask.UpdatedBy = _userContext.GetCurrentUserId()??_currentUser;
                     if (!string.IsNullOrEmpty(dto.ResourceRoleId) || (userTask.UserId != dto.AssignedUserId && userTask.Name != dto.ResourceName))
                     {
                         userTask.ResourceRoleId = dto.ResourceRoleId;
@@ -234,7 +239,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalHours = totalHours,
                         TotalCost = totalCost,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _currentUser,
+                        CreatedBy = _userContext.GetCurrentUserId()??_currentUser,
                         ResourceRoleId = dto.ResourceRoleId
                     });
                 }
@@ -257,7 +262,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     existingPh.PlannedHours = phDto.PlannedHours;
                     existingPh.UpdatedAt = DateTime.UtcNow;
-                    existingPh.UpdatedBy = _currentUser;
+                    existingPh.UpdatedBy = _userContext.GetCurrentUserId()??_currentUser;
                 }
                 else
                 {
@@ -270,7 +275,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         Month = phDto.Month,
                         PlannedHours = phDto.PlannedHours,
                         CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _currentUser
+                        CreatedBy = _userContext.GetCurrentUserId()??_currentUser
                     };
                     task.PlannedHours.Add(newPh);
                     header.PlannedHours.Add(newPh);
@@ -341,7 +346,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     ProjectId = projectId,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedBy = _currentUser,
+                    CreatedBy = _userContext.GetCurrentUserId()??_currentUser,
                     PlannedHours = new HashSet<WBSTaskPlannedHour>(),
                     WBSHistories = new List<WBSHistory>(),
                     TaskType=taskType,
@@ -408,6 +413,121 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             return decimal.TryParse(currentVersion, out var v)
                 ? (v + 0.1m).ToString("F1")
                 : currentVersion + "_updated";
+        }
+
+        private async Task CreateWBSVersionAfterUpdate(WorkBreakdownStructure wbs, List<WBSTaskDto> tasks)
+        {
+            try
+            {
+                // Generate next version number
+                var nextVersion = await _wbsVersionRepository.GetNextVersionNumberAsync(wbs.ProjectId);
+
+                // Create new WBS version
+                var wbsVersion = new WBSVersionHistory
+                {
+                    WorkBreakdownStructureId = wbs.Id,
+                    Version = nextVersion,
+                    Comments = $"Auto-generated version after WBS update - {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}",
+                    CreatedBy = _userContext.GetCurrentUserId()??_currentUser,
+                    StatusId = (int)PMWorkflowStatusEnum.Initial,
+                    IsLatest = true,
+                    IsActive = false                   
+
+                };
+
+                // Deactivate all previous versions
+                var existingVersions = await _wbsVersionRepository.GetByProjectIdAsync(wbs.ProjectId);
+                foreach (var version in existingVersions.Where(v => v.IsLatest))
+                {
+                    version.IsLatest = false;
+                    await _wbsVersionRepository.UpdateVersionAsync(version);
+                }
+
+                // Save the new version
+                await _wbsVersionRepository.CreateVersionAsync(wbsVersion);
+
+                await CopyTasksToVersion(wbs.Tasks.Where(t => !t.IsDeleted).ToList(), wbsVersion.Id);
+
+                wbs.LatestVersionHistoryId = wbsVersion.Id;
+                wbs.CurrentVersion = nextVersion;
+                _context.Entry(wbs).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Created WBS version {nextVersion} for project {wbs.ProjectId} after update");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error creating WBS version for project {wbs.ProjectId}");
+            }
+        }
+
+        private async Task CopyTasksToVersion(List<WBSTask> tasks, int wbsVersionHistoryId)
+        {
+            var taskMap = new Dictionary<int, int>(); 
+
+            foreach (var task in tasks.OrderBy(t => t.DisplayOrder))
+            {
+                var taskVersion = new WBSTaskVersionHistory
+                {
+                    WBSVersionHistoryId = wbsVersionHistoryId,
+                    OriginalTaskId = task.Id,
+                    ParentId = null,
+                    Level = task.Level,
+                    Title = task.Title,
+                    Description = task.Description,
+                    DisplayOrder = task.DisplayOrder,
+                    EstimatedBudget = task.EstimatedBudget,
+                    StartDate = task.StartDate,
+                    EndDate = task.EndDate,
+                    TaskType = task.TaskType
+                };
+
+                await _wbsVersionRepository.CreateTaskVersionAsync(taskVersion);
+                taskMap[task.Id] = taskVersion.Id;
+            }
+
+            // Second pass: Update parent relationships
+            foreach (var task in tasks)
+            {
+                if (task.ParentId.HasValue && taskMap.ContainsKey(task.ParentId.Value))
+                {
+                    var taskVersion = await _wbsVersionRepository.GetTaskVersionByIdAsync(taskMap[task.Id]);
+                    taskVersion.ParentId = taskMap[task.ParentId.Value];
+                    await _wbsVersionRepository.UpdateTaskVersionAsync(taskVersion);
+                }
+            }
+
+            // Copy planned hours and user assignments
+            foreach (var task in tasks)
+            {
+                var taskVersion = await _wbsVersionRepository.GetTaskVersionByIdAsync(taskMap[task.Id]);
+                
+                // Copy planned hours
+                foreach (var plannedHour in task.PlannedHours)
+                {
+                    var plannedHourVersion = new WBSTaskPlannedHourVersionHistory
+                    {
+                        WBSTaskVersionHistoryId = taskVersion.Id,
+                        Year = plannedHour.Year,
+                        Month = plannedHour.Month,
+                        PlannedHours = plannedHour.PlannedHours,
+                        CreatedBy = _userContext.GetCurrentUserId()??_currentUser
+                    };
+                    await _wbsVersionRepository.CreatePlannedHourVersionAsync(plannedHourVersion);
+                }
+
+                // Copy user assignments
+                foreach (var userAssignment in task.UserWBSTasks)
+                {
+                    var userAssignmentVersion = new UserWBSTaskVersionHistory
+                    {
+                        WBSTaskVersionHistoryId = taskVersion.Id,
+                        UserId = userAssignment.UserId,
+                        ResourceRoleId = userAssignment.ResourceRoleId
+                    };
+                    await _wbsVersionRepository.CreateUserAssignmentVersionAsync(userAssignmentVersion);
+                }
+            }
         }
     }
 }

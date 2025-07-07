@@ -83,14 +83,8 @@ namespace NJSAPI.Controllers
 
             var command = new AddWBSTaskCommand(projectId, taskDto);
             var newTaskId = await _mediator.Send(command);
-
-            // Optionally, retrieve the created task to return it (requires a GetTaskByIdQuery)
-            // For now, returning the ID in the location header is standard REST practice.
-            // taskDto.Id = newTaskId; // Update DTO with new ID if returning it
-            // return CreatedAtAction(nameof(GetTaskById), new { projectId, taskId = newTaskId }, taskDto);
-
-            // Returning location header with ID
-             return CreatedAtAction(nameof(GetWBS), new { projectId }, new { id = newTaskId }); // Pointing to GetWBS for simplicity, ideally GetTaskById
+          
+             return CreatedAtAction(nameof(GetWBS), new { projectId }, new { id = newTaskId });
         }
 
         /// <summary>

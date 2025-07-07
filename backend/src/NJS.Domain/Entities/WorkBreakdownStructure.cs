@@ -1,5 +1,4 @@
-﻿﻿﻿﻿//File: backend/src/NJS.Domain/Entities/WorkBreakdownStructure.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -20,8 +19,8 @@ namespace NJS.Domain.Entities
         public int Id { get; set; }
         public int ProjectId { get; set; }
         public string Structure { get; set; }
-        public string CurrentVersion { get; set; } // Renamed from Version
-        public bool IsActive { get; set; } = true; // Default to active
+        public string CurrentVersion { get; set; } 
+        public bool IsActive { get; set; } = true; 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string CreatedBy { get; set; }
 
@@ -33,8 +32,7 @@ namespace NJS.Domain.Entities
         public ICollection<WBSTask> Tasks { get; set; }
         public ICollection<JobStartForm> JobStartForms { get; set; }
         public ICollection<WBSVersionHistory> VersionHistory { get; set; }
-
-        // Navigation properties for version management
+       
         [ForeignKey("LatestVersionHistoryId")]
         public WBSVersionHistory LatestVersion { get; set; }
 

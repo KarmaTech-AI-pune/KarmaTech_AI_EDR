@@ -51,7 +51,7 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
-        /// Gets the current status of a WBS header
+        /// Gets the current status of a WBS header (returns latest version status for backward compatibility)
         /// </summary>
         /// <param name="projectId">The project ID</param>
         /// <param name="taskType">The task type (0 for Manpower, 1 for ODC)</param>
@@ -61,6 +61,37 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(404)]
         public async Task<ActionResult<WbsWorkflowDto>> GetWBSHeaderStatus(int projectId, TaskType taskType)
         {
+            // First try to get the latest WBS version status
+            var wbs = await _context.WorkBreakdownStructures
+                .Include(w => w.LatestVersion)
+                .ThenInclude(v => v.Status)
+                .FirstOrDefaultAsync(w => w.ProjectId == projectId);
+
+            if (wbs?.LatestVersion != null)
+            {
+                _logger.LogInformation($"Using WBS version status for project {projectId}, version {wbs.LatestVersion.Version}");
+                
+                string versionStatusName = Enum.GetName(typeof(PMWorkflowStatusEnum), wbs.LatestVersion.StatusId) ?? "Initial";
+                string versionUserFriendlyStatus = versionStatusName switch
+                {
+                    "Initial" => "Initial",
+                    "SentForReview" => "Sent for Review",
+                    "ReviewChanges" => "Review Changes",
+                    "SentForApproval" => "Sent for Approval",
+                    "ApprovalChanges" => "Approval Changes",
+                    "Approved" => "Approved",
+                    _ => "Initial"
+                };
+
+                return Ok(new WbsWorkflowDto
+                {
+                    Id = wbs.LatestVersion.Id,
+                    StatusId = wbs.LatestVersion.StatusId,
+                    Status = versionUserFriendlyStatus
+                });
+            }
+
+            // Fallback to the old WBS header status logic for backward compatibility
             var header = await _context.Set<WBSTaskPlannedHourHeader>()
                 .Include(h => h.WBSHistories.OrderByDescending(h => h.ActionDate))
                 .ThenInclude(h => h.Status)

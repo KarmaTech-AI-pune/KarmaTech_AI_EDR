@@ -204,10 +204,73 @@ namespace NJS.Repositories.Repositories
             return taskVersion;
         }
 
+        public async Task<WBSTaskVersionHistory> UpdateTaskVersionAsync(WBSTaskVersionHistory taskVersion)
+        {
+            _context.Entry(taskVersion).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return taskVersion;
+        }
+
         public async Task<bool> DeleteTaskVersionsAsync(int wbsVersionHistoryId)
         {
             var taskVersions = await GetTaskVersionsAsync(wbsVersionHistoryId);
             _context.WBSTaskVersionHistories.RemoveRange(taskVersions);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        #endregion
+
+        #region WBS Planned Hours Version History operations
+
+        public async Task<WBSTaskPlannedHourVersionHistory> CreatePlannedHourVersionAsync(WBSTaskPlannedHourVersionHistory plannedHourVersion)
+        {
+            _context.WBSTaskPlannedHourVersionHistories.Add(plannedHourVersion);
+            await _context.SaveChangesAsync();
+            return plannedHourVersion;
+        }
+
+        public async Task<List<WBSTaskPlannedHourVersionHistory>> GetPlannedHourVersionsAsync(int wbsTaskVersionHistoryId)
+        {
+            return await _context.WBSTaskPlannedHourVersionHistories
+                .Where(p => p.WBSTaskVersionHistoryId == wbsTaskVersionHistoryId)
+                .OrderBy(p => p.Year)
+                .ThenBy(p => p.Month)
+                .ToListAsync();
+        }
+
+        public async Task<bool> DeletePlannedHourVersionsAsync(int wbsTaskVersionHistoryId)
+        {
+            var plannedHours = await GetPlannedHourVersionsAsync(wbsTaskVersionHistoryId);
+            _context.WBSTaskPlannedHourVersionHistories.RemoveRange(plannedHours);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        #endregion
+
+        #region User WBS Task Version History operations
+
+        public async Task<UserWBSTaskVersionHistory> CreateUserAssignmentVersionAsync(UserWBSTaskVersionHistory userAssignmentVersion)
+        {
+            _context.UserWBSTaskVersionHistories.Add(userAssignmentVersion);
+            await _context.SaveChangesAsync();
+            return userAssignmentVersion;
+        }
+
+        public async Task<List<UserWBSTaskVersionHistory>> GetUserAssignmentVersionsAsync(int wbsTaskVersionHistoryId)
+        {
+            return await _context.UserWBSTaskVersionHistories
+                .Include(u => u.User)
+                .Include(u => u.ResourceRole)
+                .Where(u => u.WBSTaskVersionHistoryId == wbsTaskVersionHistoryId)
+                .ToListAsync();
+        }
+
+        public async Task<bool> DeleteUserAssignmentVersionsAsync(int wbsTaskVersionHistoryId)
+        {
+            var userAssignments = await GetUserAssignmentVersionsAsync(wbsTaskVersionHistoryId);
+            _context.UserWBSTaskVersionHistories.RemoveRange(userAssignments);
             await _context.SaveChangesAsync();
             return true;
         }

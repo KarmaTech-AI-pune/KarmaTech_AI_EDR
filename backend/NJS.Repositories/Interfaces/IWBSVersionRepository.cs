@@ -22,7 +22,18 @@ namespace NJS.Repositories.Interfaces
         Task<List<WBSTaskVersionHistory>> GetTaskVersionsAsync(int wbsVersionHistoryId);
         Task<WBSTaskVersionHistory> GetTaskVersionByIdAsync(int id);
         Task<WBSTaskVersionHistory> CreateTaskVersionAsync(WBSTaskVersionHistory taskVersion);
+        Task<WBSTaskVersionHistory> UpdateTaskVersionAsync(WBSTaskVersionHistory taskVersion);
         Task<bool> DeleteTaskVersionsAsync(int wbsVersionHistoryId);
+
+        // WBS Planned Hours Version History operations
+        Task<WBSTaskPlannedHourVersionHistory> CreatePlannedHourVersionAsync(WBSTaskPlannedHourVersionHistory plannedHourVersion);
+        Task<List<WBSTaskPlannedHourVersionHistory>> GetPlannedHourVersionsAsync(int wbsTaskVersionHistoryId);
+        Task<bool> DeletePlannedHourVersionsAsync(int wbsTaskVersionHistoryId);
+
+        // User WBS Task Version History operations
+        Task<UserWBSTaskVersionHistory> CreateUserAssignmentVersionAsync(UserWBSTaskVersionHistory userAssignmentVersion);
+        Task<List<UserWBSTaskVersionHistory>> GetUserAssignmentVersionsAsync(int wbsTaskVersionHistoryId);
+        Task<bool> DeleteUserAssignmentVersionsAsync(int wbsTaskVersionHistoryId);
 
         // WBS Version Workflow History operations
         Task<List<WBSVersionWorkflowHistory>> GetWorkflowHistoryAsync(int wbsVersionHistoryId);
