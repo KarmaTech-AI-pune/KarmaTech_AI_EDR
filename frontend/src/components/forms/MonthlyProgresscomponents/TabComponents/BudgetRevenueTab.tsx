@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
+import { calculatePercentageComplete } from '../../../../utils/calculations';
 import textFieldStyle from '../../../../theme/textFieldStyle';
 import {
   Box,
@@ -16,7 +17,29 @@ import {
 } from '@mui/material';
 
 const BudgetRevenueTab: React.FC = () => {
-  const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+  const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
+
+  const misRevenue = watch('budgetTable.currentBudgetInMIS.revenueFee');
+  const misCost = watch('budgetTable.currentBudgetInMIS.cost');
+  const totalPaymentDue = watch('progressDeliverable.totalPaymentDue');
+
+  useEffect(() => {
+    if (misRevenue && totalPaymentDue) {
+      const percentage = calculatePercentageComplete(totalPaymentDue, misRevenue);
+      setValue('budgetTable.percentCompleteOnCosts.revenueFee', percentage);
+    } else {
+      setValue('budgetTable.percentCompleteOnCosts.revenueFee', 0);
+    }
+  }, [misRevenue, totalPaymentDue, setValue]);
+
+  useEffect(() => {
+    if (misCost && totalPaymentDue) {
+      const percentage = calculatePercentageComplete(totalPaymentDue, misCost);
+      setValue('budgetTable.percentCompleteOnCosts.cost', percentage);
+    } else {
+      setValue('budgetTable.percentCompleteOnCosts.cost', 0);
+    }
+  }, [misCost, totalPaymentDue, setValue]);
 
 
   return (
@@ -204,6 +227,7 @@ const BudgetRevenueTab: React.FC = () => {
                         helperText={errors.budgetTable?.percentCompleteOnCosts?.revenueFee?.message}
                         sx={textFieldStyle}
                         InputProps={{
+                          readOnly: true,
                           endAdornment: '%'
                         }}
                       />
@@ -228,6 +252,7 @@ const BudgetRevenueTab: React.FC = () => {
                         helperText={errors.budgetTable?.percentCompleteOnCosts?.cost?.message}
                         sx={textFieldStyle}
                         InputProps={{
+                          readOnly: true,
                           endAdornment: '%'
                         }}
                       />

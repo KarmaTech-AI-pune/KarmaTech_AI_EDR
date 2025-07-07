@@ -8,3 +8,4 @@ export { MonthlyProgressForm } from './MonthlyProgresscomponents/MonthlyProgress
 export { default as ProjectClosureForm } from './ProjectClosureForm';
 export { default as FormsOverview } from './FormsOverview';
 export { FeasibilityStudyForm } from './FeasibilityStudyForm';
+export { default as MonthlyReports } from './MonthlyReports';

@@ -21,6 +21,7 @@ interface JobstartSummaryProps {
     serviceTaxAmount: number;
     totalProjectFees: number;
     profit: number;
+    profitPercentage: number;
   }) => void;
 }
 
@@ -147,13 +148,15 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
       const taxAmount = (feesNum * taxPercent / 100);
       const totalFees = feesNum + taxAmount;
       const profit = feesNum - grandTotal;
+      const profitPercentage = feesNum > 0 ? (profit / feesNum) * 100 : 0;
 
       onDataChange({
         projectFees: feesNum,
         serviceTaxPercentage: taxPercent,
         serviceTaxAmount: taxAmount,
         totalProjectFees: totalFees,
-        profit: profit
+        profit: profit,
+        profitPercentage: profitPercentage
       });
     }
   };
@@ -221,6 +224,30 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
                   }}
                 >
                   {calculateProfit()}
+                </TableCell>
+                <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
+              </TableRow>
+
+              {/* Profit Percentage Row */}
+              <TableRow sx={{
+                bgcolor: '#e3f2fd',
+                '& .MuiTableCell-root': {
+                  py: 2,
+                  fontSize: '1.1em',
+                  fontWeight: 'bold'
+                }
+              }}>
+                <TableCell colSpan={4} sx={{...tableCellStyle, width: 'calc(100% - 256px)'}}>Profit Percentage</TableCell>
+                <TableCell
+                  align="right"
+                  sx={{
+                    ...tableCellStyle,
+                    width: '240px',
+                    color: parseFloat(calculateProfit().replace(/,/g, '')) >= 0 ? '#2e7d32' : '#d32f2f',
+                    fontSize: '1.2em'
+                  }}
+                >
+                  {parseFloat(projectFees) > 0 ? `${((parseFloat(calculateProfit().replace(/,/g, '')) / parseFloat(projectFees)) * 100).toFixed(2)}%` : '0.00%'}
                 </TableCell>
                 <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
               </TableRow>

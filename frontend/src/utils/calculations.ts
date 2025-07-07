@@ -54,3 +54,16 @@ export const calculateGrossPercentage = (net: number, value: number, decimalPlac
   const grossProfit = ((net - value) / net) * 100;
   return Number(grossProfit.toFixed(decimalPlaces));
 };
+
+/**
+ * Calculates the percentage of completion given a value and a total.
+ * @param value - The current value.
+ * @param total - The total value.
+ * @param decimalPlaces - Optional number of decimal places (default: 2).
+ * @returns The percentage of completion.
+ */
+export const calculatePercentageComplete = (value: number, total: number, decimalPlaces: number = 2): number => {
+  if (total === 0) return 0; // Avoid division by zero
+  const percentage = (value / total) * 100;
+  return Number(percentage.toFixed(decimalPlaces));
+};
