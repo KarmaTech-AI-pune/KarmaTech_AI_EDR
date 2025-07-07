@@ -76,18 +76,17 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     createdAt: project?.createdAt || '',
     updatedAt: project?.updatedAt || '',
     typeOfClient: project?.typeOfClient || '',
-    estimatedCost: project?.estimatedCost || 0,
-    fundingStream: project?.fundingStream || 'Lumpsum',
+    estimatedProjectCost: project?.estimatedProjectCost || 0,
     // Parse dates to ensure consistent format
     startDate: parseDateString(project?.startDate) || today, // Default to today's date if no project data
     endDate: parseDateString(project?.endDate) || '',
     currency: project?.currency || 'INR',
-    budget: project?.budget || 0,
+    estimatedProjectFee: project?.estimatedProjectFee || 0,
     priority: project?.priority || '',
     regionalManagerId: project?.regionalManagerId || "",
     letterOfAcceptance:project?.letterOfAcceptance|| false,
     opportunityTrackingId: project?.opportunityTrackingId || 0,
-    feeType: project?.feeType || ''
+    feeType: project?.feeType || 'Lumpsum'
   })
 
 
@@ -174,8 +173,8 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       // Ensure all required fields are properly formatted
       const submissionData = {
         ...formData,
-        estimatedCost: Number(formData.estimatedCost),
-        budget: Number(formData.budget || 0),
+        estimatedProjectCost: Number(formData.estimatedProjectCost),
+        estimatedProjectFee: Number(formData.estimatedProjectFee || 0),
         projectManagerId: formData.projectManagerId,
         seniorProjectManagerId: formData.seniorProjectManagerId,
         regionalManagerId: formData.regionalManagerId,
@@ -359,21 +358,22 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               fullWidth
               select
               label="Fee Type"
-              name="fundingStream"
-              value={formData.fundingStream}
+              name="feeType"
+              value={formData.feeType}
               onChange={handleChange}
             >
               <MenuItem value="Lumpsum">Lumpsum</MenuItem>
-              <MenuItem value="Itemrate">Item Rate</MenuItem>
+              <MenuItem value="Time&Expense">Time & Expense</MenuItem>
+              <MenuItem value="Percentage">Percentage</MenuItem>
             </TextField>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Estimated Cost"
-              name="estimatedCost"
+              label="Estimated Project Cost"
+              name="estimatedProjectCost"
               type="text"
-              value={formData.estimatedCost}
+              value={formData.estimatedProjectCost}
               onChange={handleNumberChange}
               required
             />
@@ -381,10 +381,10 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Budget"
-              name="budget"
+              label="Estimated Project Fee"
+              name="estimatedProjectFee"
               type="text"
-              value={formData.budget}
+              value={formData.estimatedProjectFee}
               onChange={handleNumberChange}
             />
           </Grid>
