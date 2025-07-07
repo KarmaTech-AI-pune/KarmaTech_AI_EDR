@@ -150,8 +150,8 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
         typeOfJob: formData.typeOfJob,
         sector: formData.sector,
         feeType: formData.feeType,
-        estimatedCost: Number(formData.estimatedCost),
-        budget: Number(formData.budget || 0),
+        estimatedProjectCost: Number(formData.estimatedProjectCost),
+        budget: Number(formData.estimatedProjectFee || 0),
         priority: formData.priority,
         currency: formData.currency,
         startDate: formData.startDate,
@@ -159,7 +159,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
         status: formData.status,
         letterOfAcceptance: formData.letterOfAcceptance,
         details: formData.details,
-        fundingStream: formData.fundingStream
+        fundingStream: formData.feeType
       };
 
       console.log('Sending update with data:', updatedProject);
@@ -220,7 +220,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
                 <strong>Type:</strong> {project.typeOfJob} | <strong>Sector:</strong> {project.sector}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Cost:</strong> {project.currency} {project.estimatedCost.toLocaleString()} {project.feeType ? `(${project.feeType})` : ''}
+                <strong>Cost:</strong> {project.currency} {project.estimatedProjectCost.toLocaleString()} {project.feeType ? `(${project.feeType})` : ''}
               </Typography>
             </Grid>
           </Grid>

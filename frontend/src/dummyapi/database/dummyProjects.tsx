@@ -220,5 +220,5 @@ export const getProjectsBySector = (sector: string): Project[] => {
 
 // Utility function to calculate total project value
 export const calculateTotalProjectValue = (): number => {
-  return projects.reduce((sum, project) => sum + project.estimatedCost, 0);
+  return projects.reduce((sum, project) => sum + project.estimatedProjectCost, 0);
 };
