@@ -36,19 +36,31 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
             // Update properties of the main MonthlyProgress entity
             // CreatedDate is typically set on creation and not updated via DTO
 
+            // Update Month and Year if provided
+            if (request.MonthlyProgress?.Month > 0)
+            {
+                existingMonthlyProgress.Month = request.MonthlyProgress.Month;
+            }
+            if (request.MonthlyProgress?.Year > 0)
+            {
+                existingMonthlyProgress.Year = request.MonthlyProgress.Year;
+            }
+
             // Update FinancialDetails
-            if (request.MonthlyProgress?.FinancialDetails != null)
+            if (request.MonthlyProgress?.FinancialAndContractDetails != null)
             {
                 if (existingMonthlyProgress.FinancialDetails == null)
                 {
                     existingMonthlyProgress.FinancialDetails = new FinancialDetails();
                 }
-                existingMonthlyProgress.FinancialDetails.Net = request.MonthlyProgress.FinancialDetails.Net;
-                existingMonthlyProgress.FinancialDetails.ServiceTax = request.MonthlyProgress.FinancialDetails.ServiceTax;
-                existingMonthlyProgress.FinancialDetails.FeeTotal = request.MonthlyProgress.FinancialDetails.FeeTotal;
-                existingMonthlyProgress.FinancialDetails.BudgetOdcs = request.MonthlyProgress.FinancialDetails.BudgetOdcs;
-                existingMonthlyProgress.FinancialDetails.BudgetStaff = request.MonthlyProgress.FinancialDetails.BudgetStaff;
-                existingMonthlyProgress.FinancialDetails.BudgetSubTotal = request.MonthlyProgress.FinancialDetails.BudgetSubTotal;
+                existingMonthlyProgress.FinancialDetails.Net = request.MonthlyProgress.FinancialAndContractDetails.Net;
+                existingMonthlyProgress.FinancialDetails.ServiceTax = request.MonthlyProgress.FinancialAndContractDetails.ServiceTax;
+                existingMonthlyProgress.FinancialDetails.FeeTotal = request.MonthlyProgress.FinancialAndContractDetails.FeeTotal;
+                existingMonthlyProgress.FinancialDetails.BudgetOdcs = request.MonthlyProgress.FinancialAndContractDetails.BudgetOdcs;
+                existingMonthlyProgress.FinancialDetails.BudgetStaff = request.MonthlyProgress.FinancialAndContractDetails.BudgetStaff;
+                existingMonthlyProgress.FinancialDetails.BudgetSubTotal = request.MonthlyProgress.FinancialAndContractDetails.BudgetSubTotal;
+                existingMonthlyProgress.FinancialDetails.ContractType = request.MonthlyProgress.FinancialAndContractDetails.ContractType ?? "";
+                existingMonthlyProgress.FinancialDetails.Percentage = request.MonthlyProgress.FinancialAndContractDetails.Percentage;
             }
             else if (existingMonthlyProgress.FinancialDetails != null)
             {
@@ -56,18 +68,24 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 existingMonthlyProgress.FinancialDetails = null;
             }
 
-            // Update ContractAndCost
-            if (request.MonthlyProgress?.ContractAndCost != null)
+            // Update ContractAndCost (ActualCost)
+            if (request.MonthlyProgress?.ActualCost != null)
             {
                 if (existingMonthlyProgress.ContractAndCost == null)
                 {
                     existingMonthlyProgress.ContractAndCost = new ContractAndCost();
                 }
-                existingMonthlyProgress.ContractAndCost.ContractType = request.MonthlyProgress.ContractAndCost.ContractType;
-                existingMonthlyProgress.ContractAndCost.Percentage = request.MonthlyProgress.ContractAndCost.Percentage;
-                existingMonthlyProgress.ContractAndCost.ActualOdcs = request.MonthlyProgress.ContractAndCost.ActualOdcs;
-                existingMonthlyProgress.ContractAndCost.ActualStaff = request.MonthlyProgress.ContractAndCost.ActualStaff;
-                existingMonthlyProgress.ContractAndCost.ActualSubtotal = request.MonthlyProgress.ContractAndCost.ActualSubtotal;
+                existingMonthlyProgress.ContractAndCost.ContractType = request.MonthlyProgress.ActualCost.ContractType ?? "";
+                existingMonthlyProgress.ContractAndCost.Percentage = request.MonthlyProgress.ActualCost.Percentage;
+                existingMonthlyProgress.ContractAndCost.PriorCumulativeOdc = request.MonthlyProgress.ActualCost.PriorCumulativeOdc;
+                existingMonthlyProgress.ContractAndCost.PriorCumulativeStaff = request.MonthlyProgress.ActualCost.PriorCumulativeStaff;
+                existingMonthlyProgress.ContractAndCost.PriorCumulativeTotal = request.MonthlyProgress.ActualCost.PriorCumulativeTotal;
+                existingMonthlyProgress.ContractAndCost.ActualOdc = request.MonthlyProgress.ActualCost.ActualOdc;
+                existingMonthlyProgress.ContractAndCost.ActualStaff = request.MonthlyProgress.ActualCost.ActualStaff;
+                existingMonthlyProgress.ContractAndCost.ActualSubtotal = request.MonthlyProgress.ActualCost.ActualSubtotal;
+                existingMonthlyProgress.ContractAndCost.TotalCumulativeOdc = request.MonthlyProgress.ActualCost.TotalCumulativeOdc;
+                existingMonthlyProgress.ContractAndCost.TotalCumulativeStaff = request.MonthlyProgress.ActualCost.TotalCumulativeStaff;
+                existingMonthlyProgress.ContractAndCost.TotalCumulativeCost = request.MonthlyProgress.ActualCost.TotalCumulativeCost;
             }
             else if (existingMonthlyProgress.ContractAndCost != null)
             {
@@ -84,6 +102,9 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 existingMonthlyProgress.CTCEAC.CtcODC = request.MonthlyProgress.CtcAndEac.CtcODC;
                 existingMonthlyProgress.CTCEAC.CtcStaff = request.MonthlyProgress.CtcAndEac.CtcStaff;
                 existingMonthlyProgress.CTCEAC.CtcSubtotal = request.MonthlyProgress.CtcAndEac.CtcSubtotal;
+                existingMonthlyProgress.CTCEAC.ActualctcODC = request.MonthlyProgress.CtcAndEac.ActualctcODC;
+                existingMonthlyProgress.CTCEAC.ActualCtcStaff = request.MonthlyProgress.CtcAndEac.ActualCtcStaff;
+                existingMonthlyProgress.CTCEAC.ActualCtcSubtotal = request.MonthlyProgress.CtcAndEac.ActualCtcSubtotal;
                 existingMonthlyProgress.CTCEAC.TotalEAC = request.MonthlyProgress.CtcAndEac.TotalEAC;
                 existingMonthlyProgress.CTCEAC.GrossProfitPercentage = request.MonthlyProgress.CtcAndEac.GrossProfitPercentage;
             }
@@ -169,7 +190,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
             }
 
             // Update ProgressDeliverables (collection)
-            if (request.MonthlyProgress?.ProgressDeliverable != null)
+            if (request.MonthlyProgress?.ProgressDeliverable?.Deliverables != null)
             {
                 if (existingMonthlyProgress.ProgressDeliverables == null)
                 {
@@ -178,7 +199,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 
                 // Remove entries not present in the request
                 var deliverablesToRemove = existingMonthlyProgress.ProgressDeliverables
-                    .Where(existingEntry => !request.MonthlyProgress.ProgressDeliverable.Any(dto => dto.Milestone == existingEntry.Milestone))
+                    .Where(existingEntry => !request.MonthlyProgress.ProgressDeliverable.Deliverables.Any(dto => dto.Milestone == existingEntry.Milestone))
                     .ToList();
 
                 foreach (var entryToRemove in deliverablesToRemove)
@@ -186,7 +207,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     existingMonthlyProgress.ProgressDeliverables.Remove(entryToRemove);
                 }
 
-                foreach (var deliverableDto in request.MonthlyProgress.ProgressDeliverable)
+                foreach (var deliverableDto in request.MonthlyProgress.ProgressDeliverable.Deliverables)
                 {
                     var existingEntry = existingMonthlyProgress.ProgressDeliverables.FirstOrDefault(e => e.Milestone == deliverableDto.Milestone);
 

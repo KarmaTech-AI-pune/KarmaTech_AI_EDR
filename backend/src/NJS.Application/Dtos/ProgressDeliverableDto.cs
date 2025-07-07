@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace NJS.Application.DTOs
 {
@@ -12,5 +13,11 @@ namespace NJS.Application.DTOs
         public DateTime InvoiceDate { get; set; }
         public DateTime PaymentReceivedDate { get; set; }
         public string DeliverableComments { get; set; }
+    }
+
+    public class ProgressDeliverableWrapperDto
+    {
+        public ICollection<ProgressDeliverableDto>? Deliverables { get; set; }
+        public decimal TotalPaymentDue { get; set; }
     }
 }
