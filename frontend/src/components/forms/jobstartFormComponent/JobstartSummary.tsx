@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { addCalculation, percentageCalculation, getPercentage } from '../../../utils/calculations';
 import {
   Box,
   TableContainer,
@@ -145,10 +146,10 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
     if (onDataChange) {
       const feesNum = parseFloat(fees) || 0;
       const taxPercent = parseFloat(taxPercentage) || 0;
-      const taxAmount = (feesNum * taxPercent / 100);
-      const totalFees = feesNum + taxAmount;
+      const taxAmount = percentageCalculation(taxPercent, feesNum);
+      const totalFees = addCalculation(feesNum, taxAmount);
       const profit = feesNum - grandTotal;
-      const profitPercentage = feesNum > 0 ? (profit / feesNum) * 100 : 0;
+      const profitPercentage = getPercentage(profit, feesNum);
 
       onDataChange({
         projectFees: feesNum,
@@ -178,7 +179,7 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
     // Calculate service tax based on project fees and tax percentage
     const fees = parseFloat(projectFees) || 0;
     const taxRate = parseFloat(serviceTax.percentage) || 0;
-    const taxAmount = (fees * taxRate / 100);
+    const taxAmount = percentageCalculation(taxRate, fees);
     return taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
@@ -186,7 +187,7 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
     // Calculate total project fees including service tax
     const fees = parseFloat(projectFees) || 0;
     const tax = parseFloat(calculateServiceTax().replace(/,/g, '')) || 0;
-    const total = fees + tax;
+    const total = addCalculation(fees, tax);
     return total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
