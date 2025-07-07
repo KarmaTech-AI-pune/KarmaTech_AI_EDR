@@ -50,6 +50,7 @@ export const projectApi = {
       const formattedData = {
         id: parseInt(projectId),
         name: projectData.name,
+        details: projectData.details || '',
         clientName: projectData.clientName,
         projectNo: parseInt(projectData.projectNo), // Convert to integer as backend expects int
         typeOfClient: projectData.typeOfClient || '',
