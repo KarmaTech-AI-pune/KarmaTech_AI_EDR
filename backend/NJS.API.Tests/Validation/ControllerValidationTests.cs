@@ -1,17 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MediatR;
 using NJS.Application.CQRS.JobStartForm.Commands;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Application.Dtos;
-using NJS.Domain.Entities;
-using NJS.Repositories.Interfaces;
 using NJSAPI.Controllers;
-using Xunit;
+using Microsoft.Extensions.Logging;
 
 namespace NJS.API.Tests.Validation
 {
@@ -80,10 +74,12 @@ namespace NJS.API.Tests.Validation
         {
             // Arrange
             var mockMediator = new Mock<IMediator>();
+            var logger=  new Mock<ILogger<ProjectController>>();
             mockMediator.Setup(m => m.Send(It.IsAny<UpdateProjectCommand>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new ApplicationException("Project not found"));
 
-            var controller = new ProjectController(mockMediator.Object, null);
+
+            var controller = new ProjectController(mockMediator.Object, null, logger.Object);
 
             var projectDto = new ProjectDto
             {

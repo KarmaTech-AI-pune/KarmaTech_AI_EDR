@@ -55,6 +55,7 @@ import {
   MonthlyProgressForm,
   ProjectClosureForm,
   FormsOverview,
+  MonthlyReports,
 } from '../components/forms';
 
 const DRAWER_WIDTH = 280;
@@ -294,6 +295,12 @@ export const ProjectDetails: React.FC = () => {
       title: 'PMD8. Project Closure',
       icon: <TaskIcon />,
       component: <ProjectClosureForm />
+    },
+    {
+      id: 'monthlyReports',
+      title: 'Monthly Reports',
+      icon: <AssessmentIcon />,
+      component: <MonthlyReports />
     },
   ];
 

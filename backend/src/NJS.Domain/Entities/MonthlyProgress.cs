@@ -9,6 +9,8 @@ namespace NJS.Domain.Entities
         public int ProjectId { get; set; }
         public Project Project { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public int Month { get; set; } // Month of the monthly progress (1-12)
+        public int Year { get; set; } // Year of the monthly progress
 
         // Navigation properties for related entities
         public FinancialDetails FinancialDetails { get; set; }

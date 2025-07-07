@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Application.CQRS.Projects.Queries;
@@ -15,12 +16,13 @@ namespace NJS.API.Tests.Controllers
         private readonly Mock<IProjectManagementService> _mockProjectManagementService;
         private readonly ProjectController _controller;
         private readonly Mock<IMediator> _mediator;
+         private readonly ILogger _logger;
 
         public ProjectsControllerTests()
         {
             _mockProjectManagementService = new Mock<IProjectManagementService>();
-            _mediator = new Mock<IMediator>();
-            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object);
+            _mediator = new Mock<IMediator>();            
+            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object, (ILogger<ProjectController>)_logger);
         }
 
         [Fact]

@@ -20,7 +20,7 @@ import { MonthlyProgressAPI } from "../../../services/monthlyProgressApi";
 import { useProject } from "../../../context/ProjectContext";
 import {
   FinancialDetailsTab,
-  ContractAndCostsTab,
+  ActualCost,
   CostToCompleteAndEAC,
   ScheduleTab,
   ManpowerPlanningTab,
@@ -52,15 +52,15 @@ export type tab = {
 const tabs = [
   {
     id: "1",
-    label: "Financial Details",
+    label: "Financial Details & Contract",
     component: <FinancialDetailsTab />,
-    inputs: ["financialDetails"],
+    inputs: ["financialAndContractDetails"],
   },
   {
     id: "2",
-    label: "Contract & Costs",
-    component: <ContractAndCostsTab />,
-    inputs: ["contractAndCost"],
+    label: "Actual Cost",
+    component: <ActualCost />,
+    inputs: ["actualCost"],
   },
   {
     id: "3",
@@ -132,20 +132,26 @@ export const MonthlyProgressForm: React.FC = () => {
   const form = useForm<MonthlyProgressSchemaType>({
     resolver: zodResolver(MonthlyProgressSchema),
     defaultValues: {
-      financialDetails: {
-        net: null,
-        serviceTax: null,
-        feeTotal: null,
-        budgetOdcs: null,
-        budgetStaff: null,
-        BudgetSubTotal: null,
-      },
-      contractAndCost: {
+      financialAndContractDetails: {
+        net: 0,
+        serviceTax: 0,
+        feeTotal: 0,
+        budgetOdcs: 0,
+        budgetStaff: 0,
+        BudgetSubTotal: 0,
         contractType: "lumpsum", // Default to lumpsum
-        percentage: null,
-        actualOdcs: null,
-        actualStaff: null,
-        actualSubtotal: null,
+        percentage: 0,
+      },
+      actualCost: {
+        priorCumulativeOdc: 0,
+        priorCumulativeStaff: 0,
+        priorCumulativeTotal: 0,
+        actualOdc: 0,
+        actualStaff: 0,
+        actualSubtotal: 0,
+        totalCumulativeOdc: 0,
+        totalCumulativeStaff: 0,
+        totalCumulativeCost: 0
       },
       budgetTable: {
         originalBudget: {
@@ -164,11 +170,14 @@ export const MonthlyProgressForm: React.FC = () => {
         }
       },
       ctcAndEac: {
-      ctcODC: null,
-      ctcStaff: null,
-      ctcSubtotal: null,
-      totalEAC: null,
-      grossProfitPercentage: null,
+      ctcODC: 0,
+      ctcStaff: 0,
+      ctcSubtotal: 0,
+      actualctcODC: 0,
+      actualCtcStaff: 0,
+      actualCtcSubtotal: 0,
+      totalEAC: 0,
+      grossProfitPercentage: 0,
       },
       schedule: {
         dateOfIssueWOLOI: new Date(),
@@ -185,7 +194,10 @@ export const MonthlyProgressForm: React.FC = () => {
           nextMonthPlanningTotal: 0,
         }
       },
-      progressDeliverable: [],
+      progressDeliverable: {
+        deliverables: [],
+        totalPaymentDue: 0,
+      },
       changeOrder: [],
       programmeSchedule: [],
       earlyWarnings: [],

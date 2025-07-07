@@ -4,28 +4,29 @@ using NJS.Application.DTOs;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 {
-    public class GetMonthlyProgressByIdQueryHandler : IRequestHandler<GetMonthlyProgressByIdQuery, MonthlyProgressDto>
+    public class GetMonthlyProgressByProjectYearMonthQueryHandler : IRequestHandler<GetMonthlyProgressByProjectYearMonthQuery, MonthlyProgressDto>
     {
         private readonly IMonthlyProgressRepository _monthlyProgressRepository;
 
-        public GetMonthlyProgressByIdQueryHandler(IMonthlyProgressRepository monthlyProgressRepository)
+        public GetMonthlyProgressByProjectYearMonthQueryHandler(IMonthlyProgressRepository monthlyProgressRepository)
         {
             _monthlyProgressRepository = monthlyProgressRepository ?? throw new ArgumentNullException(nameof(monthlyProgressRepository));
         }
 
-        public async Task<MonthlyProgressDto> Handle(GetMonthlyProgressByIdQuery request, CancellationToken cancellationToken)
+        public async Task<MonthlyProgressDto> Handle(GetMonthlyProgressByProjectYearMonthQuery request, CancellationToken cancellationToken)
         {
             if (request == null)
             {
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var monthlyProgressEntity = await _monthlyProgressRepository.GetByIdAsync(request.Id);
+            var monthlyProgressEntity = await _monthlyProgressRepository.GetByProjectYearMonthAsync(request.ProjectId, request.Year, request.Month);
 
             if (monthlyProgressEntity == null)
             {
@@ -37,28 +38,41 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
             {
                 Id = monthlyProgressEntity.Id,
                 ProjectId = monthlyProgressEntity.ProjectId,
-                FinancialDetails = monthlyProgressEntity.FinancialDetails != null ? new FinancialDetailsDto
+                Month = monthlyProgressEntity.Month,
+                Year = monthlyProgressEntity.Year,
+                FinancialAndContractDetails = monthlyProgressEntity.FinancialDetails != null ? new FinancialDetailsDto
                 {
                     Net = monthlyProgressEntity.FinancialDetails.Net,
                     ServiceTax = monthlyProgressEntity.FinancialDetails.ServiceTax,
                     FeeTotal = monthlyProgressEntity.FinancialDetails.FeeTotal,
                     BudgetOdcs = monthlyProgressEntity.FinancialDetails.BudgetOdcs,
                     BudgetStaff = monthlyProgressEntity.FinancialDetails.BudgetStaff,
-                    BudgetSubTotal = monthlyProgressEntity.FinancialDetails.BudgetSubTotal
+                    BudgetSubTotal = monthlyProgressEntity.FinancialDetails.BudgetSubTotal,
+                    ContractType = monthlyProgressEntity.FinancialDetails.ContractType,
+                    Percentage = monthlyProgressEntity.FinancialDetails.Percentage
                 } : null,
-                ContractAndCost = monthlyProgressEntity.ContractAndCost != null ? new ContractAndCostDto
+                ActualCost = monthlyProgressEntity.ContractAndCost != null ? new ContractAndCostDto
                 {
                     ContractType = monthlyProgressEntity.ContractAndCost.ContractType,
                     Percentage = monthlyProgressEntity.ContractAndCost.Percentage,
-                    ActualOdcs = monthlyProgressEntity.ContractAndCost.ActualOdcs,
+                    PriorCumulativeOdc = monthlyProgressEntity.ContractAndCost.PriorCumulativeOdc,
+                    PriorCumulativeStaff = monthlyProgressEntity.ContractAndCost.PriorCumulativeStaff,
+                    PriorCumulativeTotal = monthlyProgressEntity.ContractAndCost.PriorCumulativeTotal,
+                    ActualOdc = monthlyProgressEntity.ContractAndCost.ActualOdc,
                     ActualStaff = monthlyProgressEntity.ContractAndCost.ActualStaff,
-                    ActualSubtotal = monthlyProgressEntity.ContractAndCost.ActualSubtotal
+                    ActualSubtotal = monthlyProgressEntity.ContractAndCost.ActualSubtotal,
+                    TotalCumulativeOdc = monthlyProgressEntity.ContractAndCost.TotalCumulativeOdc,
+                    TotalCumulativeStaff = monthlyProgressEntity.ContractAndCost.TotalCumulativeStaff,
+                    TotalCumulativeCost = monthlyProgressEntity.ContractAndCost.TotalCumulativeCost
                 } : null,
                 CtcAndEac = monthlyProgressEntity.CTCEAC != null ? new CTCEACDto
                 {
                     CtcODC = monthlyProgressEntity.CTCEAC.CtcODC,
                     CtcStaff = monthlyProgressEntity.CTCEAC.CtcStaff,
                     CtcSubtotal = monthlyProgressEntity.CTCEAC.CtcSubtotal,
+                    ActualctcODC = monthlyProgressEntity.CTCEAC.ActualctcODC,
+                    ActualCtcStaff = monthlyProgressEntity.CTCEAC.ActualCtcStaff,
+                    ActualCtcSubtotal = monthlyProgressEntity.CTCEAC.ActualCtcSubtotal,
                     TotalEAC = monthlyProgressEntity.CTCEAC.TotalEAC,
                     GrossProfitPercentage = monthlyProgressEntity.CTCEAC.GrossProfitPercentage
                 } : null,
@@ -89,17 +103,21 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                         NextMonthPlanningTotal = monthlyProgressEntity.ManpowerEntries?.Sum(x => x.NextMonthPlanning)
                     }
                 },
-                ProgressDeliverable = monthlyProgressEntity.ProgressDeliverables?.Select(pd => new ProgressDeliverableDto
+                ProgressDeliverable = new ProgressDeliverableWrapperDto
                 {
-                    Milestone = pd.Milestone,
-                    DueDateContract = pd.DueDateContract,
-                    DueDatePlanned = pd.DueDatePlanned,
-                    AchievedDate = pd.AchievedDate,
-                    PaymentDue = pd.PaymentDue,
-                    InvoiceDate = pd.InvoiceDate,
-                    PaymentReceivedDate = pd.PaymentReceivedDate,
-                    DeliverableComments = pd.DeliverableComments
-                }).ToList(),
+                    Deliverables = monthlyProgressEntity.ProgressDeliverables?.Select(pd => new ProgressDeliverableDto
+                    {
+                        Milestone = pd.Milestone,
+                        DueDateContract = pd.DueDateContract,
+                        DueDatePlanned = pd.DueDatePlanned,
+                        AchievedDate = pd.AchievedDate,
+                        PaymentDue = pd.PaymentDue,
+                        InvoiceDate = pd.InvoiceDate,
+                        PaymentReceivedDate = pd.PaymentReceivedDate,
+                        DeliverableComments = pd.DeliverableComments
+                    }).ToList(),
+                    TotalPaymentDue = monthlyProgressEntity.ProgressDeliverables?.Sum(pd => pd.PaymentDue) ?? 0
+                },
                 ChangeOrder = monthlyProgressEntity.ChangeOrders?.Select(co => new ChangeOrderDto
                 {
                     ContractTotal = co.ContractTotal,
