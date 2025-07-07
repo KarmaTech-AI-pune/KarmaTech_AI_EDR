@@ -8,6 +8,7 @@ namespace NJS.Repositories.Interfaces
     {
         Task<MonthlyProgress> GetByIdAsync(int id);
         Task<List<MonthlyProgress>> GetByProjectIdAsync(int projectId);
+        Task<MonthlyProgress> GetByProjectYearMonthAsync(int projectId, int year, int month);
         Task AddAsync(MonthlyProgress entity);
         Task UpdateAsync(MonthlyProgress entity);
         Task DeleteAsync(MonthlyProgress entity);

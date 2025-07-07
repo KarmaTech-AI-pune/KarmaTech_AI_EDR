@@ -11,5 +11,7 @@ namespace NJS.Domain.Entities
         public decimal BudgetOdcs { get; set; }
         public decimal BudgetStaff { get; set; }
         public decimal BudgetSubTotal { get; set; }
+        public string ContractType { get; set; }
+        public decimal Percentage { get; set; }
     }
 }
