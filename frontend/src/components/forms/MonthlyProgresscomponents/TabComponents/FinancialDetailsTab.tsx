@@ -36,7 +36,7 @@ const FinancialDetailsTab: React.FC = () => {
                         // Extract values and set them in the form
                         setValue("financialAndContractDetails.net", jobStartForm.projectFees || null);
                         setValue("financialAndContractDetails.serviceTax", jobStartForm.serviceTaxPercentage || null);
-                        setValue("budgetTable.originalBudget.cost", jobStartForm.profit || 0)
+                        setValue("budgetTable.originalBudget.cost", jobStartForm.grandTotal || 0)
                         setValue("budgetTable.originalBudget.revenueFee", jobStartForm.projectFees || 0)
                         setValue("budgetTable.originalBudget.profitPercentage", jobStartForm.projectFees || 0)
                         setValue("budgetTable.currentBudgetInMIS.revenueFee", jobStartForm.projectFees || 0)
