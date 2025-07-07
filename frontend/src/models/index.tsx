@@ -57,6 +57,7 @@ export interface Project {
     letterOfAcceptance: boolean;
     opportunityTrackingId: number;   
     feeType:string; 
+    percentage?: number;
 
 }
 
