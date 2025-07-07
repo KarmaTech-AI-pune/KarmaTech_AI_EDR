@@ -61,8 +61,9 @@ export const projectApi = {
         typeOfJob: projectData.typeOfJob || '',  // Ensure typeOfJob is never null
         sector: projectData.sector || '',
         feeType: projectData.feeType || '',  // Ensure feeType is never null
-        estimatedCost: Number(projectData.estimatedProjectCost),
-        budget: Number(projectData.estimatedProjectFee || 0),  // Ensure budget is never null
+        estimatedProjectCost: Number(projectData.estimatedProjectCost),
+        estimatedProjectFee: Number(projectData.estimatedProjectFee || 0),  // Ensure budget is never null
+        percentage: Number(projectData.percentage || 0),
         priority: projectData.priority || '',  // Ensure priority is never null
         currency: projectData.currency || 'INR',
         startDate: projectData.startDate ? new Date(projectData.startDate) : null, // Convert to proper date format
@@ -71,7 +72,6 @@ export const projectApi = {
         progress: 0, // Add missing required field
         letterOfAcceptance: projectData.letterOfAcceptance,
         opportunityTrackingId: projectData.opportunityTrackingId || 0, // Ensure it's not null
-        fundingStream: projectData.feeType || '',
         // Add missing fields with default values
         createdAt: new Date(),
         lastModifiedAt: new Date(),

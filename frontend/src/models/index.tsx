@@ -58,7 +58,6 @@ export interface Project {
     opportunityTrackingId: number;   
     feeType:string; 
     percentage?: number;
-
 }
 
 export interface OpportunityHistory {

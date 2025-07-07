@@ -151,15 +151,15 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
         sector: formData.sector,
         feeType: formData.feeType,
         estimatedProjectCost: Number(formData.estimatedProjectCost),
-        budget: Number(formData.estimatedProjectFee || 0),
+        estimatedProjectFee: Number(formData.estimatedProjectFee || 0),
+        percentage: Number(formData.percentage || 0),
         priority: formData.priority,
         currency: formData.currency,
         startDate: formData.startDate,
         endDate: formData.endDate,
         status: formData.status,
         letterOfAcceptance: formData.letterOfAcceptance,
-        details: formData.details,
-        fundingStream: formData.feeType
+        details: formData.details
       };
 
       console.log('Sending update with data:', updatedProject);

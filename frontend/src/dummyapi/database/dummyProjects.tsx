@@ -17,12 +17,12 @@ type RawProject = {
   sector?: string;
   region?: string;
   typeOfClient?: string;
-  estimatedCost: number;
+  estimatedProjectCost: number;
   feeType?: string;
   startDate?: string;
   endDate?: string;
   currency: string;
-  budget?: number;
+  estimatedProjectFee?: number;
   priority?: string;
   regionalManagerId?: string;
   regionalManagerID?: string;
@@ -49,7 +49,7 @@ const projectsData: { [key: string]: RawProject } = {
     sector: "Water",
     region: "West",
     typeOfClient: "Government",
-    estimatedCost: 5000000,
+    estimatedProjectCost: 5000000,
     feeType: "Lumpsum",
     startDate: "2023-01-01",
     endDate: "2024-12-31",
@@ -57,7 +57,7 @@ const projectsData: { [key: string]: RawProject } = {
     regionalManagerId: "usr6",
     status: 1,
     priority: "Medium",
-    budget: 5000000,
+    estimatedProjectFee: 5000000,
     createdAt: "2023-01-01",
     updatedAt: "2023-01-01",
     letterOfAcceptance: true,
@@ -77,7 +77,7 @@ const projectsData: { [key: string]: RawProject } = {
     sector: "Sanitation",
     region: "North",
     typeOfClient: "Government",
-    estimatedCost: 2000000,
+    estimatedProjectCost: 2000000,
     feeType: "Itemrate",
     startDate: "2023-03-15",
     endDate: "2025-03-14",
@@ -85,7 +85,7 @@ const projectsData: { [key: string]: RawProject } = {
     regionalManagerId: "usr7",
     status: 1,
     priority: "Medium",
-    budget: 2000000,
+    estimatedProjectFee: 2000000,
     createdAt: "2023-01-01",
     updatedAt: "2023-01-01",
     letterOfAcceptance: true,
@@ -105,7 +105,7 @@ const projectsData: { [key: string]: RawProject } = {
     sector: "Industrial",
     region: "West",
     typeOfClient: "Private",
-    estimatedCost: 3500000,
+    estimatedProjectCost: 3500000,
     feeType: "Lumpsum",
     startDate: "2022-07-01",
     endDate: "2023-12-31",
@@ -113,7 +113,7 @@ const projectsData: { [key: string]: RawProject } = {
     regionalManagerId: "usr6",
     status: 1,
     priority: "Medium",
-    budget: 3500000,
+    estimatedProjectFee: 3500000,
     createdAt: "2023-01-01",
     updatedAt: "2023-01-01",
     letterOfAcceptance: true,
@@ -133,7 +133,7 @@ const projectsData: { [key: string]: RawProject } = {
     sector: "Smart City",
     region: "South",
     typeOfClient: "Government",
-    estimatedCost: 7500000,
+    estimatedProjectCost: 7500000,
     feeType: "Itemrate",
     startDate: "2023-11-01",
     endDate: "2025-10-31",
@@ -141,7 +141,7 @@ const projectsData: { [key: string]: RawProject } = {
     regionalManagerId: "usr7",
     status: 1,
     priority: "Medium",
-    budget: 7500000,
+    estimatedProjectFee: 7500000,
     createdAt: "2023-01-01",
     updatedAt: "2023-01-01",
     letterOfAcceptance: true,
@@ -161,7 +161,7 @@ const projectsData: { [key: string]: RawProject } = {
     sector: "Coastal",
     region: "South",
     typeOfClient: "Government",
-    estimatedCost: 4500000,
+    estimatedProjectCost: 4500000,
     feeType: "Lumpsum",
     startDate: "2023-06-01",
     endDate: "2025-05-31",
@@ -169,7 +169,7 @@ const projectsData: { [key: string]: RawProject } = {
     regionalManagerId: "usr6",
     status: 1,
     priority: "Medium",
-    budget: 4500000,
+    estimatedProjectFee: 4500000,
     createdAt: "2023-01-01",
     updatedAt: "2023-01-01",
     letterOfAcceptance: true,
@@ -192,20 +192,20 @@ export const projects: Project[] = Object.values(projectsData).map(project => ({
   sector: project.sector || "",
   region: project.region || "",
   typeOfClient: project.typeOfClient || "",
-  estimatedCost: project.estimatedCost,
+  estimatedProjectCost: project.estimatedProjectCost,
+  estimatedProjectFee: project.estimatedProjectFee || 0,
   feeType: project.feeType || "",
   startDate: project.startDate || "",
   endDate: project.endDate || "",
   currency: project.currency,
-  budget: project.budget || 0,
   priority: project.priority || "",
   regionalManagerId: project.regionalManagerId || project.regionalManagerID || "0",
   letterOfAcceptance: project.letterOfAcceptance || false,
-  opportunityTrackingId: project.opportunityTrackingId || project.opportunityId || 0,
+  opportunityId: project.opportunityId || 0,
+  opportunityTrackingId: project.opportunityTrackingId || 0,
   createdAt: project.createdAt,
   updatedAt: project.updatedAt,
-  status: project.status,
-  fundingStream: project.fundingStream || ""
+  status: project.status
 }));
 
 // Utility function to get a single project by ID
