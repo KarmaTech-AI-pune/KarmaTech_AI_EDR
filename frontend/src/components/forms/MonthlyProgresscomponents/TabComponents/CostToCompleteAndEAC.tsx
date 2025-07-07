@@ -61,11 +61,13 @@ const CostToCompleteAndEAC: React.FC = () => {
   useEffect(() => {
     setValue('ctcAndEac.ctcSubtotal', calculatedSubtotal);
     setValue('ctcAndEac.actualCtcSubtotal', actualCtcSubtotal);
-  }, [calculatedSubtotal, totalEAC, setValue, actualCtcSubtotal]);
+    setValue('ctcAndEac.eacOdc', (actualOdcs || 0) + (ctcODC || 0));
+    setValue('ctcAndEac.eacStaff', (actualStaff || 0) + (ctcStaff || 0));
+  }, [calculatedSubtotal, totalEAC, setValue, actualCtcSubtotal, actualOdcs, ctcODC, actualStaff, ctcStaff]);
 
   return (
       <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={3}>
               <Paper elevation={1} sx={{ p: 2 }}>
                   <Typography variant="h6" gutterBottom color="primary">
                       Costs to Complete
@@ -143,7 +145,7 @@ const CostToCompleteAndEAC: React.FC = () => {
                   />
               </Paper>
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={3}>
               <Paper elevation={1} sx={{ p: 2 }}>
                   <Typography variant="h6" gutterBottom color="primary">
                       Actual Cost To Complete
@@ -215,12 +217,46 @@ const CostToCompleteAndEAC: React.FC = () => {
                   />
               </Paper>
           </Grid>
-          <Grid item xs={12} md={4}>
+          
+          <Grid item xs={12} md={3}>
               <Paper elevation={1} sx={{ p: 2 }}>
                   <Typography variant="h6" gutterBottom color="primary">
-                      EAC Estimate
+                      EAC(Estimated Actual Cost)
                   </Typography>
-
+                  <Controller
+                      name="ctcAndEac.eacOdc"
+                      control={control}
+                      render={() => (
+                          <TextField
+                              fullWidth
+                              label="ODCs"
+                              type="number"
+                              value={(actualOdcs || 0) + (ctcODC || 0)}
+                              InputProps={{
+                                  readOnly: true,
+                              }}
+                              sx={textFieldStyle}
+                              margin="normal"
+                          />
+                      )}
+                  />
+                  <Controller
+                      name="ctcAndEac.eacStaff"
+                      control={control}
+                      render={() => (
+                          <TextField
+                              fullWidth
+                              label="Staff"
+                              type="number"
+                              value={(actualStaff || 0) + (ctcStaff || 0)}
+                              InputProps={{
+                                  readOnly: true,
+                              }}
+                              sx={textFieldStyle}
+                              margin="normal"
+                          />
+                      )}
+                  />
                   <Controller
                       name="ctcAndEac.totalEAC"
                       control={control}
@@ -240,6 +276,15 @@ const CostToCompleteAndEAC: React.FC = () => {
                           />
                       )}
                   />
+
+              </Paper>
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+              <Paper elevation={1} sx={{ p: 2 }}>
+                  <Typography variant="h6" gutterBottom color="primary">
+                      Gross Profit
+                  </Typography>
 
                   <Controller
                       name="ctcAndEac.grossProfitPercentage"

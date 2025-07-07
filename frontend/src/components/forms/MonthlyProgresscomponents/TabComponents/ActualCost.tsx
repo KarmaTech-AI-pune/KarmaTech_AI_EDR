@@ -51,7 +51,7 @@ const ActualCost: React.FC = () => {
       <Grid item xs={12} md={4}>
         <Paper elevation={1} sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom color="primary">
-            Prior Cumulative
+            Prior Cumulative Actual Cost
           </Typography>
 
           <Controller
@@ -122,7 +122,7 @@ const ActualCost: React.FC = () => {
       <Grid item xs={12} md={4}>
         <Paper elevation={1} sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom color="primary">
-            Actual Costs
+            Current Month Actual Costs
           </Typography>
 
           <Controller
@@ -193,7 +193,7 @@ const ActualCost: React.FC = () => {
       <Grid item xs={12} md={4}>
         <Paper elevation={1} sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom color="primary">
-            Total Cumulative
+            Total Cumulative Actual Cost
           </Typography>
 
           <Controller
