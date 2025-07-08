@@ -1,20 +1,11 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect } from "react";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
-import { Grid, Paper, TextField, Typography, CircularProgress, FormControlLabel, Checkbox, Box } from "@mui/material";
+import { Grid, Paper, TextField, Typography, FormControlLabel, Checkbox, Box } from "@mui/material";
 import { formatCurrency } from "../../../../utils/MonthlyProgress/monthlyProgressUtils";
-import { projectManagementAppContext } from "../../../../App";
-import textFieldStyle from "../../../../theme/textFieldStyle";
-import { getJobStartFormByProjectId, getWBSResourceData } from "../../../../services/jobStartFormApi";
 
 const FinancialDetailsTab: React.FC = () => {
     const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
-    const context = useContext(projectManagementAppContext);
-    const projectId = context?.selectedProject?.id?.toString();
-    const [loading, setLoading] = React.useState<boolean>(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const [wbsResourcesLoading, setWbsResourcesLoading] = React.useState<boolean>(false);
-    const [wbsResourcesError, setWbsResourcesError] = React.useState<string | null>(null);
 
     // Watch for calculation fields
     const net = watch("financialAndContractDetails.net");
@@ -22,74 +13,6 @@ const FinancialDetailsTab: React.FC = () => {
     const odcs = watch("financialAndContractDetails.budgetOdcs");
     const staff = watch("financialAndContractDetails.budgetStaff");
     const contractType = watch("financialAndContractDetails.contractType");
-
-    // Fetch Job Start Form data when component mounts
-    useEffect(() => {
-        if (projectId) {
-            const fetchJobStartFormData = async () => {
-                try {
-                    setLoading(true);
-                    setError(null);
-                    const data = await getJobStartFormByProjectId(projectId);
-                    if (data && Array.isArray(data) && data.length > 0) {
-                        const jobStartForm = data[0];
-                        // Extract values and set them in the form
-                        setValue("financialAndContractDetails.net", jobStartForm.projectFees || null);
-                        setValue("financialAndContractDetails.serviceTax", jobStartForm.serviceTaxPercentage || null);
-                        setValue("budgetTable.originalBudget.cost", jobStartForm.grandTotal || 0)
-                        setValue("budgetTable.originalBudget.revenueFee", jobStartForm.projectFees || 0)
-                        setValue("budgetTable.originalBudget.profitPercentage", jobStartForm.projectFees || 0)
-                        setValue("budgetTable.currentBudgetInMIS.revenueFee", jobStartForm.projectFees || 0)
-                    }
-                } catch (error) {
-                    console.error("Error fetching Job Start Form data:", error);
-                    setError("Failed to load Job Start Form data");
-                } finally {
-                    setLoading(false);
-                }
-            };
-            
-            fetchJobStartFormData();
-        }
-    }, [projectId, setValue]);
-
-    // Fetch WBS resource data when component mounts
-    useEffect(() => {
-        if (projectId) {
-            const fetchWBSResourceData = async () => {
-                try {
-                    setWbsResourcesLoading(true);
-                    setWbsResourcesError(null);
-                    
-                    const wbsData = await getWBSResourceData(projectId);
-                    
-                    // Process the data to extract budgetOdcs and budgetStaff
-                    if (wbsData && wbsData.resourceAllocations) {
-                        // Calculate total ODC costs (taskType === 1)
-                        const totalODCs = wbsData.resourceAllocations
-                            .filter((allocation: any) => allocation.taskType === 1)
-                            .reduce((sum: number, allocation: any) => sum + allocation.totalCost, 0);
-                            
-                        // Calculate total Staff costs (taskType === 0)
-                        const totalStaff = wbsData.resourceAllocations
-                            .filter((allocation: any) => allocation.taskType === 0)
-                            .reduce((sum: number, allocation: any) => sum + allocation.totalCost, 0);
-                        
-                        // Set the values in the form
-                        setValue("financialAndContractDetails.budgetOdcs", totalODCs);
-                        setValue("financialAndContractDetails.budgetStaff", totalStaff);
-                    }
-                } catch (error) {
-                    console.error("Error fetching WBS resource data:", error);
-                    setWbsResourcesError("Failed to load WBS resource data");
-                } finally {
-                    setWbsResourcesLoading(false);
-                }
-            };
-            
-            fetchWBSResourceData();
-        }
-    }, [projectId, setValue]);
 
     // Auto-calculate totals
     useEffect(() => {

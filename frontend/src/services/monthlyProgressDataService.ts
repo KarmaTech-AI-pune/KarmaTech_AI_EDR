@@ -11,13 +11,9 @@ interface JobStartData {
   // Add other properties from the job start form API response as needed
 }
 
-interface WBSData {
-  resourceAllocations: {
-    taskType: number;
-    totalCost: number;
-  }[];
-  // Add other properties from the WBS API response as needed
-}
+import { WBSRowData } from '../types/wbs';
+
+type WBSData = WBSRowData[];
 
 interface ProjectData {
   feeType: 'lumpsum' | 'timeAndExpense' | 'percentage';
@@ -76,14 +72,14 @@ const transformDataForMonthlyProgress = (
   }
 
   // Process WBS data if the promise was fulfilled
-  if (wbsResult.status === 'fulfilled' && wbsResult.value && wbsResult.value.resourceAllocations) {
-    const { resourceAllocations } = wbsResult.value;
-    const budgetOdcs = resourceAllocations
-      .filter(alloc => alloc.taskType === 1)
-      .reduce((sum, alloc) => sum + alloc.totalCost, 0);
-    const budgetStaff = resourceAllocations
-      .filter(alloc => alloc.taskType === 0)
-      .reduce((sum, alloc) => sum + alloc.totalCost, 0);
+  if (wbsResult.status === 'fulfilled' && wbsResult.value) {
+    const wbsData = wbsResult.value;
+    const budgetOdcs = wbsData
+      .filter(row => row.taskType === 1)
+      .reduce((sum, row) => sum + (row.totalCost || 0), 0);
+    const budgetStaff = wbsData
+      .filter(row => row.taskType === 0)
+      .reduce((sum, row) => sum + (row.totalCost || 0), 0);
 
     if (transformedData.financialAndContractDetails) {
       transformedData.financialAndContractDetails.budgetOdcs = budgetOdcs;
