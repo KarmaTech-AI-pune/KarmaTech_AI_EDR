@@ -172,10 +172,10 @@ const FinancialDetailsTab: React.FC = () => {
                         name="financialAndContractDetails.contractType"
                         control={control}
                         render={({ field }) => (
-                            <RadioGroup {...field} value={field.value || ''}>
-                                <FormControlLabel value="lumpsum" control={<Radio />} label="Lumpsum" />
-                                <FormControlLabel value="timeAndExpense" control={<Radio />} label="Time & Expense" />
-                                <FormControlLabel value="percentage" control={<Radio />} label="Percentage" />
+                            <RadioGroup value={field.value || ''}>
+                                <FormControlLabel value="lumpsum" control={<Radio readOnly />} label="Lumpsum" />
+                                <FormControlLabel value="timeAndExpense" control={<Radio readOnly />} label="Time & Expense" />
+                                <FormControlLabel value="percentage" control={<Radio readOnly />} label="Percentage" />
                             </RadioGroup>
                         )}
                     />
