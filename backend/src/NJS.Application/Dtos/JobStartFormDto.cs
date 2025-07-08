@@ -24,6 +24,7 @@ namespace NJS.Application.Dtos
         public decimal ProjectFees { get; set; }
         public decimal TotalProjectFees { get; set; }
         public decimal Profit { get; set; }
+        public decimal ProfitPercentage { get; set; }
 
         public List<JobStartFormSelectionDto> Selections { get; set; } = new List<JobStartFormSelectionDto>();
 

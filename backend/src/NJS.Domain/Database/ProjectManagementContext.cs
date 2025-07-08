@@ -406,6 +406,7 @@ namespace NJS.Domain.Database
 
                 entity.Property(e => e.GrandTotal).HasPrecision(18, 2);
                 entity.Property(e => e.Profit).HasPrecision(18, 2);
+                entity.Property(e => e.ProfitPercentage).HasPrecision(18, 2);
                 entity.Property(e => e.ProjectFees).HasPrecision(18, 2);
                 entity.Property(e => e.ServiceTaxAmount).HasPrecision(18, 2);
                 entity.Property(e => e.ServiceTaxPercentage).HasPrecision(5, 2);
