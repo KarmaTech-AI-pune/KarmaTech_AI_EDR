@@ -17,6 +17,8 @@ type WBSData = WBSRowData[];
 
 interface ProjectData {
   feeType: 'lumpsum' | 'timeAndExpense' | 'percentage';
+  startDate: string | null;
+  endDate: string | null;
   // Add other properties from the project API response as needed
 }
 
@@ -50,6 +52,12 @@ const transformDataForMonthlyProgress = (
             revenueFee: null,
             cost: null,
         }
+    },
+    schedule: {
+      dateOfIssueWOLOI: null,
+      completionDateAsPerContract: null,
+      completionDateAsPerExtension: null,
+      expectedCompletionDate: null,
     }
   };
 
@@ -89,10 +97,10 @@ const transformDataForMonthlyProgress = (
 
   // Process Project data if the promise was fulfilled
   if (projectResult.status === 'fulfilled' && projectResult.value) {
-    const feeType = projectResult.value.feeType;
+    const project = projectResult.value;
     if (transformedData.financialAndContractDetails) {
-        if (feeType) {
-            let normalizedFeeType = feeType.toLowerCase().replace('&', 'And');
+        if (project.feeType) {
+            let normalizedFeeType = project.feeType.toLowerCase().replace('&', 'And');
             if (normalizedFeeType === 'timeandexpense' || normalizedFeeType === 'timeAndexpense') {
             normalizedFeeType = 'timeAndExpense';
         }
@@ -100,6 +108,12 @@ const transformDataForMonthlyProgress = (
         } else {
             transformedData.financialAndContractDetails.contractType = 'lumpsum';
         }
+    }
+    if (transformedData.schedule) {
+      transformedData.schedule.dateOfIssueWOLOI = project.startDate ? new Date(project.startDate) : null;
+      transformedData.schedule.completionDateAsPerContract = project.endDate ? new Date(project.endDate) : null;
+      transformedData.schedule.completionDateAsPerExtension = project.endDate ? new Date(project.endDate) : null;
+      transformedData.schedule.expectedCompletionDate = project.endDate ? new Date(project.endDate) : null;
     }
   }
 
