@@ -11,11 +11,11 @@ const financialAndContractSchema = z.object({
 });
 
 const actualCostSchema = z.object({
-  priorCumulativeOdc: z.number().nullable(),
-  priorCumulativeStaff: z.number().nullable(),
+  priorCumulativeOdc: z.number().nullable().optional(),
+  priorCumulativeStaff: z.number().nullable().optional(),
   priorCumulativeTotal: z.number().nullable(),
-  actualOdc: z.number().nullable(),
-  actualStaff: z.number().nullable(),
+  actualOdc: z.number().nullable().optional(),
+  actualStaff: z.number().nullable().optional(),
   actualSubtotal: z.number().nullable(),
   totalCumulativeOdc: z.number().nullable(),
   totalCumulativeStaff: z.number().nullable(),
