@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Controller, useFormContext } from "react-hook-form";
-import { Grid, Paper, TextField, Typography, FormControlLabel, Checkbox, Box } from "@mui/material";
+import { Grid, Paper, TextField, Typography, FormControlLabel, Radio, RadioGroup } from "@mui/material";
 import { formatCurrency } from "../../../../utils/MonthlyProgress/monthlyProgressUtils";
 
 const FinancialDetailsTab: React.FC = () => {
@@ -12,7 +12,6 @@ const FinancialDetailsTab: React.FC = () => {
     const serviceTax = watch("financialAndContractDetails.serviceTax");
     const odcs = watch("financialAndContractDetails.budgetOdcs");
     const staff = watch("financialAndContractDetails.budgetStaff");
-    const contractType = watch("financialAndContractDetails.contractType");
 
     // Auto-calculate totals
     useEffect(() => {
@@ -165,65 +164,22 @@ const FinancialDetailsTab: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} md={4}>
-                    <Paper elevation={1} sx={{ p: 2 }}>
-                      <Typography variant="h6" gutterBottom color="primary">
-                        Contract Type
-                      </Typography>
-            
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={contractType === 'lumpsum'}
-                    onChange={() => {
-                      setValue('financialAndContractDetails.contractType', 'lumpsum');
-                    }}
-                    sx={{
-                      '&.Mui-checked': {
-                        color: '#1869DA'
-                      }
-                    }}
-                  />
-                }
-                label="Lumpsum"
-              />
-              
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={contractType === 'timeAndExpense'}
-                    onChange={() => {
-                      setValue('financialAndContractDetails.contractType', 'timeAndExpense');
-                    }}
-                    sx={{
-                      '&.Mui-checked': {
-                        color: '#1869DA'
-                      }
-                    }}
-                  />
-                }
-                label="Time & Expense"
-              />
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={contractType === 'percentage'}
-                    onChange={() => {
-                      setValue('financialAndContractDetails.contractType', 'percentage');
-                    }}
-                    sx={{
-                      '&.Mui-checked': {
-                        color: '#1869DA'
-                      }
-                    }}
-                  />
-                }
-                label="Percentage"
-              />
-            </Box>
-            
-                    </Paper>
+                <Paper elevation={1} sx={{ p: 2 }}>
+                    <Typography variant="h6" gutterBottom color="primary">
+                    Contract Type
+                    </Typography>
+                    <Controller
+                        name="financialAndContractDetails.contractType"
+                        control={control}
+                        render={({ field }) => (
+                            <RadioGroup {...field} value={field.value || ''}>
+                                <FormControlLabel value="lumpsum" control={<Radio />} label="Lumpsum" />
+                                <FormControlLabel value="timeAndExpense" control={<Radio />} label="Time & Expense" />
+                                <FormControlLabel value="percentage" control={<Radio />} label="Percentage" />
+                            </RadioGroup>
+                        )}
+                    />
+                </Paper>
             </Grid>
         </Grid>
     );

@@ -89,8 +89,17 @@ const transformDataForMonthlyProgress = (
 
   // Process Project data if the promise was fulfilled
   if (projectResult.status === 'fulfilled' && projectResult.value) {
+    const feeType = projectResult.value.feeType;
     if (transformedData.financialAndContractDetails) {
-      transformedData.financialAndContractDetails.contractType = projectResult.value.feeType ?? 'lumpsum';
+        if (feeType) {
+            let normalizedFeeType = feeType.toLowerCase().replace('&', 'And');
+            if (normalizedFeeType === 'timeandexpense' || 'timeAndexpense') {
+                normalizedFeeType = 'timeAndExpense';
+            }
+            transformedData.financialAndContractDetails.contractType = normalizedFeeType as 'lumpsum' | 'timeAndExpense' | 'percentage';
+        } else {
+            transformedData.financialAndContractDetails.contractType = 'lumpsum';
+        }
     }
   }
 
