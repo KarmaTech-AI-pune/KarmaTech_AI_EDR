@@ -26,28 +26,41 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
             {
                 Id = mp.Id,
                 ProjectId = mp.ProjectId,
-                FinancialDetails = mp.FinancialDetails != null ? new FinancialDetailsDto
+                Month = mp.Month,
+                Year = mp.Year,
+                FinancialAndContractDetails = mp.FinancialDetails != null ? new FinancialDetailsDto
                 {
                     Net = mp.FinancialDetails.Net,
                     ServiceTax = mp.FinancialDetails.ServiceTax,
                     FeeTotal = mp.FinancialDetails.FeeTotal,
                     BudgetOdcs = mp.FinancialDetails.BudgetOdcs,
                     BudgetStaff = mp.FinancialDetails.BudgetStaff,
-                    BudgetSubTotal = mp.FinancialDetails.BudgetSubTotal
+                    BudgetSubTotal = mp.FinancialDetails.BudgetSubTotal,
+                    ContractType = mp.FinancialDetails.ContractType,
+                    Percentage = mp.FinancialDetails.Percentage
                 } : null,
-                ContractAndCost = mp.ContractAndCost != null ? new ContractAndCostDto
+                ActualCost = mp.ContractAndCost != null ? new ContractAndCostDto
                 {
                     ContractType = mp.ContractAndCost.ContractType,
                     Percentage = mp.ContractAndCost.Percentage,
-                    ActualOdcs = mp.ContractAndCost.ActualOdcs,
+                    PriorCumulativeOdc = mp.ContractAndCost.PriorCumulativeOdc,
+                    PriorCumulativeStaff = mp.ContractAndCost.PriorCumulativeStaff,
+                    PriorCumulativeTotal = mp.ContractAndCost.PriorCumulativeTotal,
+                    ActualOdc = mp.ContractAndCost.ActualOdc,
                     ActualStaff = mp.ContractAndCost.ActualStaff,
-                    ActualSubtotal = mp.ContractAndCost.ActualSubtotal
+                    ActualSubtotal = mp.ContractAndCost.ActualSubtotal,
+                    TotalCumulativeOdc = mp.ContractAndCost.TotalCumulativeOdc,
+                    TotalCumulativeStaff = mp.ContractAndCost.TotalCumulativeStaff,
+                    TotalCumulativeCost = mp.ContractAndCost.TotalCumulativeCost
                 } : null,
                 CtcAndEac = mp.CTCEAC != null ? new CTCEACDto
                 {
                     CtcODC = mp.CTCEAC.CtcODC,
                     CtcStaff = mp.CTCEAC.CtcStaff,
                     CtcSubtotal = mp.CTCEAC.CtcSubtotal,
+                    ActualctcODC = mp.CTCEAC.ActualctcODC,
+                    ActualCtcStaff = mp.CTCEAC.ActualCtcStaff,
+                    ActualCtcSubtotal = mp.CTCEAC.ActualCtcSubtotal,
                     TotalEAC = mp.CTCEAC.TotalEAC,
                     GrossProfitPercentage = mp.CTCEAC.GrossProfitPercentage
                 } : null,
@@ -78,17 +91,21 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                         NextMonthPlanningTotal = mp.ManpowerEntries?.Sum(x => x.NextMonthPlanning)
                     }
                 },
-                ProgressDeliverable = mp.ProgressDeliverables?.Select(pd => new ProgressDeliverableDto
+                ProgressDeliverable = new ProgressDeliverableWrapperDto
                 {
-                    Milestone = pd.Milestone,
-                    DueDateContract = pd.DueDateContract,
-                    DueDatePlanned = pd.DueDatePlanned,
-                    AchievedDate = pd.AchievedDate,
-                    PaymentDue = pd.PaymentDue,
-                    InvoiceDate = pd.InvoiceDate,
-                    PaymentReceivedDate = pd.PaymentReceivedDate,
-                    DeliverableComments = pd.DeliverableComments
-                }).ToList(),
+                    Deliverables = mp.ProgressDeliverables?.Select(pd => new ProgressDeliverableDto
+                    {
+                        Milestone = pd.Milestone,
+                        DueDateContract = pd.DueDateContract,
+                        DueDatePlanned = pd.DueDatePlanned,
+                        AchievedDate = pd.AchievedDate,
+                        PaymentDue = pd.PaymentDue,
+                        InvoiceDate = pd.InvoiceDate,
+                        PaymentReceivedDate = pd.PaymentReceivedDate,
+                        DeliverableComments = pd.DeliverableComments
+                    }).ToList(),
+                    TotalPaymentDue = mp.ProgressDeliverables?.Sum(pd => pd.PaymentDue) ?? 0
+                },
                 ChangeOrder = mp.ChangeOrders?.Select(co => new ChangeOrderDto
                 {
                     ContractTotal = co.ContractTotal,

@@ -44,31 +44,26 @@ namespace NJSAPI.Controllers
             }
         }
 
-        // GET: api/projects/{projectId}/monthlyprogress/{id}
-        [HttpGet("{id}")]
+        // GET: api/projects/{projectId}/year/{year}/month/{month}
+        [HttpGet("year/{year}/month/{month}")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(MonthlyProgressDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<MonthlyProgressDto>> GetMonthlyProgressById(int projectId, int id)
+        public async Task<ActionResult<MonthlyProgressDto>> GetMonthlyProgressByYearMonth(int projectId, int year, int month)
         {
             try
             {
-                var query = new GetMonthlyProgressByIdQuery { Id = id };
+                var query = new GetMonthlyProgressByProjectYearMonthQuery { ProjectId = projectId, Year = year, Month = month };
                 var result = await _mediator.Send(query);
                 if (result == null)
                 {
                     return NotFound();
                 }
-                // Optional: Check if result.ProjectId matches projectId from route
-                if (result.ProjectId != projectId)
-                {
-                    return Forbid(); // Or NotFound() depending on desired behavior
-                }
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting monthly progress {Id} for project {ProjectId}", id, projectId);
+                _logger.LogError(ex, "Error getting monthly progress for project {ProjectId}, year {Year}, month {Month}", projectId, year, month);
                 return StatusCode(500, new { message = "An error occurred while retrieving monthly progress.", error = ex.Message });
             }
         }
@@ -90,11 +85,16 @@ namespace NJSAPI.Controllers
                 var command = new CreateMonthlyProgressCommand { ProjectId = projectId, MonthlyProgress = createDto };
                 var newId = await _mediator.Send(command);
 
-                // Fetch the created entity to return it
-                var query = new GetMonthlyProgressByIdQuery { Id = newId };
+                // Fetch the created entity to return it using year/month
+                var query = new GetMonthlyProgressByProjectYearMonthQuery {
+                    ProjectId = projectId,
+                    Year = createDto.Year,
+                    Month = createDto.Month
+                };
                 var createdDto = await _mediator.Send(query);
 
-                return CreatedAtAction(nameof(GetMonthlyProgressById), new { projectId = projectId, id = newId }, createdDto);
+                return CreatedAtAction(nameof(GetMonthlyProgressByYearMonth),
+                    new { projectId = projectId, year = createDto.Year, month = createDto.Month }, createdDto);
             }
             catch (Exception ex)
             {
@@ -103,13 +103,13 @@ namespace NJSAPI.Controllers
             }
         }
 
-        // PUT: api/projects/{projectId}/monthlyprogress/{id}
-        [HttpPut("{id}")]
+        // PUT: api/projects/{projectId}/year/{year}/month/{month}
+        [HttpPut("year/{year}/month/{month}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateMonthlyProgress(int projectId, int id, [FromBody] CreateMonthlyProgressDto updateDto)
+        public async Task<IActionResult> UpdateMonthlyProgressByYearMonth(int projectId, int year, int month, [FromBody] CreateMonthlyProgressDto updateDto)
         {
             if (updateDto == null)
             {
@@ -119,51 +119,83 @@ namespace NJSAPI.Controllers
             try
             {
                 // Check if the entity exists before sending the update command
-                var checkQuery = new GetMonthlyProgressByIdQuery { Id = id };
+                var checkQuery = new GetMonthlyProgressByProjectYearMonthQuery { ProjectId = projectId, Year = year, Month = month };
                 var existing = await _mediator.Send(checkQuery);
-                if (existing == null || existing.ProjectId != projectId)
+                if (existing == null)
                 {
                     return NotFound();
                 }
 
-                var command = new UpdateMonthlyProgressCommand { Id = id, MonthlyProgress = updateDto };
+                var command = new UpdateMonthlyProgressCommand { Id = existing.Id, MonthlyProgress = updateDto };
                 await _mediator.Send(command);
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating monthly progress {Id} for project {ProjectId}", id, projectId);
+                _logger.LogError(ex, "Error updating monthly progress for project {ProjectId}, year {Year}, month {Month}", projectId, year, month);
                 return StatusCode(500, new { message = "An error occurred while updating monthly progress.", error = ex.Message });
             }
         }
 
-        // DELETE: api/projects/{projectId}/monthlyprogress/{id}
-        [HttpDelete("{id}")]
+        // DELETE: api/projects/{projectId}/year/{year}/month/{month}
+        [HttpDelete("year/{year}/month/{month}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteMonthlyProgress(int projectId, int id)
+        public async Task<IActionResult> DeleteMonthlyProgressByYearMonth(int projectId, int year, int month)
         {
             try
             {
-                // Optional: Check if the entity exists and belongs to the project before sending the delete command
-                var checkQuery = new GetMonthlyProgressByIdQuery { Id = id };
+                // Check if the entity exists before sending the delete command
+                var checkQuery = new GetMonthlyProgressByProjectYearMonthQuery { ProjectId = projectId, Year = year, Month = month };
                 var existing = await _mediator.Send(checkQuery);
-                if (existing == null || existing.ProjectId != projectId)
+                if (existing == null)
                 {
-                    return NotFound(); // Or Forbid()
+                    return NotFound();
                 }
 
-                var command = new DeleteMonthlyProgressCommand { Id = id };
+                var command = new DeleteMonthlyProgressCommand { Id = existing.Id };
                 await _mediator.Send(command);
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting monthly progress with ID: {Id} for project {ProjectId}", id, projectId);
+                _logger.LogError(ex, "Error deleting monthly progress for project {ProjectId}, year {Year}, month {Month}", projectId, year, month);
                 return StatusCode(500, new { message = "An error occurred while deleting monthly progress.", error = ex.Message });
+            }
+        }
+
+        // PUT: api/projects/{projectId}/monthlyprogress/{monthlyProgressId}/manpowerplanning/{manpowerPlanningId}
+        [HttpPut("{monthlyProgressId}/manpowerplanning/{manpowerPlanningId}")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ManpowerDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateManpowerPlanning(int projectId, int monthlyProgressId, int manpowerPlanningId, [FromBody] ManpowerDto updateDto)
+        {
+            if (updateDto == null)
+            {
+                return BadRequest("Invalid request data.");
+            }
+
+            try
+            {
+                var command = new UpdateManpowerPlanningCommand { MonthlyProgressId = monthlyProgressId, ManpowerPlanningId = manpowerPlanningId, ManpowerPlanning = updateDto };
+                var result = await _mediator.Send(command);
+
+                if (result == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating manpower planning {ManpowerPlanningId} for monthly progress {MonthlyProgressId}", manpowerPlanningId, monthlyProgressId);
+                return StatusCode(500, new { message = "An error occurred while updating manpower planning.", error = ex.Message });
             }
         }
     }

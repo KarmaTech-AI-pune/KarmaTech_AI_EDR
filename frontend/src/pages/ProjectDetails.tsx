@@ -55,6 +55,7 @@ import {
   MonthlyProgressForm,
   ProjectClosureForm,
   FormsOverview,
+  MonthlyReports,
 } from '../components/forms';
 
 const DRAWER_WIDTH = 280;
@@ -295,6 +296,12 @@ export const ProjectDetails: React.FC = () => {
       icon: <TaskIcon />,
       component: <ProjectClosureForm />
     },
+    {
+      id: 'monthlyReports',
+      title: 'Monthly Reports',
+      icon: <AssessmentIcon />,
+      component: <MonthlyReports />
+    },
   ];
 
   const menuSections = [
@@ -354,9 +361,9 @@ export const ProjectDetails: React.FC = () => {
         }
 
         // If still not found, show the forms overview
-        return <FormsOverview onFormSelect={handleFormClick} />;
+        return <FormsOverview />;
       }
-      return <FormsOverview onFormSelect={handleFormClick} />;
+      return <FormsOverview />;
     }
 
     switch (selectedSection) {
