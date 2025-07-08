@@ -93,9 +93,9 @@ const transformDataForMonthlyProgress = (
     if (transformedData.financialAndContractDetails) {
         if (feeType) {
             let normalizedFeeType = feeType.toLowerCase().replace('&', 'And');
-            if (normalizedFeeType === 'timeandexpense' || 'timeAndexpense') {
-                normalizedFeeType = 'timeAndExpense';
-            }
+            if (normalizedFeeType === 'timeandexpense' || normalizedFeeType === 'timeAndexpense') {
+            normalizedFeeType = 'timeAndExpense';
+        }
             transformedData.financialAndContractDetails.contractType = normalizedFeeType as 'lumpsum' | 'timeAndExpense' | 'percentage';
         } else {
             transformedData.financialAndContractDetails.contractType = 'lumpsum';
