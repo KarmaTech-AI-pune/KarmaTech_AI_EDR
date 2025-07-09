@@ -48,13 +48,10 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     BudgetOdcs = monthlyProgressEntity.FinancialDetails.BudgetOdcs,
                     BudgetStaff = monthlyProgressEntity.FinancialDetails.BudgetStaff,
                     BudgetSubTotal = monthlyProgressEntity.FinancialDetails.BudgetSubTotal,
-                    ContractType = monthlyProgressEntity.FinancialDetails.ContractType,
-                    Percentage = monthlyProgressEntity.FinancialDetails.Percentage
+                    ContractType = monthlyProgressEntity.FinancialDetails.ContractType
                 } : null,
                 ActualCost = monthlyProgressEntity.ContractAndCost != null ? new ContractAndCostDto
                 {
-                    ContractType = monthlyProgressEntity.ContractAndCost.ContractType,
-                    Percentage = monthlyProgressEntity.ContractAndCost.Percentage,
                     PriorCumulativeOdc = monthlyProgressEntity.ContractAndCost.PriorCumulativeOdc,
                     PriorCumulativeStaff = monthlyProgressEntity.ContractAndCost.PriorCumulativeStaff,
                     PriorCumulativeTotal = monthlyProgressEntity.ContractAndCost.PriorCumulativeTotal,
@@ -73,6 +70,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     ActualctcODC = monthlyProgressEntity.CTCEAC.ActualctcODC,
                     ActualCtcStaff = monthlyProgressEntity.CTCEAC.ActualCtcStaff,
                     ActualCtcSubtotal = monthlyProgressEntity.CTCEAC.ActualCtcSubtotal,
+                    EacOdc = monthlyProgressEntity.CTCEAC.EacOdc,
+                    EacStaff = monthlyProgressEntity.CTCEAC.EacStaff,
                     TotalEAC = monthlyProgressEntity.CTCEAC.TotalEAC,
                     GrossProfitPercentage = monthlyProgressEntity.CTCEAC.GrossProfitPercentage
                 } : null,

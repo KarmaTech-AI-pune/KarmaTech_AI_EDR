@@ -36,13 +36,10 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     BudgetOdcs = mp.FinancialDetails.BudgetOdcs,
                     BudgetStaff = mp.FinancialDetails.BudgetStaff,
                     BudgetSubTotal = mp.FinancialDetails.BudgetSubTotal,
-                    ContractType = mp.FinancialDetails.ContractType,
-                    Percentage = mp.FinancialDetails.Percentage
+                    ContractType = mp.FinancialDetails.ContractType
                 } : null,
                 ActualCost = mp.ContractAndCost != null ? new ContractAndCostDto
                 {
-                    ContractType = mp.ContractAndCost.ContractType,
-                    Percentage = mp.ContractAndCost.Percentage,
                     PriorCumulativeOdc = mp.ContractAndCost.PriorCumulativeOdc,
                     PriorCumulativeStaff = mp.ContractAndCost.PriorCumulativeStaff,
                     PriorCumulativeTotal = mp.ContractAndCost.PriorCumulativeTotal,
@@ -61,6 +58,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     ActualctcODC = mp.CTCEAC.ActualctcODC,
                     ActualCtcStaff = mp.CTCEAC.ActualCtcStaff,
                     ActualCtcSubtotal = mp.CTCEAC.ActualCtcSubtotal,
+                    EacOdc = mp.CTCEAC.EacOdc,
+                    EacStaff = mp.CTCEAC.EacStaff,
                     TotalEAC = mp.CTCEAC.TotalEAC,
                     GrossProfitPercentage = mp.CTCEAC.GrossProfitPercentage
                 } : null,
