@@ -2,12 +2,14 @@ import { getJobStartFormByProjectId } from './jobStartFormApi';
 import { WBSStructureAPI } from './wbsApi';
 import { projectApi } from './projectApi';
 import { MonthlyProgressSchemaType } from '../schemas/monthlyProgress/MonthlyProgressSchema';
+import { addCalculation, percentageCalculation } from '../utils/calculations';
 
 // Define types for the expected API responses for better type safety
 interface JobStartData {
   projectFees: number | null;
   serviceTaxPercentage: number | null;
   grandTotal: number;
+  profitPercentage: number;
   // Add other properties from the job start form API response as needed
 }
 
@@ -65,13 +67,19 @@ const transformDataForMonthlyProgress = (
   if (jobStartResult.status === 'fulfilled' && jobStartResult.value && jobStartResult.value.length > 0) {
     const jobStart = jobStartResult.value[0];
     if (transformedData.financialAndContractDetails) {
-      transformedData.financialAndContractDetails.net = jobStart.projectFees ?? null;
-      transformedData.financialAndContractDetails.serviceTax = jobStart.serviceTaxPercentage ?? null;
+      const net = jobStart.projectFees ?? 0;
+      const serviceTax = jobStart.serviceTaxPercentage ?? 0;
+      transformedData.financialAndContractDetails.net = net;
+      transformedData.financialAndContractDetails.serviceTax = serviceTax;
+      const taxAmount = percentageCalculation(serviceTax, net);
+      transformedData.financialAndContractDetails.feeTotal = addCalculation(net, taxAmount);
     }
     if (transformedData.budgetTable) {
         if(transformedData.budgetTable.originalBudget){
-            transformedData.budgetTable.originalBudget.cost = jobStart.grandTotal || 0;
             transformedData.budgetTable.originalBudget.revenueFee = jobStart.projectFees || 0;
+            transformedData.budgetTable.originalBudget.cost = jobStart.grandTotal || 0;
+            transformedData.budgetTable.originalBudget.profitPercentage = jobStart.profitPercentage || 0;
+            
         }
         if(transformedData.budgetTable.currentBudgetInMIS){
             transformedData.budgetTable.currentBudgetInMIS.revenueFee = jobStart.projectFees || 0;
@@ -92,6 +100,7 @@ const transformDataForMonthlyProgress = (
     if (transformedData.financialAndContractDetails) {
       transformedData.financialAndContractDetails.budgetOdcs = budgetOdcs;
       transformedData.financialAndContractDetails.budgetStaff = budgetStaff;
+      transformedData.financialAndContractDetails.BudgetSubTotal = addCalculation(budgetOdcs, budgetStaff);
     }
   }
 
