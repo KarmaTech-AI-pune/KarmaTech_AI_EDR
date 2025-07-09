@@ -144,8 +144,8 @@ const CostToCompleteAndEAC: React.FC = () => {
       title: "Actual Cost To Complete",
       control,
       fields: [
-        { name: "actualctcODC", label: "ODCs", defaultValue: 0},
-        { name: "actualCtcStaff", label: "Staff", defaultValue: 0},
+        { name: "actualctcODC", label: "ODCs"},
+        { name: "actualCtcStaff", label: "Staff"},
         { name: "actualCtcSubtotal", label: "Subtotal", readOnly: true, value: calculatedValues.actualCtcSubtotal },
       ],
     },
