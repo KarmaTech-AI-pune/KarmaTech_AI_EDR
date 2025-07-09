@@ -19,8 +19,10 @@ namespace NJS.Application.Dtos
 		public string TypeOfJob { get; set; } = string.Empty;
 		public string Sector { get; set; }
         public string FeeType { get; set; } = string.Empty;
-        public decimal EstimatedCost { get; set; }
-        public decimal Budget {  get; set; }
+        public decimal EstimatedProjectCost { get; set; }
+        public decimal EstimatedProjectFee {  get; set; }
+        public decimal? Percentage { get; set; }
+        public string? Details { get; set; }
 		public string Priority { get; set; } = string.Empty;
 		public string Currency { get; set; }
         public DateTime? StartDate { get; set; }

@@ -51,7 +51,7 @@ describe('projectApi', () => {
         projectManagerId: '1',
         projectNo: 'TEST-001',
         seniorProjectManagerId: '2',
-        estimatedCost: 100000,
+        estimatedProjectCost: 100000,
         currency: 'USD',
         regionalManagerId: '3',
         status: ProjectStatus.InProgress,
@@ -64,11 +64,10 @@ describe('projectApi', () => {
         office: '',
         priority: '',
         typeOfClient: '',
-        budget: 0,
+        estimatedProjectFee: 0,
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
-        feeType: '',
-        fundingStream: ''
+        feeType: ''
       }
 
       const result = await projectApi.create(newProject)
@@ -136,7 +135,7 @@ describe('projectApi', () => {
         projectManagerId: '1', 
         projectNo: 'TEST-001',
         seniorProjectManagerId: '2', 
-        estimatedCost: 100000,
+        estimatedProjectCost: 100000,
         currency: 'USD',
         regionalManagerId: '3', 
         status: ProjectStatus.InProgress,
@@ -149,11 +148,10 @@ describe('projectApi', () => {
         office: '',
         priority: '',
         typeOfClient: '',
-        budget: 0,
+        estimatedProjectFee: 0,
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
-        feeType: '',
-        fundingStream: ''
+        feeType: ''
       })
       
       expect(result).toBeNull()
@@ -202,7 +200,7 @@ describe('projectApi', () => {
         projectManagerId: '1',
         projectNo: 'TEST-001',
         seniorProjectManagerId: '2', 
-        estimatedCost: 100000,
+        estimatedProjectCost: 100000,
         currency: 'USD',
         regionalManagerId: '3', 
         status: ProjectStatus.InProgress,
@@ -215,11 +213,10 @@ describe('projectApi', () => {
         office: '',
         priority: '',
         typeOfClient: '',
-        budget: 0,
+        estimatedProjectFee: 0,
         letterOfAcceptance: false,
         opportunityTrackingId: 0,
         feeType: '',
-        fundingStream: ''
       }
 
       await expect(projectApi.create(completeProject)).resolves.not.toThrow()

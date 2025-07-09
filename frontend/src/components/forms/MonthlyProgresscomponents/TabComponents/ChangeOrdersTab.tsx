@@ -1,5 +1,5 @@
 import React from "react";
-import { Controller, useFormContext, useFieldArray } from "react-hook-form";
+import { Controller, useFormContext, useFieldArray, FieldPath } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import {
   Box,
@@ -21,6 +21,59 @@ import {
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import textFieldStyle from "../../../../theme/textFieldStyle";
+
+interface BudgetTextFieldProps {
+  name: FieldPath<MonthlyProgressSchemaType>;
+  control: any;
+  placeholder: string;
+  readOnly?: boolean;
+  endAdornment?: string;
+  type?: string;
+}
+
+const BudgetTextField: React.FC<BudgetTextFieldProps> = ({
+  name,
+  control,
+  placeholder,
+  readOnly = false,
+  endAdornment,
+  type = "text"
+}) => {
+  const { formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+
+  const getNestedError = (path: string, obj: any) => {
+    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+  };
+
+  const error = getNestedError(name, errors);
+
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field }) => (
+        <TextField
+          {...field}
+          fullWidth
+          size="small"
+          type={type}
+          placeholder={placeholder}
+          value={field.value ?? 0}
+          onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          error={!!error}
+          helperText={error?.message || ''}
+          sx={readOnly ? {} : textFieldStyle}
+          InputProps={{
+            readOnly,
+            endAdornment,
+          }}
+        />
+      )}
+    />
+  );
+};
 
 const ChangeOrdersTab: React.FC = () => {
   const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
@@ -30,33 +83,6 @@ const ChangeOrdersTab: React.FC = () => {
     name: "changeOrder"
   });
 
-  // Common text field styles following the application pattern
-  const textFieldStyle = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 1,
-      backgroundColor: '#fff',
-      '&:hover fieldset': {
-        borderColor: '#1869DA',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#1869DA',
-      }
-    },
-     // Hide number input arrows
-    '& input[type=number]': {
-      '-moz-appearance': 'textfield',
-    },
-    '& input[type=number]::-webkit-outer-spin-button': {
-      '-webkit-appearance': 'none',
-      margin: 0,
-    },
-    '& input[type=number]::-webkit-inner-spin-button': {
-      '-webkit-appearance': 'none',
-      margin: 0,
-    }
-  };
-
-  // Add new change order row
   const addChangeOrderRow = () => {
     append({
       contractTotal: null,
@@ -67,7 +93,6 @@ const ChangeOrdersTab: React.FC = () => {
     });
   };
 
-  // Remove change order row
   const removeChangeOrderRow = (index: number) => {
     remove(index);
   };
@@ -112,85 +137,16 @@ const ChangeOrdersTab: React.FC = () => {
               {fields.map((field, index) => (
                 <TableRow key={field.id} sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
                   <TableCell>
-                    <Controller
-                      name={`changeOrder.${index}.contractTotal`}
-                      control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          size="small"
-                          type="number"
-                          placeholder="Contract Total"
-                          value={field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                          onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                          error={!!errors.changeOrder?.[index]?.contractTotal}
-                          helperText={errors.changeOrder?.[index]?.contractTotal?.message}
-                          sx={textFieldStyle}
-                        />
-                      )}
-                    />
+                    <BudgetTextField name={`changeOrder.${index}.contractTotal`} control={control} placeholder="Contract Total" type="number" />
                   </TableCell>
                   <TableCell>
-                    <Controller
-                      name={`changeOrder.${index}.cost`}
-                      control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          size="small"
-                          type="number"
-                          placeholder="Cost"
-                          value={field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                          onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                          error={!!errors.changeOrder?.[index]?.cost}
-                          helperText={errors.changeOrder?.[index]?.cost?.message}
-                          sx={textFieldStyle}
-                        />
-                      )}
-                    />
+                    <BudgetTextField name={`changeOrder.${index}.cost`} control={control} placeholder="Cost" type="number" />
                   </TableCell>
                   <TableCell>
-                    <Controller
-                      name={`changeOrder.${index}.fee`}
-                      control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          size="small"
-                          type="number"
-                          placeholder="Fee"
-                          value={field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                          onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                          error={!!errors.changeOrder?.[index]?.fee}
-                          helperText={errors.changeOrder?.[index]?.fee?.message}
-                          sx={textFieldStyle}
-                        />
-                      )}
-                    />
+                    <BudgetTextField name={`changeOrder.${index}.fee`} control={control} placeholder="Fee" type="number" />
                   </TableCell>
                   <TableCell>
-                    <Controller
-                      name={`changeOrder.${index}.summaryDetails`}
-                      control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          size="small"
-                          placeholder="Summary Details"
-                          value={field.value || ''}
-                          error={!!errors.changeOrder?.[index]?.summaryDetails}
-                          helperText={errors.changeOrder?.[index]?.summaryDetails?.message}
-                          sx={textFieldStyle}
-                        />
-                      )}
-                    />
+                    <BudgetTextField name={`changeOrder.${index}.summaryDetails`} control={control} placeholder="Summary Details" />
                   </TableCell>
                   <TableCell>
                     <Controller

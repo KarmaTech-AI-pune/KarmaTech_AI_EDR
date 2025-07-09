@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
+import React, { useEffect, useMemo } from 'react';
+import { Controller, useFormContext, Control, FieldPath } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
-import { calculatePercentageComplete } from '../../../../utils/calculations';
+import { getPercentage } from '../../../../utils/calculations';
 import textFieldStyle from '../../../../theme/textFieldStyle';
 import {
   Box,
@@ -16,31 +16,92 @@ import {
   Typography
 } from '@mui/material';
 
+interface BudgetTextFieldProps {
+  name: FieldPath<MonthlyProgressSchemaType>;
+  control: Control<MonthlyProgressSchemaType>;
+  placeholder: string;
+  readOnly?: boolean;
+  endAdornment?: string;
+}
+
+const BudgetTextField: React.FC<BudgetTextFieldProps> = ({
+  name,
+  control,
+  placeholder,
+  readOnly = false,
+  endAdornment,
+}) => {
+  const { formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+
+  const getNestedError = (path: string, obj: any) => {
+    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+  };
+
+  const error = getNestedError(name, errors);
+
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field }) => (
+        <TextField
+          {...field}
+          fullWidth
+          size="small"
+          type="number"
+          placeholder={placeholder}
+          value={field.value ?? 0}
+          onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          error={!!error}
+          helperText={error?.message || ''}
+          sx={readOnly ? {} : textFieldStyle}
+          InputProps={{
+            readOnly,
+            endAdornment,
+          }}
+        />
+      )}
+    />
+  );
+};
+
 const BudgetRevenueTab: React.FC = () => {
-  const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
+  const { control, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
 
   const misRevenue = watch('budgetTable.currentBudgetInMIS.revenueFee');
   const misCost = watch('budgetTable.currentBudgetInMIS.cost');
   const totalPaymentDue = watch('progressDeliverable.totalPaymentDue');
+  const totalCumulativeActualCost = watch('actualCost.totalCumulativeCost');
+  
+
+  const calculatedPercentages = useMemo(() => {
+    const revenuePercentage = misRevenue && totalPaymentDue ? getPercentage(totalPaymentDue, misRevenue) : 0;
+    const costPercentage = misCost && totalCumulativeActualCost ? getPercentage(totalCumulativeActualCost, misCost) : 0;
+    return { revenuePercentage, costPercentage };
+  }, [misRevenue, misCost, totalPaymentDue, totalCumulativeActualCost]);
 
   useEffect(() => {
-    if (misRevenue && totalPaymentDue) {
-      const percentage = calculatePercentageComplete(totalPaymentDue, misRevenue);
-      setValue('budgetTable.percentCompleteOnCosts.revenueFee', percentage);
-    } else {
-      setValue('budgetTable.percentCompleteOnCosts.revenueFee', 0);
-    }
-  }, [misRevenue, totalPaymentDue, setValue]);
+    setValue('budgetTable.percentCompleteOnCosts.revenueFee', calculatedPercentages.revenuePercentage);
+    setValue('budgetTable.percentCompleteOnCosts.cost', calculatedPercentages.costPercentage);
+  }, [calculatedPercentages, setValue]);
 
-  useEffect(() => {
-    if (misCost && totalPaymentDue) {
-      const percentage = calculatePercentageComplete(totalPaymentDue, misCost);
-      setValue('budgetTable.percentCompleteOnCosts.cost', percentage);
-    } else {
-      setValue('budgetTable.percentCompleteOnCosts.cost', 0);
-    }
-  }, [misCost, totalPaymentDue, setValue]);
-
+  const budgetFields = {
+    original: {
+      revenueFee: "budgetTable.originalBudget.revenueFee" as const,
+      cost: "budgetTable.originalBudget.cost" as const,
+      profit: "budgetTable.originalBudget.profitPercentage" as const,
+    },
+    current: {
+      revenueFee: "budgetTable.currentBudgetInMIS.revenueFee" as const,
+      cost: "budgetTable.currentBudgetInMIS.cost" as const,
+      profit: "budgetTable.currentBudgetInMIS.profitPercentage" as const,
+    },
+    percentComplete: {
+      revenueFee: "budgetTable.percentCompleteOnCosts.revenueFee" as const,
+      cost: "budgetTable.percentCompleteOnCosts.cost" as const,
+    },
+  };
 
   return (
     <Box>
@@ -62,206 +123,47 @@ const BudgetRevenueTab: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {/* Original Budget Row */}
               <TableRow>
                 <TableCell sx={{ fontWeight: 500, backgroundColor: '#f9f9f9' }}>
                   Original Budget
                 </TableCell>
                 <TableCell>
-                  <Controller
-                    name="budgetTable.originalBudget.revenueFee"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        size="small"
-                        type="number"
-                        placeholder="Revenue/Fee"
-                        value={field.value || ''}
-                        error={!!errors.budgetTable?.originalBudget?.revenueFee}
-                        helperText={errors.budgetTable?.originalBudget?.revenueFee?.message}
-                        InputProps={{
-                          readOnly: true,
-                        }}
-                      />
-                    )}
-                  />
+                  <BudgetTextField name={budgetFields.original.revenueFee} control={control} placeholder="Revenue/Fee" readOnly />
                 </TableCell>
                 <TableCell>
-                  <Controller
-                    name="budgetTable.originalBudget.cost"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        size="small"
-                        type="number"
-                        placeholder="Cost"
-                        value={field.value || ''}
-                        InputProps={{
-                          readOnly: true,
-                        }}
-                        error={!!errors.budgetTable?.originalBudget?.cost}
-                        helperText={errors.budgetTable?.originalBudget?.cost?.message}
-                      />
-                    )}
-                  />
+                  <BudgetTextField name={budgetFields.original.cost} control={control} placeholder="Cost" readOnly />
                 </TableCell>
                 <TableCell>
-                  <Controller
-                    name="budgetTable.originalBudget.profitPercentage"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        size="small"
-                        type="number"
-                        placeholder="Profit(%)"
-                        value={field.value || ''}
-                        InputProps={{
-                          readOnly: true,
-                          endAdornment: '%'
-                        }}
-                        error={!!errors.budgetTable?.originalBudget?.profitPercentage}
-                        helperText={errors.budgetTable?.originalBudget?.profitPercentage?.message}
-                      />
-                    )}
-                  />
+                  <BudgetTextField name={budgetFields.original.profit} control={control} placeholder="Profit(%)" readOnly endAdornment="%" />
                 </TableCell>
               </TableRow>
 
-              {/* Current Budget in IMS Row */}
               <TableRow>
                 <TableCell sx={{ fontWeight: 500, backgroundColor: '#f9f9f9' }}>
                   Current Budget in MIS
                 </TableCell>
                 <TableCell>
-                  <Controller
-                    name="budgetTable.currentBudgetInMIS.revenueFee"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        size="small"
-                        type="number"
-                        placeholder="Revenue/Fee"
-                        value={field.value || ''}
-                        InputProps={{
-                          readOnly: true,
-                        }}
-                        error={!!errors.budgetTable?.currentBudgetInMIS?.revenueFee}
-                        helperText={errors.budgetTable?.currentBudgetInMIS?.revenueFee?.message}
-                      />
-                    )}
-                  />
+                  <BudgetTextField name={budgetFields.current.revenueFee} control={control} placeholder="Revenue/Fee" readOnly />
                 </TableCell>
                 <TableCell>
-                  <Controller
-                    name="budgetTable.currentBudgetInMIS.cost"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        size="small"
-                        type="number"
-                        placeholder="Cost"
-                        value={field.value || ''}
-                        InputProps={{
-                          readOnly: true,
-                        }}
-                        error={!!errors.budgetTable?.currentBudgetInMIS?.cost}
-                        helperText={errors.budgetTable?.currentBudgetInMIS?.cost?.message}
-                      />
-                    )}
-                  />
+                  <BudgetTextField name={budgetFields.current.cost} control={control} placeholder="Cost" readOnly />
                 </TableCell>
                 <TableCell>
-                  <Controller
-                    name="budgetTable.currentBudgetInMIS.profitPercentage"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        size="small"
-                        type="number"
-                        placeholder="Profit(%)"
-                        value={field.value || ''}
-                        InputProps={{
-                          readOnly: true,
-                          endAdornment: '%'
-                        }}
-                        error={!!errors.budgetTable?.currentBudgetInMIS?.profitPercentage}
-                        helperText={errors.budgetTable?.currentBudgetInMIS?.profitPercentage?.message}
-                      />
-                    )}
-                  />
+                  <BudgetTextField name={budgetFields.current.profit} control={control} placeholder="Profit(%)" readOnly endAdornment="%" />
                 </TableCell>
               </TableRow>
 
-              {/* % Complete on costs Row */}
               <TableRow>
                 <TableCell sx={{ fontWeight: 500, backgroundColor: '#f9f9f9' }}>
                   % Complete on costs:
                 </TableCell>
                 <TableCell>
-                  <Controller
-                    name="budgetTable.percentCompleteOnCosts.revenueFee"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        size="small"
-                        type="number"
-                        placeholder="Revenue/Fee %"
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
-                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                        error={!!errors.budgetTable?.percentCompleteOnCosts?.revenueFee}
-                        helperText={errors.budgetTable?.percentCompleteOnCosts?.revenueFee?.message}
-                        sx={textFieldStyle}
-                        InputProps={{
-                          readOnly: true,
-                          endAdornment: '%'
-                        }}
-                      />
-                    )}
-                  />
+                  <BudgetTextField name={budgetFields.percentComplete.revenueFee} control={control} placeholder="Revenue/Fee %" readOnly endAdornment="%" />
                 </TableCell>
                 <TableCell>
-                  <Controller
-                    name="budgetTable.percentCompleteOnCosts.cost"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        size="small"
-                        type="number"
-                        placeholder="Cost %"
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
-                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                        error={!!errors.budgetTable?.percentCompleteOnCosts?.cost}
-                        helperText={errors.budgetTable?.percentCompleteOnCosts?.cost?.message}
-                        sx={textFieldStyle}
-                        InputProps={{
-                          readOnly: true,
-                          endAdornment: '%'
-                        }}
-                      />
-                    )}
-                  />
+                  <BudgetTextField name={budgetFields.percentComplete.cost} control={control} placeholder="Cost %" readOnly endAdornment="%" />
                 </TableCell>
-                <TableCell>
-                  
-                </TableCell>
+                <TableCell></TableCell>
               </TableRow>
             </TableBody>
           </Table>

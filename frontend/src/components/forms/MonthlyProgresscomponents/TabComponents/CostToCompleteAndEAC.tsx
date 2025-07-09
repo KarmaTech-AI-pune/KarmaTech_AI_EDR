@@ -1,269 +1,179 @@
-import { Controller, useFormContext } from "react-hook-form";
+import React, { useEffect, useMemo } from "react";
+import { Controller, useFormContext, Control } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { Grid, Paper, TextField, Typography } from "@mui/material";
-import React, { useEffect } from "react";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 import { calculateGrossPercentage } from "../../../../utils/calculations";
 
-const CostToCompleteAndEAC: React.FC = () => {
-  const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
+interface FormFieldProps {
+  name: keyof MonthlyProgressSchemaType['ctcAndEac'];
+  label: string;
+  control: Control<MonthlyProgressSchemaType>;
+  readOnly?: boolean;
+  value?: number;
+  defaultValue?: number;
+}
 
-  // Watch budget values from financialDetails
+const FormField: React.FC<FormFieldProps> = ({ name, label, control, readOnly = false, value, defaultValue }) => {
+  const { formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+  const error = errors.ctcAndEac?.[name];
+
+  return (
+    <Controller
+      name={`ctcAndEac.${name}`}
+      control={control}
+      defaultValue={defaultValue}
+      render={({ field }) => (
+        <TextField
+          fullWidth
+          label={label}
+          type="number"
+          value={value !== undefined ? value : field.value}
+          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          error={!!error}
+          helperText={error?.message}
+          margin="normal"
+          InputProps={{
+            readOnly,
+          }}
+          sx={{
+            ...textFieldStyle,
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: readOnly ? '#f5f5f5' : 'inherit',
+            },
+          }}
+        />
+      )}
+    />
+  );
+};
+
+interface SectionProps {
+  title: string;
+  fields: Array<{
+    name: keyof MonthlyProgressSchemaType['ctcAndEac'];
+    label: string;
+    readOnly?: boolean;
+    value?: number;
+    defaultValue?: number;
+  }>;
+  control: Control<MonthlyProgressSchemaType>;
+}
+
+const Section: React.FC<SectionProps> = ({ title, fields, control }) => (
+  <Grid item xs={12} md={3}>
+    <Paper elevation={1} sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom color="primary">
+        {title}
+      </Typography>
+      {fields.map(field => (
+        <FormField key={field.name} {...field} control={control} />
+      ))}
+    </Paper>
+  </Grid>
+);
+
+const CostToCompleteAndEAC: React.FC = () => {
+  const { control, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
+
   const net = watch('financialAndContractDetails.net') || 0;
   const budgetOdcs = watch('financialAndContractDetails.budgetOdcs');
   const budgetStaff = watch('financialAndContractDetails.budgetStaff');
   
-  // Watch actual values from contractAndCost
-  const actualOdcs = watch('actualCost.actualOdc');
-  const actualStaff = watch('actualCost.actualStaff');
+  const totalCumulativeOdcs = watch('actualCost.totalCumulativeOdc') || 0;
+  const totalCumulativeStaff = watch('actualCost.totalCumulativeStaff') || 0;
   const actualSubtotal = watch('actualCost.actualSubtotal') || 0;
-  
 
-  // Watch CTC values
   const ctcODC = watch('ctcAndEac.ctcODC');
   const ctcStaff = watch('ctcAndEac.ctcStaff');
   const actualctcODC = watch('ctcAndEac.actualctcODC');
   const actualCtcStaff = watch('ctcAndEac.actualCtcStaff');
-  
-  // Calculate subtotal based on current CTC values
-  const calculatedSubtotal = (ctcODC || 0) + (ctcStaff || 0);
-  const actualCtcSubtotal = (actualctcODC || 0) + (actualCtcStaff || 0);
-  const totalEAC = actualSubtotal + calculatedSubtotal;
-  const grossProfitPercentage = calculateGrossPercentage(net, totalEAC);
+
+  const calculatedValues = useMemo(() => {
+    const calculatedCtcODC = (budgetOdcs ?? 0) - totalCumulativeOdcs;
+    const calculatedCtcStaff = (budgetStaff ?? 0) - totalCumulativeStaff;
+    const ctcSubtotal = calculatedCtcODC + calculatedCtcStaff;
+    
+    const actualCtcSubtotal = (actualctcODC ?? 0) + (actualCtcStaff ?? 0);
+    
+    const useActualCtc = actualctcODC != null || actualCtcStaff != null;
+
+    const eacOdc = totalCumulativeOdcs + (useActualCtc ? (actualctcODC ?? 0) : calculatedCtcODC);
+    const eacStaff = totalCumulativeStaff + (useActualCtc ? (actualCtcStaff ?? 0) : calculatedCtcStaff);
+    const totalEAC = eacOdc + eacStaff;
+    
+    const grossProfitPercentage = calculateGrossPercentage(net, totalEAC);
+
+    return {
+      calculatedCtcODC,
+      calculatedCtcStaff,
+      ctcSubtotal,
+      actualCtcSubtotal,
+      eacOdc,
+      eacStaff,
+      totalEAC,
+      grossProfitPercentage,
+    };
+  }, [budgetOdcs, budgetStaff, totalCumulativeOdcs, totalCumulativeStaff, actualctcODC, actualCtcStaff, actualSubtotal, net]);
 
   useEffect(() => {
-    setValue('ctcAndEac.grossProfitPercentage', grossProfitPercentage);
-    setValue('budgetTable.currentBudgetInMIS.profitPercentage',grossProfitPercentage)
-    setValue('ctcAndEac.totalEAC', totalEAC)
-    setValue('budgetTable.currentBudgetInMIS.cost', totalEAC)
-  }, [grossProfitPercentage, setValue, net, totalEAC]);
+    setValue('ctcAndEac.ctcODC', calculatedValues.calculatedCtcODC);
+    setValue('ctcAndEac.ctcStaff', calculatedValues.calculatedCtcStaff);
+    setValue('ctcAndEac.ctcSubtotal', calculatedValues.ctcSubtotal);
+    setValue('ctcAndEac.actualCtcSubtotal', calculatedValues.actualCtcSubtotal);
+    setValue('ctcAndEac.eacOdc', calculatedValues.eacOdc);
+    setValue('ctcAndEac.eacStaff', calculatedValues.eacStaff);
+    setValue('ctcAndEac.totalEAC', calculatedValues.totalEAC);
+    setValue('ctcAndEac.grossProfitPercentage', calculatedValues.grossProfitPercentage);
+    setValue('budgetTable.currentBudgetInMIS.profitPercentage', calculatedValues.grossProfitPercentage);
+    setValue('budgetTable.currentBudgetInMIS.cost', calculatedValues.totalEAC);
+  }, [calculatedValues, setValue]);
 
-  // Calculate CTC values when budget or actual values change
-  useEffect(() => {
-    // Only calculate if both budget and actual values are available
-    if (budgetOdcs != null) {
-      const actualOdcsValue = actualOdcs ?? 0;
-      const calculatedCtcODC = budgetOdcs - actualOdcsValue;
-      setValue('ctcAndEac.ctcODC', calculatedCtcODC);
-    }
-  }, [budgetOdcs, actualOdcs, setValue]);
-
-  useEffect(() => {
-    // Only calculate if both budget and actual values are available
-    if (budgetStaff != null) {
-      const actualStaffValue = actualStaff ?? 0;
-      const calculatedCtcStaff = budgetStaff - actualStaffValue;
-      setValue('ctcAndEac.ctcStaff', calculatedCtcStaff);
-    }
-  }, [budgetStaff, actualStaff, setValue]);
-
-  // Update subtotal and totalEAC when CTC values change
-  useEffect(() => {
-    setValue('ctcAndEac.ctcSubtotal', calculatedSubtotal);
-    setValue('ctcAndEac.actualCtcSubtotal', actualCtcSubtotal);
-  }, [calculatedSubtotal, totalEAC, setValue, actualCtcSubtotal]);
+  const sections: SectionProps[] = [
+    {
+      title: "Cost to Complete",
+      control,
+      fields: [
+        { name: "ctcODC", label: "ODCs", readOnly: true, value: ctcODC ?? 0 },
+        { name: "ctcStaff", label: "Staff", readOnly: true, value: ctcStaff ?? 0 },
+        { name: "ctcSubtotal", label: "Subtotal", readOnly: true, value: calculatedValues.ctcSubtotal },
+      ],
+    },
+    {
+      title: "Actual Cost To Complete",
+      control,
+      fields: [
+        { name: "actualctcODC", label: "ODCs"},
+        { name: "actualCtcStaff", label: "Staff"},
+        { name: "actualCtcSubtotal", label: "Subtotal", readOnly: true, value: calculatedValues.actualCtcSubtotal },
+      ],
+    },
+    {
+      title: "EAC(Estimated Actual Cost)",
+      control,
+      fields: [
+        { name: "eacOdc", label: "ODCs", readOnly: true, value: calculatedValues.eacOdc ?? 0},
+        { name: "eacStaff", label: "Staff", readOnly: true, value: calculatedValues.eacStaff ?? 0 },
+        { name: "totalEAC", label: "Total EAC", readOnly: true, value: calculatedValues.totalEAC },
+      ],
+    },
+    {
+      title: "Gross Profit",
+      control,
+      fields: [
+        { name: "grossProfitPercentage", label: "Gross Profit %", readOnly: true, value: calculatedValues.grossProfitPercentage ?? 0 },
+      ],
+    },
+  ];
 
   return (
-      <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-              <Paper elevation={1} sx={{ p: 2 }}>
-                  <Typography variant="h6" gutterBottom color="primary">
-                      Costs to Complete
-                  </Typography>
+    <Grid container spacing={3}>
+      {sections.map(section => (
+        <Section key={section.title} {...section} />
+      ))}
+    </Grid>
+  );
+};
 
-                  <Controller
-                      name="ctcAndEac.ctcODC"
-                      control={control}
-                      render={({ field }) => (
-                              <TextField
-                                  fullWidth
-                                  label="ODCs"
-                                  type="number"
-                                  value={field.value}
-                                  onChange={(e) => {
-                                      const value = e.target.value ? Number(e.target.value) : null;
-                                      field.onChange(value);
-                                  }}
-                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                                  error={!!errors.ctcAndEac?.ctcODC}
-                                  helperText={errors.ctcAndEac?.ctcODC?.message || ''}
-                                  sx={textFieldStyle}
-                                  margin="normal"
-                                  InputProps={{
-                                      readOnly: true,
-                                  }}
-                              />
-                      )}
-                  />
-
-                  <Controller
-                      name="ctcAndEac.ctcStaff"
-                      control={control}
-                      render={({ field }) => (
-                              <TextField
-                                  fullWidth
-                                  label="Staff"
-                                  type="number"
-                                  value={field.value}
-                                  onChange={(e) => {
-                                      const value = e.target.value ? Number(e.target.value) : null;
-                                      field.onChange(value);
-                                  }}
-                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                                  error={!!errors.ctcAndEac?.ctcStaff}
-                                  helperText={errors.ctcAndEac?.ctcStaff?.message || ''}
-                                  sx={textFieldStyle}
-                                  margin="normal"
-                                  InputProps={{
-                                      readOnly: true,
-                                  }}
-                              />      
-                      )}
-                  />
-                  <Controller
-                      name="ctcAndEac.ctcSubtotal"
-                      control={control}
-                      render={({ field }) => (
-                          <TextField
-                              fullWidth
-                              label="Subtotal"
-                              type="number"
-                              value={field.value}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                              error={!!errors.ctcAndEac?.ctcSubtotal}
-                              helperText={errors.ctcAndEac?.ctcSubtotal?.message || ''}
-                              inputProps={{
-                                  readOnly: true,
-                              }}
-                              sx={textFieldStyle}
-                              margin="normal"
-                          />
-                      )}
-                  />
-              </Paper>
-          </Grid>
-          <Grid item xs={12} md={4}>
-              <Paper elevation={1} sx={{ p: 2 }}>
-                  <Typography variant="h6" gutterBottom color="primary">
-                      Actual Cost To Complete
-                  </Typography>
-
-                  <Controller
-                      name="ctcAndEac.actualctcODC"
-                      control={control}
-                      render={({ field }) => (
-                              <TextField
-                                  fullWidth
-                                  label="ODCs"
-                                  type="number"
-                                  value={field.value}
-                                  onChange={(e) => {
-                                      const value = e.target.value ? Number(e.target.value) : null;
-                                      field.onChange(value);
-                                  }}
-                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                                  error={!!errors.ctcAndEac?.actualctcODC}
-                                  helperText={errors.ctcAndEac?.actualctcODC?.message || ''}
-                                  sx={textFieldStyle}
-                                  margin="normal"
-                              />
-                      )}
-                  />
-
-                  <Controller
-                      name="ctcAndEac.actualCtcStaff"
-                      control={control}
-                      render={({ field }) => (
-                              <TextField
-                                  fullWidth
-                                  label="Staff"
-                                  type="number"
-                                  value={field.value}
-                                  onChange={(e) => {
-                                      const value = e.target.value ? Number(e.target.value) : null;
-                                      field.onChange(value);
-                                  }}
-                                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                                  error={!!errors.ctcAndEac?.actualCtcStaff}
-                                  helperText={errors.ctcAndEac?.actualCtcStaff?.message || ''}
-                                  sx={textFieldStyle}
-                                  margin="normal"
-                              />                       
-                      )}
-                  />
-                  <Controller
-                      name="ctcAndEac.actualCtcSubtotal"
-                      control={control}
-                      render={({ field }) => (
-                          <TextField
-                              fullWidth
-                              label="Subtotal"
-                              type="number"
-                              value={field.value}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                              error={!!errors.ctcAndEac?.actualCtcSubtotal}
-                              helperText={errors.ctcAndEac?.actualCtcSubtotal?.message || ''}
-                              inputProps={{
-                                  readOnly: true,
-                              }}
-                              sx={textFieldStyle}
-                              margin="normal"
-                          />
-                      )}
-                  />
-              </Paper>
-          </Grid>
-          <Grid item xs={12} md={4}>
-              <Paper elevation={1} sx={{ p: 2 }}>
-                  <Typography variant="h6" gutterBottom color="primary">
-                      EAC Estimate
-                  </Typography>
-
-                  <Controller
-                      name="ctcAndEac.totalEAC"
-                      control={control}
-                      render={() => (
-                          <TextField
-                              fullWidth
-                              label="Total EAC"
-                              type="number"
-                              value={totalEAC}
-                              InputProps={{
-                                  readOnly: true,
-                              }}
-                              error={!!errors.ctcAndEac?.totalEAC}
-                              helperText={errors.ctcAndEac?.totalEAC?.message || ''}
-                              sx={textFieldStyle}
-                              margin="normal"
-                          />
-                      )}
-                  />
-
-                  <Controller
-                      name="ctcAndEac.grossProfitPercentage"
-                      control={control}
-                      render={() => (
-                          <TextField
-                              fullWidth
-                              label="Gross Profit %"
-                              type="number"
-                              value={grossProfitPercentage}
-                              InputProps={{
-                                  readOnly: true,
-                              }}
-                              error={!!errors.ctcAndEac?.grossProfitPercentage}
-                              helperText={errors.ctcAndEac?.grossProfitPercentage?.message || ''}
-                              sx={textFieldStyle}
-                              margin="normal"
-                          />
-                      )}
-                  />
-              </Paper>
-          </Grid>
-      </Grid>
-  )
-}
-
-export default CostToCompleteAndEAC
+export default CostToCompleteAndEAC;

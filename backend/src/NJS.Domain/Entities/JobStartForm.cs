@@ -40,6 +40,7 @@ namespace NJS.Domain.Entities
         public decimal ServiceTaxAmount { get; set; }   // From ServiceTaxDataDto
         public decimal TotalProjectFees { get; set; }   // Calculated on frontend
         public decimal Profit { get; set; }             // Calculated on frontend
+        public decimal ProfitPercentage { get; set; }   // Calculated on frontend
 
         // Navigation property for related selections/options
         public virtual ICollection<JobStartFormSelection> Selections { get; set; } = new List<JobStartFormSelection>();

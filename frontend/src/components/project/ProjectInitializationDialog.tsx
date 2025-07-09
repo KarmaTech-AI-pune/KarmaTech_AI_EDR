@@ -164,14 +164,13 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
       sector: opportunity.clientSector ?? '',
       region: '', // Needs to be selected
       typeOfClient: '',
-      estimatedCost: opportunity.capitalValue ?? 0,
-      fundingStream: opportunity.contractType === 'Lump Sum' ? 'Lumpsum' : opportunity.contractType ?? '',
+      estimatedProjectCost: opportunity.capitalValue ?? 0,
       startDate: opportunity.likelyStartDate instanceof Date
         ? opportunity.likelyStartDate.toISOString().split('T')[0]
         : opportunity.likelyStartDate ?? '',
       endDate: '', // Can be calculated based on durationOfProject if needed
       currency: opportunity.currency ?? '',
-      budget: opportunity.capitalValue ?? 0, // Using capitalValue as initial budget
+      estimatedProjectFee: opportunity.capitalValue ?? 0, // Using capitalValue as initial budget
       priority: '', // Needs to be selected
       regionalManagerId: opportunity.approvalManagerId || "",
       status: 0,
@@ -179,7 +178,7 @@ export const ProjectInitializationDialog: React.FC<ProjectInitializationDialogPr
       opportunityTrackingId: parseInt(selectedOpportunityId),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      feeType: ''
+      feeType: opportunity.contractType === 'Lump Sum' ? 'Lumpsum' : opportunity.contractType ?? '',
     };
 
     setImportedProjectData(projectData);

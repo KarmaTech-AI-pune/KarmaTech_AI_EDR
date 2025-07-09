@@ -13,12 +13,12 @@ export type Project = {
     sector?: string;
     region?: string;
     typeOfClient?: string;
-    estimatedCost: number;
+    estimatedProjectCost: number;
+    estimatedProjectFee: number;
     feeType?: string;
     startDate?: string;
     endDate?: string;
     currency: string;
-    budget?: number;
     priority?: string;
     regionalManagerId: string;
     letterOfAcceptance: boolean;
@@ -26,4 +26,5 @@ export type Project = {
     createdAt: string;
     updatedAt: string;
     status: ProjectStatus;
+    opportunityTrackingId?: number;
 }
