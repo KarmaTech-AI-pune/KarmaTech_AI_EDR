@@ -59,8 +59,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 existingMonthlyProgress.FinancialDetails.BudgetOdcs = request.MonthlyProgress.FinancialAndContractDetails.BudgetOdcs;
                 existingMonthlyProgress.FinancialDetails.BudgetStaff = request.MonthlyProgress.FinancialAndContractDetails.BudgetStaff;
                 existingMonthlyProgress.FinancialDetails.BudgetSubTotal = request.MonthlyProgress.FinancialAndContractDetails.BudgetSubTotal;
-                existingMonthlyProgress.FinancialDetails.ContractType = request.MonthlyProgress.FinancialAndContractDetails.ContractType ?? "";
-                existingMonthlyProgress.FinancialDetails.Percentage = request.MonthlyProgress.FinancialAndContractDetails.Percentage;
+                existingMonthlyProgress.FinancialDetails.ContractType = request.MonthlyProgress.FinancialAndContractDetails.ContractType;
             }
             else if (existingMonthlyProgress.FinancialDetails != null)
             {
@@ -75,8 +74,6 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 {
                     existingMonthlyProgress.ContractAndCost = new ContractAndCost();
                 }
-                existingMonthlyProgress.ContractAndCost.ContractType = request.MonthlyProgress.ActualCost.ContractType ?? "";
-                existingMonthlyProgress.ContractAndCost.Percentage = request.MonthlyProgress.ActualCost.Percentage;
                 existingMonthlyProgress.ContractAndCost.PriorCumulativeOdc = request.MonthlyProgress.ActualCost.PriorCumulativeOdc;
                 existingMonthlyProgress.ContractAndCost.PriorCumulativeStaff = request.MonthlyProgress.ActualCost.PriorCumulativeStaff;
                 existingMonthlyProgress.ContractAndCost.PriorCumulativeTotal = request.MonthlyProgress.ActualCost.PriorCumulativeTotal;
@@ -105,6 +102,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 existingMonthlyProgress.CTCEAC.ActualctcODC = request.MonthlyProgress.CtcAndEac.ActualctcODC;
                 existingMonthlyProgress.CTCEAC.ActualCtcStaff = request.MonthlyProgress.CtcAndEac.ActualCtcStaff;
                 existingMonthlyProgress.CTCEAC.ActualCtcSubtotal = request.MonthlyProgress.CtcAndEac.ActualCtcSubtotal;
+                existingMonthlyProgress.CTCEAC.EacOdc = request.MonthlyProgress.CtcAndEac.EacOdc;
+                existingMonthlyProgress.CTCEAC.EacStaff = request.MonthlyProgress.CtcAndEac.EacStaff;
                 existingMonthlyProgress.CTCEAC.TotalEAC = request.MonthlyProgress.CtcAndEac.TotalEAC;
                 existingMonthlyProgress.CTCEAC.GrossProfitPercentage = request.MonthlyProgress.CtcAndEac.GrossProfitPercentage;
             }
