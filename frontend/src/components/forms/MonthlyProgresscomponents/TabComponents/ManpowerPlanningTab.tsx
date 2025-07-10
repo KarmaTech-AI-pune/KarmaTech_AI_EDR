@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useContext } from "react";
-import { Controller, useFormContext, useFieldArray, useWatch, FieldPath } from "react-hook-form";
+import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { MonthlyProgressAPI, MonthlyHourDto } from "../../../../services/monthlyProgressApi";
 import { projectManagementAppContext } from "../../../../App";
@@ -18,63 +18,12 @@ import {
   CircularProgress
 } from "@mui/material";
 
-interface BudgetTextFieldProps {
-  name: FieldPath<MonthlyProgressSchemaType>;
-  control: any;
-  placeholder: string;
-  readOnly?: boolean;
-  endAdornment?: string;
-  type?: string;
-}
-
-const BudgetTextField: React.FC<BudgetTextFieldProps> = ({
-  name,
-  control,
-  placeholder,
-  readOnly = false,
-  endAdornment,
-  type = "text"
-}) => {
-  const { formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
-
-  const getNestedError = (path: string, obj: any) => {
-    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
-  };
-
-  const error = getNestedError(name, errors);
-
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field }) => (
-        <TextField
-          {...field}
-          fullWidth
-          size="small"
-          type={type}
-          placeholder={placeholder}
-          value={field.value ?? 0}
-          onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
-          onWheel={(e) => (e.target as HTMLInputElement).blur()}
-          error={!!error}
-          helperText={error?.message || ''}
-          sx={readOnly ? {} : textFieldStyle}
-          InputProps={{
-            readOnly,
-            endAdornment,
-          }}
-        />
-      )}
-    />
-  );
-};
-
 const ManpowerPlanningTab: React.FC = () => {
-  const { control, setValue } = useFormContext<MonthlyProgressSchemaType>();
+  const { control, formState: { errors }, setValue } = useFormContext<MonthlyProgressSchemaType>();
   const context = useContext(projectManagementAppContext);
   const projectId = context?.selectedProject?.id?.toString();
   
+  // State for API data loading
   const [isLoading, setIsLoading] = useState(false);
   const [_error, setError] = useState<string | null>(null);
 
@@ -83,11 +32,15 @@ const ManpowerPlanningTab: React.FC = () => {
     name: "manpowerPlanning.manpower"
   });
   
+  // Watch manpower array to calculate total
   const manpowerEntries = useWatch({
     control,
     name: "manpowerPlanning.manpower"
   });
 
+
+
+  // Helper function to get current and next month hours from monthlyHours array
   const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
     const currentDate = new Date();
     const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
@@ -112,6 +65,7 @@ const ManpowerPlanningTab: React.FC = () => {
     };
   };
 
+  // Calculate totals using useMemo to avoid unnecessary recalculations
   const totals = useMemo(() => {
     if (!manpowerEntries || manpowerEntries.length === 0) {
       return {
@@ -135,11 +89,15 @@ const ManpowerPlanningTab: React.FC = () => {
     };
   }, [manpowerEntries]);
   
+  // Use a ref to track previous totals to prevent unnecessary updates
   const prevTotalsRef = useRef(totals);
   
+  // Update form values only when totals actually change
   useEffect(() => {
+    // Skip the first render or when there are no entries
     if (!manpowerEntries || manpowerEntries.length === 0) return;
     
+    // Check if totals have changed to avoid infinite loops
     const prevTotals = prevTotalsRef.current;
     if (
       prevTotals.plannedTotal !== totals.plannedTotal ||
@@ -147,8 +105,10 @@ const ManpowerPlanningTab: React.FC = () => {
       prevTotals.balanceTotal !== totals.balanceTotal ||
       prevTotals.nextMonthPlanningTotal !== totals.nextMonthPlanningTotal
     ) {
+      // Update the ref with current totals
       prevTotalsRef.current = totals;
       
+      // Batch updates to reduce renders
       setValue("manpowerPlanning.manpowerTotal", {
         plannedTotal: totals.plannedTotal,
         consumedTotal: totals.consumedTotal,
@@ -158,6 +118,7 @@ const ManpowerPlanningTab: React.FC = () => {
     }
   }, [totals, setValue, manpowerEntries]);
   
+  // Fetch manpower resources data
   useEffect(() => {
     const fetchManpowerData = async () => {
       if (!projectId) {
@@ -169,8 +130,10 @@ const ManpowerPlanningTab: React.FC = () => {
       setError(null);
       
       try {
+        // Fetch data from API using the project ID from context
         const data = await MonthlyProgressAPI.getManpowerResources(projectId);
         
+        // Transform API data to form format
         if (data?.resources && data.resources.length > 0) {
           const formData = data.resources.map(resource => {
             const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.monthlyHours);
@@ -199,6 +162,8 @@ const ManpowerPlanningTab: React.FC = () => {
     
     fetchManpowerData();
   }, [projectId, replace]);
+
+
 
   return (
     <Box>
@@ -235,25 +200,174 @@ const ManpowerPlanningTab: React.FC = () => {
               {fields.map((field, index) => (
                 <TableRow key={field.id} sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
                   <TableCell>
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.workAssignment`} control={control} placeholder="Work Assignment" readOnly />
+                    <Controller
+                      name={`manpowerPlanning.manpower.${index}.workAssignment`}
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          size="small"
+                          placeholder="Work Assignment"
+                          value={field.value || ''}
+                          error={!!errors.manpowerPlanning?.manpower?.[index]?.workAssignment}
+                          helperText={errors.manpowerPlanning?.manpower?.[index]?.workAssignment?.message}
+                          sx={textFieldStyle}
+                          InputProps={{ readOnly: true }}
+                        />
+                      )}
+                    />
                   </TableCell>
                   <TableCell>
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.assignee`} control={control} placeholder="Assignee" readOnly />
+                    <Controller
+                      name={`manpowerPlanning.manpower.${index}.assignee`}
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          size="small"
+                          placeholder="Assignee"
+                          value={field.value || ''}
+                          error={!!errors.manpowerPlanning?.manpower?.[index]?.assignee}
+                          helperText={errors.manpowerPlanning?.manpower?.[index]?.assignee?.message}
+                          sx={textFieldStyle}
+                          InputProps={{ readOnly: true }}
+                        />
+                      )}
+                    />
                   </TableCell>
                   <TableCell align="center">
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.planned`} control={control} placeholder="Planned" type="number" readOnly />
+                    <Controller
+                      name={`manpowerPlanning.manpower.${index}.planned`}
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          size="small"
+                          type="number"
+                          placeholder="Planned"
+                          value={field.value || ''}
+                          onChange={(e) => {
+                            const value = e.target.value ? Number(e.target.value) : null;
+                            field.onChange(value);
+                            
+                            // Get current consumed value to calculate balance
+                            const consumed = manpowerEntries?.[index]?.consumed;
+                            if (value !== null && consumed !== null) {
+                              setValue(`manpowerPlanning.manpower.${index}.balance`, value - consumed);
+                            }
+                          }}
+                          error={!!errors.manpowerPlanning?.manpower?.[index]?.planned}
+                          helperText={errors.manpowerPlanning?.manpower?.[index]?.planned?.message}
+                          sx={textFieldStyle}
+                          inputProps={{ min: 0 ,
+                            readOnly: true
+                          }}
+                        />
+                      )}
+                    />
                   </TableCell>
                   <TableCell align="center">
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.consumed`} control={control} placeholder="Consumed" type="number" />
+                    <Controller
+                      name={`manpowerPlanning.manpower.${index}.consumed`}
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          size="small"
+                          type="number"
+                          placeholder="Consumed"
+                          value={field.value || ''}
+                          onChange={(e) => {
+                            const value = e.target.value ? Number(e.target.value) : null;
+                            field.onChange(value);
+                            
+                            // Get current planned value to calculate balance
+                            const planned = manpowerEntries?.[index]?.planned;
+                            if (planned !== null && value !== null) {
+                              setValue(`manpowerPlanning.manpower.${index}.balance`, planned - value);
+                            }
+                          }}
+                          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                          error={!!errors.manpowerPlanning?.manpower?.[index]?.consumed}
+                          helperText={errors.manpowerPlanning?.manpower?.[index]?.consumed?.message}
+                          sx={textFieldStyle}
+                          inputProps={{ min: 0 }}
+                        />
+                      )}
+                    />
                   </TableCell>
                   <TableCell align="center">
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.balance`} control={control} placeholder="Balance" type="number" readOnly />
+                    <Controller
+                      name={`manpowerPlanning.manpower.${index}.balance`}
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          size="small"
+                          type="number"
+                          placeholder="Balance"
+                          value={field.value || ''}
+                          InputProps={{
+                            readOnly: true,
+                          }}
+                          error={!!errors.manpowerPlanning?.manpower?.[index]?.balance}
+                          helperText={errors.manpowerPlanning?.manpower?.[index]?.balance?.message}
+                          sx={{
+                            ...textFieldStyle,
+                            '& .MuiOutlinedInput-root': {
+                              ...(textFieldStyle?.['& .MuiOutlinedInput-root'] ? textFieldStyle['& .MuiOutlinedInput-root'] : {}),
+                              backgroundColor: '#f9f9f9',
+                            }
+                          }}
+                        />
+                      )}
+                    />
                   </TableCell>
                   <TableCell align="center">
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.nextMonthPlanning`} control={control} placeholder="Next Month" type="number" readOnly />
+                    <Controller
+                      name={`manpowerPlanning.manpower.${index}.nextMonthPlanning`}
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          size="small"
+                          type="number"
+                          placeholder="Next Month"
+                          value={field.value || ''}
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                          error={!!errors.manpowerPlanning?.manpower?.[index]?.nextMonthPlanning}
+                          helperText={errors.manpowerPlanning?.manpower?.[index]?.nextMonthPlanning?.message}
+                          sx={textFieldStyle}
+                          inputProps={{ min: 0,
+                            readOnly: true 
+                           }}
+                        />
+                      )}
+                    />
                   </TableCell>
                   <TableCell>
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.manpowerComments`} control={control} placeholder="Comments" />
+                    <Controller
+                      name={`manpowerPlanning.manpower.${index}.manpowerComments`}
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          size="small"
+                          placeholder="Comments"
+                          value={field.value || ''}
+                          error={!!errors.manpowerPlanning?.manpower?.[index]?.manpowerComments}
+                          helperText={errors.manpowerPlanning?.manpower?.[index]?.manpowerComments?.message}
+                          sx={textFieldStyle}
+                        />
+                      )}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
