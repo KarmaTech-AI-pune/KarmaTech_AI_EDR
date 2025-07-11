@@ -3,6 +3,7 @@ import { WBSStructureAPI } from './wbsApi';
 import { projectApi } from './projectApi';
 import { MonthlyProgressSchemaType } from '../schemas/monthlyProgress/MonthlyProgressSchema';
 import { addCalculation, percentageCalculation } from '../utils/calculations';
+import { MonthlyProgressAPI, ManpowerResourcesResponse, MonthlyHourDto } from './monthlyProgressApi';
 
 // Define types for the expected API responses for better type safety
 interface JobStartData {
@@ -27,7 +28,8 @@ interface ProjectData {
 const transformDataForMonthlyProgress = (
   jobStartResult: PromiseSettledResult<JobStartData[]>,
   wbsResult: PromiseSettledResult<WBSData>,
-  projectResult: PromiseSettledResult<ProjectData>
+  projectResult: PromiseSettledResult<ProjectData>,
+  manpowerResult: PromiseSettledResult<ManpowerResourcesResponse>
 ): Partial<MonthlyProgressSchemaType> => {
   const transformedData: Partial<MonthlyProgressSchemaType> = {
     financialAndContractDetails: {
@@ -60,7 +62,16 @@ const transformDataForMonthlyProgress = (
       completionDateAsPerContract: null,
       completionDateAsPerExtension: null,
       expectedCompletionDate: null,
-    }
+    },
+    manpowerPlanning: {
+      manpower: [],
+      manpowerTotal: {
+        plannedTotal: 0,
+        consumedTotal: 0,
+        balanceTotal: 0,
+        nextMonthPlanningTotal: 0,
+      },
+    },
   };
 
   // Process JobStart data if the promise was fulfilled
@@ -125,6 +136,57 @@ const transformDataForMonthlyProgress = (
       transformedData.schedule.expectedCompletionDate = project.endDate ? new Date(project.endDate) : null;
     }
   }
+  
+  if (manpowerResult.status === 'fulfilled' && manpowerResult.value) {
+    const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
+      const currentDate = new Date();
+      const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
+      const currentYear = currentDate.getFullYear();
+      
+      const nextDate = new Date(currentDate);
+      nextDate.setMonth(nextDate.getMonth() + 1);
+      const nextMonth = nextDate.toLocaleString('default', { month: 'long' });
+      const nextYear = nextDate.getFullYear();
+      
+      const currentMonthData = monthlyHours?.find(item => 
+        item.month === currentMonth && item.year === currentYear
+      );
+      
+      const nextMonthData = monthlyHours?.find(item => 
+        item.month === nextMonth && item.year === nextYear
+      );
+      
+      return {
+        currentMonthHours: currentMonthData?.plannedHours || 0,
+        nextMonthHours: nextMonthData?.plannedHours || 0
+      };
+    };
+    const manpowerData = manpowerResult.value.resources.map(resource => {
+      const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.monthlyHours);
+      return {
+        workAssignment: resource.taskTitle,
+        assignee: resource.employeeName,
+        planned: currentMonthHours,
+        consumed: null,
+        balance: currentMonthHours,
+        nextMonthPlanning: nextMonthHours,
+        manpowerComments: ""
+      };
+    });
+
+    const plannedTotal = manpowerData.reduce((sum, entry) => sum + (entry.planned || 0), 0);
+    const nextMonthPlanningTotal = manpowerData.reduce((sum, entry) => sum + (entry.nextMonthPlanning || 0), 0);
+
+    if (transformedData.manpowerPlanning) {
+      transformedData.manpowerPlanning.manpower = manpowerData;
+      transformedData.manpowerPlanning.manpowerTotal = {
+        plannedTotal: plannedTotal,
+        consumedTotal: 0,
+        balanceTotal: plannedTotal,
+        nextMonthPlanningTotal: nextMonthPlanningTotal,
+      };
+    }
+  }
 
   return transformedData;
 };
@@ -136,9 +198,10 @@ export const getAggregatedMonthlyProgressData = async (
     getJobStartFormByProjectId(projectId),
     WBSStructureAPI.getProjectWBS(projectId),
     projectApi.getById(projectId),
+    MonthlyProgressAPI.getManpowerResources(projectId),
   ]);
 
-  const [jobStartResult, wbsResult, projectResult] = results;
+  const [jobStartResult, wbsResult, projectResult, manpowerResult] = results;
 
   // Basic error logging. In a real app, you might want a more robust logging service.
   results.forEach(result => {
@@ -150,6 +213,7 @@ export const getAggregatedMonthlyProgressData = async (
   return transformDataForMonthlyProgress(
     jobStartResult as PromiseSettledResult<JobStartData[]>,
     wbsResult as PromiseSettledResult<WBSData>,
-    projectResult as PromiseSettledResult<ProjectData>
+    projectResult as PromiseSettledResult<ProjectData>,
+    manpowerResult as PromiseSettledResult<ManpowerResourcesResponse>
   );
 };

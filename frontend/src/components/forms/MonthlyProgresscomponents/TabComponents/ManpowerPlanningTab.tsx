@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState, useContext } from "react";
+import React, { useEffect, useMemo, useContext } from "react";
 import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { MonthlyProgressAPI, MonthlyHourDto } from "../../../../services/monthlyProgressApi";
 import { projectManagementAppContext } from "../../../../App";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 import {
@@ -100,12 +99,8 @@ const tableColumns = [
 const ManpowerPlanningTab: React.FC = () => {
   const { control, setValue } = useFormContext<MonthlyProgressSchemaType>();
   const context = useContext(projectManagementAppContext);
-  const projectId = context?.selectedProject?.id?.toString();
   
-  const [isLoading, setIsLoading] = useState(false);
-  const [_error, setError] = useState<string | null>(null);
-
-  const { fields, replace } = useFieldArray({
+  const { fields } = useFieldArray({
     control,
     name: "manpowerPlanning.manpower"
   });
@@ -114,30 +109,6 @@ const ManpowerPlanningTab: React.FC = () => {
     control,
     name: "manpowerPlanning.manpower"
   });
-
-  const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
-    const currentYear = currentDate.getFullYear();
-    
-    const nextDate = new Date(currentDate);
-    nextDate.setMonth(nextDate.getMonth() + 1);
-    const nextMonth = nextDate.toLocaleString('default', { month: 'long' });
-    const nextYear = nextDate.getFullYear();
-    
-    const currentMonthData = monthlyHours?.find(item => 
-      item.month === currentMonth && item.year === currentYear
-    );
-    
-    const nextMonthData = monthlyHours?.find(item => 
-      item.month === nextMonth && item.year === nextYear
-    );
-    
-    return {
-      currentMonthHours: currentMonthData?.plannedHours || 0,
-      nextMonthHours: nextMonthData?.plannedHours || 0
-    };
-  };
 
   const totals = useMemo(() => {
     if (!manpowerEntries || manpowerEntries.length === 0) {
@@ -192,48 +163,6 @@ const ManpowerPlanningTab: React.FC = () => {
     });
   }, [manpowerEntries, setValue]);
   
-  useEffect(() => {
-    const fetchManpowerData = async () => {
-      if (!projectId) {
-        setError("Project ID is not available. Please select a project.");
-        return;
-      }
-      
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const data = await MonthlyProgressAPI.getManpowerResources(projectId);
-        
-        if (data?.resources && data.resources.length > 0) {
-          const formData = data.resources.map(resource => {
-            const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.monthlyHours);
-            
-            return {
-              workAssignment: resource.taskTitle,
-              assignee: resource.employeeName,
-              planned: currentMonthHours,
-              consumed: null,
-              balance: currentMonthHours,
-              nextMonthPlanning: nextMonthHours,
-              manpowerComments: ""
-            };
-          });
-          
-          replace(formData);
-        }
-        
-      } catch (err) {
-        console.error("Error fetching manpower data:", err);
-        setError("Failed to load manpower resources. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchManpowerData();
-  }, [projectId, replace]);
-
   return (
     <Box>
       <Paper elevation={1} sx={{ p: 2 }}>
@@ -242,15 +171,6 @@ const ManpowerPlanningTab: React.FC = () => {
             Manpower Planning
           </Typography>
         </Box>
-
-        {isLoading && (
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <CircularProgress size={20} sx={{ mr: 1 }} />
-            <Typography variant="body2" color="textSecondary">
-              Loading data...
-            </Typography>
-          </Box>
-        )}
 
         <TableContainer> 
           <Table sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
