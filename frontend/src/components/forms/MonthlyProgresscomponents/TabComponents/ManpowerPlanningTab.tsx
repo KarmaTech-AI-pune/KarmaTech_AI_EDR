@@ -89,34 +89,36 @@ const ManpowerPlanningTab: React.FC = () => {
     };
   }, [manpowerEntries]);
   
-  // Use a ref to track previous totals to prevent unnecessary updates
-  const prevTotalsRef = useRef(totals);
-  
   // Update form values only when totals actually change
   useEffect(() => {
-    // Skip the first render or when there are no entries
-    if (!manpowerEntries || manpowerEntries.length === 0) return;
-    
-    // Check if totals have changed to avoid infinite loops
-    const prevTotals = prevTotalsRef.current;
-    if (
-      prevTotals.plannedTotal !== totals.plannedTotal ||
-      prevTotals.consumedTotal !== totals.consumedTotal ||
-      prevTotals.balanceTotal !== totals.balanceTotal ||
-      prevTotals.nextMonthPlanningTotal !== totals.nextMonthPlanningTotal
-    ) {
-      // Update the ref with current totals
-      prevTotalsRef.current = totals;
-      
-      // Batch updates to reduce renders
-      setValue("manpowerPlanning.manpowerTotal", {
-        plannedTotal: totals.plannedTotal,
-        consumedTotal: totals.consumedTotal,
-        balanceTotal: totals.balanceTotal,
-        nextMonthPlanningTotal: totals.nextMonthPlanningTotal
-      });
-    }
-  }, [totals, setValue, manpowerEntries]);
+    if (!manpowerEntries) return;
+
+    const newTotals = manpowerEntries.reduce(
+      (acc, entry) => {
+        acc.plannedTotal += entry.planned || 0;
+        acc.consumedTotal += entry.consumed || 0;
+        acc.nextMonthPlanningTotal += entry.nextMonthPlanning || 0;
+        return acc;
+      },
+      { plannedTotal: 0, consumedTotal: 0, nextMonthPlanningTotal: 0 }
+    );
+
+    const balanceTotal = newTotals.plannedTotal - newTotals.consumedTotal;
+
+    setValue("manpowerPlanning.manpowerTotal", {
+      ...newTotals,
+      balanceTotal,
+    });
+
+    manpowerEntries.forEach((entry, index) => {
+      const planned = entry.planned || 0;
+      const consumed = entry.consumed || 0;
+      const balance = planned - consumed;
+      if (entry.balance !== balance) {
+        setValue(`manpowerPlanning.manpower.${index}.balance`, balance);
+      }
+    });
+  }, [manpowerEntries, setValue]);
   
   // Fetch manpower resources data
   useEffect(() => {
@@ -252,12 +254,6 @@ const ManpowerPlanningTab: React.FC = () => {
                           onChange={(e) => {
                             const value = e.target.value ? Number(e.target.value) : null;
                             field.onChange(value);
-                            
-                            // Get current consumed value to calculate balance
-                            const consumed = manpowerEntries?.[index]?.consumed;
-                            if (value !== null && consumed !== null) {
-                              setValue(`manpowerPlanning.manpower.${index}.balance`, value - consumed);
-                            }
                           }}
                           error={!!errors.manpowerPlanning?.manpower?.[index]?.planned}
                           helperText={errors.manpowerPlanning?.manpower?.[index]?.planned?.message}
@@ -284,12 +280,6 @@ const ManpowerPlanningTab: React.FC = () => {
                           onChange={(e) => {
                             const value = e.target.value ? Number(e.target.value) : null;
                             field.onChange(value);
-                            
-                            // Get current planned value to calculate balance
-                            const planned = manpowerEntries?.[index]?.planned;
-                            if (planned !== null && value !== null) {
-                              setValue(`manpowerPlanning.manpower.${index}.balance`, planned - value);
-                            }
                           }}
                           onWheel={(e) => (e.target as HTMLInputElement).blur()}
                           error={!!errors.manpowerPlanning?.manpower?.[index]?.consumed}
@@ -311,7 +301,7 @@ const ManpowerPlanningTab: React.FC = () => {
                           size="small"
                           type="number"
                           placeholder="Balance"
-                          value={field.value || ''}
+                          value={field.value ?? ''}
                           InputProps={{
                             readOnly: true,
                           }}
