@@ -30,8 +30,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
             {
                 ProjectId = request.ProjectId,
                 CreatedDate = DateTime.UtcNow,
-                Month = request.MonthlyProgress?.Month ?? DateTime.UtcNow.Month,
-                Year = request.MonthlyProgress?.Year ?? DateTime.UtcNow.Year,
+                Month = request.MonthlyProgress.Month,
+                Year = request.MonthlyProgress.Year,
                 FinancialDetails = request.MonthlyProgress?.FinancialAndContractDetails != null ? new FinancialDetails
                 {
                     Net = request.MonthlyProgress.FinancialAndContractDetails.Net,
