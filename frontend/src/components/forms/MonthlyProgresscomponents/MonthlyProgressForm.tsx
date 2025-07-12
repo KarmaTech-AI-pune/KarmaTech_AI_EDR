@@ -8,6 +8,7 @@ import {
   Paper,
   Typography,
   Container,
+  CircularProgress,
 } from "@mui/material";
 import { FormWrapper } from "../FormWrapper";
 import { FormProvider, useForm, SubmitHandler } from "react-hook-form";
@@ -35,6 +36,7 @@ import {
 import {
   getCurrentMonthYear,
 } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
+import { getAggregatedMonthlyProgressData } from "../../../services/monthlyProgressDataService";
 import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
@@ -129,85 +131,35 @@ const tabs = [
 
 // Main component
 export const MonthlyProgressForm: React.FC = () => {
+  const { projectId } = useProject();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const form = useForm<MonthlyProgressSchemaType>({
     resolver: zodResolver(MonthlyProgressSchema),
-    defaultValues: {
-      financialAndContractDetails: {
-        net: 0,
-        serviceTax: 0,
-        feeTotal: 0,
-        budgetOdcs: 0,
-        budgetStaff: 0,
-        BudgetSubTotal: 0,
-        contractType: "lumpsum", // Default to lumpsum
-        percentage: 0,
-      },
-      actualCost: {
-        priorCumulativeOdc: 0,
-        priorCumulativeStaff: 0,
-        priorCumulativeTotal: 0,
-        actualOdc: 0,
-        actualStaff: 0,
-        actualSubtotal: 0,
-        totalCumulativeOdc: 0,
-        totalCumulativeStaff: 0,
-        totalCumulativeCost: 0
-      },
-      budgetTable: {
-        originalBudget: {
-          revenueFee: 0,
-          cost: 0,
-          profitPercentage: 0
-        },
-        currentBudgetInMIS: {
-          revenueFee: 0,
-          cost: 0,
-          profitPercentage: 0
-        },
-        percentCompleteOnCosts: {
-          revenueFee: 0,
-          cost: 0
-        }
-      },
-      ctcAndEac: {
-      ctcODC: 0,
-      ctcStaff: 0,
-      ctcSubtotal: 0,
-      actualctcODC: 0,
-      actualCtcStaff: 0,
-      actualCtcSubtotal: 0,
-      totalEAC: 0,
-      grossProfitPercentage: 0,
-      },
-      schedule: {
-        dateOfIssueWOLOI: new Date(),
-      completionDateAsPerContract: new Date(),
-      completionDateAsPerExtension: new Date(),
-      expectedCompletionDate: new Date(),
-      },
-      manpowerPlanning: {
-        manpower: [],
-        manpowerTotal: {
-          plannedTotal: 0,
-          consumedTotal: 0,
-          balanceTotal: 0,
-          nextMonthPlanningTotal: 0,
-        }
-      },
-      progressDeliverable: {
-        deliverables: [],
-        totalPaymentDue: 0,
-      },
-      changeOrder: [],
-      programmeSchedule: [],
-      earlyWarnings: [],
-      lastMonthActions: [],
-      currentMonthActions: [],
-    },
+    defaultValues: {},
     mode: "all",
   });
 
-  const { projectId } = useProject();
+  React.useEffect(() => {
+    const fetchData = async () => {
+      if (!projectId) {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const data = await getAggregatedMonthlyProgressData(projectId);
+        form.reset(data);
+      } catch (err) {
+        setError("Failed to fetch initial form data.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [projectId, form]);
 
   const [snackbarState, setSnackbarState] = useState({
     open: false,
@@ -264,6 +216,22 @@ export const MonthlyProgressForm: React.FC = () => {
     }),
     []
   );
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <FormWrapper>

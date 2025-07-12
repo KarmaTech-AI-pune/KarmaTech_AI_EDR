@@ -171,7 +171,6 @@ namespace NJS.Domain.Database
                 .HasForeignKey<PercentCompleteOnCosts>(pcc => pcc.BudgetTableId);
 
             // Configure decimal precisions for Monthly Progress related entities
-            modelBuilder.Entity<ContractAndCost>().Property(e => e.Percentage).HasPrecision(18, 2);
             modelBuilder.Entity<ContractAndCost>().Property(e => e.PriorCumulativeOdc).HasPrecision(18, 2);
             modelBuilder.Entity<ContractAndCost>().Property(e => e.PriorCumulativeStaff).HasPrecision(18, 2);
             modelBuilder.Entity<ContractAndCost>().Property(e => e.PriorCumulativeTotal).HasPrecision(18, 2);
@@ -192,7 +191,6 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<FinancialDetails>().Property(e => e.FeeTotal).HasPrecision(18, 2);
             modelBuilder.Entity<FinancialDetails>().Property(e => e.Net).HasPrecision(18, 2);
             modelBuilder.Entity<FinancialDetails>().Property(e => e.ServiceTax).HasPrecision(18, 2);
-            modelBuilder.Entity<FinancialDetails>().Property(e => e.Percentage).HasPrecision(18, 2);
 
             modelBuilder.Entity<ManpowerPlanning>().Property(e => e.Balance).HasPrecision(18, 2);
             modelBuilder.Entity<ManpowerPlanning>().Property(e => e.Consumed).HasPrecision(18, 2);
@@ -216,6 +214,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<CTCEAC>().Property(e => e.ActualctcODC).HasPrecision(18, 2);
             modelBuilder.Entity<CTCEAC>().Property(e => e.ActualCtcStaff).HasPrecision(18, 2);
             modelBuilder.Entity<CTCEAC>().Property(e => e.ActualCtcSubtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(e => e.EacOdc).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(e => e.EacStaff).HasPrecision(18, 2);
             modelBuilder.Entity<CTCEAC>().Property(e => e.GrossProfitPercentage).HasPrecision(18, 2);
             modelBuilder.Entity<CTCEAC>().Property(e => e.TotalEAC).HasPrecision(18, 2);
 
@@ -294,7 +294,8 @@ namespace NJS.Domain.Database
             // Configure decimal precisions
             modelBuilder.Entity<FeasibilityStudy>().Property(f => f.ProbabilityAssessment).HasPrecision(18, 2);
             modelBuilder.Entity<FeasibilityStudy>().Property(f => f.FinancialInformation).HasPrecision(18, 2);
-            modelBuilder.Entity<Project>().Property(f => f.EstimatedCost).HasPrecision(18, 2);
+            modelBuilder.Entity<Project>().Property(f => f.EstimatedProjectCost).HasPrecision(18, 2);
+            modelBuilder.Entity<Project>().Property(f => f.EstimatedProjectFee).HasPrecision(18, 2);
             modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
             modelBuilder.Entity<Role>().ToTable("AspNetRoles");
             modelBuilder.Entity<Permission>();
@@ -416,6 +417,7 @@ namespace NJS.Domain.Database
 
                 entity.Property(e => e.GrandTotal).HasPrecision(18, 2);
                 entity.Property(e => e.Profit).HasPrecision(18, 2);
+                entity.Property(e => e.ProfitPercentage).HasPrecision(18, 2);
                 entity.Property(e => e.ProjectFees).HasPrecision(18, 2);
                 entity.Property(e => e.ServiceTaxAmount).HasPrecision(18, 2);
                 entity.Property(e => e.ServiceTaxPercentage).HasPrecision(5, 2);
@@ -503,7 +505,6 @@ namespace NJS.Domain.Database
             });
 
             // Configure decimal precisions for Monthly Progress related entities
-            modelBuilder.Entity<ContractAndCost>().Property(cc => cc.Percentage).HasPrecision(18, 2);
             modelBuilder.Entity<ContractAndCost>().Property(cc => cc.PriorCumulativeOdc).HasPrecision(18, 2);
             modelBuilder.Entity<ContractAndCost>().Property(cc => cc.PriorCumulativeStaff).HasPrecision(18, 2);
             modelBuilder.Entity<ContractAndCost>().Property(cc => cc.PriorCumulativeTotal).HasPrecision(18, 2);
@@ -524,7 +525,6 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<FinancialDetails>().Property(fd => fd.FeeTotal).HasPrecision(18, 2);
             modelBuilder.Entity<FinancialDetails>().Property(fd => fd.Net).HasPrecision(18, 2);
             modelBuilder.Entity<FinancialDetails>().Property(fd => fd.ServiceTax).HasPrecision(18, 2);
-            modelBuilder.Entity<FinancialDetails>().Property(fd => fd.Percentage).HasPrecision(18, 2);
 
             modelBuilder.Entity<ManpowerPlanning>().Property(mp => mp.Balance).HasPrecision(18, 2);
             modelBuilder.Entity<ManpowerPlanning>().Property(mp => mp.Consumed).HasPrecision(18, 2);
@@ -548,6 +548,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<CTCEAC>().Property(cte => cte.ActualctcODC).HasPrecision(18, 2);
             modelBuilder.Entity<CTCEAC>().Property(cte => cte.ActualCtcStaff).HasPrecision(18, 2);
             modelBuilder.Entity<CTCEAC>().Property(cte => cte.ActualCtcSubtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.EacOdc).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.EacStaff).HasPrecision(18, 2);
             modelBuilder.Entity<CTCEAC>().Property(cte => cte.GrossProfitPercentage).HasPrecision(18, 2);
             modelBuilder.Entity<CTCEAC>().Property(cte => cte.TotalEAC).HasPrecision(18, 2);
 

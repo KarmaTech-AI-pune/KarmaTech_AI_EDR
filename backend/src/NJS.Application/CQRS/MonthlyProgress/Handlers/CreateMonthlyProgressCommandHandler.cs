@@ -40,13 +40,10 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     BudgetOdcs = request.MonthlyProgress.FinancialAndContractDetails.BudgetOdcs,
                     BudgetStaff = request.MonthlyProgress.FinancialAndContractDetails.BudgetStaff,
                     BudgetSubTotal = request.MonthlyProgress.FinancialAndContractDetails.BudgetSubTotal,
-                    ContractType = request.MonthlyProgress.FinancialAndContractDetails.ContractType ?? "",
-                    Percentage = request.MonthlyProgress.FinancialAndContractDetails.Percentage
+                    ContractType = request.MonthlyProgress.FinancialAndContractDetails.ContractType
                 } : null,
                 ContractAndCost = request.MonthlyProgress?.ActualCost != null ? new ContractAndCost
                 {
-                    ContractType = request.MonthlyProgress.ActualCost.ContractType ?? "",
-                    Percentage = request.MonthlyProgress.ActualCost.Percentage,
                     PriorCumulativeOdc = request.MonthlyProgress.ActualCost.PriorCumulativeOdc,
                     PriorCumulativeStaff = request.MonthlyProgress.ActualCost.PriorCumulativeStaff,
                     PriorCumulativeTotal = request.MonthlyProgress.ActualCost.PriorCumulativeTotal,
@@ -65,6 +62,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     ActualctcODC = request.MonthlyProgress.CtcAndEac.ActualctcODC,
                     ActualCtcStaff = request.MonthlyProgress.CtcAndEac.ActualCtcStaff,
                     ActualCtcSubtotal = request.MonthlyProgress.CtcAndEac.ActualCtcSubtotal,
+                    EacOdc = request.MonthlyProgress.CtcAndEac.EacOdc,
+                    EacStaff = request.MonthlyProgress.CtcAndEac.EacStaff,
                     TotalEAC = request.MonthlyProgress.CtcAndEac.TotalEAC,
                     GrossProfitPercentage = request.MonthlyProgress.CtcAndEac.GrossProfitPercentage
                 } : null,

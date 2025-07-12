@@ -50,6 +50,7 @@ export const projectApi = {
       const formattedData = {
         id: parseInt(projectId),
         name: projectData.name,
+        details: projectData.details || '',
         clientName: projectData.clientName,
         projectNo: parseInt(projectData.projectNo), // Convert to integer as backend expects int
         typeOfClient: projectData.typeOfClient || '',
@@ -61,8 +62,9 @@ export const projectApi = {
         typeOfJob: projectData.typeOfJob || '',  // Ensure typeOfJob is never null
         sector: projectData.sector || '',
         feeType: projectData.feeType || '',  // Ensure feeType is never null
-        estimatedCost: Number(projectData.estimatedCost),
-        budget: Number(projectData.budget || 0),  // Ensure budget is never null
+        estimatedProjectCost: Number(projectData.estimatedProjectCost),
+        estimatedProjectFee: Number(projectData.estimatedProjectFee || 0),  // Ensure budget is never null
+        percentage: Number(projectData.percentage || 0),
         priority: projectData.priority || '',  // Ensure priority is never null
         currency: projectData.currency || 'INR',
         startDate: projectData.startDate ? new Date(projectData.startDate) : null, // Convert to proper date format
@@ -71,7 +73,6 @@ export const projectApi = {
         progress: 0, // Add missing required field
         letterOfAcceptance: projectData.letterOfAcceptance,
         opportunityTrackingId: projectData.opportunityTrackingId || 0, // Ensure it's not null
-        fundingStream: projectData.fundingStream || '',
         // Add missing fields with default values
         createdAt: new Date(),
         lastModifiedAt: new Date(),

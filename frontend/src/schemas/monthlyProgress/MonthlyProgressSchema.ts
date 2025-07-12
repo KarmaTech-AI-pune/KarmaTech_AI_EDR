@@ -7,18 +7,15 @@ const financialAndContractSchema = z.object({
   budgetOdcs: z.number().nullable(),
   budgetStaff: z.number().nullable(),
   BudgetSubTotal: z.number().nullable(),
-  contractType: z.enum(["lumpsum", "timeAndExpense"], {
-    required_error: "Please select a contract type",
-  }),
-  percentage: z.number().min(0).max(100).nullable(),
+  contractType: z.enum(["lumpsum", "timeAndExpense","percentage"]),
 });
 
 const actualCostSchema = z.object({
-  priorCumulativeOdc: z.number().nullable(),
-  priorCumulativeStaff: z.number().nullable(),
+  priorCumulativeOdc: z.number().nullable().optional(),
+  priorCumulativeStaff: z.number().nullable().optional(),
   priorCumulativeTotal: z.number().nullable(),
-  actualOdc: z.number().nullable(),
-  actualStaff: z.number().nullable(),
+  actualOdc: z.number().nullable().optional(),
+  actualStaff: z.number().nullable().optional(),
   actualSubtotal: z.number().nullable(),
   totalCumulativeOdc: z.number().nullable(),
   totalCumulativeStaff: z.number().nullable(),
@@ -29,9 +26,11 @@ const ctcAndEacSchema = z.object({
   ctcODC: z.number().nullable(),
   ctcStaff: z.number().nullable(),
   ctcSubtotal: z.number().nullable(),
-  actualctcODC: z.number().nullable(),
-  actualCtcStaff: z.number().nullable(),
+  actualctcODC: z.number().nullable().optional(),
+  actualCtcStaff: z.number().nullable().optional(),
   actualCtcSubtotal: z.number().nullable(),
+  eacOdc: z.number().nullable(),
+  eacStaff: z.number().nullable(),
   totalEAC: z.number().nullable(),
   grossProfitPercentage: z.number().nullable(),
 });

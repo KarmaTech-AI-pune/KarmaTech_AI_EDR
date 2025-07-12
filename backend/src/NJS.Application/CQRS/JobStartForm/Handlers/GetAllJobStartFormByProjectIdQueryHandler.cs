@@ -43,6 +43,7 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                 ProjectFees = jobStartForm.ProjectFees,
                 TotalProjectFees = jobStartForm.TotalProjectFees,
                 Profit = jobStartForm.Profit,
+                ProfitPercentage = jobStartForm.ProfitPercentage,
 
                 // Map selections
                 Selections = jobStartForm.Selections.Select(s => new JobStartFormSelectionDto
