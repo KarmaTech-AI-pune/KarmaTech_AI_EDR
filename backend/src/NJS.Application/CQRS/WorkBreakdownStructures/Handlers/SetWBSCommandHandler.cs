@@ -40,6 +40,25 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         public async Task<Unit> Handle(SetWBSCommand request, CancellationToken cancellationToken)
         {
+            var wbsHeader = await _context.Set<WBSTaskPlannedHourHeader>()
+                .FirstOrDefaultAsync(h => h.ProjectId == request.ProjectId, cancellationToken);
+
+            if (wbsHeader == null)
+            {
+                wbsHeader = new WBSTaskPlannedHourHeader
+                {
+                    ProjectId = request.ProjectId,
+                    Version = "1.0",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = _userContext.GetCurrentUserId()?? _currentUser,
+                };
+                _context.Set<WBSTaskPlannedHourHeader>().Add(wbsHeader);
+            }
+            else
+            {
+                wbsHeader.Version = CalculateNextVersion(wbsHeader.Version);
+            }
+
             var wbs = await _context.WorkBreakdownStructures
                 .Include(w => w.Tasks.Where(t => !t.IsDeleted))
                     .ThenInclude(t => t.UserWBSTasks)
@@ -53,7 +72,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     ProjectId = request.ProjectId,
                     IsActive = true,
-                    CurrentVersion = "1.0",
+                    CurrentVersion = wbsHeader.Version,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = _userContext.GetCurrentUserId()?? _currentUser,
                     Tasks = new List<WBSTask>()
@@ -62,7 +81,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
             else
             {
-                wbs.CurrentVersion = CalculateNextVersion(wbs.CurrentVersion);
+                wbs.CurrentVersion = wbsHeader.Version;
             }
 
             var existingTasksDict = wbs.Tasks.ToDictionary(t => t.Id);
@@ -410,9 +429,17 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         private string CalculateNextVersion(string currentVersion)
         {
             if (string.IsNullOrEmpty(currentVersion)) return "1.0";
-            return decimal.TryParse(currentVersion, out var v)
-                ? (v + 0.1m).ToString("F1")
-                : currentVersion + "_updated";
+            if (decimal.TryParse(currentVersion, out var v))
+            {
+                var nextVersion = v + 0.1m;
+                return nextVersion.ToString("F1");
+            }
+            else
+            {
+                // Handle non-numeric versions (e.g., "1.0_updated")
+                // For simplicity, just append "_updated" again
+                return currentVersion + "_updated";
+            }
         }
 
         private async Task CreateWBSVersionAfterUpdate(WorkBreakdownStructure wbs, List<WBSTaskDto> tasks)

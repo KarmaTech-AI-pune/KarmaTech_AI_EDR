@@ -8,6 +8,7 @@ using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using System.Linq;
 using System.Threading.Tasks;
+using NJS.Application.Services.IContract;
 
 namespace NJSAPI.Controllers
 {
@@ -19,11 +20,13 @@ namespace NJSAPI.Controllers
 	{
 		private readonly ProjectManagementContext _context;
 		private readonly ILogger<WBSHeaderController> _logger;
+		private readonly IUserContext _userContext;
 
-		public WBSHeaderController(ProjectManagementContext context, ILogger<WBSHeaderController> logger)
+		public WBSHeaderController(ProjectManagementContext context, ILogger<WBSHeaderController> logger, IUserContext userContext)
 		{
 			_context = context;
 			_logger = logger;
+			_userContext = userContext;
 		}
 
 		/// <summary>
@@ -78,25 +81,36 @@ namespace NJSAPI.Controllers
 			}
 
 			if (header.StatusId == (int)PMWorkflowStatusEnum.Approved)
-
 			{
+				_logger.LogInformation($"WBS Header {header.Id} is APPROVED, creating a new instance");
 
-				_logger.LogInformation($"WBS Header {header.Id} is APPROVED (using direct status)");
+				// Increment the version
+				string newVersion = CalculateNextVersion(header.Version);
+
+				// Create a new WBS header
+				var newHeader = new WBSTaskPlannedHourHeader
+				{
+					ProjectId = header.ProjectId,
+					Version = newVersion,
+					CreatedAt = DateTime.UtcNow,
+					CreatedBy = _userContext.GetCurrentUserId() ?? "System",
+					TaskType = header.TaskType,
+					StatusId = (int)PMWorkflowStatusEnum.Initial // Set to Initial Stage
+				};
+
+				_context.Set<WBSTaskPlannedHourHeader>().Add(newHeader);
+				await _context.SaveChangesAsync();
+
+				_logger.LogInformation($"New WBS Header created with ID {newHeader.Id} and Version {newVersion}");
 
 				var result = new WbsWorkflowDto
-
 				{
-
-					Id = header.Id,
-
-					StatusId = header.StatusId,
-
-					Status = "Approved"
-
+					Id = newHeader.Id,
+					StatusId = newHeader.StatusId,
+					Status = "Initial"
 				};
 
 				return Ok(result);
-
 			}
 
 			var latestHistory = header.WBSHistories
@@ -162,5 +176,21 @@ namespace NJSAPI.Controllers
 			});
 
 		}
+
+        private string CalculateNextVersion(string currentVersion)
+        {
+            if (string.IsNullOrEmpty(currentVersion)) return "1.0";
+            if (decimal.TryParse(currentVersion, out var v))
+            {
+                var nextVersion = v + 0.1m;
+                return nextVersion.ToString("F1");
+            }
+            else
+            {
+                // Handle non-numeric versions (e.g., "1.0_updated")
+                // For simplicity, just append "_updated" again
+                return currentVersion + "_updated";
+            }
+        }
 	}
 }

@@ -15,6 +15,8 @@ namespace NJS.Domain.Entities
         // Status tracking
         public int StatusId { get; set; } = (int)PMWorkflowStatusEnum.Initial; // Default to Initial
 
+        public string Version { get; set; } = "1.0";
+
         [ForeignKey("StatusId")]
         public PMWorkflowStatus Status { get; set; }
 
