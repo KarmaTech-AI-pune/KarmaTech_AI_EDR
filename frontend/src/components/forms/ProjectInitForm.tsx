@@ -27,20 +27,20 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   projectManagers,
   seniorProjectManagers
 }) => {
-  // Format date as YYYY-MM-DD for form input
-  const formatDateToYYYYMMDD = (date: Date): string => {
+  // Format date as DD-MM-YYYY for form input
+  const formatDateToDDMMYYYY = (date: Date): string => {
     // Ensure we're working with a valid date
     if (!(date instanceof Date) || isNaN(date.getTime())) {
-      console.error('Invalid date provided to formatDateToYYYYMMDD:', date);
+      console.error('Invalid date provided to formatDateToDDMMYYYY:', date);
       return '';
     }
 
-    // Format as YYYY-MM-DD without timezone issues
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    // Format as DD-MM-YYYY without timezone issues
     const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
 
-    return `${year}-${month}-${day}`;
+    return `${day}-${month}-${year}`;
   };
 
   // Parse date string to ensure consistent format
@@ -53,14 +53,14 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
         console.error('Invalid date string:', dateStr);
         return '';
       }
-      return formatDateToYYYYMMDD(date);
+      return formatDateToDDMMYYYY(date);
     } catch (error) {
       console.error('Error parsing date string:', error);
       return '';
     }
   };
 
-  const today = formatDateToYYYYMMDD(new Date());
+  const today = formatDateToDDMMYYYY(new Date());
 
   const [formData, setFormData] = useState<ProjectFormData>({
     name: project?.name || '',
@@ -120,7 +120,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
           if (formData.endDate <= dateValue) {
             // Calculate the day after the new start date
             const nextDay = new Date(new Date(dateValue).setDate(new Date(dateValue).getDate() + 1));
-            const nextDayFormatted = formatDateToYYYYMMDD(nextDay);
+            const nextDayFormatted = formatDateToDDMMYYYY(nextDay);
 
             // Update end date to be the day after start date
             setFormData(prev => ({
@@ -154,16 +154,16 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     try {
       // Get the current start date or default to today
-      const startDate = formData.startDate || formatDateToYYYYMMDD(new Date());
+      const startDate = formData.startDate || formatDateToDDMMYYYY(new Date());
 
       // Ensure start date is in correct format
       const startDateObj = new Date(startDate);
-      const formattedStartDate = formatDateToYYYYMMDD(startDateObj);
+      const formattedStartDate = formatDateToDDMMYYYY(startDateObj);
 
       // Calculate the day after the start date for minimum end date
       const nextDay = new Date(startDateObj);
       nextDay.setDate(nextDay.getDate() + 1);
-      const nextDayFormatted = formatDateToYYYYMMDD(nextDay);
+      const nextDayFormatted = formatDateToDDMMYYYY(nextDay);
 
       // If end date is missing or is on/before start date, set it to day after start date
       let endDate = formData.endDate || nextDayFormatted;
@@ -176,7 +176,7 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         endDate = nextDayFormatted;
       } else {
         // Ensure end date is in correct format
-        endDate = formatDateToYYYYMMDD(endDateObj);
+        endDate = formatDateToDDMMYYYY(endDateObj);
       }
 
       // Ensure all required fields are properly formatted
