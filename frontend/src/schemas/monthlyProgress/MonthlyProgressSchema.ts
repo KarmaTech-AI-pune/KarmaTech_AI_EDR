@@ -122,12 +122,12 @@ const manpowerPlanningSchema = z.object({
 
 const deliverableSchema = z.object({
   milestone: z.string().nullable(),
-  dueDateContract: z.date().nullable(),
-  dueDatePlanned: z.date().nullable(),
-  achievedDate: z.date().nullable(),
+  dueDateContract: z.string().nullable(),
+  dueDatePlanned: z.string().nullable(),
+  achievedDate: z.string().nullable(),
   paymentDue: z.number().nullable(),
-  invoiceDate: z.date().nullable(),
-  paymentReceivedDate: z.date().nullable(),
+  invoiceDate: z.string().nullable(),
+  paymentReceivedDate: z.string().nullable(),
   deliverableComments: z.string().nullable(),
 });
 
