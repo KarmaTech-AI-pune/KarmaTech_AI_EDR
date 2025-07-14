@@ -1,9 +1,9 @@
 import * as XLSX from 'xlsx';
-import { monthlyReportData } from '../dummyapi/monthlyReportData';
+import { MonthlyReport } from './monthlyProgressApi';
+import { getMonthName } from '../utils/dateUtils';
 
-export const exportToExcel = (month: string) => {
-  console.log('Starting Excel export for month:', month);
-  console.log('Monthly report data:', monthlyReportData);
+export const exportToExcel = (reportData: MonthlyReport): Blob => {
+  console.log('Starting Excel export for month:', reportData.month);
   
   try {
     // Check if XLSX is properly imported
@@ -12,7 +12,7 @@ export const exportToExcel = (month: string) => {
     }
 
     // Check if data exists
-    if (!monthlyReportData) {
+    if (!reportData) {
       throw new Error('Monthly report data is not available');
     }
 
@@ -21,74 +21,74 @@ export const exportToExcel = (month: string) => {
 
     // Simple version first - just add basic data without complex styling
     console.log('Adding report title...');
-    ws_data.push([`${month} Monthly Report`]);
+    ws_data.push([`${getMonthName(reportData.month)} ${reportData.year} Report`]);
     ws_data.push([]);
 
     // Financial and Contract Details
-    if (monthlyReportData.financialAndContractDetails) {
+    if (reportData.financialAndContractDetails) {
       console.log('Adding financial details...');
       ws_data.push(['Financial and Contract Details']);
-      Object.entries(monthlyReportData.financialAndContractDetails).forEach(([key, value]) => {
+      Object.entries(reportData.financialAndContractDetails).forEach(([key, value]) => {
         ws_data.push([key, value]);
       });
       ws_data.push([]);
     }
 
     // Actual Cost
-    if (monthlyReportData.actualCost) {
+    if (reportData.actualCost) {
       console.log('Adding actual cost...');
       ws_data.push(['Actual Cost']);
-      Object.entries(monthlyReportData.actualCost).forEach(([key, value]) => {
+      Object.entries(reportData.actualCost).forEach(([key, value]) => {
         ws_data.push([key, value]);
       });
       ws_data.push([]);
     }
 
     // CTC and EAC
-    if (monthlyReportData.ctcAndEac) {
+    if (reportData.ctcAndEac) {
       console.log('Adding CTC and EAC...');
       ws_data.push(['CTC and EAC']);
-      Object.entries(monthlyReportData.ctcAndEac).forEach(([key, value]) => {
+      Object.entries(reportData.ctcAndEac).forEach(([key, value]) => {
         ws_data.push([key, value]);
       });
       ws_data.push([]);
     }
 
     // Schedule
-    if (monthlyReportData.schedule) {
+    if (reportData.schedule) {
       console.log('Adding schedule...');
       ws_data.push(['Schedule']);
-      Object.entries(monthlyReportData.schedule).forEach(([key, value]) => {
+      Object.entries(reportData.schedule).forEach(([key, value]) => {
         ws_data.push([key, value]);
       });
       ws_data.push([]);
     }
 
     // Budget Table
-    if (monthlyReportData.budgetTable) {
+    if (reportData.budgetTable) {
       console.log('Adding budget table...');
       ws_data.push(['Budget Table']);
       
       // Original Budget
-      if (monthlyReportData.budgetTable.originalBudget) {
+      if (reportData.budgetTable.originalBudget) {
         ws_data.push(['Original Budget']);
-        Object.entries(monthlyReportData.budgetTable.originalBudget).forEach(([key, value]) => {
+        Object.entries(reportData.budgetTable.originalBudget).forEach(([key, value]) => {
           ws_data.push([key, value]);
         });
       }
       
       // Current Budget
-      if (monthlyReportData.budgetTable.currentBudgetInMIS) {
+      if (reportData.budgetTable.currentBudgetInMIS) {
         ws_data.push(['Current Budget in MIS']);
-        Object.entries(monthlyReportData.budgetTable.currentBudgetInMIS).forEach(([key, value]) => {
+        Object.entries(reportData.budgetTable.currentBudgetInMIS).forEach(([key, value]) => {
           ws_data.push([key, value]);
         });
       }
       
       // Percent Complete
-      if (monthlyReportData.budgetTable.percentCompleteOnCosts) {
+      if (reportData.budgetTable.percentCompleteOnCosts) {
         ws_data.push(['Percent Complete on Costs']);
-        Object.entries(monthlyReportData.budgetTable.percentCompleteOnCosts).forEach(([key, value]) => {
+        Object.entries(reportData.budgetTable.percentCompleteOnCosts).forEach(([key, value]) => {
           ws_data.push([key, value]);
         });
       }
@@ -97,15 +97,15 @@ export const exportToExcel = (month: string) => {
     }
 
     // Manpower Planning
-    if (monthlyReportData.manpowerPlanning && monthlyReportData.manpowerPlanning.manpower) {
+    if (reportData.manpowerPlanning && reportData.manpowerPlanning.manpower) {
       console.log('Adding manpower planning...');
       ws_data.push(['Manpower Planning']);
       
-      if (monthlyReportData.manpowerPlanning.manpower.length > 0) {
-        const headers = Object.keys(monthlyReportData.manpowerPlanning.manpower[0]);
+      if (reportData.manpowerPlanning.manpower.length > 0) {
+        const headers = Object.keys(reportData.manpowerPlanning.manpower[0]);
         ws_data.push(headers);
         
-        monthlyReportData.manpowerPlanning.manpower.forEach(item => {
+        reportData.manpowerPlanning.manpower.forEach(item => {
           ws_data.push(headers.map(header => (item as any)[header] || ''));
         });
       }
@@ -113,15 +113,15 @@ export const exportToExcel = (month: string) => {
     }
 
     // Progress Deliverable
-    if (monthlyReportData.progressDeliverable && monthlyReportData.progressDeliverable.deliverables) {
+    if (reportData.progressDeliverable && reportData.progressDeliverable.deliverables) {
       console.log('Adding progress deliverable...');
       ws_data.push(['Progress Deliverable']);
       
-      if (monthlyReportData.progressDeliverable.deliverables.length > 0) {
-        const headers = Object.keys(monthlyReportData.progressDeliverable.deliverables[0]);
+      if (reportData.progressDeliverable.deliverables.length > 0) {
+        const headers = Object.keys(reportData.progressDeliverable.deliverables[0]);
         ws_data.push(headers);
         
-        monthlyReportData.progressDeliverable.deliverables.forEach(item => {
+        reportData.progressDeliverable.deliverables.forEach(item => {
           ws_data.push(headers.map(header => (item as any)[header] || ''));
         });
       }
@@ -129,70 +129,70 @@ export const exportToExcel = (month: string) => {
     }
 
     // Change Order
-    if (monthlyReportData.changeOrder && monthlyReportData.changeOrder.length > 0) {
+    if (reportData.changeOrder && reportData.changeOrder.length > 0) {
       console.log('Adding change order...');
       ws_data.push(['Change Order']);
       
-      const headers = Object.keys(monthlyReportData.changeOrder[0]);
+      const headers = Object.keys(reportData.changeOrder[0]);
       ws_data.push(headers);
       
-      monthlyReportData.changeOrder.forEach(item => {
+      reportData.changeOrder.forEach(item => {
         ws_data.push(headers.map(header => (item as any)[header] || ''));
       });
       ws_data.push([]);
     }
 
     // Programme Schedule
-    if (monthlyReportData.programmeSchedule && monthlyReportData.programmeSchedule.length > 0) {
+    if (reportData.programmeSchedule && reportData.programmeSchedule.length > 0) {
       console.log('Adding programme schedule...');
       ws_data.push(['Programme Schedule']);
       
-      const headers = Object.keys(monthlyReportData.programmeSchedule[0]);
+      const headers = Object.keys(reportData.programmeSchedule[0]);
       ws_data.push(headers);
       
-      monthlyReportData.programmeSchedule.forEach(item => {
+      reportData.programmeSchedule.forEach(item => {
         ws_data.push(headers.map(header => (item as any)[header] || ''));
       });
       ws_data.push([]);
     }
 
     // Early Warnings
-    if (monthlyReportData.earlyWarnings && monthlyReportData.earlyWarnings.length > 0) {
+    if (reportData.earlyWarnings && reportData.earlyWarnings.length > 0) {
       console.log('Adding early warnings...');
       ws_data.push(['Early Warnings']);
       
-      const headers = Object.keys(monthlyReportData.earlyWarnings[0]);
+      const headers = Object.keys(reportData.earlyWarnings[0]);
       ws_data.push(headers);
       
-      monthlyReportData.earlyWarnings.forEach(item => {
+      reportData.earlyWarnings.forEach(item => {
         ws_data.push(headers.map(header => (item as any)[header] || ''));
       });
       ws_data.push([]);
     }
 
     // Last Month Actions
-    if (monthlyReportData.lastMonthActions && monthlyReportData.lastMonthActions.length > 0) {
+    if (reportData.lastMonthActions && reportData.lastMonthActions.length > 0) {
       console.log('Adding last month actions...');
       ws_data.push(['Last Month Actions']);
       
-      const headers = Object.keys(monthlyReportData.lastMonthActions[0]);
+      const headers = Object.keys(reportData.lastMonthActions[0]);
       ws_data.push(headers);
       
-      monthlyReportData.lastMonthActions.forEach(item => {
+      reportData.lastMonthActions.forEach(item => {
         ws_data.push(headers.map(header => (item as any)[header] || ''));
       });
       ws_data.push([]);
     }
 
     // Current Month Actions
-    if (monthlyReportData.currentMonthActions && monthlyReportData.currentMonthActions.length > 0) {
+    if (reportData.currentMonthActions && reportData.currentMonthActions.length > 0) {
       console.log('Adding current month actions...');
       ws_data.push(['Current Month Actions']);
       
-      const headers = Object.keys(monthlyReportData.currentMonthActions[0]);
+      const headers = Object.keys(reportData.currentMonthActions[0]);
       ws_data.push(headers);
       
-      monthlyReportData.currentMonthActions.forEach(item => {
+      reportData.currentMonthActions.forEach(item => {
         ws_data.push(headers.map(header => (item as any)[header] || ''));
       });
       ws_data.push([]);
@@ -220,38 +220,8 @@ export const exportToExcel = (month: string) => {
     console.log('Adding worksheet to workbook...');
     XLSX.utils.book_append_sheet(wb, ws, 'Monthly Report');
 
-    console.log('Generating file...');
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const filename = `${month}_Monthly_Report_${timestamp}.xlsx`;
-
-    console.log('Attempting to write file:', filename);
-    
-    // Try the standard method first
-    try {
-      XLSX.writeFile(wb, filename);
-      console.log('File written successfully using XLSX.writeFile');
-      return true;
-    } catch (writeError) {
-      console.warn('XLSX.writeFile failed, trying alternative method:', writeError);
-      
-      // Alternative method using blob
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([wbout], { type: 'application/octet-stream' });
-      
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.style.display = 'none';
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      console.log('File downloaded successfully using blob method');
-      return true;
-    }
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    return new Blob([wbout], { type: 'application/octet-stream' });
 
   } catch (error) {
     console.error('Excel export error:', error);

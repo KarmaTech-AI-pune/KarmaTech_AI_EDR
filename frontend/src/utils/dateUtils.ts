@@ -47,3 +47,13 @@ export const parseDateFromInput = (dateString: string): string | null => {
     return null;
   }
 };
+
+export const getMonthName = (month: string): string => {
+  const monthNumber = parseInt(month, 10);
+  if (!isNaN(monthNumber) && monthNumber >= 1 && monthNumber <= 12) {
+    const date = new Date();
+    date.setMonth(monthNumber - 1);
+    return date.toLocaleString('default', { month: 'long' });
+  }
+  return month; // Return original string if it's not a number 1-12
+};

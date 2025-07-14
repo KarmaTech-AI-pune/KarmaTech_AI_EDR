@@ -25,12 +25,14 @@ export interface ManpowerResourcesResponse {
   resources: ManpowerResourceDto[];
 }
 
-export interface MonthlyReport {
+import { MonthlyProgressSchemaType } from '../schemas/monthlyProgress/MonthlyProgressSchema';
+
+export type MonthlyReport = MonthlyProgressSchemaType & {
   id: number;
   month: string;
   year: number;
   projectId: number;
-}
+};
 
 export const MonthlyProgressAPI = {
   getMonthlyReports: async (projectId: string): Promise<MonthlyReport[]> => {

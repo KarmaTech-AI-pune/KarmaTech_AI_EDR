@@ -11,6 +11,7 @@ import {
 import MonthlyReportDialog from '../dialogbox/MonthlyReportDialog';
 import { MonthlyProgressAPI, MonthlyReport } from '../../services/monthlyProgressApi';
 import { useProject } from '../../context/ProjectContext';
+import { getMonthName } from '../../utils/dateUtils';
 
 export const MonthlyReports: React.FC = () => {
   const { projectId } = useProject();
@@ -49,16 +50,6 @@ export const MonthlyReports: React.FC = () => {
   const handleClose = () => {
     setOpen(false);
     setSelectedReport(null);
-  };
-
-  const getMonthName = (month: string): string => {
-    const monthNumber = parseInt(month, 10);
-    if (!isNaN(monthNumber) && monthNumber >= 1 && monthNumber <= 12) {
-        const date = new Date();
-        date.setMonth(monthNumber - 1);
-        return date.toLocaleString('default', { month: 'long' });
-    }
-    return month; // Return original string if it's not a number 1-12
   };
 
   if (loading) {
