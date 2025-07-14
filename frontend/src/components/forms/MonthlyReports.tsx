@@ -1,29 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
   Card,
   CardContent,
   Button,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import MonthlyReportDialog from '../dialogbox/MonthlyReportDialog';
-
-const reports = [
-  {
-    id: 1,
-    month: 'June',
-  },
-  {
-    id: 2,
-    month: 'July',
-  },
-];
+import { MonthlyProgressAPI, MonthlyReport } from '../../services/monthlyProgressApi';
+import { useProject } from '../../context/ProjectContext';
 
 export const MonthlyReports: React.FC = () => {
+  const { projectId } = useProject();
+  const [reports, setReports] = useState<MonthlyReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<{ id: number; month: string } | null>(null);
+  const [selectedReport, setSelectedReport] = useState<MonthlyReport | null>(null);
 
-  const handleClickOpen = (report: { id: number; month: string }) => {
+  useEffect(() => {
+    const fetchReports = async () => {
+      if (!projectId) {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const data = await MonthlyProgressAPI.getMonthlyReports(projectId);
+        console.log("Report", data)
+        setReports(data);
+      } catch (err) {
+        setError('Failed to fetch monthly reports.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
+  }, [projectId]);
+
+  const handleClickOpen = (report: MonthlyReport) => {
     setSelectedReport(report);
     setOpen(true);
   };
@@ -32,6 +50,32 @@ export const MonthlyReports: React.FC = () => {
     setOpen(false);
     setSelectedReport(null);
   };
+
+  const getMonthName = (month: string): string => {
+    const monthNumber = parseInt(month, 10);
+    if (!isNaN(monthNumber) && monthNumber >= 1 && monthNumber <= 12) {
+        const date = new Date();
+        date.setMonth(monthNumber - 1);
+        return date.toLocaleString('default', { month: 'long' });
+    }
+    return month; // Return original string if it's not a number 1-12
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -45,7 +89,7 @@ export const MonthlyReports: React.FC = () => {
       {reports.map((report) => (
         <Card key={report.id} sx={{ mt: 2 }}>
           <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography>{report.month} Month Report</Typography>
+            <Typography>{getMonthName(report.month)} {report.year} Report</Typography>
             <Box>
               <Button
                 variant="contained"
