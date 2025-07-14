@@ -38,8 +38,31 @@ const transformDataForMonthlyProgress = (
       feeTotal: null,
       budgetOdcs: null,
       budgetStaff: null,
-      BudgetSubTotal: null,
+      budgetSubTotal: null,
       contractType: 'lumpsum',
+    },
+    actualCost: {
+      priorCumulativeOdc: null,
+      priorCumulativeStaff: null,
+      priorCumulativeTotal: null,
+      actualOdc: null,
+      actualStaff: null,
+      actualSubtotal: null,
+      totalCumulativeOdc: null,
+      totalCumulativeStaff: null,
+      totalCumulativeCost: null,
+    },
+    ctcAndEac: {
+      ctcODC: null,
+      ctcStaff: null,
+      ctcSubtotal: null,
+      actualctcODC: null,
+      actualCtcStaff: null,
+      actualCtcSubtotal: null,
+      eacOdc: null,
+      eacStaff: null,
+      totalEAC: null,
+      grossProfitPercentage: null,
     },
     budgetTable: {
         originalBudget: {
@@ -72,6 +95,15 @@ const transformDataForMonthlyProgress = (
         nextMonthPlanningTotal: 0,
       },
     },
+    progressDeliverable: {
+      deliverables: [],
+      totalPaymentDue: null,
+    },
+    changeOrder: [],
+    programmeSchedule: [],
+    earlyWarnings: [],
+    lastMonthActions: [],
+    currentMonthActions: [],
   };
 
   // Process JobStart data if the promise was fulfilled
@@ -111,7 +143,7 @@ const transformDataForMonthlyProgress = (
     if (transformedData.financialAndContractDetails) {
       transformedData.financialAndContractDetails.budgetOdcs = budgetOdcs;
       transformedData.financialAndContractDetails.budgetStaff = budgetStaff;
-      transformedData.financialAndContractDetails.BudgetSubTotal = addCalculation(budgetOdcs, budgetStaff);
+      transformedData.financialAndContractDetails.budgetSubTotal = addCalculation(budgetOdcs, budgetStaff);
     }
   }
 
@@ -216,4 +248,37 @@ export const getAggregatedMonthlyProgressData = async (
     projectResult as PromiseSettledResult<ProjectData>,
     manpowerResult as PromiseSettledResult<ManpowerResourcesResponse>
   );
+};
+
+export const getMonthlyProgressData = async (
+  projectId: string,
+  year: number,
+  month: number
+): Promise<Partial<MonthlyProgressSchemaType>> => {
+  try {
+    const monthlyProgressData = await MonthlyProgressAPI.getMonthlyReportByYearMonth(
+      projectId,
+      year,
+      month
+    );
+
+    // Check if the response is not null and has keys, indicating existing data
+    if (monthlyProgressData && Object.keys(monthlyProgressData).length > 0) {
+      const aggregatedData = await getAggregatedMonthlyProgressData(projectId);
+      return {
+        ...aggregatedData,
+        ...monthlyProgressData,
+      };
+    }
+  } catch (error) {
+    // If getMonthlyReportByYearMonth fails (e.g., 404 Not Found), log it and proceed.
+    console.info(
+      `No existing monthly progress report for ${year}-${month}. Fetching initial data.`,
+      error
+    );
+  }
+
+  // If no existing data or if the fetch failed, get aggregated data
+  const aggregatedData = await getAggregatedMonthlyProgressData(projectId);
+  return aggregatedData;
 };

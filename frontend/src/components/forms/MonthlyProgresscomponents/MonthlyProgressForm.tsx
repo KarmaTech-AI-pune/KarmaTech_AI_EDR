@@ -40,7 +40,7 @@ import {
 import {
   getCurrentMonthYear,
 } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
-import { getAggregatedMonthlyProgressData } from "../../../services/monthlyProgressDataService";
+import { getAggregatedMonthlyProgressData, getMonthlyProgressData } from "../../../services/monthlyProgressDataService";
 import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
@@ -155,17 +155,17 @@ export const MonthlyProgressForm: React.FC = () => {
       }
       try {
         setLoading(true);
-        const data = await getAggregatedMonthlyProgressData(projectId);
+        const data = await getMonthlyProgressData(projectId, year, month);
         form.reset(data);
       } catch (err) {
-        setError("Failed to fetch initial form data.");
+        setError("Failed to fetch form data.");
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [projectId, form]);
+  }, [projectId, year, month, form]);
 
   const [snackbarState, setSnackbarState] = useState({
     open: false,

@@ -6,7 +6,7 @@ const financialAndContractSchema = z.object({
   feeTotal: z.number().nullable(),
   budgetOdcs: z.number().nullable(),
   budgetStaff: z.number().nullable(),
-  BudgetSubTotal: z.number().nullable(),
+  budgetSubTotal: z.number().nullable(),
   contractType: z.enum(["lumpsum", "timeAndExpense","percentage"]),
 });
 

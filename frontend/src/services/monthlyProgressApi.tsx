@@ -42,6 +42,16 @@ export const MonthlyProgressAPI = {
       throw new Error(`Failed to load monthly reports for project ${projectId}.`);
     }
   },
+
+  getMonthlyReportByYearMonth: async (projectId: string, year: number, month: number): Promise<MonthlyReport> => {
+    try {
+      const response = await axiosInstance.get(`/api/projects/${projectId}/monthlyprogress/year/${year}/month/${month}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching monthly report for project ${projectId}, year ${year}, month ${month}:`, error);
+      throw new Error(`Failed to load monthly report for project ${projectId}, year ${year}, month ${month}.`);
+    }
+  },
   /**
    * Get manpower resources with monthly hours for a project
    * @param projectId Project ID
@@ -64,20 +74,22 @@ export const MonthlyProgressAPI = {
    * @returns Promise with submission result
    */
   submitMonthlyProgress: async (projectId: string, formData: any) => {
-    try {
-      if (formData.year && formData.month) {
-        const { year, month, ...data } = formData;
-        const response = await axiosInstance.put(`/api/projects/${projectId}/monthlyprogress/year/${year}/month/${month}`, data);
-        return response.data;
-      } else {
-        const response = await axiosInstance.post(`/api/projects/${projectId}/monthlyprogress`, formData);
-        return response.data;
-      }
-    } catch (error) {
-      console.error(`Error submitting monthly progress for project ${projectId}:`, error);
-      throw new Error(`Failed to submit monthly progress for project ${projectId}.`);
+  const { year, month, ...data } = formData;
+  try {
+    const response = await axiosInstance.put(`/api/projects/${projectId}/monthlyprogress/year/${year}/month/${month}`, data);
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      // Not found, so create it
+      const response = await axiosInstance.post(`/api/projects/${projectId}/monthlyprogress`, formData);
+      return response.data;
     }
-  },
+    // Re-throw other errors
+    console.error(`Error submitting monthly progress for project ${projectId}:`, error);
+    throw new Error(`Failed to submit monthly progress for project ${projectId}.`);
+  }
+},
+
 
 
   updateMonthlyProgress: async (projectId: string, year: number, month: number, formData: any) => {
