@@ -31,7 +31,6 @@ namespace NJS.Domain.Tests
             {
                 Name = "Test Project",
                 ClientName = "Metropolis Municipality",
-                EstimatedCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,

@@ -22,7 +22,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IMonthlyProgressRepository, MonthlyProgressRepository>(); // Added for Monthly Progress module
             services.AddScoped<IScoringDescriptionRepository, ScoringDescriptionRepository>();
             services.AddScoped<IScoringDescriptionService, ScoringDescriptionService>();
-            services.AddScoped<IFeasibilityStudyRepository, FeasibilityStudyRepository>();
+
             services.AddScoped<IWorkBreakdownStructureRepository, WorkBreakdownStructureRepository>();
             services.AddScoped<IWBSTaskRepository, WBSTaskRepository>(); // Add this line
             services.AddScoped<IWBSOptionRepository, WBSOptionRepository>();
