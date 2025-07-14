@@ -3,6 +3,7 @@ import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/M
 import { Controller, useFormContext, Control } from "react-hook-form";
 import { Box, Grid, Paper, TextField, Typography } from "@mui/material";
 import textFieldStyle from "../../../../theme/textFieldStyle";
+import { formatDateForInput, parseDateFromInput } from "../../../../utils/dateUtils";
 
 interface DateFieldProps {
   name: keyof MonthlyProgressSchemaType['schedule'];
@@ -10,18 +11,6 @@ interface DateFieldProps {
   control: Control<MonthlyProgressSchemaType>;
   disabled?: boolean;
 }
-
-const formatDateForInput = (date: Date | null): string => {
-  if (!date) return '';
-  const d = new Date(date);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().split('T')[0];
-};
-
-const parseDateFromInput = (dateString: string): Date | null => {
-  if (!dateString) return null;
-  return new Date(dateString);
-};
 
 const DateField: React.FC<DateFieldProps> = ({ name, label, control, disabled = false }) => {
   const { formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
@@ -36,7 +25,7 @@ const DateField: React.FC<DateFieldProps> = ({ name, label, control, disabled = 
           fullWidth
           label={label}
           type="date"
-          value={formatDateForInput(field.value as Date | null)}
+          value={formatDateForInput(field.value)}
           onChange={(e) => field.onChange(parseDateFromInput(e.target.value))}
           error={!!error}
           helperText={error?.message}
@@ -47,7 +36,7 @@ const DateField: React.FC<DateFieldProps> = ({ name, label, control, disabled = 
             '& .Mui-disabled': {
               backgroundColor: '#f5f5f5',
               color: 'rgba(0, 0, 0, 0.87)', // Ensure text is visible
-              '-webkit-text-fill-color': 'rgba(0, 0, 0, 0.87)', // For webkit browsers
+              WebkitTextFillColor: 'rgba(0, 0, 0, 0.87)', // For webkit browsers
             },
           }}
           InputLabelProps={{

@@ -74,16 +74,15 @@ export const MonthlyProgressAPI = {
    * @returns Promise with submission result
    */
   submitMonthlyProgress: async (projectId: string, formData: any) => {
-  const { year, month, ...data } = formData;
-  try {
-    const response = await axiosInstance.put(`/api/projects/${projectId}/monthlyprogress/year/${year}/month/${month}`, data);
-    return response.data;
-  } catch (error) {
-    if (error.response && error.response.status === 404) {
-      // Not found, so create it
-      const response = await axiosInstance.post(`/api/projects/${projectId}/monthlyprogress`, formData);
+    const { year, month, ...data } = formData;
+    try {
+      const response = await axiosInstance.put(`/api/projects/${projectId}/monthlyprogress/year/${year}/month/${month}`, data);
       return response.data;
-    }
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        const response = await axiosInstance.post(`/api/projects/${projectId}/monthlyprogress`, { ...data, year, month });
+        return response.data;
+      }
     // Re-throw other errors
     console.error(`Error submitting monthly progress for project ${projectId}:`, error);
     throw new Error(`Failed to submit monthly progress for project ${projectId}.`);

@@ -36,10 +36,10 @@ const ctcAndEacSchema = z.object({
 });
 
 const scheduleSchema = z.object({
-  dateOfIssueWOLOI: z.date().nullable(),
-  completionDateAsPerContract: z.date().nullable(),
-  completionDateAsPerExtension: z.date().nullable(),
-  expectedCompletionDate: z.date().nullable(),
+  dateOfIssueWOLOI: z.string().nullable(),
+  completionDateAsPerContract: z.string().nullable(),
+  completionDateAsPerExtension: z.string().nullable(),
+  expectedCompletionDate: z.string().nullable(),
 });
 
 // Budget Table Schema

@@ -162,10 +162,10 @@ const transformDataForMonthlyProgress = (
         }
     }
     if (transformedData.schedule) {
-      transformedData.schedule.dateOfIssueWOLOI = project.startDate ? new Date(project.startDate) : null;
-      transformedData.schedule.completionDateAsPerContract = project.endDate ? new Date(project.endDate) : null;
-      transformedData.schedule.completionDateAsPerExtension = project.endDate ? new Date(project.endDate) : null;
-      transformedData.schedule.expectedCompletionDate = project.endDate ? new Date(project.endDate) : null;
+      transformedData.schedule.dateOfIssueWOLOI = project.startDate;
+      transformedData.schedule.completionDateAsPerContract = project.endDate;
+      transformedData.schedule.completionDateAsPerExtension = project.endDate;
+      transformedData.schedule.expectedCompletionDate = project.endDate;
     }
   }
   
