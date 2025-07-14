@@ -13,7 +13,7 @@ namespace NJS.Domain.Database
         {
 
         }
-
+        
         public DbSet<BidPreparation> BidPreparations { get; set; }
         public DbSet<BidVersionHistory> BidVersionHistories { get; set; }
         public DbSet<Project> Projects { get; set; }
@@ -80,8 +80,9 @@ namespace NJS.Domain.Database
         public DbSet<CurrentMonthAction> CurrentMonthActions { get; set; }
         public DbSet<BudgetTable> BudgetTables { get; set; }
         public DbSet<OriginalBudget> OriginalBudgets { get; set; }
-        public DbSet<CurrentBudgetInMIS> CurrentBudgetInMIS { get; set; }
+                public DbSet<CurrentBudgetInMIS> CurrentBudgetInMIS { get; set; }
         public DbSet<PercentCompleteOnCosts> PercentCompleteOnCosts { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -953,7 +954,28 @@ namespace NJS.Domain.Database
             });
             */
 
-            
+            // Configure AuditLog entity
+            modelBuilder.Entity<AuditLog>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.EntityName).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Action).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.EntityId).IsRequired();
+                entity.Property(e => e.OldValues).IsRequired();
+                entity.Property(e => e.NewValues).IsRequired();
+                entity.Property(e => e.ChangedBy).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.ChangedAt).IsRequired();
+                entity.Property(e => e.Reason).HasMaxLength(500).IsRequired(false);
+                entity.Property(e => e.IpAddress).HasMaxLength(50).IsRequired(false);
+                entity.Property(e => e.UserAgent).HasMaxLength(500).IsRequired(false);
+
+                // Create indexes for better performance
+                entity.HasIndex(e => e.EntityName);
+                entity.HasIndex(e => e.EntityId);
+                entity.HasIndex(e => e.ChangedBy);
+                entity.HasIndex(e => e.ChangedAt);
+                entity.HasIndex(e => new { e.EntityName, e.EntityId });
+            });
         }
     }
 }
