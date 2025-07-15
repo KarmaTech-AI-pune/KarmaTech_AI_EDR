@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { Controller, useFormContext, useFieldArray, useWatch, Control } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
+import { formatDateForInput, parseDateFromInput } from "../../../../utils/dateUtils";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 import {
   Box,
@@ -18,17 +19,6 @@ import {
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-
-const formatDateForInput = (date: Date | null): string => {
-  if (!date) return '';
-  const d = new Date(date);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().split('T')[0];
-};
-
-const parseDateFromInput = (dateString: string): Date => {
-  return new Date(dateString);
-};
 
 interface TableCellFieldProps {
   name: `progressDeliverable.deliverables.${number}.${keyof MonthlyProgressSchemaType['progressDeliverable']['deliverables'][number]}`;
@@ -129,12 +119,12 @@ const ProgressReviewDeliverables: React.FC = () => {
   const addDeliverableRow = () => {
     append({
       milestone: "",
-      dueDateContract: new Date(),
-      dueDatePlanned: new Date(),
-      achievedDate: new Date(),
+      dueDateContract: null,
+      dueDatePlanned: null,
+      achievedDate: null,
       paymentDue: 0,
-      invoiceDate: new Date(),
-      paymentReceivedDate: new Date(),
+      invoiceDate: null,
+      paymentReceivedDate: null,
       deliverableComments: ""
     });
   };

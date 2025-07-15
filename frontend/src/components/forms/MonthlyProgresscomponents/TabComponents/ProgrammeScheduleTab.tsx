@@ -17,7 +17,10 @@ import { Controller, useFormContext, useFieldArray } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
 
 const ProgrammeScheduleTab: React.FC = () => {
-  const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+  const { watch, control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+  const programmeScheduleData = watch("programmeSchedule");
+  
+  console.log("ProgrammeScheduleTab received data:", programmeScheduleData);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const { fields, append, remove, update } = useFieldArray({
@@ -43,9 +46,9 @@ const ProgrammeScheduleTab: React.FC = () => {
   const addProgrammeScheduleRow = () => {
     const newIndex = fields.length;
     append({
-      ProgrammeDescription: ""
+      programmeDescription: ""
     });
-    setEditingIndex(newIndex); // Immediately set the new row to edit mode
+    setEditingIndex(newIndex);
   };
 
   // Remove programme schedule row
@@ -86,7 +89,7 @@ const ProgrammeScheduleTab: React.FC = () => {
                   <TableCell sx={{ width: '100%' }}>
                     {editingIndex === index ? (
                       <Controller
-                        name={`programmeSchedule.${index}.ProgrammeDescription`}
+                        name={`programmeSchedule.${index}.programmeDescription`}
                         control={control}
                         render={({ field }) => (
                           <TextField
@@ -96,21 +99,21 @@ const ProgrammeScheduleTab: React.FC = () => {
                             rows={4}
                             placeholder="Enter programme description..."
                             value={field.value || ''}
-                            error={!!errors.programmeSchedule?.[index]?.ProgrammeDescription}
-                            helperText={errors.programmeSchedule?.[index]?.ProgrammeDescription?.message}
+                            error={!!errors.programmeSchedule?.[index]?.programmeDescription}
+                            helperText={errors.programmeSchedule?.[index]?.programmeDescription?.message}
                             sx={textFieldStyle}
                             onBlur={() => {
-                              update(index, { ProgrammeDescription: field.value }); // Update the field array with the current value
+                              update(index, { programmeDescription: field.value }); 
                               setEditingIndex(null);
-                            }} // Exit edit mode on blur
-                            autoFocus // Focus on new text field
+                            }}
+                            autoFocus
                           />
                         )}
                       />
                     ) : (
                       <Paper elevation={1} sx={{ p: 2, width: '95%', minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                          {field.ProgrammeDescription || 'No description entered.'}
+                          {field.programmeDescription || 'No description entered.'} 
                         </Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml:2, flexShrink: 0 }}>
                           <IconButton
@@ -137,7 +140,7 @@ const ProgrammeScheduleTab: React.FC = () => {
                 <TableRow sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
                   <TableCell colSpan={1} align="center">
                     <Typography variant="body2" color="textSecondary">
-                      No programme schedule entries. Click "Add Row" to get started.
+                      No programme schedule entries. Click "Add" to get started.
                     </Typography>
                   </TableCell>
                 </TableRow>

@@ -20,6 +20,7 @@ import {
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Controller, useFormContext, useFieldArray } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
+import { formatDateForInput, parseDateFromInput } from '../../../../utils/dateUtils';
 
 const CurrentMonthActionsTab: React.FC = () => {
   const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
@@ -43,25 +44,14 @@ const CurrentMonthActionsTab: React.FC = () => {
     }
   };
 
-  // Helper function to format date for input
-  const formatDateForInput = (date: Date | null): string => {
-    if (!date) return '';
-    return date.toISOString().split('T')[0];
-  };
-
-  // Helper function to parse date from input
-  const parseDateFromInput = (dateString: string): Date | null => {
-    if (!dateString) return null;
-    return new Date(dateString);
-  };
 
   // Add new current month action row
   const addCurrentMonthActionRow = () => {
     append({
-      CMactions: "",
-      CMAdate: new Date(),
-      CMAcomments: "",
-      CMApriority: null
+      actions: "",
+      date: new Date(),
+      comments: "",
+      priority: null
     });
   };
 
@@ -111,7 +101,7 @@ const CurrentMonthActionsTab: React.FC = () => {
                 <TableRow key={field.id} sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
                   <TableCell>
                     <Controller
-                      name={`currentMonthActions.${index}.CMactions`}
+                      name={`currentMonthActions.${index}.actions`}
                       control={control}
                       render={({ field }) => (
                         <TextField
@@ -120,8 +110,8 @@ const CurrentMonthActionsTab: React.FC = () => {
                           size="small"
                           placeholder="Action Description"
                           value={field.value || ''}
-                          error={!!errors.currentMonthActions?.[index]?.CMactions}
-                          helperText={errors.currentMonthActions?.[index]?.CMactions?.message}
+                          error={!!errors.currentMonthActions?.[index]?.actions}
+                          helperText={errors.currentMonthActions?.[index]?.actions?.message}
                           sx={textFieldStyle}
                         />
                       )}
@@ -129,7 +119,7 @@ const CurrentMonthActionsTab: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Controller
-                      name={`currentMonthActions.${index}.CMAdate`}
+                      name={`currentMonthActions.${index}.date`}
                       control={control}
                       render={({ field }) => (
                         <TextField
@@ -139,8 +129,8 @@ const CurrentMonthActionsTab: React.FC = () => {
                           type="date"
                           value={formatDateForInput(field.value)}
                           onChange={(e) => field.onChange(parseDateFromInput(e.target.value))}
-                          error={!!errors.currentMonthActions?.[index]?.CMAdate}
-                          helperText={errors.currentMonthActions?.[index]?.CMAdate?.message}
+                          error={!!errors.currentMonthActions?.[index]?.date}
+                          helperText={errors.currentMonthActions?.[index]?.date?.message}
                           sx={textFieldStyle}
                           slotProps={{
                             inputLabel: {
@@ -153,7 +143,7 @@ const CurrentMonthActionsTab: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Controller
-                      name={`currentMonthActions.${index}.CMAcomments`}
+                      name={`currentMonthActions.${index}.comments`}
                       control={control}
                       render={({ field }) => (
                         <TextField
@@ -162,8 +152,8 @@ const CurrentMonthActionsTab: React.FC = () => {
                           size="small"
                           placeholder="Comments"
                           value={field.value || ''}
-                          error={!!errors.currentMonthActions?.[index]?.CMAcomments}
-                          helperText={errors.currentMonthActions?.[index]?.CMAcomments?.message}
+                          error={!!errors.currentMonthActions?.[index]?.comments}
+                          helperText={errors.currentMonthActions?.[index]?.comments?.message}
                           sx={textFieldStyle}
                         />
                       )}
@@ -171,10 +161,10 @@ const CurrentMonthActionsTab: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Controller
-                      name={`currentMonthActions.${index}.CMApriority`}
+                      name={`currentMonthActions.${index}.priority`}
                       control={control}
                       render={({ field }) => (
-                        <FormControl fullWidth size="small" error={!!errors.currentMonthActions?.[index]?.CMApriority}>
+                        <FormControl fullWidth size="small" error={!!errors.currentMonthActions?.[index]?.priority}>
                           <Select
                             {...field}
                             value={field.value || ''}
@@ -188,8 +178,8 @@ const CurrentMonthActionsTab: React.FC = () => {
                             <MenuItem value="M">Medium</MenuItem>
                             <MenuItem value="L">Low</MenuItem>
                           </Select>
-                          {errors.currentMonthActions?.[index]?.CMApriority && (
-                            <FormHelperText>{errors.currentMonthActions?.[index]?.CMApriority?.message}</FormHelperText>
+                          {errors.currentMonthActions?.[index]?.priority && (
+                            <FormHelperText>{errors.currentMonthActions?.[index]?.priority?.message}</FormHelperText>
                           )}
                         </FormControl>
                       )}

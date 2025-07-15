@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState, useContext } from "react";
-import { Controller, useFormContext, useFieldArray, useWatch, FieldPath } from "react-hook-form";
+import React, { useEffect, useMemo, useContext } from "react";
+import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { MonthlyProgressAPI, MonthlyHourDto } from "../../../../services/monthlyProgressApi";
 import { projectManagementAppContext } from "../../../../App";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 import {
@@ -18,67 +17,90 @@ import {
   CircularProgress
 } from "@mui/material";
 
-interface BudgetTextFieldProps {
-  name: FieldPath<MonthlyProgressSchemaType>;
-  control: any;
+// Reusable Cell Component
+const EditableTableCell: React.FC<{
+  name: string;
+  index: number;
   placeholder: string;
-  readOnly?: boolean;
-  endAdornment?: string;
+  isReadOnly?: boolean;
+  align?: 'center' | 'left' | 'right';
   type?: string;
-}
-
-const BudgetTextField: React.FC<BudgetTextFieldProps> = ({
-  name,
-  control,
-  placeholder,
-  readOnly = false,
-  endAdornment,
-  type = "text"
-}) => {
-  const { formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
-
-  const getNestedError = (path: string, obj: any) => {
-    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+}> = ({ name, index, placeholder, isReadOnly = false, align = 'left', type = 'text' }) => {
+  const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+  const fieldName = `manpowerPlanning.manpower.${index}.${name}`;
+  
+  const getNestedError = (name: string, index: number) => {
+    if (!errors.manpowerPlanning?.manpower?.[index]) {
+      return null;
+    }
+    const fieldError = errors.manpowerPlanning.manpower[index];
+    return fieldError ? fieldError[name as keyof typeof fieldError] : null;
   };
 
-  const error = getNestedError(name, errors);
+  const error = getNestedError(name, index);
 
   return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field }) => (
-        <TextField
-          {...field}
-          fullWidth
-          size="small"
-          type={type}
-          placeholder={placeholder}
-          value={field.value ?? 0}
-          onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
-          onWheel={(e) => (e.target as HTMLInputElement).blur()}
-          error={!!error}
-          helperText={error?.message || ''}
-          sx={readOnly ? {} : textFieldStyle}
-          InputProps={{
-            readOnly,
-            endAdornment,
-          }}
-        />
-      )}
-    />
+    <TableCell align={align}>
+      <Controller
+        name={fieldName as any}
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            fullWidth
+            size="small"
+            type={type}
+            placeholder={placeholder}
+            value={field.value ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (type === 'number') {
+                field.onChange(value ? Number(value) : null);
+              } else {
+                field.onChange(value);
+              }
+            }}
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+            error={!!error}
+            helperText={error && typeof error === 'object' && 'message' in error ? error.message : ''}
+            sx={{
+              ...textFieldStyle,
+              ...(isReadOnly && {
+                '& .MuiOutlinedInput-root': {
+                  ...(textFieldStyle?.['& .MuiOutlinedInput-root']
+                    ? textFieldStyle['& .MuiOutlinedInput-root']
+                    : {}),
+                  backgroundColor: '#f9f9f9',
+                },
+              }),
+            }}
+            InputProps={{
+              readOnly: isReadOnly,
+            }}
+            inputProps={{ min: 0 }}
+          />
+        )}
+      />
+    </TableCell>
   );
 };
+
+// Column Configuration
+const tableColumns = [
+  { name: "workAssignment", label: "Work Assignment", placeholder: "Work Assignment", isReadOnly: true },
+  { name: "assignee", label: "Assignee", placeholder: "Assignee", isReadOnly: true, minWidth: 150 },
+  { name: "planned", label: "Planned", placeholder: "Planned", type: "number", align: "center", isReadOnly: true },
+  { name: "consumed", label: "Consumed", placeholder: "Consumed", type: "number", align: "center" },
+  { name: "balance", label: "Balance", placeholder: "Balance", type: "number", align: "center", isReadOnly: true },
+  { name: "nextMonthPlanning", label: "Next Month Planning", placeholder: "Next Month", type: "number", align: "center", isReadOnly: true },
+  { name: "manpowerComments", label: "Comments", placeholder: "Comments" },
+];
 
 const ManpowerPlanningTab: React.FC = () => {
   const { control, setValue } = useFormContext<MonthlyProgressSchemaType>();
   const context = useContext(projectManagementAppContext);
-  const projectId = context?.selectedProject?.id?.toString();
   
-  const [isLoading, setIsLoading] = useState(false);
-  const [_error, setError] = useState<string | null>(null);
-
-  const { fields, replace } = useFieldArray({
+  const { fields } = useFieldArray({
     control,
     name: "manpowerPlanning.manpower"
   });
@@ -87,30 +109,6 @@ const ManpowerPlanningTab: React.FC = () => {
     control,
     name: "manpowerPlanning.manpower"
   });
-
-  const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
-    const currentYear = currentDate.getFullYear();
-    
-    const nextDate = new Date(currentDate);
-    nextDate.setMonth(nextDate.getMonth() + 1);
-    const nextMonth = nextDate.toLocaleString('default', { month: 'long' });
-    const nextYear = nextDate.getFullYear();
-    
-    const currentMonthData = monthlyHours?.find(item => 
-      item.month === currentMonth && item.year === currentYear
-    );
-    
-    const nextMonthData = monthlyHours?.find(item => 
-      item.month === nextMonth && item.year === nextYear
-    );
-    
-    return {
-      currentMonthHours: currentMonthData?.plannedHours || 0,
-      nextMonthHours: nextMonthData?.plannedHours || 0
-    };
-  };
 
   const totals = useMemo(() => {
     if (!manpowerEntries || manpowerEntries.length === 0) {
@@ -135,71 +133,36 @@ const ManpowerPlanningTab: React.FC = () => {
     };
   }, [manpowerEntries]);
   
-  const prevTotalsRef = useRef(totals);
-  
   useEffect(() => {
-    if (!manpowerEntries || manpowerEntries.length === 0) return;
-    
-    const prevTotals = prevTotalsRef.current;
-    if (
-      prevTotals.plannedTotal !== totals.plannedTotal ||
-      prevTotals.consumedTotal !== totals.consumedTotal ||
-      prevTotals.balanceTotal !== totals.balanceTotal ||
-      prevTotals.nextMonthPlanningTotal !== totals.nextMonthPlanningTotal
-    ) {
-      prevTotalsRef.current = totals;
-      
-      setValue("manpowerPlanning.manpowerTotal", {
-        plannedTotal: totals.plannedTotal,
-        consumedTotal: totals.consumedTotal,
-        balanceTotal: totals.balanceTotal,
-        nextMonthPlanningTotal: totals.nextMonthPlanningTotal
-      });
-    }
-  }, [totals, setValue, manpowerEntries]);
-  
-  useEffect(() => {
-    const fetchManpowerData = async () => {
-      if (!projectId) {
-        setError("Project ID is not available. Please select a project.");
-        return;
-      }
-      
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const data = await MonthlyProgressAPI.getManpowerResources(projectId);
-        
-        if (data?.resources && data.resources.length > 0) {
-          const formData = data.resources.map(resource => {
-            const { currentMonthHours, nextMonthHours } = getMonthlyHours(resource.monthlyHours);
-            
-            return {
-              workAssignment: resource.taskTitle,
-              assignee: resource.employeeName,
-              planned: currentMonthHours,
-              consumed: 0,
-              balance: currentMonthHours,
-              nextMonthPlanning: nextMonthHours,
-              manpowerComments: ""
-            };
-          });
-          
-          replace(formData);
-        }
-        
-      } catch (err) {
-        console.error("Error fetching manpower data:", err);
-        setError("Failed to load manpower resources. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchManpowerData();
-  }, [projectId, replace]);
+    if (!manpowerEntries) return;
 
+    const newTotals = manpowerEntries.reduce(
+      (acc, entry) => {
+        acc.plannedTotal += entry.planned || 0;
+        acc.consumedTotal += entry.consumed || 0;
+        acc.nextMonthPlanningTotal += entry.nextMonthPlanning || 0;
+        return acc;
+      },
+      { plannedTotal: 0, consumedTotal: 0, nextMonthPlanningTotal: 0 }
+    );
+
+    const balanceTotal = newTotals.plannedTotal - newTotals.consumedTotal;
+
+    setValue("manpowerPlanning.manpowerTotal", {
+      ...newTotals,
+      balanceTotal,
+    });
+
+    manpowerEntries.forEach((entry, index) => {
+      const planned = entry.planned || 0;
+      const consumed = entry.consumed || 0;
+      const balance = planned - consumed;
+      if (entry.balance !== balance) {
+        setValue(`manpowerPlanning.manpower.${index}.balance`, balance);
+      }
+    });
+  }, [manpowerEntries, setValue]);
+  
   return (
     <Box>
       <Paper elevation={1} sx={{ p: 2 }}>
@@ -209,91 +172,68 @@ const ManpowerPlanningTab: React.FC = () => {
           </Typography>
         </Box>
 
-        {isLoading && (
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <CircularProgress size={20} sx={{ mr: 1 }} />
-            <Typography variant="body2" color="textSecondary">
-              Loading data...
-            </Typography>
-          </Box>
-        )}
-
         <TableContainer> 
           <Table sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
             <TableHead>
               <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 600, backgroundColor: '#f5f5f5', border: 'none' } }}>
-                <TableCell>Work Assignment</TableCell>
-                <TableCell sx={{ minWidth: 150 }}>Assignee</TableCell>
-                <TableCell align="center">Planned</TableCell>
-                <TableCell align="center">Consumed</TableCell>
-                <TableCell align="center">Balance</TableCell>
-                <TableCell align="center">Next Month Planning</TableCell>
-                <TableCell>Comments</TableCell>
+                {tableColumns.map(col => (
+                  <TableCell key={col.name} align={(col.align || 'left') as any} sx={{ minWidth: col.minWidth }}>
+                    {col.label}
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
             <TableBody>
               {fields.map((field, index) => (
                 <TableRow key={field.id} sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
-                  <TableCell>
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.workAssignment`} control={control} placeholder="Work Assignment" readOnly />
-                  </TableCell>
-                  <TableCell>
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.assignee`} control={control} placeholder="Assignee" readOnly />
-                  </TableCell>
-                  <TableCell align="center">
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.planned`} control={control} placeholder="Planned" type="number" readOnly />
-                  </TableCell>
-                  <TableCell align="center">
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.consumed`} control={control} placeholder="Consumed" type="number" />
-                  </TableCell>
-                  <TableCell align="center">
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.balance`} control={control} placeholder="Balance" type="number" readOnly />
-                  </TableCell>
-                  <TableCell align="center">
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.nextMonthPlanning`} control={control} placeholder="Next Month" type="number" readOnly />
-                  </TableCell>
-                  <TableCell>
-                    <BudgetTextField name={`manpowerPlanning.manpower.${index}.manpowerComments`} control={control} placeholder="Comments" />
-                  </TableCell>
+                  {tableColumns.map(col => (
+                    <EditableTableCell
+                      key={col.name}
+                      name={col.name}
+                      index={index}
+                      placeholder={col.placeholder}
+                      isReadOnly={col.isReadOnly}
+                      align={col.align as any}
+                      type={col.type}
+                    />
+                  ))}
                 </TableRow>
               ))}
               
-                
-                  <TableRow sx={{ 
-                    backgroundColor: '#f5f5f5',
-                    '& .MuiTableCell-root': { 
-                      fontWeight: 600,
-                      border: 'none'
-                    }
-                  }}>
-                    <TableCell>
-                      <Typography variant="subtitle2">TOTAL</Typography>
-                    </TableCell>
-                    <TableCell></TableCell>
-                    <TableCell align="center">
-                      <Typography variant="subtitle2">
-                        {totals.plannedTotal}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="subtitle2">
-                        {totals.consumedTotal}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="subtitle2" color={totals.balanceTotal < 0 ? 'error' : 'inherit'}>
-                        {totals.balanceTotal}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="subtitle2">
-                        {totals.nextMonthPlanningTotal}
-                      </Typography>
-                    </TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                
+              <TableRow sx={{ 
+                backgroundColor: '#f5f5f5',
+                '& .MuiTableCell-root': { 
+                  fontWeight: 600,
+                  border: 'none'
+                }
+              }}>
+                <TableCell>
+                  <Typography variant="subtitle2">TOTAL</Typography>
+                </TableCell>
+                <TableCell></TableCell>
+                <TableCell align="center">
+                  <Typography variant="subtitle2">
+                    {totals.plannedTotal}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Typography variant="subtitle2">
+                    {totals.consumedTotal}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Typography variant="subtitle2" color={totals.balanceTotal < 0 ? 'error' : 'inherit'}>
+                    {totals.balanceTotal}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Typography variant="subtitle2">
+                    {totals.nextMonthPlanningTotal}
+                  </Typography>
+                </TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>

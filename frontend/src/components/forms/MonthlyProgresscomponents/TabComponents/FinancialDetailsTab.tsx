@@ -95,7 +95,7 @@ const FinancialDetailsTab: React.FC = () => {
       fields: [
         { name: "budgetOdcs", label: "ODCs", readOnly: true, isCurrency: true },
         { name: "budgetStaff", label: "Staff", readOnly: true, isCurrency: true },
-        { name: "BudgetSubTotal", label: "Sub Total", readOnly: true, isCurrency: true },
+        { name: "budgetSubTotal", label: "Sub Total", readOnly: true, isCurrency: true },
       ],
     },
   ];

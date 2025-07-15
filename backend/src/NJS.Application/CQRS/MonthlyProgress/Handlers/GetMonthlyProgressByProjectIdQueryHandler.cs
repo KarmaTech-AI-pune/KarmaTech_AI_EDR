@@ -123,16 +123,16 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 }).ToList(),
                 LastMonthActions = mp.LastMonthActions?.Select(lma => new LastMonthActionDto
                 {
-                    LMactions = lma.LMactions,
-                    LMAdate = lma.LMAdate,
-                    LMAcomments = lma.LMAcomments
+                    Actions = lma.Actions,
+                    Date = lma.Date,
+                    Comments = lma.Comments
                 }).ToList(),
                 CurrentMonthActions = mp.CurrentMonthActions?.Select(cma => new CurrentMonthActionDto
                 {
-                    CMactions = cma.CMactions,
-                    CMAdate = cma.CMAdate,
-                    CMAcomments = cma.CMAcomments,
-                    CMApriority = cma.CMApriority
+                    Actions = cma.Actions,
+                    Date = cma.Date,
+                    Comments = cma.Comments,
+                    Priority = cma.Priority
                 }).ToList(),
                 BudgetTable = mp.BudgetTable != null ? new BudgetTableDto
                 {

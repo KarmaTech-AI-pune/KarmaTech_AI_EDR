@@ -347,7 +347,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 
                 // Remove entries not present in the request
                 var lastMonthActionsToRemove = existingMonthlyProgress.LastMonthActions
-                    .Where(existingEntry => !request.MonthlyProgress.LastMonthActions.Any(dto => dto.LMactions == existingEntry.LMactions))
+                    .Where(existingEntry => !request.MonthlyProgress.LastMonthActions.Any(dto => dto.Actions == existingEntry.Actions))
                     .ToList();
 
                 foreach (var entryToRemove in lastMonthActionsToRemove)
@@ -357,23 +357,23 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 
                 foreach (var lastMonthActionDto in request.MonthlyProgress.LastMonthActions)
                 {
-                    var existingEntry = existingMonthlyProgress.LastMonthActions.FirstOrDefault(e => e.LMactions == lastMonthActionDto.LMactions);
+                    var existingEntry = existingMonthlyProgress.LastMonthActions.FirstOrDefault(e => e.Actions == lastMonthActionDto.Actions);
 
                     if (existingEntry == null)
                     {
                         // Add new entry
                         existingMonthlyProgress.LastMonthActions.Add(new LastMonthAction
                         {
-                            LMactions = lastMonthActionDto.LMactions,
-                            LMAdate = lastMonthActionDto.LMAdate,
-                            LMAcomments = lastMonthActionDto.LMAcomments
+                            Actions = lastMonthActionDto.Actions,
+                            Date = lastMonthActionDto.Date,
+                            Comments = lastMonthActionDto.Comments
                         });
                     }
                     else
                     {
                         // Update existing entry
-                        existingEntry.LMAdate = lastMonthActionDto.LMAdate;
-                        existingEntry.LMAcomments = lastMonthActionDto.LMAcomments;
+                        existingEntry.Date = lastMonthActionDto.Date;
+                        existingEntry.Comments = lastMonthActionDto.Comments;
                     }
                 }
             }
@@ -392,7 +392,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 
                 // Remove entries not present in the request
                 var currentMonthActionsToRemove = existingMonthlyProgress.CurrentMonthActions
-                    .Where(existingEntry => !request.MonthlyProgress.CurrentMonthActions.Any(dto => dto.CMactions == existingEntry.CMactions))
+                    .Where(existingEntry => !request.MonthlyProgress.CurrentMonthActions.Any(dto => dto.Actions == existingEntry.Actions))
                     .ToList();
 
                 foreach (var entryToRemove in currentMonthActionsToRemove)
@@ -402,25 +402,25 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 
                 foreach (var currentMonthActionDto in request.MonthlyProgress.CurrentMonthActions)
                 {
-                    var existingEntry = existingMonthlyProgress.CurrentMonthActions.FirstOrDefault(e => e.CMactions == currentMonthActionDto.CMactions);
+                    var existingEntry = existingMonthlyProgress.CurrentMonthActions.FirstOrDefault(e => e.Actions == currentMonthActionDto.Actions);
 
                     if (existingEntry == null)
                     {
                         // Add new entry
                         existingMonthlyProgress.CurrentMonthActions.Add(new CurrentMonthAction
                         {
-                            CMactions = currentMonthActionDto.CMactions,
-                            CMAdate = currentMonthActionDto.CMAdate,
-                            CMAcomments = currentMonthActionDto.CMAcomments,
-                            CMApriority = currentMonthActionDto.CMApriority
+                            Actions = currentMonthActionDto.Actions,
+                            Date = currentMonthActionDto.Date,
+                            Comments = currentMonthActionDto.Comments,
+                            Priority = currentMonthActionDto.Priority
                         });
                     }
                     else
                     {
                         // Update existing entry
-                        existingEntry.CMAdate = currentMonthActionDto.CMAdate;
-                        existingEntry.CMAcomments = currentMonthActionDto.CMAcomments;
-                        existingEntry.CMApriority = currentMonthActionDto.CMApriority;
+                        existingEntry.Date = currentMonthActionDto.Date;
+                        existingEntry.Comments = currentMonthActionDto.Comments;
+                        existingEntry.Priority = currentMonthActionDto.Priority;
                     }
                 }
             }

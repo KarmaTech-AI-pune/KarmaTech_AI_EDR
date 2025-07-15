@@ -7,9 +7,9 @@ namespace NJS.Domain.Entities
         public int Id { get; set; }
         public int MonthlyProgressId { get; set; }
         public MonthlyProgress MonthlyProgress { get; set; }
-        public string? CMactions { get; set; }
-        public DateTime? CMAdate { get; set; }
-        public string? CMAcomments { get; set; }
-        public string? CMApriority { get; set; }
+        public string? Actions { get; set; }
+        public DateTime? Date { get; set; }
+        public string? Comments { get; set; }
+        public string? Priority { get; set; }
     }
 }

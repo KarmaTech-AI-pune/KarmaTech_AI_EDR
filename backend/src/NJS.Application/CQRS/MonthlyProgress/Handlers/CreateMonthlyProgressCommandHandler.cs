@@ -30,8 +30,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
             {
                 ProjectId = request.ProjectId,
                 CreatedDate = DateTime.UtcNow,
-                Month = request.MonthlyProgress?.Month ?? DateTime.UtcNow.Month,
-                Year = request.MonthlyProgress?.Year ?? DateTime.UtcNow.Year,
+                Month = request.MonthlyProgress.Month,
+                Year = request.MonthlyProgress.Year,
                 FinancialDetails = request.MonthlyProgress?.FinancialAndContractDetails != null ? new FinancialDetails
                 {
                     Net = request.MonthlyProgress.FinancialAndContractDetails.Net,
@@ -109,17 +109,17 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 LastMonthActions = request.MonthlyProgress?.LastMonthActions != null ?
                     request.MonthlyProgress.LastMonthActions.Select(lma => new LastMonthAction
                     {
-                        LMactions = lma.LMactions,
-                        LMAdate = lma.LMAdate,
-                        LMAcomments = lma.LMAcomments
+                        Actions = lma.Actions,
+                        Date = lma.Date,
+                        Comments = lma.Comments
                     }).ToList() : new List<LastMonthAction>(),
                 CurrentMonthActions = request.MonthlyProgress?.CurrentMonthActions != null ?
                     request.MonthlyProgress.CurrentMonthActions.Select(cma => new CurrentMonthAction
                     {
-                        CMactions = cma.CMactions,
-                        CMAdate = cma.CMAdate,
-                        CMAcomments = cma.CMAcomments,
-                        CMApriority = cma.CMApriority
+                        Actions = cma.Actions,
+                        Date = cma.Date,
+                        Comments = cma.Comments,
+                        Priority = cma.Priority
                     }).ToList() : new List<CurrentMonthAction>(),
                 ProgrammeSchedules = request.MonthlyProgress?.ProgrammeSchedule != null ?
                     request.MonthlyProgress.ProgrammeSchedule.Select(ps => new ProgrammeSchedule

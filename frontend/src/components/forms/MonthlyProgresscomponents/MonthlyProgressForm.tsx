@@ -9,6 +9,10 @@ import {
   Typography,
   Container,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { FormWrapper } from "../FormWrapper";
 import { FormProvider, useForm, SubmitHandler } from "react-hook-form";
@@ -36,7 +40,7 @@ import {
 import {
   getCurrentMonthYear,
 } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
-import { getAggregatedMonthlyProgressData } from "../../../services/monthlyProgressDataService";
+import { getAggregatedMonthlyProgressData, getMonthlyProgressData } from "../../../services/monthlyProgressDataService";
 import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
@@ -134,6 +138,8 @@ export const MonthlyProgressForm: React.FC = () => {
   const { projectId } = useProject();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
 
   const form = useForm<MonthlyProgressSchemaType>({
     resolver: zodResolver(MonthlyProgressSchema),
@@ -149,17 +155,17 @@ export const MonthlyProgressForm: React.FC = () => {
       }
       try {
         setLoading(true);
-        const data = await getAggregatedMonthlyProgressData(projectId);
+        const data = await getMonthlyProgressData(projectId, year, month);
         form.reset(data);
       } catch (err) {
-        setError("Failed to fetch initial form data.");
+        setError("Failed to fetch form data.");
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [projectId, form]);
+  }, [projectId, year, month, form]);
 
   const [snackbarState, setSnackbarState] = useState({
     open: false,
@@ -186,8 +192,9 @@ export const MonthlyProgressForm: React.FC = () => {
     }
 
     try {
+      const payload = { ...data, year, month };
       // You might want to show a loading indicator here
-      await MonthlyProgressAPI.submitMonthlyProgress(projectId, data);
+      await MonthlyProgressAPI.submitMonthlyProgress(projectId, payload);
       setSnackbarState({
         open: true,
         message: "Review saved successfully!",
@@ -256,6 +263,27 @@ export const MonthlyProgressForm: React.FC = () => {
             >
               PMD7. Monthly Progress Review - {currentMonthYear}
             </Typography>
+
+            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+              <FormControl>
+                <InputLabel>Year</InputLabel>
+                <Select value={year} onChange={(e) => setYear(e.target.value as number)} label="Year">
+                  {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                    <MenuItem key={y} value={y}>{y}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl>
+                <InputLabel>Month</InputLabel>
+                <Select value={month} onChange={(e) => setMonth(e.target.value as number)} label="Month">
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                    <MenuItem key={m} value={m}>
+                      {new Date(0, m - 1).toLocaleString('default', { month: 'long' })}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
 
             <Box>
               <FormControlsProvider tabs={tabs}>

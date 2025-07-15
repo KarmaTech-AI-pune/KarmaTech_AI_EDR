@@ -1,4 +1,4 @@
-﻿// File: backend/NJS.Domain.Tests/RepositoryTests.cs
+// File: backend/NJS.Domain.Tests/RepositoryTests.cs
 
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
@@ -29,6 +29,7 @@ namespace NJS.Domain.Tests
             {
                 Name = "City Water Supply Upgrade",
                 ClientName = "Metropolis Municipality",
+                EstimatedProjectCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
@@ -59,6 +60,7 @@ namespace NJS.Domain.Tests
             {
                 Name = "City Water Supply Upgrade",
                 ClientName = "Metropolis Municipality",
+                EstimatedProjectCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
@@ -73,6 +75,7 @@ namespace NJS.Domain.Tests
             {
                 Name = "City Water Supply Upgrade1",
                 ClientName = "Metropolis Municipality1",
+                EstimatedProjectCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
@@ -106,6 +109,7 @@ namespace NJS.Domain.Tests
                 Id = 10,
                 Name = "City Water Supply Upgrade",
                 ClientName = "Metropolis Municipality",
+                EstimatedProjectCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
@@ -139,6 +143,7 @@ namespace NJS.Domain.Tests
                 Id = 11,
                 Name = "City Water Supply Upgrade",
                 ClientName = "Metropolis Municipality",
+                EstimatedProjectCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
@@ -172,6 +177,7 @@ namespace NJS.Domain.Tests
             {
                 Name = "City Water Supply Upgrade",
                 ClientName = "Metropolis Municipality",
+                EstimatedProjectCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
@@ -186,6 +192,7 @@ namespace NJS.Domain.Tests
             {
                 Name = "City Water Supply Upgrade1",
                 ClientName = "Metropolis Municipality1",
+                EstimatedProjectCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
@@ -218,6 +225,7 @@ namespace NJS.Domain.Tests
             {
                 Name = "City Water Supply Upgrade",
                 ClientName = "Metropolis Municipality",
+                EstimatedProjectCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
@@ -232,6 +240,7 @@ namespace NJS.Domain.Tests
             {
                 Name = "City Water Supply Upgrade1",
                 ClientName = "Metropolis Municipality1",
+                EstimatedProjectCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,
