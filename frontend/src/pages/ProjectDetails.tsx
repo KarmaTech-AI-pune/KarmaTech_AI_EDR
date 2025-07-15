@@ -41,7 +41,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import { useParams } from 'react-router-dom';
+import { useProject } from '../context/ProjectContext';
 import { Project, OpportunityTracking } from '../models';
 import { getUserById } from '../services/userApi';
 import { projectApi } from '../services/projectApi';
@@ -94,7 +94,7 @@ const InfoItem: React.FC<{ label: string; value: string | number | undefined }> 
 );
 
 export const ProjectDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { projectId } = useProject();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState('overview');
@@ -109,8 +109,8 @@ export const ProjectDetails: React.FC = () => {
     const fetchProjectData = async () => {
       try {
         setIsLoading(true);
-        if (id) {
-          const projectData = await projectApi.getById(id);
+        if (projectId) {
+          const projectData = await projectApi.getById(projectId);
           if (projectData) {
             setProject(projectData as Project);
           } else {
@@ -128,7 +128,7 @@ export const ProjectDetails: React.FC = () => {
     };
 
     fetchProjectData();
-  }, [id]);
+  }, [projectId]);
 
   // Fetch manager data when the project data is loaded
   useEffect(() => {
@@ -167,7 +167,7 @@ export const ProjectDetails: React.FC = () => {
     fetchManagerData();
   }, [project]);
 
-  if (isLoading) {
+  if (isLoading || !projectId) {
     return (
       <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
         <CircularProgress />

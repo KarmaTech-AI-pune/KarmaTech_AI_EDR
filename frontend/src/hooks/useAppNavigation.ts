@@ -3,10 +3,12 @@ import { useContext } from 'react';
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType } from '../types';
 import { Project, OpportunityTracking } from '../models';
+import { useProject } from '../context/ProjectContext';
 
 export const useAppNavigation = () => {
   const navigate = useNavigate();
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
+  const { setProjectId } = useProject();
 
   const navigateToHome = () => navigate('/');
   const navigateToLogin = () => navigate('/login');
@@ -26,7 +28,8 @@ export const useAppNavigation = () => {
   const navigateToProjectDetails = (project?: Project | OpportunityTracking) => {
     if (project && context?.setSelectedProject) {
       context.setSelectedProject(project);
-      navigate(`/project-management/${project.id}`);
+      setProjectId(String(project.id));
+      navigate(`/project-management/project`);
     } else {
       navigate('/project-management');
     }
@@ -53,7 +56,8 @@ export const useAppNavigation = () => {
   const navigateToProjectResources = (project?: Project | OpportunityTracking) => {
     if (project && context?.setSelectedProject) {
       context.setSelectedProject(project);
-      navigate(`/project-management/${project.id}/resources`);
+      setProjectId(String(project.id));
+      navigate(`/project-management/project/resources`);
     } else {
       navigate('/project-management');
     }

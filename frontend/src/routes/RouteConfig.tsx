@@ -117,11 +117,11 @@ export const routes: RouteObject[] = [
                 element: <ProjectManagement />,
               },
               {
-                path: ':id',
+                path: 'project',
                 element: <ProjectDetails />,
               },
               {
-                path: ':id/resources',
+                path: 'project/resources',
                 element: <ResourceManagement />,
               },
             ],
