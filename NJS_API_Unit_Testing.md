@@ -176,11 +176,7 @@ The repository tests use an in-memory database to:
    - UpdateHeader - Updates an existing header
 
 2. **ProjectManagementService**
-   - CreateProjectWithFeasibilityStudy - Creates a project with a feasibility study
    - AddWorkBreakdownStructure - Adds a WBS to a project
-   - CreateFeasibilityStudy - Creates a feasibility study
-   - GetFeasibilityStudy - Returns a feasibility study for a project
-   - UpdateFeasibilityStudy - Updates a feasibility study
    - SubmitGoNoGoDecision - Submits a Go/No-Go decision
    - GetGoNoGoDecision - Returns a Go/No-Go decision for a project
    - CreateWBS - Creates a WBS

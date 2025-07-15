@@ -8,6 +8,7 @@ using NJSAPI.Extensions;
 using NLog.Web;
 using Microsoft.Extensions.Options;
 using NJSAPI.Configurations;
+using NJS.Domain.Extensions;
 
 internal class Program
 {
@@ -79,6 +80,9 @@ internal class Program
 
         builder.Services.AddCompression();
         builder.Host.UseNLog();
+        builder.Services.AddAuditServices();
+        builder.Services.ConfigureAuditObservers();
+
         var app = builder.Build();
 
         app.UseSwagger();

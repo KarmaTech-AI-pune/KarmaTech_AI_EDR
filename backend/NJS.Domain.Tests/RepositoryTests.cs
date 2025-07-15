@@ -1,4 +1,4 @@
-﻿// File: backend/NJS.Domain.Tests/RepositoryTests.cs
+// File: backend/NJS.Domain.Tests/RepositoryTests.cs
 
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;

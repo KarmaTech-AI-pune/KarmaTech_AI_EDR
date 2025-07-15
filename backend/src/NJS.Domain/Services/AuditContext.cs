@@ -1,27 +1,26 @@
-﻿using Microsoft.AspNetCore.Http;
-using NJS.Application.Services.IContract;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
-namespace NJS.Application.Services
+namespace NJS.Domain.Services
 {
-    public class UserContext : IUserContext
+    public class AuditContext : IAuditContext
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UserContext(IHttpContextAccessor httpContextAccessor)
+        public AuditContext(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public string GetCurrentUserId()
+        public string? GetCurrentUserId()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
 
-        public string GetCurrentUserName()
+        public string? GetCurrentUserName()
         {
-            return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value
-               ?? _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
+            return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value 
+                ?? _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
         }
 
         public string? GetIpAddress()
@@ -39,4 +38,4 @@ namespace NJS.Application.Services
             return _httpContextAccessor.HttpContext?.Request?.Headers["X-Audit-Reason"].ToString();
         }
     }
-}
+} 

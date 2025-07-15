@@ -183,45 +183,5 @@ namespace NJSAPI.Controllers
             }
         }
 
-        /// <summary>
-        /// Creates a feasibility study for a project
-        /// </summary>
-        [HttpPost("{id}/feasibility-study")]
-        [ProducesResponseType(typeof(int), 201)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> CreateFeasibilityStudy(int id, [FromBody] CreateFeasibilityStudyCommand command)
-        {
-            if (command == null)
-                return BadRequest();
-
-            command.ProjectId = id;
-
-            try
-            {
-                var feasibilityStudyId = await _mediator.Send(command);
-                return CreatedAtAction(nameof(GetFeasibilityStudy), new { id = id }, feasibilityStudyId);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Gets a project's feasibility study
-        /// </summary>
-        [HttpGet("{id}/feasibility-study")]
-        [ProducesResponseType(typeof(FeasibilityStudy), 200)]
-        [ProducesResponseType(404)]
-        public IActionResult GetFeasibilityStudy(int id)
-        {
-            var feasibilityStudy = _projectManagementService.GetFeasibilityStudy(id);
-            if (feasibilityStudy == null)
-                return NotFound();
-
-            return Ok(feasibilityStudy);
-        }
     }
 }

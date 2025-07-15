@@ -1,4 +1,4 @@
-﻿//backend/NJS.Domain.Tests/UnitOfWorkTests.cs
+//backend/NJS.Domain.Tests/UnitOfWorkTests.cs
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using NJS.Domain.Database;
