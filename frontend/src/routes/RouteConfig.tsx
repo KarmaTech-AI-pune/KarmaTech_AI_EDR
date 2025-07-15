@@ -61,7 +61,9 @@ const GoNoGoFormWrapper = () => {
     }
 
     // Navigate back to Business Development Details
-    navigation.navigateToBusinessDevelopmentDetails();
+    if (context?.selectedProject) {
+      navigation.navigateToBusinessDevelopmentDetails(context.selectedProject);
+    }
   };
 
   return <GoNoGoForm onDecisionStatusChange={handleDecisionStatusChange} />;
@@ -82,14 +84,6 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            element: <Navigate to="dashboard" replace />,
-          },
-          {
-            path: 'home',
-            element: <Home />,
-          },
-          {
-            path: 'dashboard',
             element: <Dashboard />,
           },
           {

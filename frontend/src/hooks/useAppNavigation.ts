@@ -9,7 +9,6 @@ export const useAppNavigation = () => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
 
   const navigateToHome = () => navigate('/');
-  const navigateToDashboard = () => navigate('/dashboard');
   const navigateToLogin = () => navigate('/login');
   const navigateToBusinessDevelopment = () => navigate('/business-development');
   const navigateToProjectManagement = () => navigate('/project-management');
@@ -62,7 +61,6 @@ export const useAppNavigation = () => {
 
   return {
     navigateToHome,
-    navigateToDashboard,
     navigateToLogin,
     navigateToBusinessDevelopment,
     navigateToProjectManagement,
