@@ -5,7 +5,17 @@ import { Project } from '../models';
 export const projectApi = {
   createProject: async (projectData: ProjectFormData) => {
     try {
-      const response = await axiosInstance.post(`api/Project`, projectData);
+      const formattedData = {
+        ...projectData,
+        projectNo: parseInt(projectData.projectNo, 10),
+        estimatedProjectCost: Number(projectData.estimatedProjectCost),
+        estimatedProjectFee: Number(projectData.estimatedProjectFee || 0),
+        percentage: Number(projectData.percentage || 0),
+        startDate: projectData.startDate ? new Date(projectData.startDate).toISOString() : null,
+        endDate: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
+        opportunityTrackingId: projectData.opportunityTrackingId || 0,
+      };
+      const response = await axiosInstance.post(`api/Project`, formattedData);
       return response.data;
     } catch (error) {
       console.error('Error creating project:', error);
