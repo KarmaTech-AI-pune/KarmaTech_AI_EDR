@@ -20,6 +20,7 @@ import {
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Controller, useFormContext, useFieldArray } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
+import { formatDateForInput, parseDateFromInput } from '../../../../utils/dateUtils';
 
 const CurrentMonthActionsTab: React.FC = () => {
   const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
@@ -43,17 +44,6 @@ const CurrentMonthActionsTab: React.FC = () => {
     }
   };
 
-  // Helper function to format date for input
-  const formatDateForInput = (date: Date | null): string => {
-    if (!date) return '';
-    return date.toISOString().split('T')[0];
-  };
-
-  // Helper function to parse date from input
-  const parseDateFromInput = (dateString: string): Date | null => {
-    if (!dateString) return null;
-    return new Date(dateString);
-  };
 
   // Add new current month action row
   const addCurrentMonthActionRow = () => {

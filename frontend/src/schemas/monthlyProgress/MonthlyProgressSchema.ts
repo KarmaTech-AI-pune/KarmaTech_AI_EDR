@@ -155,13 +155,13 @@ const earlyWarningsSchema = z.object({
 
 const lastMonthActionSchema = z.object({
   actions: z.string().nullable(),
-  date: z.date().nullable(),
+  date: z.string().nullable(),
   comments: z.string().nullable(),
 });
 
 const currentMonthActionSchema = z.object({
   actions: z.string().nullable(),
-  date: z.date().nullable(),
+  date: z.string().nullable(),
   comments: z.string().nullable(),
   priority: z.enum(["H", "M", "L"]).nullable(),
 });

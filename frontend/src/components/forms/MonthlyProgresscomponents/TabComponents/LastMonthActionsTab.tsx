@@ -16,6 +16,7 @@ import {
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Controller, useFormContext, useFieldArray } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
+import { formatDateForInput, parseDateFromInput } from '../../../../utils/dateUtils';
 
 const LastMonthActionsTab: React.FC = () => {
   const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
@@ -39,17 +40,6 @@ const LastMonthActionsTab: React.FC = () => {
     }
   };
 
-  // Helper function to format date for input
-  const formatDateForInput = (date: Date | null): string => {
-    if (!date) return '';
-    return date.toISOString().split('T')[0];
-  };
-
-  // Helper function to parse date from input
-  const parseDateFromInput = (dateString: string): Date | null => {
-    if (!dateString) return null;
-    return new Date(dateString);
-  };
 
   // Add new last month action row
   const addLastMonthActionRow = () => {
@@ -131,7 +121,7 @@ const LastMonthActionsTab: React.FC = () => {
                           fullWidth
                           size="small"
                           type="date"
-                          value={formatDateForInput(field.value as Date | null)}
+                          value={formatDateForInput(field.value)}
                           onChange={(e) => field.onChange(parseDateFromInput(e.target.value))}
                           error={!!errors.lastMonthActions?.[index]?.date}
                           helperText={errors.lastMonthActions?.[index]?.date?.message}
