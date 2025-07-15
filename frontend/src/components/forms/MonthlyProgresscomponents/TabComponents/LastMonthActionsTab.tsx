@@ -54,9 +54,9 @@ const LastMonthActionsTab: React.FC = () => {
   // Add new last month action row
   const addLastMonthActionRow = () => {
     append({
-      LMactions: "",
-      LMAdate: new Date(),
-      LMAcomments: ""
+      actions: "",
+      date: new Date(),
+      comments: ""
     });
   };
 
@@ -105,7 +105,7 @@ const LastMonthActionsTab: React.FC = () => {
                 <TableRow key={field.id} sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
                   <TableCell>
                     <Controller
-                      name={`lastMonthActions.${index}.LMactions`}
+                      name={`lastMonthActions.${index}.actions`}
                       control={control}
                       render={({ field }) => (
                         <TextField
@@ -114,8 +114,8 @@ const LastMonthActionsTab: React.FC = () => {
                           size="small"
                           placeholder="Action Description"
                           value={field.value || ''}
-                          error={!!errors.lastMonthActions?.[index]?.LMactions}
-                          helperText={errors.lastMonthActions?.[index]?.LMactions?.message}
+                          error={!!errors.lastMonthActions?.[index]?.actions}
+                          helperText={errors.lastMonthActions?.[index]?.actions?.message}
                           sx={textFieldStyle}
                         />
                       )}
@@ -123,7 +123,7 @@ const LastMonthActionsTab: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Controller
-                      name={`lastMonthActions.${index}.LMAdate`}
+                      name={`lastMonthActions.${index}.date`}
                       control={control}
                       render={({ field }) => (
                         <TextField
@@ -131,10 +131,10 @@ const LastMonthActionsTab: React.FC = () => {
                           fullWidth
                           size="small"
                           type="date"
-                          value={formatDateForInput(field.value)}
+                          value={formatDateForInput(field.value as Date | null)}
                           onChange={(e) => field.onChange(parseDateFromInput(e.target.value))}
-                          error={!!errors.lastMonthActions?.[index]?.LMAdate}
-                          helperText={errors.lastMonthActions?.[index]?.LMAdate?.message}
+                          error={!!errors.lastMonthActions?.[index]?.date}
+                          helperText={errors.lastMonthActions?.[index]?.date?.message}
                           sx={textFieldStyle}
                           slotProps={{
                             inputLabel: {
@@ -147,7 +147,7 @@ const LastMonthActionsTab: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Controller
-                      name={`lastMonthActions.${index}.LMAcomments`}
+                      name={`lastMonthActions.${index}.comments`}
                       control={control}
                       render={({ field }) => (
                         <TextField
@@ -156,8 +156,8 @@ const LastMonthActionsTab: React.FC = () => {
                           size="small"
                           placeholder="Comments"
                           value={field.value || ''}
-                          error={!!errors.lastMonthActions?.[index]?.LMAcomments}
-                          helperText={errors.lastMonthActions?.[index]?.LMAcomments?.message}
+                          error={!!errors.lastMonthActions?.[index]?.comments}
+                          helperText={errors.lastMonthActions?.[index]?.comments?.message}
                           sx={textFieldStyle}
                         />
                       )}

@@ -144,26 +144,27 @@ const changeOrderSchema = z.object({
   status: z.enum(["Proposed", "Submitted", "Approved"]).nullable(),
 });
 
-const lastMonthActionSchema = z.object({
-  LMactions: z.string().nullable(),
-  LMAdate: z.date().nullable(),
-  LMAcomments: z.string().nullable(),
-});
-
-const currentMonthActionSchema = z.object({
-  CMactions: z.string().nullable(),
-  CMAdate: z.date().nullable(),
-  CMAcomments: z.string().nullable(),
-  CMApriority: z.enum(["H", "M", "L"]).nullable(),
-});
 
 const programmeScheduleSchema = z.object({
-  ProgrammeDescription: z.string().nullable()
+  programmeDescription: z.string().nullable()
 })
 
 const earlyWarningsSchema = z.object({
-  WarningsDescription: z.string().nullable()
+  warningsDescription: z.string().nullable()
 })
+
+const lastMonthActionSchema = z.object({
+  actions: z.string().nullable(),
+  date: z.date().nullable(),
+  comments: z.string().nullable(),
+});
+
+const currentMonthActionSchema = z.object({
+  actions: z.string().nullable(),
+  date: z.date().nullable(),
+  comments: z.string().nullable(),
+  priority: z.enum(["H", "M", "L"]).nullable(),
+});
 
 export const MonthlyProgressSchema = z.object({
   financialAndContractDetails: financialAndContractSchema,

@@ -44,7 +44,7 @@ const EarlyWarningsTab: React.FC = () => {
   const addEarlyWarningRow = () => {
     const newIndex = fields.length;
     append({
-      WarningsDescription: ""
+      warningsDescription: ""
     });
     setEditingIndex(newIndex); // Immediately set the new row to edit mode
   };
@@ -86,7 +86,7 @@ const EarlyWarningsTab: React.FC = () => {
                   <TableCell sx={{ width: '100%' }}> 
                     {editingIndex === index ? (
                       <Controller
-                        name={`earlyWarnings.${index}.WarningsDescription`}
+                        name={`earlyWarnings.${index}.warningsDescription`}
                         control={control}
                         render={({ field }) => (
                           <TextField
@@ -96,11 +96,11 @@ const EarlyWarningsTab: React.FC = () => {
                             rows={4}
                             placeholder="Enter warning description..."
                             value={field.value || ''}
-                            error={!!errors.earlyWarnings?.[index]?.WarningsDescription}
-                            helperText={errors.earlyWarnings?.[index]?.WarningsDescription?.message}
+                            error={!!errors.earlyWarnings?.[index]?.warningsDescription}
+                            helperText={errors.earlyWarnings?.[index]?.warningsDescription?.message}
                             sx={textFieldStyle}
                             onBlur={() => {
-                              update(index, { WarningsDescription: field.value }); // Update the field array with the current value
+                              update(index, { warningsDescription: field.value }); // Update the field array with the current value
                               setEditingIndex(null); // Exit edit mode on blur
                             }}
                             autoFocus // Focus on new text field
@@ -115,7 +115,7 @@ const EarlyWarningsTab: React.FC = () => {
                             flexGrow: 1,
                           }}
                         >
-                          {field.WarningsDescription || 'No description entered.'}
+                          {field.warningsDescription || 'No description entered.'}
                         </Typography>
                         <Box sx={{ display: 'flex',flexDirection: 'column' , gap: 1, flexShrink: 0, ml:2 }}> 
                           <IconButton
