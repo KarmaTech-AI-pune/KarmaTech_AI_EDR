@@ -13,5 +13,6 @@ namespace NJS.Repositories.Interfaces
         Task UpdateAsync(MonthlyProgress entity);
         Task DeleteAsync(MonthlyProgress entity);
         Task<List<MonthlyProgress>> GetAllAsync();
+        Task UpdateManpowerPlanningAsync(ManpowerPlanning manpowerPlanning);
     }
 }

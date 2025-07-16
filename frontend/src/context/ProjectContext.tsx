@@ -1,14 +1,21 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useState, ReactNode, useContext, useEffect } from 'react';
 
 interface ProjectContextType {
   projectId: string | null;
+  setProjectId: (id: string | null) => void;
 }
 
-const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
+export const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
-export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string }> = ({ children, projectId }) => {
+export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string | null }> = ({ children, projectId: initialProjectId }) => {
+  const [projectId, setProjectId] = useState<string | null>(initialProjectId);
+
+  useEffect(() => {
+    setProjectId(initialProjectId);
+  }, [initialProjectId]);
+
   return (
-    <ProjectContext.Provider value={{ projectId }}>
+    <ProjectContext.Provider value={{ projectId, setProjectId }}>
       {children}
     </ProjectContext.Provider>
   );

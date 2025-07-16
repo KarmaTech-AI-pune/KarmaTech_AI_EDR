@@ -166,5 +166,37 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, new { message = "An error occurred while deleting monthly progress.", error = ex.Message });
             }
         }
+
+        // PUT: api/projects/{projectId}/monthlyprogress/{monthlyProgressId}/manpowerplanning/{manpowerPlanningId}
+        [HttpPut("{monthlyProgressId}/manpowerplanning/{manpowerPlanningId}")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ManpowerDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateManpowerPlanning(int projectId, int monthlyProgressId, int manpowerPlanningId, [FromBody] ManpowerDto updateDto)
+        {
+            if (updateDto == null)
+            {
+                return BadRequest("Invalid request data.");
+            }
+
+            try
+            {
+                var command = new UpdateManpowerPlanningCommand { MonthlyProgressId = monthlyProgressId, ManpowerPlanningId = manpowerPlanningId, ManpowerPlanning = updateDto };
+                var result = await _mediator.Send(command);
+
+                if (result == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating manpower planning {ManpowerPlanningId} for monthly progress {MonthlyProgressId}", manpowerPlanningId, monthlyProgressId);
+                return StatusCode(500, new { message = "An error occurred while updating manpower planning.", error = ex.Message });
+            }
+        }
     }
 }
