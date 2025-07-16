@@ -22,6 +22,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
         {
             var monthlyProgresses = await _monthlyProgressRepository.GetByProjectIdAsync(request.ProjectId);
 
+            monthlyProgresses = monthlyProgresses.OrderBy(mp => mp.Year).ThenBy(mp => mp.Month).ToList();
+
             return monthlyProgresses.Select(mp => new MonthlyProgressDto
             {
                 Id = mp.Id,
