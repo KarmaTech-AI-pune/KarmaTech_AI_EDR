@@ -21,7 +21,7 @@ export const ProjectHeaderWidget: React.FC<ProjectHeaderWidgetProps> = ({ projec
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'Not Set';
-        return new Date(dateString).toLocaleDateString();
+        return new Date(dateString).toLocaleDateString('en-GB');
     };
 
     const formatCurrency = (value: number) => {
@@ -84,7 +84,7 @@ export const ProjectHeaderWidget: React.FC<ProjectHeaderWidgetProps> = ({ projec
                             </Grid>
                             <Grid item xs={3}>
                                 <Typography sx={{ color: '#1976d2', fontWeight: 500 }}>
-                                    {formatCurrency(project.estimatedCost)}
+                                    {formatCurrency(project.estimatedProjectCost)}
                                 </Typography>
                             </Grid>
                             <Grid item xs={2}>
@@ -139,7 +139,7 @@ export const ProjectHeaderWidget: React.FC<ProjectHeaderWidgetProps> = ({ projec
                                 </Grid>
                                 <Grid item xs={6}>
                                     <Typography variant="subtitle2" color="textSecondary">Estimated Cost</Typography>
-                                    <Typography variant="body1">{formatCurrency(project.estimatedCost)}</Typography>
+                                    <Typography variant="body1">{formatCurrency(project.estimatedProjectCost)}</Typography>
                                 </Grid>
                                 <Grid item xs={6}>
                                     <Typography variant="subtitle2" color="textSecondary">Fee Type</Typography>

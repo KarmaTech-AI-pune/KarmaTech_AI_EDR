@@ -7,5 +7,4 @@ export { default as ChangeControlForm } from './ChangeControlForm';
 export { MonthlyProgressForm } from './MonthlyProgresscomponents/MonthlyProgressForm';
 export { default as ProjectClosureForm } from './ProjectClosureForm';
 export { default as FormsOverview } from './FormsOverview';
-export { FeasibilityStudyForm } from './FeasibilityStudyForm';
 export { default as MonthlyReports } from './MonthlyReports';

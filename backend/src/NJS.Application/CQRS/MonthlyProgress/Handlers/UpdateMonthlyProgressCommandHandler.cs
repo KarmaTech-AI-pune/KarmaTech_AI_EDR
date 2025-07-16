@@ -59,8 +59,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 existingMonthlyProgress.FinancialDetails.BudgetOdcs = request.MonthlyProgress.FinancialAndContractDetails.BudgetOdcs;
                 existingMonthlyProgress.FinancialDetails.BudgetStaff = request.MonthlyProgress.FinancialAndContractDetails.BudgetStaff;
                 existingMonthlyProgress.FinancialDetails.BudgetSubTotal = request.MonthlyProgress.FinancialAndContractDetails.BudgetSubTotal;
-                existingMonthlyProgress.FinancialDetails.ContractType = request.MonthlyProgress.FinancialAndContractDetails.ContractType ?? "";
-                existingMonthlyProgress.FinancialDetails.Percentage = request.MonthlyProgress.FinancialAndContractDetails.Percentage;
+                existingMonthlyProgress.FinancialDetails.ContractType = request.MonthlyProgress.FinancialAndContractDetails.ContractType;
             }
             else if (existingMonthlyProgress.FinancialDetails != null)
             {
@@ -75,8 +74,6 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 {
                     existingMonthlyProgress.ContractAndCost = new ContractAndCost();
                 }
-                existingMonthlyProgress.ContractAndCost.ContractType = request.MonthlyProgress.ActualCost.ContractType ?? "";
-                existingMonthlyProgress.ContractAndCost.Percentage = request.MonthlyProgress.ActualCost.Percentage;
                 existingMonthlyProgress.ContractAndCost.PriorCumulativeOdc = request.MonthlyProgress.ActualCost.PriorCumulativeOdc;
                 existingMonthlyProgress.ContractAndCost.PriorCumulativeStaff = request.MonthlyProgress.ActualCost.PriorCumulativeStaff;
                 existingMonthlyProgress.ContractAndCost.PriorCumulativeTotal = request.MonthlyProgress.ActualCost.PriorCumulativeTotal;
@@ -105,6 +102,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 existingMonthlyProgress.CTCEAC.ActualctcODC = request.MonthlyProgress.CtcAndEac.ActualctcODC;
                 existingMonthlyProgress.CTCEAC.ActualCtcStaff = request.MonthlyProgress.CtcAndEac.ActualCtcStaff;
                 existingMonthlyProgress.CTCEAC.ActualCtcSubtotal = request.MonthlyProgress.CtcAndEac.ActualCtcSubtotal;
+                existingMonthlyProgress.CTCEAC.EacOdc = request.MonthlyProgress.CtcAndEac.EacOdc;
+                existingMonthlyProgress.CTCEAC.EacStaff = request.MonthlyProgress.CtcAndEac.EacStaff;
                 existingMonthlyProgress.CTCEAC.TotalEAC = request.MonthlyProgress.CtcAndEac.TotalEAC;
                 existingMonthlyProgress.CTCEAC.GrossProfitPercentage = request.MonthlyProgress.CtcAndEac.GrossProfitPercentage;
             }
@@ -348,7 +347,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 
                 // Remove entries not present in the request
                 var lastMonthActionsToRemove = existingMonthlyProgress.LastMonthActions
-                    .Where(existingEntry => !request.MonthlyProgress.LastMonthActions.Any(dto => dto.LMactions == existingEntry.LMactions))
+                    .Where(existingEntry => !request.MonthlyProgress.LastMonthActions.Any(dto => dto.Actions == existingEntry.Actions))
                     .ToList();
 
                 foreach (var entryToRemove in lastMonthActionsToRemove)
@@ -358,23 +357,23 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 
                 foreach (var lastMonthActionDto in request.MonthlyProgress.LastMonthActions)
                 {
-                    var existingEntry = existingMonthlyProgress.LastMonthActions.FirstOrDefault(e => e.LMactions == lastMonthActionDto.LMactions);
+                    var existingEntry = existingMonthlyProgress.LastMonthActions.FirstOrDefault(e => e.Actions == lastMonthActionDto.Actions);
 
                     if (existingEntry == null)
                     {
                         // Add new entry
                         existingMonthlyProgress.LastMonthActions.Add(new LastMonthAction
                         {
-                            LMactions = lastMonthActionDto.LMactions,
-                            LMAdate = lastMonthActionDto.LMAdate,
-                            LMAcomments = lastMonthActionDto.LMAcomments
+                            Actions = lastMonthActionDto.Actions,
+                            Date = lastMonthActionDto.Date,
+                            Comments = lastMonthActionDto.Comments
                         });
                     }
                     else
                     {
                         // Update existing entry
-                        existingEntry.LMAdate = lastMonthActionDto.LMAdate;
-                        existingEntry.LMAcomments = lastMonthActionDto.LMAcomments;
+                        existingEntry.Date = lastMonthActionDto.Date;
+                        existingEntry.Comments = lastMonthActionDto.Comments;
                     }
                 }
             }
@@ -393,7 +392,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 
                 // Remove entries not present in the request
                 var currentMonthActionsToRemove = existingMonthlyProgress.CurrentMonthActions
-                    .Where(existingEntry => !request.MonthlyProgress.CurrentMonthActions.Any(dto => dto.CMactions == existingEntry.CMactions))
+                    .Where(existingEntry => !request.MonthlyProgress.CurrentMonthActions.Any(dto => dto.Actions == existingEntry.Actions))
                     .ToList();
 
                 foreach (var entryToRemove in currentMonthActionsToRemove)
@@ -403,25 +402,25 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 
                 foreach (var currentMonthActionDto in request.MonthlyProgress.CurrentMonthActions)
                 {
-                    var existingEntry = existingMonthlyProgress.CurrentMonthActions.FirstOrDefault(e => e.CMactions == currentMonthActionDto.CMactions);
+                    var existingEntry = existingMonthlyProgress.CurrentMonthActions.FirstOrDefault(e => e.Actions == currentMonthActionDto.Actions);
 
                     if (existingEntry == null)
                     {
                         // Add new entry
                         existingMonthlyProgress.CurrentMonthActions.Add(new CurrentMonthAction
                         {
-                            CMactions = currentMonthActionDto.CMactions,
-                            CMAdate = currentMonthActionDto.CMAdate,
-                            CMAcomments = currentMonthActionDto.CMAcomments,
-                            CMApriority = currentMonthActionDto.CMApriority
+                            Actions = currentMonthActionDto.Actions,
+                            Date = currentMonthActionDto.Date,
+                            Comments = currentMonthActionDto.Comments,
+                            Priority = currentMonthActionDto.Priority
                         });
                     }
                     else
                     {
                         // Update existing entry
-                        existingEntry.CMAdate = currentMonthActionDto.CMAdate;
-                        existingEntry.CMAcomments = currentMonthActionDto.CMAcomments;
-                        existingEntry.CMApriority = currentMonthActionDto.CMApriority;
+                        existingEntry.Date = currentMonthActionDto.Date;
+                        existingEntry.Comments = currentMonthActionDto.Comments;
+                        existingEntry.Priority = currentMonthActionDto.Priority;
                     }
                 }
             }

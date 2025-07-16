@@ -16,11 +16,13 @@ import PreviewIcon from '@mui/icons-material/Preview';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { exportToExcel } from '../../services/excelExportService';
-
+import { useProject } from '../../context/ProjectContext';
+import { MonthlyProgressAPI, MonthlyReport } from '../../services/monthlyProgressApi';
+import { getMonthName } from '../../utils/dateUtils';
 interface MonthlyReportDialogProps {
   open: boolean;
   onClose: () => void;
-  report: { id: number; month: string } | null;
+  report: MonthlyReport | null;
 }
 
 export const MonthlyReportDialog: React.FC<MonthlyReportDialogProps> = ({ 
@@ -28,30 +30,39 @@ export const MonthlyReportDialog: React.FC<MonthlyReportDialogProps> = ({
   onClose, 
   report 
 }) => {
+  const { projectId } = useProject();
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const handleDownload = async () => {
-    if (!report) return;
+    if (!report || !projectId) return;
     
     setIsDownloading(true);
     setDownloadStatus('idle');
     
     try {
-      // Add a small delay to show loading state
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const reportData = await MonthlyProgressAPI.getMonthlyReportByYearMonth(
+        projectId,
+        report.year,
+        parseInt(report.month, 10)
+      );
       
-      // Call the export function
-      exportToExcel(report.month);
+      const blob = exportToExcel(reportData);
+      const monthName = getMonthName(report.month);
+      const filename = `${monthName}_${report.year}_Report.xlsx`;
       
-      // Set success status
-      setDownloadStatus('success');
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
       
-      // Auto-close after success
-      setTimeout(() => {
-        onClose();
-        setDownloadStatus('idle');
-      }, 2000);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      onClose();
       
     } catch (error) {
       console.error('Download failed:', error);
@@ -82,7 +93,7 @@ export const MonthlyReportDialog: React.FC<MonthlyReportDialogProps> = ({
     >
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">{report.month} Month Report</Typography>
+          <Typography variant="h6">{getMonthName(report.month)} {report.year} Report</Typography>
           <IconButton onClick={handleClose} disabled={isDownloading}>
             <CloseIcon />
           </IconButton>
@@ -91,7 +102,7 @@ export const MonthlyReportDialog: React.FC<MonthlyReportDialogProps> = ({
       
       <DialogContent>
         <Typography gutterBottom>
-          Please choose an action for the {report.month} report.
+          Please choose an action for the {getMonthName(report.month)} {report.year} report.
         </Typography>
         
         {downloadStatus === 'success' && (

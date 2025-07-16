@@ -50,7 +50,8 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                 GrandTotal = request.JobStartForm.GrandTotal,
                 ProjectFees = request.JobStartForm.ProjectFees,
                 TotalProjectFees = request.JobStartForm.TotalProjectFees,
-                Profit = request.JobStartForm.Profit
+                Profit = request.JobStartForm.Profit,
+                ProfitPercentage = request.JobStartForm.ProfitPercentage
             };
 
             if (request.JobStartForm.Selections?.Any() == true)

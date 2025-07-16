@@ -15,14 +15,25 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
 
         public async Task<int> Handle(AddJobStartFormCommand command, CancellationToken cancellationToken)
         {
-            var jobStartForm = new NJS.Domain.Entities.JobStartForm 
+            var jobStartForm = new NJS.Domain.Entities.JobStartForm
             {
                 ProjectId = command.JobStartFormDto.ProjectId,
                 WorkBreakdownStructureId = command.JobStartFormDto.WorkBreakdownStructureId,
                 FormTitle = command.JobStartFormDto.FormTitle,
                 Description = command.JobStartFormDto.Description,
                 StartDate = command.JobStartFormDto.StartDate,
-                PreparedBy = command.JobStartFormDto.PreparedBy
+                PreparedBy = command.JobStartFormDto.PreparedBy,
+
+                // Financial fields
+                TotalTimeCost = command.JobStartFormDto.TotalTimeCost,
+                TotalExpenses = command.JobStartFormDto.TotalExpenses,
+                ServiceTaxPercentage = command.JobStartFormDto.ServiceTaxPercentage,
+                ServiceTaxAmount = command.JobStartFormDto.ServiceTaxAmount,
+                GrandTotal = command.JobStartFormDto.GrandTotal,
+                ProjectFees = command.JobStartFormDto.ProjectFees,
+                TotalProjectFees = command.JobStartFormDto.TotalProjectFees,
+                Profit = command.JobStartFormDto.Profit,
+                ProfitPercentage = command.JobStartFormDto.ProfitPercentage
             };
 
             await _unitOfWork.GetRepository<NJS.Domain.Entities.JobStartForm>().AddAsync(jobStartForm); // Use generic repository

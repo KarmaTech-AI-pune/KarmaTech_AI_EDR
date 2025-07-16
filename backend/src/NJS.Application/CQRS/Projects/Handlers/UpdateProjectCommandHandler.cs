@@ -32,7 +32,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             Console.WriteLine($"Updating project {request.Id} with the following data:");
             Console.WriteLine($"Office: '{dto.Office}'");
             Console.WriteLine($"TypeOfJob: '{dto.TypeOfJob}'");
-            Console.WriteLine($"Budget: {dto.Budget}");
+            Console.WriteLine($"EstimatedProjectFee: {dto.EstimatedProjectFee}");
             Console.WriteLine($"Priority: '{dto.Priority}'");
 
             // Update project properties
@@ -40,7 +40,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             existingProject.ClientName = dto.ClientName;
             existingProject.TypeOfClient = dto.TypeOfClient;
             existingProject.Sector = dto.Sector;
-            existingProject.EstimatedCost = dto.EstimatedCost;
+            existingProject.EstimatedProjectCost = dto.EstimatedProjectCost;
             existingProject.CapitalValue = dto.CapitalValue;
             existingProject.StartDate = dto.StartDate;
             existingProject.EndDate = dto.EndDate;
@@ -58,7 +58,9 @@ namespace NJS.Application.CQRS.Projects.Handlers
             existingProject.Region = !string.IsNullOrWhiteSpace(dto.Region) ? dto.Region : existingProject.Region;
             existingProject.TypeOfJob = !string.IsNullOrWhiteSpace(dto.TypeOfJob) ? dto.TypeOfJob : existingProject.TypeOfJob;
             existingProject.FeeType = !string.IsNullOrWhiteSpace(dto.FeeType) ? dto.FeeType : existingProject.FeeType;
-            existingProject.Budget = dto.Budget;
+            existingProject.EstimatedProjectFee = dto.EstimatedProjectFee;
+            existingProject.Percentage = dto.Percentage;
+            existingProject.Details = dto.Details;
             existingProject.Priority = !string.IsNullOrWhiteSpace(dto.Priority) ? dto.Priority : existingProject.Priority;
 
             existingProject.Status = dto.Status;
@@ -85,7 +87,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 Console.WriteLine($"Project state before update:");
                 Console.WriteLine($"Office: '{existingProject.Office}'");
                 Console.WriteLine($"TypeOfJob: '{existingProject.TypeOfJob}'");
-                Console.WriteLine($"Budget: {existingProject.Budget}");
+                Console.WriteLine($"EstimatedProjectFee: {existingProject.EstimatedProjectFee}");
                 Console.WriteLine($"Priority: '{existingProject.Priority}'");
 
                 _repository.Update(existingProject);
@@ -95,7 +97,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 Console.WriteLine($"Project state after update:");
                 Console.WriteLine($"Office: '{updatedProject.Office}'");
                 Console.WriteLine($"TypeOfJob: '{updatedProject.TypeOfJob}'");
-                Console.WriteLine($"Budget: {updatedProject.Budget}");
+                Console.WriteLine($"EstimatedProjectFee: {updatedProject.EstimatedProjectFee}");
                 Console.WriteLine($"Priority: '{updatedProject.Priority}'");
 
                 return Unit.Value;

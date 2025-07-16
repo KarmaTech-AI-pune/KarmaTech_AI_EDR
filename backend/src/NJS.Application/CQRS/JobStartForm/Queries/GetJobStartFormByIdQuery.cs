@@ -59,6 +59,7 @@ namespace NJS.Application.CQRS.JobStartForm.Queries
                 ProjectFees = jobStartForm.ProjectFees,
                 TotalProjectFees = jobStartForm.TotalProjectFees,
                 Profit = jobStartForm.Profit,
+                ProfitPercentage = jobStartForm.ProfitPercentage,
 
                 // Selections
                 Selections = jobStartForm.Selections?.Select(s => new JobStartFormSelectionDto

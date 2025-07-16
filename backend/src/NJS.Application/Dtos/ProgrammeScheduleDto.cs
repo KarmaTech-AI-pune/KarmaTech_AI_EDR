@@ -2,6 +2,6 @@ namespace NJS.Application.DTOs
 {
     public class ProgrammeScheduleDto
     {
-        public string ProgrammeDescription { get; set; }
+        public string? ProgrammeDescription { get; set; }
     }
 }

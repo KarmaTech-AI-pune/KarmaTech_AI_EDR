@@ -4,5 +4,8 @@
     {
         string GetCurrentUserId();
         string GetCurrentUserName();
+        string? GetIpAddress();
+        string? GetUserAgent();
+        string? GetReason();
     }
 }
