@@ -34,13 +34,6 @@ export const percentageCalculation = (percent: number, total: number, decimalPla
   return Number(percentage.toFixed(decimalPlaces));
 };
 
-/**
- * Example usage:
- * const sum = addCalculation(1, 2, 3, 4); // returns 10
- * const product = multiplyCalculation(2, 3, 4); // returns 24
- * const percent = percentageCalculation(25, 100); // returns 25.00
- * const percent2 = percentageCalculation(1, 3, 1); // returns 33.3
- */
 
 /**
  * Calculates the gross profit percentage given a net fee and total EAC.
@@ -53,4 +46,18 @@ export const calculateGrossPercentage = (net: number, value: number, decimalPlac
   if (net === 0) return 0; // Avoid division by zero
   const grossProfit = ((net - value) / net) * 100;
   return Number(grossProfit.toFixed(decimalPlaces));
+};
+
+
+/**
+ * Calculates the percentage of a value relative to a total
+ * @param value - The value to calculate percentage for
+ * @param total - The total value (100%)
+ * @param decimalPlaces - Optional number of decimal places (default: 2)
+ * @returns The percentage value
+ */
+export const getPercentage = (value: number, total: number, decimalPlaces: number = 2): number => {
+    if (total === 0) return 0;
+    const percentage = (value / total) * 100;
+    return Number(percentage.toFixed(decimalPlaces));
 };

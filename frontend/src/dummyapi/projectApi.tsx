@@ -69,7 +69,7 @@ export const projectApi = {
         id: newId,
         startDate: project.startDate || undefined,
         endDate: project.endDate || undefined,
-        estimatedCost: Number(project.estimatedCost),
+        estimatedProjectCost: Number(project.estimatedProjectCost),
         projectManagerId: String(project.projectManagerId),
         seniorProjectManagerId: String(project.seniorProjectManagerId),
         regionalManagerId: String(project.regionalManagerId)
@@ -105,7 +105,7 @@ export const projectApi = {
         ...project,
         startDate: project.startDate ? new Date(project.startDate).toISOString() : undefined,
         endDate: project.endDate ? new Date(project.endDate).toISOString() : undefined,
-        estimatedCost:  Number(project.estimatedCost),
+        estimatedCost:  Number(project.estimatedProjectCost),
         projectManagerId: String(project.projectManagerId),
         seniorProjectMangerId: String(project.seniorProjectManagerId),
         regionalManagerId: String(project.regionalManagerId)

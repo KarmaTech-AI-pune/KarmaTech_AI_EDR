@@ -7,4 +7,5 @@ export type WBSTask ={
     created_at: Date;
     updated_at: Date;
     resource_allocation?: number;
+    resource_role?: string;
 }

@@ -46,27 +46,42 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
             // Manual mapping from entity to DTO
             return monthlyProgressEntities.Select(monthlyProgressEntity => new MonthlyProgressDto
             {
-                FinancialDetails = monthlyProgressEntity.FinancialDetails != null ? new FinancialDetailsDto
+                Id = monthlyProgressEntity.Id,
+                ProjectId = monthlyProgressEntity.ProjectId,
+                Month = monthlyProgressEntity.Month,
+                Year = monthlyProgressEntity.Year,
+                FinancialAndContractDetails = monthlyProgressEntity.FinancialDetails != null ? new FinancialDetailsDto
                 {
                     Net = monthlyProgressEntity.FinancialDetails.Net,
                     ServiceTax = monthlyProgressEntity.FinancialDetails.ServiceTax,
                     FeeTotal = monthlyProgressEntity.FinancialDetails.FeeTotal,
                     BudgetOdcs = monthlyProgressEntity.FinancialDetails.BudgetOdcs,
                     BudgetStaff = monthlyProgressEntity.FinancialDetails.BudgetStaff,
-                    BudgetSubTotal = monthlyProgressEntity.FinancialDetails.BudgetSubTotal
+                    BudgetSubTotal = monthlyProgressEntity.FinancialDetails.BudgetSubTotal,
+                    ContractType = monthlyProgressEntity.FinancialDetails.ContractType
                 } : null,
-                ContractAndCost = monthlyProgressEntity.ContractAndCost != null ? new ContractAndCostDto
+                ActualCost = monthlyProgressEntity.ContractAndCost != null ? new ContractAndCostDto
                 {
-                    Percentage = monthlyProgressEntity.ContractAndCost.Percentage,
-                    ActualOdcs = monthlyProgressEntity.ContractAndCost.ActualOdcs,
+                    PriorCumulativeOdc = monthlyProgressEntity.ContractAndCost.PriorCumulativeOdc,
+                    PriorCumulativeStaff = monthlyProgressEntity.ContractAndCost.PriorCumulativeStaff,
+                    PriorCumulativeTotal = monthlyProgressEntity.ContractAndCost.PriorCumulativeTotal,
+                    ActualOdc = monthlyProgressEntity.ContractAndCost.ActualOdc,
                     ActualStaff = monthlyProgressEntity.ContractAndCost.ActualStaff,
-                    ActualSubtotal = monthlyProgressEntity.ContractAndCost.ActualSubtotal
+                    ActualSubtotal = monthlyProgressEntity.ContractAndCost.ActualSubtotal,
+                    TotalCumulativeOdc = monthlyProgressEntity.ContractAndCost.TotalCumulativeOdc,
+                    TotalCumulativeStaff = monthlyProgressEntity.ContractAndCost.TotalCumulativeStaff,
+                    TotalCumulativeCost = monthlyProgressEntity.ContractAndCost.TotalCumulativeCost
                 } : null,
-                CTCEAC = monthlyProgressEntity.CTCEAC != null ? new CTCEACDto
+                CtcAndEac = monthlyProgressEntity.CTCEAC != null ? new CTCEACDto
                 {
                     CtcODC = monthlyProgressEntity.CTCEAC.CtcODC,
                     CtcStaff = monthlyProgressEntity.CTCEAC.CtcStaff,
                     CtcSubtotal = monthlyProgressEntity.CTCEAC.CtcSubtotal,
+                    ActualctcODC = monthlyProgressEntity.CTCEAC.ActualctcODC,
+                    ActualCtcStaff = monthlyProgressEntity.CTCEAC.ActualCtcStaff,
+                    ActualCtcSubtotal = monthlyProgressEntity.CTCEAC.ActualCtcSubtotal,
+                    EacOdc = monthlyProgressEntity.CTCEAC.EacOdc,
+                    EacStaff = monthlyProgressEntity.CTCEAC.EacStaff,
                     TotalEAC = monthlyProgressEntity.CTCEAC.TotalEAC,
                     GrossProfitPercentage = monthlyProgressEntity.CTCEAC.GrossProfitPercentage
                 } : null,
@@ -77,29 +92,42 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     CompletionDateAsPerExtension = monthlyProgressEntity.Schedule.CompletionDateAsPerExtension,
                     ExpectedCompletionDate = monthlyProgressEntity.Schedule.ExpectedCompletionDate
                 } : null,
-                ManpowerEntries = monthlyProgressEntity.ManpowerEntries?.Select(mp => new ManpowerPlanningDto
+                ManpowerPlanning = new ManpowerPlanningDto
                 {
-                    WorkAssignment = mp.WorkAssignment,
-                    AssigneesJson = mp.Assignee, // Map Assignee to AssigneesJson
-                    Planned = mp.Planned,
-                    Consumed = mp.Consumed,
-                    Balance = mp.Balance,
-                    NextMonthPlanning = mp.NextMonthPlanning,
-                    ManpowerComments = mp.ManpowerComments
-                }).ToList(),
-                ManpowerTotal = monthlyProgressEntity.ManpowerTotal,
-                ProgressDeliverables = monthlyProgressEntity.ProgressDeliverables?.Select(pd => new ProgressDeliverableDto
+                    Manpower = monthlyProgressEntity.ManpowerEntries?.Select(mp => new ManpowerDto
+                    {
+                        WorkAssignment = mp.WorkAssignment,
+                        Assignee = mp.Assignee,
+                        Planned = mp.Planned,
+                        Consumed = mp.Consumed,
+                        Balance = mp.Balance,
+                        NextMonthPlanning = mp.NextMonthPlanning,
+                        ManpowerComments = mp.ManpowerComments
+                    }).ToList(),
+                    ManpowerTotal = new ManpowerTotalDto
+                    {
+                        PlannedTotal = monthlyProgressEntity.ManpowerEntries?.Sum(x => x.Planned),
+                        ConsumedTotal = monthlyProgressEntity.ManpowerEntries?.Sum(x => x.Consumed),
+                        BalanceTotal = monthlyProgressEntity.ManpowerEntries?.Sum(x => x.Balance),
+                        NextMonthPlanningTotal = monthlyProgressEntity.ManpowerEntries?.Sum(x => x.NextMonthPlanning)
+                    }
+                },
+                ProgressDeliverable = new ProgressDeliverableWrapperDto
                 {
-                    Milestone = pd.Milestone,
-                    DueDateContract = pd.DueDateContract,
-                    DueDatePlanned = pd.DueDatePlanned,
-                    AchievedDate = pd.AchievedDate,
-                    PaymentDue = pd.PaymentDue,
-                    InvoiceDate = pd.InvoiceDate,
-                    PaymentReceivedDate = pd.PaymentReceivedDate,
-                    DeliverableComments = pd.DeliverableComments
-                }).ToList(),
-                ChangeOrders = monthlyProgressEntity.ChangeOrders?.Select(co => new ChangeOrderDto
+                    Deliverables = monthlyProgressEntity.ProgressDeliverables?.Select(pd => new ProgressDeliverableDto
+                    {
+                        Milestone = pd.Milestone,
+                        DueDateContract = pd.DueDateContract,
+                        DueDatePlanned = pd.DueDatePlanned,
+                        AchievedDate = pd.AchievedDate,
+                        PaymentDue = pd.PaymentDue,
+                        InvoiceDate = pd.InvoiceDate,
+                        PaymentReceivedDate = pd.PaymentReceivedDate,
+                        DeliverableComments = pd.DeliverableComments
+                    }).ToList(),
+                    TotalPaymentDue = monthlyProgressEntity.ProgressDeliverables?.Sum(pd => pd.PaymentDue) ?? 0
+                },
+                ChangeOrder = monthlyProgressEntity.ChangeOrders?.Select(co => new ChangeOrderDto
                 {
                     ContractTotal = co.ContractTotal,
                     Cost = co.Cost,
@@ -107,18 +135,26 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     SummaryDetails = co.SummaryDetails,
                     Status = co.Status
                 }).ToList(),
+                ProgrammeSchedule = monthlyProgressEntity.ProgrammeSchedules?.Select(ps => new ProgrammeScheduleDto
+                {
+                    ProgrammeDescription = ps.ProgrammeDescription
+                }).ToList(),
+                EarlyWarnings = monthlyProgressEntity.EarlyWarnings?.Select(ew => new EarlyWarningDto
+                {
+                    WarningsDescription = ew.WarningsDescription
+                }).ToList(),
                 LastMonthActions = monthlyProgressEntity.LastMonthActions?.Select(lma => new LastMonthActionDto
                 {
-                    LMactions = lma.LMactions,
-                    LMAdate = lma.LMAdate,
-                    LMAcomments = lma.LMAcomments
+                    Actions = lma.Actions,
+                    Date = lma.Date,
+                    Comments = lma.Comments
                 }).ToList(),
                 CurrentMonthActions = monthlyProgressEntity.CurrentMonthActions?.Select(cma => new CurrentMonthActionDto
                 {
-                    CMactions = cma.CMactions,
-                    CMAdate = cma.CMAdate,
-                    CMAcomments = cma.CMAcomments,
-                    CMApriority = cma.CMApriority
+                    Actions = cma.Actions,
+                    Date = cma.Date,
+                    Comments = cma.Comments,
+                    Priority = cma.Priority
                 }).ToList(),
                 BudgetTable = monthlyProgressEntity.BudgetTable != null ? new BudgetTableDto
                 {
@@ -137,8 +173,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     PercentCompleteOnCosts = monthlyProgressEntity.BudgetTable.PercentCompleteOnCosts != null ? new PercentCompleteOnCostsDto
                     {
                         RevenueFee = monthlyProgressEntity.BudgetTable.PercentCompleteOnCosts.RevenueFee,
-                        Cost = monthlyProgressEntity.BudgetTable.PercentCompleteOnCosts.Cost,
-                        ProfitPercentage = monthlyProgressEntity.BudgetTable.PercentCompleteOnCosts.ProfitPercentage
+                        Cost = monthlyProgressEntity.BudgetTable.PercentCompleteOnCosts.Cost
                     } : null
                 } : null
             }).ToList();

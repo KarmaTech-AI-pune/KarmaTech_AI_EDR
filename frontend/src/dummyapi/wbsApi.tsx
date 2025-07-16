@@ -144,7 +144,8 @@ export const WBSStructureAPI = {
                     odc: allocation?.odc || 0,
                     totalHours: allocation?.total_hours || 0,
                     totalCost: allocation?.total_cost || 0,
-                    parentId: task.parent_id
+                    parentId: task.parent_id,
+                    resource_role: allocation?.role_id || null
                 };
             });
         } catch (error) {

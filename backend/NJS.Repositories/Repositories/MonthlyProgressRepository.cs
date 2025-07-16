@@ -25,6 +25,8 @@ namespace NJS.Repositories.Repositories
                                  .Include(mp => mp.ManpowerEntries)
                                  .Include(mp => mp.ProgressDeliverables)
                                  .Include(mp => mp.ChangeOrders)
+                                 .Include(mp => mp.ProgrammeSchedules)
+                                 .Include(mp => mp.EarlyWarnings)
                                  .Include(mp => mp.LastMonthActions)
                                  .Include(mp => mp.CurrentMonthActions)
                                  .Include(mp => mp.BudgetTable)
@@ -34,6 +36,56 @@ namespace NJS.Repositories.Repositories
                                  .Include(mp => mp.BudgetTable)
                                      .ThenInclude(bt => bt.PercentCompleteOnCosts)
                                  .FirstOrDefaultAsync(mp => mp.Id == id);
+        }
+
+
+
+        public async Task<List<MonthlyProgress>> GetByProjectIdAsync(int projectId)
+        {
+            return await _context.MonthlyProgresses
+                                 .Where(mp => mp.ProjectId == projectId)
+                                 .Include(mp => mp.FinancialDetails)
+                                 .Include(mp => mp.ContractAndCost)
+                                 .Include(mp => mp.CTCEAC)
+                                 .Include(mp => mp.Schedule)
+                                 .Include(mp => mp.ManpowerEntries)
+                                 .Include(mp => mp.ProgressDeliverables)
+                                 .Include(mp => mp.ChangeOrders)
+                                 .Include(mp => mp.ProgrammeSchedules)
+                                 .Include(mp => mp.EarlyWarnings)
+                                 .Include(mp => mp.LastMonthActions)
+                                 .Include(mp => mp.CurrentMonthActions)
+                                 .Include(mp => mp.BudgetTable)
+                                     .ThenInclude(bt => bt.OriginalBudget)
+                                 .Include(mp => mp.BudgetTable)
+                                     .ThenInclude(bt => bt.CurrentBudgetInMIS)
+                                 .Include(mp => mp.BudgetTable)
+                                     .ThenInclude(bt => bt.PercentCompleteOnCosts)
+                                 .ToListAsync();
+        }
+
+        public async Task<MonthlyProgress> GetByProjectYearMonthAsync(int projectId, int year, int month)
+        {
+            return await _context.MonthlyProgresses
+                                 .Where(mp => mp.ProjectId == projectId && mp.Year == year && mp.Month == month)
+                                 .Include(mp => mp.FinancialDetails)
+                                 .Include(mp => mp.ContractAndCost)
+                                 .Include(mp => mp.CTCEAC)
+                                 .Include(mp => mp.Schedule)
+                                 .Include(mp => mp.ManpowerEntries)
+                                 .Include(mp => mp.ProgressDeliverables)
+                                 .Include(mp => mp.ChangeOrders)
+                                 .Include(mp => mp.ProgrammeSchedules)
+                                 .Include(mp => mp.EarlyWarnings)
+                                 .Include(mp => mp.LastMonthActions)
+                                 .Include(mp => mp.CurrentMonthActions)
+                                 .Include(mp => mp.BudgetTable)
+                                     .ThenInclude(bt => bt.OriginalBudget)
+                                 .Include(mp => mp.BudgetTable)
+                                     .ThenInclude(bt => bt.CurrentBudgetInMIS)
+                                 .Include(mp => mp.BudgetTable)
+                                     .ThenInclude(bt => bt.PercentCompleteOnCosts)
+                                 .FirstOrDefaultAsync();
         }
 
         public async Task AddAsync(MonthlyProgress entity)
@@ -64,6 +116,8 @@ namespace NJS.Repositories.Repositories
                                  .Include(mp => mp.ManpowerEntries)
                                  .Include(mp => mp.ProgressDeliverables)
                                  .Include(mp => mp.ChangeOrders)
+                                 .Include(mp => mp.ProgrammeSchedules)
+                                 .Include(mp => mp.EarlyWarnings)
                                  .Include(mp => mp.LastMonthActions)
                                  .Include(mp => mp.CurrentMonthActions)
                                  .Include(mp => mp.BudgetTable)

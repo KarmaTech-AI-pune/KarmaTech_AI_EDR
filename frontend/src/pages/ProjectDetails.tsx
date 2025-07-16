@@ -55,6 +55,7 @@ import {
   MonthlyProgressForm,
   ProjectClosureForm,
   FormsOverview,
+  MonthlyReports,
 } from '../components/forms';
 
 const DRAWER_WIDTH = 280;
@@ -295,6 +296,12 @@ export const ProjectDetails: React.FC = () => {
       icon: <TaskIcon />,
       component: <ProjectClosureForm />
     },
+    {
+      id: 'monthlyReports',
+      title: 'Monthly Reports',
+      icon: <AssessmentIcon />,
+      component: <MonthlyReports />
+    },
   ];
 
   const menuSections = [
@@ -414,15 +421,13 @@ export const ProjectDetails: React.FC = () => {
               <Grid item xs={12} md={4}>
                 <InfoCard title="Financial Details" icon={<AttachMoneyIcon />}>
                   <InfoItem
-                    label="Estimated Cost"
-                    value={formatCurrency(project.estimatedCost, project.currency)}
+                    label="Estimated Project Cost"
+                    value={formatCurrency(project.estimatedProjectCost, project.currency)}
                   />
-                  {project.budget && (
                     <InfoItem
-                      label="Budget"
-                      value={formatCurrency(project.budget, project.currency)}
+                      label="Estimated Project Fee"
+                      value={formatCurrency(project.estimatedProjectFee, project.currency)}
                     />
-                  )}
                   <InfoItem label="Fee Type" value={project.feeType} />
                   <Chip
                     label={project.currency}

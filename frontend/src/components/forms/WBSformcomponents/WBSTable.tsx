@@ -75,6 +75,7 @@ interface WBSTableProps {
   onCostRateChange: (id: string, value: string) => void;
   onHoursChange: (id: string, month: string, value: string) => void;
   onODCChange: (id: string, value: string) => void;
+  onResourceRoleChange: (id: string, value: string) => void; // New prop for resource_role
 }
 
 const WBSTable: React.FC<WBSTableProps> = ({
@@ -95,6 +96,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
   onCostRateChange,
   onHoursChange,
   onODCChange,
+  onResourceRoleChange, // Destructure new prop
 }) => {
 
   const calculateChildTotals = (parentRow: WBSRowData) => {
@@ -272,6 +274,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
           onCostRateChange={onCostRateChange}
           onHoursChange={onHoursChange}
           onODCChange={onODCChange}
+          onResourceRoleChange={onResourceRoleChange} // Pass new prop
           stickyColumn={true}
         />
       );
@@ -298,6 +301,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
             onCostRateChange={onCostRateChange}
             onHoursChange={onHoursChange}
             onODCChange={onODCChange}
+            onResourceRoleChange={onResourceRoleChange} // Pass new prop
             stickyColumn={true}
           />
         );
@@ -324,6 +328,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
               onCostRateChange={onCostRateChange}
               onHoursChange={onHoursChange}
               onODCChange={onODCChange}
+              onResourceRoleChange={onResourceRoleChange} // Pass new prop
               stickyColumn={true}
             />
           );

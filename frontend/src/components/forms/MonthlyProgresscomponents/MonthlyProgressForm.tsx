@@ -8,6 +8,11 @@ import {
   Paper,
   Typography,
   Container,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { FormWrapper } from "../FormWrapper";
 import { FormProvider, useForm, SubmitHandler } from "react-hook-form";
@@ -20,7 +25,7 @@ import { MonthlyProgressAPI } from "../../../services/monthlyProgressApi";
 import { useProject } from "../../../context/ProjectContext";
 import {
   FinancialDetailsTab,
-  ContractAndCostsTab,
+  ActualCost,
   CostToCompleteAndEAC,
   ScheduleTab,
   ManpowerPlanningTab,
@@ -35,6 +40,7 @@ import {
 import {
   getCurrentMonthYear,
 } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
+import { getAggregatedMonthlyProgressData, getMonthlyProgressData } from "../../../services/monthlyProgressDataService";
 import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
@@ -52,15 +58,15 @@ export type tab = {
 const tabs = [
   {
     id: "1",
-    label: "Financial Details",
+    label: "Financial Details & Contract",
     component: <FinancialDetailsTab />,
-    inputs: ["financialDetails"],
+    inputs: ["financialAndContractDetails"],
   },
   {
     id: "2",
-    label: "Contract & Costs",
-    component: <ContractAndCostsTab />,
-    inputs: ["contractAndCost"],
+    label: "Actual Cost",
+    component: <ActualCost />,
+    inputs: ["actualCost"],
   },
   {
     id: "3",
@@ -129,73 +135,37 @@ const tabs = [
 
 // Main component
 export const MonthlyProgressForm: React.FC = () => {
+  const { projectId } = useProject();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
+
   const form = useForm<MonthlyProgressSchemaType>({
     resolver: zodResolver(MonthlyProgressSchema),
-    defaultValues: {
-      financialDetails: {
-        net: null,
-        serviceTax: null,
-        feeTotal: null,
-        budgetOdcs: null,
-        budgetStaff: null,
-        BudgetSubTotal: null,
-      },
-      contractAndCost: {
-        contractType: "lumpsum", // Default to lumpsum
-        percentage: null,
-        actualOdcs: null,
-        actualStaff: null,
-        actualSubtotal: null,
-      },
-      budgetTable: {
-        originalBudget: {
-          revenueFee: 0,
-          cost: 0,
-          profitPercentage: 0
-        },
-        currentBudgetInMIS: {
-          revenueFee: 0,
-          cost: 0,
-          profitPercentage: 0
-        },
-        percentCompleteOnCosts: {
-          revenueFee: 0,
-          cost: 0
-        }
-      },
-      ctcAndEac: {
-      ctcODC: null,
-      ctcStaff: null,
-      ctcSubtotal: null,
-      totalEAC: null,
-      grossProfitPercentage: null,
-      },
-      schedule: {
-        dateOfIssueWOLOI: new Date(),
-      completionDateAsPerContract: new Date(),
-      completionDateAsPerExtension: new Date(),
-      expectedCompletionDate: new Date(),
-      },
-      manpowerPlanning: {
-        manpower: [],
-        manpowerTotal: {
-          plannedTotal: 0,
-          consumedTotal: 0,
-          balanceTotal: 0,
-          nextMonthPlanningTotal: 0,
-        }
-      },
-      progressDeliverable: [],
-      changeOrder: [],
-      programmeSchedule: [],
-      earlyWarnings: [],
-      lastMonthActions: [],
-      currentMonthActions: [],
-    },
+    defaultValues: {},
     mode: "all",
   });
 
-  const { projectId } = useProject();
+  React.useEffect(() => {
+    const fetchData = async () => {
+      if (!projectId) {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const data = await getMonthlyProgressData(projectId, year, month);
+        form.reset(data);
+      } catch (err) {
+        setError("Failed to fetch form data.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [projectId, year, month, form]);
 
   const [snackbarState, setSnackbarState] = useState({
     open: false,
@@ -222,8 +192,9 @@ export const MonthlyProgressForm: React.FC = () => {
     }
 
     try {
+      const payload = { ...data, year, month };
       // You might want to show a loading indicator here
-      await MonthlyProgressAPI.submitMonthlyProgress(projectId, data);
+      await MonthlyProgressAPI.submitMonthlyProgress(projectId, payload);
       setSnackbarState({
         open: true,
         message: "Review saved successfully!",
@@ -253,6 +224,22 @@ export const MonthlyProgressForm: React.FC = () => {
     []
   );
 
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
   return (
     <FormWrapper>
       <Container maxWidth="xl" sx={{ py: 3 }}>
@@ -276,6 +263,27 @@ export const MonthlyProgressForm: React.FC = () => {
             >
               PMD7. Monthly Progress Review - {currentMonthYear}
             </Typography>
+
+            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+              <FormControl>
+                <InputLabel>Year</InputLabel>
+                <Select value={year} onChange={(e) => setYear(e.target.value as number)} label="Year">
+                  {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                    <MenuItem key={y} value={y}>{y}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl>
+                <InputLabel>Month</InputLabel>
+                <Select value={month} onChange={(e) => setMonth(e.target.value as number)} label="Month">
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                    <MenuItem key={m} value={m}>
+                      {new Date(0, m - 1).toLocaleString('default', { month: 'long' })}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
 
             <Box>
               <FormControlsProvider tabs={tabs}>

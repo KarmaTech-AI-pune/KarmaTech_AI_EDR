@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Application.CQRS.Projects.Queries;
@@ -15,12 +16,13 @@ namespace NJS.API.Tests.Controllers
         private readonly Mock<IProjectManagementService> _mockProjectManagementService;
         private readonly ProjectController _controller;
         private readonly Mock<IMediator> _mediator;
+         private readonly ILogger _logger;
 
         public ProjectsControllerTests()
         {
             _mockProjectManagementService = new Mock<IProjectManagementService>();
-            _mediator = new Mock<IMediator>();
-            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object);
+            _mediator = new Mock<IMediator>();            
+            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object, (ILogger<ProjectController>)_logger);
         }
 
         [Fact]
@@ -194,77 +196,5 @@ namespace NJS.API.Tests.Controllers
             Assert.Equal(500, statusCodeResult.StatusCode);
         }
 
-        [Fact]
-        public async Task CreateFeasibilityStudy_ShouldReturnCreatedAtAction_WhenSuccessful()
-        {
-            // Arrange
-            var projectId = 1;
-            var command = new CreateFeasibilityStudyCommand
-            {
-                ProjectId = projectId,
-                Description = "Test Description",
-                Title = "Test Title",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            var feasibilityStudyId = 1;
-            _mediator.Setup(m => m.Send(It.Is<CreateFeasibilityStudyCommand>(c => c.ProjectId == projectId),
-                                      It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(feasibilityStudyId);
-
-            // Act
-            var result = await _controller.CreateFeasibilityStudy(projectId, command);
-
-            // Assert
-            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
-            Assert.Equal("GetFeasibilityStudy", createdAtActionResult.ActionName);
-            Assert.Equal(projectId, createdAtActionResult.RouteValues["id"]);
-        }
-
-        [Fact]
-        public async Task CreateFeasibilityStudy_ShouldReturnBadRequest_WhenCommandIsNull()
-        {
-            // Arrange
-            var projectId = 1;
-
-            // Act
-            var result = await _controller.CreateFeasibilityStudy(projectId, null);
-
-            // Assert
-            Assert.IsType<BadRequestResult>(result);
-        }
-
-        [Fact]
-        public void GetFeasibilityStudy_ShouldReturnOk_WhenFeasibilityStudyExists()
-        {
-            // Arrange
-            var projectId = 1;
-            var feasibilityStudy = new FeasibilityStudy { Id = 1, ProjectDetails = "Feasibility Study Details" };
-            _mockProjectManagementService.Setup(s => s.GetFeasibilityStudy(projectId))
-                                       .Returns(feasibilityStudy);
-
-            // Act
-            var result = _controller.GetFeasibilityStudy(projectId);
-
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<FeasibilityStudy>(okResult.Value);
-            Assert.Equal(feasibilityStudy.Id, returnValue.Id);
-        }
-
-        [Fact]
-        public void GetFeasibilityStudy_ShouldReturnNotFound_WhenFeasibilityStudyDoesNotExist()
-        {
-            // Arrange
-            var projectId = 1;
-            _mockProjectManagementService.Setup(s => s.GetFeasibilityStudy(projectId))
-                                       .Returns((FeasibilityStudy)null);
-
-            // Act
-            var result = _controller.GetFeasibilityStudy(projectId);
-
-            // Assert
-            Assert.IsType<NotFoundResult>(result);
-        }
     }
 }

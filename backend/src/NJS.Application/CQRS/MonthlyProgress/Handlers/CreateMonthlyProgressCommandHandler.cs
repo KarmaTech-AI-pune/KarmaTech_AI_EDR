@@ -3,6 +3,8 @@ using NJS.Application.CQRS.MonthlyProgress.Commands;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,59 +21,72 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
 
         public async Task<int> Handle(CreateMonthlyProgressCommand request, CancellationToken cancellationToken)
         {
-            if (request == null || request.MonthlyProgress == null)
+            if (request == null)
             {
                 throw new ArgumentNullException(nameof(request));
             }
 
             var monthlyProgressEntity = new NJS.Domain.Entities.MonthlyProgress
             {
+                ProjectId = request.ProjectId,
                 CreatedDate = DateTime.UtcNow,
-                FinancialDetails = request.MonthlyProgress.FinancialDetails != null ? new FinancialDetails
+                Month = request.MonthlyProgress.Month,
+                Year = request.MonthlyProgress.Year,
+                FinancialDetails = request.MonthlyProgress?.FinancialAndContractDetails != null ? new FinancialDetails
                 {
-                    Net = request.MonthlyProgress.FinancialDetails.Net,
-                    ServiceTax = request.MonthlyProgress.FinancialDetails.ServiceTax,
-                    FeeTotal = request.MonthlyProgress.FinancialDetails.FeeTotal,
-                    BudgetOdcs = request.MonthlyProgress.FinancialDetails.BudgetOdcs,
-                    BudgetStaff = request.MonthlyProgress.FinancialDetails.BudgetStaff,
-                    BudgetSubTotal = request.MonthlyProgress.FinancialDetails.BudgetSubTotal
+                    Net = request.MonthlyProgress.FinancialAndContractDetails.Net,
+                    ServiceTax = request.MonthlyProgress.FinancialAndContractDetails.ServiceTax,
+                    FeeTotal = request.MonthlyProgress.FinancialAndContractDetails.FeeTotal,
+                    BudgetOdcs = request.MonthlyProgress.FinancialAndContractDetails.BudgetOdcs,
+                    BudgetStaff = request.MonthlyProgress.FinancialAndContractDetails.BudgetStaff,
+                    BudgetSubTotal = request.MonthlyProgress.FinancialAndContractDetails.BudgetSubTotal,
+                    ContractType = request.MonthlyProgress.FinancialAndContractDetails.ContractType
                 } : null,
-                ContractAndCost = request.MonthlyProgress.ContractAndCost != null ? new ContractAndCost
+                ContractAndCost = request.MonthlyProgress?.ActualCost != null ? new ContractAndCost
                 {
-                    ContractType = request.MonthlyProgress.ContractAndCost.ContractType,
-                    Percentage = request.MonthlyProgress.ContractAndCost.Percentage,
-                    ActualOdcs = request.MonthlyProgress.ContractAndCost.ActualOdcs,
-                    ActualStaff = request.MonthlyProgress.ContractAndCost.ActualStaff,
-                    ActualSubtotal = request.MonthlyProgress.ContractAndCost.ActualSubtotal
+                    PriorCumulativeOdc = request.MonthlyProgress.ActualCost.PriorCumulativeOdc,
+                    PriorCumulativeStaff = request.MonthlyProgress.ActualCost.PriorCumulativeStaff,
+                    PriorCumulativeTotal = request.MonthlyProgress.ActualCost.PriorCumulativeTotal,
+                    ActualOdc = request.MonthlyProgress.ActualCost.ActualOdc,
+                    ActualStaff = request.MonthlyProgress.ActualCost.ActualStaff,
+                    ActualSubtotal = request.MonthlyProgress.ActualCost.ActualSubtotal,
+                    TotalCumulativeOdc = request.MonthlyProgress.ActualCost.TotalCumulativeOdc,
+                    TotalCumulativeStaff = request.MonthlyProgress.ActualCost.TotalCumulativeStaff,
+                    TotalCumulativeCost = request.MonthlyProgress.ActualCost.TotalCumulativeCost
                 } : null,
-                CTCEAC = request.MonthlyProgress.CTCEAC != null ? new CTCEAC
+                CTCEAC = request.MonthlyProgress?.CtcAndEac != null ? new CTCEAC
                 {
-                    CtcODC = request.MonthlyProgress.CTCEAC.CtcODC,
-                    CtcStaff = request.MonthlyProgress.CTCEAC.CtcStaff,
-                    CtcSubtotal = request.MonthlyProgress.CTCEAC.CtcSubtotal,
-                    TotalEAC = request.MonthlyProgress.CTCEAC.TotalEAC,
-                    GrossProfitPercentage = request.MonthlyProgress.CTCEAC.GrossProfitPercentage
+                    CtcODC = request.MonthlyProgress.CtcAndEac.CtcODC,
+                    CtcStaff = request.MonthlyProgress.CtcAndEac.CtcStaff,
+                    CtcSubtotal = request.MonthlyProgress.CtcAndEac.CtcSubtotal,
+                    ActualctcODC = request.MonthlyProgress.CtcAndEac.ActualctcODC,
+                    ActualCtcStaff = request.MonthlyProgress.CtcAndEac.ActualCtcStaff,
+                    ActualCtcSubtotal = request.MonthlyProgress.CtcAndEac.ActualCtcSubtotal,
+                    EacOdc = request.MonthlyProgress.CtcAndEac.EacOdc,
+                    EacStaff = request.MonthlyProgress.CtcAndEac.EacStaff,
+                    TotalEAC = request.MonthlyProgress.CtcAndEac.TotalEAC,
+                    GrossProfitPercentage = request.MonthlyProgress.CtcAndEac.GrossProfitPercentage
                 } : null,
-                Schedule = request.MonthlyProgress.Schedule != null ? new Schedule
+                Schedule = request.MonthlyProgress?.Schedule != null ? new Schedule
                 {
                     DateOfIssueWOLOI = request.MonthlyProgress.Schedule.DateOfIssueWOLOI,
                     CompletionDateAsPerContract = request.MonthlyProgress.Schedule.CompletionDateAsPerContract,
                     CompletionDateAsPerExtension = request.MonthlyProgress.Schedule.CompletionDateAsPerExtension,
                     ExpectedCompletionDate = request.MonthlyProgress.Schedule.ExpectedCompletionDate
                 } : null,
-                ManpowerEntries = request.MonthlyProgress.ManpowerEntries != null ?
-                    request.MonthlyProgress.ManpowerEntries.Select(mp => new ManpowerPlanning
+                ManpowerEntries = request.MonthlyProgress?.ManpowerPlanning?.Manpower != null ?
+                    request.MonthlyProgress.ManpowerPlanning.Manpower.Select(mp => new ManpowerPlanning
                     {
                         WorkAssignment = mp.WorkAssignment,
-                        Assignee = mp.AssigneesJson,
+                        Assignee = mp.Assignee,
                         Planned = mp.Planned ?? 0m,
                         Consumed = mp.Consumed ?? 0m,
                         Balance = mp.Balance ?? 0m,
                         NextMonthPlanning = mp.NextMonthPlanning ?? 0m,
                         ManpowerComments = mp.ManpowerComments
                     }).ToList() : new List<ManpowerPlanning>(),
-                ProgressDeliverables = request.MonthlyProgress.ProgressDeliverables != null ?
-                    request.MonthlyProgress.ProgressDeliverables.Select(pd => new ProgressDeliverable
+                ProgressDeliverables = request.MonthlyProgress?.ProgressDeliverable?.Deliverables != null ?
+                    request.MonthlyProgress.ProgressDeliverable.Deliverables.Select(pd => new ProgressDeliverable
                     {
                         Milestone = pd.Milestone,
                         DueDateContract = pd.DueDateContract,
@@ -82,8 +97,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                         PaymentReceivedDate = pd.PaymentReceivedDate,
                         DeliverableComments = pd.DeliverableComments
                     }).ToList() : new List<ProgressDeliverable>(),
-                ChangeOrders = request.MonthlyProgress.ChangeOrders != null ?
-                    request.MonthlyProgress.ChangeOrders.Select(co => new ChangeOrder
+                ChangeOrders = request.MonthlyProgress?.ChangeOrder != null ?
+                    request.MonthlyProgress.ChangeOrder.Select(co => new ChangeOrder
                     {
                         ContractTotal = co.ContractTotal,
                         Cost = co.Cost,
@@ -91,21 +106,31 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                         SummaryDetails = co.SummaryDetails,
                         Status = co.Status
                     }).ToList() : new List<ChangeOrder>(),
-                LastMonthActions = request.MonthlyProgress.LastMonthActions != null ?
+                LastMonthActions = request.MonthlyProgress?.LastMonthActions != null ?
                     request.MonthlyProgress.LastMonthActions.Select(lma => new LastMonthAction
                     {
-                        LMactions = lma.LMactions,
-                        LMAdate = lma.LMAdate,
-                        LMAcomments = lma.LMAcomments
+                        Actions = lma.Actions,
+                        Date = lma.Date,
+                        Comments = lma.Comments
                     }).ToList() : new List<LastMonthAction>(),
-                CurrentMonthActions = request.MonthlyProgress.CurrentMonthActions != null ?
+                CurrentMonthActions = request.MonthlyProgress?.CurrentMonthActions != null ?
                     request.MonthlyProgress.CurrentMonthActions.Select(cma => new CurrentMonthAction
                     {
-                        CMactions = cma.CMactions,
-                        CMAdate = cma.CMAdate,
-                        CMAcomments = cma.CMAcomments,
-                        CMApriority = cma.CMApriority
+                        Actions = cma.Actions,
+                        Date = cma.Date,
+                        Comments = cma.Comments,
+                        Priority = cma.Priority
                     }).ToList() : new List<CurrentMonthAction>(),
+                ProgrammeSchedules = request.MonthlyProgress?.ProgrammeSchedule != null ?
+                    request.MonthlyProgress.ProgrammeSchedule.Select(ps => new ProgrammeSchedule
+                    {
+                        ProgrammeDescription = ps.ProgrammeDescription
+                    }).ToList() : new List<ProgrammeSchedule>(),
+                EarlyWarnings = request.MonthlyProgress?.EarlyWarnings != null ?
+                    request.MonthlyProgress.EarlyWarnings.Select(ew => new EarlyWarning
+                    {
+                        WarningsDescription = ew.WarningsDescription
+                    }).ToList() : new List<EarlyWarning>(),
                 BudgetTable = request.MonthlyProgress.BudgetTable != null ? new BudgetTable
                 {
                     OriginalBudget = request.MonthlyProgress.BudgetTable.OriginalBudget != null ? new OriginalBudget
@@ -123,8 +148,7 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     PercentCompleteOnCosts = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts != null ? new PercentCompleteOnCosts
                     {
                         RevenueFee = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.RevenueFee,
-                        Cost = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.Cost,
-                        ProfitPercentage = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.ProfitPercentage
+                        Cost = request.MonthlyProgress.BudgetTable.PercentCompleteOnCosts.Cost
                     } : null
                 } : null
             };

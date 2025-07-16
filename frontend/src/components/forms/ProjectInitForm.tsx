@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -8,6 +8,8 @@ import {
   Paper
 } from '@mui/material';
 import { ProjectFormData } from '../../types/index.tsx';
+import { percentageCalculation } from '../../utils/calculations.ts';
+import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts';
 
 interface ProjectFormType {
   project?: ProjectFormData;
@@ -26,40 +28,6 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   projectManagers,
   seniorProjectManagers
 }) => {
-  // Format date as YYYY-MM-DD for form input
-  const formatDateToYYYYMMDD = (date: Date): string => {
-    // Ensure we're working with a valid date
-    if (!(date instanceof Date) || isNaN(date.getTime())) {
-      console.error('Invalid date provided to formatDateToYYYYMMDD:', date);
-      return '';
-    }
-
-    // Format as YYYY-MM-DD without timezone issues
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-
-    return `${year}-${month}-${day}`;
-  };
-
-  // Parse date string to ensure consistent format
-  const parseDateString = (dateStr: string | undefined): string => {
-    if (!dateStr) return '';
-
-    try {
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) {
-        console.error('Invalid date string:', dateStr);
-        return '';
-      }
-      return formatDateToYYYYMMDD(date);
-    } catch (error) {
-      console.error('Error parsing date string:', error);
-      return '';
-    }
-  };
-
-  const today = formatDateToYYYYMMDD(new Date());
 
   const [formData, setFormData] = useState<ProjectFormData>({
     name: project?.name || '',
@@ -76,61 +44,35 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     createdAt: project?.createdAt || '',
     updatedAt: project?.updatedAt || '',
     typeOfClient: project?.typeOfClient || '',
-    estimatedCost: project?.estimatedCost || 0,
-    fundingStream: project?.fundingStream || 'Lumpsum',
+    estimatedProjectCost: project?.estimatedProjectCost || 0,
     // Parse dates to ensure consistent format
-    startDate: parseDateString(project?.startDate) || today, // Default to today's date if no project data
-    endDate: parseDateString(project?.endDate) || '',
+    startDate: formatDateForInput(project?.startDate) || formatDateForInput(new Date()), // Default to today's date if no project data
+    endDate: formatDateForInput(project?.endDate) || '',
     currency: project?.currency || 'INR',
-    budget: project?.budget || 0,
+    estimatedProjectFee: project?.estimatedProjectFee || 0,
     priority: project?.priority || '',
     regionalManagerId: project?.regionalManagerId || "",
     letterOfAcceptance:project?.letterOfAcceptance|| false,
     opportunityTrackingId: project?.opportunityTrackingId || 0,
-    feeType: project?.feeType || ''
+    feeType: project?.feeType || 'Lumpsum',
+    percentage: project?.percentage || 0,
   })
+
+  useEffect(() => {
+    if (formData.feeType === 'Percentage') {
+      const fee = percentageCalculation(formData.percentage || 0, Number(formData.estimatedProjectCost));
+      setFormData(prev => ({ ...prev, estimatedProjectFee: fee }));
+    }
+  }, [formData.percentage, formData.estimatedProjectCost, formData.feeType]);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    // Handle date inputs
-    if (name === 'startDate' || name === 'endDate') {
-      try {
-        // Validate the date format
-        const dateValue = value ? value : '';
-
-        // If it's a valid date or empty, update the form
-        setFormData(prev => ({
-          ...prev,
-          [name]: dateValue
-        }));
-
-        // If it's the start date, we may need to adjust the end date
-        if (name === 'startDate' && dateValue && formData.endDate) {
-          // Check if end date is now before start date
-          if (formData.endDate <= dateValue) {
-            // Calculate the day after the new start date
-            const nextDay = new Date(new Date(dateValue).setDate(new Date(dateValue).getDate() + 1));
-            const nextDayFormatted = formatDateToYYYYMMDD(nextDay);
-
-            // Update end date to be the day after start date
-            setFormData(prev => ({
-              ...prev,
-              endDate: nextDayFormatted
-            }));
-          }
-        }
-      } catch (error) {
-        console.error(`Error handling date change for ${name}:`, error);
-      }
-    } else {
-      // For all other inputs
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
 const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,62 +86,22 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      // Get the current start date or default to today
-      const startDate = formData.startDate || formatDateToYYYYMMDD(new Date());
-
-      // Ensure start date is in correct format
-      const startDateObj = new Date(startDate);
-      const formattedStartDate = formatDateToYYYYMMDD(startDateObj);
-
-      // Calculate the day after the start date for minimum end date
-      const nextDay = new Date(startDateObj);
-      nextDay.setDate(nextDay.getDate() + 1);
-      const nextDayFormatted = formatDateToYYYYMMDD(nextDay);
-
-      // If end date is missing or is on/before start date, set it to day after start date
-      let endDate = formData.endDate || nextDayFormatted;
-
-      // Convert dates to Date objects for proper comparison
-      const endDateObj = new Date(endDate);
-
-      // Compare dates properly (using timestamp comparison)
-      if (endDateObj <= startDateObj || isNaN(endDateObj.getTime())) {
-        endDate = nextDayFormatted;
-      } else {
-        // Ensure end date is in correct format
-        endDate = formatDateToYYYYMMDD(endDateObj);
-      }
-
-      // Ensure all required fields are properly formatted
-      const submissionData = {
-        ...formData,
-        estimatedCost: Number(formData.estimatedCost),
-        budget: Number(formData.budget || 0),
-        projectManagerId: formData.projectManagerId,
-        seniorProjectManagerId: formData.seniorProjectManagerId,
-        regionalManagerId: formData.regionalManagerId,
-        // Ensure date fields are properly formatted
-        startDate: formattedStartDate,
-        endDate: endDate,
-        // Ensure problematic fields are never null or undefined
-        office: formData.office || '',
+    const submissionData: ProjectFormData = {
+      ...formData,
+      estimatedProjectCost: Number(formData.estimatedProjectCost),
+      estimatedProjectFee: Number(formData.estimatedProjectFee || 0),
+      projectManagerId: formData.projectManagerId,
+      seniorProjectManagerId: formData.seniorProjectManagerId,
+      regionalManagerId: formData.regionalManagerId,
+      startDate: parseDateFromInput(formData.startDate || '') || undefined,
+      endDate: parseDateFromInput(formData.endDate || '') || undefined,
+      office: formData.office || '',
         typeOfJob: formData.typeOfJob || '',
         priority: formData.priority || '',
-        // Include other fields that might be missing
-        updatedAt: new Date().toISOString()
-      };
+      updatedAt: new Date().toISOString()
+    };
 
-      console.log('Submitting project with dates:', {
-        startDate: formattedStartDate,
-        endDate: endDate
-      });
-
-      onSubmit(submissionData);
-    } catch (error) {
-      console.error('Error in form submission:', error);
-      // You could add error handling UI here if needed
-    }
+    onSubmit(submissionData);
   };
 
   return (
@@ -359,33 +261,48 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               fullWidth
               select
               label="Fee Type"
-              name="fundingStream"
-              value={formData.fundingStream}
+              name="feeType"
+              value={formData.feeType}
               onChange={handleChange}
             >
               <MenuItem value="Lumpsum">Lumpsum</MenuItem>
-              <MenuItem value="Itemrate">Item Rate</MenuItem>
+              <MenuItem value="Time&Expense">Time & Expense</MenuItem>
+              <MenuItem value="Percentage">Percentage</MenuItem>
             </TextField>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Estimated Cost"
-              name="estimatedCost"
+              label="Estimated Project Cost"
+              name="estimatedProjectCost"
               type="text"
-              value={formData.estimatedCost}
+              value={formData.estimatedProjectCost}
               onChange={handleNumberChange}
               required
             />
           </Grid>
+          {formData.feeType === 'Percentage' && (
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Percentage"
+                name="percentage"
+                type="text"
+                value={formData.percentage}
+                onChange={handleNumberChange}
+                required
+              />
+            </Grid>
+          )}
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Budget"
-              name="budget"
+              label="Estimated Project Fee"
+              name="estimatedProjectFee"
               type="text"
-              value={formData.budget}
+              value={formData.estimatedProjectFee}
               onChange={handleNumberChange}
+              // disabled={formData.feeType === 'Percentage'}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -433,18 +350,16 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               value={formData.endDate}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}
-              // Using the min attribute to ensure end date is AFTER start date, not ON start date
               inputProps={{
-                min: formData.startDate ?
-                  // Add one day to start date to ensure end date is AFTER start date
-                  new Date(new Date(formData.startDate).setDate(new Date(formData.startDate).getDate() + 1)).toISOString().split('T')[0]
-                  :
-                  // If no start date, use tomorrow as minimum
-                  new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]
+                min: formData.startDate ? new Date(new Date(formData.startDate).getTime() + 86400000).toISOString().split('T')[0] : ''
               }}
               required
-              // Add error state for visual feedback with proper date comparison
               error={!!(formData.endDate && formData.startDate && new Date(formData.endDate) <= new Date(formData.startDate))}
+              helperText={
+                (formData.endDate && formData.startDate && new Date(formData.endDate) <= new Date(formData.startDate))
+                  ? "End date must be after start date."
+                  : ""
+              }
             />
           </Grid>
           <Grid item xs={12}>

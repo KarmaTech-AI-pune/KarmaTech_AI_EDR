@@ -16,6 +16,7 @@ import {
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Controller, useFormContext, useFieldArray } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
+import { formatDateForInput, parseDateFromInput } from '../../../../utils/dateUtils';
 
 const LastMonthActionsTab: React.FC = () => {
   const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
@@ -39,24 +40,13 @@ const LastMonthActionsTab: React.FC = () => {
     }
   };
 
-  // Helper function to format date for input
-  const formatDateForInput = (date: Date | null): string => {
-    if (!date) return '';
-    return date.toISOString().split('T')[0];
-  };
-
-  // Helper function to parse date from input
-  const parseDateFromInput = (dateString: string): Date | null => {
-    if (!dateString) return null;
-    return new Date(dateString);
-  };
 
   // Add new last month action row
   const addLastMonthActionRow = () => {
     append({
-      LMactions: "",
-      LMAdate: new Date(),
-      LMAcomments: ""
+      actions: "",
+      date: new Date(),
+      comments: ""
     });
   };
 
@@ -105,7 +95,7 @@ const LastMonthActionsTab: React.FC = () => {
                 <TableRow key={field.id} sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
                   <TableCell>
                     <Controller
-                      name={`lastMonthActions.${index}.LMactions`}
+                      name={`lastMonthActions.${index}.actions`}
                       control={control}
                       render={({ field }) => (
                         <TextField
@@ -114,8 +104,8 @@ const LastMonthActionsTab: React.FC = () => {
                           size="small"
                           placeholder="Action Description"
                           value={field.value || ''}
-                          error={!!errors.lastMonthActions?.[index]?.LMactions}
-                          helperText={errors.lastMonthActions?.[index]?.LMactions?.message}
+                          error={!!errors.lastMonthActions?.[index]?.actions}
+                          helperText={errors.lastMonthActions?.[index]?.actions?.message}
                           sx={textFieldStyle}
                         />
                       )}
@@ -123,7 +113,7 @@ const LastMonthActionsTab: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Controller
-                      name={`lastMonthActions.${index}.LMAdate`}
+                      name={`lastMonthActions.${index}.date`}
                       control={control}
                       render={({ field }) => (
                         <TextField
@@ -133,8 +123,8 @@ const LastMonthActionsTab: React.FC = () => {
                           type="date"
                           value={formatDateForInput(field.value)}
                           onChange={(e) => field.onChange(parseDateFromInput(e.target.value))}
-                          error={!!errors.lastMonthActions?.[index]?.LMAdate}
-                          helperText={errors.lastMonthActions?.[index]?.LMAdate?.message}
+                          error={!!errors.lastMonthActions?.[index]?.date}
+                          helperText={errors.lastMonthActions?.[index]?.date?.message}
                           sx={textFieldStyle}
                           slotProps={{
                             inputLabel: {
@@ -147,7 +137,7 @@ const LastMonthActionsTab: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Controller
-                      name={`lastMonthActions.${index}.LMAcomments`}
+                      name={`lastMonthActions.${index}.comments`}
                       control={control}
                       render={({ field }) => (
                         <TextField
@@ -156,8 +146,8 @@ const LastMonthActionsTab: React.FC = () => {
                           size="small"
                           placeholder="Comments"
                           value={field.value || ''}
-                          error={!!errors.lastMonthActions?.[index]?.LMAcomments}
-                          helperText={errors.lastMonthActions?.[index]?.LMAcomments?.message}
+                          error={!!errors.lastMonthActions?.[index]?.comments}
+                          helperText={errors.lastMonthActions?.[index]?.comments?.message}
                           sx={textFieldStyle}
                         />
                       )}

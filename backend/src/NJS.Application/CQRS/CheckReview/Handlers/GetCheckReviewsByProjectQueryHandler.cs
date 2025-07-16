@@ -1,12 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.CheckReview.Queries;
 using NJS.Application.DTOs;
 using NJS.Domain.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Application.CQRS.CheckReview.Handlers
 {
@@ -22,6 +23,7 @@ namespace NJS.Application.CQRS.CheckReview.Handlers
         public async Task<IEnumerable<CheckReviewDto>> Handle(GetCheckReviewsByProjectQuery request, CancellationToken cancellationToken)
         {
             var checkReviews = await _context.CheckReviews
+                .AsNoTracking()
                 .Where(cr => cr.ProjectId == request.ProjectId)
                 .ToListAsync(cancellationToken);
 

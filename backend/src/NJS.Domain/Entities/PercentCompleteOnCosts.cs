@@ -7,6 +7,5 @@ namespace NJS.Domain.Entities
         public BudgetTable BudgetTable { get; set; }
         public decimal RevenueFee { get; set; }
         public decimal Cost { get; set; }
-        public decimal ProfitPercentage { get; set; }
     }
 }

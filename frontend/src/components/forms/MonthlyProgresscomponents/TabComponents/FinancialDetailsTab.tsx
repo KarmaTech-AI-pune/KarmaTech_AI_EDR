@@ -1,254 +1,130 @@
-import React, { useEffect, useContext } from "react";
+import React from "react";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { Controller, useFormContext } from "react-hook-form";
-import { Grid, Paper, TextField, Typography, CircularProgress } from "@mui/material";
+import { Control, Controller, useFormContext } from "react-hook-form";
+import { Grid, Paper, TextField, Typography, FormControlLabel, Radio, RadioGroup } from "@mui/material";
+import textFieldStyle from "../../../../theme/textFieldStyle";
 import { formatCurrency } from "../../../../utils/MonthlyProgress/monthlyProgressUtils";
-import { projectManagementAppContext } from "../../../../App";
-import { getJobStartFormByProjectId, getWBSResourceData } from "../../../../services/jobStartFormApi";
+
+interface FormFieldProps {
+  name: keyof MonthlyProgressSchemaType['financialAndContractDetails'];
+  label: string;
+  control: Control<MonthlyProgressSchemaType>;
+  readOnly?: boolean;
+  isCurrency?: boolean;
+}
+
+const FormField: React.FC<FormFieldProps> = ({ name, label, control, readOnly = false, isCurrency = false }) => {
+  const { formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+  const error = errors.financialAndContractDetails?.[name];
+
+  return (
+    <Controller
+      name={`financialAndContractDetails.${name}`}
+      control={control}
+      render={({ field }) => (
+        <TextField
+          fullWidth
+          label={label}
+          type="text"
+          value={isCurrency ? formatCurrency(Number(field.value ?? 0)) : (field.value ?? '')}
+          error={!!error}
+          helperText={error?.message || ''}
+          margin="normal"
+          InputProps={{
+            readOnly,
+          }}
+          sx={{
+            ...textFieldStyle,
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: readOnly ? '#f5f5f5' : 'inherit',
+            },
+          }}
+        />
+      )}
+    />
+  );
+};
+
+interface SectionProps {
+  title: string;
+  fields: Array<{
+    name: keyof MonthlyProgressSchemaType['financialAndContractDetails'];
+    label: string;
+    readOnly?: boolean;
+    isCurrency?: boolean;
+  }>;
+  control: Control<MonthlyProgressSchemaType>;
+}
+
+const Section: React.FC<SectionProps> = ({ title, fields, control }) => (
+  <Grid item xs={12} md={4}>
+    <Paper elevation={1} sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom color="primary">
+        {title}
+      </Typography>
+      {fields.map(({ name, label, readOnly, isCurrency }) => (
+        <FormField
+          key={name}
+          name={name}
+          label={label}
+          readOnly={readOnly}
+          control={control}
+          isCurrency={isCurrency}
+        />
+      ))}
+    </Paper>
+  </Grid>
+);
 
 const FinancialDetailsTab: React.FC = () => {
-    const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
-    const context = useContext(projectManagementAppContext);
-    const projectId = context?.selectedProject?.id?.toString();
-    const [loading, setLoading] = React.useState<boolean>(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const [wbsResourcesLoading, setWbsResourcesLoading] = React.useState<boolean>(false);
-    const [wbsResourcesError, setWbsResourcesError] = React.useState<string | null>(null);
+  const { control } = useFormContext<MonthlyProgressSchemaType>();
 
-    // Watch for calculation fields
-    const net = watch("financialDetails.net");
-    const serviceTax = watch("financialDetails.serviceTax");
-    const odcs = watch("financialDetails.budgetOdcs");
-    const staff = watch("financialDetails.budgetStaff");
+  const sections: SectionProps[] = [
+    {
+      title: "Fees",
+      control,
+      fields: [
+        { name: "net", label: "Net", readOnly: true, isCurrency: true },
+        { name: "serviceTax", label: "Service Tax (%)", readOnly: true },
+        { name: "feeTotal", label: "Total", readOnly: true, isCurrency: true },
+      ],
+    },
+    {
+      title: "Budget Costs",
+      control,
+      fields: [
+        { name: "budgetOdcs", label: "ODCs", readOnly: true, isCurrency: true },
+        { name: "budgetStaff", label: "Staff", readOnly: true, isCurrency: true },
+        { name: "budgetSubTotal", label: "Sub Total", readOnly: true, isCurrency: true },
+      ],
+    },
+  ];
 
-    // Fetch Job Start Form data when component mounts
-    useEffect(() => {
-        if (projectId) {
-            const fetchJobStartFormData = async () => {
-                try {
-                    setLoading(true);
-                    setError(null);
-                    const data = await getJobStartFormByProjectId(projectId);
-                    if (data && Array.isArray(data) && data.length > 0) {
-                        const jobStartForm = data[0];
-                        // Extract values and set them in the form
-                        setValue("financialDetails.net", jobStartForm.projectFees || null);
-                        setValue("financialDetails.serviceTax", jobStartForm.serviceTaxPercentage || null);
-                        setValue("budgetTable.originalBudget.cost", jobStartForm.profit || 0)
-                        setValue("budgetTable.originalBudget.revenueFee", jobStartForm.projectFees || 0)
-                        setValue("budgetTable.originalBudget.profitPercentage", jobStartForm.projectFees || 0)
-                        setValue("budgetTable.currentBudgetInMIS.revenueFee", jobStartForm.projectFees || 0)
-                    }
-                } catch (error) {
-                    console.error("Error fetching Job Start Form data:", error);
-                    setError("Failed to load Job Start Form data");
-                } finally {
-                    setLoading(false);
-                }
-            };
-            
-            fetchJobStartFormData();
-        }
-    }, [projectId, setValue]);
-
-    // Fetch WBS resource data when component mounts
-    useEffect(() => {
-        if (projectId) {
-            const fetchWBSResourceData = async () => {
-                try {
-                    setWbsResourcesLoading(true);
-                    setWbsResourcesError(null);
-                    
-                    const wbsData = await getWBSResourceData(projectId);
-                    
-                    // Process the data to extract budgetOdcs and budgetStaff
-                    if (wbsData && wbsData.resourceAllocations) {
-                        // Calculate total ODC costs (taskType === 1)
-                        const totalODCs = wbsData.resourceAllocations
-                            .filter((allocation: any) => allocation.taskType === 1)
-                            .reduce((sum: number, allocation: any) => sum + allocation.totalCost, 0);
-                            
-                        // Calculate total Staff costs (taskType === 0)
-                        const totalStaff = wbsData.resourceAllocations
-                            .filter((allocation: any) => allocation.taskType === 0)
-                            .reduce((sum: number, allocation: any) => sum + allocation.totalCost, 0);
-                        
-                        // Set the values in the form
-                        setValue("financialDetails.budgetOdcs", totalODCs);
-                        setValue("financialDetails.budgetStaff", totalStaff);
-                    }
-                } catch (error) {
-                    console.error("Error fetching WBS resource data:", error);
-                    setWbsResourcesError("Failed to load WBS resource data");
-                } finally {
-                    setWbsResourcesLoading(false);
-                }
-            };
-            
-            fetchWBSResourceData();
-        }
-    }, [projectId, setValue]);
-
-    // Auto-calculate totals
-    useEffect(() => {
-        if (net != null && serviceTax != null) {
-            const feeTotal = net + (net * serviceTax / 100);
-            setValue("financialDetails.feeTotal", feeTotal);
-        }
-    }, [net, serviceTax, setValue]);
-
-    useEffect(() => {
-        if (odcs != null && staff != null) {
-            const budgetSubTotal = odcs + staff;
-            setValue("financialDetails.BudgetSubTotal", budgetSubTotal);
-        }
-    }, [odcs, staff, setValue]);
-
-
-    return (
-        <Grid container spacing={3}>
-            {(loading || wbsResourcesLoading) && (
-                <Grid item xs={12}>
-                    <CircularProgress size={24} sx={{ ml: 2 }} />
-                </Grid>
-            )}
-            {(error || wbsResourcesError) && (
-                <Grid item xs={12}>
-                    <Typography color="error">{error || wbsResourcesError}</Typography>
-                </Grid>
-            )}
-            <Grid item xs={12} md={6}>
+  return (
+    <Grid container spacing={3}>
+      {sections.map(section => (
+        <Section key={section.title} {...section} />
+      ))}
+      <Grid item xs={12} md={4}>
                 <Paper elevation={1} sx={{ p: 2 }}>
-                    <Typography variant="h6" gutterBottom color="primary">Fees</Typography>
+                    <Typography variant="h6" gutterBottom color="primary">
+                    Contract Type
+                    </Typography>
                     <Controller
-                        name="financialDetails.net"
+                        name="financialAndContractDetails.contractType"
                         control={control}
                         render={({ field }) => (
-                                <TextField
-                                    fullWidth
-                                    label="Net"
-                                    type="text"
-                                    {...field}
-                                    error={!!errors.financialDetails?.net}
-                                    helperText={errors.financialDetails?.net?.message || ''}
-                                    value={field.value != null ? formatCurrency(field.value) : ''}
-                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                                    InputProps={{
-                                        readOnly: true,
-                                    }}
-                                    sx={{ mb: 2 }}
-                                />
-                        )}
-                    />
-                    <Controller
-                        name="financialDetails.serviceTax"
-                        control={control}
-                        render={({ field }) => (
-                        
-                                <TextField
-                                    fullWidth
-                                    label="Service Tax (%)"
-                                    error={!!errors.financialDetails?.serviceTax}
-                                    helperText={errors.financialDetails?.serviceTax?.message || ''}
-                                    {...field}
-                                    value={field.value || ''}
-                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                                    InputProps={{
-                                        readOnly: true,
-                                    }}
-                                    sx={{ mb: 2 }}
-                                />
-                        )}
-                    />
-                    <Controller
-                        name="financialDetails.feeTotal"
-                        control={control}
-                        render={({ field }) => (
-                                <TextField
-                                    fullWidth
-                                    label="Total"
-                                    type="text"
-                                    error={!!errors.financialDetails?.feeTotal}
-                                    helperText={errors.financialDetails?.feeTotal?.message || ''}
-                                    {...field}
-                                    value={field.value != null ? formatCurrency(field.value) : ''}
-                                    InputProps={{
-                                        readOnly: true,
-                                    }}
-                                    sx={{ mb: 2 }}
-                                />
+                            <RadioGroup value={field.value || ''}>
+                                <FormControlLabel value="lumpsum" control={<Radio readOnly />} label="Lumpsum" />
+                                <FormControlLabel value="timeAndExpense" control={<Radio readOnly />} label="Time & Expense" />
+                                <FormControlLabel value="percentage" control={<Radio readOnly />} label="Percentage" />
+                            </RadioGroup>
                         )}
                     />
                 </Paper>
             </Grid>
-
-            <Grid item xs={12} md={6}>
-                <Paper elevation={1} sx={{ p: 2 }}>
-                    <Typography variant="h6" gutterBottom color="primary">Budget Costs</Typography>
-                    <Controller
-                        name="financialDetails.budgetOdcs"
-                        control={control}
-                        render={({ field }) => (
-                                <TextField
-                                    fullWidth
-                                    label="ODCs"
-                                    type="text"
-                                    error={!!errors.financialDetails?.budgetOdcs}
-                                    helperText={errors.financialDetails?.budgetOdcs?.message || ''}
-                                    {...field}
-                                    value={field.value != null ? formatCurrency(field.value) : ''}
-                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                                    InputProps={{
-                                        readOnly: true,
-                                    }}
-                                    sx={{ mb: 2 }}
-                                />
-                        )}
-                    />
-                    <Controller
-                        name="financialDetails.budgetStaff"
-                        control={control}
-                        render={({ field }) => (
-                        
-                                <TextField
-                                    fullWidth
-                                    label="Staff"
-                                    type="text"
-                                    error={!!errors.financialDetails?.budgetStaff}
-                                    helperText={errors.financialDetails?.budgetStaff?.message || ''}
-                                    {...field}
-                                    value={field.value != null ? formatCurrency(field.value) : ''}
-                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                                    InputProps={{
-                                        readOnly: true,
-                                    }}
-                                    sx={{ mb: 2 }}
-                                />
-                        )}
-                    />
-                    <Controller
-                        name="financialDetails.BudgetSubTotal"
-                        control={control}
-                        render={({ field }) => (
-                                <TextField
-                                    fullWidth
-                                    label="Sub Total"
-                                    type="text"
-                                    error={!!errors.financialDetails?.BudgetSubTotal}
-                                    helperText={errors.financialDetails?.BudgetSubTotal?.message || ''}
-                                    {...field}
-                                    value={field.value != null ? formatCurrency(field.value) : ''}
-                                    InputProps={{
-                                        readOnly: true,
-                                    }}
-                                    sx={{ mb: 2 }}
-                                />
-                        )}
-                    />
-                </Paper>
-            </Grid>
-        </Grid>
-    );
+    </Grid>
+  );
 };
 
 export default FinancialDetailsTab;

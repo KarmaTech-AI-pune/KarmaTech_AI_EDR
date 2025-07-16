@@ -26,6 +26,8 @@ export interface WBSRowData {
   unit?: string;
   resourceName?: string | null;
   resourceUnit?: string | null;
+  resource_role: string | null; // Store role ID
+  resource_role_name?: string | null; // Display role name
 }
 
 export interface WBSChildTotals {

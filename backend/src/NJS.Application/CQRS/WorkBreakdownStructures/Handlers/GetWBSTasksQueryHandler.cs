@@ -29,6 +29,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 .Include(t => t.WorkBreakdownStructure)
                 .Include(t => t.UserWBSTasks)
                     .ThenInclude(ut => ut.User)
+                .Include(t => t.UserWBSTasks)
+                    .ThenInclude(ut => ut.ResourceRole)
                 .Include(t => t.MonthlyHours)
                 .ToListAsync(cancellationToken);
 
@@ -59,6 +61,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 ResourceName = t.TaskType == TaskType.ODC ? t.UserWBSTasks?.FirstOrDefault()?.Name : null,
                 // Map ResourceUnit for both Manpower and ODC tasks
                 ResourceUnit = t.UserWBSTasks?.FirstOrDefault()?.Unit,
+                ResourceRoleId = t.UserWBSTasks?.FirstOrDefault()?.ResourceRoleId ?? string.Empty,
+                ResourceRoleName = t.UserWBSTasks?.FirstOrDefault()?.ResourceRole?.Name ?? string.Empty,
 
                 // Common for both types
                 CostRate = t.UserWBSTasks?.FirstOrDefault()?.CostRate ?? 0,
