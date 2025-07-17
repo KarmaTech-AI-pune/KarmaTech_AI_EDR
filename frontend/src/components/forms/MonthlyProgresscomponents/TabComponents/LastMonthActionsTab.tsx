@@ -45,7 +45,7 @@ const LastMonthActionsTab: React.FC = () => {
   const addLastMonthActionRow = () => {
     append({
       actions: "",
-      date: new Date(),
+      date: formatDateForInput(new Date()),
       comments: ""
     });
   };

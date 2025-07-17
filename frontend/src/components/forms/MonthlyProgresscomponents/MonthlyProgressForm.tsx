@@ -40,7 +40,7 @@ import {
 import {
   getCurrentMonthYear,
 } from "../../../utils/MonthlyProgress/monthlyProgressUtils";
-import { getAggregatedMonthlyProgressData, getMonthlyProgressData } from "../../../services/monthlyProgressDataService";
+import { getMonthlyProgressData } from "../../../services/monthlyProgressDataService";
 import { FormControlsProvider } from "../../../hooks/MontlyProgress/useForm";
 import FormHeader from "./FormHeader";
 import FormFooter from "./FormFooter";
