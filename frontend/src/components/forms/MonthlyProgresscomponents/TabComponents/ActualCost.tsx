@@ -1,280 +1,148 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { Controller, useFormContext } from "react-hook-form";
-import {
-  Grid,
-  Paper,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Controller, useFormContext, Control } from "react-hook-form";
+import { Grid, Paper, TextField, Typography } from "@mui/material";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 
-const ActualCost: React.FC = () => {
-  const { control, formState: { errors }, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
+interface FormFieldProps {
+  name: keyof MonthlyProgressSchemaType['actualCost'];
+  label: string;
+  control: Control<MonthlyProgressSchemaType>;
+  readOnly?: boolean;
+  value?: number;
+}
 
-  // Watch actual costs to calculate subtotal
+const FormField: React.FC<FormFieldProps> = ({ name, label, control, readOnly = false, value }) => {
+  const { formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
+  const error = errors.actualCost?.[name];
+
+  return (
+    <Controller
+      name={`actualCost.${name}`}
+      control={control}
+      render={({ field }) => (
+        <TextField
+          fullWidth
+          label={label}
+          type="number"
+          value={value !== undefined ? value : field.value}
+          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          error={!!error}
+          helperText={error?.message || ''}
+          margin="normal"
+          InputProps={{
+            readOnly,
+          }}
+          sx={{
+            ...textFieldStyle,
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: readOnly ? '#f5f5f5' : 'inherit',
+            },
+          }}
+        />
+      )}
+    />
+  );
+};
+
+interface SectionProps {
+  title: string;
+  fields: Array<{
+    name: keyof MonthlyProgressSchemaType['actualCost'];
+    label: string;
+    readOnly?: boolean;
+    value?: number;
+  }>;
+  control: Control<MonthlyProgressSchemaType>;
+}
+
+const Section: React.FC<SectionProps> = ({ title, fields, control }) => (
+  <Grid item xs={12} md={4}>
+    <Paper elevation={1} sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom color="primary">
+        {title}
+      </Typography>
+      {fields.map(({ name, label, readOnly, value }) => (
+        <FormField
+          key={name}
+          name={name}
+          label={label}
+          readOnly={readOnly}
+          value={value}
+          control={control}
+        />
+      ))}
+    </Paper>
+  </Grid>
+);
+
+const ActualCost: React.FC = () => {
+  const { control, watch, setValue } = useFormContext<MonthlyProgressSchemaType>();
+
   const actualOdcs = watch('actualCost.actualOdc') || 0;
   const actualStaff = watch('actualCost.actualStaff') || 0;
-  const priorCumulativeOdc = watch('actualCost.priorCumulativeOdc') || 0;
-  const priorCumulativeStaff = watch('actualCost.priorCumulativeStaff') || 0;
+  const priorCumulativeOdc = watch('actualCost.priorCumulativeOdc');
+  const priorCumulativeStaff = watch('actualCost.priorCumulativeStaff');
 
-  const calculatedSubtotal = actualOdcs + actualStaff;
-  const priorCumulativeTotal = priorCumulativeOdc + priorCumulativeStaff;
-  const totalCumulativeOdc = priorCumulativeOdc + actualOdcs;
-  const totalCumulativeStaff = priorCumulativeStaff + actualStaff;
-  const totalCumulativeCost = totalCumulativeOdc + totalCumulativeStaff;
-  
-  // Update the actualSubtotal field whenever the calculated value changes
-  useEffect(() => {
-    setValue('actualCost.actualSubtotal', calculatedSubtotal);
-  }, [calculatedSubtotal, setValue]);
-
-  useEffect(() => {
-    setValue('actualCost.priorCumulativeTotal', priorCumulativeTotal);
-  }, [priorCumulativeTotal, setValue]);
-
-  useEffect(() => {
-    setValue('actualCost.totalCumulativeOdc', totalCumulativeOdc);
-  }, [totalCumulativeOdc, setValue]);
+  const calculatedValues = useMemo(() => {
+    const priorCumulativeTotal = (priorCumulativeOdc || 0) + (priorCumulativeStaff || 0);
+    const actualSubtotal = actualOdcs + actualStaff;
+    const totalCumulativeOdc = (priorCumulativeOdc || 0) + actualOdcs;
+    const totalCumulativeStaff = (priorCumulativeStaff || 0) + actualStaff;
+    const totalCumulativeCost = totalCumulativeOdc + totalCumulativeStaff;
+    return {
+      priorCumulativeTotal,
+      actualSubtotal,
+      totalCumulativeOdc,
+      totalCumulativeStaff,
+      totalCumulativeCost,
+    };
+  }, [priorCumulativeOdc, priorCumulativeStaff, actualOdcs, actualStaff]);
 
   useEffect(() => {
-    setValue('actualCost.totalCumulativeStaff', totalCumulativeStaff);
-  }, [totalCumulativeStaff, setValue]);
+    setValue('actualCost.priorCumulativeTotal', calculatedValues.priorCumulativeTotal);
+    setValue('actualCost.actualSubtotal', calculatedValues.actualSubtotal);
+    setValue('actualCost.totalCumulativeOdc', calculatedValues.totalCumulativeOdc);
+    setValue('actualCost.totalCumulativeStaff', calculatedValues.totalCumulativeStaff);
+    setValue('actualCost.totalCumulativeCost', calculatedValues.totalCumulativeCost);
+  }, [calculatedValues, setValue]);
 
-  useEffect(() => {
-    setValue('actualCost.totalCumulativeCost', totalCumulativeCost);
-  }, [totalCumulativeCost, setValue]);
+  const sections: SectionProps[] = [
+    {
+      title: "Prior Cumulative Actual Cost",
+      control,
+      fields: [
+        { name: "priorCumulativeOdc", label: "ODCs", readOnly: true, value: priorCumulativeOdc ?? 0 },
+        { name: "priorCumulativeStaff", label: "Staff", readOnly: true, value: priorCumulativeStaff ?? 0 },
+        { name: "priorCumulativeTotal", label: "Subtotal", readOnly: true, value: calculatedValues.priorCumulativeTotal },
+      ],
+    },
+    {
+      title: "Current Month Actual Costs",
+      control,
+      fields: [
+        { name: "actualOdc", label: "ODCs" },
+        { name: "actualStaff", label: "Staff" },
+        { name: "actualSubtotal", label: "Subtotal", readOnly: true, value: calculatedValues.actualSubtotal },
+      ],
+    },
+    {
+      title: "Total Cumulative Actual Cost",
+      control,
+      fields: [
+        { name: "totalCumulativeOdc", label: "ODCs", readOnly: true, value: calculatedValues.totalCumulativeOdc },
+        { name: "totalCumulativeStaff", label: "Staff", readOnly: true, value: calculatedValues.totalCumulativeStaff },
+        { name: "totalCumulativeCost", label: "Subtotal", readOnly: true, value: calculatedValues.totalCumulativeCost },
+      ],
+    },
+  ];
 
- 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} md={4}>
-        <Paper elevation={1} sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom color="primary">
-            Prior Cumulative
-          </Typography>
-
-          <Controller
-            name="actualCost.priorCumulativeOdc"
-            control={control}
-            render={({ field }) => (
-                <TextField
-                  fullWidth
-                  label="ODCs"
-                  type="number"
-                  value={field.value}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                  error={!!errors.actualCost?.priorCumulativeOdc}
-                  helperText={errors.actualCost?.priorCumulativeOdc?.message || ''}
-                  sx={textFieldStyle}
-                  margin="normal"
-                />
-            )}
-          />
-
-          <Controller
-            name="actualCost.priorCumulativeStaff"
-            control={control}
-            render={({ field }) => (
-                <TextField
-                  fullWidth
-                  label="Staff"
-                  type="number"
-                  value={field.value}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                  error={!!errors.actualCost?.priorCumulativeStaff}
-                  helperText={errors.actualCost?.priorCumulativeStaff?.message || ''}
-                  sx={textFieldStyle}
-                  margin="normal"
-                />
-            )}
-          />
-
-          <Controller
-            name="actualCost.priorCumulativeTotal"
-            control={control}
-            render={() => (
-                <TextField
-                  fullWidth
-                  label="Subtotal"
-                  type="number"
-                  value={priorCumulativeTotal}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                    }
-                  }}
-                  sx={{
-                    ...textFieldStyle,
-                    '& .MuiOutlinedInput-root': {
-                      ...(textFieldStyle?.['& .MuiOutlinedInput-root'] ? textFieldStyle['& .MuiOutlinedInput-root'] : {}),
-                      backgroundColor: '#f5f5f5',
-                    }
-                  }}
-                  margin="normal"
-                />
-            )}
-          />
-        </Paper>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <Paper elevation={1} sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom color="primary">
-            Actual Costs
-          </Typography>
-
-          <Controller
-            name="actualCost.actualOdc"
-            control={control}
-            render={({ field }) => (
-                <TextField
-                  fullWidth
-                  label="ODCs"
-                  type="number"
-                  value={field.value}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                  error={!!errors.actualCost?.actualOdc}
-                  helperText={errors.actualCost?.actualOdc?.message || ''}
-                  sx={textFieldStyle}
-                  margin="normal"
-                />
-            )}
-          />
-
-          <Controller
-            name="actualCost.actualStaff"
-            control={control}
-            render={({ field }) => (
-                <TextField
-                  fullWidth
-                  label="Staff"
-                  type="number"
-                  value={field.value}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                  error={!!errors.actualCost?.actualStaff}
-                  helperText={errors.actualCost?.actualStaff?.message || ''}
-                  sx={textFieldStyle}
-                  margin="normal"
-                />
-            )}
-          />
-
-          <Controller
-            name="actualCost.actualSubtotal"
-            control={control}
-            render={() => (
-                <TextField
-                  fullWidth
-                  label="Subtotal"
-                  type="number"
-                  value={calculatedSubtotal}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                    }
-                  }}
-                  sx={{
-                    ...textFieldStyle,
-                    '& .MuiOutlinedInput-root': {
-                      ...(textFieldStyle?.['& .MuiOutlinedInput-root'] ? textFieldStyle['& .MuiOutlinedInput-root'] : {}),
-                      backgroundColor: '#f5f5f5',
-                    }
-                  }}
-                  margin="normal"
-                />
-            )}
-          />
-        </Paper>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <Paper elevation={1} sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom color="primary">
-            Total Cumulative
-          </Typography>
-
-          <Controller
-            name="actualCost.totalCumulativeOdc"
-            control={control}
-            render={() => (
-                <TextField
-                  fullWidth
-                  label="ODCs"
-                  type="number"
-                  value={totalCumulativeOdc}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                    }
-                  }}
-                  sx={{
-                    ...textFieldStyle,
-                    '& .MuiOutlinedInput-root': {
-                      ...(textFieldStyle?.['& .MuiOutlinedInput-root'] ? textFieldStyle['& .MuiOutlinedInput-root'] : {}),
-                      backgroundColor: '#f5f5f5',
-                    }
-                  }}
-                  margin="normal"
-                />
-            )}
-          />
-
-          <Controller
-            name="actualCost.totalCumulativeStaff"
-            control={control}
-            render={() => (
-                <TextField
-                  fullWidth
-                  label="Staff"
-                  type="number"
-                  value={totalCumulativeStaff}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                    }
-                  }}
-                  sx={{
-                    ...textFieldStyle,
-                    '& .MuiOutlinedInput-root': {
-                      ...(textFieldStyle?.['& .MuiOutlinedInput-root'] ? textFieldStyle['& .MuiOutlinedInput-root'] : {}),
-                      backgroundColor: '#f5f5f5',
-                    }
-                  }}
-                  margin="normal"
-                />
-            )}
-          />
-
-          <Controller
-            name="actualCost.totalCumulativeCost"
-            control={control}
-            render={() => (
-                <TextField
-                  fullWidth
-                  label="Subtotal"
-                  type="number"
-                  value={totalCumulativeCost}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                    }
-                  }}
-                  sx={{
-                    ...textFieldStyle,
-                    '& .MuiOutlinedInput-root': {
-                      ...(textFieldStyle?.['& .MuiOutlinedInput-root'] ? textFieldStyle['& .MuiOutlinedInput-root'] : {}),
-                      backgroundColor: '#f5f5f5',
-                    }
-                  }}
-                  margin="normal"
-                />
-            )}
-          />
-        </Paper>
-      </Grid>
+      {sections.map(section => (
+        <Section key={section.title} {...section} />
+      ))}
     </Grid>
   );
 };

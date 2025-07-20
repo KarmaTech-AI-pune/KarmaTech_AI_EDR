@@ -1,4 +1,4 @@
-﻿//backend/NJS.Domain.Tests/UnitOfWorkTests.cs
+//backend/NJS.Domain.Tests/UnitOfWorkTests.cs
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using NJS.Domain.Database;
@@ -31,7 +31,7 @@ namespace NJS.Domain.Tests
             {
                 Name = "Test Project",
                 ClientName = "Metropolis Municipality",
-                EstimatedCost = 5000000,
+                EstimatedProjectCost = 5000000,
                 StartDate = new DateTime(2023, 1, 1),
                 EndDate = new DateTime(2024, 12, 31),
                 Status = ProjectStatus.InProgress,

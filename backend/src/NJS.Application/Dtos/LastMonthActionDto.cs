@@ -4,8 +4,8 @@ namespace NJS.Application.DTOs
 {
     public class LastMonthActionDto
     {
-        public string LMactions { get; set; }
-        public DateTime LMAdate { get; set; }
-        public string LMAcomments { get; set; }
+        public string? Actions { get; set; }
+        public DateTime? Date { get; set; }
+        public string? Comments { get; set; }
     }
 }

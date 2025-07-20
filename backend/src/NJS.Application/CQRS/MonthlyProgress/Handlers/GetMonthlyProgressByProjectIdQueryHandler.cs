@@ -22,6 +22,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
         {
             var monthlyProgresses = await _monthlyProgressRepository.GetByProjectIdAsync(request.ProjectId);
 
+            monthlyProgresses = monthlyProgresses.OrderBy(mp => mp.Year).ThenBy(mp => mp.Month).ToList();
+
             return monthlyProgresses.Select(mp => new MonthlyProgressDto
             {
                 Id = mp.Id,
@@ -36,13 +38,10 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     BudgetOdcs = mp.FinancialDetails.BudgetOdcs,
                     BudgetStaff = mp.FinancialDetails.BudgetStaff,
                     BudgetSubTotal = mp.FinancialDetails.BudgetSubTotal,
-                    ContractType = mp.FinancialDetails.ContractType,
-                    Percentage = mp.FinancialDetails.Percentage
+                    ContractType = mp.FinancialDetails.ContractType
                 } : null,
                 ActualCost = mp.ContractAndCost != null ? new ContractAndCostDto
                 {
-                    ContractType = mp.ContractAndCost.ContractType,
-                    Percentage = mp.ContractAndCost.Percentage,
                     PriorCumulativeOdc = mp.ContractAndCost.PriorCumulativeOdc,
                     PriorCumulativeStaff = mp.ContractAndCost.PriorCumulativeStaff,
                     PriorCumulativeTotal = mp.ContractAndCost.PriorCumulativeTotal,
@@ -61,6 +60,8 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                     ActualctcODC = mp.CTCEAC.ActualctcODC,
                     ActualCtcStaff = mp.CTCEAC.ActualCtcStaff,
                     ActualCtcSubtotal = mp.CTCEAC.ActualCtcSubtotal,
+                    EacOdc = mp.CTCEAC.EacOdc,
+                    EacStaff = mp.CTCEAC.EacStaff,
                     TotalEAC = mp.CTCEAC.TotalEAC,
                     GrossProfitPercentage = mp.CTCEAC.GrossProfitPercentage
                 } : null,
@@ -124,16 +125,16 @@ namespace NJS.Application.CQRS.MonthlyProgress.Handlers
                 }).ToList(),
                 LastMonthActions = mp.LastMonthActions?.Select(lma => new LastMonthActionDto
                 {
-                    LMactions = lma.LMactions,
-                    LMAdate = lma.LMAdate,
-                    LMAcomments = lma.LMAcomments
+                    Actions = lma.Actions,
+                    Date = lma.Date,
+                    Comments = lma.Comments
                 }).ToList(),
                 CurrentMonthActions = mp.CurrentMonthActions?.Select(cma => new CurrentMonthActionDto
                 {
-                    CMactions = cma.CMactions,
-                    CMAdate = cma.CMAdate,
-                    CMAcomments = cma.CMAcomments,
-                    CMApriority = cma.CMApriority
+                    Actions = cma.Actions,
+                    Date = cma.Date,
+                    Comments = cma.Comments,
+                    Priority = cma.Priority
                 }).ToList(),
                 BudgetTable = mp.BudgetTable != null ? new BudgetTableDto
                 {

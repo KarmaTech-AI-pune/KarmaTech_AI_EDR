@@ -49,6 +49,7 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                 jobStartForm.ProjectFees = command.JobStartFormDto.ProjectFees;
                 jobStartForm.TotalProjectFees = command.JobStartFormDto.TotalProjectFees;
                 jobStartForm.Profit = command.JobStartFormDto.Profit;
+                jobStartForm.ProfitPercentage = command.JobStartFormDto.ProfitPercentage;
                 jobStartForm.UpdatedDate = DateTime.UtcNow; // Set UpdatedDate
 
                 // --- Update Selections (Clear and Add strategy) ---

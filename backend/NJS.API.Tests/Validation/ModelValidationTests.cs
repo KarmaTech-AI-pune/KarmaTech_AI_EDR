@@ -48,7 +48,7 @@ namespace NJS.API.Tests.Validation
                 // Name is missing
                 // ClientName is missing
                // Description = "Test Description",
-                EstimatedCost = 100000
+                EstimatedProjectCost = 100000
                 // Other required fields are missing
             };
 

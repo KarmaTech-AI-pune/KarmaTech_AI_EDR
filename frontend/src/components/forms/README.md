@@ -425,54 +425,6 @@ Example:
 ```
 
 
-## FeasibilityStudyForm.tsx
-
-### Overview
-`FeasibilityStudyForm` is a React component located in `frontend/src/components/forms/FeasibilityStudyForm.tsx`. It serves as a form interface for creating and editing feasibility studies within the project management application.
-
-### Dependencies
-- **@mui/material**: Material-UI library components
-  - TextField: For input fields
-  - Button: For form submission
-
-### Component Structure
-```tsx
-export const FeasibilityStudyForm = () => {
-  // Component implementation
-}
-```
-
-### Current Implementation
-- Basic form structure with Material-UI components
-- Single TextField for "Project Name"
-- Submit button with primary styling
-
-### Planned Features (TODOs)
-1. Form logic and state management implementation
-2. Additional form fields for feasibility study data
-3. Form validation
-4. Submit handler implementation
-
-### Props
-Currently, the component doesn't accept any props. Future implementations may include:
-- Initial data for editing existing feasibility studies
-- Submission handlers
-- Validation rules
-
-### Usage
-The component is designed to be used within the project management workflow for assessing project feasibility. It will be integrated into the broader project management interface.
-
-### Technical Notes
-- Uses Material-UI components for consistent styling
-- Currently in development stage with placeholder functionality
-- Will need integration with backend APIs for data persistence
-
-### Future Development
-1. Implement form state management
-2. Add comprehensive field validation
-3. Connect with backend APIs
-4. Add error handling
-5. Implement success/failure notifications
 
 ## GoNoGoForm.tsx
 
