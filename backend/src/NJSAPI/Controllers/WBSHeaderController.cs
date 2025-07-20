@@ -65,12 +65,8 @@ namespace NJSAPI.Controllers
 		public async Task<ActionResult<WbsWorkflowDto>> GetWBSHeaderStatus(int projectId, TaskType taskType)
 		{
 			var header = await _context.Set<WBSTaskPlannedHourHeader>()
-
-			 .Include(h => h.WBSHistories.OrderByDescending(h => h.ActionDate))
-
-			  .ThenInclude(h => h.Status)
-
-	  .FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskType);
+			 .Include(h => h.WBSHistories.OrderByDescending(h => h.ActionDate).Where(h => !h.IsDeleted))
+              .ThenInclude(h => h.Status).FirstOrDefaultAsync(h => h.ProjectId == projectId && h.TaskType == taskType);
 
 			if (header == null)
 
@@ -80,35 +76,35 @@ namespace NJSAPI.Controllers
 
 			}
 
-			if (header.StatusId == (int)PMWorkflowStatusEnum.Approved)
+            if (header.StatusId == (int)PMWorkflowStatusEnum.Approved)
 			{
 				_logger.LogInformation($"WBS Header {header.Id} is APPROVED, creating a new instance");
 
 				// Increment the version
-				string newVersion = CalculateNextVersion(header.Version);
+				//string newVersion = CalculateNextVersion(header.Version);
 
 				// Create a new WBS header
-				var newHeader = new WBSTaskPlannedHourHeader
-				{
-					ProjectId = header.ProjectId,
-					Version = newVersion,
-					CreatedAt = DateTime.UtcNow,
-					CreatedBy = _userContext.GetCurrentUserId() ?? "System",
-					TaskType = header.TaskType,
-					StatusId = (int)PMWorkflowStatusEnum.Initial // Set to Initial Stage
-				};
+				//var newHeader = new WBSTaskPlannedHourHeader
+				//{
+				//	ProjectId = header.ProjectId,
+				//	Version = newVersion,
+				//	CreatedAt = DateTime.UtcNow,
+				//	CreatedBy = _userContext.GetCurrentUserId() ?? "System",
+				//	TaskType = header.TaskType,
+				//	StatusId = (int)PMWorkflowStatusEnum.Initial // Set to Initial Stage
+				//};
 
-				_context.Set<WBSTaskPlannedHourHeader>().Add(newHeader);
-				await _context.SaveChangesAsync();
+			//_context.Set<WBSTaskPlannedHourHeader>().Add(newHeader);
+				//await _context.SaveChangesAsync();
 
-				_logger.LogInformation($"New WBS Header created with ID {newHeader.Id} and Version {newVersion}");
+				//_logger.LogInformation($"New WBS Header created with ID {newHeader.Id} and Version {newVersion}");
 
 				var result = new WbsWorkflowDto
 				{
-					Id = newHeader.Id,
-					StatusId = newHeader.StatusId,
-					Status = "Initial"
-				};
+					Id = header.Id,
+					StatusId = header.StatusId,
+					Status = "Approved"
+                };
 
 				return Ok(result);
 			}

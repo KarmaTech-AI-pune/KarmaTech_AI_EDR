@@ -101,6 +101,8 @@ namespace NJS.Application.Services
 
             // Add the history entry
             _context.WBSHistories.Add(history);
+            wbsHeader.StatusId = (int)status;
+            _context.WBSTaskPlannedHourHeaders.Update(wbsHeader);
 
             // Save changes to the database
             await _context.SaveChangesAsync(cancellationToken);
