@@ -24,6 +24,8 @@ namespace NJS.Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string CreatedBy { get; set; }
 
+        public TaskType TaskType { get; set; } = TaskType.Manpower;
+
         // Version management
         public int? LatestVersionHistoryId { get; set; }
         public int? ActiveVersionHistoryId { get; set; }

@@ -44,5 +44,6 @@ namespace NJS.Domain.Entities
 
         [ForeignKey("AssignedToId")]
         public User AssignedTo { get; set; }
+        public bool IsDeleted { get; set; } = false;
     }
 }
