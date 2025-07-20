@@ -25,7 +25,7 @@ interface DeleteDialog {
   childCount: number;
 }
 
-interface MonthlyHours {
+interface PlannedHours {
   [year: string]: {
     [month: string]: number;
   };
@@ -65,22 +65,22 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
       // Transform all WBS data first
       const allTransformedRows = wbsData.map((task) => {
-        // Transform monthlyHours from potential array to nested object
-        const transformedMonthlyHours: MonthlyHours = {};
-        if (task.monthlyHours && Array.isArray(task.monthlyHours)) {
-          task.monthlyHours.forEach((monthEntry: any) => {
+        // Transform plannedHours from potential array to nested object
+        const transformedPlannedHours: PlannedHours = {};
+        if (task.plannedHours && Array.isArray(task.plannedHours)) {
+          task.plannedHours.forEach((monthEntry: any) => {
             if (monthEntry && typeof monthEntry === 'object' && monthEntry.year && monthEntry.month && typeof monthEntry.plannedHours === 'number') {
               const yearStr = monthEntry.year.toString();
               const monthName = monthEntry.month;
-              if (!transformedMonthlyHours[yearStr]) {
-                transformedMonthlyHours[yearStr] = {};
+              if (!transformedPlannedHours[yearStr]) {
+                transformedPlannedHours[yearStr] = {};
               }
-              transformedMonthlyHours[yearStr][monthName] = monthEntry.plannedHours;
+              transformedPlannedHours[yearStr][monthName] = monthEntry.plannedHours;
             }
           });
-        } else if (task.monthlyHours && typeof task.monthlyHours === 'object') {
+        } else if (task.plannedHours && typeof task.plannedHours === 'object') {
           // Assume it's already in the correct format or handle other potential formats
-          Object.assign(transformedMonthlyHours, task.monthlyHours);
+          Object.assign(transformedPlannedHours, task.plannedHours);
         }
 
         // Determine if this is an ODC task
@@ -95,7 +95,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
           // Use optional chaining and nullish coalescing for safe access
           name: isOdcTask ? (task.resourceName ?? null) : (task.assignedUserId?.toString() || null),
           costRate: task.costRate || 0,
-          monthlyHours: transformedMonthlyHours,
+          plannedHours: transformedPlannedHours,
           // For ODC tasks, use TotalCost as odc value
           odc: isOdcTask ? task.totalCost : (task.odc || 0),
           // For ODC tasks, set odcHours to TotalHours
@@ -244,10 +244,10 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const calculateAndSetMonths = (rowsToCalculateFrom: WBSRowData[]) => {
       const allMonths = new Set<string>();
       rowsToCalculateFrom.forEach((row) => {
-        if (row.monthlyHours) {
-          Object.keys(row.monthlyHours).forEach(year => {
+        if (row.plannedHours) {
+          Object.keys(row.plannedHours).forEach(year => {
             const yearStr = year.toString().slice(2); // Ensure year is string, then slice
-            Object.keys(row.monthlyHours[year]).forEach(monthName => {
+            Object.keys(row.plannedHours[year]).forEach(monthName => {
               allMonths.add(`${monthName} ${yearStr}`);
             });
           });
@@ -420,7 +420,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       name: null,
       assignedUserId: null, // Initialize assignedUserId field
       costRate: 0,
-      monthlyHours: {},
+      plannedHours: {},
       odc: 0,
       odcHours: 0,
       totalHours: 0,
@@ -661,14 +661,14 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       if (row.id === rowId) {
         const [monthName, yearStr] = month.split(' ');
         const year = `20${yearStr}`; // Assuming yearStr is 'YY'
-        const newMonthlyHours = {
-          ...row.monthlyHours,
+        const newPlannedHours = {
+          ...row.plannedHours,
           [year]: {
-            ...(row.monthlyHours[year] || {}),
+            ...(row.plannedHours[year] || {}),
             [monthName]: hours
           }
         };
-        const totalHours = Object.values(newMonthlyHours)
+        const totalHours = Object.values(newPlannedHours)
           .flatMap(yearHours => Object.values(yearHours))
           .reduce((sum, h) => sum + h, 0);
 
@@ -676,7 +676,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         if (formType === 'odc') {
           return {
             ...row,
-            monthlyHours: newMonthlyHours,
+            plannedHours: newPlannedHours,
             totalHours,
             odcHours: totalHours,
             odc: totalHours * row.costRate, // Calculate ODC cost based on total hours and rate
@@ -687,7 +687,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         // For Manpower form, keep the original logic
         return {
           ...row,
-          monthlyHours: newMonthlyHours,
+          plannedHours: newPlannedHours,
           totalHours,
           totalCost: (totalHours * row.costRate) + row.odc
         };

@@ -1,5 +1,5 @@
 // WBS Task Type Definition
-import { WBSTask, WBSTaskResourceAllocation, MonthlyHour } from "../../models";
+import { WBSTask, WBSTaskResourceAllocation, PlannedHour } from "../../models";
 
 // WBS Task Resource Allocation Type Definition
 
@@ -103,7 +103,7 @@ export const resourceAllocations: WBSTaskResourceAllocation[] = [
   },
 ];
 
-export const monthlyHours: MonthlyHour[] = [
+export const plannedHours: PlannedHour[] = [
   {
     id: "1",
     task_id: "1733290002938",

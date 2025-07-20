@@ -58,7 +58,7 @@ namespace NJS.Application.CQRS.PMWorkflow.Handlers
                     // If RM/RD is rejecting, find the project and get the SPM
                     if (request.EntityType == "WBS")
                     {
-                        var wbsHeader = await _context.Set<Domain.Entities.WBSTaskMonthlyHourHeader>()
+                        var wbsHeader = await _context.Set<Domain.Entities.WBSTaskPlannedHourHeader>()
                             .FirstOrDefaultAsync(w => w.Id == request.EntityId, cancellationToken);
 
                         if (wbsHeader != null)

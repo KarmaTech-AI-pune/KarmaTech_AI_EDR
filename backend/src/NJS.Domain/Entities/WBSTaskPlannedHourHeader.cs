@@ -1,9 +1,9 @@
-﻿using NJS.Domain.Enums;
+using NJS.Domain.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    public class WBSTaskMonthlyHourHeader
+    public class WBSTaskPlannedHourHeader
     {
         public int Id { get; set; }
         public int ProjectId { get; set; }
@@ -15,10 +15,12 @@ namespace NJS.Domain.Entities
         // Status tracking
         public int StatusId { get; set; } = (int)PMWorkflowStatusEnum.Initial; // Default to Initial
 
+        public string Version { get; set; } = "1.0";
+
         [ForeignKey("StatusId")]
         public PMWorkflowStatus Status { get; set; }
 
-        public ICollection<WBSTaskMonthlyHour> MonthlyHours { get; set; } = new HashSet<WBSTaskMonthlyHour>();
+        public ICollection<WBSTaskPlannedHour> PlannedHours { get; set; } = new HashSet<WBSTaskPlannedHour>();
         public ICollection<WBSHistory> WBSHistories { get; set; } = [];
     }
 }

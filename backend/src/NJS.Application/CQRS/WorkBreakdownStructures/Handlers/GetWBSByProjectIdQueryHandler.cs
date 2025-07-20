@@ -29,7 +29,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     Id = w.Id,
                     ProjectId = w.ProjectId,
-                    Version = w.Version,
+                    Version = w.CurrentVersion,
                     IsActive = w.IsActive,
                     CreatedAt = w.CreatedAt,
                     CreatedBy = w.CreatedBy,
@@ -50,11 +50,11 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             EndDate = t.EndDate,
                             TaskType = t.TaskType,
 
-                            MonthlyHours = t.MonthlyHours.Select(mh => new MonthlyHourDto
+                            PlannedHours = t.PlannedHours.Select(ph => new PlannedHourDto
                             {
-                                Year = int.Parse(mh.Year),
-                                Month = mh.Month,
-                                PlannedHours = mh.PlannedHours
+                                Year = int.Parse(ph.Year),
+                                Month = ph.Month,
+                                PlannedHours = ph.PlannedHours
                             }).ToList(),
 
                             // Use null-safe projections
@@ -76,11 +76,11 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                             TotalHours = t.TaskType == TaskType.ODC && t.UserWBSTasks.FirstOrDefault() != null
                                 ? t.UserWBSTasks.FirstOrDefault().TotalHours
-                                : t.MonthlyHours.Sum(mh => mh.PlannedHours),
+                                : t.PlannedHours.Sum(ph => ph.PlannedHours),
 
                             TotalCost = t.TaskType == TaskType.ODC && t.UserWBSTasks.FirstOrDefault() != null
                                 ? t.UserWBSTasks.FirstOrDefault().TotalCost
-                                : (decimal)t.MonthlyHours.Sum(mh => mh.PlannedHours) *
+                                : (decimal)t.PlannedHours.Sum(ph => ph.PlannedHours) *
                                   (t.UserWBSTasks.FirstOrDefault() != null ? t.UserWBSTasks.FirstOrDefault().CostRate : 0)
                         }).ToList()
                 })

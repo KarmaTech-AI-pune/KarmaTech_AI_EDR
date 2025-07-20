@@ -3,38 +3,38 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
+using MediatR;
 using NJS.Application.Dtos;
-using NJS.Domain.Database;
+using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
 using NJS.Domain.Entities;
+using NJS.Domain.Enums;
+using NJS.Domain.Database;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
     /// <summary>
-    /// Handler for GetManpowerResourcesWithMonthlyHoursQuery
+    /// Handler for GetManpowerResourcesWithPlannedHoursQuery
     /// </summary>
-    public class GetManpowerResourcesWithMonthlyHoursQueryHandler : 
-        IRequestHandler<GetManpowerResourcesWithMonthlyHoursQuery, ManpowerResourcesWithMonthlyHoursDto>
+    public class GetManpowerResourcesWithPlannedHoursQueryHandler : 
+        IRequestHandler<GetManpowerResourcesWithPlannedHoursQuery, ManpowerResourcesWithPlannedHoursDto>
     {
         private readonly ProjectManagementContext _context;
         private readonly UserManager<User> _userManager;
-        private readonly ILogger<GetManpowerResourcesWithMonthlyHoursQueryHandler> _logger;
+        private readonly ILogger<GetManpowerResourcesWithPlannedHoursQueryHandler> _logger;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GetManpowerResourcesWithMonthlyHoursQueryHandler"/> class.
+        /// Initializes a new instance of the <see cref="GetManpowerResourcesWithPlannedHoursQueryHandler"/> class.
         /// </summary>
         /// <param name="context">The database context.</param>
         /// <param name="userManager">The user manager.</param>
         /// <param name="logger">The logger.</param>
-        /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
-        public GetManpowerResourcesWithMonthlyHoursQueryHandler(
-            ProjectManagementContext context, 
+        public GetManpowerResourcesWithPlannedHoursQueryHandler(
+            ProjectManagementContext context,
             UserManager<User> userManager,
-            ILogger<GetManpowerResourcesWithMonthlyHoursQueryHandler> logger)
+            ILogger<GetManpowerResourcesWithPlannedHoursQueryHandler> logger)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
@@ -46,14 +46,14 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>A task containing the manpower resources with monthly hours.</returns>
-        public async Task<ManpowerResourcesWithMonthlyHoursDto> Handle(
-            GetManpowerResourcesWithMonthlyHoursQuery request, 
+        /// <returns>A task containing the manpower resources with planned hours.</returns>
+        public async Task<ManpowerResourcesWithPlannedHoursDto> Handle(
+            GetManpowerResourcesWithPlannedHoursQuery request, 
             CancellationToken cancellationToken)
         {
             try
             {
-                _logger.LogInformation("Retrieving manpower resources with monthly hours for project {ProjectId}", request.ProjectId);
+                _logger.LogInformation("Retrieving manpower resources with planned hours for project {ProjectId}", request.ProjectId);
                 
                 // Check if project exists
                 var projectExists = await _context.Projects
@@ -71,7 +71,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         .ThenInclude(t => t.UserWBSTasks)
                             .ThenInclude(ut => ut.User)
                     .Include(w => w.Tasks.Where(t => !t.IsDeleted && t.TaskType == TaskType.Manpower))
-                        .ThenInclude(t => t.MonthlyHours)
+                        .ThenInclude(t => t.PlannedHours)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(w => w.ProjectId == request.ProjectId && w.IsActive, cancellationToken);
 
@@ -80,7 +80,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     _logger.LogInformation("No active WBS found for project {ProjectId}", request.ProjectId);
                     
                     // Return empty result if no WBS found
-                    return new ManpowerResourcesWithMonthlyHoursDto
+                    return new ManpowerResourcesWithPlannedHoursDto
                     {
                         ProjectId = request.ProjectId,
                         Resources = Array.Empty<ManpowerResourceDto>()
@@ -115,15 +115,15 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                                 CostRate = userTask.CostRate,
                                 TotalHours = (decimal)userTask.TotalHours,
                                 TotalCost = userTask.TotalCost,
-                                MonthlyHours = task.MonthlyHours
-                                    .Select(mh => new MonthlyHourDto
+                                PlannedHours = task.PlannedHours
+                                    .Select(ph => new PlannedHourDto
                                     {
-                                        Year = int.TryParse(mh.Year, out var year) ? year : DateTime.Now.Year,
-                                        Month = mh.Month,
-                                        PlannedHours = mh.PlannedHours
+                                        Year = int.TryParse(ph.Year, out var year) ? year : DateTime.Now.Year,
+                                        Month = ph.Month,
+                                        PlannedHours = ph.PlannedHours
                                     })
-                                    .OrderBy(mh => mh.Year)
-                                    .ThenBy(mh => GetMonthOrder(mh.Month))
+                                    .OrderBy(ph => ph.Year)
+                                    .ThenBy(ph => GetMonthOrder(ph.Month))
                                     .ToList()
                             };
 
@@ -141,7 +141,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _logger.LogInformation("Successfully retrieved {Count} manpower resources for project {ProjectId}", 
                     resources.Count, request.ProjectId);
                 
-                return new ManpowerResourcesWithMonthlyHoursDto
+                return new ManpowerResourcesWithPlannedHoursDto
                 {
                     ProjectId = request.ProjectId,
                     Resources = resources
@@ -153,15 +153,15 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 throw; // Let the controller handle the exception
             }
         }
-        
+
         /// <summary>
-        /// Gets the numeric order of a month for sorting purposes.
+        /// Gets the month order for sorting purposes.
         /// </summary>
-        /// <param name="month">The month name.</param>
-        /// <returns>The month number (1-12).</returns>
-        private static int GetMonthOrder(string month)
+        /// <param name="monthName">Name of the month.</param>
+        /// <returns>The month order (1-12).</returns>
+        private static int GetMonthOrder(string monthName)
         {
-            return month?.ToLower() switch
+            return monthName?.ToLowerInvariant() switch
             {
                 "january" => 1,
                 "february" => 2,
@@ -175,7 +175,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 "october" => 10,
                 "november" => 11,
                 "december" => 12,
-                _ => 0
+                _ => 13 // Unknown months go to the end
             };
         }
     }

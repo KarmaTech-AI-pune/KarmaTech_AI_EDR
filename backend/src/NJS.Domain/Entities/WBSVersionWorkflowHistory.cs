@@ -5,11 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NJS.Domain.Entities
 {
     /// <summary>
-    /// This model is used to track project workflow history
+    /// Entity to track workflow history for WBS versions
     /// </summary>
-    public class WBSHistory
+    public class WBSVersionWorkflowHistory
     {
-        public WBSHistory()
+        public WBSVersionWorkflowHistory()
         {
             ActionDate = DateTime.UtcNow;
         }
@@ -18,10 +18,10 @@ namespace NJS.Domain.Entities
         public int Id { get; set; }
 
         [Required]
-        public int WBSTaskPlannedHourHeaderId { get; set; }
+        public int WBSVersionHistoryId { get; set; }
 
-        [ForeignKey("WBSTaskPlannedHourHeaderId")]
-        public WBSTaskPlannedHourHeader WBSTaskPlannedHourHeader { get; set; }
+        [ForeignKey("WBSVersionHistoryId")]
+        public WBSVersionHistory WBSVersionHistory { get; set; }
 
         [Required]
         public int StatusId { get; set; }
@@ -44,6 +44,5 @@ namespace NJS.Domain.Entities
 
         [ForeignKey("AssignedToId")]
         public User AssignedTo { get; set; }
-        public bool IsDeleted { get; set; } = false;
     }
-}
+} 

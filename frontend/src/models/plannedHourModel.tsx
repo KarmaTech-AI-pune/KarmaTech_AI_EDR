@@ -1,4 +1,4 @@
-export interface MonthlyHour {
+export interface PlannedHour {
     id: string;
     task_id: string;
     year: string;

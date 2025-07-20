@@ -1,6 +1,6 @@
 import { axiosInstance } from './axiosConfig';
 import { WBSRowData, WBSOption, TaskType } from '../types/wbs';
-import { MonthlyHour } from '../models/monthlyHourModel';
+import { PlannedHour } from '../models/plannedHourModel';
 
 export const WBSStructureAPI = {
   /**
@@ -34,7 +34,7 @@ export const WBSStructureAPI = {
       const transformRowToBackendFormat = (row: WBSRowData) => {
         // Convert monthly hours from object to array format
         const monthlyHours: Array<{Year: number, Month: string, PlannedHours: number}> = [];
-        Object.entries(row.monthlyHours).forEach(([year, months]) => {
+        Object.entries(row.plannedHours || {}).forEach(([year, months]) => {
           Object.entries(months).forEach(([month, hours]) => {
             monthlyHours.push({
               Year: parseInt(year),
@@ -89,7 +89,7 @@ export const WBSStructureAPI = {
           ResourceUnit: isOdcTask ? (row.unit || "") : (row.unit || ""),
           TotalHours: row.totalHours,
           TotalCost: row.totalCost,
-          MonthlyHours: monthlyHours,
+          PlannedHours: monthlyHours,
           TaskType: row.taskType !== undefined ? row.taskType : (row.title.toLowerCase().includes('odc') ? TaskType.ODC : TaskType.Manpower), // Use taskType if set, otherwise infer from title
           Description: "",
           DisplayOrder: 0,
@@ -245,38 +245,38 @@ export const WBSOptionsAPI = {
   }
 };
 
-export const MonthlyHoursAPI = {
+export const PlannedHoursAPI = {
   /**
-   * Get monthly hours for a project
+   * Get planned hours for a project
    * @param projectId Project ID
-   * @returns Promise with monthly hours data
+   * @returns Promise with planned hours data
    */
-  getMonthlyHoursByProjectId: async (projectId: string) => {
+  getPlannedHoursByProjectId: async (projectId: string) => {
     try {
-      const response = await axiosInstance.get(`/api/projects/${projectId}/monthlyhours`);
+      const response = await axiosInstance.get(`/api/projects/${projectId}/plannedhours`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching monthly hours for project ${projectId}:`, error);
-      throw new Error(`Failed to load monthly hours for project ${projectId}. Please check if the backend service is running.`);
+      console.error(`Error fetching planned hours for project ${projectId}:`, error);
+      throw new Error(`Failed to load planned hours for project ${projectId}. Please check if the backend service is running.`);
     }
   },
 
   /**
-   * Update monthly hours for a task
+   * Update planned hours for a task
    * @param projectId Project ID
    * @param taskId Task ID
-   * @param data Monthly hours data
+   * @param data Planned hours data
    * @returns Promise with updated data
    */
-  updateMonthlyHours: async (projectId: string, taskId: string, data: { monthly_hours: Partial<MonthlyHour>[] }) => {
+  updatePlannedHours: async (projectId: string, taskId: string, data: { planned_hours: Partial<PlannedHour>[] }) => {
     try {
       const response = await axiosInstance.put(
-        `/api/projects/${projectId}/wbs/tasks/${taskId}/monthlyhours`,
+        `/api/projects/${projectId}/wbs/tasks/${taskId}/plannedhours`,
         data
       );
       return response.data;
     } catch (error) {
-      console.error(`Error updating monthly hours for task ${taskId}:`, error);
+      console.error(`Error updating planned hours for task ${taskId}:`, error);
       // For update operations, we still throw the error as we can't provide a meaningful fallback
       throw error;
     }

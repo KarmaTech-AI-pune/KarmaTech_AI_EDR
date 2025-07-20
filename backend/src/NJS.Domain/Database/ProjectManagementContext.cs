@@ -23,8 +23,8 @@ namespace NJS.Domain.Database
         public DbSet<GoNoGoDecision> GoNoGoDecisions { get; set; }
         public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; }
         public DbSet<WBSTask> WBSTasks { get; set; }
-        public DbSet<WBSTaskMonthlyHourHeader> WBSTaskMonthlyHourHeaders { get; set; } // Added
-        public DbSet<WBSTaskMonthlyHour> WBSTaskMonthlyHours { get; set; } // Added
+        public DbSet<WBSTaskPlannedHourHeader> WBSTaskPlannedHourHeaders { get; set; } // Added
+        public DbSet<WBSTaskPlannedHour> WBSTaskPlannedHours { get; set; } // Added
         public DbSet<UserWBSTask> UserWBSTasks { get; set; }
         public DbSet<WBSOption> WBSOptions { get; set; }
         public DbSet<OpportunityTracking> OpportunityTrackings { get; set; }
@@ -33,6 +33,14 @@ namespace NJS.Domain.Database
         public DbSet<OpportunityStatus> OpportunityStatuses { get; set; }
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
         public DbSet<WBSHistory> WBSHistories { get; set; }
+        
+        // WBS Versioning entities
+        public DbSet<WBSVersionHistory> WBSVersionHistories { get; set; }
+        public DbSet<WBSTaskVersionHistory> WBSTaskVersionHistories { get; set; }
+        public DbSet<WBSVersionWorkflowHistory> WBSVersionWorkflowHistories { get; set; }
+        public DbSet<WBSTaskPlannedHourVersionHistory> WBSTaskPlannedHourVersionHistories { get; set; }
+        public DbSet<UserWBSTaskVersionHistory> UserWBSTaskVersionHistories { get; set; }
+        
         public DbSet<Region> Regions { get; set; }
         public DbSet<FailedEmailLog> FailedEmailLogs { get; set; }
         public DbSet<Settings> Settings { get; set; }
@@ -331,9 +339,9 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
 
             modelBuilder.Entity<WBSHistory>()
-                .HasOne(ph => ph.WBSTaskMonthlyHourHeader)
+                .HasOne(ph => ph.WBSTaskPlannedHourHeader)
                 .WithMany(p => p.WBSHistories)
-                .HasForeignKey(ph => ph.WBSTaskMonthlyHourHeaderId)
+                .HasForeignKey(ph => ph.WBSTaskPlannedHourHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<WBSHistory>()
@@ -499,6 +507,156 @@ namespace NJS.Domain.Database
             {
                 // Optional: Add index on ProjectId if frequent lookups by project are expected
                 entity.HasIndex(w => w.ProjectId);
+                
+                // Configure relationships with version history
+                entity.HasMany(w => w.VersionHistory)
+                      .WithOne(v => v.WorkBreakdownStructure)
+                      .HasForeignKey(v => v.WorkBreakdownStructureId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                // Configure navigation properties for version management
+                entity.HasOne(w => w.LatestVersion)
+                      .WithMany()
+                      .HasForeignKey(w => w.LatestVersionHistoryId)
+                      .OnDelete(DeleteBehavior.NoAction)
+                      .IsRequired(false);
+                
+                entity.HasOne(w => w.ActiveVersion)
+                      .WithMany()
+                      .HasForeignKey(w => w.ActiveVersionHistoryId)
+                      .OnDelete(DeleteBehavior.NoAction)
+                      .IsRequired(false);
+            });
+
+            // Configure WBS Version History entity
+            modelBuilder.Entity<WBSVersionHistory>(entity =>
+            {
+                entity.Property(v => v.Version).HasMaxLength(20).IsRequired();
+                entity.Property(v => v.Comments).HasMaxLength(1000);
+                
+                // Configure relationships
+                entity.HasOne(v => v.Status)
+                      .WithMany()
+                      .HasForeignKey(v => v.StatusId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(v => v.CreatedByUser)
+                      .WithMany()
+                      .HasForeignKey(v => v.CreatedBy)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(v => v.ApprovedByUser)
+                      .WithMany()
+                      .HasForeignKey(v => v.ApprovedBy)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                // Indexes for performance
+                entity.HasIndex(v => v.WorkBreakdownStructureId);
+                entity.HasIndex(v => v.Version);
+                entity.HasIndex(v => v.IsActive);
+                entity.HasIndex(v => v.IsLatest);
+                entity.HasIndex(v => v.CreatedAt);
+            });
+
+            // Configure WBS Task Version History entity
+            modelBuilder.Entity<WBSTaskVersionHistory>(entity =>
+            {
+                entity.Property(t => t.EstimatedBudget).HasPrecision(18, 2);
+                entity.Property(t => t.Title).HasMaxLength(255).IsRequired();
+                entity.Property(t => t.Description).HasMaxLength(1000);
+                
+                // Configure self-referencing relationship for hierarchy
+                entity.HasOne(t => t.Parent)
+                      .WithMany(t => t.Children)
+                      .HasForeignKey(t => t.ParentId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                // Configure relationship with WBS Version History
+                entity.HasOne(t => t.WBSVersionHistory)
+                      .WithMany(v => v.TaskVersions)
+                      .HasForeignKey(t => t.WBSVersionHistoryId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                // Indexes for performance
+                entity.HasIndex(t => t.WBSVersionHistoryId);
+                entity.HasIndex(t => t.OriginalTaskId);
+                entity.HasIndex(t => t.ParentId);
+                entity.HasIndex(t => t.DisplayOrder);
+            });
+
+            // Configure WBS Version Workflow History entity
+            modelBuilder.Entity<WBSVersionWorkflowHistory>(entity =>
+            {
+                entity.Property(h => h.Action).HasMaxLength(100);
+                entity.Property(h => h.Comments).HasMaxLength(1000);
+                
+                // Configure relationships
+                entity.HasOne(h => h.Status)
+                      .WithMany()
+                      .HasForeignKey(h => h.StatusId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(h => h.ActionUser)
+                      .WithMany()
+                      .HasForeignKey(h => h.ActionBy)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(h => h.AssignedTo)
+                      .WithMany()
+                      .HasForeignKey(h => h.AssignedToId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                // Indexes for performance
+                entity.HasIndex(h => h.WBSVersionHistoryId);
+                entity.HasIndex(h => h.ActionDate);
+            });
+
+            // Configure WBS Task Planned Hour Version History entity
+            modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>(entity =>
+            {
+                entity.Property(ph => ph.Year).HasMaxLength(4).IsRequired();
+                entity.Property(ph => ph.Month).HasMaxLength(20).IsRequired();
+                entity.Property(ph => ph.CreatedBy).HasMaxLength(100);
+                
+                // Configure relationship with WBS Task Version History
+                entity.HasOne(ph => ph.WBSTaskVersionHistory)
+                      .WithMany(t => t.PlannedHours)
+                      .HasForeignKey(ph => ph.WBSTaskVersionHistoryId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                // Indexes for performance
+                entity.HasIndex(ph => ph.WBSTaskVersionHistoryId);
+            });
+
+            // Configure User WBS Task Version History entity
+            modelBuilder.Entity<UserWBSTaskVersionHistory>(entity =>
+            {
+                entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
+                entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
+                entity.Property(ut => ut.Name).HasMaxLength(255);
+                entity.Property(ut => ut.Unit).HasMaxLength(50);
+                entity.Property(ut => ut.CreatedBy).HasMaxLength(100);
+                entity.Property(ut => ut.ResourceRoleId).IsRequired(false);
+                
+                // Configure relationships
+                entity.HasOne(ut => ut.WBSTaskVersionHistory)
+                      .WithMany(t => t.UserAssignments)
+                      .HasForeignKey(ut => ut.WBSTaskVersionHistoryId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasOne(ut => ut.User)
+                      .WithMany()
+                      .HasForeignKey(ut => ut.UserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                
+                entity.HasOne(ut => ut.ResourceRole)
+                      .WithMany()
+                      .HasForeignKey(ut => ut.ResourceRoleId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                
+                // Indexes for performance
+                entity.HasIndex(ut => ut.WBSTaskVersionHistoryId);
+                entity.HasIndex(ut => ut.UserId);
             });
 
             // Configure decimal precisions for Monthly Progress related entities
@@ -856,10 +1014,10 @@ namespace NJS.Domain.Database
                       .IsRequired(false);
             });
 
-            modelBuilder.Entity<WBSTaskMonthlyHour>()
-                .HasOne(m => m.WBSTaskMonthlyHourHeader)
-                .WithMany(h => h.MonthlyHours)
-                .HasForeignKey(m => m.WBSTaskMonthlyHourHeaderId)
+            modelBuilder.Entity<WBSTaskPlannedHour>()
+                .HasOne(m => m.WBSTaskPlannedHourHeader)
+                .WithMany(h => h.PlannedHours)
+                .HasForeignKey(m => m.WBSTaskPlannedHourHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configure JobStartFormHeader entity

@@ -83,14 +83,8 @@ namespace NJSAPI.Controllers
 
             var command = new AddWBSTaskCommand(projectId, taskDto);
             var newTaskId = await _mediator.Send(command);
-
-            // Optionally, retrieve the created task to return it (requires a GetTaskByIdQuery)
-            // For now, returning the ID in the location header is standard REST practice.
-            // taskDto.Id = newTaskId; // Update DTO with new ID if returning it
-            // return CreatedAtAction(nameof(GetTaskById), new { projectId, taskId = newTaskId }, taskDto);
-
-            // Returning location header with ID
-             return CreatedAtAction(nameof(GetWBS), new { projectId }, new { id = newTaskId }); // Pointing to GetWBS for simplicity, ideally GetTaskById
+          
+             return CreatedAtAction(nameof(GetWBS), new { projectId }, new { id = newTaskId });
         }
 
         /// <summary>
@@ -142,24 +136,24 @@ namespace NJSAPI.Controllers
         // public async Task<ActionResult<WBSTaskDto>> GetTaskById(int projectId, int taskId) { ... }
 
         /// <summary>
-        /// Gets manpower resources with monthly hours for a project.
+        /// Gets manpower resources with planned hours for a project.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <returns>Manpower resources with monthly hours data.</returns>
-        /// <response code="200">Returns the manpower resources with monthly hours.</response>
+        /// <returns>Manpower resources with planned hours data.</returns>
+        /// <response code="200">Returns the manpower resources with planned hours.</response>
         /// <response code="404">If the project is not found.</response>
         /// <response code="500">If an unexpected error occurs.</response>
         [HttpGet("manpowerresources")]
-        [ProducesResponseType(typeof(ManpowerResourcesWithMonthlyHoursDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ManpowerResourcesWithPlannedHoursDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ManpowerResourcesWithMonthlyHoursDto>> GetManpowerResourcesWithMonthlyHours(int projectId)
+        public async Task<ActionResult<ManpowerResourcesWithPlannedHoursDto>> GetManpowerResourcesWithPlannedHours(int projectId)
         {
             try
             {
-                _logger.LogInformation("Retrieving manpower resources with monthly hours for project {ProjectId}", projectId);
-                
-                var query = new GetManpowerResourcesWithMonthlyHoursQuery(projectId);
+                _logger.LogInformation("Retrieving manpower resources with planned hours for project {ProjectId}", projectId);
+
+                var query = new GetManpowerResourcesWithPlannedHoursQuery(projectId);
                 var result = await _mediator.Send(query);
                 
                 if (result == null)

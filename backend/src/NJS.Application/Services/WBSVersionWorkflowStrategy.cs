@@ -1,34 +1,37 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
+using NJS.Repositories.Interfaces;
 
 namespace NJS.Application.Services
 {
-    public class WBSWorkflowStrategy : IEntityWorkflowStrategy
+    public class WBSVersionWorkflowStrategy : IEntityWorkflowStrategy
     {
         private readonly ProjectManagementContext _context;
-        private readonly ILogger<WBSWorkflowStrategy> _logger;
+        private readonly IWBSVersionRepository _wbsVersionRepository;
+        private readonly ILogger<WBSVersionWorkflowStrategy> _logger;
 
-        public WBSWorkflowStrategy(ProjectManagementContext context, ILogger<WBSWorkflowStrategy> logger)
+        public WBSVersionWorkflowStrategy(
+            ProjectManagementContext context, 
+            IWBSVersionRepository wbsVersionRepository,
+            ILogger<WBSVersionWorkflowStrategy> logger)
         {
             _context = context;
+            _wbsVersionRepository = wbsVersionRepository;
             _logger = logger;
         }
 
-        public string EntityType => "WBS";
+        public string EntityType => "WBSVersion";
 
         public async Task<PMWorkflowDto> ExecuteAsync(WorkflowActionContext context, CancellationToken cancellationToken)
         {
-            var wbsHeader = await _context.Set<WBSTaskPlannedHourHeader>()
-                .Include(w => w.WBSHistories)
-                .FirstOrDefaultAsync(w => w.Id == context.EntityId, cancellationToken);
-
-            if (wbsHeader == null)
-                throw new Exception($"WBS Header with ID {context.EntityId} not found");
+            var wbsVersion = await _wbsVersionRepository.GetByIdAsync(context.EntityId);
+            if (wbsVersion == null)
+                throw new Exception($"WBS Version with ID {context.EntityId} not found");
 
             var currentUserId = context.CurrentUser.Id;
 
@@ -36,14 +39,11 @@ namespace NJS.Application.Services
             bool isFromSentForApproval = false;
 
             // Get the most recent history entry to determine the current status
-            var latestHistory = wbsHeader.WBSHistories
-                .OrderByDescending(h => h.ActionDate)
-                .FirstOrDefault();
-
+            var latestHistory = await _wbsVersionRepository.GetLatestWorkflowHistoryAsync(wbsVersion.Id);
             if (latestHistory != null)
             {
                 isFromSentForApproval = latestHistory.StatusId == (int)PMWorkflowStatusEnum.SentForApproval;
-                _logger.LogInformation($"WBSWorkflowStrategy: Latest history status: {latestHistory.StatusId}, isFromSentForApproval: {isFromSentForApproval}");
+                _logger.LogInformation($"WBSVersionWorkflowStrategy: Latest history status: {latestHistory.StatusId}, isFromSentForApproval: {isFromSentForApproval}");
             }
 
             // Determine the new status based on the action and current status
@@ -56,7 +56,7 @@ namespace NJS.Application.Services
                     PMWorkflowStatusEnum.ApprovalChanges :
                     PMWorkflowStatusEnum.ReviewChanges;
 
-                _logger.LogInformation($"WBSWorkflowStrategy: Rejection detected. IsApprovalChanges: {context.IsApprovalChanges}, Using status: {status} ({(int)status})");
+                _logger.LogInformation($"WBSVersionWorkflowStrategy: Rejection detected. IsApprovalChanges: {context.IsApprovalChanges}, Using status: {status} ({(int)status})");
             }
             else
             {
@@ -71,61 +71,58 @@ namespace NJS.Application.Services
                 };
             }
 
-            // Create a new history entry
-            var history = new WBSHistory
+            // Create a new workflow history entry
+            var workflowHistory = new WBSVersionWorkflowHistory
             {
-                WBSTaskPlannedHourHeaderId = wbsHeader.Id,
+                WBSVersionHistoryId = wbsVersion.Id,
                 StatusId = (int)status,
                 Action = context.Action,
-                Comments = context.Comments ?? $"WBS {status.ToString()} action",
+                Comments = context.Comments ?? $"WBS Version {status.ToString()} action",
                 ActionDate = DateTime.UtcNow,
                 ActionBy = currentUserId,
                 AssignedToId = context.AssignedToId
             };
 
-            wbsHeader.WBSHistories.Add(history);
+            // Update the version status
+            wbsVersion.StatusId = (int)status;
 
+            // If approved, set approval metadata
             if (status == PMWorkflowStatusEnum.Approved)
             {
-                try
-                {
-                    wbsHeader.StatusId = (int)status;
-                }
-                catch (Exception ex)
-                {
-
-                    _logger.LogInformation($"Error setting approval status: {ex.Message}");
-
-                }
+                wbsVersion.ApprovedAt = DateTime.UtcNow;
+                wbsVersion.ApprovedBy = currentUserId;
             }
 
-            // Add the history entry
-            _context.WBSHistories.Add(history);
-            wbsHeader.StatusId = (int)status;
-            _context.WBSTaskPlannedHourHeaders.Update(wbsHeader);
+            // Save the workflow history
+            await _wbsVersionRepository.CreateWorkflowHistoryAsync(workflowHistory);
 
-            // Save changes to the database
-            await _context.SaveChangesAsync(cancellationToken);
+            // Update the version
+            await _wbsVersionRepository.UpdateVersionAsync(wbsVersion);
 
             // Log the status update
-            _logger.LogInformation($"WBS Header {wbsHeader.Id} status updated to {status} by user {currentUserId}");
+            _logger.LogInformation($"WBS Version {wbsVersion.Id} status updated to {status} by user {currentUserId}");
+
+            // Get user names for response
+            var actionUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
+            var assignedToUser = context.AssignedToId != null ?
+                await _context.Users.FirstOrDefaultAsync(u => u.Id == context.AssignedToId, cancellationToken) : null;
 
             // Return the workflow DTO
             return new PMWorkflowDto
             {
-                Id = history.Id,
+                Id = workflowHistory.Id,
                 EntityId = context.EntityId,
-                EntityType = "WBS",
+                EntityType = "WBSVersion",
                 StatusId = (int)status,
                 Status = status.ToString(),
                 Action = context.Action,
                 Comments = context.Comments,
-                ActionDate = history.ActionDate,
+                ActionDate = workflowHistory.ActionDate,
                 ActionBy = currentUserId,
-                ActionByName = context.CurrentUser?.UserName ?? "Unknown",
+                ActionByName = actionUser?.UserName ?? "Unknown",
                 AssignedToId = context.AssignedToId,
-                AssignedToName = context.AssignedToUser?.UserName ?? "Unknown"
+                AssignedToName = assignedToUser?.UserName ?? "Unknown"
             };
         }
     }
-}
+} 

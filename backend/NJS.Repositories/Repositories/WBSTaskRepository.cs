@@ -26,15 +26,15 @@ namespace NJS.Repositories.Repositories
             {
                 var query = _context.WorkBreakdownStructures
                     .Include(wbs => wbs.Tasks)
-                        .ThenInclude(task => task.MonthlyHours)
-                            .ThenInclude(mh => mh.WBSTaskMonthlyHourHeader) // Include header for status check
+                        .ThenInclude(task => task.PlannedHours)
+                            .ThenInclude(ph => ph.WBSTaskPlannedHourHeader) // Include header for status check
                     .Include(wbs => wbs.Tasks) // Re-include Tasks to chain another ThenInclude
                         .ThenInclude(task => task.UserWBSTasks)
                             .ThenInclude(uwt => uwt.User) // Include User entity for user details
                     .Where(wbs => wbs.Tasks.Any(task =>
-                        task.MonthlyHours.Any(mh =>
-                            mh.WBSTaskMonthlyHourHeader != null &&
-                            mh.WBSTaskMonthlyHourHeader.StatusId == (int)PMWorkflowStatusEnum.Approved)));
+                        task.PlannedHours.Any(ph =>
+                            ph.WBSTaskPlannedHourHeader != null &&
+                            ph.WBSTaskPlannedHourHeader.StatusId == (int)PMWorkflowStatusEnum.Approved)));
 
                 if (projectId.HasValue)
                 {

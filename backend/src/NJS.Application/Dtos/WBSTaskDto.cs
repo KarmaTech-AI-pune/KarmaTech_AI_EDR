@@ -29,8 +29,8 @@ namespace NJS.Application.Dtos
         public string? ResourceRoleId { get; set; } // Added Resource Role ID
         public string? ResourceRoleName { get; set; } // Added Resource Role Name for display
 
-        // Monthly Hours
-        public List<MonthlyHourDto> MonthlyHours { get; set; } = new();
+        // Planned Hours
+        public List<PlannedHourDto> PlannedHours { get; set; } = new();
 
         // Calculated Totals (Calculated in backend query/handler, not expected from frontend on save)
         public double TotalHours { get; set; }

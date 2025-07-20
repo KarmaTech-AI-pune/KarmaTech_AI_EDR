@@ -5,9 +5,9 @@ using NJS.Application.Dtos;
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Queries
 {
     /// <summary>
-    /// Query to get manpower resources with monthly hours for a specific project
+    /// Query to get manpower resources with planned hours for a specific project
     /// </summary>
-    public class GetManpowerResourcesWithMonthlyHoursQuery : IRequest<ManpowerResourcesWithMonthlyHoursDto>
+    public class GetManpowerResourcesWithPlannedHoursQuery : IRequest<ManpowerResourcesWithPlannedHoursDto>
     {
         /// <summary>
         /// The project identifier
@@ -15,11 +15,11 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Queries
         public int ProjectId { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GetManpowerResourcesWithMonthlyHoursQuery"/> class.
+        /// Initializes a new instance of the <see cref="GetManpowerResourcesWithPlannedHoursQuery"/> class.
         /// </summary>
         /// <param name="projectId">The project identifier.</param>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when projectId is less than or equal to 0.</exception>
-        public GetManpowerResourcesWithMonthlyHoursQuery(int projectId)
+        public GetManpowerResourcesWithPlannedHoursQuery(int projectId)
         {
             if (projectId <= 0)
             {
