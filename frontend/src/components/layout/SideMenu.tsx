@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   Drawer,
   List,
@@ -135,10 +135,14 @@ const formSections = [
 
 
 export const SideMenu: React.FC = () => {
+    const location = useLocation();
     const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
-    const [formsOpen, setFormsOpen] = useState(false);
+    const [formsOpen, setFormsOpen] = useState(location.pathname.includes('/forms'));
     const [expandedForm, setExpandedForm] = useState<string | null>(null);
 
+    useEffect(() => {
+        setFormsOpen(location.pathname.includes('/forms'));
+    }, [location.pathname]);
 
     const toggleDrawer = () => {
         setIsDrawerExpanded(!isDrawerExpanded);
