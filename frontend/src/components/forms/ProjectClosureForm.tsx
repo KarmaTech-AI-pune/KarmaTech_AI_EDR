@@ -34,7 +34,7 @@ import {
   deleteProjectClosure,
   ProjectClosureWithMetadata
 } from '../../services/projectClosureApi';
-import { projectManagementAppContext } from '../../App';
+import { useProject } from '../../context/ProjectContext';
 import { ProjectClosureRow, ProjectClosureComment, Project,WorkflowHistory } from "../../models";
 import { PMWorkflowStatus } from '../../models/pmWorkflowModel';
 import ProjectClosureWorkflow from '../common/ProjectClosureWorkflow';
@@ -50,9 +50,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
   onCancel,
   closureId
 }) => {
-  const context = useContext(projectManagementAppContext);
-  const selectedProject = context?.selectedProject as Project | null;
-
+  const { projectId } = useProject();
   const [expanded, setExpanded] = useState<string[]>(['overall', 'management', 'design', 'construction', 'summary']);
 
   const handleAccordionChange = (panel: string) => {
@@ -297,13 +295,13 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
           }
         }
         // If no closureId but we have a selected project, try to find by project ID
-        else if (selectedProject?.id) {
+        else if (projectId) {
           try {
-            console.log(`Trying to find project closure for project ID ${selectedProject.id}`);
-            const projectId = parseInt(selectedProject.id.toString(), 10);
+            console.log(`Trying to find project closure for project ID ${projectId}`);
+            const numericProjectId = parseInt(projectId, 10);
 
             // First try to get all closures for this project
-            const projectClosures = await getAllProjectClosuresByProjectId(projectId);
+            const projectClosures = await getAllProjectClosuresByProjectId(numericProjectId);
 
             if (projectClosures && projectClosures.length > 0) {
               // Use the most recent one (should be first in the array as they're sorted by created date desc)
@@ -547,7 +545,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     };
 
     loadExistingData();   
-  }, [closureId, selectedProject?.id,workflowStatus]);
+  }, [closureId, projectId,workflowStatus]);
 
   const handleInputChange = (field: keyof ProjectClosureRow) => (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -606,7 +604,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
       // Clear all form fields
       setFormData({
-        projectId: selectedProject?.id?.toString() || '',
+        projectId: projectId || '',
         clientFeedback: '',
         successCriteria: '',
         clientExpectations: '',
@@ -787,14 +785,14 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
   };
 
   const handleSave = async () => {
-    if (!selectedProject) {   
+    if (!projectId) {   
       alert('Error: No project selected. Please select a project before saving.');
       return;
     }
 
     try {
       // Get project ID from the selected project
-      const rawProjectId = selectedProject.id;
+      const rawProjectId = projectId;
 
       // Validate project ID from selected project
       if (!rawProjectId || rawProjectId === '' || isNaN(parseInt(rawProjectId.toString(), 10))) {
@@ -804,22 +802,22 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
       }
 
       // Convert to a valid numeric project ID
-      let projectId = parseInt(rawProjectId.toString(), 10);   
+      const numericProjectId = parseInt(rawProjectId.toString(), 10);   
 
       // Additional validation to ensure it's a positive integer
-      if (projectId <= 0) {
-        console.error('Project ID must be a positive number:', projectId);
-        alert(`Error: Project ID must be a positive number. Current value: ${projectId}`);
+      if (numericProjectId <= 0) {
+        console.error('Project ID must be a positive number:', numericProjectId);
+        alert(`Error: Project ID must be a positive number. Current value: ${numericProjectId}`);
         return;
       }
 
      
 
       // Validate project ID in form data
-      if (formData.projectId !== projectId.toString()) {
+      if (formData.projectId !== numericProjectId.toString()) {
         console.warn('Project ID mismatch between selected project and form data. Correcting...');
         // Update form data with the correct project ID
-        setFormData(prev => ({ ...prev, projectId: projectId.toString() }));
+        setFormData(prev => ({ ...prev, projectId: numericProjectId.toString() }));
       }     
 
       try {
@@ -905,7 +903,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
             ...formattedData,   // Override with new form data
             ...missingFields,   // Add any missing fields
             id: idToUpdate,
-            projectId: projectId.toString(), // Convert to string as required by the interface
+            projectId: numericProjectId.toString(), // Convert to string as required by the interface
             // Keep existing metadata
             createdAt: existingClosure.createdAt,
             createdBy: existingClosure.createdBy || '',
@@ -1004,7 +1002,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
           const dataToSend = {
             ...formattedData,
             ...missingFields,
-            projectId: projectId.toString(), // Convert to string as required by the interface
+            projectId: numericProjectId.toString(), // Convert to string as required by the interface
             createdAt: new Date().toISOString(),
             // These fields are required by the interface but will be overridden by the backend
             createdBy: '',
@@ -1047,7 +1045,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
           try {
             // Create a new object without the id field
             const dataToRetry = {
-              projectId: projectId.toString(), // Convert to string as required by the interface
+              projectId: numericProjectId.toString(), // Convert to string as required by the interface
               createdAt: new Date().toISOString(),
               createdBy: '',
               updatedAt: null,
@@ -1087,7 +1085,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
           try {
             // Create a new object without the id field
             const dataToRetry = {
-              projectId: projectId.toString(), // Convert to string as required by the interface
+              projectId: numericProjectId.toString(), // Convert to string as required by the interface
               createdAt: new Date().toISOString(),
               createdBy: '',
               updatedAt: null,
@@ -1258,7 +1256,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     }
   };
 
-  if (!selectedProject) {
+  if (!projectId) {
     return (
       <Container maxWidth="xl" sx={{ py: 3 }}>
         <Alert severity="warning">Please select a project to proceed with the closure form.</Alert>
@@ -1606,7 +1604,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
                             ...comments,
                             {
                               id: `positive-${Date.now()}`,
-                              projectId: selectedProject.id.toString(),
+                              projectId: projectId || '',
                               type: 'positives',
                               comment: ''
                             }
@@ -1668,7 +1666,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
                             ...comments,
                             {
                               id: `lesson-${Date.now()}`,
-                              projectId: selectedProject.id.toString(),
+                              projectId: projectId || '',
                               type: 'lessons-learned',
                               comment: ''
                             }

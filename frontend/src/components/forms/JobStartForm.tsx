@@ -8,12 +8,11 @@ import { Container, Box, Paper, CircularProgress, Alert, Snackbar, Typography } 
 import { getWBSResourceData, submitJobStartForm, updateJobStartForm, getJobStartFormByProjectId } from '../../services/jobStartFormApi'
 import { WBSResource } from '../../types/jobStartFormTypes'
 import { CustomRow } from './jobstartFormComponent/TableTemplate'
-import { projectManagementAppContext } from '../../App'
-import { projectManagementAppContextType } from '../../types'
+import { useProject } from '../../context/ProjectContext'
 import LoadingButton from '../common/LoadingButton'
 
 const JobStartForm: React.FC = () => {
-  const context = useContext<projectManagementAppContextType | null>(projectManagementAppContext)
+  const { projectId } = useProject()
   const [wbsResources, setWbsResources] = useState<WBSResource[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -105,9 +104,6 @@ const JobStartForm: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false)
   const [snackbarMessage, setSnackbarMessage] = useState<string>('')
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success')
-
-  // Get project ID from context
-  const projectId = context?.selectedProject?.id?.toString()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -288,15 +284,6 @@ const JobStartForm: React.FC = () => {
 
     fetchData()
   }, [projectId])
-
-  // If context is not available, show an error
-  if (!context) {
-    return (
-      <Container>
-        <Alert severity="error">Context not available</Alert>
-      </Container>
-    );
-  }
 
   // If no project is selected, show a warning
   if (!projectId) {

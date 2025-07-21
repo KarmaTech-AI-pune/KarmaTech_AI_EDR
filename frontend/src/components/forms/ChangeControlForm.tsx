@@ -27,7 +27,7 @@ import {
   updateChangeControl,
   deleteChangeControl
 } from '../../api/changeControlApi';
-import { projectManagementAppContext } from '../../App';
+import { useProject } from '../../context/ProjectContext';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -40,7 +40,7 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
 }));
 
 const ChangeControlForm: React.FC = () => {
-  const context = useContext(projectManagementAppContext);
+  const { projectId } = useProject();
   const [rows, setRows] = useState<ChangeControl[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | number | null>(null);
@@ -50,17 +50,17 @@ const ChangeControlForm: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (context?.selectedProject?.id) {
+    if (projectId) {
       loadChangeControls();
     }
-  }, [context?.selectedProject?.id]);
+  }, [projectId]);
 
   const loadChangeControls = async () => {
-    if (!context?.selectedProject?.id) return;
+    if (!projectId) return;
 
     setLoading(true);
     try {
-      const data = await getChangeControlsByProjectId(context.selectedProject.id.toString());
+      const data = await getChangeControlsByProjectId(projectId);
       setRows(data);
       setError('');
     } catch (err: any) {
@@ -91,7 +91,7 @@ const ChangeControlForm: React.FC = () => {
   };
 
   const handleSave = async (data: Omit<ChangeControl, 'id' | 'projectId'>) => {
-    if (!context?.selectedProject?.id) return;
+    if (!projectId) return;
 
     setLoading(true);
     setError('');
@@ -99,9 +99,7 @@ const ChangeControlForm: React.FC = () => {
 
     try {
       // Get project ID as a number
-      const projectId = typeof context.selectedProject.id === 'string'
-        ? parseInt(context.selectedProject.id)
-        : context.selectedProject.id;
+      const numericProjectId = parseInt(projectId);
 
       // Format the data properly for backend
       const formattedData = {
@@ -125,11 +123,11 @@ const ChangeControlForm: React.FC = () => {
       if (editingId !== null) {
         // Update existing record
         const updated = await updateChangeControl(
-          projectId,
+          numericProjectId,
           editingId,
           {
             ...formattedData,
-            projectId: projectId
+            projectId: numericProjectId
           }
         );
         if (updated) {
@@ -138,10 +136,10 @@ const ChangeControlForm: React.FC = () => {
       } else {
         // Create new record with next available srNo
         const created = await createChangeControl(
-          projectId,
+          numericProjectId,
           {
             ...formattedData,
-            projectId: projectId,
+            projectId: numericProjectId,
             srNo: getNextSrNo()
           }
         );
@@ -177,16 +175,14 @@ const ChangeControlForm: React.FC = () => {
   };
 
   const handleDelete = async (id: string | number) => {
-    if (!context?.selectedProject?.id) return;
+    if (!projectId) return;
 
     setLoading(true);
     try {
       // Get project ID as a number
-      const projectId = typeof context.selectedProject.id === 'string'
-        ? parseInt(context.selectedProject.id)
-        : context.selectedProject.id;
+      const numericProjectId = parseInt(projectId);
 
-      await deleteChangeControl(projectId, id);
+      await deleteChangeControl(numericProjectId, id);
       setRows(rows.filter(row => row.id !== id));
       setError('');
     } catch (err: any) {
@@ -208,7 +204,7 @@ const ChangeControlForm: React.FC = () => {
     return rows.length > 0 ? Math.max(...rows.map(row => row.srNo)) + 1 : 1;
   };
 
-  if (!context?.selectedProject?.id) {
+  if (!projectId) {
     return (
       <Container maxWidth="xl" sx={{ py: 3 }}>
         <Alert severity="warning">Please select a project to view the change control register.</Alert>
