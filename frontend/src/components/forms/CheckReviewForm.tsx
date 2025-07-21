@@ -30,7 +30,6 @@ import {
   updateCheckReview
 } from '../../api/checkReviewApi';
 import { projectManagementAppContext } from '../../App';
-import { FormWrapper } from './FormWrapper';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -249,11 +248,9 @@ const CheckReviewForm: React.FC = () => {
 
   if (!context?.selectedProject?.id) {
     return (
-      <FormWrapper>
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-          <Alert severity="warning">Please select a project to view the check and review form.</Alert>
-        </Container>
-      </FormWrapper>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="warning">Please select a project to view the check and review form.</Alert>
+      </Container>
     );
   }
 
@@ -466,9 +463,9 @@ const CheckReviewForm: React.FC = () => {
   );
 
   return (
-    <FormWrapper>
+    <>
       {formContent}
-    </FormWrapper>
+    </>
   );
 };
 

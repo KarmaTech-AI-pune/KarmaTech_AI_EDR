@@ -25,7 +25,6 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import InputRegisterDialog from './InputRegisterformcomponents/InputRegisterDialog';
 import { deleteInputRegister, getInputRegisterByProject } from '../../api/inputRegisterApi';
 import { projectManagementAppContext } from '../../App';
-import { FormWrapper } from './FormWrapper';
 import { InputRegisterRow } from '../../models';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
@@ -73,11 +72,9 @@ const InputRegisterForm: React.FC = () => {
 
   if (!context?.selectedProject?.id) {
     return (
-      <FormWrapper>
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-          <Alert severity="warning">Please select a project to view the input register.</Alert>
-        </Container>
-      </FormWrapper>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="warning">Please select a project to view the input register.</Alert>
+      </Container>
     );
   }
 
@@ -345,7 +342,7 @@ const InputRegisterForm: React.FC = () => {
   );
 
   return (
-    <FormWrapper>
+    <>
       {formContent}
 
       {/* Notification Snackbar */}
@@ -359,7 +356,7 @@ const InputRegisterForm: React.FC = () => {
           {notification.message}
         </Alert>
       </Snackbar>
-    </FormWrapper>
+    </>
   );
 };
 

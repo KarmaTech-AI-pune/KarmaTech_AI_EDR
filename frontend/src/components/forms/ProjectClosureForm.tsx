@@ -36,7 +36,6 @@ import {
 } from '../../services/projectClosureApi';
 import { projectManagementAppContext } from '../../App';
 import { ProjectClosureRow, ProjectClosureComment, Project,WorkflowHistory } from "../../models";
-import { FormWrapper } from './FormWrapper';
 import { PMWorkflowStatus } from '../../models/pmWorkflowModel';
 import ProjectClosureWorkflow from '../common/ProjectClosureWorkflow';
 
@@ -1261,11 +1260,9 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
 
   if (!selectedProject) {
     return (
-      <FormWrapper>
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-          <Alert severity="warning">Please select a project to proceed with the closure form.</Alert>
-        </Container>
-      </FormWrapper>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="warning">Please select a project to proceed with the closure form.</Alert>
+      </Container>
     );
   }
 
@@ -1762,9 +1759,9 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
   );
 
   return (
-    <FormWrapper>
+    <>
       {formContent}
-    </FormWrapper>
+    </>
   );
 };
 

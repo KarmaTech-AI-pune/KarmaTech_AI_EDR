@@ -36,7 +36,6 @@ import {
   OutwardRow
 } from '../../services/correspondenceApi';
 import { projectManagementAppContext } from '../../App';
-import { FormWrapper } from './FormWrapper';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -748,11 +747,9 @@ const CorrespondenceForm: React.FC = () => {
 
   if (!context?.selectedProject?.id) {
     return (
-      <FormWrapper>
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-          <Alert severity="warning">Please select a project to view the correspondence register.</Alert>
-        </Container>
-      </FormWrapper>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="warning">Please select a project to view the correspondence register.</Alert>
+      </Container>
     );
   }
 
@@ -897,9 +894,9 @@ const CorrespondenceForm: React.FC = () => {
   );
 
   return (
-    <FormWrapper>
+    <>
       {formContent}
-    </FormWrapper>
+    </>
   );
 };
 

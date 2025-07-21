@@ -11,7 +11,6 @@ import WBSSummary from './WBSformcomponents/WBSSummary';
 import { WBSOption, WBSRowData, TaskType } from '../../types/wbs';
 import { resourceRole } from '../../models/resourceRoleModel';
 import { Employee } from '../../models/employeeModel';
-import { FormWrapper } from './FormWrapper';
 
 // Unit options are defined in WBSRow.tsx
 
@@ -377,13 +376,11 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   if (!isProject || !projectStartDate) {
     return (
-      <FormWrapper>
-        <Paper sx={{ p: 3, m: 2 }}>
-          <Alert severity="error">
-            Project start date is not set. Please set a start date for the project before creating a WBS.
-          </Alert>
-        </Paper>
-      </FormWrapper>
+      <Paper sx={{ p: 3, m: 2 }}>
+        <Alert severity="error">
+          Project start date is not set. Please set a start date for the project before creating a WBS.
+        </Alert>
+      </Paper>
       );
   }
 
@@ -830,11 +827,9 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   // Loading indicator
   if (loading) {
     return (
-      <FormWrapper>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-          <CircularProgress />
-        </Box>
-      </FormWrapper>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
@@ -917,18 +912,16 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   if (!isProject || !projectStartDate) {
     return (
-      <FormWrapper>
-        <Paper sx={{ p: 3, m: 2 }}>
-          <Alert severity="error">
-            Project start date is not set. Please set a start date for the project before creating a WBS.
-          </Alert>
-        </Paper>
-      </FormWrapper>
+      <Paper sx={{ p: 3, m: 2 }}>
+        <Alert severity="error">
+          Project start date is not set. Please set a start date for the project before creating a WBS.
+        </Alert>
+      </Paper>
     );
   }
 
   return (
-    <FormWrapper>
+    <>
       {formContent}
       <NotificationSnackbar
         open={snackbarOpen}
@@ -936,7 +929,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         severity={snackbarSeverity}
         onClose={() => setSnackbarOpen(false)}
       />
-    </FormWrapper>
+    </>
   );
 };
 

@@ -12,6 +12,7 @@ import {
     MonthlyReports,
   } from '../../components/forms';
 import { useParams } from 'react-router-dom';
+import { FormWrapper } from '../../components/forms/FormWrapper';
 
 const ProjectForms: React.FC = () => {
     const { formId, subFormId } = useParams<{ formId: string, subFormId: string }>();
@@ -53,9 +54,9 @@ const ProjectForms: React.FC = () => {
     }
 
   return (
-    <>
+    <FormWrapper>
       {renderForm()}
-    </>
+    </FormWrapper>
   );
 };
 

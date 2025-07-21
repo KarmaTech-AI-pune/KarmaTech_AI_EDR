@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext } from 'react'
-import { FormWrapper } from './FormWrapper'
 import JobstartTime from './jobstartFormComponent/JobstartTime'
 import EstimatedExpenses from './jobstartFormComponent/EstimatedExpenses'
 import JobstartGrandTotal from './jobstartFormComponent/JobstartGrandTotal'
@@ -437,10 +436,9 @@ const JobStartForm: React.FC = () => {
   }
 
   return (
-    <FormWrapper>
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box sx={{
-          width: '100%',
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Box sx={{
+        width: '100%',
           maxHeight: 'calc(100vh - 200px)',
           overflowY: 'auto',
           overflowX: 'hidden',
@@ -552,7 +550,6 @@ const JobStartForm: React.FC = () => {
             )}
           </Paper>
         </Box>
-      </Container>
 
       {/* Success/Error Snackbar */}
       <Snackbar
@@ -570,8 +567,8 @@ const JobStartForm: React.FC = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </FormWrapper>
-  )
+    </Container>
+  );
 }
 
 export default JobStartForm
