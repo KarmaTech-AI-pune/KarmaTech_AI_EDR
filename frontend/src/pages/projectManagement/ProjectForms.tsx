@@ -13,11 +13,28 @@ import {
   } from '../../components/forms';
 import { useParams } from 'react-router-dom';
 import { FormWrapper } from '../../components/forms/FormWrapper';
+import NotFound from '../NotFound';
+
+const validFormIds = [
+    'wbs',
+    'job-start',
+    'input-register',
+    'correspondence',
+    'check&review',
+    'change-control',
+    'progress-review',
+    'closure',
+    'monthly-reports',
+];
 
 const ProjectForms: React.FC = () => {
     const { formId, subFormId } = useParams<{ formId: string, subFormId: string }>();
 
     const renderForm = () => {
+        if (formId && !validFormIds.includes(formId)) {
+            return <NotFound />;
+        }
+
         if (formId === 'wbs') {
             if (subFormId === 'manpower') {
                 return <WorkBreakdownStructureForm formType="manpower" />;

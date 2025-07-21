@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
 import { PermissionType } from '../models';
+import NotFound from '../pages/NotFound';
 
 const ProjectManagement = lazy(() => import('../pages/ProjectManagement'));
 const ProjectDetails = lazy(() => import('../pages/projectManagement/ProjectDetails'));
@@ -51,11 +52,19 @@ export const projectManagementRoutes: RouteObject[] = [
             path: 'timeline',
             element: <ProjectTimeline />,
           },
+          {
+        path: '*',
+        element: <NotFound />,
+      },
         ]
       },
       {
         path: 'project/resources',
         element: <ResourceManagement />,
+      },
+      {
+        path: '*',
+        element: <NotFound />,
       },
     ],
   },
