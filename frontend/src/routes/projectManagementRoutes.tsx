@@ -1,10 +1,14 @@
 import { lazy } from 'react';
-import { RouteObject } from 'react-router-dom';
+import { RouteObject, Navigate } from 'react-router-dom';
 import { PermissionType } from '../models';
 
 const ProjectManagement = lazy(() => import('../pages/ProjectManagement'));
-const ProjectDetails = lazy(() => import('../pages/ProjectDetails'));
+const ProjectDetails = lazy(() => import('../pages/projectManagement/ProjectDetails'));
 const ResourceManagement = lazy(() => import('../components/ResourceManagement'));
+const ProjectOverview = lazy(() => import('../pages/projectManagement/ProjectOverview'));
+const ProjectForms = lazy(() => import('../pages/projectManagement/ProjectForms'));
+const ProjectDocuments = lazy(() => import('../pages/projectManagement/ProjectDocuments'));
+const ProjectTimeline = lazy(() => import('../pages/projectManagement/ProjectTimeline'));
 
 export const projectManagementRoutes: RouteObject[] = [
   {
@@ -18,6 +22,36 @@ export const projectManagementRoutes: RouteObject[] = [
       {
         path: 'project',
         element: <ProjectDetails />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="overview" replace />,
+          },
+          {
+            path: 'overview',
+            element: <ProjectOverview />,
+          },
+          {
+            path: 'forms',
+            element: <ProjectForms />,
+          },
+          {
+            path: 'forms/:formId',
+            element: <ProjectForms />,
+          },
+          {
+            path: 'forms/:formId/:subFormId',
+            element: <ProjectForms />,
+          },
+          {
+            path: 'documents',
+            element: <ProjectDocuments />,
+          },
+          {
+            path: 'timeline',
+            element: <ProjectTimeline />,
+          },
+        ]
       },
       {
         path: 'project/resources',

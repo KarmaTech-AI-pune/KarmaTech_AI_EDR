@@ -1,5 +1,4 @@
 import { RouteObject } from 'react-router-dom';
-import { coreRoutes } from './coreRoutes';
 import { businessDevelopmentRoutes } from './businessDevelopmentRoutes';
 import { projectManagementRoutes } from './projectManagementRoutes';
 import { adminRoutes } from './adminRoutes';
@@ -7,7 +6,7 @@ import Layout from '../components/Layout';
 import ProtectedRoute from './ProtectedRoute';
 import LoginScreen from '../pages/LoginScreen';
 import Dashboard from '../components/Dashboard';
-import NotFound from '../components/NotFound';
+import NotFound from '../pages/NotFound';
 
 const protectedRoutes: RouteObject[] = [
   ...businessDevelopmentRoutes,
