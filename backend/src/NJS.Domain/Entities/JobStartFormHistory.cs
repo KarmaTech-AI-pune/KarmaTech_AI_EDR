@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NJS.Domain.Entities
 {
     [Table("JobStartFormHistories")]
-    public class JobStartFormHistory
+    public class JobStartFormHistory : ITenantEntity
     {
         public JobStartFormHistory()
         {
@@ -14,6 +14,8 @@ namespace NJS.Domain.Entities
 
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int JobStartFormHeaderId { get; set; }

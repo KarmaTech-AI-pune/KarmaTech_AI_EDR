@@ -3,9 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    public class WBSTaskPlannedHourHeader
+    public class WBSTaskPlannedHourHeader : ITenantEntity
     {
         public int Id { get; set; }
+        public int TenantId { get; set; }
         public int ProjectId { get; set; }
         public Project Project { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

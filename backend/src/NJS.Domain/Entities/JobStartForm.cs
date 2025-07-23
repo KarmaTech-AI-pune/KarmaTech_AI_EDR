@@ -7,10 +7,12 @@ using System.Text.Json;
 namespace NJS.Domain.Entities
 {
     [Table("JobStartForms")]
-    public class JobStartForm
+    public class JobStartForm : ITenantEntity
     {
         [Key]
         public int FormId { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int ProjectId { get; set; } // Foreign key to Project

@@ -7,7 +7,7 @@ namespace NJS.Domain.Entities
     /// <summary>
     /// This model is used to track project workflow history
     /// </summary>
-    public class WBSHistory
+    public class WBSHistory : ITenantEntity
     {
         public WBSHistory()
         {
@@ -16,6 +16,8 @@ namespace NJS.Domain.Entities
 
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int WBSTaskPlannedHourHeaderId { get; set; }

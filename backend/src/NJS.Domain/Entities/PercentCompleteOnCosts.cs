@@ -1,8 +1,9 @@
 namespace NJS.Domain.Entities
 {
-    public class PercentCompleteOnCosts
+    public class PercentCompleteOnCosts : ITenantEntity
     {
         public int Id { get; set; }
+        public int TenantId { get; set; }
         public int BudgetTableId { get; set; }
         public BudgetTable BudgetTable { get; set; }
         public decimal RevenueFee { get; set; }

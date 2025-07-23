@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace NJS.Domain.Entities
 {
-    public class WorkBreakdownStructure
+    public class WorkBreakdownStructure : ITenantEntity
     {
         public WorkBreakdownStructure()
         {
@@ -17,6 +17,7 @@ namespace NJS.Domain.Entities
         }
 
         public int Id { get; set; }
+        public int TenantId { get; set; }
         public int ProjectId { get; set; }
         public string Structure { get; set; }
         public string CurrentVersion { get; set; } 

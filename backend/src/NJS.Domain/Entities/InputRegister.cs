@@ -5,10 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NJS.Domain.Entities
 {
     [Table("InputRegisters")]
-    public class InputRegister
+    public class InputRegister : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int ProjectId { get; set; }

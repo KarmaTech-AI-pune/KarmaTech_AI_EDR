@@ -5,10 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NJS.Domain.Entities
 {
     [Table("JobStartFormResources")]
-    public class JobStartFormResource
+    public class JobStartFormResource : ITenantEntity
     {
         [Key]
         public int ResourceId { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int FormId { get; set; } // Foreign key to JobStartForm

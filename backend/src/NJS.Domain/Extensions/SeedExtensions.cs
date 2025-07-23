@@ -21,7 +21,8 @@ namespace NJS.Domain.Extensions
             try
             {
                 using var scope = app.ApplicationServices.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+                var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<ProjectManagementContext>>();
+                await using var context = new ProjectManagementContext(options, tenantId: 1);
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 

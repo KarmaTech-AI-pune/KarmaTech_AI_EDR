@@ -9,6 +9,8 @@ using NLog.Web;
 using Microsoft.Extensions.Options;
 using NJSAPI.Configurations;
 using NJS.Domain.Extensions;
+using NJSAPI.Extensions;
+using NJSAPI.Middleware;
 
 internal class Program
 {
@@ -21,6 +23,7 @@ internal class Program
 
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
+        builder.Services.AddTenantServices(builder.Configuration);
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddConfiguredSwagger(builder.Configuration);
@@ -97,6 +100,7 @@ internal class Program
         app.UseCors("AllowSpecificOrigin");
         app.UseResponseCompression();
         app.UseHttpsRedirection();
+        app.UseMiddleware<TenantResolverMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
         app.SeedApplicationData();

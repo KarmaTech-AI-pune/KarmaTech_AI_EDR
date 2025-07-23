@@ -4,10 +4,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    public class WBSTaskPlannedHour
+    public class WBSTaskPlannedHour : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
         public int WBSTaskPlannedHourHeaderId { get; set; }
         public WBSTaskPlannedHourHeader WBSTaskPlannedHourHeader { get; set; }
 

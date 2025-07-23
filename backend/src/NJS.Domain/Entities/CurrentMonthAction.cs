@@ -2,9 +2,10 @@ using System;
 
 namespace NJS.Domain.Entities
 {
-    public class CurrentMonthAction
+    public class CurrentMonthAction : ITenantEntity
     {
         public int Id { get; set; }
+        public int TenantId { get; set; }
         public int MonthlyProgressId { get; set; }
         public MonthlyProgress MonthlyProgress { get; set; }
         public string? Actions { get; set; }

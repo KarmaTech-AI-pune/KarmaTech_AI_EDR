@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    public class ProjectClosureWorkflowHistory
+    public class ProjectClosureWorkflowHistory : ITenantEntity
     {
         public ProjectClosureWorkflowHistory()
         {
@@ -13,6 +13,8 @@ namespace NJS.Domain.Entities
 
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
         
         public int ProjectClosureId { get; set; }
         
