@@ -28,8 +28,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format } from 'date-fns';
 import { bidPreparationApi, DocumentCategory } from '../../dummyapi/bidPreparationApi';
-import { projectManagementAppContext } from '../../App';
-import { projectManagementAppContextType } from '../../types';
+import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
 import { getBidVersionHistory, BidVersionHistory as BidVersionHistoryType, BidPreparationStatus } from '../../dummyapi/bidVersionHistoryApi';
 import { getStatusLabel } from '../../utils/statusUtils';
 
@@ -253,7 +252,7 @@ const initializeCategories = (): DocumentCategory[] => {
 };
 
 const BidPreparationForm: React.FC = () => {
-  const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
+  const { opportunityId } = useBusinessDevelopment();
   const [categories, setCategories] = useState<DocumentCategory[]>(initializeCategories());
   const [editMode, setEditMode] = useState(false);
   const [currentRole, setCurrentRole] = useState<'Business Development Manager' | 'Regional Manager' | 'Regional Director'>('Business Development Manager');
@@ -282,14 +281,14 @@ const BidPreparationForm: React.FC = () => {
 
   const loadBidPreparationData = async () => {
     try {
-      if (!context.selectedProject?.id) {
+      if (!opportunityId) {
         setError('No project selected');
         return;
       }
       
       // Ensure we're passing a number to the API
-      const projectId = Number(context.selectedProject.id);
-      const data = await bidPreparationApi.getBidPreparationData(projectId);
+      const opportunityIdNum = Number(opportunityId);
+      const data = await bidPreparationApi.getBidPreparationData(opportunityIdNum);
       if (data.documentCategoriesJson) {
         setCategories(JSON.parse(data.documentCategoriesJson));
         setStatus(data.status);
@@ -379,17 +378,17 @@ const BidPreparationForm: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      if (!context.selectedProject?.id) {
+      if (!opportunityId) {
         setError('No project selected');
         return;
       }
       
       // Ensure we're passing a number to the API
-      const projectId = Number(context.selectedProject.id);
+      const opportunityIdNum = Number(opportunityId);
       
       if ((currentRole === 'Regional Director' || currentRole === 'Regional Manager')) {
         await bidPreparationApi.approveOrReject(
-          projectId,
+          opportunityIdNum,
           approvalAction === 'approve' ? true : false,
           comments
         );
@@ -397,7 +396,7 @@ const BidPreparationForm: React.FC = () => {
       } else {
         await bidPreparationApi.updateBidPreparationData(
           categories,
-          projectId,
+          opportunityIdNum,
           comments
         );
       }
@@ -412,14 +411,14 @@ const BidPreparationForm: React.FC = () => {
 
   const handleSubmitForApproval = async () => {
     try {
-      if (!context.selectedProject?.id) {
+      if (!opportunityId) {
         setError('No project selected');
         return;
       }
       
       // Ensure we're passing a number to the API
-      const projectId = Number(context.selectedProject.id);
-      await bidPreparationApi.submitForApproval(projectId);
+      const opportunityIdNum = Number(opportunityId);
+      await bidPreparationApi.submitForApproval(opportunityIdNum);
       setStatus(BidPreparationStatus.PendingApproval);
       loadVersionHistory();
       setEditMode(false);
@@ -437,14 +436,14 @@ const BidPreparationForm: React.FC = () => {
   
   const loadVersionHistory = async () => {
     try {
-      if (!context.selectedProject?.id) {
+      if (!opportunityId) {
         setError('No project selected');
         return;
       }
       
       // Ensure we're passing a number to the API
-      const projectId = Number(context.selectedProject.id);
-      const history = await getBidVersionHistory(projectId);
+      const opportunityIdNum = Number(opportunityId);
+      const history = await getBidVersionHistory(opportunityIdNum);
       setVersionHistory(history);
       
       if (history && history.length > 0) {

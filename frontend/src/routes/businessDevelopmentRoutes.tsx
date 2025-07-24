@@ -1,12 +1,14 @@
 import { lazy } from 'react';
-import { RouteObject } from 'react-router-dom';
+import { RouteObject, Navigate } from 'react-router-dom';
 import { PermissionType } from '../models';
 
 const BusinessDevelopment = lazy(() => import('../pages/BusinessDevelopment'));
 const BusinessDevelopmentDetails = lazy(() => import('../pages/BusinessDevelopmentDetails'));
-const GoNoGoForm = lazy(() => import('../components/forms/GoNoGoForm'));
-const BidPreparationForm = lazy(() => import('../components/forms/BidPreparationForm'));
-const GoNoGoFormWrapper = lazy(() => import('../components/GoNoGoFormWrapper'));
+const BOverview = lazy(() => import('../pages/businessDevelopment/BOverview'));
+const BForms = lazy(() => import('../pages/businessDevelopment/BForms'));
+const BFormRenderer = lazy(() => import('../pages/businessDevelopment/BFormRenderer'));
+const BDocuments = lazy(() => import('../pages/businessDevelopment/BDocuments'));
+const BTimeline = lazy(() => import('../pages/businessDevelopment/BTimeline'));
 
 export const businessDevelopmentRoutes: RouteObject[] = [
   {
@@ -18,16 +20,34 @@ export const businessDevelopmentRoutes: RouteObject[] = [
         element: <BusinessDevelopment />,
       },
       {
-        path: ':id',
+        path: 'details',
         element: <BusinessDevelopmentDetails />,
-      },
-      {
-        path: ':id/gonogo-form',
-        element: <GoNoGoFormWrapper />,
-      },
-      {
-        path: ':id/bid-preparation',
-        element: <BidPreparationForm />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="overview" replace />,
+          },
+          {
+            path: 'overview',
+            element: <BOverview />,
+          },
+          {
+            path: 'forms',
+            element: <BForms />,
+          },
+          {
+            path: 'forms/:formId',
+            element: <BFormRenderer />,
+          },
+          {
+            path: 'documents',
+            element: <BDocuments />,
+          },
+          {
+            path: 'timeline',
+            element: <BTimeline />,
+          },
+        ],
       },
     ],
   },
