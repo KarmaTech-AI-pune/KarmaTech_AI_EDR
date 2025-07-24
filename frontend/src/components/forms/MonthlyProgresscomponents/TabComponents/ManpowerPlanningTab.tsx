@@ -12,7 +12,7 @@ import {
   TableRow,
   TextField,
   Paper,
-  Typography
+  Typography,
 } from "@mui/material";
 
 // Reusable Cell Component

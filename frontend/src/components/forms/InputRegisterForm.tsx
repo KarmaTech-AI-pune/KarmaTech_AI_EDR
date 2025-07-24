@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -24,8 +24,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import InputRegisterDialog from './InputRegisterformcomponents/InputRegisterDialog';
 import { deleteInputRegister, getInputRegisterByProject } from '../../api/inputRegisterApi';
-import { projectManagementAppContext } from '../../App';
-import { FormWrapper } from './FormWrapper';
+import { useProject } from '../../context/ProjectContext';
 import { InputRegisterRow } from '../../models';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
@@ -40,7 +39,7 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
 
 const InputRegisterForm: React.FC = () => {
   const theme = useTheme();
-  const context = useContext(projectManagementAppContext);
+  const { projectId } = useProject();
   const [rows, setRows] = useState<InputRegisterRow[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<InputRegisterRow | undefined>(undefined);
@@ -49,17 +48,17 @@ const InputRegisterForm: React.FC = () => {
   const [isDialogOpening, setIsDialogOpening] = useState(false);
 
   useEffect(() => {
-    if (!context?.selectedProject?.id) {
+    if (!projectId) {
       setError('No project selected');
       return;
     }
 
     const fetchData = async () => {
       try {
-        if (!context.selectedProject?.id) {
+        if (!projectId) {
           throw new Error('Project ID is required');
         }
-        const data = await getInputRegisterByProject(context.selectedProject.id.toString());
+        const data = await getInputRegisterByProject(projectId);
         setRows(data);
         setError('');
       } catch (err) {
@@ -69,15 +68,13 @@ const InputRegisterForm: React.FC = () => {
     };
 
     fetchData();
-  }, [context?.selectedProject?.id]);
+  }, [projectId]);
 
-  if (!context?.selectedProject?.id) {
+  if (!projectId) {
     return (
-      <FormWrapper>
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-          <Alert severity="warning">Please select a project to view the input register.</Alert>
-        </Container>
-      </FormWrapper>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="warning">Please select a project to view the input register.</Alert>
+      </Container>
     );
   }
 
@@ -339,13 +336,13 @@ const InputRegisterForm: React.FC = () => {
         onClose={handleCloseDialog}
         onSave={handleSave}
         initialData={selectedRow}
-        projectId={context.selectedProject?.id?.toString() || ''}
+        projectId={projectId || ''}
       />
     </Container>
   );
 
   return (
-    <FormWrapper>
+    <>
       {formContent}
 
       {/* Notification Snackbar */}
@@ -359,7 +356,7 @@ const InputRegisterForm: React.FC = () => {
           {notification.message}
         </Alert>
       </Snackbar>
-    </FormWrapper>
+    </>
   );
 };
 

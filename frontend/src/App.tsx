@@ -4,7 +4,8 @@ import { Project, OpportunityTracking } from "./models"
 import { GoNoGoDecision } from "./models/goNoGoDecisionModel"
 import { createContext, useState, useEffect } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { ProjectProvider } from './context/ProjectContext'; // Import ProjectProvider
+import { ProjectProvider } from './context/ProjectContext';
+import { BusinessDevelopmentProvider } from './context/BusinessDevelopmentContext';
 import { authApi } from './services/authApi'
 import { PermissionType } from './models'
 import { routes } from './routes/RouteConfig';
@@ -185,13 +186,12 @@ function App() {
 
   const router = createBrowserRouter(routes);
 
-  // Extract projectId from selectedProject if available
-  const projectId = selectedProject?.id || null;
-
   return (
     <projectManagementAppContext.Provider value={contextValue}>
-      <ProjectProvider projectId={projectId as string}> {/* Provide projectId via context */}
-        <RouterProvider router={router} />
+      <ProjectProvider>
+        <BusinessDevelopmentProvider>
+          <RouterProvider router={router} />
+        </BusinessDevelopmentProvider>
       </ProjectProvider>
     </projectManagementAppContext.Provider>
   );

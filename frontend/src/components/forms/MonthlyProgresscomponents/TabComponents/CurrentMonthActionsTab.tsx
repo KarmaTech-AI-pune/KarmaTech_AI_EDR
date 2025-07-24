@@ -49,7 +49,7 @@ const CurrentMonthActionsTab: React.FC = () => {
   const addCurrentMonthActionRow = () => {
     append({
       actions: "",
-      date: formatDateForInput(new Date()),
+      date: new Date().toISOString(),
       comments: "",
       priority: null
     });

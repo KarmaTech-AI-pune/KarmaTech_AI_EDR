@@ -21,7 +21,8 @@ import { OpportunityTracking } from '../../models';
 import { OpportunityForm } from '../forms/OpportunityForm';
 import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../models';
-import { useAppNavigation } from '../../hooks/useAppNavigation';
+import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
+import { useNavigate } from 'react-router-dom';
 
 export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   opportunity,
@@ -53,7 +54,8 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [canEditOpportunity, setCanEditOpportunity] = useState(false);
   const [canDeleteOpportunity, setCanDeleteOpportunity] = useState(false);
-  const navigation = useAppNavigation();
+  const { setOpportunityId } = useBusinessDevelopment();
+  const navigate = useNavigate();
 
   // Update current opportunity when the prop changes
   useEffect(() => {
@@ -157,7 +159,10 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   };
 
   const handleOpportunityClick = () => {
-    navigation.navigateToBusinessDevelopmentDetails(currentOpportunity);
+    if (currentOpportunity.id) {
+      setOpportunityId(currentOpportunity.id.toString());
+      navigate('/business-development/details/overview');
+    }
   };
 
   return (
