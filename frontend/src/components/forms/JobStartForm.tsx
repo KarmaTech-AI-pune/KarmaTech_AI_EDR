@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect } from 'react'
 import JobstartTime from './jobstartFormComponent/JobstartTime'
 import EstimatedExpenses from './jobstartFormComponent/EstimatedExpenses'
 import JobstartGrandTotal from './jobstartFormComponent/JobstartGrandTotal'

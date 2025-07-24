@@ -24,7 +24,6 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
-import { OpportunityTracking } from '../../models';
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;

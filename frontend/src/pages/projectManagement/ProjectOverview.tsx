@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Box, Grid, Card, CardContent, Chip } from '@mui/material';
+import { Typography, Box, Grid, Card, CardContent } from '@mui/material';
 import { useProjectDetailsContext } from './ProjectDetails';
 import HomeIcon from '@mui/icons-material/Home';
 import BusinessIcon from '@mui/icons-material/Business';

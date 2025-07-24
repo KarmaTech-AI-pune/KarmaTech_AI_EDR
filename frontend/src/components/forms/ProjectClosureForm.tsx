@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   Box,
@@ -35,7 +35,7 @@ import {
   ProjectClosureWithMetadata
 } from '../../services/projectClosureApi';
 import { useProject } from '../../context/ProjectContext';
-import { ProjectClosureRow, ProjectClosureComment, Project,WorkflowHistory } from "../../models";
+import { ProjectClosureRow, ProjectClosureComment, WorkflowHistory } from "../../models";
 import { PMWorkflowStatus } from '../../models/pmWorkflowModel';
 import ProjectClosureWorkflow from '../common/ProjectClosureWorkflow';
 

@@ -14,7 +14,7 @@ import { BDChips } from '../components/common/BDChips';
 const NAVBAR_HEIGHT = '64px';
 
 export const BusinessDevelopmentDetails: React.FC = () => {
-  const { opportunity, histories, handleOpportunityUpdate, isLoading, error, opportunityId } = useBusinessDevelopment();
+  const { opportunity, histories, handleOpportunityUpdate, isLoading, error } = useBusinessDevelopment();
 
   if (isLoading) {
     return (

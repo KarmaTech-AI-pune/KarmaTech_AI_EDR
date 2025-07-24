@@ -5,7 +5,7 @@ import ProtectedRoute from './ProtectedRoute';
 import Layout from '../components/Layout';
 
 const Dashboard = lazy(() => import('../components/Dashboard'));
-const NotFound = lazy(() => import('../components/NotFound'));
+const NotFound = lazy(() => import('../pages/NotFound'));
 
 export const coreRoutes: RouteObject[] = [
   {

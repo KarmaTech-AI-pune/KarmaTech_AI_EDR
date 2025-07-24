@@ -25,6 +25,10 @@ export interface projectManagementAppContextType {
     setSelectedProject: (project: Project | OpportunityTracking | null) => void;
     currentGoNoGoDecision: GoNoGoDecision | null;
     setCurrentGoNoGoDecision: (decision: GoNoGoDecision | null) => void;
+    goNoGoDecisionStatus: string | null; // Added state property
+    setGoNoGoDecisionStatus: (status: string) => void; // Added setter
+    goNoGoVersionNumber: number | null; // Added state property
+    setGoNoGoVersionNumber: (versionNumber: number) => void; // Added setter
     currentUser: UserWithRole | null;
     setCurrentUser: (user: UserWithRole | null) => void;
     canEditOpportunity: boolean;

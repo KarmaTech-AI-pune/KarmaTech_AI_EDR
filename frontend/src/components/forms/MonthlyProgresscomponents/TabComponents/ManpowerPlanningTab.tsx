@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useContext } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
-import { projectManagementAppContext } from "../../../../App";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 import {
   Box,
@@ -14,7 +13,6 @@ import {
   TextField,
   Paper,
   Typography,
-  CircularProgress
 } from "@mui/material";
 
 // Reusable Cell Component
@@ -98,7 +96,6 @@ const tableColumns = [
 
 const ManpowerPlanningTab: React.FC = () => {
   const { control, setValue } = useFormContext<MonthlyProgressSchemaType>();
-  const context = useContext(projectManagementAppContext);
   
   const { fields } = useFieldArray({
     control,

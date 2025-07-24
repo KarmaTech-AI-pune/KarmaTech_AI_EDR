@@ -20,8 +20,8 @@ const GoNoGoFormWrapper = () => {
 
     // Update the Go/No Go decision status and version number
     if (context?.setGoNoGoDecisionStatus && context?.setGoNoGoVersionNumber) {
-      context.setGoNoGoDecisionStatus(status);
-      context.setGoNoGoVersionNumber(versionNumber);
+    context.setGoNoGoDecisionStatus(status);
+    context.setGoNoGoVersionNumber(versionNumber);
     }
 
     // Navigate back to Business Development Details
