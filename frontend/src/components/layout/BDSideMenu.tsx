@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Drawer,
   List,
@@ -31,10 +31,10 @@ const COLLAPSED_DRAWER_WIDTH = 65;
 const NAVBAR_HEIGHT = '64px';
 
 export const BDSideMenu: React.FC = () => {
-  const [formsOpen, setFormsOpen] = useState(false);
+  const location = useLocation();
+  const [formsOpen, setFormsOpen] = useState(location.pathname.includes('/forms'));
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
   const navigate = useNavigate();
-  const location = useLocation();
   const { opportunity, goNoGoDecisionStatus, goNoGoVersionNumber } = useBusinessDevelopment();
 
   const isOpportunityApproved = Array.isArray(opportunity?.currentHistory)
@@ -44,6 +44,10 @@ export const BDSideMenu: React.FC = () => {
   const handleNavigation = (path: string) => {
     navigate(path);
   };
+
+   useEffect(() => {
+        setFormsOpen(location.pathname.includes('/forms'));
+    }, [location.pathname]);
 
   const toggleDrawer = () => {
     setIsDrawerExpanded(!isDrawerExpanded);
