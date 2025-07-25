@@ -255,6 +255,45 @@ export const getMonthlyProgressData = async (
   year: number,
   month: number
 ): Promise<Partial<MonthlyProgressSchemaType>> => {
+  let previousMonthData: Partial<MonthlyProgressSchemaType> = {};
+
+  // Calculate previous month and year
+  let previousMonth = month - 1;
+  let previousYear = year;
+  if (previousMonth === 0) {
+    previousMonth = 12;
+    previousYear -= 1;
+  }
+
+  try {
+    // Attempt to fetch previous month's data
+    const prevMonthReport = await MonthlyProgressAPI.getMonthlyReportByYearMonth(
+      projectId,
+      previousYear,
+      previousMonth
+    );
+    if (prevMonthReport && prevMonthReport.actualCost) {
+      previousMonthData = {
+        actualCost: {
+          priorCumulativeOdc: prevMonthReport.actualCost.totalCumulativeOdc ?? null,
+          priorCumulativeStaff: prevMonthReport.actualCost.totalCumulativeStaff ?? null,
+          priorCumulativeTotal: prevMonthReport.actualCost.totalCumulativeCost ?? null,
+          actualOdc: null, // These are for the current month, so initialize as null
+          actualStaff: null,
+          actualSubtotal: null,
+          totalCumulativeOdc: null,
+          totalCumulativeStaff: null,
+          totalCumulativeCost: null,
+        },
+      };
+    }
+  } catch (error) {
+    console.info(
+      `No previous month's report found for ${previousYear}-${previousMonth}.`,
+      error
+    );
+  }
+
   try {
     const monthlyProgressData = await MonthlyProgressAPI.getMonthlyReportByYearMonth(
       projectId,
@@ -267,6 +306,7 @@ export const getMonthlyProgressData = async (
       const aggregatedData = await getAggregatedMonthlyProgressData(projectId);
       return {
         ...aggregatedData,
+        ...previousMonthData, // Merge previous month's data
         ...monthlyProgressData,
       };
     }
@@ -280,5 +320,8 @@ export const getMonthlyProgressData = async (
 
   // If no existing data or if the fetch failed, get aggregated data
   const aggregatedData = await getAggregatedMonthlyProgressData(projectId);
-  return aggregatedData;
+  return {
+    ...aggregatedData,
+    ...previousMonthData, // Merge previous month's data even if current month data is new
+  };
 };
