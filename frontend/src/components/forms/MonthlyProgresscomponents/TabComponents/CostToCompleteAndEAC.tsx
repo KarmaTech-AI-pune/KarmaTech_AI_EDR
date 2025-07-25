@@ -69,10 +69,12 @@ const Section: React.FC<SectionProps> = ({ title, fields, control }) => {
     fullTitle = "Actual Cost To Complete";
   } else if (title === "EAC") {
     fullTitle = "Estimated Actual Cost";
+  } else if (title === "TCAC") {
+    fullTitle = "Total Cumulative Actual Cost";
   }
 
   return (
-    <Grid item xs={12} md={3}>
+    <Grid item xs={12} md={2.4}>
       <Paper elevation={1} sx={{ p: 2 }}>
         <Tooltip title={fullTitle} arrow>
           <Typography variant="h6" gutterBottom color="primary">
@@ -110,10 +112,8 @@ const CostToCompleteAndEAC: React.FC = () => {
     
     const actualCtcSubtotal = (actualctcODC ?? 0) + (actualCtcStaff ?? 0);
     
-    const useActualCtc = actualctcODC != null || actualCtcStaff != null;
-
-    const eacOdc = totalCumulativeOdcs + (useActualCtc ? (actualctcODC ?? 0) : calculatedCtcODC);
-    const eacStaff = totalCumulativeStaff + (useActualCtc ? (actualCtcStaff ?? 0) : calculatedCtcStaff);
+    const eacOdc = actualctcODC != null ? (totalCumulativeOdcs + actualctcODC) : (budgetOdcs ?? 0);
+    const eacStaff = actualCtcStaff != null ? (totalCumulativeStaff + actualCtcStaff) : (budgetStaff ?? 0);
     const totalEAC = eacOdc + eacStaff;
     
     const grossProfitPercentage = calculateGrossPercentage(net, totalEAC);
@@ -144,6 +144,15 @@ const CostToCompleteAndEAC: React.FC = () => {
   }, [calculatedValues, setValue]);
 
   const sections: SectionProps[] = [
+    {
+      title: "TCAC",
+      control,
+      fields: [
+        { name: "eacOdc", label: "ODCs", readOnly: true, value: watch('actualCost.totalCumulativeOdc') ?? 0 },
+        { name: "eacStaff", label: "Staff", readOnly: true, value: watch('actualCost.totalCumulativeStaff') ?? 0 },
+        { name: "totalEAC", label: "Subtotal", readOnly: true, value: watch('actualCost.totalCumulativeCost') ?? 0 },
+      ],
+    },
     {
       title: "CTC",
       control,
@@ -181,7 +190,7 @@ const CostToCompleteAndEAC: React.FC = () => {
   ];
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       {sections.map(section => (
         <Section key={section.title} {...section} />
       ))}
