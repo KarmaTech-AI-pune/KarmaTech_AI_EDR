@@ -28,7 +28,7 @@ interface JobstartSummaryProps {
 
 const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPercentage, onDataChange }: JobstartSummaryProps) => {
   // State for project fees and service tax
-  const [projectFees, setProjectFees] = useState<string>(
+  const [projectFees, _setProjectFees] = useState<string>(
     (initialProjectFees || 0).toString()
   );
   const [serviceTax, setServiceTax] = useState({
@@ -70,36 +70,6 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
   };
 
   // Handlers for input changes
-  const handleProjectFeesChange = (value: string) => {
-    // Only allow numeric values (including decimal points)
-    if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
-      // Remove any leading zeros (except for decimal values like 0.xx)
-      let cleanedValue = value;
-      if (value.length > 1 && value.startsWith('0') && value.charAt(1) !== '.') {
-        cleanedValue = value.replace(/^0+/, '');
-      }
-
-      setProjectFees(cleanedValue);
-      notifyParentOfChanges(cleanedValue, serviceTax.percentage);
-    }
-  };
-
-  // Format project fees to always have 2 decimal places when focus is lost
-  const handleProjectFeesBlur = () => {
-    if (projectFees) {
-      const numValue = parseFloat(projectFees);
-      if (!isNaN(numValue)) {
-        // Format to 2 decimal places without leading zeros
-        const formattedValue = numValue.toFixed(2);
-        setProjectFees(formattedValue);
-        notifyParentOfChanges(formattedValue, serviceTax.percentage);
-      }
-    } else {
-      // If field is empty, set to 0.00
-      setProjectFees('0.00');
-      notifyParentOfChanges('0.00', serviceTax.percentage);
-    }
-  };
 
   const handleServiceTaxChange = (value: string) => {
     // Only allow numeric values (including decimal points)
