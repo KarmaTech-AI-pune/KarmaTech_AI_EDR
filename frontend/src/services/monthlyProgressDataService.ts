@@ -285,6 +285,7 @@ export const getMonthlyProgressData = async (
           totalCumulativeStaff: null,
           totalCumulativeCost: null,
         },
+        lastMonthActions: prevMonthReport.currentMonthActions || [],
       };
     }
   } catch (error) {
@@ -308,6 +309,7 @@ export const getMonthlyProgressData = async (
         ...aggregatedData,
         ...previousMonthData, // Merge previous month's data
         ...monthlyProgressData,
+        lastMonthActions: previousMonthData.lastMonthActions || monthlyProgressData.lastMonthActions || [],
       };
     }
   } catch (error) {
@@ -323,5 +325,6 @@ export const getMonthlyProgressData = async (
   return {
     ...aggregatedData,
     ...previousMonthData, // Merge previous month's data even if current month data is new
+    lastMonthActions: previousMonthData.lastMonthActions || [],
   };
 };
