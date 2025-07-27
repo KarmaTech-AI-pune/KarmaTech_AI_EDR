@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:tenant1": "vite --config vite.config.tenant1.ts",
+    "dev:tenant2": "vite --config vite.config.tenant2.ts",
     "build": "tsc -b && vite build",
+    "build:tenant1": "tsc -b && vite build --config vite.config.tenant1.ts",
+    "build:tenant2": "tsc -b && vite build --config vite.config.tenant2.ts",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

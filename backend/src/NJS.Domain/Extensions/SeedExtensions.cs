@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,11 +23,12 @@ namespace NJS.Domain.Extensions
             {
                 using var scope = app.ApplicationServices.CreateScope();
                 var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<ProjectManagementContext>>();
-                await using var context = new ProjectManagementContext(options, tenantId: 1);
+                var httpContextAccessor = scope.ServiceProvider.GetService<IHttpContextAccessor>();
+                await using var context = new ProjectManagementContext(options, httpContextAccessor);
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 
-                await context.Database.MigrateAsync();
+               await context.Database.MigrateAsync();
 
                 // Seed Permissions
                 var permissions = new[]

@@ -25,6 +25,9 @@ namespace NJS.Domain.Entities
         public string Comments { get; set; }
         public DateTime ActionDate { get; set; }
         public string ActionBy { get; set; }
+        
+        [ForeignKey("ActionBy")]
+        [InverseProperty("OpportunityHistories")]
         public User ActionUser { get; set; }
 
         public string? AssignedToId { get; set; }

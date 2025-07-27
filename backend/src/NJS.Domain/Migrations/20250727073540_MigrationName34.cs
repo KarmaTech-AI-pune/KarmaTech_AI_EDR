@@ -5,7 +5,7 @@
 namespace NJS.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class AutoMigration_20250513_162420 : Migration
+    public partial class MigrationName34 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -54,6 +54,7 @@ namespace NJS.Domain.Entities
 
         // Navigation properties
         [ForeignKey("WorkBreakdownStructureId")]
+        [InverseProperty("VersionHistory")]
         public WorkBreakdownStructure WorkBreakdownStructure { get; set; }
 
         [ForeignKey("CreatedBy")]

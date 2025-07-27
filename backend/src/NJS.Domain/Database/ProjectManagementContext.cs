@@ -23,11 +23,11 @@ namespace NJS.Domain.Database
                     TenantId = (int)tenantId;
                 }
             }
-        }
+            else
+            {
+                TenantId = 1;
 
-        public ProjectManagementContext(DbContextOptions<ProjectManagementContext> options, int? tenantId) : base(options)
-        {
-            TenantId = tenantId;
+            }
         }
         
         public DbSet<BidPreparation> BidPreparations { get; set; }
@@ -107,6 +107,9 @@ namespace NJS.Domain.Database
         public DbSet<PercentCompleteOnCosts> PercentCompleteOnCosts { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Tenant> Tenants { get; set; }
+        public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+        public DbSet<TenantUser> TenantUsers { get; set; }
+        public DbSet<TenantDatabase> TenantDatabases { get; set; }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -115,7 +118,11 @@ namespace NJS.Domain.Database
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                        entry.Entity.TenantId = TenantId ?? throw new InvalidOperationException("TenantId cannot be null.");
+                        // Only set TenantId if it's not already set (for seeding scenarios)
+                        if (entry.Entity.TenantId == 0)
+                        {
+                            entry.Entity.TenantId = TenantId ?? throw new InvalidOperationException("TenantId cannot be null.");
+                        }
                         break;
                 }
             }
@@ -410,8 +417,8 @@ namespace NJS.Domain.Database
                 .HasOne(oh => oh.Opportunity)
                 .WithMany(o => o.OpportunityHistories)
                 .HasForeignKey(oh => oh.OpportunityId);
-            modelBuilder.Entity<OpportunityHistory>()
-                .HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
+            //modelBuilder.Entity<OpportunityHistory>()
+                //.HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
 
             modelBuilder.Entity<WBSHistory>()

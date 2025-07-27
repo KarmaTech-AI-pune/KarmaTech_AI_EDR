@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,14 @@ namespace NJS.Domain.Extensions
                 {
                     options.AddInterceptors(new NJS.Domain.Interceptors.AuditSaveChangesInterceptor(auditSubject, auditContext));
                 }
+            });
+
+            // Register a factory for ProjectManagementContext to handle IHttpContextAccessor dependency
+            services.AddScoped<ProjectManagementContext>(provider =>
+            {
+                var options = provider.GetRequiredService<DbContextOptions<ProjectManagementContext>>();
+                var httpContextAccessor = provider.GetService<IHttpContextAccessor>();
+                return new ProjectManagementContext(options, httpContextAccessor);
             });
 
             services.AddIdentity<User, Role>()
