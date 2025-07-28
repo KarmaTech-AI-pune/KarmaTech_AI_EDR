@@ -6,7 +6,7 @@ const ProjectTimeline: React.FC = () => {
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom>Timeline</Typography>
       <Typography variant="body1" color="text.secondary">
-        Project timeline section will be implemented hereeee
+        Project timeline section will be implemented here
       </Typography>
     </Paper>
   );

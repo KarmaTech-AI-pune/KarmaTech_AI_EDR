@@ -29,7 +29,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
 export const useProject = () => {
   const context = useContext(ProjectContext);
-  console.log("nani id", context)
   if (context === undefined) {
     throw new Error('useProject must be used within a ProjectProvider');
   }

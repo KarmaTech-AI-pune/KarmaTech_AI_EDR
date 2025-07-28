@@ -1,3 +1,7 @@
+# Remove the Migrations folder
+Write-Host "Removing Migrations folder..."
+Remove-Item -Recurse -Force "src\NJS.Domain\Migrations" -ErrorAction SilentlyContinue
+
 # Remove existing migration
 Write-Host "Removing existing migration..."
 dotnet ef migrations remove --project src/NJS.Domain --startup-project src/NJSAPI
