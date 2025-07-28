@@ -7,6 +7,7 @@ using NJS.Application.CQRS.Users.Queries;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
+using NJS.Repositories.Interfaces;
 
 namespace NJSAPI.Controllers
 {
@@ -19,15 +20,19 @@ namespace NJSAPI.Controllers
         private readonly IAuthService _authService;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<UserController> _logger;
+        private readonly ITenantService _tenantService;
         public UserController(
             IAuthService authService,
-            UserManager<User> userManager, IMediator mediator,
+            UserManager<User> userManager, 
+            IMediator mediator,
+            ITenantService tenantService,
             ILogger<UserController> logger)
         {
             _authService = authService;
             _userManager = userManager;
             _logger = logger;
             _mediator = mediator;
+            _tenantService = tenantService;
         }
 
         [HttpPost("login")]
@@ -38,6 +43,16 @@ namespace NJSAPI.Controllers
                 if (model == null || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
                 {
                     return BadRequest(new { success = false, message = "Invalid login data" });
+                }
+
+                // Check for tenant context in headers
+                var tenantContext = Request.Headers["X-Tenant-Context"].FirstOrDefault();
+                
+                // If tenant context is provided, validate it exists
+                if (!string.IsNullOrEmpty(tenantContext))
+                {
+                    await _tenantService.SetTenantContextAsync(tenantContext);
+                    _logger.LogInformation($"Login attempt for tenant: {tenantContext}");
                 }
 
                 var (success, user, token) = await _authService.ValidateUserAsync(model.Email, model.Password);

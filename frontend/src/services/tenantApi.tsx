@@ -41,4 +41,32 @@ export const suggestSubdomain = async (companyName: string): Promise<string[]> =
 export const getTenantStats = async () => {
   const response = await axios.get(`${API_BASE_URL}api/tenants/stats`);
   return response.data;
+};
+
+// Tenant User Management APIs
+export const getTenantUsers = async (tenantId: number) => {
+  const response = await axios.get(`${API_BASE_URL}api/tenants/${tenantId}/users`);
+  return response.data;
+};
+
+export const addTenantUser = async (tenantUser: {
+  tenantId: number;
+  userId: string;
+  role: number;
+  isActive: boolean;
+}) => {
+  const response = await axios.post(`${API_BASE_URL}api/tenants/${tenantUser.tenantId}/users`, tenantUser);
+  return response.data;
+};
+
+export const updateTenantUser = async (tenantUserId: number, updates: {
+  role?: number;
+  isActive?: boolean;
+}) => {
+  const response = await axios.put(`${API_BASE_URL}api/tenants/users/${tenantUserId}`, updates);
+  return response.data;
+};
+
+export const removeTenantUser = async (tenantUserId: number) => {
+  await axios.delete(`${API_BASE_URL}api/tenants/users/${tenantUserId}`);
 }; 

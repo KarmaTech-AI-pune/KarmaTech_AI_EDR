@@ -7,7 +7,8 @@ import {
     Typography,
     Box,
     Alert,
-    Container
+    Container,
+    Link
 } from '@mui/material';
 import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
@@ -160,6 +161,11 @@ export const LoginScreen: React.FC = () => {
                         <a href="#" style={{ color: '#1976d2', textDecoration: 'none' }}>
                             Forgot password?
                         </a>
+                    </Typography>
+                    <Typography variant="body2" align="center" sx={{ mt: 1, color: '#666' }}>
+                        <Link href="/enhanced-login" sx={{ color: '#1976d2', textDecoration: 'none' }}>
+                            🚀 Try Enhanced Multi-Tenant Login
+                        </Link>
                     </Typography>
                 </CardContent>
             </Card>

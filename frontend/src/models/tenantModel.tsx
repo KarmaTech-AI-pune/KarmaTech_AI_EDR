@@ -39,10 +39,10 @@ export interface TenantUser {
 }
 
 export enum TenantUserRole {
-  Owner = 'Owner',
-  Admin = 'Admin',
-  Manager = 'Manager',
-  User = 'User'
+  Owner = 0,
+  Admin = 1,
+  Manager = 2,
+  User = 3
 }
 
 export interface TenantDatabase {

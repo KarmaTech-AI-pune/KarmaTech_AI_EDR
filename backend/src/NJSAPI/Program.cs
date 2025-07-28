@@ -31,9 +31,16 @@ internal class Program
         builder.Services.AddCors(options =>
         {
             var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+            
+            // Add tenant subdomains dynamically
+            
+            
+            var allOrigins = allowedOrigins?.ToList() ?? new List<string>();
+            //allOrigins.AddRange(tenantSubdomains);
+            
             options.AddPolicy("AllowSpecificOrigin",
                 builder => builder
-                    .WithOrigins(allowedOrigins)
+                    .WithOrigins(allOrigins.ToArray())
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials());
@@ -98,6 +105,7 @@ internal class Program
 
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");
+        app.UseTenantCors(); // Add custom tenant CORS middleware
         app.UseResponseCompression();
         app.UseHttpsRedirection();
         app.UseMiddleware<TenantResolverMiddleware>();

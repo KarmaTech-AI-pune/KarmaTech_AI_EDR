@@ -4,6 +4,7 @@ import { AlertsPanel } from './AlertsPanel'; // Import the new component
 import { BusinessDevelopment, ProjectManagement } from '../pages';
 import { ReportsList } from './ReportsList';
 import { NotificationCenter } from './navigation/NotificationCenter';
+import EnhancedLoginLink from './common/EnhancedLoginLink';
 import { useEffect, useState, useContext } from 'react';
 import { PermissionType } from '../models';
 import { projectManagementAppContext } from '../App';
@@ -75,6 +76,7 @@ export const Dashboard = () => {
             {/* Add the AlertsPanel here */}
             <AlertsPanel /> 
             {projectList && projectList}
+            <EnhancedLoginLink />
           </Box>
 
           {/* Right Column - Other Components */}

@@ -269,6 +269,131 @@ namespace NJSAPI.Controllers
             });
         }
 
+        // GET: api/tenants/{id}/users
+        [HttpGet("{id}/users")]
+        public async Task<ActionResult<IEnumerable<object>>> GetTenantUsers(int id)
+        {
+            var tenant = await _context.Tenants.FindAsync(id);
+            if (tenant == null)
+            {
+                return NotFound("Tenant not found");
+            }
+
+            var tenantUsers = await _context.TenantUsers
+                .Where(tu => tu.TenantId == id)
+                .Include(tu => tu.User)
+                .Select(tu => new
+                {
+                    tu.Id,
+                    tu.TenantId,
+                    tu.UserId,
+                    tu.Role,
+                    tu.IsActive,
+                    tu.JoinedAt,
+                    User = new
+                    {
+                        tu.User.Id,
+                        tu.User.UserName,
+                        tu.User.Name,
+                        tu.User.Email,
+                        tu.User.Avatar
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(tenantUsers);
+        }
+
+        // POST: api/tenants/{id}/users
+        [HttpPost("{id}/users")]
+        public async Task<ActionResult<object>> AddTenantUser(int id, [FromBody] AddTenantUserRequest request)
+        {
+            var tenant = await _context.Tenants.FindAsync(id);
+            if (tenant == null)
+            {
+                return NotFound("Tenant not found");
+            }
+
+            var user = await _context.Users.FindAsync(request.UserId);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            // Check if user is already assigned to this tenant
+            var existingTenantUser = await _context.TenantUsers
+                .FirstOrDefaultAsync(tu => tu.TenantId == id && tu.UserId == request.UserId);
+
+            if (existingTenantUser != null)
+            {
+                return BadRequest("User is already assigned to this tenant");
+            }
+
+            var tenantUser = new TenantUser
+            {
+                TenantId = id,
+                UserId = request.UserId,
+                Role = request.Role,
+                IsActive = request.IsActive,
+                JoinedAt = DateTime.UtcNow
+            };
+
+            _context.TenantUsers.Add(tenantUser);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Added user {UserId} to tenant {TenantId} with role {Role}", 
+                request.UserId, id, request.Role);
+
+            return CreatedAtAction(nameof(GetTenantUsers), new { id }, tenantUser);
+        }
+
+        // PUT: api/tenants/users/{tenantUserId}
+        [HttpPut("users/{tenantUserId}")]
+        public async Task<ActionResult<object>> UpdateTenantUser(int tenantUserId, [FromBody] UpdateTenantUserRequest request)
+        {
+            var tenantUser = await _context.TenantUsers.FindAsync(tenantUserId);
+            if (tenantUser == null)
+            {
+                return NotFound("Tenant user not found");
+            }
+
+            if (request.Role.HasValue)
+            {
+                tenantUser.Role = request.Role.Value;
+            }
+
+            if (request.IsActive.HasValue)
+            {
+                tenantUser.IsActive = request.IsActive.Value;
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Updated tenant user {TenantUserId} with role {Role} and active status {IsActive}", 
+                tenantUserId, tenantUser.Role, tenantUser.IsActive);
+
+            return Ok(tenantUser);
+        }
+
+        // DELETE: api/tenants/users/{tenantUserId}
+        [HttpDelete("users/{tenantUserId}")]
+        public async Task<ActionResult> RemoveTenantUser(int tenantUserId)
+        {
+            var tenantUser = await _context.TenantUsers.FindAsync(tenantUserId);
+            if (tenantUser == null)
+            {
+                return NotFound("Tenant user not found");
+            }
+
+            _context.TenantUsers.Remove(tenantUser);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Removed user {UserId} from tenant {TenantId}", 
+                tenantUser.UserId, tenantUser.TenantId);
+
+            return NoContent();
+        }
+
         private bool TenantExists(int id)
         {
             return _context.Tenants.Any(e => e.Id == id);
@@ -283,5 +408,18 @@ namespace NJSAPI.Controllers
     public class SuggestSubdomainRequest
     {
         public string CompanyName { get; set; } = string.Empty;
+    }
+
+    public class AddTenantUserRequest
+    {
+        public string UserId { get; set; } = string.Empty;
+        public TenantUserRole Role { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+
+    public class UpdateTenantUserRequest
+    {
+        public TenantUserRole? Role { get; set; }
+        public bool? IsActive { get; set; }
     }
 }

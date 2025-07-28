@@ -12,7 +12,9 @@ namespace NJS.Domain.Database
 {
     public class ProjectManagementContext : IdentityDbContext<User>
     {
+       
         public int? TenantId { get; private set; }
+
 
         public ProjectManagementContext(DbContextOptions<ProjectManagementContext> options, IHttpContextAccessor httpContextAccessor = null) : base(options)
         {

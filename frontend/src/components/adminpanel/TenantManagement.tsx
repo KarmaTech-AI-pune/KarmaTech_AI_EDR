@@ -33,6 +33,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import StorageIcon from '@mui/icons-material/Storage';
 import PeopleIcon from '@mui/icons-material/People';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import GroupIcon from '@mui/icons-material/Group';
 import * as tenantApi from '../../services/tenantApi';
 import * as subscriptionApi from '../../services/subscriptionApi';
 import { Tenant, TenantStatus } from '../../models/tenantModel';
@@ -315,6 +316,15 @@ const TenantManagement = () => {
                   <IconButton onClick={() => handleEdit(tenant)} color="primary" size="small">
                     <EditIcon />
                   </IconButton>
+                  <Tooltip title="Manage Users">
+                    <IconButton 
+                      onClick={() => window.location.href = '/admin?section=tenantUsers&tenantId=' + tenant.id} 
+                      color="secondary" 
+                      size="small"
+                    >
+                      <GroupIcon />
+                    </IconButton>
+                  </Tooltip>
                   <IconButton onClick={() => handleDelete(tenant.id)} color="error" size="small">
                     <DeleteIcon />
                   </IconButton>

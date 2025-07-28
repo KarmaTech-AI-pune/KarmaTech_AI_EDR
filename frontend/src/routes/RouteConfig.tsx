@@ -1,6 +1,7 @@
 import { useContext, lazy } from 'react';
 import { RouteObject, Outlet, useLocation, Navigate } from 'react-router-dom';
 import LoginScreen from '../pages/LoginScreen';
+import EnhancedLoginScreen from '../pages/EnhancedLoginScreen';
 import ProtectedRoute from './ProtectedRoute.tsx';
 import { PermissionType } from '../models';
 import { LoadingProvider } from '../context/LoadingContext';
@@ -27,8 +28,8 @@ const Layout = () => {
   const location = useLocation();
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
 
-  // Don't show navbar on login page
-  const showNavbar = location.pathname !== '/login' && context?.isAuthenticated;
+  // Don't show navbar on login pages
+  const showNavbar = !['/login', '/enhanced-login'].includes(location.pathname) && context?.isAuthenticated;
 
   return (
     <LoadingProvider>
@@ -75,6 +76,10 @@ export const routes: RouteObject[] = [
       {
         path: 'login',
         element: <LoginScreen />,
+      },
+      {
+        path: 'enhanced-login',
+        element: <EnhancedLoginScreen />,
       },
       {
         path: '',

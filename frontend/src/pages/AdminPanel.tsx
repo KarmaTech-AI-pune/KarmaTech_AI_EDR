@@ -20,6 +20,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UsersManagement from '../components/adminpanel/UsersManagement';
 import RolesManagement from '../components/adminpanel/RolesManagement';
 import TenantManagement from '../components/adminpanel/TenantManagement';
+import TenantUsersManagement from '../components/adminpanel/TenantUsersManagement';
 import SubscriptionManagement from '../components/adminpanel/SubscriptionManagement';
 import BillingManagement from '../components/adminpanel/BillingManagement';
 import SystemSettings from '../components/adminpanel/SystemSettings';
@@ -30,10 +31,11 @@ const NAVBAR_HEIGHT = '70px';
 
 const AdminPanel: React.FC = () => {
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
-  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'settings'>('tenants');
+  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'settings'>('tenants');
 
   const menuItems = [
     { id: 'tenants', text: 'Tenant Management', icon: <BusinessIcon /> },
+    { id: 'tenantUsers', text: 'Tenant Users', icon: <PeopleIcon /> },
     { id: 'subscriptions', text: 'Subscription Plans', icon: <AttachMoneyIcon /> },
     { id: 'billing', text: 'Billing Management', icon: <ReceiptIcon /> },
     { id: 'users', text: 'Users Management', icon: <PeopleIcon /> },
@@ -49,6 +51,8 @@ const AdminPanel: React.FC = () => {
     switch (selectedSection) {
       case 'tenants':
         return <TenantManagement />;
+      case 'tenantUsers':
+        return <TenantUsersManagement />;
       case 'subscriptions':
         return <SubscriptionManagement />;
       case 'billing':
