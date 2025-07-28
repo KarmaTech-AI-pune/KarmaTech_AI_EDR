@@ -97,6 +97,8 @@ internal class Program
         app.UseCors("AllowSpecificOrigin");
         app.UseResponseCompression();
         app.UseHttpsRedirection();
+        app.UseStaticFiles();
+        app.MapFallbackToFile("index.html");
         app.UseAuthentication();
         app.UseAuthorization();
         app.SeedApplicationData();
