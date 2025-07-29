@@ -128,7 +128,7 @@ const Signup: React.FC = () => {
                   <FormField name="lastName" label="Last Name" placeholder="Doe" />
                 </Grid>
                 <Grid item xs={12}>
-                  <FormField name="phoneNumber" label="Phone Number" placeholder="(555) 123-4567" />
+                  <FormField name="phoneNumber" label="Phone Number" placeholder="9012345678" />
                 </Grid>
                 <Grid item xs={12}>
                   <FormField name="emailAddress" label="Email Address" type="email" placeholder="john@company.com" />
