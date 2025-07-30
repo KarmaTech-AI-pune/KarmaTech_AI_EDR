@@ -56,6 +56,8 @@ namespace NJS.Application.Extensions
             services.AddScoped<IProjectClosureRepository, ProjectClosureRepository>();
             services.AddScoped<ITenantRepository, TenantRepository>();
 
+            services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
+
            // services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAuthService, EnhancedAuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();

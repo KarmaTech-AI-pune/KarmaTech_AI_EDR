@@ -112,6 +112,7 @@ namespace NJS.Domain.Database
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
         public DbSet<TenantUser> TenantUsers { get; set; }
         public DbSet<TenantDatabase> TenantDatabases { get; set; }
+        public DbSet<CreateAccount> CreateAccounts { get; set; }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
