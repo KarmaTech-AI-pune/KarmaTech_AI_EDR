@@ -19,10 +19,9 @@ import {
   Link,
   createTheme,
   ThemeProvider,
-  Snackbar,
-  Alert,
   CircularProgress,
 } from '@mui/material';
+import NotificationSnackbar from '../components/widgets/NotificationSnackbar';
 import FormField from '../components/forms/FormField';
 import { signupSchema } from '../schemas/signupSchema';
 import { z } from 'zod';
@@ -224,11 +223,13 @@ const Signup: React.FC = () => {
           </Box>
         </Paper>
       </Box>
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleCloseSnackbar}>
-        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      <NotificationSnackbar
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      />
     </ThemeProvider>
   );
 };
