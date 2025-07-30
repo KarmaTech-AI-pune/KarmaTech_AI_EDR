@@ -19,7 +19,6 @@ import {
   createTheme,
   ThemeProvider,
 } from '@mui/material';
-import KarmaTechLogo from '../../public/KarmaTech_logo.jpg';
 import FormField from '../components/forms/FormField';
 import { signupSchema } from '../schemas/signupSchema';
 import { z } from 'zod';
@@ -86,7 +85,7 @@ const Signup: React.FC = () => {
         }}
       >
         <Box sx={{ textAlign: 'center', marginBottom: 4 }}>
-          <img src={KarmaTechLogo} alt="KarmaTech AI Logo" style={{ width: '80px', height: '80px', marginBottom: '16px' }} />
+          <img src="/KarmaTech_logo.jpg" alt="KarmaTech AI Logo" style={{ width: '80px', height: '80px', marginBottom: '16px' }} />
           <Typography variant="h4" component="h1" sx={{ color: '#1869DA', fontWeight: 'bold', marginBottom: 1 }}>
             KarmaTech AI Project Management Application
           </Typography>
