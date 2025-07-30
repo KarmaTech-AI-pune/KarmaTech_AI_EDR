@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -18,10 +19,14 @@ import {
   Link,
   createTheme,
   ThemeProvider,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import FormField from '../components/forms/FormField';
 import { signupSchema } from '../schemas/signupSchema';
 import { z } from 'zod';
+import { authApi } from '../services/authApi';
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
@@ -64,11 +69,56 @@ const Signup: React.FC = () => {
     mode: 'all',
   });
 
-  const { handleSubmit } = methods;
+  const { handleSubmit, reset } = methods;
+  const navigate = useNavigate();
 
-  const onSubmit = (data: SignupFormValues) => {
-    console.log(data);
-    // Here you would typically send the data to your backend API
+  const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
+  const onSubmit = async (data: SignupFormValues) => {
+    setLoading(true);
+    try {
+      const payload = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        emailAddress: data.emailAddress,
+        phoneNumber: data.phoneNumber,
+        companyName: data.companyName,
+        companyAddress: data.companyAddress,
+        subdomain: data.subdomain,
+        subscriptionPlan: data.subscriptionPlan,
+      };
+
+      const result = await authApi.signup(payload);
+
+      if (result.success) {
+        setSnackbarMessage(result.message || 'Account created successfully! Redirecting to login...');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+        reset(); // Clear the form
+        setTimeout(() => {
+          navigate('/login'); // Redirect to login page
+        }, 2000);
+      } else {
+        setSnackbarMessage(result.message || 'Account creation failed. Please try again.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    } catch (error: any) {
+      // This catch block will primarily handle unexpected errors not caught by authApi.signup
+      console.error('Signup error:', error);
+      setSnackbarMessage('An unexpected error occurred during signup.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -155,8 +205,9 @@ const Signup: React.FC = () => {
                     fullWidth
                     size="large"
                     sx={{ paddingY: 1.5, fontWeight: 'bold' }}
+                    disabled={loading}
                   >
-                    Create Account
+                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
                   </Button>
                 </Grid>
               </Grid>
@@ -173,6 +224,11 @@ const Signup: React.FC = () => {
           </Box>
         </Paper>
       </Box>
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </ThemeProvider>
   );
 };

@@ -131,8 +131,23 @@ export const authApi = {
     } catch (error) {
       return true;
     }
+  },
+
+  signup: async (signupData: any): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const response = await axiosInstance.post('/api/CreateAccount', signupData);
+      if (response.status === 201) {
+        return { success: true, message: 'Account created successfully!' };
+      } else {
+        return { success: false, message: response.data?.message || 'Account creation failed.' };
+      }
+    } catch (error: any) {
+      console.error('Signup API error:', error);
+      return { success: false, message: error.response?.data?.message || 'An unexpected error occurred during signup.' };
+    }
   }
 };
+
 function normalizePermissions(permissions: any) {
  
     // If permissions is an array, join it into a single string and split by commas
