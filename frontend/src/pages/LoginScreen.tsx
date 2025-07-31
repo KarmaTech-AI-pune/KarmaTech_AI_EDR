@@ -1,4 +1,5 @@
 import { useState, useContext  } from 'react'
+import { Navigate } from 'react-router-dom';
 import {
     TextField,
     Button,
@@ -19,8 +20,12 @@ export const LoginScreen: React.FC = () => {
     const [email, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
+    const { isAuthenticated, setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
     const navigation = useAppNavigation();
+
+    if (isAuthenticated) {
+        return <Navigate to="/" replace />;
+    }
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,7 +98,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#666'
                     }}
                 >
-                    Version 1.11.10
+                    Version 1.11.11
                 </Typography>
             </Container>
 

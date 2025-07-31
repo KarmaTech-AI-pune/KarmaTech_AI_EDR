@@ -14,7 +14,6 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import { FormWrapper } from "../FormWrapper";
 import { FormProvider, useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -241,10 +240,9 @@ export const MonthlyProgressForm: React.FC = () => {
   }
 
   return (
-    <FormWrapper>
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box sx={containerStyles}>
-          <Paper
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Box sx={containerStyles}>
+        <Paper
             elevation={0}
             sx={{
               p: 3,
@@ -312,6 +310,5 @@ export const MonthlyProgressForm: React.FC = () => {
           />
         </Box>
       </Container>
-    </FormWrapper>
   );
 };
