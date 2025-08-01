@@ -71,7 +71,7 @@ export const LoginScreen: React.FC = () => {
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
                 <Box sx={{ mb: 1 }}>
                     <img
-                        src="/KarmaTech_logo.jpg"
+                        src="/KarmaTech_logo.png"
                         alt="KarmaTech AI"
                         style={{
                             maxWidth: '150px',

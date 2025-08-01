@@ -8,25 +8,6 @@ import { Tenant } from '../models/tenantModel';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 // Enhanced axios instance with tenant context
-const createAxiosInstance = (baseURL: string) => {
-  const instance = axios.create({
-    baseURL,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  // Add auth token to requests
-  instance.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  });
-
-  return instance;
-};
 
 // Normalize permissions from string to array
 const normalizePermissions = (permissions: string | string[]): string[] => {
@@ -317,4 +298,4 @@ export const enhancedAuthApi = {
       return null;
     }
   }
-}; 
+};

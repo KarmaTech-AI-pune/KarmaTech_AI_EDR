@@ -1,3 +1,5 @@
+import { SubscriptionPlan } from "./subscriptionModel";
+
 export interface Tenant {
   id: number;
   name: string;

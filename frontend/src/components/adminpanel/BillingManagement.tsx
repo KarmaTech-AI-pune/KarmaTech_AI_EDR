@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Typography,
   Paper,
@@ -15,13 +15,24 @@ import {
   Chip,
   Alert,
 } from '@mui/material';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import ReceiptIcon from '@mui/icons-material/Receipt';
-import PaymentIcon from '@mui/icons-material/Payment';
-import WarningIcon from '@mui/icons-material/Warning';
+
+interface Invoice {
+  id: number;
+  tenantName: string;
+  amount: number;
+  status: string;
+  dueDate: string;
+  paidDate: string | null;
+}
 
 const BillingManagement = () => {
-  const [billingData, setBillingData] = useState({
+  const [billingData, setBillingData] = useState<{
+    totalRevenue: number;
+    monthlyRevenue: number;
+    pendingPayments: number;
+    overduePayments: number;
+    invoices: Invoice[];
+  }>({
     totalRevenue: 0,
     monthlyRevenue: 0,
     pendingPayments: 0,
@@ -185,4 +196,4 @@ const BillingManagement = () => {
   );
 };
 
-export default BillingManagement; 
+export default BillingManagement;

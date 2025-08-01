@@ -105,7 +105,7 @@ export const Navbar = () => {
         }}
       >
         <img
-          src="/KarmaTech_logo.jpg"
+          src="/KarmaTech_logo.png"
           alt="KarmaTech AI"
           style={{
             height: '100%',

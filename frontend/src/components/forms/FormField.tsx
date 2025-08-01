@@ -21,9 +21,7 @@ const FormField: React.FC<FormFieldProps> = ({
   placeholder,
   endAdornment,
   selectOptions,
-  gridXs = 12,
-  gridSm,
-}) => {
+  }) => {
   const { control, formState: { errors } } = useFormContext();
   const error = errors[name];
 

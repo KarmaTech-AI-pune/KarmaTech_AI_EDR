@@ -1,6 +1,5 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import { enhancedAuthApi } from '../services/enhancedAuthApi';
 
 interface TenantContextType {
   tenantId: number | null;

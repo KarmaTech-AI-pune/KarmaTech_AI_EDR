@@ -5,17 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
-  Container,
-  TextField,
   Typography,
   Paper,
   Grid,
-  InputAdornment,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  FormHelperText,
   Link,
   createTheme,
   ThemeProvider,
@@ -134,7 +126,7 @@ const Signup: React.FC = () => {
         }}
       >
         <Box sx={{ textAlign: 'center', marginBottom: 4 }}>
-          <img src="/KarmaTech_logo.jpg" alt="KarmaTech AI Logo" style={{ width: '80px', height: '80px', marginBottom: '16px' }} />
+          <img src="/KarmaTech_logo.png" alt="KarmaTech AI Logo" style={{ width: '80px', height: '80px', marginBottom: '16px' }} />
           <Typography variant="h4" component="h1" sx={{ color: '#1869DA', fontWeight: 'bold', marginBottom: 1 }}>
             KarmaTech AI Project Management Application
           </Typography>
@@ -157,7 +149,7 @@ const Signup: React.FC = () => {
             Create Account
           </Typography>
           <Typography variant="body2" color="textSecondary" sx={{ marginBottom: 3 , textAlign: 'center'}}>
-            Join thousands of professionals already using EDR
+            Join thousands of professionals using  EDR enterprise digital runner
           </Typography>
 
           <FormProvider {...methods}>

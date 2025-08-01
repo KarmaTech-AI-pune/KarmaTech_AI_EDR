@@ -86,9 +86,13 @@ export const EnhancedLoginScreen: React.FC = () => {
 
     // Test users for different scenarios
     const testUsers = {
-         };
+        superAdmin: { email: 'superadmin@example.com', password: 'password' },
+        tenantAdmin: { email: 'tenantadmin@example.com', password: 'password' },
+        tenantManager: { email: 'tenantmanager@example.com', password: 'password' },
+        tenantUser: { email: 'tenantuser@example.com', password: 'password' },
+    };
 
-    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
         setError('');
     };
@@ -190,7 +194,7 @@ export const EnhancedLoginScreen: React.FC = () => {
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
                 <Box sx={{ mb: 1 }}>
                     <img
-                        src="/KarmaTech_logo.jpg"
+                        src="/KarmaTech_logo.png"
                         alt="KarmaTech AI"
                         style={{
                             maxWidth: '150px',
@@ -494,4 +498,4 @@ export const EnhancedLoginScreen: React.FC = () => {
     );
 };
 
-export default EnhancedLoginScreen; 
+export default EnhancedLoginScreen;

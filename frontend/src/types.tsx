@@ -13,6 +13,12 @@ export interface UserWithRole extends User {
         name: string;
         permissions: string[];
     } | null;
+    isSuperAdmin?: boolean;
+    userType?: string;
+    tenantRole?: string;
+    tenantContext?: string;
+    tenantId?: number;
+    tenantDomain?: string;
 }
 
 export interface projectManagementAppContextType {

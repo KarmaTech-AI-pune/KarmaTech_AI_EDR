@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Typography,
   Paper,
@@ -32,7 +32,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import BusinessIcon from '@mui/icons-material/Business';
 import StorageIcon from '@mui/icons-material/Storage';
 import PeopleIcon from '@mui/icons-material/People';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import GroupIcon from '@mui/icons-material/Group';
 import * as tenantApi from '../../services/tenantApi';
 import * as subscriptionApi from '../../services/subscriptionApi';
@@ -125,10 +124,15 @@ const TenantManagement = () => {
   const handleSubmit = async () => {
     debugger;
     try {
+      const dataToSubmit = {
+        ...formData,
+        subscriptionPlanId: formData.subscriptionPlanId ? parseInt(formData.subscriptionPlanId) : undefined,
+      };
+
       if (editingTenant) {
-        await tenantApi.updateTenant(editingTenant.id, formData);
+        await tenantApi.updateTenant(editingTenant.id, dataToSubmit);
       } else {
-        await tenantApi.createTenant(formData);
+        await tenantApi.createTenant(dataToSubmit);
       }
       await loadTenants();
       handleClose();
@@ -459,4 +463,4 @@ const TenantManagement = () => {
   );
 };
 
-export default TenantManagement; 
+export default TenantManagement;

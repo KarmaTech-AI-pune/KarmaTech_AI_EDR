@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Typography,
-  Paper,
   Box,
   Grid,
   Card,
@@ -11,8 +10,7 @@ import {
   FormControlLabel,
   Button,
   Alert,
-  Divider,
-} from '@mui/material';
+  } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SecurityIcon from '@mui/icons-material/Security';
 import EmailIcon from '@mui/icons-material/Email';

@@ -5,6 +5,8 @@ import { adminRoutes } from './adminRoutes';
 import Layout from '../components/Layout';
 import ProtectedRoute from './ProtectedRoute';
 import LoginScreen from '../pages/LoginScreen';
+import EnhancedLoginScreen from '../pages/EnhancedLoginScreen';
+import Signup from '../pages/Signup';
 import Dashboard from '../components/Dashboard';
 import NotFound from '../pages/NotFound';
 

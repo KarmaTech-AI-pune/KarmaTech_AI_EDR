@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Typography,
   Paper,
@@ -17,10 +17,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Grid,
   Card,
   CardContent,
@@ -31,11 +27,10 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import PeopleIcon from '@mui/icons-material/People';
 import StorageIcon from '@mui/icons-material/Storage';
 import * as subscriptionApi from '../../services/subscriptionApi';
-import { SubscriptionPlan, PlanFeatures } from '../../models/subscriptionModel';
+import { SubscriptionPlan } from '../../models/subscriptionModel';
 
 const SubscriptionManagement = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -128,7 +123,7 @@ const SubscriptionManagement = () => {
   const handleSubmit = async () => {
     try {
       if (editingPlan) {
-        await subscriptionApi.updateSubscriptionPlan(editingPlan.id, formData);
+        await subscriptionApi.updateSubscriptionPlan(editingPlan.id, { ...formData, id: editingPlan.id });
       } else {
         await subscriptionApi.createSubscriptionPlan(formData);
       }
@@ -512,4 +507,4 @@ const SubscriptionManagement = () => {
   );
 };
 
-export default SubscriptionManagement; 
+export default SubscriptionManagement;
