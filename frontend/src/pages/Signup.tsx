@@ -128,7 +128,7 @@ const Signup: React.FC = () => {
         <Box sx={{ textAlign: 'center', marginBottom: 4 }}>
           <img src="/KarmaTech_logo.png" alt="KarmaTech AI Logo" style={{ width: '80px', height: '80px', marginBottom: '16px' }} />
           <Typography variant="h4" component="h1" sx={{ color: '#1869DA', fontWeight: 'bold', marginBottom: 1 }}>
-            KarmaTech AI Project Management Application
+            KarmaTech-AI EDR(Enterprise Digital Runner)
           </Typography>
           <Typography variant="subtitle1" color="textSecondary">
             Version 1.11.11

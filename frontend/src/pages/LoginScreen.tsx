@@ -89,7 +89,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#1976d2'
                     }}
                 >
-                    KarmaTech AI Project Management Application
+                    KarmaTech-AI EDR(Enterprise Digital Runner)
                 </Typography>
                 <Typography
                     variant="h6"
