@@ -13,6 +13,7 @@ namespace NJS.Domain.Database
     public class ProjectManagementContext : IdentityDbContext<User>
     {
        
+
         public int? TenantId { get; private set; }
 
 
@@ -113,6 +114,7 @@ namespace NJS.Domain.Database
         public DbSet<TenantUser> TenantUsers { get; set; }
         public DbSet<TenantDatabase> TenantDatabases { get; set; }
         public DbSet<CreateAccount> CreateAccounts { get; set; }
+        public DbSet<Feature> Features { get; set; }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -315,6 +317,9 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<ChangeOrder>().Property(co => co.ContractTotal).HasPrecision(18, 2);
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Cost).HasPrecision(18, 2);
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Fee).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Feature>().Property(f => f.PriceINR).HasPrecision(18, 2);
+            modelBuilder.Entity<Feature>().Property(f => f.PriceUSD).HasPrecision(18, 2);
 
             // Configure Identity tables
             modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
