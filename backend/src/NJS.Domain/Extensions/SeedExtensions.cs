@@ -310,10 +310,56 @@ namespace NJS.Domain.Extensions
 
                 // Seed Scoring Tables if they don't exist
                 await SeedScoringTablesAsync(context);
+
+                // Seed Features
+                await SeedFeaturesAsync(context);
             }
             catch (Exception)
             {
                 throw;
+            }
+        }
+
+        private static async Task SeedFeaturesAsync(ProjectManagementContext context)
+        {
+            if (!context.Set<Feature>().Any())
+            {
+                Console.WriteLine("Feature table is empty, inserting data...");
+
+                var features = new List<Feature>
+                {
+                    new Feature { Name = "Users Included" },
+                    new Feature { Name = "Work Breakdown Structure (WBS)" },
+                    new Feature { Name = "WBS version 2.0" },
+                    new Feature { Name = "Gantt/Timeline View" },
+                    new Feature { Name = "ODC (Other Direct Cost) Table" },
+                    new Feature { Name = "Job Start Form" },
+                    new Feature { Name = "Estimated Expenses Table" },
+                    new Feature { Name = "Input Register" },
+                    new Feature { Name = "Email Notifications" },
+                    new Feature { Name = "Check & Review Logs" },
+                    new Feature { Name = "Change Control Register" },
+                    new Feature { Name = "Monthly Progress Review" },
+                    new Feature { Name = "Quarterly Progress Review" },
+                    new Feature { Name = "Weekly/Daily Progress Review" },
+                    new Feature { Name = "Milestone Tracking" },
+                    new Feature { Name = "Budget vs Actual Analysis" },
+                    new Feature { Name = "Manpower Planning" },
+                    new Feature { Name = "API Integration" },
+                    new Feature { Name = "User Experience" },
+                    new Feature { Name = "Reporting" },
+                    new Feature { Name = "SLA Support & Updates" },
+                    new Feature { Name = "Price (USD)" },
+                    new Feature { Name = "Price (INR)" }
+                };
+
+                await context.Set<Feature>().AddRangeAsync(features);
+                await context.SaveChangesAsync();
+                Console.WriteLine("Feature data inserted successfully");
+            }
+            else
+            {
+                Console.WriteLine("Feature table already has data, skipping insert");
             }
         }
 

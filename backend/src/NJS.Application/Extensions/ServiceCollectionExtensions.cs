@@ -91,8 +91,10 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEntityWorkflowStrategy, WBSVersionWorkflowStrategy>(); // Add WBS version workflow strategy
             services.AddScoped<IEntityWorkflowStrategy, JobStartFormWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
+            services.AddScoped<IFeatureRepository, FeatureRepository>();
 
             return services;
         }
+        
     }
 }
