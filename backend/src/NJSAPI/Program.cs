@@ -8,8 +8,6 @@ using NJSAPI.Extensions;
 using NLog.Web;
 using Microsoft.Extensions.Options;
 using NJSAPI.Configurations;
-using NJS.Domain.Extensions;
-using NJSAPI.Extensions;
 using NJSAPI.Middleware;
 
 internal class Program
@@ -17,6 +15,9 @@ internal class Program
     private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+       
+
         builder.Services.AddControllers();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddLogging();
@@ -25,21 +26,22 @@ internal class Program
         builder.Services.AddApplicationServices();
         builder.Services.AddTenantServices(builder.Configuration);
 
+        // Add tenant connection resolver
+        //builder.Services.AddScoped<ProjectManagementContextFactory>();
+
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddConfiguredSwagger(builder.Configuration);
 
+        // Configure CORS for tenant
         builder.Services.AddCors(options =>
         {
             var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
-            
-            // Add tenant subdomains dynamically
-            
-            
-            var allOrigins = allowedOrigins?.ToList() ?? new List<string>();
-            //allOrigins.AddRange(tenantSubdomains);
-            
+
+            var allOrigins = allowedOrigins?.ToList();
+
             options.AddPolicy("AllowSpecificOrigin",
                 builder => builder
+                    .SetIsOriginAllowedToAllowWildcardSubdomains()  
                     .WithOrigins(allOrigins.ToArray())
                     .AllowAnyHeader()
                     .AllowAnyMethod()
@@ -82,7 +84,6 @@ internal class Program
             options.AddPolicy("RequireAdminOrManager", policy =>
                 policy.RequireRole("Admin", "Manager"));
 
-            // Default policy requiring authentication
             options.DefaultPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
                 .Build();
@@ -93,26 +94,27 @@ internal class Program
         builder.Services.AddAuditServices();
         builder.Services.ConfigureAuditObservers();
 
+        // Configure the app
         var app = builder.Build();
+
+        // Use CORS before other middleware
+        app.UseCors("AllowSpecificOrigin");
 
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
             var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
-            options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", swaggerSettings.Title);
+            options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", $"{swaggerSettings.Title}");
         });
 
-
-        // Use CORS before other middleware
-        app.UseCors("AllowSpecificOrigin");
-        app.UseTenantCors(); // Add custom tenant CORS middleware
+       // app.UseTenantCors();
         app.UseResponseCompression();
         app.UseHttpsRedirection();
         app.UseMiddleware<TenantResolverMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
         app.SeedApplicationData();
-        app.MapControllers(); 
+        app.MapControllers();
 
         app.Run();
     }
