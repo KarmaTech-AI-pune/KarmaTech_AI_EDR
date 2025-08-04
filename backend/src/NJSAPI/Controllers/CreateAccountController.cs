@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using NJS.Application.CQRS.CreateAccount;
 using NJS.Application.DTOs;
 using System.Threading.Tasks;
+using System;
 
 namespace NJSAPI.Controllers
 {
@@ -23,20 +24,38 @@ namespace NJSAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountDto createAccountDto)
         {
-            _logger.LogInformation("Received signup request for email: {Email}", createAccountDto.EmailAddress);
-
-            var command = new CreateAccountCommand { CreateAccountDto = createAccountDto };
-            var result = await _mediator.Send(command);
-
-            if (result)
+            try
             {
-                _logger.LogInformation("Account created successfully for email: {Email}", createAccountDto.EmailAddress);
-                return CreatedAtAction(nameof(CreateAccount), new { email = createAccountDto.EmailAddress }, createAccountDto);
+                _logger.LogInformation("Received signup request for email: {Email}", createAccountDto.EmailAddress);
+
+                var command = new CreateAccountCommand { CreateAccountDto = createAccountDto };
+                var result = await _mediator.Send(command);
+
+                if (result)
+                {
+                    _logger.LogInformation("Account created successfully for email: {Email}", createAccountDto.EmailAddress);
+                    return CreatedAtAction(nameof(CreateAccount), new { email = createAccountDto.EmailAddress }, createAccountDto);
+                }
+                else
+                {
+                    _logger.LogError("Account creation failed for email: {Email}", createAccountDto.EmailAddress);
+                    return BadRequest(new { message = "Account creation failed" });
+                }
             }
-            else
+            catch (DuplicateEmailException ex)
             {
-                _logger.LogError("Account creation failed for email: {Email}", createAccountDto.EmailAddress);
-                return BadRequest("Account creation failed");
+                _logger.LogWarning("Account creation failed - email already exists: {Email}", createAccountDto.EmailAddress);
+                return Conflict(new { message = ex.Message, errorType = "EmailExists" });
+            }
+            catch (DuplicateSubdomainException ex)
+            {
+                _logger.LogWarning("Account creation failed - subdomain already exists: {Subdomain}", createAccountDto.Subdomain);
+                return Conflict(new { message = ex.Message, errorType = "SubdomainExists" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error occurred while creating account for email: {Email}", createAccountDto.EmailAddress);
+                return StatusCode(500, new { message = "An unexpected error occurred while creating the account." });
             }
         }
     }
