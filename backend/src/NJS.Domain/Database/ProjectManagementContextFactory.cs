@@ -8,10 +8,11 @@ namespace NJS.Domain.Database
 {
     public class ProjectManagementContextFactory : IDesignTimeDbContextFactory<ProjectManagementContext>
     {
-        private readonly ITenantConnectionResolver _connectionResolver;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IConfiguration _configuration;
+        private readonly ITenantConnectionResolver? _connectionResolver;
+        private readonly IHttpContextAccessor? _httpContextAccessor;
+        private readonly IConfiguration? _configuration;
 
+        // This constructor is used during runtime by DI
         public ProjectManagementContextFactory(
             ITenantConnectionResolver connectionResolver,
             IHttpContextAccessor httpContextAccessor,
@@ -22,21 +23,64 @@ namespace NJS.Domain.Database
             _configuration = configuration;
         }
 
+        // This parameterless constructor is used by EF Core design-time tools
+        public ProjectManagementContextFactory()
+        {
+            // These will be null during design-time operations
+            _connectionResolver = null;
+            _httpContextAccessor = null;
+            _configuration = null;
+        }
+
         public ProjectManagementContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
-            
-            // For design-time operations (migrations, etc.), use the default connection
-            var connectionString = _configuration.GetConnectionString("AppDbConnection");
-            optionsBuilder.UseSqlServer(connectionString);
+
+            // For design-time operations (migrations, etc.), use configuration from appsettings.json
+            if (_configuration == null)
+            {
+                // When running from command line, build configuration manually
+                // Get the absolute path to the NJSAPI project directory
+                var currentDir = Directory.GetCurrentDirectory();
+                var solutionDir = Path.GetFullPath(Path.Combine(currentDir, ".."));
+                var startupProjectPath = Path.Combine(solutionDir, "NJSAPI");
+
+                var configuration = new ConfigurationBuilder()
+                    .SetBasePath(startupProjectPath)
+                    .AddJsonFile(Path.Combine(startupProjectPath, "appsettings.json"))
+                    .AddJsonFile(Path.Combine(startupProjectPath, "appsettings.Development.json"), optional: true)
+                    .Build();
+
+                var connectionString = configuration.GetConnectionString("AppDbConnection");
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException("Connection string 'AppDbConnection' not found in appsettings.json");
+                }
+                optionsBuilder.UseSqlServer(connectionString);
+            }
+            else
+            {
+                // During runtime, use injected configuration
+                var connectionString = _configuration.GetConnectionString("AppDbConnection");
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException("Connection string 'AppDbConnection' not found in configuration");
+                }
+                optionsBuilder.UseSqlServer(connectionString);
+            }
 
             return new ProjectManagementContext(optionsBuilder.Options, _httpContextAccessor);
         }
 
         public async Task<ProjectManagementContext> CreateTenantDbContextAsync()
         {
+            if (_connectionResolver == null || _httpContextAccessor == null)
+            {
+                throw new InvalidOperationException("This method cannot be called during design-time operations.");
+            }
+
             var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
-            
+
             // Get tenant info from the current request
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null)
@@ -62,4 +106,4 @@ namespace NJS.Domain.Database
             return new ProjectManagementContext(optionsBuilder.Options, _httpContextAccessor);
         }
     }
-} 
+}
