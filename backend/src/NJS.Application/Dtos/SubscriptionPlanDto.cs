@@ -86,4 +86,10 @@ namespace NJS.Application.DTOs
         [JsonPropertyName("sla_support")]
         public string SlaSupport { get; set; } = string.Empty;
     }
+    // Simple response DTO for features by plan name
+    public class PlanFeaturesResponseDto
+    {
+        public string PlanName { get; set; } = string.Empty;
+        public List<PlanFeatureItemDto> Features { get; set; } = new List<PlanFeatureItemDto>();
+    }
 }

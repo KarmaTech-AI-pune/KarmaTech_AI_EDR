@@ -1215,7 +1215,6 @@ namespace NJS.Domain.Database
                 .HasOne(spf => spf.Feature)
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
-            modelBuilder.Entity<SubscriptionPlanFeature>().HasQueryFilter(p => p.TenantId == TenantId);
         }
     }
 }

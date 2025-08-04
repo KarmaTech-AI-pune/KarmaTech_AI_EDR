@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    public class SubscriptionPlanFeature : ITenantEntity
+    public class SubscriptionPlanFeature
     {
         [Key]
         public int Id { get; set; }
@@ -19,6 +19,5 @@ namespace NJS.Domain.Entities
 
         [ForeignKey("FeatureId")]
         public Feature Feature { get; set; }
-        public int TenantId { get; set; }
     }
 }

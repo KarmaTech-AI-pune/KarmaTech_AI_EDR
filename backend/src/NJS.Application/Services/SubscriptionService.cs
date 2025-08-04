@@ -7,6 +7,7 @@ using NJS.Application.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using System;
 
 namespace NJS.Application.Services
 {
@@ -387,6 +388,80 @@ namespace NJS.Application.Services
         {
             // Return all static plans
             return GetStaticPlans();
+        }
+
+        public async Task<PlanFeaturesResponseDto?> GetFeaturesByPlanNameAsync(string planName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(planName))
+                    return null;
+
+                // Query the database to get the subscription plan with its features
+                var plan = await _context.SubscriptionPlans
+                    .Include(sp => sp.SubscriptionPlanFeatures)
+                    .ThenInclude(spf => spf.Feature)
+                    .Where(p => p.IsActive)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                // Find the plan by name (case-insensitive)
+                var matchedPlan = plan.FirstOrDefault(p =>
+                    string.Equals(p.Name, planName, StringComparison.OrdinalIgnoreCase));
+
+                if (matchedPlan == null)
+                    return null;
+
+                // Map feature names to IDs to match the expected format
+                var featureNameToIdMap = new Dictionary<string, string>
+                {
+                    { "Work Breakdown Structure (WBS)", "wbs" },
+                    { "WBS Version 2.0", "wbs_v2" },
+                    { "Gantt/Timeline View", "gantt_view" },
+                    { "ODC (Other Direct Cost) Table", "odc" },
+                    { "Job Start Form", "job_start_form" },
+                    { "Estimated Expenses Table", "estimated_expenses" },
+                    { "Input Register", "input_register" },
+                    { "Email Notifications", "email_notifications" },
+                    { "Check & Review Logs", "review_logs" },
+                    { "Change Control Register", "change_control" },
+                    { "Monthly Progress Review", "monthly_review" },
+                    { "Quarterly Progress Review", "quarterly_review" },
+                    { "Weekly/Daily Progress Review", "weekly_review" },
+                    { "Milestone Tracking", "milestone_tracking" },
+                    { "Budget vs Actual Analysis", "budget_analysis" },
+                    { "Manpower Planning", "manpower_planning" },
+                    { "API Integration", "api_integration" },
+                    { "Basic UI", "user_experience" },
+                    { "Enhanced UX", "user_experience" },
+                    { "Tailored UI/UX", "user_experience" },
+                    { "Basic Export (PDF)", "reporting" }
+                };
+
+                // Map to the response DTO
+                var result = new PlanFeaturesResponseDto
+                {
+                    PlanName = matchedPlan.Name,
+                    Features = matchedPlan.SubscriptionPlanFeatures?.Select(spf => new PlanFeatureItemDto
+                    {
+                        Id = featureNameToIdMap.ContainsKey(spf.Feature.Name)
+                            ? featureNameToIdMap[spf.Feature.Name]
+                            : spf.Feature.Name.ToLowerInvariant()
+                                .Replace(" ", "_")
+                                .Replace("(", "")
+                                .Replace(")", "")
+                                .Replace("/", "_"),
+                        Name = spf.Feature.Name
+                    }).ToList() ?? new List<PlanFeatureItemDto>()
+                };
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting features for plan: {PlanName}", planName);
+                throw;
+            }
         }
 
         private List<PlanByNameResponseDto> GetStaticPlans()

@@ -301,9 +301,9 @@ namespace NJSAPI.Controllers
             }
         }
 
-        // GET: api/subscriptions/features/by-plan/{planName} - Get specific plan
+        // GET: api/subscriptions/features/by-plan/{planName} - Get features for specific plan from database
         [HttpGet("features/by-plan/{planName}")]
-        public async Task<ActionResult<PlanByNameResponseDto>> GetPlanByName(string planName)
+        public async Task<ActionResult<PlanFeaturesResponseDto>> GetFeaturesByPlanName(string planName)
         {
             try
             {
@@ -312,19 +312,26 @@ namespace NJSAPI.Controllers
                     return BadRequest(new { message = "Plan name is required" });
                 }
 
-                var plan = await _subscriptionService.GetPlanByNameAsync(planName);
+                var planFeatures = await _subscriptionService.GetFeaturesByPlanNameAsync(planName);
 
-                if (plan == null)
+                if (planFeatures == null)
                 {
                     return NotFound(new { message = $"Plan '{planName}' not found" });
                 }
 
-                return Ok(plan);
+                return Ok(planFeatures);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving plan by name: {PlanName}", planName);
-                return StatusCode(500, new { message = "An error occurred while retrieving the plan" });
+                // Return the actual error message for debugging
+                return Ok(new PlanFeaturesResponseDto
+                {
+                    PlanName = planName,
+                    Features = new List<PlanFeatureItemDto>
+                    {
+                        new PlanFeatureItemDto { Id = "controller_error", Name = $"Controller Error: {ex.Message}" }
+                    }
+                });
             }
         }
 

@@ -332,29 +332,34 @@ namespace NJS.Domain.Extensions
 
                 var features = new List<Feature>
                 {
-                    new Feature { Name = "Users Included" },
+                    // Core features for all plans
                     new Feature { Name = "Work Breakdown Structure (WBS)" },
-                    new Feature { Name = "WBS version 2.0" },
-                    new Feature { Name = "Gantt/Timeline View" },
                     new Feature { Name = "ODC (Other Direct Cost) Table" },
                     new Feature { Name = "Job Start Form" },
-                    new Feature { Name = "Estimated Expenses Table" },
                     new Feature { Name = "Input Register" },
                     new Feature { Name = "Email Notifications" },
-                    new Feature { Name = "Check & Review Logs" },
-                    new Feature { Name = "Change Control Register" },
                     new Feature { Name = "Monthly Progress Review" },
+                    new Feature { Name = "Manpower Planning" },
+
+                    // Starter plan specific features
+                    new Feature { Name = "Basic UI" },
+                    new Feature { Name = "Basic Export (PDF)" },
+
+                    // Business plan additional features
+                    new Feature { Name = "Estimated Expenses Table" },
+                    new Feature { Name = "Check & Review Logs" },
                     new Feature { Name = "Quarterly Progress Review" },
+                    new Feature { Name = "Enhanced UX" },
+
+                    // Enterprise plan additional features
+                    new Feature { Name = "WBS Version 2.0" },
+                    new Feature { Name = "Gantt/Timeline View" },
+                    new Feature { Name = "Change Control Register" },
                     new Feature { Name = "Weekly/Daily Progress Review" },
                     new Feature { Name = "Milestone Tracking" },
                     new Feature { Name = "Budget vs Actual Analysis" },
-                    new Feature { Name = "Manpower Planning" },
                     new Feature { Name = "API Integration" },
-                    new Feature { Name = "User Experience" },
-                    new Feature { Name = "Reporting" },
-                    new Feature { Name = "SLA Support & Updates" },
-                    new Feature { Name = "Price (USD)" },
-                    new Feature { Name = "Price (INR)" }
+                    new Feature { Name = "Tailored UI/UX" }
                 };
 
                 try
@@ -419,9 +424,8 @@ namespace NJS.Domain.Extensions
             var existingEnterprisePlan = await context.Set<SubscriptionPlan>().FirstOrDefaultAsync(sp => sp.Name == "Enterprise");
 
             // Get all features
-            var usersIncludedFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Users Included");
             var wbsFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Work Breakdown Structure (WBS)");
-            var wbsVersion2Feature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "WBS version 2.0");
+            var wbsVersion2Feature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "WBS Version 2.0");
             var ganttTimelineViewFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Gantt/Timeline View");
             var odcTableFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "ODC (Other Direct Cost) Table");
             var jobStartFormFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Job Start Form");
@@ -437,72 +441,64 @@ namespace NJS.Domain.Extensions
             var budgetVsActualAnalysisFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Budget vs Actual Analysis");
             var manpowerPlanningFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Manpower Planning");
             var apiIntegrationFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "API Integration");
-            var userExperienceFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "User Experience");
-            var reportingFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Reporting");
-            var slaSupportUpdatesFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "SLA Support & Updates");
-            var priceUsdFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Price (USD)");
-            var priceInrFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Price (INR)");
+            var basicUiFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Basic UI");
+            var enhancedUxFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Enhanced UX");
+            var tailoredUiUxFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Tailored UI/UX");
+            var basicExportPdfFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Basic Export (PDF)");
 
             // Starter Plan Features
             if (existingStarterPlan != null)
             {
-                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = wbsFeature.Id, TenantId = 0 });
-                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = odcTableFeature.Id, TenantId = 0 });
-                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = jobStartFormFeature.Id, TenantId = 0 });
-                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = inputRegisterFeature.Id, TenantId = 0 });
-                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = emailNotificationsFeature.Id, TenantId = 0 });
-                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = monthlyProgressReviewFeature.Id, TenantId = 0 });
-                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = manpowerPlanningFeature.Id, TenantId = 0 });
-                if (userExperienceFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = userExperienceFeature.Id, TenantId = 0 });
-                if (reportingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = reportingFeature.Id, TenantId = 0 });
-                if (slaSupportUpdatesFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = slaSupportUpdatesFeature.Id, TenantId = 0 });
+                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = wbsFeature.Id });
+                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = odcTableFeature.Id });
+                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = jobStartFormFeature.Id });
+                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = inputRegisterFeature.Id });
+                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = emailNotificationsFeature.Id });
+                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = monthlyProgressReviewFeature.Id });
+                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = manpowerPlanningFeature.Id });
+                if (basicUiFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = basicUiFeature.Id });
+                if (basicExportPdfFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = basicExportPdfFeature.Id });
             }
 
             // Business Plan Features
             if (existingBusinessPlan != null)
             {
-                if (usersIncludedFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = usersIncludedFeature.Id, TenantId = 0 });
-                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = wbsFeature.Id, TenantId = 0 });
-                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = odcTableFeature.Id, TenantId = 0 });
-                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = jobStartFormFeature.Id, TenantId = 0 });
-                if (estimatedExpensesTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = estimatedExpensesTableFeature.Id, TenantId = 0 });
-                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = inputRegisterFeature.Id, TenantId = 0 });
-                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = emailNotificationsFeature.Id, TenantId = 0 });
-                if (checkReviewLogsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = checkReviewLogsFeature.Id, TenantId = 0 });
-                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = monthlyProgressReviewFeature.Id, TenantId = 0 });
-                if (quarterlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = quarterlyProgressReviewFeature.Id, TenantId = 0 });
-                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = manpowerPlanningFeature.Id, TenantId = 0 });
-                if (userExperienceFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = userExperienceFeature.Id, TenantId = 0 });
-                if (reportingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = reportingFeature.Id, TenantId = 0 });
-                if (slaSupportUpdatesFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = slaSupportUpdatesFeature.Id, TenantId = 0 });
+                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = wbsFeature.Id });
+                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = odcTableFeature.Id });
+                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = jobStartFormFeature.Id });
+                if (estimatedExpensesTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = estimatedExpensesTableFeature.Id });
+                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = inputRegisterFeature.Id });
+                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = emailNotificationsFeature.Id });
+                if (checkReviewLogsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = checkReviewLogsFeature.Id });
+                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = monthlyProgressReviewFeature.Id });
+                if (quarterlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = quarterlyProgressReviewFeature.Id });
+                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = manpowerPlanningFeature.Id });
+                if (enhancedUxFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = enhancedUxFeature.Id });
+                if (basicExportPdfFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = basicExportPdfFeature.Id });
             }
 
             // Enterprise Plan Features
             if (existingEnterprisePlan != null)
             {
-                if (usersIncludedFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = usersIncludedFeature.Id, TenantId = 0 });
-                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = wbsFeature.Id, TenantId = 0 });
-                if (wbsVersion2Feature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = wbsVersion2Feature.Id, TenantId = 0 });
-                if (ganttTimelineViewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = ganttTimelineViewFeature.Id, TenantId = 0 });
-                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = odcTableFeature.Id, TenantId = 0 });
-                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = jobStartFormFeature.Id, TenantId = 0 });
-                if (estimatedExpensesTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = estimatedExpensesTableFeature.Id, TenantId = 0 });
-                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = inputRegisterFeature.Id, TenantId = 0 });
-                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = emailNotificationsFeature.Id, TenantId = 0 });
-                if (checkReviewLogsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = checkReviewLogsFeature.Id, TenantId = 0 });
-                if (changeControlRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = changeControlRegisterFeature.Id, TenantId = 0 });
-                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = monthlyProgressReviewFeature.Id, TenantId = 0 });
-                if (quarterlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = quarterlyProgressReviewFeature.Id, TenantId = 0 });
-                if (weeklyDailyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = weeklyDailyProgressReviewFeature.Id, TenantId = 0 });
-                if (milestoneTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = milestoneTrackingFeature.Id, TenantId = 0 });
-                if (budgetVsActualAnalysisFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = budgetVsActualAnalysisFeature.Id, TenantId = 0 });
-                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = manpowerPlanningFeature.Id, TenantId = 0 });
-                if (apiIntegrationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = apiIntegrationFeature.Id, TenantId = 0 });
-                if (userExperienceFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = userExperienceFeature.Id, TenantId = 0 });
-                if (reportingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = reportingFeature.Id, TenantId = 0 });
-                if (slaSupportUpdatesFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = slaSupportUpdatesFeature.Id, TenantId = 0 });
-                if (priceUsdFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = priceUsdFeature.Id, TenantId = 0 });
-                if (priceInrFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = priceInrFeature.Id, TenantId = 0 });
+                if (wbsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = wbsFeature.Id });
+                if (wbsVersion2Feature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = wbsVersion2Feature.Id });
+                if (ganttTimelineViewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = ganttTimelineViewFeature.Id });
+                if (odcTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = odcTableFeature.Id });
+                if (jobStartFormFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = jobStartFormFeature.Id });
+                if (estimatedExpensesTableFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = estimatedExpensesTableFeature.Id });
+                if (inputRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = inputRegisterFeature.Id });
+                if (emailNotificationsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = emailNotificationsFeature.Id });
+                if (checkReviewLogsFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = checkReviewLogsFeature.Id });
+                if (changeControlRegisterFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = changeControlRegisterFeature.Id });
+                if (monthlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = monthlyProgressReviewFeature.Id });
+                if (quarterlyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = quarterlyProgressReviewFeature.Id });
+                if (weeklyDailyProgressReviewFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = weeklyDailyProgressReviewFeature.Id });
+                if (milestoneTrackingFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = milestoneTrackingFeature.Id });
+                if (budgetVsActualAnalysisFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = budgetVsActualAnalysisFeature.Id });
+                if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = manpowerPlanningFeature.Id });
+                if (apiIntegrationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = apiIntegrationFeature.Id });
+                if (tailoredUiUxFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = tailoredUiUxFeature.Id });
+                if (basicExportPdfFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = basicExportPdfFeature.Id });
             }
 
             await context.SaveChangesAsync();
