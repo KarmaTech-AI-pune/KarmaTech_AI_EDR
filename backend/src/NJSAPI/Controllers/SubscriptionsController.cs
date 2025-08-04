@@ -3,6 +3,7 @@ using NJS.Domain.Entities;
 using NJS.Domain.Database;
 using Microsoft.EntityFrameworkCore;
 using NJS.Application.Services.IContract;
+using NJS.Application.DTOs;
 using Microsoft.Extensions.Logging;
 
 namespace NJSAPI.Controllers
@@ -27,10 +28,30 @@ namespace NJSAPI.Controllers
 
         // GET: api/subscriptions/plans
         [HttpGet("plans")]
-        public async Task<ActionResult<IEnumerable<SubscriptionPlan>>> GetSubscriptionPlans()
+        public async Task<ActionResult> GetSubscriptionPlans([FromQuery] bool includeFeatures = false)
         {
-            var plans = await _subscriptionService.GetAllSubscriptionPlansAsync();
-            return Ok(plans);
+            try
+            {
+                if (includeFeatures)
+                {
+                    var plansWithFeatures = await _subscriptionService.GetAllSubscriptionPlansWithFeaturesAsync();
+                    var response = new SubscriptionPlansResponseDto
+                    {
+                        Plans = plansWithFeatures.ToList()
+                    };
+                    return Ok(response);
+                }
+                else
+                {
+                    var plans = await _subscriptionService.GetAllSubscriptionPlansAsync();
+                    return Ok(plans);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving subscription plans");
+                return StatusCode(500, new { message = "An error occurred while retrieving subscription plans" });
+            }
         }
 
         // GET: api/subscriptions/plans/5
@@ -44,6 +65,27 @@ namespace NJSAPI.Controllers
             }
             return plan;
         }
+
+        // GET: api/subscriptions/plans-with-features
+        [HttpGet("plans-with-features")]
+        public async Task<ActionResult<SubscriptionPlansResponseDto>> GetSubscriptionPlansWithFeatures()
+        {
+            try
+            {
+                var plans = await _subscriptionService.GetAllSubscriptionPlansWithFeaturesAsync();
+                var response = new SubscriptionPlansResponseDto
+                {
+                    Plans = plans.ToList()
+                };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving subscription plans with features");
+                return StatusCode(500, new { message = "An error occurred while retrieving subscription plans" });
+            }
+        }
+
 
         // POST: api/subscriptions/plans
         [HttpPost("plans")]
@@ -243,34 +285,36 @@ namespace NJSAPI.Controllers
             }
         }
 
+        // GET: api/subscriptions/features/by-plan/{planName}
+        [HttpGet("features/by-plan/{planName}")]
+        public async Task<ActionResult<PlanByNameResponseDto>> GetPlanByName(string planName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(planName))
+                {
+                    return BadRequest(new { message = "Plan name is required" });
+                }
+
+                var plan = await _subscriptionService.GetPlanByNameAsync(planName);
+
+                if (plan == null)
+                {
+                    return NotFound(new { message = $"Plan '{planName}' not found" });
+                }
+
+                return Ok(plan);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving plan by name: {PlanName}", planName);
+                return StatusCode(500, new { message = "An error occurred while retrieving the plan" });
+            }
+        }
+
         private bool SubscriptionPlanExists(int id)
         {
             return _context.SubscriptionPlans.Any(e => e.Id == id);
-        }
-
-        [HttpGet("features/by-plan/{planName}")]
-        public async Task<IActionResult> GetFeaturesByPlanName(string planName)
-        {
-            var plan = await _context.SubscriptionPlans
-                .Include(sp => sp.SubscriptionPlanFeatures)
-                .ThenInclude(spf => spf.Feature)
-                .FirstOrDefaultAsync(sp => sp.Name == planName);
-
-            if (plan == null)
-            {
-                return NotFound($"Subscription plan '{planName}' not found.");
-            }
-
-            var features = plan.SubscriptionPlanFeatures.Select(spf => new
-            {
-                spf.Feature.Id,
-                spf.Feature.Name,
-                spf.Feature.Description,
-                spf.Feature.PriceUSD,
-                spf.Feature.PriceINR
-            }).ToList();
-
-            return Ok(features);
         }
     }
 

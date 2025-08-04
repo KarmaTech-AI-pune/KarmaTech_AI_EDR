@@ -1,4 +1,5 @@
 using NJS.Domain.Entities;
+using NJS.Application.DTOs;
 
 namespace NJS.Application.Services.IContract
 {
@@ -11,5 +12,7 @@ namespace NJS.Application.Services.IContract
         Task<bool> UpdateTenantSubscriptionAsync(int tenantId, int newPlanId);
         Task<SubscriptionPlan> GetSubscriptionPlanAsync(int planId);
         Task<IEnumerable<SubscriptionPlan>> GetAllSubscriptionPlansAsync();
+        Task<IEnumerable<SubscriptionPlanDto>> GetAllSubscriptionPlansWithFeaturesAsync();
+        Task<PlanByNameResponseDto?> GetPlanByNameAsync(string planName);
     }
-} 
+}

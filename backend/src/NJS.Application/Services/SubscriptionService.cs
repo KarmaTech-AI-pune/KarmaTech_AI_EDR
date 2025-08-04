@@ -3,6 +3,7 @@ using NJS.Domain.Entities;
 using NJS.Domain.Database;
 using Microsoft.EntityFrameworkCore;
 using NJS.Application.Services.IContract;
+using NJS.Application.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -335,5 +336,225 @@ namespace NJS.Application.Services
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<IEnumerable<SubscriptionPlanDto>> GetAllSubscriptionPlansWithFeaturesAsync()
+        {
+            var plans = await _context.SubscriptionPlans
+                .Include(sp => sp.SubscriptionPlanFeatures)
+                .ThenInclude(spf => spf.Feature)
+                .Where(p => p.IsActive)
+                .ToListAsync();
+
+            return plans.Select(plan => new SubscriptionPlanDto
+            {
+                Id = plan.Id,
+                Name = plan.Name,
+                Description = plan.Description,
+                MonthlyPrice = plan.MonthlyPrice,
+                YearlyPrice = plan.YearlyPrice,
+                MaxUsers = plan.MaxUsers,
+                MaxProjects = plan.MaxProjects,
+                MaxStorageGB = plan.MaxStorageGB,
+                IsActive = plan.IsActive,
+                StripePriceId = plan.StripePriceId,
+                Features = plan.SubscriptionPlanFeatures?.Select(spf => new FeatureDto
+                {
+                    Id = spf.Feature.Id,
+                    Name = spf.Feature.Name,
+                    Description = spf.Feature.Description,
+                    PriceUSD = spf.Feature.PriceUSD,
+                    PriceINR = spf.Feature.PriceINR
+                }).ToList() ?? new List<FeatureDto>()
+            });
+        }
+
+
+
+        public async Task<PlanByNameResponseDto?> GetPlanByNameAsync(string planName)
+        {
+            if (string.IsNullOrWhiteSpace(planName))
+                return null;
+
+            // Static plan data based on the JSON payload provided
+            var plans = GetStaticPlans();
+
+            return plans.FirstOrDefault(p =>
+                string.Equals(p.Name, planName, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(p.Slug, planName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private List<PlanByNameResponseDto> GetStaticPlans()
+        {
+            return new List<PlanByNameResponseDto>
+            {
+                new PlanByNameResponseDto
+                {
+                    Id = "plan_starter_2024",
+                    Name = "Starter",
+                    Slug = "starter",
+                    Description = "Perfect for individuals and small projects",
+                    Pricing = new PlanPricingDto
+                    {
+                        Monthly = new PlanMonthlyPriceDto
+                        {
+                            Amount = 100,
+                            Currency = "USD",
+                            Formatted = "$100"
+                        },
+                        MonthlyInr = new PlanMonthlyPriceDto
+                        {
+                            Amount = 8500,
+                            Currency = "INR",
+                            Formatted = "₹8,500"
+                        }
+                    },
+                    Features = new List<PlanFeatureItemDto>
+                    {
+                        new PlanFeatureItemDto { Id = "wbs", Name = "Work Breakdown Structure (WBS)" },
+                        new PlanFeatureItemDto { Id = "odc", Name = "ODC (Other Direct Cost) Table" },
+                        new PlanFeatureItemDto { Id = "job_start_form", Name = "Job Start Form" },
+                        new PlanFeatureItemDto { Id = "input_register", Name = "Input Register" },
+                        new PlanFeatureItemDto { Id = "email_notifications", Name = "Email Notifications" },
+                        new PlanFeatureItemDto { Id = "monthly_review", Name = "Monthly Progress Review" },
+                        new PlanFeatureItemDto { Id = "manpower_planning", Name = "Manpower Planning" },
+                        new PlanFeatureItemDto { Id = "user_experience", Name = "Basic UI" },
+                        new PlanFeatureItemDto { Id = "reporting", Name = "Basic Export (PDF)" }
+                    },
+                    Limitations = new PlanLimitationsDto
+                    {
+                        UsersIncluded = 5,
+                        Projects = 5,
+                        StorageGb = 10
+                    },
+                    Support = new PlanSupportDto
+                    {
+                        SlaSupport = "Email Only"
+                    }
+                },
+                new PlanByNameResponseDto
+                {
+                    Id = "plan_business_2024",
+                    Name = "Business",
+                    Slug = "business",
+                    Description = "For small to mid-sized teams with advanced needs",
+                    Pricing = new PlanPricingDto
+                    {
+                        Monthly = new PlanMonthlyPriceDto
+                        {
+                            Amount = 400,
+                            Currency = "USD",
+                            Formatted = "$400"
+                        },
+                        MonthlyInr = new PlanMonthlyPriceDto
+                        {
+                            Amount = 34000,
+                            Currency = "INR",
+                            Formatted = "₹34,000"
+                        }
+                    },
+                    Features = new List<PlanFeatureItemDto>
+                    {
+                        new PlanFeatureItemDto { Id = "wbs", Name = "Work Breakdown Structure (WBS)" },
+                        new PlanFeatureItemDto { Id = "odc", Name = "ODC (Other Direct Cost) Table" },
+                        new PlanFeatureItemDto { Id = "job_start_form", Name = "Job Start Form" },
+                        new PlanFeatureItemDto { Id = "estimated_expenses", Name = "Estimated Expenses Table" },
+                        new PlanFeatureItemDto { Id = "input_register", Name = "Input Register" },
+                        new PlanFeatureItemDto { Id = "email_notifications", Name = "Email Notifications" },
+                        new PlanFeatureItemDto { Id = "review_logs", Name = "Check & Review Logs" },
+                        new PlanFeatureItemDto { Id = "monthly_review", Name = "Monthly Progress Review" },
+                        new PlanFeatureItemDto { Id = "quarterly_review", Name = "Quarterly Progress Review" },
+                        new PlanFeatureItemDto { Id = "manpower_planning", Name = "Manpower Planning" },
+                        new PlanFeatureItemDto { Id = "user_experience", Name = "Enhanced UX" },
+                        new PlanFeatureItemDto { Id = "reporting", Name = "Basic Export (PDF)" }
+                    },
+                    Limitations = new PlanLimitationsDto
+                    {
+                        UsersIncluded = 20,
+                        Projects = 25,
+                        StorageGb = 100
+                    },
+                    Support = new PlanSupportDto
+                    {
+                        SlaSupport = "Email Only"
+                    }
+                },
+                new PlanByNameResponseDto
+                {
+                    Id = "plan_enterprise_2024",
+                    Name = "Enterprise",
+                    Slug = "enterprise",
+                    Description = "Custom solution for large organizations",
+                    Pricing = new PlanPricingDto
+                    {
+                        Custom = true,
+                        Currency = "USD",
+                        Formatted = "Contact Us"
+                    },
+                    Features = new List<PlanFeatureItemDto>
+                    {
+                        new PlanFeatureItemDto { Id = "wbs", Name = "Work Breakdown Structure (WBS)" },
+                        new PlanFeatureItemDto { Id = "wbs_v2", Name = "WBS Version 2.0" },
+                        new PlanFeatureItemDto { Id = "gantt_view", Name = "Gantt/Timeline View" },
+                        new PlanFeatureItemDto { Id = "odc", Name = "ODC (Other Direct Cost) Table" },
+                        new PlanFeatureItemDto { Id = "job_start_form", Name = "Job Start Form" },
+                        new PlanFeatureItemDto { Id = "estimated_expenses", Name = "Estimated Expenses Table" },
+                        new PlanFeatureItemDto { Id = "input_register", Name = "Input Register" },
+                        new PlanFeatureItemDto { Id = "email_notifications", Name = "Email Notifications" },
+                        new PlanFeatureItemDto { Id = "review_logs", Name = "Check & Review Logs" },
+                        new PlanFeatureItemDto { Id = "change_control", Name = "Change Control Register" },
+                        new PlanFeatureItemDto { Id = "monthly_review", Name = "Monthly Progress Review" },
+                        new PlanFeatureItemDto { Id = "quarterly_review", Name = "Quarterly Progress Review" },
+                        new PlanFeatureItemDto { Id = "weekly_review", Name = "Weekly/Daily Progress Review" },
+                        new PlanFeatureItemDto { Id = "milestone_tracking", Name = "Milestone Tracking" },
+                        new PlanFeatureItemDto { Id = "budget_analysis", Name = "Budget vs Actual Analysis" },
+                        new PlanFeatureItemDto { Id = "manpower_planning", Name = "Manpower Planning" },
+                        new PlanFeatureItemDto { Id = "api_integration", Name = "API Integration" },
+                        new PlanFeatureItemDto { Id = "user_experience", Name = "Tailored UI/UX" },
+                        new PlanFeatureItemDto { Id = "reporting", Name = "Basic Export (PDF)" }
+                    },
+                    Limitations = new PlanLimitationsDto
+                    {
+                        UsersIncluded = "Unlimited",
+                        Projects = "Unlimited",
+                        StorageGb = "Unlimited"
+                    },
+                    Support = new PlanSupportDto
+                    {
+                        SlaSupport = "24/7 Priority Support"
+                    }
+                },
+                new PlanByNameResponseDto
+                {
+                    Id = "plan_one_time_license",
+                    Name = "One-Time License",
+                    Slug = "one-time-license",
+                    Description = "Lifetime access with one-time payment",
+                    Pricing = new PlanPricingDto
+                    {
+                        Onetime = new PlanOnetimePriceDto
+                        {
+                            Amount = 100000,
+                            Currency = "INR",
+                            Formatted = "₹1,00,000"
+                        }
+                    },
+                    Features = new List<PlanFeatureItemDto>
+                    {
+                        new PlanFeatureItemDto { Id = "all_enterprise_features", Name = "All Enterprise Features Included" },
+                        new PlanFeatureItemDto { Id = "license_duration", Name = "Lifetime License" }
+                    },
+                    Limitations = new PlanLimitationsDto
+                    {
+                        UsersIncluded = "Unlimited",
+                        Projects = "Unlimited",
+                        StorageGb = "Unlimited"
+                    },
+                    Support = new PlanSupportDto
+                    {
+                        SlaSupport = "1 Year Included"
+                    }
+                }
+            };
+        }
     }
-} 
+}
