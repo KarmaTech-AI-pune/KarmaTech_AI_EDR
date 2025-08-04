@@ -115,6 +115,7 @@ namespace NJS.Domain.Database
         public DbSet<TenantDatabase> TenantDatabases { get; set; }
         public DbSet<CreateAccount> CreateAccounts { get; set; }
         public DbSet<Feature> Features { get; set; }
+        public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -1201,6 +1202,20 @@ namespace NJS.Domain.Database
                 entity.HasIndex(e => e.ChangedAt);
                 entity.HasIndex(e => new { e.EntityName, e.EntityId });
             });
+
+            modelBuilder.Entity<SubscriptionPlanFeature>()
+                .HasKey(spf => spf.Id);
+
+            modelBuilder.Entity<SubscriptionPlanFeature>()
+                .HasOne(spf => spf.SubscriptionPlan)
+                .WithMany(sp => sp.SubscriptionPlanFeatures)
+                .HasForeignKey(spf => spf.SubscriptionPlanId);
+
+            modelBuilder.Entity<SubscriptionPlanFeature>()
+                .HasOne(spf => spf.Feature)
+                .WithMany(f => f.SubscriptionPlanFeatures)
+                .HasForeignKey(spf => spf.FeatureId);
+            modelBuilder.Entity<SubscriptionPlanFeature>().HasQueryFilter(p => p.TenantId == TenantId);
         }
     }
 }

@@ -13,5 +13,7 @@ namespace NJS.Domain.Entities
         public decimal? PriceUSD { get; set; }
 
         public decimal? PriceINR { get; set; }
+
+        public virtual ICollection<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
     }
 }

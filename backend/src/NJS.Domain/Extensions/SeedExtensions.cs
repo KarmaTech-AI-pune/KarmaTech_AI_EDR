@@ -313,9 +313,13 @@ namespace NJS.Domain.Extensions
 
                 // Seed Features
                 await SeedFeaturesAsync(context);
+
+                // Seed Subscription Plans and Features
+                await SeedSubscriptionPlansAndFeaturesAsync(context);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Console.WriteLine($"An error occurred while seeding the database: {e.Message}");
                 throw;
             }
         }
@@ -353,13 +357,195 @@ namespace NJS.Domain.Extensions
                     new Feature { Name = "Price (INR)" }
                 };
 
-                await context.Set<Feature>().AddRangeAsync(features);
-                await context.SaveChangesAsync();
-                Console.WriteLine("Feature data inserted successfully");
+                try
+                {
+                    await context.Set<Feature>().AddRangeAsync(features);
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("Feature data inserted successfully");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"An error occurred while seeding features: {e.Message}");
+                    throw;
+                }
             }
             else
             {
                 Console.WriteLine("Feature table already has data, skipping insert");
+            }
+        }
+
+        private static async Task SeedSubscriptionPlansAndFeaturesAsync(ProjectManagementContext context)
+        {
+            if (!context.Set<SubscriptionPlan>().Any())
+            {
+                Console.WriteLine("SubscriptionPlan table is empty, inserting data...");
+
+                var starterPlan = new SubscriptionPlan { Name = "Starter", Description = "Basic plan", MonthlyPrice = 10, YearlyPrice = 100, MaxUsers = 5, MaxProjects = 1, MaxStorageGB = 10 };
+                var businessPlan = new SubscriptionPlan { Name = "Business", Description = "Standard plan", MonthlyPrice = 20, YearlyPrice = 200, MaxUsers = 10, MaxProjects = 5, MaxStorageGB = 50 };
+                var enterprisePlan = new SubscriptionPlan { Name = "Enterprise", Description = "Advanced plan", MonthlyPrice = 50, YearlyPrice = 500, MaxUsers = 50, MaxProjects = 20, MaxStorageGB = 200 };
+
+                try
+                {
+                    await context.Set<SubscriptionPlan>().AddRangeAsync(starterPlan, businessPlan, enterprisePlan);
+                await context.SaveChangesAsync();
+
+                    var usersIncludedFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Users Included");
+                    var wbsFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Work Breakdown Structure (WBS)");
+                    var wbsVersion2Feature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "WBS version 2.0");
+                    var ganttTimelineViewFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Gantt/Timeline View");
+                    var odcTableFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "ODC (Other Direct Cost) Table");
+                    var jobStartFormFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Job Start Form");
+                    var estimatedExpensesTableFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Estimated Expenses Table");
+                    var inputRegisterFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Input Register");
+                    var emailNotificationsFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Email Notifications");
+                    var checkReviewLogsFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Check & Review Logs");
+                    var changeControlRegisterFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Change Control Register");
+                    var monthlyProgressReviewFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Monthly Progress Review");
+                    var quarterlyProgressReviewFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Quarterly Progress Review");
+                    var weeklyDailyProgressReviewFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Weekly/Daily Progress Review");
+                    var milestoneTrackingFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Milestone Tracking");
+                    var budgetVsActualAnalysisFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Budget vs Actual Analysis");
+                    var manpowerPlanningFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Manpower Planning");
+                    var apiIntegrationFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "API Integration");
+                    var userExperienceFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "User Experience");
+                    var reportingFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Reporting");
+                    var slaSupportUpdatesFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "SLA Support & Updates");
+                    var priceUsdFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Price (USD)");
+                    var priceInrFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Price (INR)");
+
+                    // Starter Plan Features
+                    if (starterPlan != null && emailNotificationsFeature != null)
+                    {
+                        context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = starterPlan.Id, FeatureId = emailNotificationsFeature.Id });
+                    }
+
+                    // Business Plan Features
+                    if (businessPlan != null)
+                    {
+                        if (emailNotificationsFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = businessPlan.Id, FeatureId = emailNotificationsFeature.Id });
+                        }
+                        if (wbsFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = businessPlan.Id, FeatureId = wbsFeature.Id });
+                        }
+                        if (reportingFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = businessPlan.Id, FeatureId = reportingFeature.Id });
+                        }
+                    }
+
+                    // Enterprise Plan Features
+                    if (enterprisePlan != null)
+                    {
+                        if (usersIncludedFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = usersIncludedFeature.Id });
+                        }
+                        if (wbsFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = wbsFeature.Id });
+                        }
+                        if (wbsVersion2Feature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = wbsVersion2Feature.Id });
+                        }
+                        if (ganttTimelineViewFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = ganttTimelineViewFeature.Id });
+                        }
+                        if (odcTableFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = odcTableFeature.Id });
+                        }
+                        if (jobStartFormFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = jobStartFormFeature.Id });
+                        }
+                        if (estimatedExpensesTableFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = estimatedExpensesTableFeature.Id });
+                        }
+                        if (inputRegisterFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = inputRegisterFeature.Id });
+                        }
+                        if (emailNotificationsFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = emailNotificationsFeature.Id });
+                        }
+                        if (checkReviewLogsFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = checkReviewLogsFeature.Id });
+                        }
+                        if (changeControlRegisterFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = changeControlRegisterFeature.Id });
+                        }
+                        if (monthlyProgressReviewFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = monthlyProgressReviewFeature.Id });
+                        }
+                        if (quarterlyProgressReviewFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = quarterlyProgressReviewFeature.Id });
+                        }
+                        if (weeklyDailyProgressReviewFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = weeklyDailyProgressReviewFeature.Id });
+                        }
+                        if (milestoneTrackingFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = milestoneTrackingFeature.Id });
+                        }
+                        if (budgetVsActualAnalysisFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = budgetVsActualAnalysisFeature.Id });
+                        }
+                        if (manpowerPlanningFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = manpowerPlanningFeature.Id });
+                        }
+                        if (apiIntegrationFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = apiIntegrationFeature.Id });
+                        }
+                        if (userExperienceFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = userExperienceFeature.Id });
+                        }
+                        if (reportingFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = reportingFeature.Id });
+                        }
+                        if (slaSupportUpdatesFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = slaSupportUpdatesFeature.Id });
+                        }
+                        if (priceUsdFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = priceUsdFeature.Id });
+                        }
+                        if (priceInrFeature != null)
+                        {
+                            context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = enterprisePlan.Id, FeatureId = priceInrFeature.Id });
+                        }
+                    }
+
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("SubscriptionPlan data inserted successfully");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"An error occurred while seeding subscription plans: {e.Message}");
+                    throw;
+                }
+            }
+            else
+            {
+                Console.WriteLine("SubscriptionPlan table already has data, skipping insert");
             }
         }
 

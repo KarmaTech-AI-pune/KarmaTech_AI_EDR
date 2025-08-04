@@ -34,27 +34,9 @@ namespace NJS.Domain.Entities
         [MaxLength(255)]
         public string StripePriceId { get; set; }
 
-        [Column(TypeName = "nvarchar(max)")]
-        public string FeaturesJson { get; set; } = "{}";
-
-        [NotMapped]
-        public PlanFeatures Features 
-        { 
-            get => JsonSerializer.Deserialize<PlanFeatures>(FeaturesJson ?? "{}") ?? new PlanFeatures();
-            set => FeaturesJson = JsonSerializer.Serialize(value);
-        }
-
         [JsonIgnore]
         public virtual ICollection<Tenant> Tenants { get; set; } = new List<Tenant>();
-    }
 
-    public class PlanFeatures
-    {
-        public bool AdvancedReporting { get; set; }
-        public bool CustomBranding { get; set; }
-        public bool APIAccess { get; set; }
-        public bool PrioritySupport { get; set; }
-        public bool WhiteLabel { get; set; }
-        public bool SSO { get; set; }
+        public virtual ICollection<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
     }
-} 
+}

@@ -247,6 +247,31 @@ namespace NJSAPI.Controllers
         {
             return _context.SubscriptionPlans.Any(e => e.Id == id);
         }
+
+        [HttpGet("features/by-plan/{planName}")]
+        public async Task<IActionResult> GetFeaturesByPlanName(string planName)
+        {
+            var plan = await _context.SubscriptionPlans
+                .Include(sp => sp.SubscriptionPlanFeatures)
+                .ThenInclude(spf => spf.Feature)
+                .FirstOrDefaultAsync(sp => sp.Name == planName);
+
+            if (plan == null)
+            {
+                return NotFound($"Subscription plan '{planName}' not found.");
+            }
+
+            var features = plan.SubscriptionPlanFeatures.Select(spf => new
+            {
+                spf.Feature.Id,
+                spf.Feature.Name,
+                spf.Feature.Description,
+                spf.Feature.PriceUSD,
+                spf.Feature.PriceINR
+            }).ToList();
+
+            return Ok(features);
+        }
     }
 
     public class CreateSubscriptionRequest
@@ -258,4 +283,4 @@ namespace NJSAPI.Controllers
     {
         public int PlanId { get; set; }
     }
-} 
+}
