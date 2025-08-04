@@ -14,5 +14,6 @@ namespace NJS.Application.Services.IContract
         Task<IEnumerable<SubscriptionPlan>> GetAllSubscriptionPlansAsync();
         Task<IEnumerable<SubscriptionPlanDto>> GetAllSubscriptionPlansWithFeaturesAsync();
         Task<PlanByNameResponseDto?> GetPlanByNameAsync(string planName);
+        Task<List<PlanByNameResponseDto>> GetAllPlansAsync();
     }
 }

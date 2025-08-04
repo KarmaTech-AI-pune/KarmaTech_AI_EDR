@@ -285,7 +285,23 @@ namespace NJSAPI.Controllers
             }
         }
 
-        // GET: api/subscriptions/features/by-plan/{planName}
+        // GET: api/subscriptions/features - Get all plans
+        [HttpGet("features")]
+        public async Task<ActionResult<object>> GetAllPlansFeatures()
+        {
+            try
+            {
+                var plans = await _subscriptionService.GetAllPlansAsync();
+                return Ok(new { plans = plans });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving all plans");
+                return StatusCode(500, new { message = "An error occurred while retrieving plans" });
+            }
+        }
+
+        // GET: api/subscriptions/features/by-plan/{planName} - Get specific plan
         [HttpGet("features/by-plan/{planName}")]
         public async Task<ActionResult<PlanByNameResponseDto>> GetPlanByName(string planName)
         {

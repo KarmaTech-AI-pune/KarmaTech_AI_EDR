@@ -383,6 +383,12 @@ namespace NJS.Application.Services
                 string.Equals(p.Slug, planName, StringComparison.OrdinalIgnoreCase));
         }
 
+        public async Task<List<PlanByNameResponseDto>> GetAllPlansAsync()
+        {
+            // Return all static plans
+            return GetStaticPlans();
+        }
+
         private List<PlanByNameResponseDto> GetStaticPlans()
         {
             return new List<PlanByNameResponseDto>
