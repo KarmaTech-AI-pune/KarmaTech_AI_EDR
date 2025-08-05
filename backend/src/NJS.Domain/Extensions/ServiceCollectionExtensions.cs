@@ -62,6 +62,7 @@ namespace NJS.Domain.Extensions
                 configuration.GetSection(EmailSettings.SectionName).Bind(options);
 
             });
+            services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
             return services;
         }       
     }

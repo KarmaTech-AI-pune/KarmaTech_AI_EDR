@@ -1,6 +1,6 @@
 import { Credentials, LoginResponse, UserWithRole } from '../types';
-import {  PermissionType } from '../models';
-import { axiosInstance } from './axiosConfig';
+import { PermissionType } from '../models';
+import { axiosInstance, ensureHeaders } from './axiosConfig';
 import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {
@@ -18,19 +18,20 @@ interface DecodedToken {
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
+      // The tenant context header will be automatically added by the axios interceptor
       const response = await axiosInstance.post('api/user/login', credentials);
       const { success, token } = response.data;
       
       if (success && token) {
         // Store token
         localStorage.setItem('token', token);
-        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
         // Decode token and store user data
         const decodedToken = jwtDecode<DecodedToken>(token);
         const role = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-        const permissions = decodedToken.Permissions;//join(',').split(',').map(p => p.trim());
+        const permissions = decodedToken.Permissions;
         const temp = normalizePermissions(permissions);
+
         // Create user with role details
         const userWithRole: UserWithRole = {
           id: decodedToken.sub,
