@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useContext } from 'react';
 import {
   Box,
   Button,
@@ -18,6 +19,8 @@ import FormField from '../components/forms/FormField';
 import { signupSchema } from '../schemas/signupSchema';
 import { z } from 'zod';
 import { authApi } from '../services/authApi';
+import { projectManagementAppContext } from '../App';
+import { projectManagementAppContextType } from '../types';
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
@@ -67,6 +70,12 @@ const Signup: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+  const { isAuthenticated } = useContext(projectManagementAppContext) as projectManagementAppContextType;
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
