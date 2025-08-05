@@ -7,10 +7,12 @@ namespace NJS.Domain.Entities
     /// <summary>
     /// Entity to track user assignments for WBS task versions
     /// </summary>
-    public class UserWBSTaskVersionHistory
+    public class UserWBSTaskVersionHistory : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int WBSTaskVersionHistoryId { get; set; }
@@ -47,4 +49,4 @@ namespace NJS.Domain.Entities
         [ForeignKey("ResourceRoleId")]
         public Role ResourceRole { get; set; }
     }
-} 
+}

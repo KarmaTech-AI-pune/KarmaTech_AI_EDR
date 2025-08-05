@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 
 namespace NJS.Domain.Entities
 {
-    public class OpportunityStatus
+    public class OpportunityStatus : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
         public string Status { get; set; }
         public ICollection<OpportunityHistory> OpportunityHistories { get; set; } = [];
     }

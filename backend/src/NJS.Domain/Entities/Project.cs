@@ -6,10 +6,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NJS.Domain.Entities
 {
     [Table("Projects")]
-    public class Project : IAuditableEntity
+    public class Project : IAuditableEntity, ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         [StringLength(100)]

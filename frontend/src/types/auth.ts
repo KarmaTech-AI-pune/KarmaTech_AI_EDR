@@ -3,7 +3,7 @@ import { Project, OpportunityTracking } from '../models';
 import { GoNoGoDecision } from '../models/goNoGoDecisionModel';
 
 export interface Credentials {
-  username: string;
+  email: string;
   password: string;
 }
 

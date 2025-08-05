@@ -1,17 +1,36 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.Extensions.Configuration;
 using NJS.Domain.Entities;
+using System.Linq;
+using System;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace NJS.Domain.Database
 {
     public class ProjectManagementContext : IdentityDbContext<User>
     {
-        public ProjectManagementContext(DbContextOptions<ProjectManagementContext> options) : base(options)
-        {
+       
 
+        public int? TenantId { get; private set; }
+
+
+        public ProjectManagementContext(DbContextOptions<ProjectManagementContext> options, IHttpContextAccessor httpContextAccessor = null) : base(options)
+        {
+            if (httpContextAccessor?.HttpContext != null)
+            {
+                if (httpContextAccessor.HttpContext.Items.TryGetValue("TenantId", out var tenantId))
+                {
+                    TenantId = (int)tenantId;
+                }
+            }
+            else
+            {
+                TenantId = 1;
+
+            }
         }
         
         public DbSet<BidPreparation> BidPreparations { get; set; }
@@ -90,10 +109,80 @@ namespace NJS.Domain.Database
         public DbSet<CurrentBudgetInMIS> CurrentBudgetInMIS { get; set; }
         public DbSet<PercentCompleteOnCosts> PercentCompleteOnCosts { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Tenant> Tenants { get; set; }
+        public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+        public DbSet<TenantUser> TenantUsers { get; set; }
+        public DbSet<TenantDatabase> TenantDatabases { get; set; }
+        public DbSet<CreateAccount> CreateAccounts { get; set; }
+        public DbSet<Feature> Features { get; set; }
+        public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        // Only set TenantId if it's not already set (for seeding scenarios)
+                        if (entry.Entity.TenantId == 0)
+                        {
+                            entry.Entity.TenantId = TenantId ?? throw new InvalidOperationException("TenantId cannot be null.");
+                        }
+                        break;
+                }
+            }
+            return await base.SaveChangesAsync(cancellationToken);
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<CheckReview>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<CorrespondenceInward>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<CorrespondenceOutward>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<GoNoGoDecision>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<InputRegister>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<JobStartForm>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<JobStartFormHeader>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<MonthlyProgress>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ProjectClosure>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ProjectResource>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSTaskPlannedHourHeader>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WorkBreakdownStructure>().HasQueryFilter(p => p.TenantId == TenantId);
+            // Add other entities that need to be filtered by TenantId here
+            modelBuilder.Entity<BudgetTable>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<CTCEAC>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ChangeControlWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ChangeOrder>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ContractAndCost>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<CurrentMonthAction>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<EarlyWarning>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<FinancialDetails>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<JobStartFormHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<JobStartFormResource>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<JobStartFormSelection>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<LastMonthAction>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ManpowerPlanning>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ProgrammeSchedule>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ProgressDeliverable>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ProjectClosureWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<Schedule>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSTask>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSTaskPlannedHour>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<OriginalBudget>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<CurrentBudgetInMIS>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<PercentCompleteOnCosts>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<UserWBSTask>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSVersionWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
@@ -230,6 +319,9 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Cost).HasPrecision(18, 2);
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Fee).HasPrecision(18, 2);
 
+            modelBuilder.Entity<Feature>().Property(f => f.PriceINR).HasPrecision(18, 2);
+            modelBuilder.Entity<Feature>().Property(f => f.PriceUSD).HasPrecision(18, 2);
+
             // Configure Identity tables
             modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
             {
@@ -334,8 +426,8 @@ namespace NJS.Domain.Database
                 .HasOne(oh => oh.Opportunity)
                 .WithMany(o => o.OpportunityHistories)
                 .HasForeignKey(oh => oh.OpportunityId);
-            modelBuilder.Entity<OpportunityHistory>()
-                .HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
+            //modelBuilder.Entity<OpportunityHistory>()
+                //.HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
 
             modelBuilder.Entity<WBSHistory>()
@@ -1086,28 +1178,7 @@ namespace NJS.Domain.Database
                       .OnDelete(DeleteBehavior.Restrict)
                       .IsRequired(false);
             });
-            // Removed ProjectClosureComment entity configuration to fix build issues
-            /*
-            modelBuilder.Entity<ProjectClosureComment>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-
-                // Configure string properties
-                entity.Property(e => e.Type).HasMaxLength(20).IsRequired();
-                entity.Property(e => e.Comment).IsRequired();
-                entity.Property(e => e.CreatedBy).HasMaxLength(100).IsRequired(false);
-                entity.Property(e => e.UpdatedBy).HasMaxLength(100).IsRequired(false);
-
-                // Create index on ProjectClosureId for faster lookups
-                entity.HasIndex(e => e.ProjectClosureId);
-
-                // Configure relationship with ProjectClosure
-                entity.HasOne(pcc => pcc.ProjectClosure)
-                      .WithMany(pc => pc.Comments)
-                      .HasForeignKey(pcc => pcc.ProjectClosureId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
-            */
+            
 
             // Configure AuditLog entity
             modelBuilder.Entity<AuditLog>(entity =>
@@ -1131,6 +1202,19 @@ namespace NJS.Domain.Database
                 entity.HasIndex(e => e.ChangedAt);
                 entity.HasIndex(e => new { e.EntityName, e.EntityId });
             });
+
+            modelBuilder.Entity<SubscriptionPlanFeature>()
+                .HasKey(spf => spf.Id);
+
+            modelBuilder.Entity<SubscriptionPlanFeature>()
+                .HasOne(spf => spf.SubscriptionPlan)
+                .WithMany(sp => sp.SubscriptionPlanFeatures)
+                .HasForeignKey(spf => spf.SubscriptionPlanId);
+
+            modelBuilder.Entity<SubscriptionPlanFeature>()
+                .HasOne(spf => spf.Feature)
+                .WithMany(f => f.SubscriptionPlanFeatures)
+                .HasForeignKey(spf => spf.FeatureId);
         }
     }
 }

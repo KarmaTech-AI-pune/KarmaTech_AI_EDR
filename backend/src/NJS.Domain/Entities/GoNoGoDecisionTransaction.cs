@@ -5,10 +5,12 @@ using NJS.Domain.Enums;
 
 namespace NJS.Domain.Entities
 {
-    public class GoNoGoDecisionTransaction
+    public class GoNoGoDecisionTransaction : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
         public int Score { get; set; }
         public string Commits { get; set; }
         public int? GoNoGoDecisionHeaderId { get; set; }

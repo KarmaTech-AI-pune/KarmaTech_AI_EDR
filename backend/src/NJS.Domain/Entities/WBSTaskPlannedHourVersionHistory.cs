@@ -7,10 +7,12 @@ namespace NJS.Domain.Entities
     /// <summary>
     /// Entity to track planned hours for WBS task versions
     /// </summary>
-    public class WBSTaskPlannedHourVersionHistory
+    public class WBSTaskPlannedHourVersionHistory : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int WBSTaskVersionHistoryId { get; set; }
@@ -34,4 +36,4 @@ namespace NJS.Domain.Entities
         [ForeignKey("WBSTaskVersionHistoryId")]
         public WBSTaskVersionHistory WBSTaskVersionHistory { get; set; }
     }
-} 
+}

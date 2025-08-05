@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Paper,
   Button,
@@ -29,8 +29,7 @@ import {
   deleteCheckReview,
   updateCheckReview
 } from '../../api/checkReviewApi';
-import { projectManagementAppContext } from '../../App';
-import { FormWrapper } from './FormWrapper';
+import { useProject } from '../../context/ProjectContext';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -43,7 +42,7 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
 }));
 
 const CheckReviewForm: React.FC = () => {
-  const context = useContext(projectManagementAppContext);
+  const { projectId } = useProject();
   const [rows, setRows] = useState<CheckReviewRow[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string>('');
@@ -51,23 +50,23 @@ const CheckReviewForm: React.FC = () => {
   const [editingReview, setEditingReview] = useState<CheckReviewRow | undefined>(undefined);
 
   useEffect(() => {
-    if (context?.selectedProject?.id) {
+    if (projectId) {
       loadReviews();
     }
-  }, [context?.selectedProject?.id]);
+  }, [projectId]);
 
   const loadReviews = async () => {
-    if (!context?.selectedProject?.id) {
+    if (!projectId) {
       console.warn('No project selected, cannot load reviews');
       return;
     }
 
     try {
       setLoading(true);
-      console.log('Loading reviews for project:', context.selectedProject.id);
+      console.log('Loading reviews for project:', projectId);
 
       try {
-        const reviews = await getCheckReviewsByProject(context.selectedProject.id.toString());
+        const reviews = await getCheckReviewsByProject(projectId);
         console.log('Loaded reviews from backend:', reviews);
 
         if (!reviews || reviews.length === 0) {
@@ -121,7 +120,7 @@ const CheckReviewForm: React.FC = () => {
   };
 
   const handleAddReview = async (reviewData: Omit<CheckReviewRow, 'projectId' | 'activityNo'>) => {
-    if (!context?.selectedProject?.id) {
+    if (!projectId) {
       setError('No project selected. Please select a project first.');
       return;
     }
@@ -142,10 +141,10 @@ const CheckReviewForm: React.FC = () => {
         setEditingReview(undefined);
       } else {
         // Create new review
-        console.log('Creating new review for project:', context.selectedProject.id);
+        console.log('Creating new review for project:', projectId);
         const newReview: Omit<CheckReviewRow, 'id'> = {
           ...reviewData,
-          projectId: context.selectedProject.id.toString(),
+          projectId: projectId,
           activityNo: getNextActivityNo(),
           createdBy: 'System' // Add createdBy field
         };
@@ -247,13 +246,11 @@ const CheckReviewForm: React.FC = () => {
     />
   );
 
-  if (!context?.selectedProject?.id) {
+  if (!projectId) {
     return (
-      <FormWrapper>
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-          <Alert severity="warning">Please select a project to view the check and review form.</Alert>
-        </Container>
-      </FormWrapper>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="warning">Please select a project to view the check and review form.</Alert>
+      </Container>
     );
   }
 
@@ -466,9 +463,9 @@ const CheckReviewForm: React.FC = () => {
   );
 
   return (
-    <FormWrapper>
+    <>
       {formContent}
-    </FormWrapper>
+    </>
   );
 };
 

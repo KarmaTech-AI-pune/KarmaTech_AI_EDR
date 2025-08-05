@@ -1,4 +1,5 @@
 import { useState, useContext  } from 'react'
+import { Navigate } from 'react-router-dom';
 import {
     TextField,
     Button,
@@ -7,7 +8,8 @@ import {
     Typography,
     Box,
     Alert,
-    Container
+    Container,
+    Link
 } from '@mui/material';
 import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
@@ -18,8 +20,12 @@ export const LoginScreen: React.FC = () => {
     const [email, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
+    const { isAuthenticated, setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
     const navigation = useAppNavigation();
+
+    if (isAuthenticated) {
+        return <Navigate to="/" replace />;
+    }
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -65,7 +71,7 @@ export const LoginScreen: React.FC = () => {
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
                 <Box sx={{ mb: 1 }}>
                     <img
-                        src="/KarmaTech_logo.jpg"
+                        src="/KarmaTech_logo.png"
                         alt="KarmaTech AI"
                         style={{
                             maxWidth: '150px',
@@ -83,7 +89,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#1976d2'
                     }}
                 >
-                    KarmaTech AI Project Management Application
+                    KarmaTech-AI EDR(Enterprise Digital Runner)
                 </Typography>
                 <Typography
                     variant="h6"
@@ -92,7 +98,7 @@ export const LoginScreen: React.FC = () => {
                         color: '#666'
                     }}
                 >
-                    Version 1.11.10
+                    Version 1.11.11
                 </Typography>
             </Container>
 
@@ -160,6 +166,11 @@ export const LoginScreen: React.FC = () => {
                         <a href="#" style={{ color: '#1976d2', textDecoration: 'none' }}>
                             Forgot password?
                         </a>
+                    </Typography>
+                    <Typography variant="body2" align="center" sx={{ mt: 1, color: '#666' }}>
+                        <Link href="/enhanced-login" sx={{ color: '#1976d2', textDecoration: 'none' }}>
+                            🚀 Try Enhanced Multi-Tenant Login
+                        </Link>
                     </Typography>
                 </CardContent>
             </Card>

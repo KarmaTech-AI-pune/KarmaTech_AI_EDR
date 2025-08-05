@@ -4,10 +4,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NJS.Domain.Entities
 {
     [Table("ScoringDescriptionSummarry")]
-    public class ScoringDescriptionSummarry
+    public class ScoringDescriptionSummarry : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
         
         [ForeignKey("ScoringDescriptions")]
         public int ScoringDescriptionID { get; set; }

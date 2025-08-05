@@ -2,9 +2,10 @@ using System;
 
 namespace NJS.Domain.Entities
 {
-    public class ProgressDeliverable
+    public class ProgressDeliverable : ITenantEntity
     {
         public int Id { get; set; }
+        public int TenantId { get; set; }
         public int MonthlyProgressId { get; set; }
         public MonthlyProgress MonthlyProgress { get; set; }
         public string? Milestone { get; set; }

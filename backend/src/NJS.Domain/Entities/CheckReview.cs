@@ -5,10 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NJS.Domain.Entities
 {
     [Table("CheckReviews")]
-    public class CheckReview
+    public class CheckReview : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int ProjectId { get; set; }

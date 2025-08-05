@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -12,10 +12,12 @@ namespace NJS.Domain.Entities
         ODC = 1
     }
 
-    public class WBSTask
+    public class WBSTask : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int WorkBreakdownStructureId { get; set; }

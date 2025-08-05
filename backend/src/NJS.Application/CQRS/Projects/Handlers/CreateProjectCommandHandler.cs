@@ -25,6 +25,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             var dto = request.ProjectDto;
             var project = new Project
             {
+                TenantId = dto.TenantId ?? 0, // Set to 0 to let database context handle it
                 Name = dto.Name,
                 ClientName = dto.ClientName,
                 ProjectNo = dto.ProjectNo,

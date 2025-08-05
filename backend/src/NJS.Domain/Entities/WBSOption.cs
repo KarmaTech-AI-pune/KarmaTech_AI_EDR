@@ -9,10 +9,12 @@ namespace NJS.Domain.Entities
         ODC = 1
     }
 
-    public class WBSOption
+    public class WBSOption : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         [StringLength(100)]

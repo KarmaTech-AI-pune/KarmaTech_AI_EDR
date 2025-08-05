@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    public class ChangeControlWorkflowHistory
+    public class ChangeControlWorkflowHistory : ITenantEntity
     {
         public ChangeControlWorkflowHistory()
         {
@@ -13,6 +13,8 @@ namespace NJS.Domain.Entities
 
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         public int ChangeControlId { get; set; }
 

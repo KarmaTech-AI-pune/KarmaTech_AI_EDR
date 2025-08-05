@@ -3,10 +3,12 @@ using System.Collections.Generic;
 
 namespace NJS.Domain.Entities
 {
-    public class PMWorkflowStatus
+    public class PMWorkflowStatus : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
         public string Status { get; set; }
 
         // Navigation properties

@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'
-import { FormWrapper } from './FormWrapper'
+import React, { useState, useEffect } from 'react'
 import JobstartTime from './jobstartFormComponent/JobstartTime'
 import EstimatedExpenses from './jobstartFormComponent/EstimatedExpenses'
 import JobstartGrandTotal from './jobstartFormComponent/JobstartGrandTotal'
@@ -9,12 +8,13 @@ import { Container, Box, Paper, CircularProgress, Alert, Snackbar, Typography } 
 import { getWBSResourceData, submitJobStartForm, updateJobStartForm, getJobStartFormByProjectId } from '../../services/jobStartFormApi'
 import { WBSResource } from '../../types/jobStartFormTypes'
 import { CustomRow } from './jobstartFormComponent/TableTemplate'
-import { projectManagementAppContext } from '../../App'
-import { projectManagementAppContextType } from '../../types'
+import { useProject } from '../../context/ProjectContext'
 import LoadingButton from '../common/LoadingButton'
+import { projectApi } from '../../services/projectApi'; // Import projectApi from services
+import { Project } from '../../models/projectModel'; // Import Project model
 
 const JobStartForm: React.FC = () => {
-  const context = useContext<projectManagementAppContextType | null>(projectManagementAppContext)
+  const { projectId } = useProject()
   const [wbsResources, setWbsResources] = useState<WBSResource[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -107,9 +107,6 @@ const JobStartForm: React.FC = () => {
   const [snackbarMessage, setSnackbarMessage] = useState<string>('')
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success')
 
-  // Get project ID from context
-  const projectId = context?.selectedProject?.id?.toString()
-
   useEffect(() => {
     const fetchData = async () => {
       if (!projectId) {
@@ -122,33 +119,34 @@ const JobStartForm: React.FC = () => {
         setLoading(true)
 
         // First, try to fetch existing JobStartForm data
-        let existingFormData = null
-        let existingResources: Record<string, any> = {}
-        let existingCustomRows: Record<string, any> = {}
+        let existingFormData = null;
+        let existingResources: Record<string, any> = {};
+        let existingCustomRows: Record<string, any> = {};
+        let fetchedProject: Project | null = null; // To store fetched project data
 
         try {
           // Get data from /api/projects/{projectId}/jobstartforms
-          const formData = await getJobStartFormByProjectId(projectId)
+          const formData = await getJobStartFormByProjectId(projectId);
           if (formData && Array.isArray(formData) && formData.length > 0) {
-            existingFormData = formData[0] // Get the first form if multiple exist
+            existingFormData = formData[0]; // Get the first form if multiple exist
             // Ensure formId is a number before setting it
             if (existingFormData.formId !== undefined) {
               setFormId(typeof existingFormData.formId === 'string'
                 ? parseInt(existingFormData.formId)
-                : existingFormData.formId)
+                : existingFormData.formId);
             }
-            setIsUpdating(true)
+            setIsUpdating(true);
 
             // Set form status if available
             if (existingFormData.status) {
-              setFormStatus(existingFormData.status)
+              setFormStatus(existingFormData.status);
               // If form is in review or approved, disable edit mode
               if (['Sent for Review', 'Sent for Approval', 'Approved', 'Review Changes', 'Approval Changes'].includes(existingFormData.status)) {
-                setEditMode(false)
+                setEditMode(false);
               }
             }
 
-            // Set summary data
+            // Set summary data from existing form
             setSummaryData({
               projectFees: existingFormData.projectFees || 0,
               serviceTaxPercentage: existingFormData.serviceTaxPercentage || 18,
@@ -156,7 +154,7 @@ const JobStartForm: React.FC = () => {
               totalProjectFees: existingFormData.totalProjectFees || 0,
               profit: existingFormData.profit || 0,
               profitPercentage: existingFormData.profitPercentage || 0
-            })
+            });
 
             // Process existing resources and custom rows
             if (existingFormData.resources && Array.isArray(existingFormData.resources)) {
@@ -164,21 +162,36 @@ const JobStartForm: React.FC = () => {
               existingFormData.resources.forEach(resource => {
                 if (resource.wbsTaskId) {
                   // Regular resource
-                  existingResources[resource.wbsTaskId] = resource
+                  existingResources[resource.wbsTaskId] = resource;
                 } else if (resource.name) {
                   // Custom row (name field contains the row ID)
-                  existingCustomRows[resource.name] = resource
+                  existingCustomRows[resource.name] = resource;
                 }
-              })
+              });
             }
           }
         } catch (err) {
-          console.log('No existing JobStartForm found, creating a new one')
+          console.log('No existing JobStartForm found, creating a new one');
           // Continue with WBS data if no form exists
         }
 
+        // Fetch Project data regardless of whether JobStartForm exists
+        try {
+          fetchedProject = await projectApi.getById(projectId);
+          // If no existing JobStartForm data, initialize projectFees from fetched project
+          if (!existingFormData) {
+            setSummaryData(prev => ({
+              ...prev,
+              projectFees: fetchedProject?.estimatedProjectFee || 0
+            }));
+          }
+        } catch (err) {
+          console.error('Error fetching project data:', err);
+          // Handle error, but don't block the form from loading
+        }
+
         // Then fetch WBS resource data from /api/projects/{projectId}/jobstartforms/wbsresources
-        const wbsData = await getWBSResourceData(projectId)
+        const wbsData = await getWBSResourceData(projectId);
 
         // Transform the data from the API to match our WBSResource type
         const resources: WBSResource[] = wbsData.resourceAllocations.map((allocation: any) => {
@@ -289,15 +302,6 @@ const JobStartForm: React.FC = () => {
 
     fetchData()
   }, [projectId])
-
-  // If context is not available, show an error
-  if (!context) {
-    return (
-      <Container>
-        <Alert severity="error">Context not available</Alert>
-      </Container>
-    );
-  }
 
   // If no project is selected, show a warning
   if (!projectId) {
@@ -437,10 +441,9 @@ const JobStartForm: React.FC = () => {
   }
 
   return (
-    <FormWrapper>
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box sx={{
-          width: '100%',
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Box sx={{
+        width: '100%',
           maxHeight: 'calc(100vh - 200px)',
           overflowY: 'auto',
           overflowX: 'hidden',
@@ -552,7 +555,6 @@ const JobStartForm: React.FC = () => {
             )}
           </Paper>
         </Box>
-      </Container>
 
       {/* Success/Error Snackbar */}
       <Snackbar
@@ -570,8 +572,8 @@ const JobStartForm: React.FC = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </FormWrapper>
-  )
+    </Container>
+  );
 }
 
 export default JobStartForm

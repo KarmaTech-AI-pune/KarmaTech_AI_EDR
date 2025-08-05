@@ -1,9 +1,22 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using NJS.Domain.Database;
+using NJS.Domain.Entities;
+using NJS.Domain.Events;
+using NJS.Domain.GenericRepository;
+using NJS.Domain.Models;
+using NJS.Domain.Services;
+using NJS.Domain.UnitWork;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
-using NJS.Repositories.Interfaces;
 using NJS.Repositories.Repositories;
+using NJS.Repositories.Interfaces;
 using System.Reflection;
+using Microsoft.AspNetCore.Hosting;
 
 namespace NJS.Application.Extensions
 {
@@ -41,8 +54,12 @@ namespace NJS.Application.Extensions
             services.AddScoped<ICheckReviewRepository, CheckReviewRepository>();
             services.AddScoped<IChangeControlRepository, ChangeControlRepository>();
             services.AddScoped<IProjectClosureRepository, ProjectClosureRepository>();
+            services.AddScoped<ITenantRepository, TenantRepository>();
 
-            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
+
+           // services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAuthService, EnhancedAuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
             services.AddScoped<IProjectHistoryService, ProjectHistoryService>();
@@ -50,6 +67,22 @@ namespace NJS.Application.Extensions
             services.AddScoped<IUserContext, UserContext>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<ISubscriptionService, SubscriptionService>();
+            services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
+
+            // Register DNS Management Service based on environment
+            var environment = services.BuildServiceProvider().GetService<IWebHostEnvironment>();
+            if (environment?.EnvironmentName == "Development")
+            {
+                services.AddScoped<IDNSManagementService, MockDNSManagementService>();
+            }
+            else
+            {
+                services.AddScoped<IDNSManagementService, DNSManagementService>();
+
+                // Note: For production, you'll need to configure AWS credentials and region
+                // services.AddAWSService<IAmazonRoute53>();
+            }
 
             //Define Strategy pattern
             services.AddScoped<IEntityWorkflowStrategy, ChangeControlWorkflowStrategy>();
@@ -58,9 +91,10 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEntityWorkflowStrategy, WBSVersionWorkflowStrategy>(); // Add WBS version workflow strategy
             services.AddScoped<IEntityWorkflowStrategy, JobStartFormWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
-
+            services.AddScoped<IFeatureRepository, FeatureRepository>();
 
             return services;
         }
+        
     }
 }

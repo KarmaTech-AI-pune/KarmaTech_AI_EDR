@@ -7,6 +7,7 @@ namespace NJS.Application.Dtos
     public class ProjectDto
     {
         public int Id { get; set; }
+        public int? TenantId { get; set; } // Added for multi-tenant support
         public string Name { get; set; }
         public string ClientName { get; set; }
 		public int ProjectNo { get; set; }

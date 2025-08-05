@@ -7,7 +7,7 @@ namespace NJS.Domain.Entities
     /// <summary>
     /// Entity to track workflow history for WBS versions
     /// </summary>
-    public class WBSVersionWorkflowHistory
+    public class WBSVersionWorkflowHistory : ITenantEntity
     {
         public WBSVersionWorkflowHistory()
         {
@@ -16,6 +16,8 @@ namespace NJS.Domain.Entities
 
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int WBSVersionHistoryId { get; set; }
@@ -45,4 +47,4 @@ namespace NJS.Domain.Entities
         [ForeignKey("AssignedToId")]
         public User AssignedTo { get; set; }
     }
-} 
+}

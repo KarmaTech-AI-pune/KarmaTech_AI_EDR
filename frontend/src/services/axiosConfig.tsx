@@ -2,33 +2,52 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// Function to get tenant context from domain
+const getTenantContext = () => {
+  const hostname = window.location.hostname;
+  
+  // Extract subdomain (e.g., 'companyb' from 'companyb.localhost')
+  const subdomain = hostname.split('.')[0];
+  if(subdomain===null || subdomain === 'localhost' || subdomain === '') {
+    return null; 
+  }
+  return subdomain;
+};
+
 export const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   },
-  withCredentials: false // Disable sending cookies in cross-origin requests to avoid CORS issues
+  withCredentials: false
 });
 
-// Add request interceptor to add token to all requests
+// Add request interceptor to add token and tenant context to all requests
 axiosInstance.interceptors.request.use(
   (config) => {
+    // Ensure headers object exists
+    config.headers = config.headers || {};
+
+    // Add token if exists
     const token = localStorage.getItem('token');
     if (token) {
-      // Ensure headers object exists
-      config.headers = config.headers || {};
-
-      // Set Authorization header with Bearer token
       config.headers.Authorization = `Bearer ${token}`;
-
-      console.log('Request with token:', {
-        url: config.url,
-        method: config.method,
-        hasAuthHeader: !!config.headers.Authorization
-      });
-    } else {
-      console.warn('No token found in localStorage');
     }
+
+    // Add tenant context from domain
+    const tenantContext = getTenantContext();
+    if (tenantContext) {
+      config.headers['X-Tenant-Context'] = tenantContext;
+      console.log('Added tenant context:', tenantContext);
+    }
+
+    console.log('Request headers:', {
+      url: config.url,
+      method: config.method,
+      hasAuthHeader: !!config.headers.Authorization,
+      tenantContext: config.headers['X-Tenant-Context']
+    });
+
     return config;
   },
   (error) => {
@@ -59,16 +78,15 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       console.warn('Unauthorized access detected - clearing token');
       localStorage.removeItem('token');
-      // You could also redirect to login page here
-      // window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
-// Helper function to ensure token is included in requests
-export const ensureAuthHeader = (config?: AxiosRequestConfig): AxiosRequestConfig => {
+// Helper function to ensure auth and tenant headers
+export const ensureHeaders = (config?: AxiosRequestConfig): AxiosRequestConfig => {
   const token = localStorage.getItem('token');
+  const tenantContext = getTenantContext();
   const newConfig = config ? { ...config } : {};
 
   if (!newConfig.headers) {
@@ -77,6 +95,10 @@ export const ensureAuthHeader = (config?: AxiosRequestConfig): AxiosRequestConfi
 
   if (token) {
     newConfig.headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (tenantContext) {
+    newConfig.headers['X-Tenant-Context'] = tenantContext;
   }
 
   return newConfig;
