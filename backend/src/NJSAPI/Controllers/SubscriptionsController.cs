@@ -285,25 +285,29 @@ namespace NJSAPI.Controllers
             }
         }
 
-        // GET: api/subscriptions/features - Get all plans
+        // GET: api/subscriptions/features - Get all subscription plans with features, pricing, and limitations
         [HttpGet("features")]
-        public async Task<ActionResult<object>> GetAllPlansFeatures()
+        public async Task<ActionResult<SubscriptionFeaturesResponseDto>> GetAllSubscriptionFeatures()
         {
             try
             {
-                var plans = await _subscriptionService.GetAllPlansAsync();
-                return Ok(new { plans = plans });
+                _logger.LogInformation("Retrieving all subscription plans with features, pricing, and limitations");
+
+                var result = await _subscriptionService.GetAllSubscriptionFeaturesAsync();
+
+                _logger.LogInformation("Successfully retrieved {Count} subscription plans with details", result.Plans.Count);
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving all plans");
-                return StatusCode(500, new { message = "An error occurred while retrieving plans" });
+                _logger.LogError(ex, "Error retrieving subscription plans with features");
+                return StatusCode(500, new { message = "An error occurred while retrieving subscription plans with features" });
             }
         }
 
-        // GET: api/subscriptions/features/by-plan/{planName} - Get features for specific plan from database
+        // GET: api/subscriptions/features/by-plan/{planName} - Get specific plan with features, pricing, and limitations
         [HttpGet("features/by-plan/{planName}")]
-        public async Task<ActionResult<PlanFeaturesResponseDto>> GetFeaturesByPlanName(string planName)
+        public async Task<ActionResult<SubscriptionFeaturesResponseDto>> GetSubscriptionFeaturesByPlanName(string planName)
         {
             try
             {
@@ -312,26 +316,22 @@ namespace NJSAPI.Controllers
                     return BadRequest(new { message = "Plan name is required" });
                 }
 
-                var planFeatures = await _subscriptionService.GetFeaturesByPlanNameAsync(planName);
+                _logger.LogInformation("Retrieving subscription plan '{PlanName}' with features, pricing, and limitations", planName);
 
-                if (planFeatures == null)
+                var result = await _subscriptionService.GetSubscriptionFeaturesByPlanNameAsync(planName);
+
+                if (result.Plans.Count == 0)
                 {
-                    return NotFound(new { message = $"Plan '{planName}' not found" });
+                    return NotFound(new { message = $"Subscription plan '{planName}' not found" });
                 }
 
-                return Ok(planFeatures);
+                _logger.LogInformation("Successfully retrieved subscription plan '{PlanName}' with details", planName);
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                // Return the actual error message for debugging
-                return Ok(new PlanFeaturesResponseDto
-                {
-                    PlanName = planName,
-                    Features = new List<PlanFeatureItemDto>
-                    {
-                        new PlanFeatureItemDto { Id = "controller_error", Name = $"Controller Error: {ex.Message}" }
-                    }
-                });
+                _logger.LogError(ex, "Error retrieving subscription plan '{PlanName}' with features", planName);
+                return StatusCode(500, new { message = $"An error occurred while retrieving subscription plan '{planName}' with features" });
             }
         }
 

@@ -637,5 +637,240 @@ namespace NJS.Application.Services
                 }
             };
         }
+
+        public async Task<SubscriptionFeaturesResponseDto> GetAllSubscriptionFeaturesAsync()
+        {
+            _logger.LogInformation("Getting all subscription plans with features, pricing, and limitations");
+
+            try
+            {
+                var subscriptionPlans = await _context.SubscriptionPlans
+                    .Include(sp => sp.SubscriptionPlanFeatures)
+                        .ThenInclude(spf => spf.Feature)
+                    .Where(sp => sp.IsActive)
+                    .ToListAsync();
+
+                var response = new SubscriptionFeaturesResponseDto();
+
+                foreach (var plan in subscriptionPlans)
+                {
+                    // Create pricing structure based on plan properties
+                    var pricingStructure = CreatePricingStructure(plan);
+
+                    // Map features to string array (simplified feature names)
+                    var featureNames = new List<string>();
+                    if (plan.SubscriptionPlanFeatures != null)
+                    {
+                        foreach (var spf in plan.SubscriptionPlanFeatures)
+                        {
+                            var featureName = MapFeatureToSlug(spf.Feature.Name);
+                            if (!string.IsNullOrEmpty(featureName))
+                            {
+                                featureNames.Add(featureName);
+                            }
+                        }
+                    }
+
+                    var planDto = new SubscriptionPlanWithDetailsDto
+                    {
+                        Id = plan.StripePriceId ?? $"plan_{plan.Name.ToLower().Replace(" ", "_")}_{DateTime.Now.Year}",
+                        Name = plan.Name,
+                        Description = plan.Description,
+                        Pricing = pricingStructure,
+                        Features = featureNames,
+                        Limitations = CreateLimitationsStructure(plan)
+                    };
+
+                    response.Plans.Add(planDto);
+                }
+
+                _logger.LogInformation("Successfully retrieved {Count} subscription plans with details", response.Plans.Count);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving subscription plans with details");
+                throw;
+            }
+        }
+
+        private static string MapFeatureToSlug(string featureName)
+        {
+            return featureName?.ToLower() switch
+            {
+                "work breakdown structure (wbs)" => "wbs",
+                "wbs version 2.0" => "wbs_v2",
+                "gantt/timeline view" => "gantt_view",
+                "odc (other direct cost) table" => "odc",
+                "job start form" => "job_start_form",
+                "estimated expenses table" => "estimated_expenses",
+                "input register" => "input_register",
+                "email notifications" => "email_notifications",
+                "check & review logs" => "review_logs",
+                "change control register" => "change_control",
+                "monthly progress review" => "monthly_review",
+                "quarterly progress review" => "quarterly_review",
+                "weekly/daily progress review" => "weekly_review",
+                "milestone tracking" => "milestone_tracking",
+                "budget vs actual analysis" => "budget_analysis",
+                "manpower planning" => "manpower_planning",
+                "api integration" => "api_integration",
+                "basic ui" => "user_experience_basic",
+                "enhanced ux" => "user_experience_enhanced",
+                "tailored ui/ux" => "user_experience_tailored",
+                "basic export (pdf)" => "reporting_basic",
+                _ => null
+            };
+        }
+
+        public async Task<SubscriptionFeaturesResponseDto> GetSubscriptionFeaturesByPlanNameAsync(string planName)
+        {
+            _logger.LogInformation("Getting subscription plan '{PlanName}' with features, pricing, and limitations", planName);
+
+            try
+            {
+                var subscriptionPlan = await _context.SubscriptionPlans
+                    .Include(sp => sp.SubscriptionPlanFeatures)
+                        .ThenInclude(spf => spf.Feature)
+                    .Where(sp => sp.IsActive && sp.Name.ToLower() == planName.ToLower())
+                    .FirstOrDefaultAsync();
+
+                if (subscriptionPlan == null)
+                {
+                    _logger.LogWarning("Subscription plan '{PlanName}' not found", planName);
+                    return new SubscriptionFeaturesResponseDto();
+                }
+
+                var response = new SubscriptionFeaturesResponseDto();
+
+                // Create pricing structure based on plan properties
+                var pricingStructure = CreatePricingStructure(subscriptionPlan);
+
+                // Map features to string array (simplified feature names)
+                var featureNames = new List<string>();
+                if (subscriptionPlan.SubscriptionPlanFeatures != null)
+                {
+                    foreach (var spf in subscriptionPlan.SubscriptionPlanFeatures)
+                    {
+                        var featureName = MapFeatureToSlug(spf.Feature.Name);
+                        if (!string.IsNullOrEmpty(featureName))
+                        {
+                            featureNames.Add(featureName);
+                        }
+                    }
+                }
+
+                var planDto = new SubscriptionPlanWithDetailsDto
+                {
+                    Id = subscriptionPlan.StripePriceId ?? $"plan_{subscriptionPlan.Name.ToLower().Replace(" ", "_")}_{DateTime.Now.Year}",
+                    Name = subscriptionPlan.Name,
+                    Description = subscriptionPlan.Description,
+                    Pricing = pricingStructure,
+                    Features = featureNames,
+                    Limitations = CreateLimitationsStructure(subscriptionPlan)
+                };
+
+                response.Plans.Add(planDto);
+
+                _logger.LogInformation("Successfully retrieved subscription plan '{PlanName}' with {FeatureCount} features", planName, featureNames.Count);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving subscription plan '{PlanName}' with details", planName);
+                throw;
+            }
+        }
+
+        private static PricingStructureDto CreatePricingStructure(SubscriptionPlan plan)
+        {
+            var pricingStructure = new PricingStructureDto();
+
+            switch (plan.Name.ToLower())
+            {
+                case "starter":
+                    pricingStructure.Monthly = new PricingDetailDto
+                    {
+                        Amount = 100,
+                        Currency = "USD",
+                        Formatted = "$100"
+                    };
+                    pricingStructure.MonthlyInr = new PricingDetailDto
+                    {
+                        Amount = 8500,
+                        Currency = "INR",
+                        Formatted = "₹8,500"
+                    };
+                    break;
+
+                case "business":
+                    pricingStructure.Monthly = new PricingDetailDto
+                    {
+                        Amount = 400,
+                        Currency = "USD",
+                        Formatted = "$400"
+                    };
+                    pricingStructure.MonthlyInr = new PricingDetailDto
+                    {
+                        Amount = 34000,
+                        Currency = "INR",
+                        Formatted = "₹34,000"
+                    };
+                    break;
+
+                case "enterprise":
+                    pricingStructure.Custom = true;
+                    pricingStructure.Formatted = "Contact Us";
+                    pricingStructure.Currency = "USD";
+                    break;
+
+                case "one-time license":
+                    pricingStructure.Onetime = new PricingDetailDto
+                    {
+                        Amount = 100000,
+                        Currency = "INR",
+                        Formatted = "₹1,00,000"
+                    };
+                    break;
+            }
+
+            return pricingStructure;
+        }
+
+        private static LimitationsStructureDto CreateLimitationsStructure(SubscriptionPlan plan)
+        {
+            return plan.Name.ToLower() switch
+            {
+                "starter" => new LimitationsStructureDto
+                {
+                    UsersIncluded = "5",
+                    Projects = "5",
+                    StorageGb = "10",
+                    Support = "Email Only"
+                },
+                "business" => new LimitationsStructureDto
+                {
+                    UsersIncluded = "20",
+                    Projects = "25",
+                    StorageGb = "100",
+                    Support = "Email Only"
+                },
+                "enterprise" => new LimitationsStructureDto
+                {
+                    UsersIncluded = "Unlimited",
+                    Projects = "Unlimited",
+                    StorageGb = "Unlimited",
+                    Support = "24/7 Priority Support"
+                },
+                "one-time license" => new LimitationsStructureDto
+                {
+                    UsersIncluded = "Unlimited",
+                    Projects = "Unlimited",
+                    StorageGb = "Unlimited",
+                    Support = "1 Year Included"
+                },
+                _ => new LimitationsStructureDto()
+            };
+        }
     }
 }
