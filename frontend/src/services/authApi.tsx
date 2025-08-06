@@ -1,6 +1,6 @@
 import { Credentials, LoginResponse, UserWithRole } from '../types';
 import { PermissionType } from '../models';
-import { axiosInstance, ensureHeaders } from './axiosConfig';
+import { axiosInstance } from './axiosConfig';
 import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {
@@ -51,7 +51,9 @@ export const authApi = {
           },
           standardRate: response.data.user.standardRate,
           isConsultant: response.data.user.isConsultant,
-          createdAt: response.data.user.createdAt
+          createdAt: response.data.user.createdAt,
+          tenantId: response.data.user.tenantId,
+          tenantDomain: response.data.user.tenantDomain,
         };
 
         // Store user information
