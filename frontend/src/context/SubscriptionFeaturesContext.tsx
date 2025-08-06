@@ -25,6 +25,7 @@ export const SubscriptionFeaturesProvider: React.FC<SubscriptionFeaturesProvider
         try {
           const fetchedFeatures = await tenantService.getSubscriptionPlanFeatures(currentUser.tenantId);
           setFeatures(fetchedFeatures);
+          console.log("features", fetchFeatures)
         } catch (error) {
           console.error('Failed to fetch subscription features:', error);
           setFeatures(null);
