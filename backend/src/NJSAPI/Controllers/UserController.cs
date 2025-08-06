@@ -67,6 +67,14 @@ namespace NJSAPI.Controllers
                         Avatar = user?.Avatar ?? string.Empty,
                     };
 
+                    // Get tenant information for the logged-in user
+                    var currentTenant = await _tenantService.GetCurrentTenantAsync();
+                    if (currentTenant != null)
+                    {
+                        userDto.TenantId = currentTenant.Id;
+                        userDto.TenantDomain = currentTenant.Domain;
+                    }
+
                     return Ok(new
                     {
                         success = true,
