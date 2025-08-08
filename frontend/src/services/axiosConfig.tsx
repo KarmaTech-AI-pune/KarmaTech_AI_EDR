@@ -1,21 +1,55 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+interface EnvironmentConfig {
+  apiBaseUrl: string;
+  tenantProtocol: string;
+  tenantDomain: string;
+  tenantPort: string;
+}
 
-// Function to get tenant context from domain
-const getTenantContext = () => {
+// Environment configuration with fallbacks
+const ENV_CONFIG: EnvironmentConfig = {
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL ,
+  tenantProtocol: import.meta.env.VITE_TENANT_PROTOCOL,
+  tenantDomain: import.meta.env.VITE_TENANT_DOMAIN ,
+  tenantPort: import.meta.env.VITE_TENANT_PORT ,
+};
+
+/**
+ * Extracts tenant context from the current domain
+ * @returns {string | null} The tenant subdomain or null if not found
+ */
+const getTenantContext = (): string | null => {
   const hostname = window.location.hostname;
   
   // Extract subdomain (e.g., 'companyb' from 'companyb.localhost')
   const subdomain = hostname.split('.')[0];
-  if(subdomain===null || subdomain === 'localhost' || subdomain === '') {
+  
+  // Return null for localhost, empty string, or invalid subdomains
+  if (!subdomain || subdomain === 'localhost' || subdomain === hostname) {
     return null; 
   }
+  
   return subdomain;
 };
 
+/**
+ * Constructs the appropriate API base URL based on tenant context
+ * @returns {string} The API base URL
+ */
+const getApiBaseUrl = (): string => {
+  const tenant = getTenantContext();
+  
+  if (tenant) {
+    // Construct tenant-specific API URL using environment variables
+    const { tenantProtocol, tenantDomain, tenantPort } = ENV_CONFIG;
+    return `${tenantProtocol}://${tenant}.${tenantDomain}:${tenantPort}/`;
+  }  
+  return ENV_CONFIG.apiBaseUrl;
+};
+
 export const axiosInstance: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json'
   },
