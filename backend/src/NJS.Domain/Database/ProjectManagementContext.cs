@@ -117,6 +117,13 @@ namespace NJS.Domain.Database
         public DbSet<Feature> Features { get; set; }
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
 
+        public DbSet<todoProjectSchedule> TodoProjectSchedules { get; set; }
+        public DbSet<todoProject> TodoProjects { get; set; }
+        public DbSet<todoProjectLead> TodoProjectLeads { get; set; }
+        public DbSet<todoTask> TodoTasks { get; set; }
+        public DbSet<TodoAssignedTo> TodoAssignedTos { get; set; }
+        public DbSet<TodoActivity> TodoActivities { get; set; }
+
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
@@ -138,6 +145,37 @@ namespace NJS.Domain.Database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Todo module relationships (no tenant filtering)
+            modelBuilder.Entity<todoProjectSchedule>()
+                .HasOne(ps => ps.Project)
+                .WithOne()
+                .HasForeignKey<todoProject>(p => p.Id);
+
+            modelBuilder.Entity<todoProject>()
+                .HasOne(p => p.ProjectLead)
+                .WithOne()
+                .HasForeignKey<todoProjectLead>(pl => pl.Id);
+
+            modelBuilder.Entity<todoTask>()
+                .HasOne(t => t.ProjectSchedule)
+                .WithMany(ps => ps.Tasks)
+                .HasForeignKey(t => t.ProjectScheduleId);
+
+            modelBuilder.Entity<todoTask>()
+                .HasMany(t => t.AssignedTo)
+                .WithOne(a => a.Task)
+                .HasForeignKey(a => a.TaskId);
+
+            modelBuilder.Entity<TodoActivity>()
+                .HasOne(a => a.Task)
+                .WithMany(t => t.Activities)
+                .HasForeignKey(a => a.TaskId);
+
+            // Configure decimal precision for Todo module
+            modelBuilder.Entity<TodoActivity>()
+                .Property(a => a.ActivityCost)
+                .HasPrecision(18, 2);
 
             modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
