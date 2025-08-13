@@ -33,7 +33,7 @@ namespace NJS.Application.CQRS.TodoSchedules.Handlers
                     .ThenInclude(t => t.Activities)
                 .Include(ps => ps.Tasks!)
                     .ThenInclude(t => t.AssignedTo)
-                .FirstOrDefaultAsync(ps => ps.Project.Id == projectId, cancellationToken);
+                .FirstOrDefaultAsync(ps => ps.Project != null && ps.Project.Id == projectId, cancellationToken);
 
             if (todoProjectSchedule == null)
             {
@@ -43,18 +43,18 @@ namespace NJS.Application.CQRS.TodoSchedules.Handlers
             // Map the entity to the DTO
             var todoScheduleDto = new TodoScheduleDto
             {
-                ProjectID = todoProjectSchedule.Project.Id,
+                ProjectID = todoProjectSchedule.Project?.Id ?? 0,
                 Date = todoProjectSchedule.Date,
-                ProjectName = todoProjectSchedule.Project.Title,
-                Location = todoProjectSchedule.Project.Location,
-                WorkingHours = todoProjectSchedule.Project.WorkingHours,
-                ProjectLeadName = todoProjectSchedule.Project.ProjectLead.Name,
-                ProjectLeadEmail = todoProjectSchedule.Project.ProjectLead.Email,
+                ProjectName = todoProjectSchedule.Project?.Title,
+                Location = todoProjectSchedule.Project?.Location,
+                WorkingHours = todoProjectSchedule.Project?.WorkingHours,
+                ProjectLeadName = todoProjectSchedule.Project?.ProjectLead?.Name,
+                ProjectLeadEmail = todoProjectSchedule.Project?.ProjectLead?.Email,
                 Tasks = (todoProjectSchedule.Tasks ?? Enumerable.Empty<todoTask>())
                     .Select(t => new TodoTaskDto
                     {
-                        TaskID = t.TaskID,
-                        ProjectID = todoProjectSchedule.Project?.Id,
+                        TaskID = t.TaskID ?? 0,
+                        ProjectID = todoProjectSchedule.Project?.Id ?? 0,
                         TimeSlot = t.TimeSlot,
                         Phase = t.Phase,
                         Cost = t.Cost,
@@ -62,14 +62,14 @@ namespace NJS.Application.CQRS.TodoSchedules.Handlers
                         Activities = (t.Activities ?? Enumerable.Empty<TodoActivity>()).Select(a => new ActivityDto
                         {
                             ActivityID = a.Id,
-                            TaskID = t.TaskID,
+                            TaskID = a.TaskId ?? 0,
                             Activity = a.Activity,
-                            ActivityCost = a.ActivityCost ?? 0
+                            ActivityCost = a.ActivityCost
                         }).ToList(),
                         AssignedTo = (t.AssignedTo ?? Enumerable.Empty<TodoAssignedTo>()).Select(a => new AssignedToDto
                         {
                             AssigneeID = a.Id,
-                            TaskID = t.TaskID,
+                            TaskID = a.TaskId ?? 0,
                             AssigneeName = a.Name
                         }).ToList()
                     }).ToList()

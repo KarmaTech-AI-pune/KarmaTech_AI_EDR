@@ -5,7 +5,7 @@ namespace NJS.Application.Dtos
 {
     public class TodoScheduleDto
     {
-        public int? ProjectID { get; set; }
+        public int ProjectID { get; set; }
         public DateTime? Date { get; set; }
         public string? ProjectName { get; set; }
         public string? Location { get; set; }
@@ -17,8 +17,8 @@ namespace NJS.Application.Dtos
 
     public class TodoTaskDto
     {
-        public int? TaskID { get; set; }
-        public int? ProjectID { get; set; }
+        public int TaskID { get; set; }
+        public int ProjectID { get; set; }
         public string? TimeSlot { get; set; }
         public string? Phase { get; set; }
         public decimal? Cost { get; set; }
@@ -29,16 +29,25 @@ namespace NJS.Application.Dtos
 
     public class ActivityDto
     {
-        public int? ActivityID { get; set; }
-        public int? TaskID { get; set; }
+        public int ActivityID { get; set; }
+        public int TaskID { get; set; }
         public string? Activity { get; set; }
         public decimal? ActivityCost { get; set; }
     }
 
     public class AssignedToDto
     {
-        public int? AssigneeID { get; set; }
-        public int? TaskID { get; set; }
+        public int AssigneeID { get; set; }
+        public int TaskID { get; set; }
         public string? AssigneeName { get; set; }
+    }
+
+    // Response DTO for POST endpoint
+    public class TodoScheduleResponseDto
+    {
+        public TodoScheduleDto Data { get; set; }
+        public string AccessLink { get; set; }
+        public int ProjectId { get; set; }
+        public string Message { get; set; } = "Project schedule created successfully!";
     }
 }

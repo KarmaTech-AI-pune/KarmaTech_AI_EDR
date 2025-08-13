@@ -4,11 +4,12 @@ using NJS.Application.CQRS.TodoSchedules.Command;
 using NJS.Application.CQRS.TodoSchedules.Query;
 using NJS.Application.Dtos;
 using System.Threading.Tasks;
+using System;
 
 namespace NJSAPI.Controllers
 {
     [ApiController]
-    [Route("api/todoschedule")]
+    [Route("api/project-schedule")]
     public class TodoScheduleController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -24,14 +25,27 @@ namespace NJSAPI.Controllers
             var command = new CreateTodoScheduleCommand { TodoSchedule = todoScheduleDto };
             var createdId = await _mediator.Send(command);
 
-            // Prefer provided ProjectID for lookup; fall back to created id
-            //var lookupProjectId = todoScheduleDto?.ProjectID ?? createdId;
-            //var query = new GetTodoScheduleQuery { ProjectId = lookupProjectId };
-            //var stored = await _mediator.Send(query);
+            // Fetch the newly created schedule with all its details
+            var query = new GetTodoScheduleQuery { ProjectId = createdId };
+            var storedData = await _mediator.Send(query);
 
-            // Return 200 OK with the stored data (if not found, at least return the id)
-            //object response = stored as object ?? new { id = createdId };
-            return Ok(todoScheduleDto);
+            if (storedData == null)
+            {
+                return StatusCode(500, "Failed to retrieve created schedule.");
+            }
+
+            // Generate the access link
+            var accessLink = $"{Request.Scheme}://{Request.Host}/api/project-schedule/{createdId}";
+
+            // Return 200 OK with the full stored data and access link
+            var response = new TodoScheduleResponseDto
+            {
+                Data = storedData,
+                AccessLink = accessLink,
+                ProjectId = createdId
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("{projectId}")]
