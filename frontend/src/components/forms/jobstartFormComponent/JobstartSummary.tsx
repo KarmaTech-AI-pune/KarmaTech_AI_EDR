@@ -28,7 +28,7 @@ interface JobstartSummaryProps {
 
 const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPercentage, onDataChange }: JobstartSummaryProps) => {
   // State for project fees and service tax
-  const [projectFees, setProjectFees] = useState<string>(
+  const [projectFees, _setProjectFees] = useState<string>(
     (initialProjectFees || 0).toString()
   );
   const [serviceTax, setServiceTax] = useState({
@@ -70,36 +70,6 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
   };
 
   // Handlers for input changes
-  const handleProjectFeesChange = (value: string) => {
-    // Only allow numeric values (including decimal points)
-    if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
-      // Remove any leading zeros (except for decimal values like 0.xx)
-      let cleanedValue = value;
-      if (value.length > 1 && value.startsWith('0') && value.charAt(1) !== '.') {
-        cleanedValue = value.replace(/^0+/, '');
-      }
-
-      setProjectFees(cleanedValue);
-      notifyParentOfChanges(cleanedValue, serviceTax.percentage);
-    }
-  };
-
-  // Format project fees to always have 2 decimal places when focus is lost
-  const handleProjectFeesBlur = () => {
-    if (projectFees) {
-      const numValue = parseFloat(projectFees);
-      if (!isNaN(numValue)) {
-        // Format to 2 decimal places without leading zeros
-        const formattedValue = numValue.toFixed(2);
-        setProjectFees(formattedValue);
-        notifyParentOfChanges(formattedValue, serviceTax.percentage);
-      }
-    } else {
-      // If field is empty, set to 0.00
-      setProjectFees('0.00');
-      notifyParentOfChanges('0.00', serviceTax.percentage);
-    }
-  };
 
   const handleServiceTaxChange = (value: string) => {
     // Only allow numeric values (including decimal points)
@@ -256,26 +226,8 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
               {/* Project Fees Section */}
               <TableRow sx={{ bgcolor: '#fafafa' }}>
                 <TableCell colSpan={4} sx={{ ...tableCellStyle, width: 'calc(100% - 256px)', fontWeight: 'bold' }}>PROJECT FEES</TableCell>
-                <TableCell align="right" sx={{...tableCellStyle, width: '240px'}}>
-                  <TextField
-                    size="small"
-                    type="text"
-                    // Using inputProps for now as slotProps doesn't support min/step directly
-                    inputProps={{
-                      min: 0,
-                      step: 0.01
-                    }}
-                    value={projectFees}
-                    onChange={(e) => handleProjectFeesChange(e.target.value)}
-                    onBlur={handleProjectFeesBlur}
-                    sx={{
-                      ...textFieldStyle,
-                      width: '50%',
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#fff'
-                      }
-                    }}
-                  />
+                <TableCell align="right" sx={{...tableCellStyle, width: '240px', fontWeight: 'bold', color: '#1976d2', fontSize: '1.2em'}}>
+                  {parseFloat(projectFees).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </TableCell>
                 <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
               </TableRow>
@@ -332,7 +284,8 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
                     ...tableCellStyle,
                     width: '240px',
                     fontWeight: 'bold',
-                    color: '#1976d2'
+                    color: '#1976d2',
+                    fontSize: '1.2em' // Added font size
                   }}
                 >
                   {calculateServiceTax()}
@@ -349,8 +302,8 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
                   fontSize: '1.1em'
                 }
               }}>
-                <TableCell colSpan={4} sx={{...tableCellStyle, width: 'calc(100% - 256px)'}}>TOTAL PROJECT FEES</TableCell>
-                <TableCell align="right" sx={{...tableCellStyle, width: '240px'}}>{calculateTotalProjectFees()}</TableCell>
+                <TableCell colSpan={4} sx={{...tableCellStyle, width: 'calc(100% - 256px)'}}>TOTAL PROJECT FEES(Incl.tax)</TableCell>
+                <TableCell align="right" sx={{...tableCellStyle, width: '240px', fontSize: '1.2em'}}>{calculateTotalProjectFees()}</TableCell>
                 <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
               </TableRow>
             </TableBody>

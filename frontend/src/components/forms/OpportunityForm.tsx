@@ -81,7 +81,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
         // Add each user to the map, overwriting any duplicates
         users.forEach(user => {
           // Ensure we have valid data
-          if(user.name) {
+          if(user && user.name) {
             uniqueManagersMap.add({id: user.id, name: user.name})
           }
         });
@@ -111,8 +111,11 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       }
     };
 
-    fetchManagers();
-  }, [context.user, project]);
+    // Add a check for context and context.user
+    if (context && context.user) {
+      fetchManagers();
+    }
+  }, [context, project]);
 
   // Helper function to format date values to YYYY-MM-DD string format
   const formatDateForInput = (dateValue: Date | string | undefined): string => {

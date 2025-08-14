@@ -92,16 +92,25 @@ internal class Program
             options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", swaggerSettings.Title);
         });
 
-
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");
         app.UseResponseCompression();
         app.UseHttpsRedirection();
+
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
         app.UseAuthentication();
         app.UseAuthorization();
-        app.SeedApplicationData();
-        app.MapControllers(); 
 
+        app.MapControllers();
+
+        // This will redirect all unhandled routes (that are not static files or API routes) to index.html
+        // This should be placed after UseStaticFiles, UseRouting, UseAuthentication, UseAuthorization, and MapControllers
+        app.MapFallbackToFile("index.html");
+
+        app.SeedApplicationData(); 
         app.Run();
     }
 }

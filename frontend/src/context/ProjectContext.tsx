@@ -1,4 +1,4 @@
-import React, { createContext, useState, ReactNode, useContext, useEffect } from 'react';
+import { createContext, useState, ReactNode, useContext, useEffect } from 'react';
 
 interface ProjectContextType {
   projectId: string | null;
@@ -7,12 +7,18 @@ interface ProjectContextType {
 
 export const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
-export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string | null }> = ({ children, projectId: initialProjectId }) => {
-  const [projectId, setProjectId] = useState<string | null>(initialProjectId);
+export const ProjectProvider = ({ children }: { children: ReactNode }) => {
+  const [projectId, setProjectId] = useState<string | null>(() => {
+    return sessionStorage.getItem('projectId');
+  });
 
   useEffect(() => {
-    setProjectId(initialProjectId);
-  }, [initialProjectId]);
+    if (projectId) {
+      sessionStorage.setItem('projectId', projectId);
+    } else {
+      sessionStorage.removeItem('projectId');
+    }
+  }, [projectId]);
 
   return (
     <ProjectContext.Provider value={{ projectId, setProjectId }}>
