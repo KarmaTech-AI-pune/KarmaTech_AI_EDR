@@ -94,8 +94,11 @@ namespace NJS.Application.Services
             if (httpContext == null)
                 return false;
 
+            var tenants = _tenantDbContext.Tenants.ToList();
+            var selectedTenant = tenants.FirstOrDefault(t => t.Domain.Equals(tenantDomain, StringComparison.OrdinalIgnoreCase));
+
             var tenant = await _tenantDbContext.Tenants.FirstOrDefaultAsync(t => t.Domain == tenantDomain);
-            if (tenant == null)
+            if (selectedTenant == null)
             {
                 return false;
             }

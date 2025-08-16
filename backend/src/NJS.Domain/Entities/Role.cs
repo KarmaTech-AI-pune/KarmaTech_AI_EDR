@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
+    [Table("AspNetRoles")]
     public class Role : IdentityRole
     {
         [Required]
@@ -19,6 +20,7 @@ namespace NJS.Domain.Entities
 
         // Navigation property for Role Permissions
         public virtual ICollection<RolePermission> RolePermissions { get; set; }
+       
 
         public Role() : base()
         {

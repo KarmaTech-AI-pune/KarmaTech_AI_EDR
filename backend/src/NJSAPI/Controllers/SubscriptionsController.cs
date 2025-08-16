@@ -12,18 +12,21 @@ namespace NJSAPI.Controllers
     [Route("api/[controller]")]
     public class SubscriptionsController : ControllerBase
     {
-        private readonly ProjectManagementContext _context;
+        private readonly TenantDbContext _context;
+        private readonly ProjectManagementContext _projectManagementContext;
         private readonly ISubscriptionService _subscriptionService;
         private readonly ILogger<SubscriptionsController> _logger;
 
         public SubscriptionsController(
-            ProjectManagementContext context,
+            TenantDbContext context,
             ISubscriptionService subscriptionService,
-            ILogger<SubscriptionsController> logger)
+            ILogger<SubscriptionsController> logger,
+            ProjectManagementContext projectManagementContext)
         {
             _context = context;
             _subscriptionService = subscriptionService;
             _logger = logger;
+            _projectManagementContext = projectManagementContext;
         }
 
         // GET: api/subscriptions/plans
@@ -113,7 +116,7 @@ namespace NJSAPI.Controllers
                 return BadRequest();
             }
 
-            var existingPlan = await _context.SubscriptionPlans.FindAsync(id);
+            var existingPlan = await _projectManagementContext.SubscriptionPlans.FindAsync(id);
             if (existingPlan == null)
             {
                 return NotFound();
@@ -145,7 +148,7 @@ namespace NJSAPI.Controllers
         [HttpDelete("plans/{id}")]
         public async Task<IActionResult> DeleteSubscriptionPlan(int id)
         {
-            var plan = await _context.SubscriptionPlans.FindAsync(id);
+            var plan = await _projectManagementContext.SubscriptionPlans.FindAsync(id);
             if (plan == null)
             {
                 return NotFound();
@@ -158,7 +161,7 @@ namespace NJSAPI.Controllers
                 return BadRequest(new { message = $"Cannot delete plan. {tenantsUsingPlan} tenants are currently using this plan." });
             }
 
-            _context.SubscriptionPlans.Remove(plan);
+            _projectManagementContext.SubscriptionPlans.Remove(plan);
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Deleted subscription plan {PlanName}", plan.Name);
@@ -241,8 +244,8 @@ namespace NJSAPI.Controllers
         [HttpGet("stats")]
         public async Task<ActionResult<object>> GetSubscriptionStats()
         {
-            var totalPlans = await _context.SubscriptionPlans.CountAsync();
-            var activePlans = await _context.SubscriptionPlans.CountAsync(p => p.IsActive);
+            var totalPlans = await _projectManagementContext.SubscriptionPlans.CountAsync();
+            var activePlans = await _projectManagementContext.SubscriptionPlans.CountAsync(p => p.IsActive);
             var totalSubscribers = await _context.Tenants.CountAsync(t => t.SubscriptionPlanId.HasValue);
 
             // Calculate monthly revenue
@@ -337,7 +340,7 @@ namespace NJSAPI.Controllers
 
         private bool SubscriptionPlanExists(int id)
         {
-            return _context.SubscriptionPlans.Any(e => e.Id == id);
+            return _projectManagementContext.SubscriptionPlans.Any(e => e.Id == id);
         }
     }
 

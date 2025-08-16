@@ -25,6 +25,7 @@ namespace NJS.Application.CQRS.Roles.Handlers
                     Name = request.RoleDefination.Name,
                     MinRate = request.RoleDefination.MinRate,
                     IsResourceRole = request.RoleDefination.IsResourceRole,
+                    Description= request.RoleDefination.Name.ToUpper(),
                     RolePermissions = new List<RolePermission>()
 
                 };

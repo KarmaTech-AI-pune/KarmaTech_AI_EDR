@@ -9,6 +9,9 @@ using NLog.Web;
 using Microsoft.Extensions.Options;
 using NJSAPI.Configurations;
 using NJSAPI.Middleware;
+using NJS.Domain.Services;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using NJS.Application.Services;
 
 internal class Program
 {
@@ -19,12 +22,31 @@ internal class Program
        
 
         builder.Services.AddControllers();
-        builder.Services.AddHttpContextAccessor();
         builder.Services.AddLogging();
+
+        // Add HttpContextAccessor as singleton
+        builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+        builder.Services.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>();
+        builder.Services.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>();
+        builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
+
+        // Add tenant resolution strategies in priority order
+        //builder.Services.TryAddEnumerable(new[]
+        //{
+          //  ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>(),
+            //ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>(),
+            //ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>()
+        //});
+
+        // Add tenant services
+        builder.Services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
+      //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
 
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
         builder.Services.AddTenantServices(builder.Configuration);
+       // builder.Services.AddAndMigrateTenantDatabases(builder.Configuration);
 
         // Add tenant connection resolver
         //builder.Services.AddScoped<ProjectManagementContextFactory>();
@@ -109,9 +131,9 @@ internal class Program
 
        // app.UseTenantCors();
         app.UseResponseCompression();
-        app.UseHttpsRedirection();
-        app.UseMiddleware<TenantResolverMiddleware>();
+        app.UseHttpsRedirection();       
         app.UseAuthentication();
+        app.UseMiddleware<TenantResolverMiddleware>();
         app.UseAuthorization();
         app.SeedApplicationData();
         app.MapControllers();

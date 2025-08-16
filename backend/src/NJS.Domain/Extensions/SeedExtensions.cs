@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
+using NJS.Domain.Services;
 
 namespace NJS.Domain.Extensions
 {
@@ -22,9 +23,22 @@ namespace NJS.Domain.Extensions
             try
             {
                 using var scope = app.ApplicationServices.CreateScope();
+               // var tenantDbContext = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+               /// var tenants = await tenantDbContext.Tenants
+               //     .Include(t => t.TenantDatabases)
+               //     .ToListAsync();
+
+             
                 var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<ProjectManagementContext>>();
                 var httpContextAccessor = scope.ServiceProvider.GetService<IHttpContextAccessor>();
-                await using var context = new ProjectManagementContext(options, httpContextAccessor);
+
+
+               // var currentTenantService = scope.ServiceProvider.GetRequiredService<ICurrentTenantService>();
+               // await currentTenantService.SetTenant(1);
+            
+                await using var context = new ProjectManagementContext(options, null);
+
+              
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 

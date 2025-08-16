@@ -17,6 +17,8 @@ namespace NJSAPI.Controllers
     {
         private readonly IMediator _mediator;
         private readonly IProjectManagementService _projectManagementService;
+        private readonly ITenantService tenantService;
+        private readonly ICurrentUserService currentUserService;
         private readonly ILogger<ProjectController> _logger;
 
         public ProjectController(
@@ -29,6 +31,8 @@ namespace NJSAPI.Controllers
         {
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _projectManagementService = projectManagementService ?? throw new ArgumentNullException(nameof(projectManagementService));
+            this.tenantService = tenantService;
+            this.currentUserService = currentUserService;
             _logger = logger;
         }
 
