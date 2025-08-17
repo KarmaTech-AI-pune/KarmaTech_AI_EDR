@@ -10,8 +10,8 @@ namespace NJS.Domain.Services
 
     public class HeaderResolutionStrategy : ITenantResolutionStrategy
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private const string TenantHeaderKey = "X-Tenant-Id";
+        private readonly IHttpContextAccessor _httpContextAccessor;       
+        private const string TenantHeaderKey = "X-Tenant-Context";
 
         public HeaderResolutionStrategy(IHttpContextAccessor httpContextAccessor)
         {

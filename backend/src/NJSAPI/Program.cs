@@ -29,7 +29,7 @@ internal class Program
 
         builder.Services.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>();
         builder.Services.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>();
-        builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
+       // builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
 
         // Add tenant resolution strategies in priority order
         //builder.Services.TryAddEnumerable(new[]

@@ -171,9 +171,11 @@ namespace NJS.Domain.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
 
-
-            modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<User>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
+            modelBuilder.Entity<Role>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
+            modelBuilder.Entity<Project>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CheckReview>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CorrespondenceInward>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -218,8 +220,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             
-            modelBuilder.Entity<User>().HasQueryFilter(p => p.TenantId == TenantId);
-           // modelBuilder.Entity<Role>().HasQueryFilter(p => p.TenantId == TenantId);
+           
 
 
 
@@ -1298,7 +1299,7 @@ namespace NJS.Domain.Database
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
 
-            base.OnModelCreating(modelBuilder);
+            
         }
        
     }

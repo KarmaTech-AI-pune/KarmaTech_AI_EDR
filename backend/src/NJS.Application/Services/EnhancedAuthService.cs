@@ -76,7 +76,7 @@ namespace NJS.Application.Services
                         return (false, null, null); // User not authorized for this tenant
                     }
 
-                    var token = await GenerateJwtTokenAsync(user);//GenerateJwtTokenAsync(user, tenantUser.Role, false);
+                    var token = await GenerateJwtTokenAsync(user, tenantUser.Role, false);
                     return (true, user, token);
                 }
             }
