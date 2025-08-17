@@ -27,11 +27,15 @@ namespace NJS.Application.Services
 
         public async Task<int?> GetTenantId(string domain)
         {
-            var tenant = await _tenantDbContext.Tenants.FirstOrDefaultAsync(t => t.Domain == domain);
-            if (tenant==null)
+            var tenant = await _tenantDbContext.Tenants
+                .FirstOrDefaultAsync(t => t.Domain == domain);
+
+            if (tenant == null && int.TryParse(domain, out var tenantId))
             {
-                 tenant = await _tenantDbContext.Tenants.FirstOrDefaultAsync(t => t.Id == int.Parse(domain));
+                tenant = await _tenantDbContext.Tenants
+                    .FirstOrDefaultAsync(t => t.Id == tenantId);
             }
+
             return tenant?.Id;
         }
 

@@ -128,12 +128,13 @@ internal class Program
             var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
             options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", $"{swaggerSettings.Title}");
         });
-
+        
        // app.UseTenantCors();
         app.UseResponseCompression();
         app.UseHttpsRedirection();       
-        app.UseAuthentication();
+       
         app.UseMiddleware<TenantResolverMiddleware>();
+        app.UseAuthentication();
         app.UseAuthorization();
         app.SeedApplicationData();
         app.MapControllers();
