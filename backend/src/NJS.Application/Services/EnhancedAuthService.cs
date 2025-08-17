@@ -76,7 +76,7 @@ namespace NJS.Application.Services
                         return (false, null, null); // User not authorized for this tenant
                     }
 
-                    var token = await GenerateJwtTokenAsync(user, tenantUser.Role, false);
+                    var token = await GenerateJwtTokenAsync(user);//GenerateJwtTokenAsync(user, tenantUser.Role, false);
                     return (true, user, token);
                 }
             }
@@ -183,6 +183,49 @@ namespace NJS.Application.Services
             {
                 var permissionsString = string.Join(",", permissions);
                 claims.Add(new Claim("Permissions", permissionsString));
+            }
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(3),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        private async Task<string> GenerateJwtTokenAsync(User user)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            // Get user roles
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Name, user.UserName)
+            };
+
+            List<string> permissions = [];
+            // Add role claims
+            foreach (var role in roles)
+            {
+                var roleDetils = await _roleManager.FindByNameAsync(role).ConfigureAwait(false);
+                var rolePermissions = await _permissionRepository.GetPermissionsByRoleId(roleDetils.Id).ConfigureAwait(false);
+                // claims.Add(new Claim(ClaimTypes.Role, role));
+                if (rolePermissions != null && rolePermissions.Any())
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                    var permissionsString = string.Join(",", rolePermissions.Select(p => p.Name));
+                    claims.Add(new Claim("Permissions", permissionsString));
+                }
+
+
             }
 
             var token = new JwtSecurityToken(

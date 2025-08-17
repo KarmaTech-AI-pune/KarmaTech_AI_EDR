@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Entities;
 using NJS.Domain.Services;
-using Microsoft.Extensions.DependencyInjection;
-using System.Linq.Expressions;
 
 namespace NJS.Domain.Database
 {
@@ -49,8 +47,8 @@ namespace NJS.Domain.Database
                 }
             }
             return base.SaveChangesAsync(cancellationToken);
-        }
-
+        }   
+       
         // Tenant-specific tables only
         public DbSet<BidPreparation> BidPreparations { get; set; }
         public DbSet<BidVersionHistory> BidVersionHistories { get; set; }

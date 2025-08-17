@@ -12,8 +12,8 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20250816043935_UpdateChangeControlRelationships1")]
-    partial class UpdateChangeControlRelationships1
+    [Migration("20250817045217_UpdateChangeControlRelationships3")]
+    partial class UpdateChangeControlRelationships3
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -3005,6 +3005,9 @@ namespace NJS.Domain.Migrations
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

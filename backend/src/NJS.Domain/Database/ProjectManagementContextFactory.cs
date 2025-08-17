@@ -22,10 +22,10 @@ namespace NJS.Domain.Database
                 .Build();
 
             // Retrieve the connection string from the configuration
-            string connectionString = configuration.GetConnectionString("DefaultConnection");
+            string connectionString = configuration.GetConnectionString("AppDbConnection");
             if (string.IsNullOrEmpty(connectionString))
             {
-                throw new InvalidOperationException("Connection string 'DefaultConnection' not found in appsettings.json");
+                throw new InvalidOperationException("Connection string 'AppDbConnection' not found in appsettings.json");
             }
 
             DbContextOptionsBuilder<TenantDbContext> optionsBuilder = new();
@@ -50,10 +50,10 @@ namespace NJS.Domain.Database
     //            .AddJsonFile(Path.Combine(startupProjectPath, "appsettings.Development.json"), optional: true)
     //            .Build();
 
-    //        var connectionString = configuration.GetConnectionString("DefaultConnection");
+    //        var connectionString = configuration.GetConnectionString("AppDbConnection");
     //        if (string.IsNullOrEmpty(connectionString))
     //        {
-    //            throw new InvalidOperationException("Connection string 'DefaultConnection' not found in appsettings.json");
+    //            throw new InvalidOperationException("Connection string 'AppDbConnection' not found in appsettings.json");
     //        }
 
     //        var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();

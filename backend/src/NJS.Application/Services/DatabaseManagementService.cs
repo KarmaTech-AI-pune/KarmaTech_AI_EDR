@@ -206,7 +206,7 @@ namespace NJS.Application.Services
 
         private string GetMasterConnectionString()
         {
-            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            var connectionString = _configuration.GetConnectionString("AppDbConnection");
             var builder = new SqlConnectionStringBuilder(connectionString)
             {
                 InitialCatalog = "master"

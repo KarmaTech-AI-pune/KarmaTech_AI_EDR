@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NJS.Domain.Entities
 {
     [Table("AspNetRoles")]
-    public class Role : IdentityRole
+    public class Role : IdentityRole, ITenantEntity
     {
         [Required]
         [MaxLength(500)]
@@ -20,7 +20,7 @@ namespace NJS.Domain.Entities
 
         // Navigation property for Role Permissions
         public virtual ICollection<RolePermission> RolePermissions { get; set; }
-       
+        public int TenantId { get; set; }
 
         public Role() : base()
         {

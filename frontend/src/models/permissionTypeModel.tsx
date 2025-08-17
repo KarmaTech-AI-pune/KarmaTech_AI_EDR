@@ -20,5 +20,6 @@ export enum PermissionType {
     SUBMIT_FOR_APPROVAL = 'SUBMIT_FOR_APPROVAL',
   
     // System Permissions
-    SYSTEM_ADMIN = 'SYSTEM_ADMIN'
+    SYSTEM_ADMIN = 'SYSTEM_ADMIN',
+    TENANT_ADMIN = 'Tenant_ADMIN'
   }

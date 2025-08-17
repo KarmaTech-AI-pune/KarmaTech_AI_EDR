@@ -92,7 +92,9 @@ export enum PermissionType {
     //SUBMIT_FOR_REVIEW = 'SUBMIT_FOR_REVIEW',
     SUBMIT_FOR_APPROVAL = 'SUBMIT_FOR_APPROVAL',
 
-    SYSTEM_ADMIN = 'SYSTEM_ADMIN'
+    SYSTEM_ADMIN = 'SYSTEM_ADMIN',
+    Tenant_ADMIN = 'Tenant_ADMIN',
+
 }
 
 export interface RoleDefinition {

@@ -2,6 +2,8 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
 interface EnvironmentConfig {
   apiBaseUrl: string;
+  staticIp: string;
+  useStaticIp: boolean;
   tenantProtocol: string;
   tenantDomain: string;
   tenantPort: string;
@@ -9,10 +11,12 @@ interface EnvironmentConfig {
 
 // Environment configuration with fallbacks
 const ENV_CONFIG: EnvironmentConfig = {
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL ,
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+  staticIp: import.meta.env.VITE_STATIC_IP || '',
+  useStaticIp: import.meta.env.VITE_USE_STATIC_IP === 'true',
   tenantProtocol: import.meta.env.VITE_TENANT_PROTOCOL,
-  tenantDomain: import.meta.env.VITE_TENANT_DOMAIN ,
-  tenantPort: import.meta.env.VITE_TENANT_PORT ,
+  tenantDomain: import.meta.env.VITE_TENANT_DOMAIN,
+  tenantPort: import.meta.env.VITE_TENANT_PORT,
 };
 
 /**
@@ -20,6 +24,7 @@ const ENV_CONFIG: EnvironmentConfig = {
  * @returns {string | null} The tenant subdomain or null if not found
  */
 const getTenantContext = (): string | null => {
+  debugger;
   const hostname = window.location.hostname;
   
   // Extract subdomain (e.g., 'companyb' from 'companyb.localhost')
@@ -39,7 +44,7 @@ const getTenantContext = (): string | null => {
  */
 const getApiBaseUrl = (): string => {
   const tenant = getTenantContext();
-  
+  debugger;
   if (tenant) {
     // Construct tenant-specific API URL using environment variables
     const { tenantProtocol, tenantDomain, tenantPort } = ENV_CONFIG;

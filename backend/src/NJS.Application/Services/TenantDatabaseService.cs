@@ -41,7 +41,7 @@ namespace NJS.Application.Services
                 // Create the actual database and apply migrations
                 string connectionString = !string.IsNullOrEmpty(tenantDatabase.ConnectionString)
                     ? tenantDatabase.ConnectionString
-                    : _configuration.GetConnectionString("DefaultConnection");
+                    : _configuration.GetConnectionString("AppDbConnection");
 
                 await EnsureDatabaseCreatedAsync(connectionString);
 
