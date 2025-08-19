@@ -74,7 +74,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 CreatedBy = _currentUser,
                 IsDeleted = false,
                 UserWBSTasks = new List<UserWBSTask>(),
-                PlannedHours = new List<WBSTaskPlannedHour>()
+                PlannedHours = new List<WBSTaskPlannedHour>(),
+                TodoProjectScheduleId = taskDto.TodoProjectScheduleId
             };
 
             // --- 3. Add User Assignment and Planned Hours ---

@@ -49,6 +49,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             StartDate = t.StartDate,
                             EndDate = t.EndDate,
                             TaskType = t.TaskType,
+                            TodoProjectScheduleId = t.TodoProjectScheduleId,
 
                             PlannedHours = t.PlannedHours.Select(ph => new PlannedHourDto
                             {

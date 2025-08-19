@@ -29,7 +29,7 @@ namespace NJS.Domain.Entities
 
         [StringLength(100)]
         public string ParentValue { get; set; }
-
-        public FormType FormType { get; set; } = FormType.Manpower; // Default to Manpower for backward compatibility
+        public FormType FormType { get; set; } =  FormType.Manpower; // Default to Manpower for backward compatibility
+        public int? TodoProjectScheduleId { get; set; }
     }
 }

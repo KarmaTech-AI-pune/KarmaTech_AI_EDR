@@ -43,5 +43,7 @@ namespace NJS.Application.Dtos
 
         // Flag to indicate if this DTO represents a new task (frontend might not send Id=0)
         // public bool IsNew { get; set; } // Optional: Could help backend diffing logic
+
+        public int? TodoProjectScheduleId { get; set; }
     }
 }
