@@ -64,8 +64,7 @@ namespace NJS.Domain.Database
         public DbSet<CheckReview> CheckReviews { get; set; }
         public DbSet<ChangeControl> ChangeControls { get; set; }
         public DbSet<ProjectClosure> ProjectClosures { get; set; }
-        // Removed ProjectClosureComment to fix build issues
-        // public DbSet<ProjectClosureComment> ProjectClosureComments { get; set; }
+        public DbSet<Cashflow> Cashflows { get; set; }
 
         // PM Workflow entities
         public DbSet<PMWorkflowStatus> PMWorkflowStatuses { get; set; }
