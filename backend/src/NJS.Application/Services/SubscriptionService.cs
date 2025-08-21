@@ -13,25 +13,28 @@ namespace NJS.Application.Services
 {
     public class SubscriptionService : ISubscriptionService
     {
-        private readonly ProjectManagementContext _context;
+        private readonly TenantDbContext _context;
+        private readonly ProjectManagementContext _projectManagementContext;
         private readonly ILogger<SubscriptionService> _logger;
         private readonly string _stripeSecretKey;
         private readonly bool _isDevelopment;
 
-        public SubscriptionService(
-            ProjectManagementContext context,
-            ILogger<SubscriptionService> logger,
-            IConfiguration configuration)
+        public SubscriptionService(TenantDbContext context,
+            ProjectManagementContext projectManagementContext,
+            IConfiguration configuration,
+             ILogger<SubscriptionService> logger)
         {
             _context = context;
             _logger = logger;
             _stripeSecretKey = configuration["Stripe:SecretKey"];
             _isDevelopment = configuration["ASPNETCORE_ENVIRONMENT"] == "Development";
-            
+
             if (!_isDevelopment && !string.IsNullOrEmpty(_stripeSecretKey))
             {
                 StripeConfiguration.ApiKey = _stripeSecretKey;
             }
+
+            _projectManagementContext = projectManagementContext;
         }
 
         public async Task<SubscriptionPlan> CreateSubscriptionPlanAsync(SubscriptionPlan plan)
@@ -41,7 +44,7 @@ namespace NJS.Application.Services
                 if (_isDevelopment)
                 {
                     _logger.LogInformation("[MOCK STRIPE] Would create subscription plan: {PlanName}", plan.Name);
-                    _context.SubscriptionPlans.Add(plan);
+                    _projectManagementContext.SubscriptionPlans.Add(plan);
                     await _context.SaveChangesAsync();
                     return plan;
                 }
@@ -69,7 +72,7 @@ namespace NJS.Application.Services
                 var price = await priceService.CreateAsync(priceOptions);
 
                 plan.StripePriceId = price.Id;
-                _context.SubscriptionPlans.Add(plan);
+                _projectManagementContext.SubscriptionPlans.Add(plan);
                 await _context.SaveChangesAsync();
 
                 return plan;
@@ -89,7 +92,7 @@ namespace NJS.Application.Services
                     .Include(t => t.SubscriptionPlan)
                     .FirstOrDefaultAsync(t => t.Id == tenantId);
 
-                var plan = await _context.SubscriptionPlans
+                var plan = await _projectManagementContext.SubscriptionPlans
                     .FirstOrDefaultAsync(p => p.Id == planId);
 
                 if (tenant == null || plan == null)
@@ -237,7 +240,7 @@ namespace NJS.Application.Services
                     .Include(t => t.SubscriptionPlan)
                     .FirstOrDefaultAsync(t => t.Id == tenantId);
 
-                var newPlan = await _context.SubscriptionPlans
+                var newPlan = await _projectManagementContext.SubscriptionPlans
                     .FirstOrDefaultAsync(p => p.Id == newPlanId);
 
                 if (tenant == null || newPlan == null)
@@ -286,13 +289,13 @@ namespace NJS.Application.Services
 
         public async Task<SubscriptionPlan> GetSubscriptionPlanAsync(int planId)
         {
-            return await _context.SubscriptionPlans
+            return await _projectManagementContext.SubscriptionPlans
                 .FirstOrDefaultAsync(p => p.Id == planId);
         }
 
         public async Task<IEnumerable<SubscriptionPlan>> GetAllSubscriptionPlansAsync()
         {
-            return await _context.SubscriptionPlans
+            return await _projectManagementContext.SubscriptionPlans
                 .Where(p => p.IsActive)
                 .ToListAsync();
         }
@@ -340,7 +343,7 @@ namespace NJS.Application.Services
 
         public async Task<IEnumerable<SubscriptionPlanDto>> GetAllSubscriptionPlansWithFeaturesAsync()
         {
-            var plans = await _context.SubscriptionPlans
+            var plans = await _projectManagementContext.SubscriptionPlans
                 .Include(sp => sp.SubscriptionPlanFeatures)
                 .ThenInclude(spf => spf.Feature)
                 .Where(p => p.IsActive)
@@ -398,7 +401,7 @@ namespace NJS.Application.Services
                     return null;
 
                 // Query the database to get the subscription plan with its features
-                var plan = await _context.SubscriptionPlans
+                var plan = await _projectManagementContext.SubscriptionPlans
                     .Include(sp => sp.SubscriptionPlanFeatures)
                     .ThenInclude(spf => spf.Feature)
                     .Where(p => p.IsActive)
@@ -644,7 +647,7 @@ namespace NJS.Application.Services
 
             try
             {
-                var subscriptionPlans = await _context.SubscriptionPlans
+                var subscriptionPlans = await _projectManagementContext.SubscriptionPlans
                     .Include(sp => sp.SubscriptionPlanFeatures)
                         .ThenInclude(spf => spf.Feature)
                     .Where(sp => sp.IsActive)
@@ -729,7 +732,7 @@ namespace NJS.Application.Services
 
             try
             {
-                var subscriptionPlan = await _context.SubscriptionPlans
+                var subscriptionPlan = await _projectManagementContext.SubscriptionPlans
                     .Include(sp => sp.SubscriptionPlanFeatures)
                         .ThenInclude(spf => spf.Feature)
                     .Where(sp => sp.IsActive && sp.Name.ToLower() == planName.ToLower())

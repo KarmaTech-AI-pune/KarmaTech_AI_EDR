@@ -27,7 +27,15 @@ namespace NJS.Application.Services
 
         public async Task<int?> GetTenantId(string domain)
         {
-            var tenant = await _tenantDbContext.Tenants.FirstOrDefaultAsync(t => t.Domain == domain);
+            var tenant = await _tenantDbContext.Tenants
+                .FirstOrDefaultAsync(t => t.Domain == domain);
+
+            if (tenant == null && int.TryParse(domain, out var tenantId))
+            {
+                tenant = await _tenantDbContext.Tenants
+                    .FirstOrDefaultAsync(t => t.Id == tenantId);
+            }
+
             return tenant?.Id;
         }
 
@@ -94,8 +102,11 @@ namespace NJS.Application.Services
             if (httpContext == null)
                 return false;
 
+            var tenants = _tenantDbContext.Tenants.ToList();
+            var selectedTenant = tenants.FirstOrDefault(t => t.Domain.Equals(tenantDomain, StringComparison.OrdinalIgnoreCase));
+
             var tenant = await _tenantDbContext.Tenants.FirstOrDefaultAsync(t => t.Domain == tenantDomain);
-            if (tenant == null)
+            if (selectedTenant == null)
             {
                 return false;
             }

@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace NJS.Domain.Entities
 {
+    [Table("TenantDatabases")]
     public class TenantDatabase
     {
         [Key]
@@ -15,7 +16,7 @@ namespace NJS.Domain.Entities
         [MaxLength(255)]
         public string DatabaseName { get; set; }
 
-        [MaxLength(255)]
+        [MaxLength(500)]
         public string ConnectionString { get; set; }
 
         public DatabaseStatus Status { get; set; } = DatabaseStatus.Active;

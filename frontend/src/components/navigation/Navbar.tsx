@@ -17,7 +17,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
-import { authApi } from '../../dummyapi/authApi';
+import { authApi } from '../../services/authApi';
 import { PermissionType } from '../../models';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
 
@@ -44,14 +44,16 @@ export const Navbar = () => {
 
   const [authorizedPages, setAuthorizedPages] = useState<typeof navLinks>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTenantAdmin, setIsTenantAdmin] = useState(false);
 
   useEffect(() => {
     const checkUserPermissions = async () => {
       const currentUser = await authApi.getCurrentUser();
-
+debugger;
       if (!currentUser || !currentUser.roleDetails) {
         setAuthorizedPages([]);
         setIsAdmin(false);
+        setIsTenantAdmin(false)
         return;
       }
 
@@ -62,6 +64,7 @@ export const Navbar = () => {
 
       setAuthorizedPages(availablePages);
       setIsAdmin(permissions.includes(PermissionType.SYSTEM_ADMIN));
+      setIsTenantAdmin(permissions.includes(PermissionType.Tenant_ADMIN));
     };
 
     checkUserPermissions();
@@ -223,7 +226,7 @@ export const Navbar = () => {
           </Box>
 
           {/* Admin Icon */}
-          {isAdmin && (
+          {(isAdmin || isTenantAdmin) && (
             <Box sx={{ mr: 2 }}>
               <Tooltip title="Admin Panel">
                 <IconButton

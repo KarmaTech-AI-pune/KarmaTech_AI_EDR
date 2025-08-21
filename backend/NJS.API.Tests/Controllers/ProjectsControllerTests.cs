@@ -7,6 +7,7 @@ using NJS.Application.CQRS.Projects.Queries;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
+using NJS.Repositories.Interfaces;
 using NJSAPI.Controllers;
 
 namespace NJS.API.Tests.Controllers
@@ -16,13 +17,17 @@ namespace NJS.API.Tests.Controllers
         private readonly Mock<IProjectManagementService> _mockProjectManagementService;
         private readonly ProjectController _controller;
         private readonly Mock<IMediator> _mediator;
+        private readonly Mock<ITenantService> _tenantService;
+        private readonly Mock<ICurrentUserService> _currentUserService;
          private readonly ILogger _logger;
 
         public ProjectsControllerTests()
         {
             _mockProjectManagementService = new Mock<IProjectManagementService>();
-            _mediator = new Mock<IMediator>();            
-            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object, (ILogger<ProjectController>)_logger);
+            _mediator = new Mock<IMediator>();
+            _currentUserService = new Mock<ICurrentUserService>();
+            _tenantService = new Mock<ITenantService>();
+            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object,_tenantService.Object,_currentUserService.Object, (ILogger<ProjectController>)_logger);
         }
 
         [Fact]

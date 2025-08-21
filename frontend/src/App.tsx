@@ -7,6 +7,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ProjectProvider } from './context/ProjectContext';
 import { BusinessDevelopmentProvider } from './context/BusinessDevelopmentContext';
 import { SubscriptionFeaturesProvider } from './context/SubscriptionFeaturesContext';
+import { TenantProvider } from './hooks/useTenantContext';
 import { authApi } from './services/authApi'
 import { PermissionType } from './models'
 import { routes } from './routes/RouteConfig';
@@ -189,13 +190,15 @@ function App() {
 
   return (
     <projectManagementAppContext.Provider value={contextValue}>
-      <SubscriptionFeaturesProvider>
-        <ProjectProvider>
-          <BusinessDevelopmentProvider>
-            <RouterProvider router={router} />
-          </BusinessDevelopmentProvider>
-        </ProjectProvider>
-      </SubscriptionFeaturesProvider>
+      <TenantProvider>
+        <SubscriptionFeaturesProvider>
+          <ProjectProvider>
+            <BusinessDevelopmentProvider>
+              <RouterProvider router={router} />
+            </BusinessDevelopmentProvider>
+          </ProjectProvider>
+        </SubscriptionFeaturesProvider>
+      </TenantProvider>
     </projectManagementAppContext.Provider>
   );
 }

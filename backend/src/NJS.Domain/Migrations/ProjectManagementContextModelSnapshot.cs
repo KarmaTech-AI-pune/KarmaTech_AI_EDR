@@ -22,42 +22,6 @@ namespace NJS.Domain.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(13)
-                        .HasColumnType("nvarchar(13)");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
-
-                    b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasDiscriminator().HasValue("IdentityRole");
-
-                    b.UseTphMappingStrategy();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -897,6 +861,43 @@ namespace NJS.Domain.Migrations
                     b.ToTable("CorrespondenceOutwards");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.CreateAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CompanyAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CompanyName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmailAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Subdomain")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SubscriptionPlan")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CreateAccounts");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.CurrentBudgetInMIS", b =>
                 {
                     b.Property<int>("Id")
@@ -928,7 +929,7 @@ namespace NJS.Domain.Migrations
                     b.HasIndex("BudgetTableId")
                         .IsUnique();
 
-                    b.ToTable("CurrentBudgetInMIS");
+                    b.ToTable("CurrentBudgetInMISs");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.CurrentMonthAction", b =>
@@ -1026,6 +1027,33 @@ namespace NJS.Domain.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("FailedEmailLogs");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.Feature", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("PriceINR")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PriceUSD")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Features");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.FinancialDetails", b =>
@@ -2240,12 +2268,9 @@ namespace NJS.Domain.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("TenantId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.ToTable("Permissions");
+                    b.ToTable("Permissions", (string)null);
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ProgrammeSchedule", b =>
@@ -2950,6 +2975,47 @@ namespace NJS.Domain.Migrations
                     b.ToTable("Regions");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool?>("IsResourceRole")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("MinRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.RolePermission", b =>
                 {
                     b.Property<int>("Id")
@@ -3164,9 +3230,6 @@ namespace NJS.Domain.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("FeaturesJson")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -3197,6 +3260,29 @@ namespace NJS.Domain.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SubscriptionPlans");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.SubscriptionPlanFeature", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("FeatureId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubscriptionPlanId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeatureId");
+
+                    b.HasIndex("SubscriptionPlanId");
+
+                    b.ToTable("SubscriptionPlanFeatures");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Tenant", b =>
@@ -3265,7 +3351,7 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("SubscriptionPlanId");
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Tenant");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.TenantDatabase", b =>
@@ -3277,8 +3363,8 @@ namespace NJS.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ConnectionString")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -3402,6 +3488,9 @@ namespace NJS.Domain.Migrations
 
                     b.Property<decimal?>("StandardRate")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -4070,29 +4159,9 @@ namespace NJS.Domain.Migrations
                     b.ToTable("WorkBreakdownStructures");
                 });
 
-            modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
-                {
-                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityRole");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool?>("IsResourceRole")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal?>("MinRate")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasDiscriminator().HasValue("Role");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("NJS.Domain.Entities.Role", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4119,7 +4188,7 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("NJS.Domain.Entities.Role", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4206,13 +4275,13 @@ namespace NJS.Domain.Migrations
                     b.HasOne("NJS.Domain.Entities.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "WorkflowStatus")
                         .WithMany()
                         .HasForeignKey("WorkflowStatusId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Project");
@@ -4225,13 +4294,13 @@ namespace NJS.Domain.Migrations
                     b.HasOne("NJS.Domain.Entities.User", "ActionUser")
                         .WithMany()
                         .HasForeignKey("ActionBy")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("NJS.Domain.Entities.User", "AssignedTo")
                         .WithMany()
                         .HasForeignKey("AssignedToId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("NJS.Domain.Entities.ChangeControl", "ChangeControl")
                         .WithMany("WorkflowHistories")
@@ -4246,7 +4315,7 @@ namespace NJS.Domain.Migrations
                     b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "Status")
                         .WithMany()
                         .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("ActionUser");
@@ -4809,6 +4878,25 @@ namespace NJS.Domain.Migrations
                     b.Navigation("ScoringDescriptions");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.SubscriptionPlanFeature", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.Feature", "Feature")
+                        .WithMany("SubscriptionPlanFeatures")
+                        .HasForeignKey("FeatureId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NJS.Domain.Entities.SubscriptionPlan", "SubscriptionPlan")
+                        .WithMany("SubscriptionPlanFeatures")
+                        .HasForeignKey("SubscriptionPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Feature");
+
+                    b.Navigation("SubscriptionPlan");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.Tenant", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.SubscriptionPlan", "SubscriptionPlan")
@@ -4902,16 +4990,18 @@ namespace NJS.Domain.Migrations
                 {
                     b.HasOne("NJS.Domain.Entities.User", "ActionUser")
                         .WithMany()
-                        .HasForeignKey("ActionBy");
+                        .HasForeignKey("ActionBy")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("NJS.Domain.Entities.User", "AssignedTo")
                         .WithMany()
-                        .HasForeignKey("AssignedToId");
+                        .HasForeignKey("AssignedToId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "Status")
                         .WithMany("WBSHistories")
                         .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("NJS.Domain.Entities.WBSTaskPlannedHourHeader", "WBSTaskPlannedHourHeader")
@@ -4971,13 +5061,13 @@ namespace NJS.Domain.Migrations
                     b.HasOne("NJS.Domain.Entities.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "Status")
                         .WithMany()
                         .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Project");
@@ -5125,6 +5215,11 @@ namespace NJS.Domain.Migrations
                     b.Navigation("WorkflowHistories");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.Feature", b =>
+                {
+                    b.Navigation("SubscriptionPlanFeatures");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.GoNoGoDecisionHeader", b =>
                 {
                     b.Navigation("Versions");
@@ -5209,6 +5304,11 @@ namespace NJS.Domain.Migrations
                     b.Navigation("WorkflowHistories");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.ScoreRange", b =>
                 {
                     b.Navigation("GoNoGoDecisionOpportunitiesScoring");
@@ -5226,6 +5326,8 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("NJS.Domain.Entities.SubscriptionPlan", b =>
                 {
+                    b.Navigation("SubscriptionPlanFeatures");
+
                     b.Navigation("Tenants");
                 });
 
@@ -5290,11 +5392,6 @@ namespace NJS.Domain.Migrations
                     b.Navigation("Tasks");
 
                     b.Navigation("VersionHistory");
-                });
-
-            modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
-                {
-                    b.Navigation("RolePermissions");
                 });
 #pragma warning restore 612, 618
         }

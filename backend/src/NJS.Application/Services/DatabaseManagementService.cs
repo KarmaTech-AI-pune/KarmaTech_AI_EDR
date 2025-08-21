@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Database;
+using System;
 
 namespace NJS.Application.Services
 {
@@ -22,15 +23,20 @@ namespace NJS.Application.Services
             _logger = logger;
         }
 
-        public async Task<bool> CreateTenantDatabaseAsync(string databaseName, string connectionString)
+        public async Task<(bool isDbCreated,string dbName,string connectionString)> CreateTenantDatabaseAsync(string subDomain)
         {
 
-            //string connectionString = _configuration.GetConnectionString("DefaultConnection");
-            SqlConnectionStringBuilder builder = new(connectionString);
+            string mainConnectionString = _configuration.GetConnectionString("AppDbConnection");
+            SqlConnectionStringBuilder builder = new(mainConnectionString);
             string mainDatabaseName = builder.InitialCatalog; // retrieve the database name
-            string tenantDbName = databaseName;
+            string tenantDbName = mainDatabaseName + "-" + subDomain;
             builder.InitialCatalog = tenantDbName; // set new database name
-            string modifiedConnectionString = connectionString;
+            string modifiedConnectionString = builder.ConnectionString; // create new connection string
+            // Use the main database for all tenants
+            //var databaseName = mainConnectionString;
+            
+            
+            //string modifiedConnectionString = builder.ConnectionString; // create new connection string
             //try
             //{
             //    // Get the master database connection string
@@ -75,19 +81,19 @@ namespace NJS.Application.Services
                     if (dbContext.Database.GetPendingMigrations().Any())
                     {
                         Console.ForegroundColor = ConsoleColor.Blue;
-                        Console.WriteLine($"Applying ApplicationDB Migrations for New '{databaseName}' tenant.");
+                        Console.WriteLine($"Applying ApplicationDB Migrations for New '{tenantDbName}' tenant.");
                         Console.ResetColor();
                         dbContext.Database.Migrate();
                     }
                 }
-                return true;
-
+                return new (true, tenantDbName, modifiedConnectionString);
+                    
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating database {DatabaseName}", databaseName);
+                _logger.LogError(ex, "Error creating database {DatabaseName}", tenantDbName);
             }
-            return false;
+            return new (false, null, null);
         }
 
         public async Task<bool> DeleteTenantDatabaseAsync(string databaseName)
