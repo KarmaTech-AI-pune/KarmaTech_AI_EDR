@@ -1,6 +1,7 @@
 import { Credentials, LoginResponse, UserWithRole } from '../types';
 import { PermissionType } from '../models';
 import { axiosInstance } from './axiosConfig';
+import { getTenantContext } from './axiosConfig';
 import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {
@@ -18,8 +19,25 @@ interface DecodedToken {
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
-      // The tenant context header will be automatically added by the axios interceptor
-      const response = await axiosInstance.post('api/user/login', credentials);
+      const tenantContext = getTenantContext();
+      
+      // Ensure we have a tenant context
+      if (!tenantContext) {
+        console.error('No tenant context available');
+        return {
+          success: false,
+          message: 'Invalid tenant configuration'
+        };
+      }
+
+      // Ensure proper headers are set for the login request
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Context': tenantContext
+        }
+      };
+      const response = await axiosInstance.post('api/user/login', credentials, config);
       const { success, token } = response.data;
       
       if (success && token) {

@@ -23,33 +23,49 @@ const ENV_CONFIG: EnvironmentConfig = {
  * Extracts tenant context from the current domain
  * @returns {string | null} The tenant subdomain or null if not found
  */
-const getTenantContext = (): string | null => {
-  debugger;
+export const getTenantContext = (): string | null => {
+  // debugger;
+  // const hostname = window.location.hostname;
+  
+  // // Extract subdomain (e.g., 'companyb' from 'companyb.localhost')
+  // const subdomain = hostname.split('.')[0];
+  
+  // // Return null for localhost, empty string, or invalid subdomains
+  // if (!subdomain || subdomain === 'localhost' || subdomain === hostname) {
+  //   return null; 
+  // }
+  
+  // return subdomain;
+debugger;
   const hostname = window.location.hostname;
-  
-  // Extract subdomain (e.g., 'companyb' from 'companyb.localhost')
-  const subdomain = hostname.split('.')[0];
-  
-  // Return null for localhost, empty string, or invalid subdomains
-  if (!subdomain || subdomain === 'localhost' || subdomain === hostname) {
-    return null; 
+  debugger;
+  // Support "companya.localhost" and "companya.dev.localhost"
+  if (hostname.includes('localhost')) {
+    const parts = hostname.split('.');
+    if(parts[0]=="localhost"){
+      return parts[0];
+    }
+    return parts.length > 1 ? parts[0] : null;
   }
-  
-  return subdomain;
+
+  // Normal subdomain logic
+  const subdomain = hostname.split('.')[0];
+  return subdomain && subdomain !== hostname ? subdomain : null;
 };
+
 
 /**
  * Constructs the appropriate API base URL based on tenant context
  * @returns {string} The API base URL
  */
 const getApiBaseUrl = (): string => {
-  const tenant = getTenantContext();
-  debugger;
-  if (tenant) {
+//  const tenant = getTenantContext();
+//  debugger;
+//  if (tenant) {
     // Construct tenant-specific API URL using environment variables
-    const { tenantProtocol, tenantDomain, tenantPort } = ENV_CONFIG;
-    return `${tenantProtocol}://${tenant}.${tenantDomain}:${tenantPort}/`;
-  }  
+   // const { tenantProtocol, tenantDomain, tenantPort } = ENV_CONFIG;
+   // return `${tenantProtocol}://${tenant}.${tenantDomain}:${tenantPort}/`;
+//  }  
   return ENV_CONFIG.apiBaseUrl;
 };
 

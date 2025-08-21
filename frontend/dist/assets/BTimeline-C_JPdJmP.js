@@ -1,0 +1,1 @@
+import{j as e,B as r,X as i,T as t}from"./index-_VJtkHCC.js";const n=()=>e.jsx(r,{sx:{p:3},children:e.jsxs(i,{sx:{p:3},children:[e.jsx(t,{variant:"h6",gutterBottom:!0,children:"Timeline"}),e.jsx(t,{variant:"body1",color:"text.secondary",children:"Opportunity timeline section will be implemented here"})]})});export{n as BTimeline,n as default};

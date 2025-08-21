@@ -1,0 +1,31 @@
+# API Configuration
+VITE_API_BASE_URL=http://api.karmatech-ai.com
+VITE_STATIC_IP=
+VITE_USE_STATIC_IP=false
+
+# Tenant Configuration
+VITE_TENANT_PROTOCOL=http
+VITE_TENANT_DOMAIN=karmatech-ai.com
+VITE_TENANT_PORT=80
+
+# Additional Settings
+VITE_ENABLE_MOCK_DATA=false
+VITE_ENABLE_LOGGING=false
+
+# Build Configuration
+VITE_ENV=production
+
+# NJS ISO API URL
+# VITE_API_BASE_URL=http://192.168.50.53:5005/
+# VITE_ENV=development
+
+#VITE_API_BASE_URL=https://isotrack.njsei.com/ISOAPI/
+#VITE_ENV=production
+
+# NJS ISO API URL
+# VITE_API_BASE_URL=http://192.168.50.53:5005/
+# VITE_API_BASE_URL=http://117.248.109.35:5007/
+# VITE_ENV=development
+
+#VITE_API_BASE_URL=https://isotrack.njsei.com/ISOAPI/
+#VITE_ENV=production
