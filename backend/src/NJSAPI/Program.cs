@@ -12,6 +12,7 @@ using NJSAPI.Middleware;
 using NJS.Domain.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NJS.Application.Services;
+using NJS.Application.Services.IContract;
 
 internal class Program
 {
@@ -41,8 +42,20 @@ internal class Program
 
         // Add tenant services
         builder.Services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
-      //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
+        //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
 
+        var environment = builder.Configuration.GetValue<string>("DNS:Env");
+        if (environment == "Development" || environment=="Dev")
+        {
+            builder.Services.AddScoped<IDNSManagementService, MockDNSManagementService>();
+        }
+        else
+        {
+            builder.Services.AddScoped<IDNSManagementService, DNSManagementService>();
+
+            // Note: For production, you'll need to configure AWS credentials and region
+            // services.AddAWSService<IAmazonRoute53>();
+        }
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
         builder.Services.AddTenantServices(builder.Configuration);
