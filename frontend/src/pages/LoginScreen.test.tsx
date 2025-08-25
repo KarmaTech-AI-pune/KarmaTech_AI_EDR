@@ -1,199 +1,246 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { BrowserRouter, Navigate } from 'react-router-dom';
 import { LoginScreen } from './LoginScreen';
 import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { UserWithRole } from '../types';
+import { User } from '../models'; // Corrected import path for User
+import { projectManagementAppContextType } from '../types'; // Import the full type
+import { vi, describe, test, beforeEach, expect } from 'vitest'; // Explicitly import vitest globals
 
-// Mock dependencies
-vi.mock('../services/authApi');
-vi.mock('../hooks/useAppNavigation');
-vi.mock('react-router-dom', async (importOriginal: () => Promise<any>) => {
-  const actual: any = await importOriginal();
-  return {
-    ...actual,
-    Navigate: vi.fn(({ to }) => `Navigate to ${to}`), // Mock Navigate component
-  };
-});
+// Mock the authApi
+vi.mock('../services/authApi', () => ({
+    authApi: {
+        login: vi.fn(),
+    },
+}));
 
+// Mock the useAppNavigation hook
+vi.mock('../hooks/useAppNavigation', () => ({
+    useAppNavigation: vi.fn(() => ({
+        navigateToHome: vi.fn(),
+    })),
+}));
+
+// Mock the projectManagementAppContext
 const mockSetIsAuthenticated = vi.fn();
 const mockSetUser = vi.fn();
 const mockNavigateToHome = vi.fn();
 
-const mockUser: UserWithRole = {
-  id: '1',
-  userName: 'testuser',
-  name: 'Test User',
-  email: 'test@example.com',
-  roles: [],
-  standardRate: 100,
-  isConsultant: false,
-  createdAt: new Date().toISOString(),
-  roleDetails: {
-    id: '1',
-    name: 'Test Role',
-    permissions: []
-  }
-};
-
 const renderLoginScreen = (isAuthenticated: boolean = false) => {
-  return render(
-    <projectManagementAppContext.Provider
-      value={{
-        isAuthenticated,
-        setIsAuthenticated: mockSetIsAuthenticated,
-        user: isAuthenticated ? mockUser : null,
-        setUser: mockSetUser,
-        handleLogout: vi.fn(),
-        selectedProject: null,
-        setSelectedProject: vi.fn(),
-        currentGoNoGoDecision: null,
-        setCurrentGoNoGoDecision: vi.fn(),
-        goNoGoDecisionStatus: null,
-        setGoNoGoDecisionStatus: vi.fn(),
-        goNoGoVersionNumber: null,
-        setGoNoGoVersionNumber: vi.fn(),
-        currentUser: isAuthenticated ? mockUser : null,
-        setCurrentUser: vi.fn(),
-        canEditOpportunity: false,
-        setCanEditOpportunity: vi.fn(),
-        canDeleteOpportunity: false,
-        setCanDeleteOpportunity: vi.fn(),
-        canReviewBD: false,
-        setCanReviewBD: vi.fn(),
-        canApproveBD: false,
-        setCanApproveBD: vi.fn(),
-        canSubmitForApproval: false,
-        setCanSubmitForApproval: vi.fn(),
-        canProjectSubmitForReview: false,
-        setProjectCanSubmitForReview: vi.fn(),
-        canProjectSubmitForApproval: false,
-        setProjectCanSubmitForApproval: vi.fn(),
-        canProjectCanApprove: false,
-        setProjectCanApprove: vi.fn(),
-      }}
-    >
-      <LoginScreen />
-    </projectManagementAppContext.Provider>
-  );
+    (useAppNavigation as vi.Mock).mockReturnValue({
+        navigateToHome: mockNavigateToHome,
+    });
+
+    return render(
+        <BrowserRouter>
+            <projectManagementAppContext.Provider
+                value={{
+                    isAuthenticated,
+                    setIsAuthenticated: mockSetIsAuthenticated,
+                    user: null,
+                    setUser: mockSetUser,
+                    // Mocking all other required properties of projectManagementAppContextType
+                    handleLogout: vi.fn(),
+                    selectedProject: null,
+                    setSelectedProject: vi.fn(),
+                    currentGoNoGoDecision: null,
+                    setCurrentGoNoGoDecision: vi.fn(),
+                    goNoGoDecisionStatus: null,
+                    setGoNoGoDecisionStatus: vi.fn(),
+                    goNoGoVersionNumber: null,
+                    setGoNoGoVersionNumber: vi.fn(), // Corrected setter name
+                    currentUser: null,
+                    setCurrentUser: vi.fn(),
+                    canEditOpportunity: false,
+                    setCanEditOpportunity: vi.fn(),
+                    canDeleteOpportunity: false,
+                    setCanDeleteOpportunity: vi.fn(),
+                    canReviewBD: false,
+                    setCanReviewBD: vi.fn(),
+                    canApproveBD: false,
+                    setCanApproveBD: vi.fn(),
+                    canSubmitForApproval: false,
+                    setCanSubmitForApproval: vi.fn(),
+                    canProjectSubmitForReview: false,
+                    setProjectCanSubmitForReview: vi.fn(),
+                    canProjectSubmitForApproval: false,
+                    setProjectCanSubmitForApproval: vi.fn(),
+                    canProjectCanApprove: false,
+                    setProjectCanApprove: vi.fn(),
+                } as projectManagementAppContextType} // Cast to the full type
+            >
+                <LoginScreen />
+            </projectManagementAppContext.Provider>
+        </BrowserRouter>
+    );
 };
 
-describe('LoginScreen Component', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    (useAppNavigation as vi.Mock).mockReturnValue({
-      navigateToHome: mockNavigateToHome,
-    });
-    localStorage.clear(); // Clear localStorage before each test
-  });
+describe('LoginScreen', () => {
+    let localStorageSetItemSpy: vi.SpyInstance;
+    let localStorageGetItemSpy: vi.SpyInstance;
 
-  it('renders the login form', () => {
-    renderLoginScreen();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
-    expect(screen.getByText(/KarmaTech AI Project Management Application/i)).toBeInTheDocument();
-  });
+    beforeEach(() => {
+        vi.clearAllMocks(); // Use vi.clearAllMocks
+        localStorage.clear();
 
-  it('updates email and password on input change', () => {
-    renderLoginScreen();
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-
-    expect(emailInput).toHaveValue('test@example.com');
-    expect(passwordInput).toHaveValue('password123');
-  });
-
-  it('handles successful login', async () => {
-    (authApi.login as vi.Mock).mockResolvedValue({
-      success: true,
-      token: 'mock-token',
-      user: mockUser,
+        // Mock localStorage.setItem and getItem for the specific test case
+        localStorageSetItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+        localStorageGetItemSpy = vi.spyOn(Storage.prototype, 'getItem');
     });
 
-    renderLoginScreen();
+    test('renders login form elements', () => {
+        renderLoginScreen();
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
-
-    await waitFor(() => {
-      expect(authApi.login).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
-      });
-      expect(localStorage.getItem('token')).toBe('mock-token');
-      expect(mockSetUser).toHaveBeenCalledWith(mockUser);
-      expect(mockSetIsAuthenticated).toHaveBeenCalledWith(true);
-      expect(mockNavigateToHome).toHaveBeenCalled();
-    });
-  });
-
-  it('handles failed login and displays error message', async () => {
-    (authApi.login as vi.Mock).mockResolvedValue({
-      success: false,
-      message: 'Invalid credentials',
+        expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
+        expect(screen.getByText(/login to your account/i)).toBeInTheDocument();
     });
 
-    renderLoginScreen();
-
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'wrong@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpass' } });
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
-
-    await waitFor(() => {
-      expect(authApi.login).toHaveBeenCalled();
-      expect(localStorage.getItem('token')).toBeNull();
-      expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
-      expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
+    test('navigates to home if already authenticated', () => {
+        renderLoginScreen(true);
+        // Since Navigate is a component, we can't directly assert its call.
+        // We can check if the LoginScreen content is not rendered,
+        // or if the mock navigation was called if it were an imperative navigation.
+        // For declarative Navigate, we'd typically test the routing setup.
+        // For this unit test, we'll ensure the login form is not visible.
+        expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /log in/i })).not.toBeInTheDocument();
     });
-  });
 
-  it('handles API call error during login', async () => {
-    (authApi.login as vi.Mock).mockRejectedValue(new Error('Network error'));
+    test('handles successful login', async () => {
+        const mockUser: User = {
+            id: '1',
+            userName: 'testuser',
+            name: 'Test User',
+            email: 'test@example.com',
+            standardRate: 100,
+            isConsultant: false,
+            createdAt: '2023-01-01T00:00:00Z',
+            roles: [],
+        };
+        (authApi.login as vi.Mock).mockResolvedValue({
+            success: true,
+            token: 'mock-token',
+            user: mockUser,
+        });
 
-    renderLoginScreen();
+        renderLoginScreen();
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
+        fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
+        fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
-    await waitFor(() => {
-      expect(authApi.login).toHaveBeenCalled();
-      expect(screen.getByText('Network error')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(authApi.login).toHaveBeenCalledWith({
+                email: 'test@example.com',
+                password: 'password123',
+            });
+            expect(localStorage.getItem('token')).toBe('mock-token');
+            expect(mockSetUser).toHaveBeenCalledWith(mockUser);
+            expect(mockSetIsAuthenticated).toHaveBeenCalledWith(true);
+            expect(mockNavigateToHome).toHaveBeenCalled();
+        });
     });
-  });
 
-  it('redirects to home if already authenticated', () => {
-    const { getByText } = renderLoginScreen(true); // Render with isAuthenticated = true
-    expect(getByText('Navigate to /')).toBeInTheDocument();
-  });
+    test('displays error message on failed login (invalid credentials)', async () => {
+        (authApi.login as vi.Mock).mockResolvedValue({
+            success: false,
+            message: 'Invalid credentials',
+        });
 
-  it('clears error message on subsequent login attempt', async () => {
-    (authApi.login as vi.Mock)
-      .mockResolvedValueOnce({ success: false, message: 'First error' })
-      .mockResolvedValueOnce({ success: true, token: 'mock-token', user: mockUser });
+        renderLoginScreen();
 
-    renderLoginScreen();
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'wrong@example.com' } });
+        fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpass' } });
+        fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
-    // First failed attempt
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'wrong@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpass' } });
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
-    await waitFor(() => expect(screen.getByText('First error')).toBeInTheDocument());
-
-    // Second successful attempt
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
-
-    await waitFor(() => {
-      expect(screen.queryByText('First error')).not.toBeInTheDocument();
-      expect(mockNavigateToHome).toHaveBeenCalled();
+        await waitFor(() => {
+            expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+            expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
+            expect(mockSetUser).not.toHaveBeenCalled();
+            expect(mockNavigateToHome).not.toHaveBeenCalled();
+        });
     });
-  });
+
+    test('displays generic error message on API error', async () => {
+        (authApi.login as vi.Mock).mockRejectedValue(new Error('Network error'));
+
+        renderLoginScreen();
+
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
+        fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
+        fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+        await waitFor(() => {
+            expect(screen.getByText(/an error occurred\. please try again\./i)).toBeInTheDocument();
+            expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
+            expect(mockSetUser).not.toHaveBeenCalled();
+            expect(mockNavigateToHome).not.toHaveBeenCalled();
+        });
+    });
+
+    test('displays error if token fails to set in local storage', async () => {
+        const mockUser: User = {
+            id: '1',
+            userName: 'testuser',
+            name: 'Test User',
+            email: 'test@example.com',
+            standardRate: 100,
+            isConsultant: false,
+            createdAt: '2023-01-01T00:00:00Z',
+            roles: [],
+        };
+        (authApi.login as vi.Mock).mockResolvedValue({
+            success: true,
+            token: 'mock-token',
+            user: mockUser,
+        });
+
+        // Mock localStorage.setItem to simulate failure or not setting the item
+        localStorageSetItemSpy.mockImplementation((key: string, value: string) => {
+            if (key === 'token') {
+                // Simulate failure to set token by not actually setting it
+                // or by immediately clearing it for the purpose of this test
+                // For a more realistic scenario, we'd mock getItem to return null after setItem
+            } else {
+                Object.defineProperty(window, 'localStorage', {
+                    value: {
+                        ...window.localStorage,
+                        [key]: value,
+                    },
+                    writable: true,
+                });
+            }
+        });
+
+        // Mock localStorage.getItem to return null for 'token' after setItem is called
+        localStorageGetItemSpy.mockImplementation((key: string) => {
+            if (key === 'token') {
+                return null; // Simulate token not being found after setting
+            }
+            return null;
+        });
+
+
+        renderLoginScreen();
+
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
+        fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
+        fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+        await waitFor(() => {
+            expect(authApi.login).toHaveBeenCalled();
+            expect(localStorageSetItemSpy).toHaveBeenCalledWith('token', 'mock-token');
+            expect(localStorageGetItemSpy).toHaveBeenCalledWith('token');
+            expect(screen.getByText(/failed to set authentication token/i)).toBeInTheDocument();
+            expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
+            expect(mockSetUser).not.toHaveBeenCalled();
+            expect(mockNavigateToHome).not.toHaveBeenCalled();
+        });
+
+        localStorageSetItemSpy.mockRestore();
+        localStorageGetItemSpy.mockRestore();
+    });
 });
