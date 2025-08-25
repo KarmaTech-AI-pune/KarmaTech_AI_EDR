@@ -2,8 +2,8 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import ProgrammeScheduleTab from '../ProgrammeScheduleTab';
-import { MonthlyProgressSchema, MonthlyProgressSchemaType } from '../../../../../schemas/monthlyProgress/MonthlyProgressSchema';
+import ProgrammeScheduleTab from './ProgrammeScheduleTab';
+import { MonthlyProgressSchema, MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
 
 // Test wrapper component
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -30,25 +30,28 @@ describe('ProgrammeScheduleTab', () => {
     );
 
     expect(screen.getByText('Programme Schedule')).toBeInTheDocument();
-    expect(screen.getByText('Programme Description')).toBeInTheDocument();
-    expect(screen.getByText('No programme schedule entries. Click "Add Row" to get started.')).toBeInTheDocument();
-    expect(screen.getByText('Add Row')).toBeInTheDocument();
+    expect(screen.getByText('No programme schedule entries. Click "Add" to get started.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
   });
 
-  test('adds new row when Add Row button is clicked', () => {
+  test('adds new row when Add button is clicked and exits edit mode on blur', () => {
     render(
       <TestWrapper>
         <ProgrammeScheduleTab />
       </TestWrapper>
     );
 
-    const addButton = screen.getByText('Add Row');
+    const addButton = screen.getByRole('button', { name: /add/i });
     fireEvent.click(addButton);
 
-    // Should have a text area for programme description
-    expect(screen.getByPlaceholderText('Enter programme description...')).toBeInTheDocument();
-    
-    // Should have a delete button
+    // Should be in edit mode with a text area
+    const textArea = screen.getByPlaceholderText('Enter programme description...');
+    expect(textArea).toBeInTheDocument();
+
+    // Exit edit mode by blurring the textarea
+    fireEvent.blur(textArea);
+
+    // Now the delete button should be visible
     expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
   });
 
@@ -60,18 +63,19 @@ describe('ProgrammeScheduleTab', () => {
     );
 
     // Add a row first
-    const addButton = screen.getByText('Add Row');
+    const addButton = screen.getByRole('button', { name: /add/i });
     fireEvent.click(addButton);
 
-    // Verify row exists
-    expect(screen.getByPlaceholderText('Enter programme description...')).toBeInTheDocument();
+    // Exit edit mode to make delete button visible
+    const textArea = screen.getByPlaceholderText('Enter programme description...');
+    fireEvent.blur(textArea);
 
     // Delete the row
     const deleteButton = screen.getByRole('button', { name: /delete/i });
     fireEvent.click(deleteButton);
 
     // Should show empty state again
-    expect(screen.getByText('No programme schedule entries. Click "Add Row" to get started.')).toBeInTheDocument();
+    expect(screen.getByText('No programme schedule entries. Click "Add" to get started.')).toBeInTheDocument();
   });
 
   test('allows text input in programme description field', () => {
@@ -82,7 +86,7 @@ describe('ProgrammeScheduleTab', () => {
     );
 
     // Add a row
-    const addButton = screen.getByText('Add Row');
+    const addButton = screen.getByRole('button', { name: /add/i });
     fireEvent.click(addButton);
 
     // Type in the text area

@@ -2,10 +2,14 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Dashboard } from './Dashboard'
 import { projectManagementAppContext } from '../App'
-import { PermissionType } from '../models'
-import { UserWithRole } from '../types'
+import { PermissionType } from '../models/permissionTypeModel'
+import { UserWithRole, projectManagementAppContextType } from '../types'
 
 // Mock the child components
+vi.mock('./AlertsPanel', () => ({
+  AlertsPanel: () => <div data-testid="alerts-panel">Alerts Panel Component</div>
+}))
+
 vi.mock('./ResourceManagement', () => ({
   ResourceManagement: () => <div data-testid="resource-management">Resource Management Component</div>
 }))
@@ -25,23 +29,12 @@ vi.mock('../pages', () => ({
 
 describe('Dashboard Component', () => {
   // Setup mock context values
-  const createMockContext = (permissions: PermissionType[] = []) => ({
-    screenState: 'dashboard',
-    setScreenState: vi.fn(),
-    isAuthenticated: true,
-    setIsAuthenticated: vi.fn(),
-    user: null,
-    setUser: vi.fn(),
-    handleLogout: vi.fn(),
-    selectedProject: null,
-    setSelectedProject: vi.fn(),
-    currentGoNoGoDecision: null,
-    setCurrentGoNoGoDecision: vi.fn(),
-    goNoGoDecisionStatus: null,
-    setGoNoGoDecisionStatus: vi.fn(),
-    goNoGoVersionNumber: null,
-    setGoNoGoVersionNumber: vi.fn(),
-    currentUser: {
+  // Helper function to create a mock context for testing
+  const createMockContext = (
+    permissions: PermissionType[] = [],
+    currentUserOverride: UserWithRole | null | undefined = undefined // Allows overriding or setting to null
+  ): projectManagementAppContextType => {
+    const defaultUser: UserWithRole = {
       id: '1',
       userName: 'testuser',
       name: 'Test User',
@@ -53,29 +46,49 @@ describe('Dashboard Component', () => {
       roleDetails: {
         id: '1',
         name: 'Test Role',
-        permissions: permissions
-      }
-    } as UserWithRole,
-    setCurrentUser: vi.fn(),
-    canEditOpportunity: false,
-    setCanEditOpportunity: vi.fn(),
-    canDeleteOpportunity: false,
-    setCanDeleteOpportunity: vi.fn(),
-    canSubmitForReview: false,
-    setCanSubmitForReview: vi.fn(),
-    canReviewBD: false,
-    setCanReviewBD: vi.fn(),
-    canApproveBD: false,
-    setCanApproveBD: vi.fn(),
-    canSubmitForApproval: false,
-    setCanSubmitForApproval: vi.fn(),
-    canProjectSubmitForReview: false,
-    setProjectCanSubmitForReview: vi.fn(),
-    canProjectSubmitForApproval: false,
-    setProjectCanSubmitForApproval: vi.fn(),
-    canProjectCanApprove: false,
-    setProjectCanApprove: vi.fn()
-  })
+        permissions: permissions,
+      },
+    };
+
+    const userToUse = currentUserOverride === undefined ? defaultUser : currentUserOverride;
+
+    return {
+      // Removed screenState as it's not in projectManagementAppContextType
+      isAuthenticated: true,
+      setIsAuthenticated: vi.fn(),
+      user: userToUse,
+      setUser: vi.fn(),
+      handleLogout: vi.fn(),
+      selectedProject: null,
+      setSelectedProject: vi.fn(),
+      currentGoNoGoDecision: null,
+      setCurrentGoNoGoDecision: vi.fn(),
+      goNoGoDecisionStatus: null,
+      setGoNoGoDecisionStatus: vi.fn(),
+      goNoGoVersionNumber: null,
+      setGoNoGoVersionNumber: vi.fn(),
+      currentUser: userToUse,
+      setCurrentUser: vi.fn(),
+      canEditOpportunity: false,
+      setCanEditOpportunity: vi.fn(),
+      canDeleteOpportunity: false,
+      setCanDeleteOpportunity: vi.fn(),
+      // canSubmitForReview: false, // Removed as per App.tsx
+      // setCanSubmitForReview: vi.fn(), // Removed as per App.tsx
+      canReviewBD: false,
+      setCanReviewBD: vi.fn(),
+      canApproveBD: false,
+      setCanApproveBD: vi.fn(),
+      canSubmitForApproval: false,
+      setCanSubmitForApproval: vi.fn(),
+      canProjectSubmitForReview: false,
+      setProjectCanSubmitForReview: vi.fn(),
+      canProjectSubmitForApproval: false,
+      setProjectCanSubmitForApproval: vi.fn(),
+      canProjectCanApprove: false,
+      setProjectCanApprove: vi.fn(),
+    };
+  };
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -133,9 +146,23 @@ describe('Dashboard Component', () => {
     expect(screen.getByTestId('notification-center')).toBeInTheDocument()
   })
 
+  // Test case: Displays generic "User" when currentUser name is not available
   it('displays generic "User" when currentUser name is not available', () => {
-    const mockContext = createMockContext()
-    mockContext.currentUser.name = ''
+    const mockContext = createMockContext([], {
+      id: '1',
+      userName: 'testuser',
+      name: '', // Empty name
+      email: 'test@example.com',
+      roles: [],
+      standardRate: 100,
+      isConsultant: false,
+      createdAt: new Date().toISOString(),
+      roleDetails: {
+        id: '1',
+        name: 'Test Role',
+        permissions: []
+      }
+    })
 
     render(
       <projectManagementAppContext.Provider value={mockContext}>
@@ -144,5 +171,29 @@ describe('Dashboard Component', () => {
     )
 
     expect(screen.getByText(/Welcome, User!/i)).toBeInTheDocument()
+  })
+
+  // Test case: Displays generic "User" when currentUser is null
+  it('displays generic "User" when currentUser is null', () => {
+    const mockContext = createMockContext([], null) // Pass null for currentUser
+
+    render(
+      <projectManagementAppContext.Provider value={mockContext}>
+        <Dashboard />
+      </projectManagementAppContext.Provider>
+    )
+
+    expect(screen.getByText(/Welcome, User!/i)).toBeInTheDocument()
+  })
+
+  // Test case: Renders AlertsPanel component
+  it('renders AlertsPanel component', () => {
+    const mockContext = createMockContext()
+    render(
+      <projectManagementAppContext.Provider value={mockContext}>
+        <Dashboard />
+      </projectManagementAppContext.Provider>
+    )
+    expect(screen.getByTestId('alerts-panel')).toBeInTheDocument()
   })
 })

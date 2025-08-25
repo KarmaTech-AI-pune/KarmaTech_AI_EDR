@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const financialAndContractSchema = z.object({
+export const financialAndContractSchema = z.object({
   net: z.number().nullable(),
   serviceTax: z.number().min(0).max(100).nullable(),
   feeTotal: z.number().nullable(),
@@ -10,7 +10,7 @@ const financialAndContractSchema = z.object({
   contractType: z.enum(["lumpsum", "timeAndExpense","percentage"]),
 });
 
-const actualCostSchema = z.object({
+export const actualCostSchema = z.object({
   priorCumulativeOdc: z.number().nullable().optional(),
   priorCumulativeStaff: z.number().nullable().optional(),
   priorCumulativeTotal: z.number().nullable(),
@@ -22,7 +22,7 @@ const actualCostSchema = z.object({
   totalCumulativeCost: z.number().nullable(),
 });
 
-const ctcAndEacSchema = z.object({
+export const ctcAndEacSchema = z.object({
   ctcODC: z.number().nullable(),
   ctcStaff: z.number().nullable(),
   ctcSubtotal: z.number().nullable(),
@@ -35,7 +35,7 @@ const ctcAndEacSchema = z.object({
   grossProfitPercentage: z.number().nullable(),
 });
 
-const scheduleSchema = z.object({
+export const scheduleSchema = z.object({
   dateOfIssueWOLOI: z.string().nullable(),
   completionDateAsPerContract: z.string().nullable(),
   completionDateAsPerExtension: z.string().nullable(),
@@ -43,7 +43,7 @@ const scheduleSchema = z.object({
 });
 
 // Budget Table Schema
-const BudgetRowSchema = z.object({
+export const BudgetRowSchema = z.object({
   revenueFee: z
     .number()
     .nullable()
@@ -66,7 +66,7 @@ const BudgetRowSchema = z.object({
     .transform((val) => (val === null ? null : Number(val))),
 });
 
-const BudgetTableSchema = z.object({
+export const BudgetTableSchema = z.object({
   originalBudget: BudgetRowSchema,
 
   currentBudgetInMIS: BudgetRowSchema,
@@ -100,7 +100,7 @@ const BudgetTableSchema = z.object({
   }),
 });
 
-const manpowerSchema = z.object({
+export const manpowerSchema = z.object({
   workAssignment: z.string().nullable(),
   assignee: z.string().nullable(),
   planned: z.number().nullable(),
@@ -110,7 +110,7 @@ const manpowerSchema = z.object({
   manpowerComments: z.string().nullable(),
 });
 
-const manpowerPlanningSchema = z.object({
+export const manpowerPlanningSchema = z.object({
   manpower: z.array(manpowerSchema),
   manpowerTotal: z.object({
     plannedTotal: z.number().nullable(),
@@ -120,7 +120,7 @@ const manpowerPlanningSchema = z.object({
   }),
 });
 
-const deliverableSchema = z.object({
+export const deliverableSchema = z.object({
   milestone: z.string().nullable(),
   dueDateContract: z.string().nullable(),
   dueDatePlanned: z.string().nullable(),
@@ -131,12 +131,12 @@ const deliverableSchema = z.object({
   deliverableComments: z.string().nullable(),
 });
 
-const progressDeliverableSchema = z.object({
+export const progressDeliverableSchema = z.object({
   deliverables: z.array(deliverableSchema),
   totalPaymentDue: z.number().nullable()
 })
 
-const changeOrderSchema = z.object({
+export const changeOrderSchema = z.object({
   contractTotal: z.number().nullable(),
   cost: z.number().nullable(),
   fee: z.number().nullable(),
@@ -145,21 +145,21 @@ const changeOrderSchema = z.object({
 });
 
 
-const programmeScheduleSchema = z.object({
+export const programmeScheduleSchema = z.object({
   programmeDescription: z.string().nullable()
 })
 
-const earlyWarningsSchema = z.object({
+export const earlyWarningsSchema = z.object({
   warningsDescription: z.string().nullable()
 })
 
-const lastMonthActionSchema = z.object({
+export const lastMonthActionSchema = z.object({
   actions: z.string().nullable(),
   date: z.string().nullable(),
   comments: z.string().nullable(),
 });
 
-const currentMonthActionSchema = z.object({
+export const currentMonthActionSchema = z.object({
   actions: z.string().nullable(),
   date: z.string().nullable(),
   comments: z.string().nullable(),
