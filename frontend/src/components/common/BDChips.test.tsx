@@ -1,264 +1,212 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { BDChips } from './BDChips';
-import { getWorkflowByOpportunityId } from '../../dummyapi/opportunityWorkflowApi';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as opportunityWorkflowApi from '../../dummyapi/opportunityWorkflowApi';
+import { WorkflowEntry } from '../../models/workflowEntryModel';
 
-// Mock the opportunityWorkflowApi
-vi.mock('../../dummyapi/opportunityWorkflowApi', () => ({
-  getWorkflowByOpportunityId: vi.fn()
-}));
+// Mock the API call using vi.mock
+vi.mock('../../dummyapi/opportunityWorkflowApi');
 
-describe('BDChips Component', () => {
+const mockGetWorkflowByOpportunityId = opportunityWorkflowApi.getWorkflowByOpportunityId as vi.Mock;
+
+describe('BDChips', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders all three workflow chips', async () => {
-    // Mock workflow data
-    vi.mocked(getWorkflowByOpportunityId).mockResolvedValue({
-      id: '1',
-      opportunityId: 123,
-      formStage: 'opportunityTracking',
-      workflowId: 'workflow1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+  it('renders correctly with default inactive state when no workflow data', async () => {
+    // Arrange
+    mockGetWorkflowByOpportunityId.mockResolvedValue(undefined);
+    const opportunityId = 1;
 
-    render(<BDChips opportunityId={123} />);
+    // Act
+    render(<BDChips opportunityId={opportunityId} />);
 
-    // Wait for the async operation to complete
+    // Assert
     await waitFor(() => {
-      expect(getWorkflowByOpportunityId).toHaveBeenCalledWith(123);
+      expect(mockGetWorkflowByOpportunityId).toHaveBeenCalledWith(opportunityId);
     });
 
-    // Check that all three chips are rendered
     expect(screen.getByText('FB01 Opportunity Tracking')).toBeInTheDocument();
     expect(screen.getByText('FB02 Go/NoGo')).toBeInTheDocument();
     expect(screen.getByText('FB03 Bid Preparation')).toBeInTheDocument();
+
+    // All should be inactive (default color)
+    const chips = screen.getAllByRole('button'); // Chips are rendered as buttons
+    chips.forEach(chip => {
+      expect(chip).toHaveClass('MuiChip-colorDefault');
+    });
   });
 
-  it('shows correct chip status for opportunityTracking stage', async () => {
-    // Mock workflow data for opportunityTracking stage
-    vi.mocked(getWorkflowByOpportunityId).mockResolvedValue({
+  it('renders correctly for "opportunityTracking" formStage', async () => {
+    // Arrange
+    const mockWorkflow: WorkflowEntry = {
       id: '1',
-      opportunityId: 123,
+      opportunityId: 1,
       formStage: 'opportunityTracking',
-      workflowId: 'workflow1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+      workflowId: 'wf1',
+      createdAt: '2023-01-01',
+      updatedAt: '2023-01-01',
+    };
+    mockGetWorkflowByOpportunityId.mockResolvedValue(mockWorkflow);
+    const opportunityId = 1;
 
-    const { container } = render(<BDChips opportunityId={123} />);
+    // Act
+    render(<BDChips opportunityId={opportunityId} />);
 
-    // Wait for the async operation to complete
+    // Assert
     await waitFor(() => {
-      expect(getWorkflowByOpportunityId).toHaveBeenCalledWith(123);
+      expect(mockGetWorkflowByOpportunityId).toHaveBeenCalledWith(opportunityId);
     });
 
-    // Get all chips
-    const chips = container.querySelectorAll('.MuiChip-root');
-    expect(chips.length).toBe(3);
-
-    // First chip should be pending (warning color)
-    expect(chips[0]).toHaveClass('MuiChip-colorWarning');
-    
-    // Second and third chips should be inactive (default color)
-    expect(chips[1]).toHaveClass('MuiChip-colorDefault');
-    expect(chips[2]).toHaveClass('MuiChip-colorDefault');
+    expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorWarning'); // Pending
+    expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorDefault'); // Inactive
+    expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorDefault'); // Inactive
   });
 
-  it('shows correct chip status for goNoGo stage', async () => {
-    // Mock workflow data for goNoGo stage
-    vi.mocked(getWorkflowByOpportunityId).mockResolvedValue({
-      id: '1',
-      opportunityId: 123,
+  it('renders correctly for "goNoGo" formStage', async () => {
+    // Arrange
+    const mockWorkflow: WorkflowEntry = {
+      id: '2',
+      opportunityId: 2,
       formStage: 'goNoGo',
-      workflowId: 'workflow1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+      workflowId: 'wf2',
+      createdAt: '2023-01-01',
+      updatedAt: '2023-01-01',
+    };
+    mockGetWorkflowByOpportunityId.mockResolvedValue(mockWorkflow);
+    const opportunityId = 2;
 
-    const { container } = render(<BDChips opportunityId={123} />);
+    // Act
+    render(<BDChips opportunityId={opportunityId} />);
 
-    // Wait for the async operation to complete
+    // Assert
     await waitFor(() => {
-      expect(getWorkflowByOpportunityId).toHaveBeenCalledWith(123);
+      expect(mockGetWorkflowByOpportunityId).toHaveBeenCalledWith(opportunityId);
     });
 
-    // Get all chips
-    const chips = container.querySelectorAll('.MuiChip-root');
-    expect(chips.length).toBe(3);
-
-    // First chip should be completed (success color)
-    expect(chips[0]).toHaveClass('MuiChip-colorSuccess');
-    
-    // Second chip should be pending (warning color)
-    expect(chips[1]).toHaveClass('MuiChip-colorWarning');
-    
-    // Third chip should be inactive (default color)
-    expect(chips[2]).toHaveClass('MuiChip-colorDefault');
+    expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorSuccess'); // Completed
+    expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorWarning'); // Pending
+    expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorDefault'); // Inactive
   });
 
-  it('shows correct chip status for bidPreparation stage', async () => {
-    // Mock workflow data for bidPreparation stage
-    vi.mocked(getWorkflowByOpportunityId).mockResolvedValue({
-      id: '1',
-      opportunityId: 123,
+  it('renders correctly for "bidPreparation" formStage', async () => {
+    // Arrange
+    const mockWorkflow: WorkflowEntry = {
+      id: '3',
+      opportunityId: 3,
       formStage: 'bidPreparation',
-      workflowId: 'workflow1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+      workflowId: 'wf3',
+      createdAt: '2023-01-01',
+      updatedAt: '2023-01-01',
+    };
+    mockGetWorkflowByOpportunityId.mockResolvedValue(mockWorkflow);
+    const opportunityId = 3;
 
-    const { container } = render(<BDChips opportunityId={123} />);
+    // Act
+    render(<BDChips opportunityId={opportunityId} />);
 
-    // Wait for the async operation to complete
+    // Assert
     await waitFor(() => {
-      expect(getWorkflowByOpportunityId).toHaveBeenCalledWith(123);
+      expect(mockGetWorkflowByOpportunityId).toHaveBeenCalledWith(opportunityId);
     });
 
-    // Get all chips
-    const chips = container.querySelectorAll('.MuiChip-root');
-    expect(chips.length).toBe(3);
-
-    // First and second chips should be completed (success color)
-    expect(chips[0]).toHaveClass('MuiChip-colorSuccess');
-    expect(chips[1]).toHaveClass('MuiChip-colorSuccess');
-    
-    // Third chip should be pending (warning color)
-    expect(chips[2]).toHaveClass('MuiChip-colorWarning');
+    expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorSuccess'); // Completed
+    expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorSuccess'); // Completed
+    expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorWarning'); // Pending
   });
 
-  it('shows all chips as completed for bidSubmitted stage', async () => {
-    // Mock workflow data for bidSubmitted stage
-    vi.mocked(getWorkflowByOpportunityId).mockResolvedValue({
-      id: '1',
-      opportunityId: 123,
+  it('renders correctly for "bidSubmitted" formStage (all completed)', async () => {
+    // Arrange
+    const mockWorkflow: WorkflowEntry = {
+      id: '4',
+      opportunityId: 4,
       formStage: 'bidSubmitted',
-      workflowId: 'workflow1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+      workflowId: 'wf4',
+      createdAt: '2023-01-01',
+      updatedAt: '2023-01-01',
+    };
+    mockGetWorkflowByOpportunityId.mockResolvedValue(mockWorkflow);
+    const opportunityId = 4;
 
-    const { container } = render(<BDChips opportunityId={123} />);
+    // Act
+    render(<BDChips opportunityId={opportunityId} />);
 
-    // Wait for the async operation to complete
+    // Assert
     await waitFor(() => {
-      expect(getWorkflowByOpportunityId).toHaveBeenCalledWith(123);
+      expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorSuccess'); // Completed
     });
-
-    // Get all chips
-    const chips = container.querySelectorAll('.MuiChip-root');
-    expect(chips.length).toBe(3);
-
-    // All chips should be completed (success color)
-    expect(chips[0]).toHaveClass('MuiChip-colorSuccess');
-    expect(chips[1]).toHaveClass('MuiChip-colorSuccess');
-    expect(chips[2]).toHaveClass('MuiChip-colorSuccess');
   });
 
-  it('shows all chips as completed for bidAccepted stage', async () => {
-    // Mock workflow data for bidAccepted stage
-    vi.mocked(getWorkflowByOpportunityId).mockResolvedValue({
-      id: '1',
-      opportunityId: 123,
+  it('renders correctly for "bidAccepted" formStage (all completed)', async () => {
+    // Arrange
+    const mockWorkflow: WorkflowEntry = {
+      id: '5',
+      opportunityId: 5,
       formStage: 'bidAccepted',
-      workflowId: 'workflow1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+      workflowId: 'wf5',
+      createdAt: '2023-01-01',
+      updatedAt: '2023-01-01',
+    };
+    mockGetWorkflowByOpportunityId.mockResolvedValue(mockWorkflow);
+    const opportunityId = 5;
 
-    const { container } = render(<BDChips opportunityId={123} />);
+    // Act
+    render(<BDChips opportunityId={opportunityId} />);
 
-    // Wait for the async operation to complete
+    // Assert
     await waitFor(() => {
-      expect(getWorkflowByOpportunityId).toHaveBeenCalledWith(123);
+      expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorSuccess'); // Completed
     });
-
-    // Get all chips
-    const chips = container.querySelectorAll('.MuiChip-root');
-    expect(chips.length).toBe(3);
-
-    // All chips should be completed (success color)
-    expect(chips[0]).toHaveClass('MuiChip-colorSuccess');
-    expect(chips[1]).toHaveClass('MuiChip-colorSuccess');
-    expect(chips[2]).toHaveClass('MuiChip-colorSuccess');
   });
 
-  it('shows all chips as completed for bidRejected stage', async () => {
-    // Mock workflow data for bidRejected stage
-    vi.mocked(getWorkflowByOpportunityId).mockResolvedValue({
-      id: '1',
-      opportunityId: 123,
+  it('renders correctly for "bidRejected" formStage (all completed)', async () => {
+    // Arrange
+    const mockWorkflow: WorkflowEntry = {
+      id: '6',
+      opportunityId: 6,
       formStage: 'bidRejected',
-      workflowId: 'workflow1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+      workflowId: 'wf6',
+      createdAt: '2023-01-01',
+      updatedAt: '2023-01-01',
+    };
+    mockGetWorkflowByOpportunityId.mockResolvedValue(mockWorkflow);
+    const opportunityId = 6;
 
-    const { container } = render(<BDChips opportunityId={123} />);
+    // Act
+    render(<BDChips opportunityId={opportunityId} />);
 
-    // Wait for the async operation to complete
+    // Assert
     await waitFor(() => {
-      expect(getWorkflowByOpportunityId).toHaveBeenCalledWith(123);
+      expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorSuccess'); // Completed
     });
-
-    // Get all chips
-    const chips = container.querySelectorAll('.MuiChip-root');
-    expect(chips.length).toBe(3);
-
-    // All chips should be completed (success color)
-    expect(chips[0]).toHaveClass('MuiChip-colorSuccess');
-    expect(chips[1]).toHaveClass('MuiChip-colorSuccess');
-    expect(chips[2]).toHaveClass('MuiChip-colorSuccess');
-  });
-
-  it('shows all chips as inactive for unknown stage', async () => {
-    // Mock workflow data with unknown stage
-    vi.mocked(getWorkflowByOpportunityId).mockResolvedValue({
-      id: '1',
-      opportunityId: 123,
-      formStage: 'unknownStage',
-      workflowId: 'workflow1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
-
-    const { container } = render(<BDChips opportunityId={123} />);
-
-    // Wait for the async operation to complete
-    await waitFor(() => {
-      expect(getWorkflowByOpportunityId).toHaveBeenCalledWith(123);
-    });
-
-    // Get all chips
-    const chips = container.querySelectorAll('.MuiChip-root');
-    expect(chips.length).toBe(3);
-
-    // All chips should be inactive (default color)
-    expect(chips[0]).toHaveClass('MuiChip-colorDefault');
-    expect(chips[1]).toHaveClass('MuiChip-colorDefault');
-    expect(chips[2]).toHaveClass('MuiChip-colorDefault');
   });
 
   it('handles API error gracefully', async () => {
-    // Mock API error
-    vi.mocked(getWorkflowByOpportunityId).mockRejectedValue(new Error('API Error'));
-    
-    // Spy on console.error to prevent test output pollution
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
-    render(<BDChips opportunityId={123} />);
-    
-    // Wait for the async operation to complete
+    // Arrange
+    console.error = vi.fn(); // Mock console.error to prevent test output clutter
+    mockGetWorkflowByOpportunityId.mockRejectedValue(new Error('API Error'));
+    const opportunityId = 999;
+
+    // Act
+    render(<BDChips opportunityId={opportunityId} />);
+
+    // Assert
     await waitFor(() => {
-      expect(getWorkflowByOpportunityId).toHaveBeenCalledWith(123);
+      expect(mockGetWorkflowByOpportunityId).toHaveBeenCalledWith(opportunityId);
+      expect(console.error).toHaveBeenCalledWith('Error fetching workflow data:', expect.any(Error));
     });
-    
-    // Component should still render without crashing
-    expect(screen.getByText('FB01 Opportunity Tracking')).toBeInTheDocument();
-    
-    // Restore console.error
-    consoleSpy.mockRestore();
+
+    // All chips should still render as inactive (default color)
+    const chips = screen.getAllByRole('button');
+    chips.forEach(chip => {
+      expect(chip).toHaveClass('MuiChip-colorDefault');
+    });
   });
 });
