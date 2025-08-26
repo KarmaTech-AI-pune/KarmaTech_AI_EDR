@@ -1,6 +1,7 @@
 using NJS.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Domain.Entities
 {
@@ -16,12 +17,14 @@ namespace NJS.Domain.Entities
         public int FormId { get; set; }
         
         [ForeignKey("FormId")]
-        public JobStartForm JobStartForm { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual JobStartForm JobStartForm { get; set; }
         
         public int ProjectId { get; set; }
         
         [ForeignKey("ProjectId")]
-        public Project Project { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual Project Project { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
@@ -31,7 +34,8 @@ namespace NJS.Domain.Entities
         public int StatusId { get; set; } = (int)PMWorkflowStatusEnum.Initial; // Default to Initial
         
         [ForeignKey("StatusId")]
-        public PMWorkflowStatus Status { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual PMWorkflowStatus Status { get; set; }
         
         // Navigation property for workflow history
         public ICollection<JobStartFormHistory> JobStartFormHistories { get; set; } = new List<JobStartFormHistory>();

@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace NJS.Domain.Entities
 {
+    [Table("CurrentBudgetInMISs")]
     public class CurrentBudgetInMIS : ITenantEntity
     {
         public int Id { get; set; }

@@ -1,38 +1,55 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Entities;
-using System.Linq;
-using System;
-using System.Threading.Tasks;
-using System.Threading;
+using NJS.Domain.Services;
 
 namespace NJS.Domain.Database
 {
-    public class ProjectManagementContext : IdentityDbContext<User>
-    {
-       
-
+    public class ProjectManagementContext : IdentityDbContext<User,Role,string>
+{
         public int? TenantId { get; private set; }
+        private readonly ICurrentTenantService _currentTenantService;
+        public string CurrentTenantConnectionString { get; set; }
 
-
-        public ProjectManagementContext(DbContextOptions<ProjectManagementContext> options, IHttpContextAccessor httpContextAccessor = null) : base(options)
+      
+        public ProjectManagementContext(
+            DbContextOptions<ProjectManagementContext> options,
+            ICurrentTenantService currentTenantService
+           ) : base(options)
         {
-            if (httpContextAccessor?.HttpContext != null)
+            _currentTenantService = currentTenantService;
+            TenantId = _currentTenantService?.TenantId ?? 1;
+            CurrentTenantConnectionString = _currentTenantService?.ConnectionString;
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!string.IsNullOrEmpty(CurrentTenantConnectionString))
             {
-                if (httpContextAccessor.HttpContext.Items.TryGetValue("TenantId", out var tenantId))
+                optionsBuilder.UseSqlServer(CurrentTenantConnectionString);
+            }
+            base.OnConfiguring(optionsBuilder);
+        }
+
+        
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
+            {
+                switch (entry.State)
                 {
-                    TenantId = (int)tenantId;
+                    case EntityState.Added:
+                    case EntityState.Modified:
+                        entry.Entity.TenantId = TenantId.Value;
+                        break;
                 }
             }
-            else
-            {
-                TenantId = 1;
-
-            }
-        }
-        
+            return base.SaveChangesAsync(cancellationToken);
+        }   
+       
+        // Tenant-specific tables only
         public DbSet<BidPreparation> BidPreparations { get; set; }
         public DbSet<BidVersionHistory> BidVersionHistories { get; set; }
         public DbSet<Project> Projects { get; set; }
@@ -52,14 +69,14 @@ namespace NJS.Domain.Database
         public DbSet<OpportunityStatus> OpportunityStatuses { get; set; }
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
         public DbSet<WBSHistory> WBSHistories { get; set; }
-        
+
         // WBS Versioning entities
         public DbSet<WBSVersionHistory> WBSVersionHistories { get; set; }
         public DbSet<WBSTaskVersionHistory> WBSTaskVersionHistories { get; set; }
         public DbSet<WBSVersionWorkflowHistory> WBSVersionWorkflowHistories { get; set; }
         public DbSet<WBSTaskPlannedHourVersionHistory> WBSTaskPlannedHourVersionHistories { get; set; }
         public DbSet<UserWBSTaskVersionHistory> UserWBSTaskVersionHistories { get; set; }
-        
+
         public DbSet<Region> Regions { get; set; }
         public DbSet<FailedEmailLog> FailedEmailLogs { get; set; }
         public DbSet<Settings> Settings { get; set; }
@@ -109,37 +126,56 @@ namespace NJS.Domain.Database
         public DbSet<CurrentBudgetInMIS> CurrentBudgetInMIS { get; set; }
         public DbSet<PercentCompleteOnCosts> PercentCompleteOnCosts { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
-        public DbSet<Tenant> Tenants { get; set; }
+
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
-        public DbSet<TenantUser> TenantUsers { get; set; }
-        public DbSet<TenantDatabase> TenantDatabases { get; set; }
         public DbSet<CreateAccount> CreateAccounts { get; set; }
         public DbSet<Feature> Features { get; set; }
+
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public override int SaveChanges()
         {
-            foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
+            foreach (var entry in ChangeTracker.Entries<ITenantEntity>().ToList())
             {
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                        // Only set TenantId if it's not already set (for seeding scenarios)
-                        if (entry.Entity.TenantId == 0)
-                        {
-                            entry.Entity.TenantId = TenantId ?? throw new InvalidOperationException("TenantId cannot be null.");
-                        }
+                    case EntityState.Modified:
+                        entry.Entity.TenantId = (int)TenantId;
                         break;
                 }
             }
-            return await base.SaveChangesAsync(cancellationToken);
+            var result = base.SaveChanges();
+            return result;
         }
+
+        //public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        //{
+        //    foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
+        //    {
+        //        switch (entry.State)
+        //        {
+
+        //            case EntityState.Modified:
+        //            case EntityState.Added:
+        //                // Only set TenantId if it's not already set (for seeding scenarios)
+        //                if (entry.Entity.TenantId == 0)
+        //                {
+        //                    entry.Entity.TenantId = TenantId ?? throw new InvalidOperationException("TenantId cannot be null.");
+        //                }
+        //                break;
+        //        }
+        //    }
+        //    return await base.SaveChangesAsync(cancellationToken);
+        //}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<User>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
+            modelBuilder.Entity<Role>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
+            modelBuilder.Entity<Project>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CheckReview>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CorrespondenceInward>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -183,6 +219,10 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<WBSVersionWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            
+           
+
+
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
@@ -395,7 +435,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<Project>().Property(f => f.EstimatedProjectFee).HasPrecision(18, 2);
             modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
             modelBuilder.Entity<Role>().ToTable("AspNetRoles");
-            modelBuilder.Entity<Permission>();
+            modelBuilder.Entity<Permission>().ToTable("Permissions");
 
             // Configure OpportunityTracking decimal precisions
             modelBuilder.Entity<OpportunityTracking>()
@@ -427,7 +467,7 @@ namespace NJS.Domain.Database
                 .WithMany(o => o.OpportunityHistories)
                 .HasForeignKey(oh => oh.OpportunityId);
             //modelBuilder.Entity<OpportunityHistory>()
-                //.HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
+            //.HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
             modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
 
             modelBuilder.Entity<WBSHistory>()
@@ -599,20 +639,20 @@ namespace NJS.Domain.Database
             {
                 // Optional: Add index on ProjectId if frequent lookups by project are expected
                 entity.HasIndex(w => w.ProjectId);
-                
+
                 // Configure relationships with version history
                 entity.HasMany(w => w.VersionHistory)
                       .WithOne(v => v.WorkBreakdownStructure)
                       .HasForeignKey(v => v.WorkBreakdownStructureId)
                       .OnDelete(DeleteBehavior.Cascade);
-                
+
                 // Configure navigation properties for version management
                 entity.HasOne(w => w.LatestVersion)
                       .WithMany()
                       .HasForeignKey(w => w.LatestVersionHistoryId)
                       .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired(false);
-                
+
                 entity.HasOne(w => w.ActiveVersion)
                       .WithMany()
                       .HasForeignKey(w => w.ActiveVersionHistoryId)
@@ -625,23 +665,23 @@ namespace NJS.Domain.Database
             {
                 entity.Property(v => v.Version).HasMaxLength(20).IsRequired();
                 entity.Property(v => v.Comments).HasMaxLength(1000);
-                
+
                 // Configure relationships
                 entity.HasOne(v => v.Status)
                       .WithMany()
                       .HasForeignKey(v => v.StatusId)
                       .OnDelete(DeleteBehavior.Restrict);
-                
+
                 entity.HasOne(v => v.CreatedByUser)
                       .WithMany()
                       .HasForeignKey(v => v.CreatedBy)
                       .OnDelete(DeleteBehavior.Restrict);
-                
+
                 entity.HasOne(v => v.ApprovedByUser)
                       .WithMany()
                       .HasForeignKey(v => v.ApprovedBy)
                       .OnDelete(DeleteBehavior.Restrict);
-                
+
                 // Indexes for performance
                 entity.HasIndex(v => v.WorkBreakdownStructureId);
                 entity.HasIndex(v => v.Version);
@@ -656,19 +696,19 @@ namespace NJS.Domain.Database
                 entity.Property(t => t.EstimatedBudget).HasPrecision(18, 2);
                 entity.Property(t => t.Title).HasMaxLength(255).IsRequired();
                 entity.Property(t => t.Description).HasMaxLength(1000);
-                
+
                 // Configure self-referencing relationship for hierarchy
                 entity.HasOne(t => t.Parent)
                       .WithMany(t => t.Children)
                       .HasForeignKey(t => t.ParentId)
                       .OnDelete(DeleteBehavior.Restrict);
-                
+
                 // Configure relationship with WBS Version History
                 entity.HasOne(t => t.WBSVersionHistory)
                       .WithMany(v => v.TaskVersions)
                       .HasForeignKey(t => t.WBSVersionHistoryId)
                       .OnDelete(DeleteBehavior.Cascade);
-                
+
                 // Indexes for performance
                 entity.HasIndex(t => t.WBSVersionHistoryId);
                 entity.HasIndex(t => t.OriginalTaskId);
@@ -681,23 +721,23 @@ namespace NJS.Domain.Database
             {
                 entity.Property(h => h.Action).HasMaxLength(100);
                 entity.Property(h => h.Comments).HasMaxLength(1000);
-                
+
                 // Configure relationships
                 entity.HasOne(h => h.Status)
                       .WithMany()
                       .HasForeignKey(h => h.StatusId)
                       .OnDelete(DeleteBehavior.Restrict);
-                
+
                 entity.HasOne(h => h.ActionUser)
                       .WithMany()
                       .HasForeignKey(h => h.ActionBy)
                       .OnDelete(DeleteBehavior.Restrict);
-                
+
                 entity.HasOne(h => h.AssignedTo)
                       .WithMany()
                       .HasForeignKey(h => h.AssignedToId)
                       .OnDelete(DeleteBehavior.Restrict);
-                
+
                 // Indexes for performance
                 entity.HasIndex(h => h.WBSVersionHistoryId);
                 entity.HasIndex(h => h.ActionDate);
@@ -709,13 +749,13 @@ namespace NJS.Domain.Database
                 entity.Property(ph => ph.Year).HasMaxLength(4).IsRequired();
                 entity.Property(ph => ph.Month).HasMaxLength(20).IsRequired();
                 entity.Property(ph => ph.CreatedBy).HasMaxLength(100);
-                
+
                 // Configure relationship with WBS Task Version History
                 entity.HasOne(ph => ph.WBSTaskVersionHistory)
                       .WithMany(t => t.PlannedHours)
                       .HasForeignKey(ph => ph.WBSTaskVersionHistoryId)
                       .OnDelete(DeleteBehavior.Cascade);
-                
+
                 // Indexes for performance
                 entity.HasIndex(ph => ph.WBSTaskVersionHistoryId);
             });
@@ -729,23 +769,23 @@ namespace NJS.Domain.Database
                 entity.Property(ut => ut.Unit).HasMaxLength(50);
                 entity.Property(ut => ut.CreatedBy).HasMaxLength(100);
                 entity.Property(ut => ut.ResourceRoleId).IsRequired(false);
-                
+
                 // Configure relationships
                 entity.HasOne(ut => ut.WBSTaskVersionHistory)
                       .WithMany(t => t.UserAssignments)
                       .HasForeignKey(ut => ut.WBSTaskVersionHistoryId)
                       .OnDelete(DeleteBehavior.Cascade);
-                
+
                 entity.HasOne(ut => ut.User)
                       .WithMany()
                       .HasForeignKey(ut => ut.UserId)
                       .OnDelete(DeleteBehavior.SetNull);
-                
+
                 entity.HasOne(ut => ut.ResourceRole)
                       .WithMany()
                       .HasForeignKey(ut => ut.ResourceRoleId)
                       .OnDelete(DeleteBehavior.SetNull);
-                
+
                 // Indexes for performance
                 entity.HasIndex(ut => ut.WBSTaskVersionHistoryId);
                 entity.HasIndex(ut => ut.UserId);
@@ -928,13 +968,15 @@ namespace NJS.Domain.Database
                 entity.HasOne(cc => cc.Project)
                       .WithMany()
                       .HasForeignKey(cc => cc.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                      .OnDelete(DeleteBehavior.NoAction)
+                      .IsRequired();
 
-                // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
+                // Configure relationship with PMWorkflowStatus - Use NO ACTION to prevent cascade delete cycles
                 entity.HasOne(cc => cc.WorkflowStatus)
                       .WithMany()
                       .HasForeignKey(cc => cc.WorkflowStatusId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.NoAction)
+                      .IsRequired();
             });
 
             // Configure ProjectClosure entity
@@ -1030,6 +1072,7 @@ namespace NJS.Domain.Database
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
+
             // Configure ChangeControlWorkflowHistory entity
             modelBuilder.Entity<ChangeControlWorkflowHistory>(entity =>
             {
@@ -1042,31 +1085,71 @@ namespace NJS.Domain.Database
                 entity.HasIndex(e => e.StatusId);
                 entity.HasIndex(e => e.ActionBy);
 
-                // Configure relationship with ChangeControl
+                // ChangeControl → WorkflowHistories: Cascade (primary deletion path)
                 entity.HasOne(h => h.ChangeControl)
                       .WithMany(h => h.WorkflowHistories)
                       .HasForeignKey(h => h.ChangeControlId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
+                // PMWorkflowStatus: NO ACTION (prevent multiple cascade paths)
                 entity.HasOne(h => h.Status)
                       .WithMany()
                       .HasForeignKey(h => h.StatusId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.NoAction)
+                      .IsRequired();
 
-                // Configure relationship with User (ActionBy)
+                // User (ActionBy): NO ACTION (prevent multiple cascade paths)
                 entity.HasOne(h => h.ActionUser)
                       .WithMany()
                       .HasForeignKey(h => h.ActionBy)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.NoAction)
+                      .IsRequired();
 
-                // Configure relationship with User (AssignedTo)
+                // User (AssignedTo): NO ACTION, optional (prevent multiple cascade paths)
                 entity.HasOne(h => h.AssignedTo)
                       .WithMany()
                       .HasForeignKey(h => h.AssignedToId)
-                      .OnDelete(DeleteBehavior.Restrict)
+                      .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired(false);
             });
+
+            // Configure ChangeControlWorkflowHistory entity
+            //modelBuilder.Entity<ChangeControlWorkflowHistory>(entity =>
+            //{
+            //    entity.HasKey(e => e.Id);
+            //    entity.Property(e => e.Action).IsRequired();
+            //    entity.Property(e => e.Comments).IsRequired(false);
+
+            //    // Create indexes for faster lookups
+            //    entity.HasIndex(e => e.ChangeControlId);
+            //    entity.HasIndex(e => e.StatusId);
+            //    entity.HasIndex(e => e.ActionBy);
+
+            //    // Configure relationship with ChangeControl
+            //    entity.HasOne(h => h.ChangeControl)
+            //          .WithMany(h => h.WorkflowHistories)
+            //          .HasForeignKey(h => h.ChangeControlId)
+            //          .OnDelete(DeleteBehavior.Restrict);
+
+            //    // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
+            //    entity.HasOne(h => h.Status)
+            //          .WithMany()
+            //          .HasForeignKey(h => h.StatusId)
+            //          .OnDelete(DeleteBehavior.Restrict);
+
+            //    // Configure relationship with User (ActionBy)
+            //    entity.HasOne(h => h.ActionUser)
+            //          .WithMany()
+            //          .HasForeignKey(h => h.ActionBy)
+            //          .OnDelete(DeleteBehavior.Restrict);
+
+            //    // Configure relationship with User (AssignedTo)
+            //    entity.HasOne(h => h.AssignedTo)
+            //          .WithMany()
+            //          .HasForeignKey(h => h.AssignedToId)
+            //          .OnDelete(DeleteBehavior.Restrict)
+            //          .IsRequired(false);
+            //});
 
             // Configure ProjectClosureWorkflowHistory entity
             modelBuilder.Entity<ProjectClosureWorkflowHistory>(entity =>
@@ -1178,7 +1261,7 @@ namespace NJS.Domain.Database
                       .OnDelete(DeleteBehavior.Restrict)
                       .IsRequired(false);
             });
-            
+
 
             // Configure AuditLog entity
             modelBuilder.Entity<AuditLog>(entity =>
@@ -1215,6 +1298,10 @@ namespace NJS.Domain.Database
                 .HasOne(spf => spf.Feature)
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
+
+            
         }
+       
     }
+   
 }

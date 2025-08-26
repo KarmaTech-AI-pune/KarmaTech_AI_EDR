@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿using System;
 using System.Collections.Generic;
 
 namespace NJS.Application.Dtos
@@ -16,5 +16,7 @@ namespace NJS.Application.Dtos
         public List<string> Permissions { get; set; } = new List<string>();
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public int? TenantId { get; set; }
+        public string? TenantDomain { get; set; }
     }
 }

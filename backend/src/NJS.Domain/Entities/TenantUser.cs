@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace NJS.Domain.Entities
 {
+    [Table("TenantUsers")]
     public class TenantUser
     {
         [Key]

@@ -9,6 +9,10 @@ using NLog.Web;
 using Microsoft.Extensions.Options;
 using NJSAPI.Configurations;
 using NJSAPI.Middleware;
+using NJS.Domain.Services;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using NJS.Application.Services;
+using NJS.Application.Services.IContract;
 
 internal class Program
 {
@@ -19,12 +23,43 @@ internal class Program
        
 
         builder.Services.AddControllers();
-        builder.Services.AddHttpContextAccessor();
         builder.Services.AddLogging();
 
+        // Add HttpContextAccessor as singleton
+        builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+        builder.Services.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>();
+        builder.Services.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>();
+        builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
+
+        // Add tenant resolution strategies in priority order
+        //builder.Services.TryAddEnumerable(new[]
+        //{
+          //  ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>(),
+            //ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>(),
+            //ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>()
+        //});
+
+        // Add tenant services
+        builder.Services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
+        //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
+
+        var environment = builder.Configuration.GetValue<string>("DNS:Env");
+        if (environment == "Development" || environment=="Dev")
+        {
+            builder.Services.AddScoped<IDNSManagementService, MockDNSManagementService>();
+        }
+        else
+        {
+            builder.Services.AddScoped<IDNSManagementService, DNSManagementService>();
+
+            // Note: For production, you'll need to configure AWS credentials and region
+            // services.AddAWSService<IAmazonRoute53>();
+        }
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
         builder.Services.AddTenantServices(builder.Configuration);
+       // builder.Services.AddAndMigrateTenantDatabases(builder.Configuration);
 
         // Add tenant connection resolver
         //builder.Services.AddScoped<ProjectManagementContextFactory>();
@@ -106,10 +141,11 @@ internal class Program
             var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
             options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", $"{swaggerSettings.Title}");
         });
-
+        
        // app.UseTenantCors();
         app.UseResponseCompression();
-        app.UseHttpsRedirection();
+        app.UseHttpsRedirection();       
+       
         app.UseMiddleware<TenantResolverMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();

@@ -13,6 +13,7 @@ namespace NJSAPI.Controllers
     public class TenantsController : ControllerBase
     {
         private readonly ProjectManagementContext _context;
+        private readonly TenantDbContext _tenantDbContext;
         private readonly IDNSManagementService _dnsService;
         private readonly ISubscriptionService _subscriptionService;
         private readonly ILogger<TenantsController> _logger;
@@ -20,6 +21,7 @@ namespace NJSAPI.Controllers
 
         public TenantsController(
             ProjectManagementContext context,
+            TenantDbContext tenantDbContext,
             IDNSManagementService dnsService,
             ISubscriptionService subscriptionService,
             IDatabaseManagementService databaseManagementService,
@@ -29,6 +31,7 @@ namespace NJSAPI.Controllers
             _dnsService = dnsService;
             _subscriptionService = subscriptionService;
             _databaseManagementService = databaseManagementService;
+            _tenantDbContext = tenantDbContext;
             _logger = logger;
         }
 
@@ -36,7 +39,7 @@ namespace NJSAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Tenant>>> GetTenants()
         {
-            var result = await _context.Tenants
+            var result = await _tenantDbContext.Tenants
                 .Include(t => t.SubscriptionPlan)
                 .Include(t => t.TenantUsers)
                 .Include(t => t.TenantDatabases)
@@ -49,7 +52,7 @@ namespace NJSAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Tenant>> GetTenant(int id)
         {
-            var tenant = await _context.Tenants
+            var tenant = await _tenantDbContext.Tenants
                 .Include(t => t.SubscriptionPlan)
                 .Include(t => t.TenantUsers)
                 .Include(t => t.TenantDatabases)
@@ -83,26 +86,26 @@ namespace NJSAPI.Controllers
                 }
 
                 // Create tenant database
-                var tenantDb = new TenantDatabase
-                {
-                    TenantId = 0, // Will be set after tenant is created
-                    DatabaseName = $"Tenant_{tenant.Domain}",
-                    ConnectionString = $"Server=localhost;Database=Tenant_{tenant.Domain};Trusted_Connection=true;TrustServerCertificate=True;MultipleActiveResultSets=true;",
-                    Status = DatabaseStatus.Active
-                };
-                var result = await _databaseManagementService.CreateTenantDatabaseAsync(tenantDb.DatabaseName, tenantDb.ConnectionString);
-                if (!result)
+                
+                (bool isDbCreated, string dbName, string connectionString) result = await _databaseManagementService.CreateTenantDatabaseAsync(tenant.Domain);
+                if (!result.isDbCreated)
                 {
                     return BadRequest(new { message = "Failed to create tenant database" });
                 }
-
-                _context.Tenants.Add(tenant);
-                await _context.SaveChangesAsync();
+                var tenantDb = new TenantDatabase
+                {
+                    TenantId = 0, // Will be set after tenant is created
+                    DatabaseName = result.dbName,
+                    ConnectionString = result.connectionString,
+                    Status = DatabaseStatus.Active
+                };
+                _tenantDbContext.Tenants.Add(tenant);
+                await _tenantDbContext.SaveChangesAsync();
 
                 // Update tenant database with correct tenant ID
                 tenantDb.TenantId = tenant.Id;
-                _context.TenantDatabases.Add(tenantDb);
-                await _context.SaveChangesAsync();
+                _tenantDbContext.TenantDatabases.Add(tenantDb);
+                await _tenantDbContext.SaveChangesAsync();
 
 
 
@@ -132,7 +135,7 @@ namespace NJSAPI.Controllers
                 return BadRequest();
             }
 
-            var existingTenant = await _context.Tenants.FindAsync(id);
+            var existingTenant = await _tenantDbContext.Tenants.FindAsync(id);
             if (existingTenant == null)
             {
                 return NotFound();
@@ -186,7 +189,7 @@ namespace NJSAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTenant(int id)
         {
-            var tenant = await _context.Tenants.FindAsync(id);
+            var tenant = await _tenantDbContext.Tenants.FindAsync(id);
             if (tenant == null)
             {
                 return NotFound();
@@ -200,7 +203,7 @@ namespace NJSAPI.Controllers
                 // Cancel subscription
                 await _subscriptionService.CancelTenantSubscriptionAsync(tenant.Id);
 
-                _context.Tenants.Remove(tenant);
+                _tenantDbContext.Tenants.Remove(tenant);
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Deleted tenant {TenantName} with subdomain {Subdomain}", tenant.Name, tenant.Domain);
@@ -253,10 +256,10 @@ namespace NJSAPI.Controllers
         [HttpGet("stats")]
         public async Task<ActionResult<object>> GetTenantStats()
         {
-            var totalTenants = await _context.Tenants.CountAsync();
-            var activeTenants = await _context.Tenants.CountAsync(t => t.Status == TenantStatus.Active);
-            var trialTenants = await _context.Tenants.CountAsync(t => t.Status == TenantStatus.Trial);
-            var suspendedTenants = await _context.Tenants.CountAsync(t => t.Status == TenantStatus.Suspended);
+            var totalTenants = await _tenantDbContext.Tenants.CountAsync();
+            var activeTenants = await _tenantDbContext.Tenants.CountAsync(t => t.Status == TenantStatus.Active);
+            var trialTenants = await _tenantDbContext.Tenants.CountAsync(t => t.Status == TenantStatus.Trial);
+            var suspendedTenants = await _tenantDbContext.Tenants.CountAsync(t => t.Status == TenantStatus.Suspended);
 
             return Ok(new
             {
@@ -264,8 +267,8 @@ namespace NJSAPI.Controllers
                 activeTenants,
                 trialTenants,
                 suspendedTenants,
-                totalUsers = await _context.TenantUsers.CountAsync(),
-                totalDatabases = await _context.TenantDatabases.CountAsync()
+                totalUsers = await _tenantDbContext.TenantUsers.CountAsync(),
+                totalDatabases = await _tenantDbContext.TenantDatabases.CountAsync()
             });
         }
 
@@ -273,13 +276,13 @@ namespace NJSAPI.Controllers
         [HttpGet("{id}/users")]
         public async Task<ActionResult<IEnumerable<object>>> GetTenantUsers(int id)
         {
-            var tenant = await _context.Tenants.FindAsync(id);
+            var tenant = await _tenantDbContext.Tenants.FindAsync(id);
             if (tenant == null)
             {
                 return NotFound("Tenant not found");
             }
 
-            var tenantUsers = await _context.TenantUsers
+            var tenantUsers = await _tenantDbContext.TenantUsers
                 .Where(tu => tu.TenantId == id)
                 .Include(tu => tu.User)
                 .Select(tu => new
@@ -308,7 +311,7 @@ namespace NJSAPI.Controllers
         [HttpPost("{id}/users")]
         public async Task<ActionResult<object>> AddTenantUser(int id, [FromBody] AddTenantUserRequest request)
         {
-            var tenant = await _context.Tenants.FindAsync(id);
+            var tenant = await _tenantDbContext.Tenants.FindAsync(id);
             if (tenant == null)
             {
                 return NotFound("Tenant not found");
@@ -321,7 +324,7 @@ namespace NJSAPI.Controllers
             }
 
             // Check if user is already assigned to this tenant
-            var existingTenantUser = await _context.TenantUsers
+            var existingTenantUser = await _tenantDbContext.TenantUsers
                 .FirstOrDefaultAsync(tu => tu.TenantId == id && tu.UserId == request.UserId);
 
             if (existingTenantUser != null)
@@ -338,8 +341,8 @@ namespace NJSAPI.Controllers
                 JoinedAt = DateTime.UtcNow
             };
 
-            _context.TenantUsers.Add(tenantUser);
-            await _context.SaveChangesAsync();
+            _tenantDbContext.TenantUsers.Add(tenantUser);
+            await _tenantDbContext.SaveChangesAsync();
 
             _logger.LogInformation("Added user {UserId} to tenant {TenantId} with role {Role}", 
                 request.UserId, id, request.Role);
@@ -351,7 +354,7 @@ namespace NJSAPI.Controllers
         [HttpPut("users/{tenantUserId}")]
         public async Task<ActionResult<object>> UpdateTenantUser(int tenantUserId, [FromBody] UpdateTenantUserRequest request)
         {
-            var tenantUser = await _context.TenantUsers.FindAsync(tenantUserId);
+            var tenantUser = await _tenantDbContext.TenantUsers.FindAsync(tenantUserId);
             if (tenantUser == null)
             {
                 return NotFound("Tenant user not found");
@@ -367,7 +370,7 @@ namespace NJSAPI.Controllers
                 tenantUser.IsActive = request.IsActive.Value;
             }
 
-            await _context.SaveChangesAsync();
+            await _tenantDbContext.SaveChangesAsync();
 
             _logger.LogInformation("Updated tenant user {TenantUserId} with role {Role} and active status {IsActive}", 
                 tenantUserId, tenantUser.Role, tenantUser.IsActive);
@@ -379,14 +382,14 @@ namespace NJSAPI.Controllers
         [HttpDelete("users/{tenantUserId}")]
         public async Task<ActionResult> RemoveTenantUser(int tenantUserId)
         {
-            var tenantUser = await _context.TenantUsers.FindAsync(tenantUserId);
+            var tenantUser = await _tenantDbContext.TenantUsers.FindAsync(tenantUserId);
             if (tenantUser == null)
             {
                 return NotFound("Tenant user not found");
             }
 
-            _context.TenantUsers.Remove(tenantUser);
-            await _context.SaveChangesAsync();
+            _tenantDbContext.TenantUsers.Remove(tenantUser);
+            await _tenantDbContext.SaveChangesAsync();
 
             _logger.LogInformation("Removed user {UserId} from tenant {TenantId}", 
                 tenantUser.UserId, tenantUser.TenantId);
@@ -396,7 +399,7 @@ namespace NJSAPI.Controllers
 
         private bool TenantExists(int id)
         {
-            return _context.Tenants.Any(e => e.Id == id);
+            return _tenantDbContext.Tenants.Any(e => e.Id == id);
         }
     }
 

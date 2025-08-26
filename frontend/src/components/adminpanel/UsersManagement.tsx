@@ -18,7 +18,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Role } from '../../models/roleModel';
 import { AuthUser } from '../../models/userModel';
-import { RoleDefinition } from '../../models/roleDefinitionModel';
+
+import { PermissionType, RoleDefinition } from '../../models/index';
 import * as usersApi from '../../services/userApi';
 import UserDialog from '../dialogbox/adminpage/UserDialog';
 import { useRoles } from '../../hooks/useRoles';
@@ -149,8 +150,12 @@ const UsersManagement = () => {
     // Map selected role names to actual Role objects from the API
     const selectedRoles = selectedValues
       .map(value => availableRoles.find(role => role.name === value))
-      .filter((role): role is RoleDefinition | Role => role !== undefined);
-
+      .filter((role): role is RoleDefinition => role !== undefined)
+      .map(role => ({
+        id: role.id,
+        name: role.name,
+        permissions: role.permissions as PermissionType[]
+      }));
 
     setFormData(prev => ({
       ...prev,

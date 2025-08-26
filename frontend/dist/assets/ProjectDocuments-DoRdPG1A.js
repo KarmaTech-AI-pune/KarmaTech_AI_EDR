@@ -1,0 +1,1 @@
+import{j as e,X as r,T as t}from"./index-_VJtkHCC.js";const n=()=>e.jsxs(r,{sx:{p:3},children:[e.jsx(t,{variant:"h6",gutterBottom:!0,children:"Documents"}),e.jsx(t,{variant:"body1",color:"text.secondary",children:"Document management section will be implemented here"})]});export{n as default};

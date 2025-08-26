@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace NJS.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class MigrationName3 : Migration
+    public partial class UpdateChangeControlRelationships3 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,10 +16,10 @@ namespace NJS.Domain.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Discriminator = table.Column<string>(type: "nvarchar(13)", maxLength: 13, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     MinRate = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     IsResourceRole = table.Column<bool>(type: "bit", nullable: true),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -41,6 +41,7 @@ namespace NJS.Domain.Migrations
                     StandardRate = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     IsConsultant = table.Column<bool>(type: "bit", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -84,6 +85,26 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CreateAccounts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EmailAddress = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyAddress = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Subdomain = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubscriptionPlan = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CreateAccounts", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "FailedEmailLogs",
                 columns: table => new
                 {
@@ -102,6 +123,22 @@ namespace NJS.Domain.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_FailedEmailLogs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Features",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PriceUSD = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    PriceINR = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Features", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -124,7 +161,6 @@ namespace NJS.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantId = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Category = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
@@ -242,8 +278,7 @@ namespace NJS.Domain.Migrations
                     MaxProjects = table.Column<int>(type: "int", nullable: false),
                     MaxStorageGB = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    StripePriceId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    FeaturesJson = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    StripePriceId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -524,7 +559,33 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Tenants",
+                name: "SubscriptionPlanFeatures",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SubscriptionPlanId = table.Column<int>(type: "int", nullable: false),
+                    FeatureId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubscriptionPlanFeatures", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubscriptionPlanFeatures_Features_FeatureId",
+                        column: x => x.FeatureId,
+                        principalTable: "Features",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SubscriptionPlanFeatures_SubscriptionPlans_SubscriptionPlanId",
+                        column: x => x.SubscriptionPlanId,
+                        principalTable: "SubscriptionPlans",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tenant",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -547,9 +608,9 @@ namespace NJS.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tenants", x => x.Id);
+                    table.PrimaryKey("PK_Tenant", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tenants_SubscriptionPlans_SubscriptionPlanId",
+                        name: "FK_Tenant_SubscriptionPlans_SubscriptionPlanId",
                         column: x => x.SubscriptionPlanId,
                         principalTable: "SubscriptionPlans",
                         principalColumn: "Id");
@@ -753,7 +814,7 @@ namespace NJS.Domain.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     DatabaseName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    ConnectionString = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ConnectionString = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LastBackup = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -762,9 +823,9 @@ namespace NJS.Domain.Migrations
                 {
                     table.PrimaryKey("PK_TenantDatabases", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TenantDatabases_Tenants_TenantId",
+                        name: "FK_TenantDatabases_Tenant_TenantId",
                         column: x => x.TenantId,
-                        principalTable: "Tenants",
+                        principalTable: "Tenant",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -791,9 +852,9 @@ namespace NJS.Domain.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TenantUsers_Tenants_TenantId",
+                        name: "FK_TenantUsers_Tenant_TenantId",
                         column: x => x.TenantId,
-                        principalTable: "Tenants",
+                        principalTable: "Tenant",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -922,14 +983,12 @@ namespace NJS.Domain.Migrations
                         name: "FK_ChangeControls_PMWorkflowStatuses_WorkflowStatusId",
                         column: x => x.WorkflowStatusId,
                         principalTable: "PMWorkflowStatuses",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ChangeControls_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1332,14 +1391,12 @@ namespace NJS.Domain.Migrations
                         name: "FK_WBSTaskPlannedHourHeaders_PMWorkflowStatuses_StatusId",
                         column: x => x.StatusId,
                         principalTable: "PMWorkflowStatuses",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_WBSTaskPlannedHourHeaders_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1365,14 +1422,12 @@ namespace NJS.Domain.Migrations
                         name: "FK_ChangeControlWorkflowHistories_AspNetUsers_ActionBy",
                         column: x => x.ActionBy,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ChangeControlWorkflowHistories_AspNetUsers_AssignedToId",
                         column: x => x.AssignedToId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ChangeControlWorkflowHistories_ChangeControls_ChangeControlId",
                         column: x => x.ChangeControlId,
@@ -1388,8 +1443,7 @@ namespace NJS.Domain.Migrations
                         name: "FK_ChangeControlWorkflowHistories_PMWorkflowStatuses_StatusId",
                         column: x => x.StatusId,
                         principalTable: "PMWorkflowStatuses",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1774,8 +1828,7 @@ namespace NJS.Domain.Migrations
                         name: "FK_WBSHistories_PMWorkflowStatuses_StatusId",
                         column: x => x.StatusId,
                         principalTable: "PMWorkflowStatuses",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_WBSHistories_WBSTaskPlannedHourHeaders_WBSTaskPlannedHourHeaderId",
                         column: x => x.WBSTaskPlannedHourHeaderId,
@@ -1785,7 +1838,7 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CurrentBudgetInMIS",
+                name: "CurrentBudgetInMISs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -1798,9 +1851,9 @@ namespace NJS.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CurrentBudgetInMIS", x => x.Id);
+                    table.PrimaryKey("PK_CurrentBudgetInMISs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CurrentBudgetInMIS_BudgetTables_BudgetTableId",
+                        name: "FK_CurrentBudgetInMISs_BudgetTables_BudgetTableId",
                         column: x => x.BudgetTableId,
                         principalTable: "BudgetTables",
                         principalColumn: "Id",
@@ -2488,8 +2541,8 @@ namespace NJS.Domain.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CurrentBudgetInMIS_BudgetTableId",
-                table: "CurrentBudgetInMIS",
+                name: "IX_CurrentBudgetInMISs_BudgetTableId",
+                table: "CurrentBudgetInMISs",
                 column: "BudgetTableId",
                 unique: true);
 
@@ -2769,14 +2822,24 @@ namespace NJS.Domain.Migrations
                 column: "ScoringDescriptionID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SubscriptionPlanFeatures_FeatureId",
+                table: "SubscriptionPlanFeatures",
+                column: "FeatureId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubscriptionPlanFeatures_SubscriptionPlanId",
+                table: "SubscriptionPlanFeatures",
+                column: "SubscriptionPlanId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tenant_SubscriptionPlanId",
+                table: "Tenant",
+                column: "SubscriptionPlanId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TenantDatabases_TenantId",
                 table: "TenantDatabases",
                 column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Tenants_SubscriptionPlanId",
-                table: "Tenants",
-                column: "SubscriptionPlanId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenantUsers_TenantId",
@@ -3159,10 +3222,13 @@ namespace NJS.Domain.Migrations
                 name: "CorrespondenceOutwards");
 
             migrationBuilder.DropTable(
+                name: "CreateAccounts");
+
+            migrationBuilder.DropTable(
                 name: "CTCEACs");
 
             migrationBuilder.DropTable(
-                name: "CurrentBudgetInMIS");
+                name: "CurrentBudgetInMISs");
 
             migrationBuilder.DropTable(
                 name: "CurrentMonthActions");
@@ -3243,6 +3309,9 @@ namespace NJS.Domain.Migrations
                 name: "Settings");
 
             migrationBuilder.DropTable(
+                name: "SubscriptionPlanFeatures");
+
+            migrationBuilder.DropTable(
                 name: "TenantDatabases");
 
             migrationBuilder.DropTable(
@@ -3303,7 +3372,10 @@ namespace NJS.Domain.Migrations
                 name: "ScoringDescription");
 
             migrationBuilder.DropTable(
-                name: "Tenants");
+                name: "Features");
+
+            migrationBuilder.DropTable(
+                name: "Tenant");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
