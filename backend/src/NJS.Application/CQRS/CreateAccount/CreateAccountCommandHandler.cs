@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using NJS.Domain.Database;
 using Microsoft.EntityFrameworkCore;
 using System;
+using NJS.Application.CQRS.Email.Notifications;
 
 namespace NJS.Application.CQRS.CreateAccount
 {
@@ -24,12 +25,14 @@ namespace NJS.Application.CQRS.CreateAccount
         private readonly ICreateAccountRepository _createAccountRepository;
         private readonly ILogger<CreateAccountCommandHandler> _logger;
         private readonly ProjectManagementContext _context;
+        private readonly IMediator _mediator;
 
-        public CreateAccountCommandHandler(ICreateAccountRepository createAccountRepository, ILogger<CreateAccountCommandHandler> logger, ProjectManagementContext context)
+        public CreateAccountCommandHandler(ICreateAccountRepository createAccountRepository, ILogger<CreateAccountCommandHandler> logger, ProjectManagementContext context, IMediator mediator)
         {
             _createAccountRepository = createAccountRepository;
             _logger = logger;
             _context = context;
+            _mediator = mediator;
         }
 
         public async Task<bool> Handle(CreateAccountCommand request, CancellationToken cancellationToken)
@@ -75,6 +78,27 @@ namespace NJS.Application.CQRS.CreateAccount
                 if (result)
                 {
                     _logger.LogInformation("Account created successfully for email: {Email}", request.CreateAccountDto.EmailAddress);
+
+                    // Send email notification
+                    try
+                    {
+                        await _mediator.Publish(new AccountCreationEmailNotification(
+                            request.CreateAccountDto.FirstName,
+                            request.CreateAccountDto.LastName,
+                            request.CreateAccountDto.EmailAddress,
+                            request.CreateAccountDto.PhoneNumber,
+                            request.CreateAccountDto.CompanyName,
+                            request.CreateAccountDto.CompanyAddress,
+                            request.CreateAccountDto.Subdomain,
+                            request.CreateAccountDto.SubscriptionPlan
+                        ), cancellationToken);
+                    }
+                    catch (Exception emailEx)
+                    {
+                        // Log email failure but don't block account creation
+                        _logger.LogError(emailEx, "Failed to send account creation notification email for: {Email}", request.CreateAccountDto.EmailAddress);
+                    }
+
                     return true;
                 }
                 else
