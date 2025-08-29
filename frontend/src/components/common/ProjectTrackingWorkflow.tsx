@@ -38,7 +38,7 @@ interface WorkflowPayload {
   action: WorkflowAction;
 }
 
-interface ProjectTrackingWorkflowProps {
+export interface ProjectTrackingWorkflowProps { // Export the interface
   projectId: string;
   statusId: number;
   status: string;
