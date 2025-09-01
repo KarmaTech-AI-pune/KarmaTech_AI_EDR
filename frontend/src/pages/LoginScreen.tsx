@@ -65,8 +65,8 @@ export const LoginScreen: React.FC = () => {
             justifyContent="center"
             alignItems="center"
             minHeight="100vh"
-            bgcolor="#f5f5f5"
             padding={3}
+            sx={{ backgroundColor: 'background.default' }}
         >
             <Container maxWidth="sm" sx={{ textAlign: 'center', mb: 2 }}>
                 <Box sx={{ mb: 1 }}>
@@ -83,19 +83,19 @@ export const LoginScreen: React.FC = () => {
                 <Typography
                     variant="h4"
                     component="h1"
+                    color="primary"
                     sx={{
                         mb: 1,
                         fontWeight: 'bold',
-                        color: '#1976d2'
                     }}
                 >
                     KarmaTech-AI EDR(Enterprise Digital Runner)
                 </Typography>
                 <Typography
                     variant="h6"
+                    color="text.secondary"
                     sx={{
                         mb: 1,
-                        color: '#666'
                     }}
                 >
                     Version 1.11.11
@@ -106,8 +106,9 @@ export const LoginScreen: React.FC = () => {
                 sx={{
                     maxWidth: 450,
                     width: '100%',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                    borderRadius: 2
+                    borderRadius: 2,
+                    bgcolor: 'background.paper',
+                    boxShadow: 3,
                 }}
             >
                 <CardContent sx={{ p: 4 }}>
@@ -162,13 +163,13 @@ export const LoginScreen: React.FC = () => {
                             Log In
                         </Button>
                     </form>
-                    <Typography variant="body2" align="center" sx={{ mt: 2, color: '#666' }}>
-                        <a href="#" style={{ color: '#1976d2', textDecoration: 'none' }}>
+                    <Typography variant="body2" align="center" sx={{ mt: 2, color: 'text.secondary' }}>
+                        <Link href="#" color="primary" sx={{ textDecoration: 'none' }}>
                             Forgot password?
-                        </a>
+                        </Link>
                     </Typography>
-                    <Typography variant="body2" align="center" sx={{ mt: 1, color: '#666' }}>
-                        <Link href="/enhanced-login" sx={{ color: '#1976d2', textDecoration: 'none' }}>
+                    <Typography variant="body2" align="center" sx={{ mt: 1, color: 'text.secondary' }}>
+                        <Link href="/enhanced-login" color="primary" sx={{ textDecoration: 'none' }}>
                             🚀 Try Enhanced Multi-Tenant Login
                         </Link>
                     </Typography>
