@@ -19,6 +19,7 @@ export interface UserWithRole extends User {
     tenantContext?: string;
     tenantId?: number;
     tenantDomain?: string;
+    twoFactorEnabled?: boolean;
 }
 
 export interface projectManagementAppContextType {
@@ -68,6 +69,7 @@ export interface LoginResponse {
     user?: UserWithRole;
     token?: string;
     message?: string;
+    requiresOtp?: boolean; 
 }
 
 export interface OpportunityItemProps {

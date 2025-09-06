@@ -15,11 +15,14 @@ import { authApi } from '../services/authApi';
 import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
 import { useAppNavigation } from '../hooks/useAppNavigation';
+import { OTPVerification } from '../components/OTPVerification';
 
 export const LoginScreen: React.FC = () => {
     const [email, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [requiresOtp, setRequiresOtp] = useState(false);
     const { isAuthenticated, setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
     const navigation = useAppNavigation();
 
@@ -30,6 +33,7 @@ export const LoginScreen: React.FC = () => {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setIsLoading(true);
 
         const credentials: Credentials = {
             email,
@@ -38,16 +42,24 @@ export const LoginScreen: React.FC = () => {
 
         try {
             const result = await authApi.login(credentials);
-
-            if (result.success && result.token && result.user) {
-                localStorage.setItem('token', result.token);
-                const storedToken = localStorage.getItem('token');
-                if (storedToken) {
-                    setUser(result.user);
-                    setIsAuthenticated(true);
-                    navigation.navigateToHome();
+debugger;
+            if (result.success) {
+                if (result.requiresOtp) {
+                    // 2FA is required, show OTP verification
+                    setRequiresOtp(true);
+                } else if (result.token && result.user) {
+                    // Normal login without 2FA
+                    localStorage.setItem('token', result.token);
+                    const storedToken = localStorage.getItem('token');
+                    if (storedToken) {
+                        setUser(result.user);
+                        setIsAuthenticated(true);
+                        navigation.navigateToHome();
+                    } else {
+                        setError('Failed to set authentication token');
+                    }
                 } else {
-                    setError('Failed to set authentication token');
+                    setError(result.message || 'Invalid username or password');
                 }
             } else {
                 setError(result.message || 'Invalid username or password');
@@ -55,8 +67,37 @@ export const LoginScreen: React.FC = () => {
         } catch (err) {
             console.error('Login error:', err);
             setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
+
+    const handleOtpVerificationSuccess = (response: any) => {
+        if (response.success) {
+            // Token and user are already stored in localStorage by twoFactorApi.verifyOtp
+            setUser(response.user);
+            setIsAuthenticated(true);
+            navigation.navigateToHome();
+        } else {
+            setError(response.message || 'OTP verification failed');
+        }
+    };
+
+    const handleBackToLogin = () => {
+        setRequiresOtp(false);
+        setError('');
+    };
+
+    // Show OTP verification if required
+    if (requiresOtp) {
+        return (
+            <OTPVerification
+                email={email}
+                onVerificationSuccess={handleOtpVerificationSuccess}
+                onBackToLogin={handleBackToLogin}
+            />
+        );
+    }
 
     return (
         <Box
@@ -150,6 +191,7 @@ export const LoginScreen: React.FC = () => {
                             variant="contained"
                             color="primary"
                             size="large"
+                            disabled={isLoading}
                             sx={{
                                 mt: 2,
                                 mb: 2,
@@ -159,7 +201,7 @@ export const LoginScreen: React.FC = () => {
                                 fontSize: '1.1rem'
                             }}
                         >
-                            Log In
+                            {isLoading ? 'Logging in...' : 'Log In'}
                         </Button>
                     </form>
                     <Typography variant="body2" align="center" sx={{ mt: 2, color: '#666' }}>

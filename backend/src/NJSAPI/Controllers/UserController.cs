@@ -8,6 +8,7 @@ using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace NJSAPI.Controllers
 {
@@ -21,18 +22,23 @@ namespace NJSAPI.Controllers
         private readonly UserManager<User> _userManager;
         private readonly ILogger<UserController> _logger;
         private readonly ITenantService _tenantService;
+        private readonly ITwoFactorService _twoFactorService;
         public UserController(
             IAuthService authService,
             UserManager<User> userManager, 
             IMediator mediator,
             ITenantService tenantService,
-            ILogger<UserController> logger)
+            ITwoFactorService twoFactorService,
+            ILogger<UserController> logger
+           )
         {
             _authService = authService;
             _userManager = userManager;
             _logger = logger;
             _mediator = mediator;
             _tenantService = tenantService;
+            _twoFactorService = twoFactorService;
+
         }
 
         [HttpPost("login")]
@@ -59,12 +65,37 @@ namespace NJSAPI.Controllers
 
                 if (success)
                 {
+                    // Check if 2FA is required for this user
+                   
+                    if (await _twoFactorService.IsOtpRequiredAsync(model.Email))
+                    {
+                        // Send OTP and return response indicating 2FA is required
+                        var otpResult = await _twoFactorService.SendOtpAsync(model.Email);
+                        
+                        if (otpResult.Success)
+                        {
+                            return Ok(new
+                            {
+                                success = true,
+                                message = "Credentials valid. OTP sent to your email for verification.",
+                                requiresOtp = true,
+                                email = model.Email
+                            });
+                        }
+                        else
+                        {
+                            return BadRequest(new { success = false, message = otpResult.Message });
+                        }
+                    }
+
+                    // If no 2FA required, proceed with normal login
                     var userDto = new UserDto
                     {
                         Id = user?.Id ?? string.Empty,
                         UserName = user?.UserName ?? string.Empty,
                         Email = user?.Email ?? string.Empty,
                         Avatar = user?.Avatar ?? string.Empty,
+                        TwoFactorEnabled=user.TwoFactorEnabled
                     };
 
                     // Get tenant information for the logged-in user
@@ -80,7 +111,8 @@ namespace NJSAPI.Controllers
                         success = true,
                         message = "Login successful",
                         token = token,
-                        user = userDto
+                        user = userDto,
+                        requiresOtp = false
                     });
                 }
 
