@@ -26,6 +26,7 @@ namespace NJS.Application.Services
         private readonly RoleManager<Role> _roleManager;
         private readonly IPermissionRepository _permissionRepository;
         private readonly ITenantService _tenantService;
+        private readonly IEmailTemplateService _emailTemplateService;
 
         public TwoFactorService(
             UserManager<User> userManager,
@@ -36,7 +37,8 @@ namespace NJS.Application.Services
             IConfiguration configuration,
             RoleManager<Role> roleManager,
             IPermissionRepository permissionRepository,
-            ITenantService tenantService
+            ITenantService tenantService,
+            IEmailTemplateService emailTemplateService
             )
         {
             _userManager = userManager;
@@ -48,6 +50,7 @@ namespace NJS.Application.Services
             _roleManager = roleManager;
             _permissionRepository = permissionRepository;
             _tenantService = tenantService;
+            _emailTemplateService = emailTemplateService;
         }
 
         public async Task<OtpSentResponse> SendOtpAsync(string email)
@@ -262,28 +265,23 @@ namespace NJS.Application.Services
             return (random % 1000000).ToString("D6");
         }
 
-        private async Task SendOtpEmailAsync(string email, string otpCode)
-        {
-            var message = new NJS.Domain.Models.EmailMessage
-            {
-                To = email,
-                Subject = "Your Login OTP Code",
-                Body = $@"
-                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
-                        <h2 style='color: #333;'>NJS Project Management - Login OTP</h2>
-                        <p>Hello,</p>
-                        <p>Your login verification code is:</p>
-                        <div style='background-color: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0;'>
-                            <h1 style='color: #007bff; font-size: 32px; margin: 0; letter-spacing: 5px;'>{otpCode}</h1>
-                        </div>
-                        <p><strong>This code will expire in 5 minutes.</strong></p>
-                        <p>If you didn't request this code, please ignore this email.</p>
-                        <p>Best regards,<br>NJS Project Management Team</p>
-                    </div>",
-                IsHtml = true
-            };
+private async Task SendOtpEmailAsync(string email, string otpCode)
+{
+    var template = await _emailTemplateService.GetTemplateAsync("otp-login");
+    var renderedTemplate = _emailTemplateService.RenderTemplate(template, new Dictionary<string, string>
+    {
+        { "OTP_CODE", otpCode }
+    });
 
-            await _emailService.SendEmailAsync(message);
+    var message = new NJS.Domain.Models.EmailMessage
+    {
+        To = email,
+        Subject = "Your Login OTP Code",
+        Body = renderedTemplate,
+        IsHtml = true
+    };
+
+    await _emailService.SendEmailAsync(message);
         }
 
         private async Task<string> GenerateJwtTokenAsync(User user)

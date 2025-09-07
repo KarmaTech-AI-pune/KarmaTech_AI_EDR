@@ -82,6 +82,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
             services.AddScoped<IFeatureRepository, FeatureRepository>();
             services.AddScoped<ITwoFactorService, TwoFactorService>();
+            services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 
             return services;
         }

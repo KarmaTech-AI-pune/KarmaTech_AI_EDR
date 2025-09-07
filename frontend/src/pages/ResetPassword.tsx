@@ -1,5 +1,4 @@
-import { useState, useContext  } from 'react'
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import {
     TextField,
     Button,
@@ -11,93 +10,75 @@ import {
     Container,
     Link
 } from '@mui/material';
-import { authApi } from '../services/authApi';
-import { projectManagementAppContext } from '../App';
-import { projectManagementAppContextType, Credentials } from '../types';
-import { useAppNavigation } from '../hooks/useAppNavigation';
-import { OTPVerification } from '../components/OTPVerification';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { passwordApi } from '../services/passwordApi';
 
-export const LoginScreen: React.FC = () => {
-    const [email, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+export const ResetPassword: React.FC = () => {
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [requiresOtp, setRequiresOtp] = useState(false);
-    const { isAuthenticated, setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
-    const navigation = useAppNavigation();
 
-    if (isAuthenticated) {
-        return <Navigate to="/" replace />;
-    }
+    // Get token and email from URL parameters
+    const token = searchParams.get('token');
+    const email = searchParams.get('email');
 
-    const handleLogin = async (e: React.FormEvent) => {
+    useEffect(() => {
+        if (!token || !email) {
+            setError('Invalid reset password link');
+        }
+    }, [token, email]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
         setIsLoading(true);
 
-        const credentials: Credentials = {
-            email,
-            password
-        };
-
         try {
-            const result = await authApi.login(credentials);
-debugger;
+            if (!token || !email) {
+                setError('Invalid reset password link');
+                return;
+            }
+
+            if (!newPassword || !confirmPassword) {
+                setError('Please fill in all fields');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                setError('Passwords do not match');
+                return;
+            }
+
+            // Validate password strength
+            const validation = passwordApi.validatePassword(newPassword);
+            if (!validation.isValid) {
+                setError(validation.errors.join('. '));
+                return;
+            }
+
+            const result = await passwordApi.resetPassword(token, newPassword, email);
+            
             if (result.success) {
-                if (result.requiresOtp) {
-                    // 2FA is required, show OTP verification
-                    setRequiresOtp(true);
-                } else if (result.token && result.user) {
-                    // Normal login without 2FA
-                    localStorage.setItem('token', result.token);
-                    const storedToken = localStorage.getItem('token');
-                    if (storedToken) {
-                        setUser(result.user);
-                        setIsAuthenticated(true);
-                        navigation.navigateToHome();
-                    } else {
-                        setError('Failed to set authentication token');
-                    }
-                } else {
-                    setError(result.message || 'Invalid username or password');
-                }
+                setSuccess(result.message);
+                // Redirect to login after 3 seconds
+                setTimeout(() => {
+                    navigate('/login');
+                }, 3000);
             } else {
-                setError(result.message || 'Invalid username or password');
+                setError(result.message);
             }
         } catch (err) {
-            console.error('Login error:', err);
-            setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
+            setError('An error occurred. Please try again.');
+            console.error('Reset password error:', err);
         } finally {
             setIsLoading(false);
         }
     };
-
-    const handleOtpVerificationSuccess = (response: any) => {
-        if (response.success) {
-            // Token and user are already stored in localStorage by twoFactorApi.verifyOtp
-            setUser(response.user);
-            setIsAuthenticated(true);
-            navigation.navigateToHome();
-        } else {
-            setError(response.message || 'OTP verification failed');
-        }
-    };
-
-    const handleBackToLogin = () => {
-        setRequiresOtp(false);
-        setError('');
-    };
-
-    // Show OTP verification if required
-    if (requiresOtp) {
-        return (
-            <OTPVerification
-                email={email}
-                onVerificationSuccess={handleOtpVerificationSuccess}
-                onBackToLogin={handleBackToLogin}
-            />
-        );
-    }
 
     return (
         <Box
@@ -130,16 +111,7 @@ debugger;
                         color: '#1976d2'
                     }}
                 >
-                    KarmaTech-AI EDR(Enterprise Digital Runner)
-                </Typography>
-                <Typography
-                    variant="h6"
-                    sx={{
-                        mb: 1,
-                        color: '#666'
-                    }}
-                >
-                    Version 1.11.11
+                    Reset Your Password
                 </Typography>
             </Container>
 
@@ -152,17 +124,18 @@ debugger;
                 }}
             >
                 <CardContent sx={{ p: 4 }}>
-                    <Typography variant="h5" component="h2" align="center" gutterBottom>
-                        Login to your account
+                    <Typography variant="body1" align="center" gutterBottom sx={{ mb: 3 }}>
+                        Enter your new password below.
                     </Typography>
-                    <form onSubmit={handleLogin}>
+                    <form onSubmit={handleSubmit}>
                         <TextField
                             fullWidth
-                            label="Email"
+                            label="New Password"
                             variant="outlined"
                             margin="normal"
-                            value={email}
-                            onChange={(e) => setUsername(e.target.value)}
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
                             sx={{
                                 mb: 2,
                                 '& .MuiOutlinedInput-root': {
@@ -172,12 +145,12 @@ debugger;
                         />
                         <TextField
                             fullWidth
-                            label="Password"
-                            type="password"
+                            label="Confirm New Password"
                             variant="outlined"
                             margin="normal"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
                             sx={{
                                 mb: 3,
                                 '& .MuiOutlinedInput-root': {
@@ -191,7 +164,7 @@ debugger;
                             variant="contained"
                             color="primary"
                             size="large"
-                            disabled={isLoading}
+                            disabled={isLoading || !token || !email}
                             sx={{
                                 mt: 2,
                                 mb: 2,
@@ -201,28 +174,24 @@ debugger;
                                 fontSize: '1.1rem'
                             }}
                         >
-                            {isLoading ? 'Logging in...' : 'Log In'}
+                            {isLoading ? 'Resetting...' : 'Reset Password'}
                         </Button>
                     </form>
                     <Typography variant="body2" align="center" sx={{ mt: 2, color: '#666' }}>
                         <Link 
-                            href="/forgot-password" 
+                            href="/login" 
                             sx={{ 
                                 color: '#1976d2', 
                                 textDecoration: 'none',
                                 cursor: 'pointer'
                             }}
                         >
-                            Forgot password?
-                        </Link>
-                    </Typography>
-                    <Typography variant="body2" align="center" sx={{ mt: 1, color: '#666' }}>
-                        <Link href="/enhanced-login" sx={{ color: '#1976d2', textDecoration: 'none' }}>
-                            🚀 Try Enhanced Multi-Tenant Login
+                            Back to Login
                         </Link>
                     </Typography>
                 </CardContent>
             </Card>
+            
             {error && (
                 <Alert
                     severity="error"
@@ -237,8 +206,23 @@ debugger;
                     {error}
                 </Alert>
             )}
+            
+            {success && (
+                <Alert
+                    severity="success"
+                    sx={{
+                        position: 'fixed',
+                        bottom: 16,
+                        right: 16,
+                        maxWidth: 300,
+                        boxShadow: 2
+                    }}
+                >
+                    {success}
+                </Alert>
+            )}
         </Box>
     );
 };
 
-export default LoginScreen;
+export default ResetPassword;

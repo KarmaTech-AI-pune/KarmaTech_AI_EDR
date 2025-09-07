@@ -8,7 +8,7 @@ using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
+using NJS.Domain.Models;
 
 namespace NJSAPI.Controllers
 {
@@ -23,12 +23,17 @@ namespace NJSAPI.Controllers
         private readonly ILogger<UserController> _logger;
         private readonly ITenantService _tenantService;
         private readonly ITwoFactorService _twoFactorService;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
+
         public UserController(
             IAuthService authService,
             UserManager<User> userManager, 
             IMediator mediator,
             ITenantService tenantService,
             ITwoFactorService twoFactorService,
+            IEmailService emailService,
+            IConfiguration configuration,
             ILogger<UserController> logger
            )
         {
@@ -38,7 +43,26 @@ namespace NJSAPI.Controllers
             _mediator = mediator;
             _tenantService = tenantService;
             _twoFactorService = twoFactorService;
+            _emailService = emailService;
+            _configuration = configuration;
+        }
 
+        public class ChangePasswordRequest
+        {
+            public string CurrentPassword { get; set; }
+            public string NewPassword { get; set; }
+        }
+
+        public class ForgotPasswordRequest
+        {
+            public string Email { get; set; }
+        }
+
+        public class ResetPasswordRequest
+        {
+            public string Token { get; set; }
+            public string Email { get; set; }
+            public string NewPassword { get; set; }
         }
 
         [HttpPost("login")]
@@ -205,6 +229,218 @@ namespace NJSAPI.Controllers
             var query = new GetAllPermissionsQuery();
             var permissions = await _mediator.Send(query);
             return Ok(permissions);
+        }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            try
+            {
+                if (request == null || string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+                {
+                    return BadRequest(new { success = false, message = "Current and new password are required" });
+                }
+
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return Unauthorized(new { success = false, message = "User not found or not authenticated" });
+                }
+
+                var isCurrentValid = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+                if (!isCurrentValid)
+                {
+                    return BadRequest(new { success = false, message = "Current password is incorrect" });
+                }
+
+                var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+                if (!result.Succeeded)
+                {
+                    var errorMessage = result.Errors != null && result.Errors.Any()
+                        ? string.Join("; ", result.Errors.Select(e => e.Description))
+                        : "Failed to change password";
+                    return BadRequest(new { success = false, message = errorMessage });
+                }
+
+                return Ok(new { success = true, message = "Password changed successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while changing password");
+                return StatusCode(500, new { success = false, message = "An error occurred while changing password" });
+            }
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            try
+            {
+                if (request == null || string.IsNullOrWhiteSpace(request.Email))
+                {
+                    return BadRequest(new { success = false, message = "Email is required" });
+                }
+
+                var user = await _userManager.FindByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    // Don't reveal that the user does not exist
+                    return Ok(new { success = true, message = "If an account exists with this email, a password reset link has been sent." });
+                }
+
+                // Generate password reset token
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                // Use frontend URL for reset link
+
+                var frontendUrl = _configuration["ResetPassword:FrontEndUrl"];
+                var resetLink = $"{frontendUrl}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
+
+                // Send email with reset link
+                var message = new EmailMessage
+                {
+                    To = user.Email,
+                    Subject = "Password Reset Request",
+                    Body = $@"
+                        <h2>Password Reset Request</h2>
+                        <p>A password reset has been requested for your account.</p>
+                        <p>Click the link below to reset your password:</p>
+                        <p><a href='{resetLink}'>Reset Password</a></p>
+                        <p>If you did not request this reset, please ignore this email.</p>
+                        <p>This link will expire in 24 hours.</p>",
+                    IsHtml = true
+                };
+
+                await _emailService.SendEmailAsync(message);
+
+                return Ok(new { success = true, message = "If an account exists with this email, a password reset link has been sent." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during password reset request");
+                return StatusCode(500, new { success = false, message = "An error occurred while processing your request" });
+            }
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                if (request == null || string.IsNullOrWhiteSpace(request.Token) || 
+                    string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.NewPassword))
+                {
+                    return BadRequest(new { success = false, message = "Token, email, and new password are required" });
+                }
+
+                var user = await _userManager.FindByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    // Don't reveal that the user does not exist
+                    return BadRequest(new { success = false, message = "Invalid password reset request" });
+                }
+
+                var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+                if (!result.Succeeded)
+                {
+                    var errorMessage = result.Errors != null && result.Errors.Any()
+                        ? string.Join("; ", result.Errors.Select(e => e.Description))
+                        : "Failed to reset password";
+                    return BadRequest(new { success = false, message = errorMessage });
+                }
+
+                // Send confirmation email
+                var message = new EmailMessage
+                {
+                    To = user.Email,
+                    Subject = "Password Reset Successful",
+                    Body = @"
+                        <h2>Password Reset Successful</h2>
+                        <p>Your password has been successfully reset.</p>
+                        <p>If you did not make this change, please contact support immediately.</p>",
+                    IsHtml = true
+                };
+
+                await _emailService.SendEmailAsync(message);
+
+                return Ok(new { success = true, message = "Password has been reset successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during password reset");
+                return StatusCode(500, new { success = false, message = "An error occurred while resetting your password" });
+            }
+        }
+
+        [HttpPost("reset-user-password")]
+        public async Task<IActionResult> UpdatePassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                if (request == null ||
+                    string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.NewPassword))
+                {
+                    return BadRequest(new { success = false, message = "Token, email, and new password are required" });
+                }
+
+                var user = await _userManager.FindByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    // Don't reveal that the user does not exist
+                    return BadRequest(new { success = false, message = "Invalid password reset request" });
+                }
+
+              
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                if(token == null)
+                {
+                    return BadRequest(new { success = false, message = "Invalid token generated while updating password" });
+                }
+                var result = await _userManager.ResetPasswordAsync(user, token, request.NewPassword);
+                if (!result.Succeeded)
+                {
+                    var errorMessage = result.Errors != null && result.Errors.Any()
+                        ? string.Join("; ", result.Errors.Select(e => e.Description))
+                        : "Failed to reset password";
+                    return BadRequest(new { success = false, message = errorMessage });
+                }
+
+                // Send confirmation email asynchronously
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var message = new EmailMessage
+                        {
+                            To = user.Email,
+                            Subject = "Your Password Has Been Updated",
+                            Body = $@"
+                                <h2>Password Update Notification</h2>
+                                <p>Your account password has been updated by an administrator.</p>
+                                <p>Your new password is: <strong>{request.NewPassword}</strong></p>
+                                <p>Please login with this password and change it immediately for security purposes.</p>
+                                <p style='color: #ff0000;'>Important: Delete this email after memorizing or safely storing your password.</p>
+                                <br/>
+                                <p>If you did not expect this change, please contact support immediately.</p>",
+                            IsHtml = true
+                        };
+
+                        await _emailService.SendEmailAsync(message);
+                    }
+                    catch (Exception emailEx)
+                    {
+                        _logger.LogError(emailEx, "Failed to send password update confirmation email to {Email}", user.Email);
+                    }
+                });
+
+                return Ok(new { success = true, message = "Password has been reset successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during password reset");
+                return StatusCode(500, new { success = false, message = "An error occurred while resetting your password" });
+            }
         }
     }
 }

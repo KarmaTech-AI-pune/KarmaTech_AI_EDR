@@ -127,3 +127,18 @@ export const deleteUser = async (id: string): Promise<void> => {
     console.error(`Error deleting user with id ${id}:`, error);
   }
 };
+
+export const resetUserPassword = async (userId: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await axiosInstance.post(`/api/user/${userId}/reset-password`, {});
+    return {
+      success: true,
+      message: response.data.message || 'Password reset successfully'
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Failed to reset password'
+    };
+  }
+};

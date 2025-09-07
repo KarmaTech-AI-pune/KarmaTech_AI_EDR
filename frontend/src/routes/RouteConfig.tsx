@@ -9,6 +9,8 @@ import EnhancedLoginScreen from '../pages/EnhancedLoginScreen';
 import Signup from '../pages/Signup';
 import Dashboard from '../components/Dashboard';
 import NotFound from '../pages/NotFound';
+import ForgotPassword from '../pages/ForgotPassword';
+import ResetPassword from '../pages/ResetPassword';
 import { lazy } from 'react';
 
 const UserProfile = lazy(() => import('../pages/UserProfile'));
@@ -35,6 +37,14 @@ export const routes: RouteObject[] = [
       {
         path: 'signup', 
         element: <Signup />,
+      },
+      {
+        path: 'forgot-password',
+        element: <ForgotPassword />,
+      },
+      {
+        path: 'reset-password',
+        element: <ResetPassword />,
       },
       {
         path: '',

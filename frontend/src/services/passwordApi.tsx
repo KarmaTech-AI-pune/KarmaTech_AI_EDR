@@ -115,11 +115,12 @@ export const passwordApi = {
   /**
    * Reset password with token (for forgot password flow)
    */
-  resetPassword: async (token: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+  resetPassword: async (token: string, newPassword: string, email: string): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await axiosInstance.post(`${API_BASE_URL}api/user/reset-password`, {
         token,
-        newPassword
+        newPassword,
+        email
       });
       
       return {
@@ -132,5 +133,28 @@ export const passwordApi = {
         message: error.response?.data?.message || 'Failed to reset password'
       };
     }
+  },
+
+
+  /**
+  * Admin reset user password (for admin functionality)
+  */
+  adminResetUserPassword: async (email: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await axiosInstance.post(`${API_BASE_URL}api/user/reset-user-password`, {
+        email,
+        newPassword
+      });
+      return {
+        success: true,
+        message: response.data.message || 'User password reset successfully'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to reset user password'
+      };
+    }
   }
+
 };
