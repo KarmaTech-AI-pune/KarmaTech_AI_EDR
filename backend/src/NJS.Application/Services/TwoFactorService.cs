@@ -39,7 +39,7 @@ namespace NJS.Application.Services
             IPermissionRepository permissionRepository,
             ITenantService tenantService,
             IEmailTemplateService emailTemplateService
-            )
+        )
         {
             _userManager = userManager;
             _dbContext = dbContext;
@@ -189,9 +189,9 @@ namespace NJS.Application.Services
 
                 var twoFactorCode = await _dbContext.TwoFactorCodes
                     .Where(t => t.UserId == user.Id &&
-                               t.Code == otpCode &&
-                               !t.IsUsed &&
-                               t.ExpiresAt > DateTime.UtcNow)
+                                t.Code == otpCode &&
+                                !t.IsUsed &&
+                                t.ExpiresAt > DateTime.UtcNow)
                     .FirstOrDefaultAsync();
 
                 return twoFactorCode != null;
@@ -265,23 +265,23 @@ namespace NJS.Application.Services
             return (random % 1000000).ToString("D6");
         }
 
-private async Task SendOtpEmailAsync(string email, string otpCode)
-{
-    var template = await _emailTemplateService.GetTemplateAsync("otp-login");
-    var renderedTemplate = _emailTemplateService.RenderTemplate(template, new Dictionary<string, string>
-    {
-        { "OTP_CODE", otpCode }
-    });
+        private async Task SendOtpEmailAsync(string email, string otpCode)
+        {
+            var template = await _emailTemplateService.GetTemplateAsync("otp-login");
+            var renderedTemplate = _emailTemplateService.RenderTemplate(template, new Dictionary<string, string>
+            {
+                { "OTP_CODE", otpCode }
+            });
 
-    var message = new NJS.Domain.Models.EmailMessage
-    {
-        To = email,
-        Subject = "Your Login OTP Code",
-        Body = renderedTemplate,
-        IsHtml = true
-    };
+            var message = new NJS.Domain.Models.EmailMessage
+            {
+                To = email,
+                Subject = "Your Login OTP Code",
+                Body = renderedTemplate,
+                IsHtml = true
+            };
 
-    await _emailService.SendEmailAsync(message);
+            await _emailService.SendEmailAsync(message);
         }
 
         private async Task<string> GenerateJwtTokenAsync(User user)
@@ -333,7 +333,7 @@ private async Task SendOtpEmailAsync(string email, string otpCode)
 
             // Check if user is a super admin (has SYSTEM_ADMIN permission)
             var isSuperAdmin = await IsSuperAdminAsync(user);
-            
+
             if (isSuperAdmin)
             {
                 claims.Add(new Claim("IsSuperAdmin", "true"));
@@ -348,7 +348,7 @@ private async Task SendOtpEmailAsync(string email, string otpCode)
                 {
                     claims.Add(new Claim("TenantId", currentTenantId.Value.ToString()));
                     claims.Add(new Claim("UserType", "TenantUser"));
-                    
+
                     // Add tenant domain for additional context
                     var tenantDomain = await _tenantService.GetCurrentTenantDomain();
                     if (!string.IsNullOrEmpty(tenantDomain))
@@ -413,6 +413,7 @@ private async Task SendOtpEmailAsync(string email, string otpCode)
                     }
                 }
             }
+
             return false;
         }
 
@@ -482,4 +483,3 @@ private async Task SendOtpEmailAsync(string email, string otpCode)
         }
     }
 }
-
