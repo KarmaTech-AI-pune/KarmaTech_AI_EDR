@@ -132,8 +132,9 @@ namespace NJS.Domain.Extensions
             services.Configure<EmailSettings>(options =>
             {
                 configuration.GetSection(EmailSettings.SectionName).Bind(options);
-
             });
+            
+         
            // services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
            
             return services;

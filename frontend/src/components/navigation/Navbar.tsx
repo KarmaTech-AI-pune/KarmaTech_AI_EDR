@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import {
   AppBar,
@@ -15,11 +15,14 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import LockIcon from '@mui/icons-material/Lock';
+import SecurityIcon from '@mui/icons-material/Security';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
 import { authApi } from '../../services/authApi';
 import { PermissionType } from '../../models';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
+import PasswordChangeDropdown from './PasswordChangeDropdown';
 
 const navLinks = [
   {
@@ -37,6 +40,8 @@ const navLinks = [
 export const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+  const [showPasswordDropdown, setShowPasswordDropdown] = useState(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
   const { setIsAuthenticated, user } = useContext(
     projectManagementAppContext,
   ) as projectManagementAppContextType;
@@ -44,7 +49,7 @@ export const Navbar = () => {
 
   const [authorizedPages, setAuthorizedPages] = useState<typeof navLinks>([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isTenantAdmin, setIsTenantAdmin] = useState(false);
+  const [isTenantAdmin, setIsTenantAdmin] = useState(false);  
 
   useEffect(() => {
     const checkUserPermissions = async () => {
@@ -65,6 +70,7 @@ debugger;
       setAuthorizedPages(availablePages);
       setIsAdmin(permissions.includes(PermissionType.SYSTEM_ADMIN));
       setIsTenantAdmin(permissions.includes(PermissionType.Tenant_ADMIN));
+      
     };
 
     checkUserPermissions();
@@ -85,6 +91,27 @@ debugger;
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
+
+
+  const handleClosePasswordDropdown = useCallback(() => {
+    setShowPasswordDropdown(false);
+  }, []);
+
+  // Handle click outside to close password dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showPasswordDropdown && avatarRef.current && !avatarRef.current.contains(event.target as Node)) {
+        setShowPasswordDropdown(false);
+      }
+    };
+
+    if (showPasswordDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showPasswordDropdown]);
 
   const handleLogout = async () => {
     try {
@@ -238,24 +265,31 @@ debugger;
                 </IconButton>
               </Tooltip>
             </Box>
-          )}
+          )}        
 
           {/* User Menu */}
-          <Box sx={{ flexGrow: 0 }}>
-            <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-              <Avatar
-                alt={user?.name || 'User'}
-                src={user?.avatar}
-                sx={{
-                  width: 40,
-                  height: 40,
-                  bgcolor: 'primary.light',
-                  border: '2px solid white',
-                }}
-              >
-                {user?.name?.[0] || 'U'}
-              </Avatar>
-            </IconButton>
+          <Box sx={{ flexGrow: 0, position: 'relative' }}>
+            <Box ref={avatarRef}>
+              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                <Avatar
+                  alt={user?.name || 'User'}
+                  src={user?.avatar}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: 'primary.light',
+                    border: '2px solid white',
+                  }}
+                >
+                  {user?.name?.[0] || 'U'}
+                </Avatar>
+              </IconButton>
+            </Box>
+            
+            {/* Password Change Dropdown */}
+            {showPasswordDropdown && (
+              <PasswordChangeDropdown onClose={handleClosePasswordDropdown} />
+            )}
             <Menu
               sx={{ mt: '45px' }}
               id="menu-appbar"
@@ -273,9 +307,21 @@ debugger;
               onClose={handleCloseUserMenu}
               data-testid="menu"
             >
-              <MenuItem onClick={handleCloseUserMenu}>
+              <MenuItem 
+                component={Link} 
+                to="/profile" 
+                onClick={handleCloseUserMenu}
+              >
                 <Typography textAlign="center">Profile</Typography>
               </MenuItem>
+              <MenuItem 
+                component={Link} 
+                to="/profile?section=2fa" 
+                onClick={handleCloseUserMenu}
+              >
+                <SecurityIcon sx={{ mr: 1, fontSize: 20 }} />
+                <Typography textAlign="center">2FA Settings</Typography>
+              </MenuItem>                        
               <MenuItem onClick={handleCloseUserMenu}>
                 <Typography textAlign="center">Settings</Typography>
               </MenuItem>

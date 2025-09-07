@@ -132,6 +132,7 @@ namespace NJS.Domain.Database
         public DbSet<Feature> Features { get; set; }
 
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
+        public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
 
         public override int SaveChanges()
         {
