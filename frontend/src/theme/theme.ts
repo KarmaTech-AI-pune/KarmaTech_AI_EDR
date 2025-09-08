@@ -11,12 +11,12 @@ const theme = createTheme({
       main: '#FFC107', // A shade of yellow
     },
     background: {
-      default: '#f4f6f8',
+      default: '#ffffff',
       paper: '#ffffff',
     },
     text: {
-      primary: '#333333',
-      secondary: '#555555',
+      // primary: '#333333',
+      // secondary: '#555555',
     },
   },
   typography: {
