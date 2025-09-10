@@ -62,6 +62,13 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   const handleEdit = () => setEditingIssue(showIssueDetail);
   const handleToggleFlag = () => onToggleFlag(showIssueDetail.id);
 
+  const statusOptions = [
+    { value: "To Do", label: "To Do", color: "#f5fb3aff" },
+    { value: "In Progress", label: "In Progress", color: "#34a1faff" },
+    { value: "Review", label: "Review", color: "#fba524ff" },
+    { value: "Done", label: "Done", color: "#49f54eff" },
+  ];
+
   const handleStatusChange = (event: any) => {
     const newStatus = event.target.value as Issue["status"];
     onUpdateIssue(showIssueDetail.id, { status: newStatus });
@@ -254,7 +261,9 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                 value={showIssueDetail.status}
                 onChange={handleStatusChange}
                 sx={{
-                  backgroundColor: "#98f987ff",
+                  backgroundColor: statusOptions.find(
+                    (opt) => opt.value === showIssueDetail.status
+                  )?.color,
                   "& .MuiSelect-select": {
                     padding: "4px 8px", // Reduce padding (default is usually 16px 14px)
                     minHeight: "unset",
@@ -270,9 +279,15 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   },
                 }}
               >
-                <MenuItem value="To Do">To Do</MenuItem>
-                <MenuItem value="In Progress">In Progress</MenuItem>
-                <MenuItem value="Done">Done</MenuItem>
+                {statusOptions.map((option) => (
+                  <MenuItem
+                    key={option.value}
+                    value={option.value}
+                    // sx={{ backgroundColor: option.color }}
+                  >
+                    {option.label}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Box>
