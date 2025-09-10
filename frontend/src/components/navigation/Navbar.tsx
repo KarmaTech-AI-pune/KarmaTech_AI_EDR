@@ -49,7 +49,6 @@ export const Navbar = () => {
   useEffect(() => {
     const checkUserPermissions = async () => {
       const currentUser = await authApi.getCurrentUser();
-debugger;
       if (!currentUser || !currentUser.roleDetails) {
         setAuthorizedPages([]);
         setIsAdmin(false);

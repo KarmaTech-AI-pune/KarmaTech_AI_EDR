@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy } from 'react';
 import {
     WorkBreakdownStructureForm,
     JobStartForm,
@@ -14,6 +14,8 @@ import {
 import { useParams } from 'react-router-dom';
 import { FormWrapper } from '../../components/forms/FormWrapper';
 import NotFound from '../NotFound';
+
+const TodoList = lazy(() => import('../../pages/projectManagement/WBS/TodoList'));
 
 const validFormIds = [
     'wbs',
@@ -41,6 +43,9 @@ const ProjectForms: React.FC = () => {
             }
             if (subFormId === 'odc') {
                 return <WorkBreakdownStructureForm formType="odc" />;
+            }
+            if (subFormId === 'todo-list') {
+                return <TodoList />
             }
         }
         if (formId === 'job-start') {
