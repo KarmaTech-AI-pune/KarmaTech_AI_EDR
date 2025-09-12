@@ -145,53 +145,7 @@ namespace NJS.Domain.Database
         public DbSet<TodoSubTask> TodoSubTasks { get; set; } // Added
         
 
-        public DbSet<todoProjectSchedule> TodoProjectSchedules { get; set; }
-        public DbSet<todoProject> TodoProjects { get; set; }
-        public DbSet<todoProjectLead> TodoProjectLeads { get; set; }
-        public DbSet<todoTask> TodoTasks { get; set; }
-        public DbSet<TodoAssignedTo> TodoAssignedTos { get; set; }
-        public DbSet<TodoActivity> TodoActivities { get; set; }
-        public DbSet<todoPhase> TodoPhases { get; set; } // Added
-        public DbSet<todoPhaseActivity> TodoPhaseActivities { get; set; } // Added
-        public DbSet<TodoSprint> TodoSprints { get; set; } // Added
-        public DbSet<TodoSubTask> TodoSubTasks { get; set; } // Added
-        
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            foreach (var entry in ChangeTracker.Entries<ITenantEntity>().ToList())
-            {
-                switch (entry.State)
-                {
-                    case EntityState.Added:
-                    case EntityState.Modified:
-                        entry.Entity.TenantId = (int)TenantId;
-                        break;
-                }
-            }
-            var result = base.SaveChanges();
-            return result;
-        }
-
-        //public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        //{
-        //    foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
-        //    {
-        //        switch (entry.State)
-        //        {
-
-        //            case EntityState.Modified:
-        //            case EntityState.Added:
-        //                // Only set TenantId if it's not already set (for seeding scenarios)
-        //                if (entry.Entity.TenantId == 0)
-        //                {
-        //                    entry.Entity.TenantId = TenantId ?? throw new InvalidOperationException("TenantId cannot be null.");
-        //                }
-        //                break;
-        //        }
-        //    }
-        //    return await base.SaveChangesAsync(cancellationToken);
-        //}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
