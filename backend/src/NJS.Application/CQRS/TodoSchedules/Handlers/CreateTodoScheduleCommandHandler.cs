@@ -9,6 +9,7 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.TodoSchedules.Command;
 using NJS.Repositories.Interfaces;
+using System.Collections.Generic;
 
 
 namespace NJS.Application.CQRS.TodoSchedules.Handlers
@@ -78,35 +79,88 @@ namespace NJS.Application.CQRS.TodoSchedules.Handlers
 
                     if (taskDto.Activities != null && taskDto.Activities.Any())
                     {
-                        foreach (var actDto in taskDto.Activities.Where(a => a != null))
+                        foreach (var activityDto in taskDto.Activities.Where(a => a != null))
                         {
-                            (task.Activities ??= new List<TodoActivity>()).Add(new TodoActivity
+                            var activity = new TodoActivity
                             {
-                                Activity = actDto.Activity,
-                                ActivityCost = actDto.ActivityCost
-                            });
+                                Activity = activityDto.Activity,
+                                ActivityCost = activityDto.ActivityCost
+                            };
+                            task.Activities ??= new List<TodoActivity>();
+                            task.Activities.Add(activity);
                         }
                     }
-
-                    if (taskDto.AssignedTo != null && taskDto.AssignedTo.Any())
-                    {
-                        foreach (var asgDto in taskDto.AssignedTo.Where(a => a != null))
-                        {
-                            (task.AssignedTo ??= new List<TodoAssignedTo>()).Add(new TodoAssignedTo
-                            {
-                                Name = asgDto.AssigneeName
-                            });
-                        }
-                    }
-
-                    (todoProjectSchedule.Tasks ??= new List<todoTask>()).Add(task);
+                    todoProjectSchedule.Tasks ??= new List<todoTask>();
+                    todoProjectSchedule.Tasks.Add(task);
                 }
             }
 
-            // Repository returns the created Project Id for consistency with GET route by projectId
-            int projectId = await _todoScheduleRepository.CreateTodoSchedule(todoProjectSchedule);
+            // Add Sprints, Phases, Activities to todoProject
+            if (todoScheduleDto.Sprints != null && todoScheduleDto.Sprints.Any())
+            {
+                foreach (var sprintDto in todoScheduleDto.Sprints.Where(s => s != null))
+                {
+                    var sprint = new TodoSprint
+                    {
+                        SprintName = sprintDto.SprintName,
+                        StartDate = sprintDto.StartDate,
+                        EndDate = sprintDto.EndDate,
+                        Project = todoProject
+                    };
 
-            return projectId;
+                    if (sprintDto.Phases != null && sprintDto.Phases.Any())
+                    {
+                        foreach (var phaseDto in sprintDto.Phases.Where(p => p != null))
+                        {
+                            var phase = new todoPhase
+                            {
+                                PhaseName = phaseDto.PhaseName,
+                                Sprint = sprint
+                            };
+
+                            if (phaseDto.Activities != null && phaseDto.Activities.Any())
+                            {
+                                foreach (var phaseActivityDto in phaseDto.Activities.Where(pa => pa != null))
+                                {
+                                    var phaseActivity = new todoPhaseActivity
+                                    {
+                                        ActivityID = phaseActivityDto.ActivityID,
+                                        Date = phaseActivityDto.Date,
+                                        StartTime = phaseActivityDto.StartTime,
+                                        EndTime = phaseActivityDto.EndTime,
+                                        Phase = phase
+                                    };
+
+                                    if (phaseActivityDto.SubTasks != null && phaseActivityDto.SubTasks.Any())
+                                    {
+                                        foreach (var subTaskDto in phaseActivityDto.SubTasks.Where(st => st != null))
+                                        {
+                                            var subTask = new TodoSubTask
+                                            {
+                                                SubTaskID = subTaskDto.SubTaskID,
+                                                Description = subTaskDto.Description
+                                            };
+                                            phaseActivity.SubTasks ??= new List<TodoSubTask>();
+                                            phaseActivity.SubTasks.Add(subTask);
+                                        }
+                                    }
+                                    phase.Activities ??= new List<todoPhaseActivity>();
+                                    phase.Activities.Add(phaseActivity);
+                                }
+                            }
+                            sprint.Phases ??= new List<todoPhase>();
+                            sprint.Phases.Add(phase);
+                        }
+                    }
+                    todoProject!.Sprints ??= new List<TodoSprint>();
+                    todoProject.Sprints.Add(sprint);
+                }
+            }
+
+            _context.TodoProjectSchedules.Add(todoProjectSchedule);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return todoProjectSchedule.Project?.Id ?? 0;
         }
     }
 }

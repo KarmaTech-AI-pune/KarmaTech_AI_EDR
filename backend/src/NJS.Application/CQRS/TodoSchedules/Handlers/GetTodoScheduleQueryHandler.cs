@@ -33,6 +33,13 @@ namespace NJS.Application.CQRS.TodoSchedules.Handlers
                     .ThenInclude(t => t.Activities)
                 .Include(ps => ps.Tasks!)
                     .ThenInclude(t => t.AssignedTo)
+                .Include(ps => ps.Tasks!)
+                    .ThenInclude(t => t.SubTasks)
+                .Include(ps => ps.Project!)
+                    .ThenInclude(p => p.Sprints)
+                        .ThenInclude(s => s.Phases)!
+                            .ThenInclude(ph => ph.Activities)!
+                                .ThenInclude(pha => pha.SubTasks)
                 .FirstOrDefaultAsync(ps => ps.Project != null && ps.Project.Id == projectId, cancellationToken);
 
             if (todoProjectSchedule == null)
@@ -71,8 +78,45 @@ namespace NJS.Application.CQRS.TodoSchedules.Handlers
                             AssigneeID = a.Id,
                             TaskID = a.TaskId ?? 0,
                             AssigneeName = a.Name
+                        }).ToList(),
+                        SubTasks = (t.SubTasks ?? Enumerable.Empty<TodoSubTask>()).Select(st => new SubTaskDto
+                        {
+                            Id = st.Id,
+                            SubTaskID = st.SubTaskID ?? 0,
+                            Description = st.Description,
+                            PhaseActivityId = st.PhaseActivityId ?? 0
+                        }).ToList()
+                    }).ToList(),
+                Sprints = (todoProjectSchedule.Project?.Sprints ?? Enumerable.Empty<TodoSprint>()).Select(s => new SprintDto
+                {
+                    Id = s.Id,
+                    SprintName = s.SprintName,
+                    StartDate = s.StartDate,
+                    EndDate = s.EndDate,
+                    ProjectId = s.ProjectId,
+                    Phases = (s.Phases ?? Enumerable.Empty<todoPhase>()).Select(p => new PhaseDto
+                    {
+                        Id = p.Id,
+                        PhaseName = p.PhaseName,
+                        SprintId = p.SprintId,
+                        Activities = (p.Activities ?? Enumerable.Empty<todoPhaseActivity>()).Select(pa => new PhaseActivityDto
+                        {
+                            Id = pa.Id,
+                            ActivityID = pa.ActivityID ?? 0,
+                            Date = pa.Date,
+                            StartTime = pa.StartTime,
+                            EndTime = pa.EndTime,
+                            PhaseId = pa.PhaseId,
+                            SubTasks = (pa.SubTasks ?? Enumerable.Empty<TodoSubTask>()).Select(st => new SubTaskDto
+                            {
+                                Id = st.Id,
+                                SubTaskID = st.SubTaskID ?? 0,
+                                Description = st.Description,
+                                PhaseActivityId = st.PhaseActivityId ?? 0
+                            }).ToList()
                         }).ToList()
                     }).ToList()
+                }).ToList()
             };
 
             return todoScheduleDto;

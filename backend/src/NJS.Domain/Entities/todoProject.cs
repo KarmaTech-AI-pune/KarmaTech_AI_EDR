@@ -11,5 +11,7 @@ namespace NJS.Domain.Entities
         public string? WorkingHours { get; set; }
 
         public todoProjectLead? ProjectLead { get; set; }
+
+        public ICollection<TodoSprint>? Sprints { get; set; }
     }
 }

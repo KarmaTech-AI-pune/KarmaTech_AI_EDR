@@ -22,6 +22,8 @@ namespace NJS.Domain.Entities
         public ICollection<TodoAssignedTo>? AssignedTo { get; set; }
         public ICollection<TodoActivity>? Activities { get; set; }
 
+        public ICollection<TodoSubTask>? SubTasks { get; set; }
+
         [ForeignKey("ProjectSchedule")]
         public int? ProjectScheduleId { get; set; }
         public todoProjectSchedule? ProjectSchedule { get; set; }

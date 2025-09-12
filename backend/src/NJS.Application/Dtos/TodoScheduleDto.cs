@@ -13,6 +13,7 @@ namespace NJS.Application.Dtos
         public string? ProjectLeadName { get; set; }
         public string? ProjectLeadEmail { get; set; }
         public List<TodoTaskDto>? Tasks { get; set; }
+        public List<SprintDto>? Sprints { get; set; } // Added
     }
 
     public class TodoTaskDto
@@ -25,6 +26,7 @@ namespace NJS.Application.Dtos
         public decimal? CostImpact { get; set; }
         public List<ActivityDto>? Activities { get; set; }
         public List<AssignedToDto>? AssignedTo { get; set; }
+        public List<SubTaskDto>? SubTasks { get; set; } // Added
     }
 
     public class ActivityDto

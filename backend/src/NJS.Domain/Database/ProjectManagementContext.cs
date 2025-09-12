@@ -123,6 +123,11 @@ namespace NJS.Domain.Database
         public DbSet<todoTask> TodoTasks { get; set; }
         public DbSet<TodoAssignedTo> TodoAssignedTos { get; set; }
         public DbSet<TodoActivity> TodoActivities { get; set; }
+        public DbSet<todoPhase> TodoPhases { get; set; } // Added
+        public DbSet<todoPhaseActivity> TodoPhaseActivities { get; set; } // Added
+        public DbSet<TodoSprint> TodoSprints { get; set; } // Added
+        public DbSet<TodoSubTask> TodoSubTasks { get; set; } // Added
+        
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -1253,6 +1258,31 @@ namespace NJS.Domain.Database
                 .HasOne(spf => spf.Feature)
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
+
+            modelBuilder.Entity<todoPhase>()
+                .HasOne(tp => tp.Sprint)
+                .WithMany(ts => ts.Phases)
+                .HasForeignKey(tp => tp.SprintId);
+
+            modelBuilder.Entity<todoPhaseActivity>()
+                .HasOne(tpa => tpa.Phase)
+                .WithMany(tp => tp.Activities)
+                .HasForeignKey(tpa => tpa.PhaseId);
+
+            modelBuilder.Entity<todoPhaseActivity>()
+                .HasMany(tpa => tpa.SubTasks)
+                .WithOne(tst => tst.PhaseActivity)
+                .HasForeignKey(tst => tst.PhaseActivityId);
+
+            modelBuilder.Entity<todoTask>()
+                .HasMany(t => t.AssignedTo)
+                .WithOne(a => a.Task)
+                .HasForeignKey(a => a.TaskId);
+
+            modelBuilder.Entity<TodoSprint>()
+                .HasOne(ts => ts.Project)
+                .WithMany(tp => tp.Sprints)
+                .HasForeignKey(ts => ts.ProjectId);
         }
     }
 }
