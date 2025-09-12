@@ -130,8 +130,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
                         IsDeleted = false,
                         UserWBSTasks = new List<UserWBSTask>(),
-                        PlannedHours = new List<WBSTaskPlannedHour>()
-
+                        PlannedHours = new List<WBSTaskPlannedHour>(),
+                        TodoProjectScheduleId = dto.TodoProjectScheduleId
                     };
 
                     _context.WBSTasks.Add(taskEntity);

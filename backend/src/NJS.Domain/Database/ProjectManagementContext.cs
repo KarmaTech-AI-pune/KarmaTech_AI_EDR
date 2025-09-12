@@ -133,7 +133,31 @@ namespace NJS.Domain.Database
 
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
 
-        public override int SaveChanges()
+        public DbSet<todoProjectSchedule> TodoProjectSchedules { get; set; }
+        public DbSet<todoProject> TodoProjects { get; set; }
+        public DbSet<todoProjectLead> TodoProjectLeads { get; set; }
+        public DbSet<todoTask> TodoTasks { get; set; }
+        public DbSet<TodoAssignedTo> TodoAssignedTos { get; set; }
+        public DbSet<TodoActivity> TodoActivities { get; set; }
+        public DbSet<todoPhase> TodoPhases { get; set; } // Added
+        public DbSet<todoPhaseActivity> TodoPhaseActivities { get; set; } // Added
+        public DbSet<TodoSprint> TodoSprints { get; set; } // Added
+        public DbSet<TodoSubTask> TodoSubTasks { get; set; } // Added
+        
+
+        public DbSet<todoProjectSchedule> TodoProjectSchedules { get; set; }
+        public DbSet<todoProject> TodoProjects { get; set; }
+        public DbSet<todoProjectLead> TodoProjectLeads { get; set; }
+        public DbSet<todoTask> TodoTasks { get; set; }
+        public DbSet<TodoAssignedTo> TodoAssignedTos { get; set; }
+        public DbSet<TodoActivity> TodoActivities { get; set; }
+        public DbSet<todoPhase> TodoPhases { get; set; } // Added
+        public DbSet<todoPhaseActivity> TodoPhaseActivities { get; set; } // Added
+        public DbSet<TodoSprint> TodoSprints { get; set; } // Added
+        public DbSet<TodoSubTask> TodoSubTasks { get; set; } // Added
+        
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             foreach (var entry in ChangeTracker.Entries<ITenantEntity>().ToList())
             {
@@ -173,9 +197,38 @@ namespace NJS.Domain.Database
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
-            modelBuilder.Entity<Role>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
-            modelBuilder.Entity<Project>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
+            // Todo module relationships (no tenant filtering)
+            modelBuilder.Entity<todoProjectSchedule>()
+                .HasOne(ps => ps.Project)
+                .WithOne()
+                .HasForeignKey<todoProject>(p => p.Id);
+
+            modelBuilder.Entity<todoProject>()
+                .HasOne(p => p.ProjectLead)
+                .WithOne()
+                .HasForeignKey<todoProjectLead>(pl => pl.Id);
+
+            modelBuilder.Entity<todoTask>()
+                .HasOne(t => t.ProjectSchedule)
+                .WithMany(ps => ps.Tasks)
+                .HasForeignKey(t => t.ProjectScheduleId);
+
+            modelBuilder.Entity<todoTask>()
+                .HasMany(t => t.AssignedTo)
+                .WithOne(a => a.Task)
+                .HasForeignKey(a => a.TaskId);
+
+            modelBuilder.Entity<TodoActivity>()
+                .HasOne(a => a.Task)
+                .WithMany(t => t.Activities)
+                .HasForeignKey(a => a.TaskId);
+
+            // Configure decimal precision for Todo module
+            modelBuilder.Entity<TodoActivity>()
+                .Property(a => a.ActivityCost)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CheckReview>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CorrespondenceInward>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -1299,7 +1352,30 @@ namespace NJS.Domain.Database
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
 
-            
+            modelBuilder.Entity<todoPhase>()
+                .HasOne(tp => tp.Sprint)
+                .WithMany(ts => ts.Phases)
+                .HasForeignKey(tp => tp.SprintId);
+
+            modelBuilder.Entity<todoPhaseActivity>()
+                .HasOne(tpa => tpa.Phase)
+                .WithMany(tp => tp.Activities)
+                .HasForeignKey(tpa => tpa.PhaseId);
+
+            modelBuilder.Entity<todoPhaseActivity>()
+                .HasMany(tpa => tpa.SubTasks)
+                .WithOne(tst => tst.PhaseActivity)
+                .HasForeignKey(tst => tst.PhaseActivityId);
+
+            modelBuilder.Entity<todoTask>()
+                .HasMany(t => t.AssignedTo)
+                .WithOne(a => a.Task)
+                .HasForeignKey(a => a.TaskId);
+
+            modelBuilder.Entity<TodoSprint>()
+                .HasOne(ts => ts.Project)
+                .WithMany(tp => tp.Sprints)
+                .HasForeignKey(ts => ts.ProjectId);
         }
        
     }
