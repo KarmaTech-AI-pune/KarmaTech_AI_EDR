@@ -11,47 +11,57 @@ interface MetricsGridProps {
 const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
   return (
     <Grid container spacing={3} sx={{ mb: 4 }}>
-      <Grid item xs={12} sm={6} lg={3}>
+      <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
-          title="Total Revenue"
+          title="Total Revenue-Expected"
           value={formatCurrency(metrics.totalRevenue)}
-          change="12.5% vs last quarter"
-          changeType="positive"
+          change={`${metrics.totalRevenueChange}% vs last quater`}
+          changeType={metrics.totalRevenueChangeType}
+          icon="revenue"
+        />
+      </Grid>
+
+      <Grid item xs={12} sm={6} lg={2.4}>
+        <MetricCard
+          title="Total Revenue-Actual"
+          value={formatCurrency(metrics.totalRevenue)}
+          change={`${metrics.totalRevenueChange}% vs last quater`}
+          changeType={metrics.totalRevenueChangeType}
           icon="revenue"
         />
       </Grid>
       
-      <Grid item xs={12} sm={6} lg={3}>
+      <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Profit Margin"
           value={`${metrics.profitMargin}%`}
-          change="2.1% improvement"
-          changeType="positive"
+          change={`${metrics.profitMarginChange}% improvement`}
+          changeType={metrics.profitMarginChangeType}
           icon="profit"
         />
       </Grid>
       
-      <Grid item xs={12} sm={6} lg={3}>
+      <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Revenue at Risk"
           value={formatCurrency(metrics.revenueAtRisk)}
-          change="3 projects affected"
-          changeType="negative"
+          change={`${metrics.revenueAtRiskChange} projects affected`}
+          changeType={metrics.revenueAtRiskChangeType}
           icon="risk"
-          subtitle="Critical attention needed"
         />
       </Grid>
       
-      <Grid item xs={12} sm={6} lg={3}>
+      <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Pending Approvals"
           value={metrics.approvalDelays.toString()}
-          change="Avg 11.7 days delay"
-          changeType="negative"
+          change={`Avg ${metrics.approvalDelaysChange} days delay`}
+          changeType={metrics.approvalDelaysChangeType}
           icon="approvals"
-          subtitle="Process bottleneck identified"
         />
       </Grid>
+      
+      
     </Grid>
   );
 };

@@ -23,11 +23,17 @@ export interface RegionalData {
 
 export interface FinancialMetrics {
   totalRevenue: number;
-  totalProfit: number;
+  totalRevenueChange: number;
+  totalRevenueChangeType: 'positive' | 'negative' | 'neutral';
   profitMargin: number;
-  npv: number;
-  approvalDelays: number;
+  profitMarginChange: number;
+  profitMarginChangeType: 'positive' | 'negative' | 'neutral';
   revenueAtRisk: number;
+  revenueAtRiskChange: number;
+  revenueAtRiskChangeType: 'positive' | 'negative' | 'neutral';
+  approvalDelays: number;
+  approvalDelaysChange: number;
+  approvalDelaysChangeType: 'positive' | 'negative' | 'neutral';
 }
 
 export interface CashflowData {

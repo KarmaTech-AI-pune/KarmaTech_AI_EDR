@@ -27,8 +27,8 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue, onClick, onToggleFl
         mb: 1.5,
       }}
     >
-      <CardContent sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1 }}>
+      <CardContent sx={{ p: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.75rem', color: 'text.secondary' }}>
             <IssueTypeIcon issueType={issue.issueType} />
             <Typography variant="body2" fontWeight="medium">{issue.key}</Typography>
@@ -69,7 +69,7 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue, onClick, onToggleFl
           </Box>
         )}
 
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 1, borderTop: '1px solid', borderColor: 'grey.100' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',  borderTop: '1px solid', borderColor: 'grey.100' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {issue.storyPoints > 0 && (
               <Avatar sx={{ width: 20, height: 20, bgcolor: 'grey.100', color: 'grey.600', fontSize: '0.75rem', fontWeight: 'medium' }}>
