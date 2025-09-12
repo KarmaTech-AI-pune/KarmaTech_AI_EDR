@@ -32,6 +32,7 @@ import {
 import { Issue, TeamMember } from "../../../types/todolist";
 import { IssueTypeIcon } from "../common/IssueTypeIcon";
 import { PriorityIcon } from "../common/PriorityIcon";
+import { IssueDetailRow } from "../common/IssueDetailRow";
 
 interface IssueDetailModalProps {
   showIssueDetail: Issue | null;
@@ -247,7 +248,8 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             borderLeft: "1px solid",
             borderColor: "grey.100",
             p: 3,
-            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <Box sx={{ mb: 3 }}>
@@ -292,171 +294,97 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             </FormControl>
           </Box>
 
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" mb={1}>
-              Assignee
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                p: 1,
-                border: "1px solid",
-                borderColor: "grey.300",
-                borderRadius: 1,
-                bgcolor: "white",
-              }}
-            >
-              {showIssueDetail.assignee ? (
-                <>
-                  <Avatar
-                    sx={{
-                      bgcolor: "primary.main",
-                      width: 24,
-                      height: 24,
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    {showIssueDetail.assignee.avatar}
-                  </Avatar>
-                  <Typography variant="body2">
-                    {showIssueDetail.assignee.name}
-                  </Typography>
-                </>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Unassigned
-                </Typography>
-              )}
-            </Box>
-          </Box>
-
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" mb={1}>
-              Reporter
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                p: 1,
-                border: "1px solid",
-                borderColor: "grey.300",
-                borderRadius: 1,
-                bgcolor: "white",
-              }}
-            >
-              <Avatar
-                sx={{
-                  bgcolor: "primary.main",
-                  width: 24,
-                  height: 24,
-                  fontSize: "0.75rem",
-                }}
-              >
-                {showIssueDetail.reporter.avatar}
-              </Avatar>
-              <Typography variant="body2">
-                {showIssueDetail.reporter.name}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" mb={1}>
-              Priority
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                p: 1,
-                border: "1px solid",
-                borderColor: "grey.300",
-                borderRadius: 1,
-                bgcolor: "white",
-              }}
-            >
-              <PriorityIcon priority={showIssueDetail.priority} />
-              <Typography variant="body2">
-                {showIssueDetail.priority}
-              </Typography>
-            </Box>
-          </Box>
-
-          {showIssueDetail.storyPoints > 0 && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary" mb={1}>
-                Story Points
-              </Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  p: 1,
-                  border: "1px solid",
-                  borderColor: "grey.300",
-                  borderRadius: 1,
-                  bgcolor: "white",
-                }}
-              >
+          <Box sx={{ overflowY: "auto", flex: 1 }}>
+            <IssueDetailRow label="Assignee">
+            {showIssueDetail.assignee ? (
+              <>
                 <Avatar
                   sx={{
-                    width: 20,
-                    height: 20,
-                    bgcolor: "grey.100",
-                    color: "grey.600",
+                    bgcolor: "primary.main",
+                    width: 24,
+                    height: 24,
                     fontSize: "0.75rem",
-                    fontWeight: "medium",
                   }}
                 >
-                  {showIssueDetail.storyPoints}
+                  {showIssueDetail.assignee.avatar}
                 </Avatar>
                 <Typography variant="body2">
-                  {showIssueDetail.storyPoints} points
+                  {showIssueDetail.assignee.name}
                 </Typography>
-              </Box>
-            </Box>
+              </>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Unassigned
+              </Typography>
+            )}
+          </IssueDetailRow>
+
+          <IssueDetailRow label="Reporter">
+            <Avatar
+              sx={{
+                bgcolor: "primary.main",
+                width: 24,
+                height: 24,
+                fontSize: "0.75rem",
+              }}
+            >
+              {showIssueDetail.reporter.avatar}
+            </Avatar>
+            <Typography variant="body2">
+              {showIssueDetail.reporter.name}
+            </Typography>
+          </IssueDetailRow>
+
+          <IssueDetailRow label="Priority">
+            <PriorityIcon priority={showIssueDetail.priority} />
+            <Typography variant="body2">
+              {showIssueDetail.priority}
+            </Typography>
+          </IssueDetailRow>
+
+          {showIssueDetail.storyPoints > 0 && (
+            <IssueDetailRow label="Story Points">
+              <Avatar
+                sx={{
+                  width: 20,
+                  height: 20,
+                  bgcolor: "grey.100",
+                  color: "grey.600",
+                  fontSize: "0.75rem",
+                  fontWeight: "medium",
+                }}
+              >
+                {showIssueDetail.storyPoints}
+              </Avatar>
+              <Typography variant="body2">
+                {showIssueDetail.storyPoints} points
+              </Typography>
+            </IssueDetailRow>
           )}
 
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" mb={1}>
-              Components
-            </Typography>
+          <IssueDetailRow label="Components">
             <Typography variant="body2" color="text.primary">
               {showIssueDetail.components?.join(", ") || "None"}
             </Typography>
-          </Box>
+          </IssueDetailRow>
 
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" mb={1}>
-              Fix Version
-            </Typography>
+          <IssueDetailRow label="Fix Version">
             <Typography variant="body2" color="text.primary">
               {showIssueDetail.fixVersion || "None"}
             </Typography>
-          </Box>
+          </IssueDetailRow>
 
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" mb={1}>
-              Created
-            </Typography>
+          <IssueDetailRow label="Created">
             <Typography variant="body2" color="text.primary">
               {showIssueDetail.createdDate}
             </Typography>
-          </Box>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" mb={1}>
-              Updated
-            </Typography>
+          </IssueDetailRow>
+
+          <IssueDetailRow label="Updated">
             <Typography variant="body2" color="text.primary">
               {showIssueDetail.updatedDate}
             </Typography>
-          </Box>
+          </IssueDetailRow>
 
           {showIssueDetail.subtasks > 0 && (
             <Box sx={{ mb: 3 }}>
@@ -512,6 +440,8 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
               </Box>
             </Box>
           )}
+          </Box>
+          
         </Box>
       </DialogContent>
     </Dialog>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Card,
   CardContent,
@@ -6,11 +6,11 @@ import {
   Typography,
   Chip,
   useTheme,
-  useMediaQuery
-} from '@mui/material';
-import { PendingApproval } from '../../data/types/dashboard';
-import { IMPACT_COLORS } from '../../utils/constants';
-import ActionButton from '../shared/ActionButton';
+  useMediaQuery,
+} from "@mui/material";
+import { PendingApproval } from "../../data/types/dashboard";
+import { IMPACT_COLORS } from "../../utils/constants";
+import ActionButton from "../shared/ActionButton";
 
 interface PendingApprovalsProps {
   approvals: PendingApproval[];
@@ -21,28 +21,30 @@ interface PendingApprovalsProps {
 const PendingApprovals: React.FC<PendingApprovalsProps> = ({
   approvals,
   onEscalate,
-  onRemind
+  onRemind,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
-    <Card sx={{ height: '100%' }}>
+    <Card sx={{ height: "100%" }}>
       <CardContent sx={{ p: isMobile ? 2 : 3 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: isMobile ? 'flex-start' : 'center', 
-          mb: isMobile ? 2 : 3,
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: isMobile ? 1 : 0
-        }}>
-          <Typography 
-            variant="h6" 
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: isMobile ? "flex-start" : "center",
+            mb: isMobile ? 2 : 3,
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? 1 : 0,
+          }}
+        >
+          <Typography
+            variant="h6"
             fontWeight="semibold"
-            sx={{ 
-              fontSize: isMobile ? '1.1rem' : '1.25rem',
-              lineHeight: isMobile ? 1.3 : 1.2
+            sx={{
+              fontSize: isMobile ? "1.1rem" : "1.25rem",
+              lineHeight: isMobile ? 1.3 : 1.2,
             }}
           >
             Pending Approvals
@@ -51,57 +53,72 @@ const PendingApprovals: React.FC<PendingApprovalsProps> = ({
             label={`${approvals.length} Pending`}
             size={isMobile ? "medium" : "small"}
             sx={{
-              backgroundColor: '#f8e1c0ff',
+              backgroundColor: "#f8e1c0ff",
               color: theme.palette.warning.dark,
-              fontWeight: 'medium',
-              fontSize: isMobile ? '0.75rem' : '0.8125rem',
-              alignSelf: isMobile ? 'flex-start' : 'auto'
+              fontWeight: "medium",
+              fontSize: isMobile ? "0.75rem" : "0.8125rem",
+              alignSelf: isMobile ? "flex-start" : "auto",
             }}
           />
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 1.5 : 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: isMobile ? 1.5 : 2,
+          }}
+        >
           {approvals.map((approval) => {
             const impactStyle = IMPACT_COLORS[approval.impact];
             return (
-              <Card 
-                key={approval.id} 
-                variant="outlined" 
-                sx={{ 
-                  p: isMobile ? 1.5 : 2, 
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    boxShadow: 3
-                  }
+              <Card
+                key={approval.id}
+                variant="outlined"
+                sx={{
+                  p: isMobile ? 1.5 : 2,
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    boxShadow: 3,
+                  },
                 }}
               >
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: isMobile ? 'flex-start' : 'center',
-                  flexDirection: isMobile ? 'column' : 'row',
-                  gap: isMobile ? 1 : 2
-                }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    flexDirection: isMobile ? "column" : "row",
+                    gap: isMobile ? 1 : 2,
+                  }}
+                >
                   <Box sx={{ flex: 1 }}>
-                    <Typography 
-                      variant="subtitle1" 
+                    <Typography
+                      variant="subtitle1"
                       fontWeight="medium"
-                      sx={{ fontSize: isMobile ? '0.9rem' : '1rem', mb: 0.5 }}
+                      sx={{ fontSize: isMobile ? "0.9rem" : "1rem", mb: 0.5 }}
                     >
                       {approval.project}
                     </Typography>
-                    <Typography 
-                      variant="body2" 
+                    <Typography
+                      variant="body2"
                       color="text.secondary"
-                      sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem', mb: 1 }}
+                      sx={{ fontSize: isMobile ? "0.8rem" : "0.875rem", mb: 1 }}
                     >
                       Manager: {approval.manager}
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 1 : 2, flexWrap: 'wrap' }}>
-                      <Typography 
-                        variant="caption" 
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: isMobile ? 1 : 2,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
                         color="text.secondary"
-                        sx={{ fontSize: isMobile ? '0.7rem' : '0.75rem' }}
+                        sx={{ fontSize: isMobile ? "0.7rem" : "0.75rem" }}
                       >
                         {approval.days} days overdue
                       </Typography>
@@ -111,19 +128,24 @@ const PendingApprovals: React.FC<PendingApprovalsProps> = ({
                         sx={{
                           backgroundColor: impactStyle.backgroundColor,
                           color: impactStyle.color,
-                          fontWeight: 'medium',
-                          fontSize: isMobile ? '0.7rem' : '0.75rem'
+                          fontWeight: "medium",
+                          fontSize: isMobile ? "0.7rem" : "0.75rem",
+                          "& .MuiChip-label": {
+                            padding: "6px 8px", // Add custom padding to label
+                          },
                         }}
                       />
                     </Box>
                   </Box>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: isMobile ? 'row' : 'column', 
-                    gap: isMobile ? 1 : 1.5,
-                    width: isMobile ? '100%' : 'auto',
-                    justifyContent: isMobile ? 'flex-end' : 'auto'
-                  }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: isMobile ? "row" : "column",
+                      gap: isMobile ? 1 : 1.5,
+                      width: isMobile ? "100%" : "auto",
+                      justifyContent: isMobile ? "flex-end" : "auto",
+                    }}
+                  >
                     <ActionButton
                       variant="primary"
                       size={isMobile ? "small" : "small"}
