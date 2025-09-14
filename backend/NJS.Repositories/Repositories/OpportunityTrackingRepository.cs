@@ -2,10 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {
@@ -31,7 +27,8 @@ namespace NJS.Repositories.Repositories
 
         public async Task<OpportunityTracking> GetByIdAsync(int id)
         {
-            var opportunity = await _context.OpportunityTrackings.Include(x => x.OpportunityHistories).ThenInclude(x => x.Status)
+            var opportunity = await _context.OpportunityTrackings.Include(x => x.OpportunityHistories)
+                .ThenInclude(x => x.Status)
                 .FirstAsync(o => o.Id == id);
 
             if (opportunity == null)
@@ -41,11 +38,12 @@ namespace NJS.Repositories.Repositories
 
             return opportunity;
         }
-       
+
 
         public async Task<IEnumerable<OpportunityTracking>> GetAllAsync()
         {
-            return await _context.OpportunityTrackings.Include(x => x.OpportunityHistories).ThenInclude(x => x.Status).ToListAsync();
+            return await _context.OpportunityTrackings.Include(x => x.OpportunityHistories).ThenInclude(x => x.Status)
+                .ToListAsync();
         }
 
         public async Task<OpportunityTracking> UpdateAsync(OpportunityTracking opportunityTracking)
@@ -72,7 +70,6 @@ namespace NJS.Repositories.Repositories
 
         public async Task<IEnumerable<OpportunityTracking>> GetByBidManagerIdAsync(string bidManagerId)
         {
-
             return await _context.OpportunityTrackings.Include(x => x.OpportunityHistories).ThenInclude(x => x.Status)
                 .Where(o => o.BidManagerId == bidManagerId)
                 .ToListAsync();

@@ -66,6 +66,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             try
@@ -76,13 +77,12 @@ namespace NJSAPI.Controllers
                 }
 
                 // Check for tenant context in headers
-                var tenantContext = Request.Headers["X-Tenant-Context"].FirstOrDefault();
-                
-                // If tenant context is provided, validate it exists
-                if (!string.IsNullOrEmpty(tenantContext))
+                var tenant = model.Tenant ?? Request.Headers["X-Tenant-Context"].FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(tenant))
                 {
-                    await _tenantService.SetTenantContextAsync(tenantContext);
-                    _logger.LogInformation($"Login attempt for tenant: {tenantContext}");
+                    await _tenantService.SetTenantContextAsync(tenant);
+                    _logger.LogInformation($"Login attempt for tenant: {tenant}");
                 }
 
                 var (success, user, token) = await _authService.ValidateUserAsync(model.Email, model.Password);
@@ -157,7 +157,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        //  [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> GetById(string id)
         {
             var query = new GetUserByIdQuery(id);
@@ -170,7 +170,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost("Create")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateUserCommand command)
         {
             command.Password = "Admin@123";
@@ -183,6 +183,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPut("{id}")]       
+        [Authorize]
         public async Task<IActionResult> Update(string id, [FromBody] UpdateUserCommand command)
         {
             if (id != command.Id)

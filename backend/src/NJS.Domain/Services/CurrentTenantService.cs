@@ -75,14 +75,14 @@ namespace NJS.Domain.Services
                 if (tenantInfo == null)
                 {
                     _logger.LogWarning("Tenant not found with ID: {TenantId}", tenant);
-                    throw new Exception($"Tenant not found with ID: {tenant}");
+                    return false;
                 }
 
                 var tenantDb = await _context.TenantDatabases.Where(x => x.TenantId == tenantInfo.Id).FirstOrDefaultAsync();
                 if (tenantDb == null)
                 {
                     _logger.LogWarning("No database configuration found for tenant: {TenantId}", tenant);
-                    throw new Exception($"No database configuration found for tenant: {tenant}");
+                    return false;
                 }
 
                 _tenantId = tenant;

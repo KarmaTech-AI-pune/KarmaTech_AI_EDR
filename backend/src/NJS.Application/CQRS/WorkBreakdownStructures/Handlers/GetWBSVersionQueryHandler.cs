@@ -4,9 +4,6 @@ using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
 using NJS.Application.Dtos;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {

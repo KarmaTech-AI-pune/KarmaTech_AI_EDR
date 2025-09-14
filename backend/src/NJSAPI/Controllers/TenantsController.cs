@@ -1,15 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NJS.Domain.Entities;
 using NJS.Domain.Database;
 using Microsoft.EntityFrameworkCore;
 using NJS.Application.Services.IContract;
-using NJS.Application.Services;
-using Microsoft.Extensions.Logging;
 
 namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TenantsController : ControllerBase
     {
         private readonly ProjectManagementContext _context;

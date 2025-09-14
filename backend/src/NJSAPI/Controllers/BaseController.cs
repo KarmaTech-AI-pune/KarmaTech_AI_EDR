@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using NJS.Application.Services;
 using NJS.Application.Services.IContract;
 using NJS.Repositories.Interfaces;
-using System.Security.Claims;
 
 namespace NJSAPI.Controllers
 {
