@@ -12,3 +12,4 @@ namespace NJS.Application.Services.IContract
         void UpdateWBS(WorkBreakdownStructure wbs);
     }
 }
+

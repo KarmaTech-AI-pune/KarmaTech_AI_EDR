@@ -1,6 +1,6 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using NJS.Application.Dtos;
 using NJS.Application.CQRS.WorkBreakdownStructures.Commands;
 using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
@@ -9,6 +9,7 @@ namespace NJSAPI.Controllers
 {
     [Route("api/projects/{projectId}/[controller]")]
     [ApiController]
+    [Authorize]
     public class WBSController : ControllerBase
     {
         private readonly IMediator _mediator;

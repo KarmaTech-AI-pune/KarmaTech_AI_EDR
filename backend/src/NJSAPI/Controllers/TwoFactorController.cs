@@ -1,12 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
-using Microsoft.Extensions.Logging;
 
 namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TwoFactorController : ControllerBase
     {
         private readonly ITwoFactorService _twoFactorService;

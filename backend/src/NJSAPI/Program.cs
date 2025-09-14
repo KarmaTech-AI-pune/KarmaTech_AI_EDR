@@ -28,24 +28,18 @@ internal class Program
         // Add HttpContextAccessor as singleton
         builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
+        // Add tenant resolution strategies in priority order
+        
         builder.Services.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>();
         builder.Services.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>();
         builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
-
-        // Add tenant resolution strategies in priority order
-        //builder.Services.TryAddEnumerable(new[]
-        //{
-          //  ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>(),
-            //ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>(),
-            //ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>()
-        //});
-
+       
         // Add tenant services
         builder.Services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
         //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
 
         var environment = builder.Configuration.GetValue<string>("DNS:Env");
-        if (environment == "Development" || environment=="Dev")
+        if (environment is "Development" or "Dev")
         {
             builder.Services.AddScoped<IDNSManagementService, MockDNSManagementService>();
         }
@@ -59,10 +53,6 @@ internal class Program
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
         builder.Services.AddTenantServices(builder.Configuration);
-       // builder.Services.AddAndMigrateTenantDatabases(builder.Configuration);
-
-        // Add tenant connection resolver
-        //builder.Services.AddScoped<ProjectManagementContextFactory>();
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddConfiguredSwagger(builder.Configuration);
@@ -105,24 +95,24 @@ internal class Program
         });
 
         // Configure Authorization Policies
-        builder.Services.AddAuthorization(options =>
-        {
-            options.AddPolicy("RequireAdminRole", policy =>
-                policy.RequireRole("Admin"));
-
-            options.AddPolicy("RequireManagerRole", policy =>
-                policy.RequireRole("Manager"));
-
-            options.AddPolicy("RequireUserRole", policy =>
-                policy.RequireRole("User"));
-
-            options.AddPolicy("RequireAdminOrManager", policy =>
-                policy.RequireRole("Admin", "Manager"));
-
-            options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-        });
+        // builder.Services.AddAuthorization(options =>
+        // {
+        //     options.AddPolicy("RequireAdminRole", policy =>
+        //         policy.RequireRole("Admin"));
+        //
+        //     options.AddPolicy("RequireManagerRole", policy =>
+        //         policy.RequireRole("Manager"));
+        //
+        //     options.AddPolicy("RequireUserRole", policy =>
+        //         policy.RequireRole("User"));
+        //
+        //     options.AddPolicy("RequireAdminOrManager", policy =>
+        //         policy.RequireRole("Admin", "Manager"));
+        //
+        //     options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        //         .RequireAuthenticatedUser()
+        //         .Build();
+        // });
 
         builder.Services.AddCompression();
         builder.Host.UseNLog();
@@ -134,6 +124,7 @@ internal class Program
 
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");
+        
 
         app.UseSwagger();
         app.UseSwaggerUI(options =>
@@ -149,6 +140,7 @@ internal class Program
         app.UseMiddleware<TenantResolverMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseMiddleware<TenantMiddleware>();
         app.SeedApplicationData();
         app.MapControllers();
 

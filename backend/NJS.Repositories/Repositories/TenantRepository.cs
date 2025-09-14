@@ -2,8 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {

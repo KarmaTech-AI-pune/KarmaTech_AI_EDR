@@ -2,11 +2,6 @@
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {
@@ -18,6 +13,7 @@ namespace NJS.Repositories.Repositories
         {
             _context = context;
         }
+
         public async Task<OpportunityHistory> GetByIdAsync(int id)
         {
             return await _context.OpportunityHistories
@@ -26,6 +22,7 @@ namespace NJS.Repositories.Repositories
                 .Include(oh => oh.ActionUser)
                 .FirstOrDefaultAsync(oh => oh.Id == id);
         }
+
         public async Task<List<OpportunityHistory>> GetAllAsync()
         {
             return await _context.OpportunityHistories

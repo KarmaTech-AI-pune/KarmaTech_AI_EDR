@@ -10,7 +10,7 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-
+    [Authorize]
     public class BidPreparationController : ControllerBase
     {
         private readonly IMediator _mediator;
