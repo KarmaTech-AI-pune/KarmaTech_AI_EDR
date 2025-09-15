@@ -1,46 +1,33 @@
-name: Push PR Tag to Base Branch
-run-name: "Sync tags on PR merge to ${{ github.event.pull_request.base.ref }}"
+name: Tag on PR Merge
+run-name: "Create tag for PR #${{ github.event.pull_request.number }} on ${{ github.event.pull_request.base.ref }}"
 
 on:
   pull_request:
-    types: [closed]   # fires when PR is closed/merged
+    types: [closed]
 
 jobs:
-  push-tag:
+  create-tag:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # required to push tag
+      contents: write   # required to push tags
     steps:
       - name: Checkout base branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
-          fetch-depth: 0       # fetch full history
-          fetch-tags: true     # make sure tags are available
+          fetch-depth: 0
 
       - name: Set Git config
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # ------------------------------------------------------------------
-      # OPTION 1: Push ALL tags from the PR head branch
-      # ------------------------------------------------------------------
-      - name: Copy all tags from head branch
+      - name: Create new tag
         run: |
-          git fetch origin refs/heads/${{ github.event.pull_request.head.ref }} --tags
-          git push origin --tags
-
-      # ------------------------------------------------------------------
-      # OPTION 2: Push ONLY release tags (starting with v)
-      # Comment out Option 1 above and uncomment this block if you prefer
-      # ------------------------------------------------------------------
-      # - name: Copy only release tags
-      #   run: |
-      #     git fetch origin refs/heads/${{ github.event.pull_request.head.ref }} --tags
-      #     TAGS=$(git tag --merged origin/${{ github.event.pull_request.head.ref }} | grep '^v' || true)
-      #     for tag in $TAGS; do
-      #       echo "Pushing release tag $tag to origin"
-      #       git push origin $tag
-      #     done
+          # Example tag format: pr-123-20250915
+          TAG_NAME="pr-${{ github.event.pull_request.number }}-$(date +'%Y%m%d')"
+          
+          echo "Creating tag: $TAG_NAME"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
