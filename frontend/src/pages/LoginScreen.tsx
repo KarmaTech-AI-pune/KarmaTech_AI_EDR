@@ -42,7 +42,7 @@ export const LoginScreen: React.FC = () => {
 
         try {
             const result = await authApi.login(credentials);
-debugger;
+// debugger;
             if (result.success) {
                 if (result.requiresOtp) {
                     // 2FA is required, show OTP verification

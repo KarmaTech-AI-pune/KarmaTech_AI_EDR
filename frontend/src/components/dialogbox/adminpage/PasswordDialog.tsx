@@ -58,7 +58,7 @@ const PasswordDialog: React.FC<PasswordDialogProps> = ({
       }
 
       setIsLoading(true);
-      debugger;
+      // debugger;
       // Call the API to reset password
       const result = await passwordApi.adminResetUserPassword(user?.email || '', newPassword);
 

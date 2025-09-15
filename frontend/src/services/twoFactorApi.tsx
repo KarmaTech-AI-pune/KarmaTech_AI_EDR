@@ -65,7 +65,7 @@ export const twoFactorApi = {
         email,
         otpCode
       });
-      debugger;
+      // debugger;
       const { success, token } = response.data;
       
       if (success && token) {
@@ -156,7 +156,7 @@ export const twoFactorApi = {
         ? `${API_BASE_URL}api/twofactor/status/${encodeURIComponent(userId)}`
         : `${API_BASE_URL}api/twofactor/status`;
       const response = await axiosInstance.get(url);
-      debugger;
+      // debugger;
       return {
         success: true,
         enabled: Boolean(response.data?.isTwoFactorEnabled)        

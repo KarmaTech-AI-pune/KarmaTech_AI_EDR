@@ -95,7 +95,7 @@ export const UserProfile: React.FC = () => {
   useEffect(() => {
     // Seed initial UI from user object while status loads
     console.log('User object in UserProfile:', user);
-    debugger;
+    // debugger;
     if (user) {
       setState(prev => ({
         ...prev,
@@ -122,7 +122,7 @@ export const UserProfile: React.FC = () => {
 
   // Fetch actual 2FA status from backend; fall back to user object on failure
   useEffect(() => {
-    debugger;
+    // debugger;
     const fetch2FAStatus = async () => {
       //if (!user) return;
       try {
