@@ -3,14 +3,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using NJSAPI.Extensions;
 using NLog.Web;
 using Microsoft.Extensions.Options;
 using NJSAPI.Configurations;
 using NJSAPI.Middleware;
 using NJS.Domain.Services;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
 
@@ -145,3 +143,4 @@ internal class Program
         app.Run();
     }
 }
+
