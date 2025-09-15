@@ -31,7 +31,7 @@ internal class Program
         builder.Services.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>();
         builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
        
-        // Add tenant services
+        // Add tenant services for
         builder.Services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
         //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
 
