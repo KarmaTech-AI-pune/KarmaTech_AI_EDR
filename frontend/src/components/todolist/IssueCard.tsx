@@ -55,15 +55,17 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue, onClick, onToggleFl
           {issue.summary}
         </Typography>
 
-        {issue.subtasks > 0 && (
+        {issue.subtasks.length > 0 && (
           <Box sx={{ mb: 1.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'text.secondary', mb: 0.5 }}>
               <Typography variant="caption">Subtasks</Typography>
-              <Typography variant="caption">{issue.completedSubtasks}/{issue.subtasks}</Typography>
+              <Typography variant="caption">
+                {issue.subtasks.filter(s => s.status === 'Done').length}/{issue.subtasks.length}
+              </Typography>
             </Box>
             <LinearProgress
               variant="determinate"
-              value={(issue.completedSubtasks / issue.subtasks) * 100}
+              value={issue.subtasks.length > 0 ? (issue.subtasks.filter(s => s.status === 'Done').length / issue.subtasks.length) * 100 : 0}
               sx={{ height: 4, borderRadius: 2, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { bgcolor: 'success.main' } }}
             />
           </Box>

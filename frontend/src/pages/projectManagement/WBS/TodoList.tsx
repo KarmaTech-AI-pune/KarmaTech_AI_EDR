@@ -18,6 +18,9 @@ export default function TodoList() {
     deleteIssue,
     moveIssue,
     toggleFlag,
+    createSubtask,
+    updateSubtask,
+    deleteSubtask,
     teamMembers,
   } = useTodolistIssues();
 
@@ -124,6 +127,9 @@ export default function TodoList() {
         onDeleteIssue={deleteIssue}
         onToggleFlag={toggleFlag}
         onUpdateIssue={updateIssue}
+        onCreateSubtask={createSubtask}
+        onUpdateSubtask={updateSubtask}
+        onDeleteSubtask={deleteSubtask}
         teamMembers={teamMembers}
       />
 

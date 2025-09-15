@@ -29,10 +29,11 @@ import {
   Message,
   CalendarMonth,
 } from "@mui/icons-material";
-import { Issue, TeamMember } from "../../../types/todolist";
+import { Issue, TeamMember, Subtask, NewSubtaskFormState } from "../../../types/todolist";
 import { IssueTypeIcon } from "../common/IssueTypeIcon";
 import { PriorityIcon } from "../common/PriorityIcon";
 import { IssueDetailRow } from "../common/IssueDetailRow";
+import { SubtaskList } from "../SubtaskList";
 
 interface IssueDetailModalProps {
   showIssueDetail: Issue | null;
@@ -40,7 +41,10 @@ interface IssueDetailModalProps {
   setEditingIssue: (issue: Issue | null) => void;
   onDeleteIssue: (issueId: string) => void;
   onToggleFlag: (issueId: string) => void;
-  onUpdateIssue: (issueId: string, updates: Partial<Issue>) => void;
+  onUpdateIssue: (issueId: string, updates: Partial<Issue>) => void; // Original onUpdateIssue from parent
+  onCreateSubtask: (parentIssueId: string, subtaskData: NewSubtaskFormState) => void;
+  onUpdateSubtask: (subtaskId: string, updates: Partial<Subtask>) => void;
+  onDeleteSubtask: (subtaskId: string) => void;
   teamMembers: TeamMember[];
 }
 
@@ -51,6 +55,9 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   onDeleteIssue,
   onToggleFlag,
   onUpdateIssue,
+  onCreateSubtask,
+  onUpdateSubtask,
+  onDeleteSubtask,
   teamMembers,
 }) => {
   if (!showIssueDetail) return null;
@@ -62,6 +69,13 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   };
   const handleEdit = () => setEditingIssue(showIssueDetail);
   const handleToggleFlag = () => onToggleFlag(showIssueDetail.id);
+
+  const handleUpdateIssueAndState = (issueId: string, updates: Partial<Issue>) => {
+    onUpdateIssue(issueId, updates);
+    if (showIssueDetail && issueId === showIssueDetail.id) {
+      setShowIssueDetail({ ...showIssueDetail, ...updates });
+    }
+  };
 
   const statusOptions = [
     { value: "To Do", label: "To Do", color: "#f5fb3aff" },
@@ -76,13 +90,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     setShowIssueDetail({ ...showIssueDetail, status: newStatus });
   };
 
-  const handleSubtaskToggle = (index: number) => {
-    const currentCompleted = showIssueDetail.completedSubtasks;
-    const newCompleted =
-      index < currentCompleted ? currentCompleted - 1 : currentCompleted + 1;
-    onUpdateIssue(showIssueDetail.id, { completedSubtasks: newCompleted });
-    setShowIssueDetail({ ...showIssueDetail, completedSubtasks: newCompleted });
-  };
 
   return (
     <Dialog
@@ -141,6 +148,16 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           <Typography variant="body1" color="text.primary" sx={{ mb: 4 }}>
             {showIssueDetail.description || "No description provided."}
           </Typography>
+
+          {/* Subtask Management */}
+          <SubtaskList
+            issue={showIssueDetail}
+            teamMembers={teamMembers}
+            onUpdateIssue={handleUpdateIssueAndState}
+            onCreateSubtask={onCreateSubtask}
+            onUpdateSubtask={onUpdateSubtask}
+            onDeleteSubtask={onDeleteSubtask}
+          />
 
           <Box sx={{ borderTop: "1px solid", borderColor: "grey.100", pt: 3 }}>
             <Typography variant="h6" fontWeight="medium" sx={{ mb: 2 }}>
@@ -386,60 +403,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             </Typography>
           </IssueDetailRow>
 
-          {showIssueDetail.subtasks > 0 && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary" mb={1}>
-                Subtasks ({showIssueDetail.completedSubtasks}/
-                {showIssueDetail.subtasks})
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={
-                  (showIssueDetail.completedSubtasks /
-                    showIssueDetail.subtasks) *
-                  100
-                }
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  bgcolor: "grey.200",
-                  "& .MuiLinearProgress-bar": { bgcolor: "success.main" },
-                  mb: 1.5,
-                }}
-              />
-              <Box>
-                {Array.from({ length: showIssueDetail.subtasks }, (_, i) => (
-                  <FormControlLabel
-                    key={i}
-                    control={
-                      <Checkbox
-                        checked={i < showIssueDetail.completedSubtasks}
-                        onChange={() => handleSubtaskToggle(i)}
-                        size="small"
-                      />
-                    }
-                    label={
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          textDecoration:
-                            i < showIssueDetail.completedSubtasks
-                              ? "line-through"
-                              : "none",
-                          color:
-                            i < showIssueDetail.completedSubtasks
-                              ? "text.secondary"
-                              : "text.primary",
-                        }}
-                      >
-                        Subtask {i + 1}
-                      </Typography>
-                    }
-                  />
-                ))}
-              </Box>
-            </Box>
-          )}
           </Box>
           
         </Box>

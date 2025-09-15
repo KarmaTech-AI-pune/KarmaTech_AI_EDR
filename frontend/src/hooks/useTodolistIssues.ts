@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { initialIssues, teamMembers } from '../data/todolistData';
-import { Issue, TeamMember, NewIssueFormState } from '../types/todolist';
+import { Issue, TeamMember, NewIssueFormState, Subtask, NewSubtaskFormState } from '../types/todolist';
 
 export const useTodolistIssues = () => {
   const [issues, setIssues] = useState<Issue[]>(initialIssues);
@@ -8,6 +8,13 @@ export const useTodolistIssues = () => {
   const getNextIssueKey = () => {
     const maxNum = Math.max(...issues.map(issue => parseInt(issue.key.split('-')[1])));
     return `PROJ-${String(maxNum + 1).padStart(3, '0')}`;
+  };
+
+  const getNextSubtaskKey = (parentIssue: Issue) => {
+    const maxSubtaskNum = parentIssue.subtasks.length > 0 
+      ? Math.max(...parentIssue.subtasks.map(subtask => parseInt(subtask.key.split('-')[2])))
+      : 0;
+    return `${parentIssue.key}-${maxSubtaskNum + 1}`;
   };
 
   const createIssue = (newIssueData: NewIssueFormState) => {
@@ -30,13 +37,75 @@ export const useTodolistIssues = () => {
       flagged: false,
       attachments: 0,
       comments: 0,
-      subtasks: 0,
-      completedSubtasks: 0,
+      subtasks: [],
+      isExpanded: false,
       createdDate: new Date().toISOString().split('T')[0],
       updatedDate: new Date().toISOString().split('T')[0]
     };
 
     setIssues([...issues, issue]);
+  };
+
+  const createSubtask = (parentIssueId: string, subtaskData: NewSubtaskFormState) => {
+    if (!subtaskData.summary.trim()) return;
+
+    setIssues(prevIssues => 
+      prevIssues.map(issue => {
+        if (issue.id === parentIssueId) {
+          const assignedMember = teamMembers.find(member => member.id === subtaskData.assignee);
+          const newSubtask: Subtask = {
+            id: `sub-${Date.now()}`,
+            parentIssueId,
+            key: getNextSubtaskKey(issue),
+            summary: subtaskData.summary,
+            description: subtaskData.description,
+            status: 'To Do',
+            assignee: assignedMember || null,
+            reporter: teamMembers[0], // Current user
+            priority: subtaskData.priority,
+            issueType: 'Sub-task',
+            storyPoints: subtaskData.storyPoints ? parseInt(subtaskData.storyPoints) : undefined,
+            createdDate: new Date().toISOString().split('T')[0],
+            updatedDate: new Date().toISOString().split('T')[0]
+          };
+
+          return {
+            ...issue,
+            subtasks: [...issue.subtasks, newSubtask],
+            updatedDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return issue;
+      })
+    );
+  };
+
+  const updateSubtask = (subtaskId: string, updates: Partial<Subtask>) => {
+    setIssues(prevIssues =>
+      prevIssues.map(issue => ({
+        ...issue,
+        subtasks: issue.subtasks.map(subtask =>
+          subtask.id === subtaskId
+            ? { ...subtask, ...updates, updatedDate: new Date().toISOString().split('T')[0] }
+            : subtask
+        ),
+        updatedDate: issue.subtasks.some(s => s.id === subtaskId) 
+          ? new Date().toISOString().split('T')[0] 
+          : issue.updatedDate
+      }))
+    );
+  };
+
+  const deleteSubtask = (subtaskId: string) => {
+    setIssues(prevIssues =>
+      prevIssues.map(issue => ({
+        ...issue,
+        subtasks: issue.subtasks.filter(subtask => subtask.id !== subtaskId),
+        updatedDate: issue.subtasks.some(s => s.id === subtaskId)
+          ? new Date().toISOString().split('T')[0]
+          : issue.updatedDate
+      }))
+    );
   };
 
   const updateIssue = (issueId: string, updates: Partial<Issue>) => {
@@ -69,6 +138,9 @@ export const useTodolistIssues = () => {
     deleteIssue,
     moveIssue,
     toggleFlag,
+    createSubtask,
+    updateSubtask,
+    deleteSubtask,
     teamMembers // Expose teamMembers for assignee selection
   };
 };
