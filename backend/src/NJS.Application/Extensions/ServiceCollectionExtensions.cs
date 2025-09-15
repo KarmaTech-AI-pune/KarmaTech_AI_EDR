@@ -81,6 +81,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEntityWorkflowStrategy, JobStartFormWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
             services.AddScoped<IFeatureRepository, FeatureRepository>();
+            services.AddScoped<IMeasurementUnitRepository, MeasurementUnitRepository>();
 
             return services;
         }

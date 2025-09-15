@@ -72,6 +72,8 @@ namespace NJS.Domain.Database
 
         // WBS Versioning entities
         public DbSet<WBSVersionHistory> WBSVersionHistories { get; set; }
+
+        public DbSet<MeasurementUnit> MeasurementUnits { get; set; }
         public DbSet<WBSTaskVersionHistory> WBSTaskVersionHistories { get; set; }
         public DbSet<WBSVersionWorkflowHistory> WBSVersionWorkflowHistories { get; set; }
         public DbSet<WBSTaskPlannedHourVersionHistory> WBSTaskPlannedHourVersionHistories { get; set; }
@@ -218,17 +220,15 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<WBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<WBSVersionWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
-            modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
-            
-           
-
-
+            modelBuilder.Entity<MeasurementUnit>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
                 .HasOne(mp => mp.Project)
                 .WithMany()
                 .HasForeignKey(mp => mp.ProjectId);
+
+
 
             // Configure one-to-one relationships with MonthlyProgress
             modelBuilder.Entity<MonthlyProgress>()
@@ -632,7 +632,10 @@ namespace NJS.Domain.Database
                       .WithMany()
                       .HasForeignKey(ut => ut.ResourceRoleId)
                       .OnDelete(DeleteBehavior.SetNull);
+
             });
+
+
 
             // Configure WorkBreakdownStructure entity
             modelBuilder.Entity<WorkBreakdownStructure>(entity =>
