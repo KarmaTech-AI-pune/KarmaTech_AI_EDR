@@ -1,4 +1,5 @@
 name: Push PR Tag to Base Branch
+run-name: "Sync tags on PR merge to ${{ github.event.pull_request.base.ref }}"
 
 on:
   pull_request:
@@ -15,21 +16,31 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0       # fetch full history
+          fetch-tags: true     # make sure tags are available
 
       - name: Set Git config
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Copy tag from head branch
+      # ------------------------------------------------------------------
+      # OPTION 1: Push ALL tags from the PR head branch
+      # ------------------------------------------------------------------
+      - name: Copy all tags from head branch
         run: |
-          # fetch tags from the PR source branch
-          git fetch origin refs/heads/${{ github.event.pull_request.head.ref }}:refs/remotes/origin/${{ github.event.pull_request.head.ref }} --tags
-          
-          # list tags that exist on the head branch but not in base
-          TAGS=$(git tag --merged origin/${{ github.event.pull_request.head.ref }} | grep -v -Ff <(git tag --merged HEAD) || true)
+          git fetch origin refs/heads/${{ github.event.pull_request.head.ref }} --tags
+          git push origin --tags
 
-          for tag in $TAGS; do
-            echo "Pushing tag $tag to origin"
-            git push origin $tag
-          done
+      # ------------------------------------------------------------------
+      # OPTION 2: Push ONLY release tags (starting with v)
+      # Comment out Option 1 above and uncomment this block if you prefer
+      # ------------------------------------------------------------------
+      # - name: Copy only release tags
+      #   run: |
+      #     git fetch origin refs/heads/${{ github.event.pull_request.head.ref }} --tags
+      #     TAGS=$(git tag --merged origin/${{ github.event.pull_request.head.ref }} | grep '^v' || true)
+      #     for tag in $TAGS; do
+      #       echo "Pushing release tag $tag to origin"
+      #       git push origin $tag
+      #     done
