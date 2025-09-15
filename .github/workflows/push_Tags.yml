@@ -1,5 +1,5 @@
-name: Tag on PR Merge
-run-name: "Create tag for PR #${{ github.event.pull_request.number }} on ${{ github.event.pull_request.base.ref }}"
+name: Auto Tag Release on PR Merge
+run-name: "Create release tag for ${{ github.event.pull_request.base.ref }} after PR #${{ github.event.pull_request.number }}"
 
 on:
   pull_request:
@@ -10,24 +10,49 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # required to push tags
+      contents: write
     steps:
       - name: Checkout base branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
+          fetch-tags: true
 
       - name: Set Git config
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create new tag
+      - name: Determine next version tag
+        id: version
         run: |
-          # Example tag format: pr-123-20250915
-          TAG_NAME="pr-${{ github.event.pull_request.number }}-$(date +'%Y%m%d')"
-          
-          echo "Creating tag: $TAG_NAME"
-          git tag $TAG_NAME
-          git push origin $TAG_NAME
+          # Fetch all tags
+          git fetch --tags
+
+          # Get latest tag (default to v1.0.0 if none exist)
+          latest_tag=$(git tag --sort=-v:refname | head -n1)
+          if [[ -z "$latest_tag" ]]; then
+            new_tag="v1.0.0"
+          else
+            # Strip "v" and split version
+            base=${latest_tag#v}
+            major=$(echo $base | cut -d. -f1)
+            minor=$(echo $base | cut -d. -f2)
+            patch=$(echo $base | cut -d. -f3)
+
+            # Increment patch version
+            patch=$((patch+1))
+            new_tag="v$major.$minor.$patch"
+          fi
+
+          echo "latest=$latest_tag" >> $GITHUB_OUTPUT
+          echo "new=$new_tag" >> $GITHUB_OUTPUT
+
+      - name: Create and push new tag
+        run: |
+          echo "Latest tag: ${{ steps.version.outputs.latest }}"
+          echo "New tag: ${{ steps.version.outputs.new }}"
+
+          git tag ${{ steps.version.outputs.new }}
+          git push origin ${{ steps.version.outputs.new }}
