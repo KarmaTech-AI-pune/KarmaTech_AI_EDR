@@ -1,0 +1,35 @@
+name: Push PR Tag to Base Branch
+
+on:
+  pull_request:
+    types: [closed]   # fires when PR is closed/merged
+
+jobs:
+  push-tag:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to push tag
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Set Git config
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Copy tag from head branch
+        run: |
+          # fetch tags from the PR source branch
+          git fetch origin refs/heads/${{ github.event.pull_request.head.ref }}:refs/remotes/origin/${{ github.event.pull_request.head.ref }} --tags
+          
+          # list tags that exist on the head branch but not in base
+          TAGS=$(git tag --merged origin/${{ github.event.pull_request.head.ref }} | grep -v -Ff <(git tag --merged HEAD) || true)
+
+          for tag in $TAGS; do
+            echo "Pushing tag $tag to origin"
+            git push origin $tag
+          done
