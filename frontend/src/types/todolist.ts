@@ -16,10 +16,17 @@ export interface Subtask {
   reporter: TeamMember;
   issueType: "Sub-task";
   storyPoints?: number;
-  attachments: number;
-  comments: number;
+  attachments?: number; 
+  comments?: number;
   createdDate: string;
   updatedDate: string;
+}
+
+export interface Comment {
+  id: string;
+  author: TeamMember;
+  text: string;
+  createdDate: string;
 }
 
 export interface Issue {
@@ -37,7 +44,7 @@ export interface Issue {
   components: string[];
   flagged: boolean;
   attachments: number;
-  comments: number;
+  comments: Comment[]; // Changed from number to array of Comment objects
   subtasks: Subtask[];
   isExpanded: boolean;
   createdDate: string;

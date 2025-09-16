@@ -26,7 +26,20 @@ export const initialIssues: Issue[] = [
     components: ['Authentication'],
     flagged: false,
     attachments: 2,
-    comments: 5,
+    comments: [
+      {
+        id: 'comment-1-1',
+        author: teamMembers[1], // Sarah Wilson
+        text: 'Initial thoughts on authentication flow.',
+        createdDate: '2025-09-01',
+      },
+      {
+        id: 'comment-1-2',
+        author: teamMembers[0], // John Smith
+        text: 'Agreed, focusing on secure JWT implementation first.',
+        createdDate: '2025-09-02',
+      },
+    ],
     isExpanded: false,
     subtasks: [
       {
@@ -92,7 +105,14 @@ export const initialIssues: Issue[] = [
     components: ['UI'],
     flagged: true,
     attachments: 1,
-    comments: 2,
+    comments: [
+      {
+        id: 'comment-2-1',
+        author: teamMembers[2], // Mike Johnson
+        text: 'Reproduced the bug on iPhone 12. It seems related to flexbox.',
+        createdDate: '2025-09-02',
+      },
+    ],
     isExpanded: false,
     subtasks: [],
     createdDate: '2025-09-02',
@@ -113,7 +133,20 @@ export const initialIssues: Issue[] = [
     components: ['Database'],
     flagged: false,
     attachments: 0,
-    comments: 8,
+    comments: [
+      {
+        id: 'comment-3-1',
+        author: teamMembers[4], // David Kim
+        text: 'Initial profiling shows heavy joins on the dashboard query.',
+        createdDate: '2025-08-28',
+      },
+      {
+        id: 'comment-3-2',
+        author: teamMembers[6], // Chris Wilson
+        text: 'Consider adding indexes to `user_id` and `project_id` columns.',
+        createdDate: '2025-08-29',
+      },
+    ],
     isExpanded: true,
     subtasks: [
       {
@@ -194,7 +227,14 @@ export const initialIssues: Issue[] = [
     components: ['UI', 'Design System'],
     flagged: false,
     attachments: 3,
-    comments: 1,
+    comments: [
+      {
+        id: 'comment-4-1',
+        author: teamMembers[5], // Emma Davis
+        text: 'New color palette applied to primary buttons. Looks good!',
+        createdDate: '2025-08-30',
+      },
+    ],
     isExpanded: false,
     subtasks: [
       {
@@ -246,7 +286,20 @@ export const initialIssues: Issue[] = [
     components: ['Security', 'API'],
     flagged: false,
     attachments: 5,
-    comments: 12,
+    comments: [
+      {
+        id: 'comment-5-1',
+        author: teamMembers[6], // Chris Wilson
+        text: 'Completed initial audit of authentication endpoints. Found minor issues.',
+        createdDate: '2025-08-27',
+      },
+      {
+        id: 'comment-5-2',
+        author: teamMembers[0], // John Smith
+        text: 'Working on fixing the identified auth issues.',
+        createdDate: '2025-08-28',
+      },
+    ],
     isExpanded: false,
     subtasks: [
       {

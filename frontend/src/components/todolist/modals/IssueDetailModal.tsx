@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react"; // Added useState
 import {
   Dialog,
   DialogTitle,
@@ -29,7 +29,7 @@ import {
   Message,
   CalendarMonth,
 } from "@mui/icons-material";
-import { Issue, TeamMember, Subtask, NewSubtaskFormState } from "../../../types/todolist";
+import { Issue, TeamMember, Subtask, NewSubtaskFormState, Comment } from "../../../types/todolist"; // Added Comment
 import { IssueTypeIcon } from "../common/IssueTypeIcon";
 import { PriorityIcon } from "../common/PriorityIcon";
 import { IssueDetailRow } from "../common/IssueDetailRow";
@@ -44,7 +44,8 @@ interface IssueDetailModalProps {
   onUpdateIssue: (issueId: string, updates: Partial<Issue>) => void; // Original onUpdateIssue from parent
   onCreateSubtask: (parentIssueId: string, subtaskData: NewSubtaskFormState) => void;
   onUpdateSubtask: (subtaskId: string, updates: Partial<Subtask>) => void;
-  onDeleteSubtask: (subtaskId: string) => void;
+  onDeleteSubtask: (subtaskId: string) => void; // This is the parent's onDeleteSubtask for persistence
+  onAddComment: (issueId: string, commentText: string) => void; // New prop for adding comments
   teamMembers: TeamMember[];
 }
 
@@ -58,9 +59,12 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   onCreateSubtask,
   onUpdateSubtask,
   onDeleteSubtask,
+  onAddComment, // Destructure new prop
   teamMembers,
 }) => {
   if (!showIssueDetail) return null;
+
+  const [newCommentText, setNewCommentText] = useState(""); // State for new comment input
 
   const handleClose = () => setShowIssueDetail(null);
   const handleDelete = () => {
@@ -69,6 +73,29 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   };
   const handleEdit = () => setEditingIssue(showIssueDetail);
   const handleToggleFlag = () => onToggleFlag(showIssueDetail.id);
+
+  const handleDeleteSubtask = (subtaskId: string) => {
+    if (showIssueDetail) {
+      const updatedSubtasks = showIssueDetail.subtasks.filter(
+        (subtask) => subtask.id !== subtaskId
+      );
+      setShowIssueDetail({ ...showIssueDetail, subtasks: updatedSubtasks });
+      onDeleteSubtask(subtaskId); // Call parent's onDeleteSubtask for persistence
+    }
+  };
+
+  const handleUpdateSubtask = (
+    subtaskId: string,
+    updates: Partial<Subtask>
+  ) => {
+    if (showIssueDetail) {
+      const updatedSubtasks = showIssueDetail.subtasks.map((subtask) =>
+        subtask.id === subtaskId ? { ...subtask, ...updates } : subtask
+      );
+      setShowIssueDetail({ ...showIssueDetail, subtasks: updatedSubtasks });
+      onUpdateSubtask(subtaskId, updates); // Call parent's onUpdateSubtask for persistence
+    }
+  };
 
   const handleUpdateIssueAndState = (issueId: string, updates: Partial<Issue>) => {
     onUpdateIssue(issueId, updates);
@@ -90,6 +117,21 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     setShowIssueDetail({ ...showIssueDetail, status: newStatus });
   };
 
+  const handleAddComment = () => {
+    if (newCommentText.trim() && showIssueDetail) {
+      const newComment: Comment = {
+        id: `comment-${Date.now()}`, // Simple unique ID
+        author: showIssueDetail.reporter, // Assuming reporter is the commenter for now
+        text: newCommentText,
+        createdDate: new Date().toISOString().split("T")[0],
+      };
+
+      const updatedComments = [...showIssueDetail.comments, newComment];
+      setShowIssueDetail({ ...showIssueDetail, comments: updatedComments });
+      onAddComment(showIssueDetail.id, newCommentText); // Call parent's onAddComment for persistence
+      setNewCommentText(""); // Clear input
+    }
+  };
 
   return (
     <Dialog
@@ -155,63 +197,27 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             teamMembers={teamMembers}
             onUpdateIssue={handleUpdateIssueAndState}
             onCreateSubtask={onCreateSubtask}
-            onUpdateSubtask={onUpdateSubtask}
-            onDeleteSubtask={onDeleteSubtask}
+            onUpdateSubtask={handleUpdateSubtask}
+            onDeleteSubtask={handleDeleteSubtask}
           />
 
           <Box sx={{ borderTop: "1px solid", borderColor: "grey.100", pt: 3 }}>
             <Typography variant="h6" fontWeight="medium" sx={{ mb: 2 }}>
               Activity
             </Typography>
-            <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-              <Avatar
-                sx={{
-                  bgcolor: "primary.main",
-                  width: 32,
-                  height: 32,
-                  fontSize: "0.75rem",
-                }}
-              >
-                {showIssueDetail.reporter.avatar}
-              </Avatar>
-              <Box
-                sx={{ flex: 1, bgcolor: "grey.50", borderRadius: 1, p: 1.5 }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    fontSize: "0.875rem",
-                    color: "text.secondary",
-                    mb: 0.5,
-                  }}
-                >
-                  <Typography variant="body2" fontWeight="medium">
-                    {showIssueDetail.reporter.name}
-                  </Typography>
-                  <Typography variant="body2">created this issue</Typography>
-                  <Typography variant="body2">
-                    {showIssueDetail.createdDate}
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.primary">
-                  Initial issue creation
-                </Typography>
-              </Box>
-            </Box>
 
-            {showIssueDetail.comments > 0 && (
-              <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+            {/* Existing Comments */}
+            {showIssueDetail.comments.map((comment) => (
+              <Box key={comment.id} sx={{ display: "flex", gap: 2, mb: 2 }}>
                 <Avatar
                   sx={{
-                    bgcolor: "success.main",
+                    bgcolor: "primary.main",
                     width: 32,
                     height: 32,
                     fontSize: "0.75rem",
                   }}
                 >
-                  {showIssueDetail.assignee?.avatar || "U"}
+                  {comment.author.avatar}
                 </Avatar>
                 <Box
                   sx={{ flex: 1, bgcolor: "grey.50", borderRadius: 1, p: 1.5 }}
@@ -227,20 +233,21 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     }}
                   >
                     <Typography variant="body2" fontWeight="medium">
-                      {showIssueDetail.assignee?.name || "Team Member"}
+                      {comment.author.name}
                     </Typography>
-                    <Typography variant="body2">added a comment</Typography>
+                    <Typography variant="body2">commented</Typography>
                     <Typography variant="body2">
-                      {showIssueDetail.updatedDate}
+                      {comment.createdDate}
                     </Typography>
                   </Box>
                   <Typography variant="body2" color="text.primary">
-                    Working on this issue. Making good progress.
+                    {comment.text}
                   </Typography>
                 </Box>
               </Box>
-            )}
+            ))}
 
+            {/* Add New Comment */}
             <Box sx={{ mt: 3 }}>
               <TextField
                 fullWidth
@@ -248,10 +255,18 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                 rows={4}
                 placeholder="Add a comment..."
                 variant="outlined"
+                value={newCommentText}
+                onChange={(e) => setNewCommentText(e.target.value)}
                 sx={{ mb: 1 }}
               />
               <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                <Button variant="contained">Comment</Button>
+                <Button
+                  variant="contained"
+                  onClick={handleAddComment}
+                  disabled={!newCommentText.trim()}
+                >
+                  Comment
+                </Button>
               </Box>
             </Box>
           </Box>

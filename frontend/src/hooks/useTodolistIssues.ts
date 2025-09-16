@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { initialIssues, teamMembers } from '../data/todolistData';
-import { Issue, TeamMember, NewIssueFormState, Subtask, NewSubtaskFormState } from '../types/todolist';
+import { Issue, TeamMember, NewIssueFormState, Subtask, NewSubtaskFormState, Comment } from '../types/todolist'; // Added Comment
 
 export const useTodolistIssues = () => {
   const [issues, setIssues] = useState<Issue[]>(initialIssues);
@@ -36,7 +36,7 @@ export const useTodolistIssues = () => {
       components: [newIssueData.components], // Convert string to array
       flagged: false,
       attachments: 0,
-      comments: 0,
+      comments: [], // Initialize as empty array
       subtasks: [],
       isExpanded: false,
       createdDate: new Date().toISOString().split('T')[0],
@@ -131,6 +131,27 @@ export const useTodolistIssues = () => {
     }
   };
 
+  const addComment = (issueId: string, commentText: string) => {
+    setIssues(prevIssues =>
+      prevIssues.map(issue => {
+        if (issue.id === issueId) {
+          const newComment: Comment = {
+            id: `comment-${Date.now()}`,
+            author: teamMembers[0], // Assuming current user is the first team member
+            text: commentText,
+            createdDate: new Date().toISOString().split('T')[0],
+          };
+          return {
+            ...issue,
+            comments: [...issue.comments, newComment],
+            updatedDate: new Date().toISOString().split('T')[0],
+          };
+        }
+        return issue;
+      })
+    );
+  };
+
   return {
     issues,
     createIssue,
@@ -141,6 +162,7 @@ export const useTodolistIssues = () => {
     createSubtask,
     updateSubtask,
     deleteSubtask,
+    addComment, // Expose addComment
     teamMembers // Expose teamMembers for assignee selection
   };
 };

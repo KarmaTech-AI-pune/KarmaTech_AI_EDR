@@ -138,10 +138,7 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
             <Typography
               variant="body2"
               sx={{
-                textDecoration:
-                  subtask.status === "Done" ? "line-through" : "none",
-                color:
-                  subtask.status === "Done" ? "text.secondary" : "text.primary",
+                
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -217,57 +214,41 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
 
       {/* Status Column */}
       <Box sx={{ display: "flex", alignItems: "center" }}>
-        {isEditing ? (
-          <FormControl size="small" sx={{ minWidth: 100 }}>
-            <Select
-              value={editingStatus}
-              onChange={(e) =>
-                setEditingStatus(e.target.value as Subtask["status"])
-              }
-              onClick={(e) => e.stopPropagation()}
-              sx={{
-                backgroundColor: statusOptions.find(
-                  (opt) => opt.value === editingStatus
-                )?.color,
-                color: editingStatus === "Done" ? "white" : "text.primary",
-                "& .MuiSelect-select": {
-                  padding: "4px 8px",
-                  minHeight: "unset",
-                },
-                "& .MuiOutlinedInput-notchedOutline": {
-                  border: "none",
-                },
-                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  border: "none",
-                },
-                "&:hover .MuiOutlinedInput-notchedOutline": {
-                  border: "none",
-                },
-              }}
-            >
-              {statusOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        ) : (
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Chip
-              label={subtask.status}
-              size="small"
-              sx={{
-                backgroundColor: statusColor,
-                color: subtask.status === "Done" ? "white" : "text.primary",
-                fontWeight: "medium",
-                fontSize: "0.75rem",
-                height: 20,
-                minWidth: "fit-content",
-              }}
-            />
-          </Box>
-        )}
+        <FormControl size="small" sx={{ minWidth: 50 }}>
+          <Select
+            value={subtask.status} // Use subtask.status directly
+            onChange={(e) => {
+              const newStatus = e.target.value as Subtask["status"];
+              onUpdateSubtask(subtask.id, { status: newStatus });
+            }}
+            onClick={(e) => e.stopPropagation()}
+            sx={{
+              backgroundColor: statusOptions.find(
+                (opt) => opt.value === subtask.status
+              )?.color,
+              color: subtask.status === "Done" ? "white" : "text.primary",
+              "& .MuiSelect-select": {
+                padding: "2px 4px",
+                minHeight: "unset",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                border: "none",
+              },
+              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                border: "none",
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                border: "none",
+              },
+            }}
+          >
+            {statusOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center"}}>
