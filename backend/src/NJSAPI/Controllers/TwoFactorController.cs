@@ -7,7 +7,6 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class TwoFactorController : ControllerBase
     {
         private readonly ITwoFactorService _twoFactorService;

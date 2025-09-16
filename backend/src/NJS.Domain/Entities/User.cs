@@ -24,7 +24,7 @@ namespace NJS.Domain.Entities
 
         public bool IsActive { get; set; } = true;
 
-        public new bool TwoFactorEnabled { get; set; } = true; // Default to true for all users
+        public new bool TwoFactorEnabled { get; set; } = false; // Default to true for all users
 
         // Navigation property for WBS Tasks
         public ICollection<UserWBSTask> UserWBSTasks { get; set; }
