@@ -467,8 +467,11 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     if (deleteDialog.rowId && projectId) {
       const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
       try {
-        // Filter the correct state based on formType
+        await WBSStructureAPI.deleteWBSTask(projectId, deleteDialog.rowId);
         setRowsFunc(prevRows => prevRows.filter(row => row.id !== deleteDialog.rowId));
+        setSnackbarMessage('WBS task deleted successfully!');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
       } catch (error) {
         console.error(`Error deleting WBS task from ${formType} form:`, error);
         setSnackbarMessage('Failed to delete WBS task');
@@ -643,13 +646,12 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleHoursChange = (rowId: string, month: string, value: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
-    // Skip processing for odcHours since it's now calculated automatically
     if (month === 'odcHours') {
       return;
     }
 
     // Regular monthly hours
-    const hours = value === '' ? 0 : Math.min(Math.max(parseInt(value) || 0, 0), 160); // Keep validation
+    const hours = value === '' ? 0 : Math.min(Math.max(parseInt(value) || 0, 0));
 
     setRowsFunc(prevRows => prevRows.map(row => {
       if (row.id === rowId) {
