@@ -83,6 +83,7 @@ namespace NJSAPI.Controllers
         {
             var command = new CreateWBSOptionCommand
             {
+                Value = request.Value,
                 Label = request.Label,
                 Level = request.Level,
                 ParentValue = request.ParentValue,
