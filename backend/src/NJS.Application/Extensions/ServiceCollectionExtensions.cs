@@ -70,8 +70,8 @@ namespace NJS.Application.Extensions
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
 
-            // Todo schedule
-            services.AddScoped<ITodoScheduleRepository, TodoScheduleRepository>();
+            // Project schedule (new Todo entities replacement)
+            services.AddScoped<IProjectScheduleRepository, ProjectScheduleRepository>();
 
             // Register DNS Management Service based on environment
             var environment = services.BuildServiceProvider().GetService<IWebHostEnvironment>();
