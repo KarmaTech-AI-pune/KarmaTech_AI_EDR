@@ -473,10 +473,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleDeleteConfirm = async () => {
     if (deleteDialog.rowId && projectId) {
-      const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
       try {
         await WBSStructureAPI.deleteWBSTask(projectId, deleteDialog.rowId);
-        // After successful deletion, reload all WBS data to ensure totals are recalculated
         await loadWBSData(projectId);
         setSnackbarMessage('WBS task deleted successfully!');
         setSnackbarSeverity('success');

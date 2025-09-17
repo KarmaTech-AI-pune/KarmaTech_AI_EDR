@@ -38,7 +38,7 @@ import { projectManagementAppContextType } from '../types';
 import { twoFactorApi } from '../services/twoFactorApi';
 import { passwordApi } from '../services/passwordApi';
 import { authApi } from '../services/authApi';
-import { de } from 'date-fns/locale';
+
 
 interface PasswordChangeData {
   currentPassword: string;
