@@ -178,8 +178,19 @@ namespace NJSAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _mediator.Send(command);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            try
+            {
+                var result = await _mediator.Send(command);
+                if(result == null)
+                {
+                    return BadRequest(command);
+                }
+                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]       
