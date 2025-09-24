@@ -2,11 +2,17 @@ import { FinancialMetrics, CashflowData } from '../types/dashboard';
 
 export const financialMetrics: FinancialMetrics = {
   totalRevenue: 8600000,
-  totalProfit: 1548000,
+  totalRevenueChange: 12.5,
+  totalRevenueChangeType: "positive",
   profitMargin: 18,
-  npv: 2100000,
+  profitMarginChange: 2.1,
+  profitMarginChangeType: "positive",
   approvalDelays: 12,
-  revenueAtRisk: 450000
+  approvalDelaysChange: 11.7,
+  approvalDelaysChangeType: "negative",
+  revenueAtRisk: 450000,
+  revenueAtRiskChange: 3,
+  revenueAtRiskChangeType: "negative"
 };
 
 export const cashflowData: CashflowData[] = [
