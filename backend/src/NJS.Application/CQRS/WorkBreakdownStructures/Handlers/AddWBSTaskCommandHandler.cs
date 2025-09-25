@@ -11,25 +11,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging; // Add this for ILogger
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
-    public class AddWBSTaskCommandHandler : IRequestHandler<AddWBSTaskCommand, int>
+    public class AddWBSTaskCommandHandler : IRequestHandler<AddWBSTaskCommand, WBSTaskDto>
     {
         private readonly ProjectManagementContext _context;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<AddWBSTaskCommandHandler> _logger; // Inject ILogger
 
         // TODO: Inject ICurrentUserService or similar
         private readonly string _currentUser = "System"; // Placeholder
 
-        public AddWBSTaskCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork)
+        public AddWBSTaskCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork, ILogger<AddWBSTaskCommandHandler> logger)
         {
             _context = context;
             _unitOfWork = unitOfWork;
+            _logger = logger; // Assign logger
         }
 
-        public async Task<int> Handle(AddWBSTaskCommand request, CancellationToken cancellationToken)
+        public async Task<WBSTaskDto> Handle(AddWBSTaskCommand request, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Handling AddWBSTaskCommand for ProjectId {ProjectId}, Payload {@Payload}",
+                request.ProjectId, request.TaskDto);
+
             // --- 1. Find the active WBS for the project ---
             var wbs = await _context.WorkBreakdownStructures
                 .Include(w => w.Tasks) // Include tasks to potentially validate ParentId if needed
@@ -37,11 +43,20 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
             if (wbs == null)
             {
-                // Option 1: Throw specific exception
-                // throw new NotFoundException(nameof(WorkBreakdownStructure), request.ProjectId);
-                // Option 2: Return a specific value indicating failure (e.g., 0 or -1)
-                // Option 3: Throw generic exception
-                throw new Exception($"Active Work Breakdown Structure not found for Project ID {request.ProjectId}. Cannot add task.");
+                _logger.LogWarning("No active Work Breakdown Structure found for Project ID {ProjectId}. Creating a new one.", request.ProjectId);
+                // Create a new WBS if none exists
+                wbs = new WorkBreakdownStructure
+                {
+                    ProjectId = request.ProjectId,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = _currentUser,
+                    // Set other default properties as needed
+                    Tasks = new List<WBSTask>() // Initialize tasks collection
+                };
+                _context.WorkBreakdownStructures.Add(wbs);
+                await _unitOfWork.SaveChangesAsync(); // Save the new WBS to get its ID
+                _logger.LogInformation("New Work Breakdown Structure created with ID {WBSId} for Project ID {ProjectId}.", wbs.Id, request.ProjectId);
             }
 
             // Handle ParentId based on task level
@@ -53,6 +68,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             // Optional: Validate ParentId if provided
             if (request.TaskDto.ParentId.HasValue && !wbs.Tasks.Any(t => t.Id == request.TaskDto.ParentId.Value && !t.IsDeleted))
             {
+                _logger.LogError("Parent Task with ID {ParentId} not found in WBS {WBSId}.", request.TaskDto.ParentId.Value, wbs.Id);
                 throw new Exception($"Parent Task with ID {request.TaskDto.ParentId.Value} not found in the WBS.");
             }
 
@@ -60,34 +76,37 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             var taskDto = request.TaskDto;
             var taskEntity = new WBSTask
             {
-                WorkBreakdownStructureId = wbs.Id, // Associate with the found WBS
+                WorkBreakdownStructureId = wbs.Id, // Associate with the found or newly created WBS
                 Title = taskDto.Title,
                 Description = taskDto.Description,
-                Level = taskDto.Level, // No cast needed now
+                Level = taskDto.Level,
                 ParentId = taskDto.ParentId,
-                DisplayOrder = taskDto.DisplayOrder, // Consider logic to determine next DisplayOrder if needed
+                DisplayOrder = taskDto.DisplayOrder,
                 EstimatedBudget = taskDto.EstimatedBudget,
                 StartDate = taskDto.StartDate,
                 EndDate = taskDto.EndDate,
-                TaskType = taskDto.TaskType, // Set TaskType
+                TaskType = taskDto.TaskType,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = _currentUser,
                 IsDeleted = false,
                 UserWBSTasks = new List<UserWBSTask>(),
                 PlannedHours = new List<WBSTaskPlannedHour>()
             };
+            _logger.LogInformation("Mapped WBSTask entity: {@TaskEntity}", taskEntity);
 
             // --- 3. Add User Assignment and Planned Hours ---
-            // Using copied helper methods (could be refactored later)
             await UpdateUserAssignment(taskEntity, taskDto, cancellationToken);
             UpdatePlannedHours(taskEntity, taskDto, wbs.ProjectId);
 
             // --- 4. Add to context and save ---
             _context.WBSTasks.Add(taskEntity);
+            _logger.LogInformation("Adding WBSTask to context. Attempting to save changes.");
             await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("WBSTask saved successfully. New Task ID: {TaskId}", taskEntity.Id);
 
             // --- 5. Return the new Task ID ---
-            return taskEntity.Id;
+            taskDto.Id = taskEntity.Id; // Populate the ID in the DTO
+            return taskDto;
         }
 
         // --- Helper methods copied from SetWBSCommandHandler ---
