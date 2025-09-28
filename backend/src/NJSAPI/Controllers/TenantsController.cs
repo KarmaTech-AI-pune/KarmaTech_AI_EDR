@@ -164,11 +164,11 @@ namespace NJSAPI.Controllers
                 await _subscriptionService.UpdateTenantSubscriptionAsync(tenant.Id, tenant.SubscriptionPlanId.Value);
             }
 
-            _context.Entry(existingTenant).CurrentValues.SetValues(tenant);
+            _tenantDbContext.Entry(existingTenant).CurrentValues.SetValues(tenant);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _tenantDbContext.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
