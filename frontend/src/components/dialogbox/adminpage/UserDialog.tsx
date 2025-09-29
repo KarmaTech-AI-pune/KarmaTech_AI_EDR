@@ -20,6 +20,7 @@ import {
 import { AuthUser } from '../../../models/userModel';
 import { Role } from '../../../models/roleModel';
 import { useRoles } from '../../../hooks/useRoles';
+import { useNumericInput } from '../../../hooks/useNumericInput';
 
 interface UserDialogProps {
   open: boolean;
@@ -56,6 +57,30 @@ const UserDialog: React.FC<UserDialogProps> = ({
   // 🔹 keep errors in local state
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [submitted, setSubmitted] = React.useState(false);
+
+  const { value: standardRateValue, setValue: setStandardRateValue, handleChange: handleRateChange } =
+    useNumericInput(formData.standardRate);
+
+  React.useEffect(() => {
+    setStandardRateValue(String(formData.standardRate ?? ""));
+  }, [formData.standardRate, setStandardRateValue]);
+
+    // when hook changes, push update to parent formData
+  const handleStandardRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleRateChange(e); // sanitize locally
+
+    // Create a synthetic event with the correct types
+    const syntheticEvent = {
+      ...e,
+      target: {
+        ...e.target,
+        name: "standardRate",
+        value: e.target.value, // keep as string for compatibility
+      },
+    } as React.ChangeEvent<HTMLInputElement>;
+
+    handleInputChange(syntheticEvent);
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -170,8 +195,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
                 label="Standard Rate"
                 type="number"
                 required={!editingUser}
-                value={formData.standardRate}
-                onChange={handleInputChange}
+                value={standardRateValue}         // ✅ hook’s value
+                onChange={handleStandardRateChange} // ✅ sync hook + parent
                 fullWidth
                 error={submitted && !!errors.standardRate}
                 helperText={submitted ? errors.standardRate : ""}
