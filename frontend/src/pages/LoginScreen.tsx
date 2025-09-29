@@ -1,4 +1,4 @@
-import { useState, useContext  } from 'react'
+import { useState, useContext } from 'react'
 import { Navigate } from 'react-router-dom';
 import {
     TextField,
@@ -16,6 +16,7 @@ import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { OTPVerification } from '../components/OTPVerification';
+import UserSubscriptionContext from '../context/UserSubscriptionContext'; // Import UserSubscriptionContext
 
 export const LoginScreen: React.FC = () => {
     const [email, setUsername] = useState('');
@@ -24,6 +25,7 @@ export const LoginScreen: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [requiresOtp, setRequiresOtp] = useState(false);
     const { isAuthenticated, setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
+    const { refreshSubscription } = useContext(UserSubscriptionContext)!; // Access refreshSubscription
     const navigation = useAppNavigation();
 
     if (isAuthenticated) {
@@ -55,6 +57,7 @@ export const LoginScreen: React.FC = () => {
                         setUser(result.user);
                         setIsAuthenticated(true);
                         navigation.navigateToHome();
+                        await refreshSubscription(); // Call refreshSubscription from context
                     } else {
                         setError('Failed to set authentication token');
                     }
@@ -72,12 +75,13 @@ export const LoginScreen: React.FC = () => {
         }
     };
 
-    const handleOtpVerificationSuccess = (response: any) => {
+    const handleOtpVerificationSuccess = async (response: any) => { // Made async
         if (response.success) {
             // Token and user are already stored in localStorage by twoFactorApi.verifyOtp
             setUser(response.user);
             setIsAuthenticated(true);
             navigation.navigateToHome();
+            await refreshSubscription(); // Call refreshSubscription after OTP success
         } else {
             setError(response.message || 'OTP verification failed');
         }

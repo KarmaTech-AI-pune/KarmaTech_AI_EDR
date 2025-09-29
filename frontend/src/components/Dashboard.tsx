@@ -7,12 +7,14 @@ import { NotificationCenter } from './navigation/NotificationCenter';
 import { useEffect, useState, useContext } from 'react';
 import { PermissionType } from '../models';
 import { projectManagementAppContext } from '../App';
+import UserSubscriptionContext from '../context/UserSubscriptionContext'; // Import UserSubscriptionContext
 
 const NAVBAR_HEIGHT = '64px';
 
 export const Dashboard = () => {
   const [projectList, setProjectList] = useState<null | JSX.Element>(null);
   const context = useContext(projectManagementAppContext);
+  const { subscription } = useContext(UserSubscriptionContext)!; // Access subscription from context
 
   useEffect(() => {
     if (context?.currentUser?.roleDetails?.permissions.includes(PermissionType.VIEW_PROJECT)) {
@@ -50,6 +52,19 @@ export const Dashboard = () => {
         >
           Welcome, {context?.currentUser?.name || 'User'}!
         </Typography>
+        {subscription?.planName && (
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              mb: 3,
+              fontSize: { xs: '1rem', sm: '1.2rem' },
+              fontWeight: 400,
+              color: '#3f51b5'
+            }}
+          >
+            Subscription Plan: {subscription.planName}
+          </Typography>
+        )}
         
         <Box
           sx={{
