@@ -32,8 +32,8 @@ interface UserDialogProps {
     email: string;
     password: string;
     roles: Role[];
-    standardRate: number,
-    isConsultant: boolean,
+    standardRate: number;
+    isConsultant: boolean;
   };
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleRoleChange: (event: SelectChangeEvent<string[]>) => void;
@@ -52,6 +52,57 @@ const UserDialog: React.FC<UserDialogProps> = ({
 }) => {
   const { roles, loading, error } = useRoles();
   const selectedRoleNames = formData.roles;
+
+  // 🔹 keep errors in local state
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = React.useState(false);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.userName.trim()) {
+      newErrors.userName = "Username is required";
+    } else if (formData.userName.trim().split(/\s+/).length > 1) {
+      newErrors.userName = "Username should be a single word";
+    }
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (!editingUser && !formData.password.trim()) {
+      newErrors.password = "Password is required";
+    }
+
+    if (!formData.standardRate || formData.standardRate <= 0) {
+      newErrors.standardRate = "Standard rate must be greater than 0";
+    }
+
+    if (formData.roles.length === 0) {
+      newErrors.roles = "Select at least one role";
+    }
+
+    return newErrors;
+  };
+
+  const handleSubmit = () => {
+    setSubmitted(true);
+    const validationErrors = validateForm();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setErrors({});
+    onSubmit(); 
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -79,6 +130,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
                 value={formData.userName}
                 onChange={handleInputChange}
                 fullWidth
+                error={submitted && !!errors.userName}
+                helperText={submitted ? errors.userName : ""}
               />
               <TextField
                 name="name"
@@ -87,6 +140,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
                 value={formData.name}
                 onChange={handleInputChange}
                 fullWidth
+                error={submitted && !!errors.name}
+                helperText={submitted ? errors.name : ""}
               />
               <TextField
                 name="email"
@@ -96,6 +151,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
                 value={formData.email}
                 onChange={handleInputChange}
                 fullWidth
+                error={submitted && !!errors.email}
+                helperText={submitted ? errors.email : ""}
               />
               <TextField
                 name="password"
@@ -105,6 +162,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
                 value={formData.password}
                 onChange={handleInputChange}
                 fullWidth
+                error={submitted && !!errors.password}
+                helperText={submitted ? errors.password : ""}
               />
               <TextField
                 name="standardRate"
@@ -114,6 +173,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
                 value={formData.standardRate}
                 onChange={handleInputChange}
                 fullWidth
+                error={submitted && !!errors.standardRate}
+                helperText={submitted ? errors.standardRate : ""}
               />
 
               <FormControlLabel
@@ -127,7 +188,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
                 label="IsConsultant"
               />
 
-              <FormControl fullWidth required>
+              <FormControl fullWidth required error={submitted && !!errors.roles}>
                 <InputLabel>Roles</InputLabel>
                 <Select
                   multiple
@@ -143,13 +204,15 @@ const UserDialog: React.FC<UserDialogProps> = ({
                     </MenuItem>
                   ))}
                 </Select>
-                <FormHelperText>Select at least one role</FormHelperText>
+                <FormHelperText>
+                  {submitted ? errors.roles : "Select at least one role"}
+                </FormHelperText>
               </FormControl>
             </Stack>
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose}>Cancel</Button>
-            <Button onClick={onSubmit} variant="contained" color="primary">
+            <Button onClick={handleSubmit} variant="contained" color="primary">
               {editingUser ? 'Save' : 'Add'}
             </Button>
           </DialogActions>
