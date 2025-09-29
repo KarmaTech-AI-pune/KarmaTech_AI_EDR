@@ -5,6 +5,8 @@ import {
   UpdateSubscriptionPlanRequest,
   SubscriptionStats 
 } from '../models/subscriptionModel';
+import { SubscriptionData } from '../types/subscriptionType';
+import { getUserPlan } from '../dummyapi/subscriptionPlanData';
 
 export const getSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
   const response = await axiosInstance.get(`api/subscriptions/plans`);
@@ -48,4 +50,16 @@ export const updateTenantSubscription = async (tenantId: number, planId: number)
 export const getSubscriptionStats = async (): Promise<SubscriptionStats> => {
   const response = await axiosInstance.get(`api/subscriptions/stats`);
   return response.data;
+};
+
+export const getUserSubscriptionDetails =async (): Promise<SubscriptionData | null> => {
+    try {
+      // const response = await axiosInstance.get<SubscriptionData>("/api/user/subscription");
+      // return response.data;
+      const data = getUserPlan(1);
+      return Promise.resolve(data);
+    } catch (error) {
+      console.error("Error fetching subscription details:", error);
+      return null;
+    }
 };
