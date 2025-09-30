@@ -57,7 +57,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 CreatedBy = dto.ProjectManagerId, // Using Project Manager as creator
                 LastModifiedBy = dto.ProjectManagerId,
                 LetterOfAcceptance = dto.LetterOfAcceptance,
-                OpportunityTrackingId = dto.OpportunityTrackingId == 0 ? null : dto.OpportunityTrackingId,
+                OpportunityTrackingId = dto.OpportunityTrackingId,
             };
 
             // Calculate duration in months if not provided and dates are available

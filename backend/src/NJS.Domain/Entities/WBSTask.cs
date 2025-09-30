@@ -66,5 +66,10 @@ namespace NJS.Domain.Entities
         public ICollection<WBSTask> Children { get; set; } = new List<WBSTask>();
         public ICollection<WBSTaskPlannedHour> PlannedHours { get; set; } = new List<WBSTaskPlannedHour>();
         public ICollection<UserWBSTask> UserWBSTasks { get; set; } = new List<UserWBSTask>();
+
+        public int? TodoProjectScheduleId { get; set; }
+
+        [ForeignKey(nameof(TodoProjectScheduleId))]
+        public todoProjectSchedule TodoProjectSchedule { get; set; }
     }
 }

@@ -90,7 +90,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 CreatedBy = _currentUser,
                 IsDeleted = false,
                 UserWBSTasks = new List<UserWBSTask>(),
-                PlannedHours = new List<WBSTaskPlannedHour>()
+                PlannedHours = new List<WBSTaskPlannedHour>(),
+                TodoProjectScheduleId = taskDto.TodoProjectScheduleId
             };
             _logger.LogInformation("Mapped WBSTask entity: {@TaskEntity}", taskEntity);
 

@@ -29,6 +29,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
@@ -52,6 +53,12 @@ const formSections = [
           title: 'ODC Form',
           icon: <ReceiptLongIcon />,
           path: 'forms/wbs/odc'
+        },
+        {
+          id: 'todolist',
+          title: 'TodoList',
+          icon: <ChecklistRtlIcon />,
+          path: 'forms/wbs/todo-list'
         }
       ]
     },
@@ -184,12 +191,12 @@ export const SideMenu: React.FC = () => {
         },
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', py: 1 }}>
         <IconButton onClick={toggleDrawer}>
           {isDrawerExpanded ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </IconButton>
       </Box>
-      <List sx={{ width: '100%', p: 2 }}>
+      <List sx={{ width: '100' }}>
         {menuSections.map((section) => (
           <Box key={section.id}>
             <ListItem disablePadding>
@@ -206,7 +213,6 @@ export const SideMenu: React.FC = () => {
                   },
                   minHeight: 48,
                   justifyContent: isDrawerExpanded ? 'initial' : 'center',
-                  px: 2.5,
                 }}
               >
                 <Tooltip title={!isDrawerExpanded ? section.title : ''} placement="right">
