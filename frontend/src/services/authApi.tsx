@@ -14,6 +14,7 @@ interface DecodedToken {
   iss: string;
   aud: string;
   jti: string;
+  SubscriptionPlanId?: number; // Add SubscriptionPlanId to the decoded token interface
 }
 
 export const authApi = {

@@ -787,6 +787,24 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         return;
       }
 
+        if (
+        !combinedWbsData ||
+        combinedWbsData.length === 0 ||
+        combinedWbsData == undefined
+      ) {
+        if (formType === "manpower") {
+          setIsManpowerEditing(!isManpowerEditing);
+        } else {
+          setIsOdcEditing(!isOdcEditing);
+        }
+
+        setSnackbarMessage("Add levels to save the tasks");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+
+        return;
+      }
+
       // Save the combined, complete WBS data
       await WBSStructureAPI.setProjectWBS(projectId, combinedWbsData);
 
