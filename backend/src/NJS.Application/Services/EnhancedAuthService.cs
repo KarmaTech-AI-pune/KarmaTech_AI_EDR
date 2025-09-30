@@ -195,7 +195,7 @@ namespace NJS.Application.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        private async Task<string> GenerateJwtTokenAsync(User user)
+        public async Task<string> GenerateJwtTokenAsync(User user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -287,6 +287,23 @@ namespace NJS.Application.Services
 
             var result = await _userManager.AddToRoleAsync(user, roleName);
             return result.Succeeded;
+        }
+
+        public async  Task<bool> ValidateUserAnsPasswordAsync(string email, string password)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return false;
+            }
+
+            var isValidPassword = await _userManager.CheckPasswordAsync(user, password);
+            if (!isValidPassword)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 } 

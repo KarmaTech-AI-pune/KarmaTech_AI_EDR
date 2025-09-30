@@ -349,7 +349,7 @@ The component is designed to be used within a project management context and req
      srNo: number;
      incomingLetterNo: string;
      letterDate: string;
-     njsInwardNo: string;
+     inwardNo: string;
      receiptDate: string;
      from: string;
      subject: string;

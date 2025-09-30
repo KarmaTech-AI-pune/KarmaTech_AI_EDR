@@ -41,19 +41,10 @@ namespace NJS.Repositories.Repositories
 
             try
             {
-                // Check if we need to reset the identity seed before adding a new entry
-                await ResetIdentitySeedAsync();
-
-                // Set creation timestamp
                 correspondenceInward.CreatedAt = DateTime.Now;
-
-                // Don't set the ID - let the database assign it automatically
-
                 _context.CorrespondenceInwards.Add(correspondenceInward);
                 await _context.SaveChangesAsync();
-
                 _logger.LogInformation($"Added correspondence inward with ID: {correspondenceInward.Id}");
-
                 return correspondenceInward.Id;
             }
             catch (Exception ex)

@@ -8,11 +8,14 @@ using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NJSAPI.Controllers
 {
+   
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ProjectController : BaseController
     {
         private readonly IMediator _mediator;

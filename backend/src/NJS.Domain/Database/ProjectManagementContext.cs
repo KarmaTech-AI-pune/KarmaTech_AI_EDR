@@ -132,6 +132,7 @@ namespace NJS.Domain.Database
         public DbSet<Feature> Features { get; set; }
 
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
+        public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
 
         // Main Projects (tenant-based) - Note: This was already defined above
 

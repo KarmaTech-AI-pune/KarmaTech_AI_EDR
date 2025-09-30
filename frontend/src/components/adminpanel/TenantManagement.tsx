@@ -122,7 +122,7 @@ const TenantManagement = () => {
   };
 
   const handleSubmit = async () => {
-    debugger;
+    // debugger;
     try {
       const dataToSubmit = {
         ...formData,

@@ -165,7 +165,8 @@ export const ProjectManagement: React.FC = () => {
     if (!currentUser) return false;
 
     // If user has admin permissions, show all projects
-    if (currentUser.roleDetails?.permissions.includes(PermissionType.SYSTEM_ADMIN)) {
+    if (currentUser.roleDetails?.permissions.includes(PermissionType.SYSTEM_ADMIN) ||
+        currentUser.roleDetails?.permissions.includes(PermissionType.Tenant_ADMIN)) {
       return true;
     }
 

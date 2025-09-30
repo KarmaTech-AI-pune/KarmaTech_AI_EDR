@@ -39,7 +39,7 @@ export const enhancedAuthApi = {
   // Login with tenant context detection
   login: async (credentials: Credentials, tenantContext?: string): Promise<LoginResponse> => {
     try {
-      debugger;
+      // debugger;
       // Determine API endpoint based on tenant context
       let apiUrl = `${API_BASE_URL}api/user/login`;
       

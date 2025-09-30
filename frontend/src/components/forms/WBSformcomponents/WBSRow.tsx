@@ -369,7 +369,6 @@ const WBSRow: React.FC<WBSRowProps> = ({
               value={getPlannedHours(month)}
               onChange={(e) => onHoursChange(row.id, month, e.target.value)}
               min="0"
-              max="160"
               style={{
                 backgroundColor: editMode ? '#f5f5f5' : 'white'
               }}
