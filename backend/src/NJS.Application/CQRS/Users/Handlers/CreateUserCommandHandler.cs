@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using NJS.Application.CQRS.Email.Notifications;
 using NJS.Application.CQRS.Users.Commands;
 using NJS.Application.Dtos;
 using NJS.Domain.Entities;
@@ -11,13 +12,16 @@ namespace NJS.Application.CQRS.Users.Handlers
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
+        private readonly IMediator _mediator;
 
         public CreateUserCommandHandler(
             UserManager<User> userManager,
-            RoleManager<Role> roleManager)
+            RoleManager<Role> roleManager,
+            IMediator mediator)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+            _mediator = mediator;
         }
 
         public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -34,6 +38,13 @@ namespace NJS.Application.CQRS.Users.Handlers
                 CreatedAt = DateTime.UtcNow
             };
 
+            if (await _userManager.FindByNameAsync(request.UserName) != null)
+                return new UserDto();
+
+            if (await _userManager.FindByEmailAsync(request.Email) != null)
+            {
+                return new UserDto();
+            }
             var result = await _userManager.CreateAsync(user, request.Password);
             if (!result.Succeeded)
             {
@@ -72,7 +83,12 @@ namespace NJS.Application.CQRS.Users.Handlers
 
                 });
             }
-
+            // Send welcome email
+            await _mediator.Publish(new UserRegistrationEmailNotification(
+                request.Email,
+                request.UserName,
+                request.Password
+            ), cancellationToken);
             return new UserDto
             {
                 Id = user.Id.ToString(),

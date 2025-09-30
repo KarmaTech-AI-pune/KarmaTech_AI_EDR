@@ -22,6 +22,9 @@ export interface User {
     avatar?: string;
     lastLogin?: string | null;
     password?: string;
+    tenantId?: number;
+    tenantDomain?: string;
+    twoFactorEnabled?: boolean;
 }
 
 export interface Role {

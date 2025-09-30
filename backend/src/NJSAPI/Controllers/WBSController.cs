@@ -1,6 +1,6 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using NJS.Application.Dtos;
 using NJS.Application.CQRS.WorkBreakdownStructures.Commands;
 using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
@@ -9,6 +9,7 @@ namespace NJSAPI.Controllers
 {
     [Route("api/projects/{projectId}/[controller]")]
     [ApiController]
+    [Authorize]
     public class WBSController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -67,7 +68,7 @@ namespace NJSAPI.Controllers
         /// <param name="taskDto">The details of the task to add.</param>
         /// <returns>The created task details or its ID.</returns>
         [HttpPost("tasks")]
-        [ProducesResponseType(typeof(WBSTaskDto), StatusCodes.Status201Created)] // Or just the ID
+        [ProducesResponseType(typeof(WBSTaskDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)] // If WBS not found
         public async Task<ActionResult<WBSTaskDto>> AddTask(int projectId, [FromBody] WBSTaskDto taskDto)
@@ -82,9 +83,9 @@ namespace NJSAPI.Controllers
             }
 
             var command = new AddWBSTaskCommand(projectId, taskDto);
-            var newTaskId = await _mediator.Send(command);
+            var createdTaskDto = await _mediator.Send(command);
           
-             return CreatedAtAction(nameof(GetWBS), new { projectId }, new { id = newTaskId });
+            return CreatedAtAction(nameof(GetWBS), new { projectId }, createdTaskDto);
         }
 
         /// <summary>

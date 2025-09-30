@@ -22,32 +22,42 @@ public class UserRegistrationEmailNotification : INotification
 public class UserRegistrationEmailNotificationHandler : INotificationHandler<UserRegistrationEmailNotification>
 {
     private readonly IEmailService _emailService;
+    private readonly ILogger<UserRegistrationEmailNotificationHandler> _logger;
 
-    public UserRegistrationEmailNotificationHandler(IEmailService emailService)
+    public UserRegistrationEmailNotificationHandler(IEmailService emailService, ILogger<UserRegistrationEmailNotificationHandler> logger)
     {
         _emailService = emailService;
+        _logger = logger;
+
     }
 
     public async Task Handle(UserRegistrationEmailNotification notification, CancellationToken cancellationToken)
     {
+        string body = GetWelcomeEmailBody(notification.UserEmail, notification.Password);
+
         var message = new EmailMessage
         {
             To = notification.UserEmail,
-            Subject = "Welcome to NJS Project Management",
-            Body = $@"
-                <h2>Welcome to NJS Project Management!</h2>
-                <p>Your account has been created successfully.</p>
-                <p>Here are your login credentials:</p>
-                <ul>
-                    <li>Username: {notification.Username}</li>
-                    <li>Password: {notification.Password}</li>
-                </ul>
-                <p>Please change your password after your first login.</p>
-                <p>Best regards,<br>NJS Project Management Team</p>",
+            Subject = "Onboarding User!",
+            Body = body,
             IsHtml = true
         };
+        _logger.LogInformation("Welcome to Onboarding UserName:{Name},Password:{Password}", notification.UserEmail, notification.Password);
 
         await _emailService.SendEmailAsync(message);
+    }
+
+    public static string GetWelcomeEmailBody(string userEmail, string password)
+    {
+        
+        string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates/Email", "onboarding.html");
+        string body = File.ReadAllText(templatePath);
+
+        // Replace placeholders
+        body = body.Replace("{{UserEmail}}", userEmail)
+                   .Replace("{{Password}}", password);
+
+        return body;
     }
 }
 

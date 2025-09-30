@@ -72,6 +72,7 @@ export const authApi = {
           createdAt: response.data.user.createdAt,
           tenantId: response.data.user.tenantId,
           tenantDomain: response.data.user.tenantDomain,
+          twoFactorEnabled: response.data.user.twoFactorEnabled,
         };
 
         // Store user information

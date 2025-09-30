@@ -18,5 +18,6 @@ namespace NJS.Application.Dtos
         public DateTime UpdatedAt { get; set; }
         public int? TenantId { get; set; }
         public string? TenantDomain { get; set; }
+        public bool TwoFactorEnabled { get; set; } = false;
     }
 }

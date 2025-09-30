@@ -45,14 +45,7 @@ namespace NJS.Repositories.Repositories
 
             try
             {
-                // Check if we need to reset the identity seed before adding a new entry
-                await ResetIdentitySeedAsync();
-
-                // Ensure CreatedAt is set to a non-null value
                 correspondenceOutward.CreatedAt = DateTime.Now;
-
-                // Don't set the ID - let the database assign it automatically
-
                 _context.CorrespondenceOutwards.Add(correspondenceOutward);
                 await _context.SaveChangesAsync();
 

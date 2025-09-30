@@ -10,6 +10,7 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/checkreview")]
+    [Authorize]
     public class CheckReviewController : ControllerBase
     {
         private readonly IMediator _mediator;
