@@ -140,6 +140,11 @@ internal class Program
         app.SeedApplicationData();
         app.MapControllers();
 
+        // This will redirect all unhandled routes (that are not static files or API routes) to index.html
+        // This should be placed after UseStaticFiles, UseRouting, UseAuthentication, UseAuthorization, and MapControllers
+        app.MapFallbackToFile("index.html");
+
+        app.SeedApplicationData(); 
         app.Run();
     }
 }
