@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy } from 'react';
 import {
     WorkBreakdownStructureForm,
     JobStartForm,
@@ -15,6 +15,8 @@ import { useParams } from 'react-router-dom';
 import { FormWrapper } from '../../components/forms/FormWrapper';
 import NotFound from '../NotFound';
 import FeatureGate from '../../components/subscription/FeatureGate';
+
+const TodoList = lazy(() => import('../../pages/projectManagement/WBS/TodoList'));
 
 const validFormIds = [
     'wbs',

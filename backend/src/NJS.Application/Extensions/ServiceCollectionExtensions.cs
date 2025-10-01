@@ -57,6 +57,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<ITenantRepository, TenantRepository>();
 
             services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
+            services.AddScoped<ICashflowRepository, CashflowRepository>();
 
            // services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAuthService, EnhancedAuthService>();
@@ -69,6 +70,9 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
+
+            // Project schedule (new Todo entities replacement)
+            services.AddScoped<IProjectScheduleRepository, ProjectScheduleRepository>();
 
             // Register DNS Management Service based on environment
            

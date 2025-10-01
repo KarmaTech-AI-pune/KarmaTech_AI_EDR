@@ -108,8 +108,8 @@ export const updateUser = async (id: string, user: Partial<AuthUser>): Promise<A
       email: user.email,
       avatar: user.avatar,
       roles: roles,
-      isConsultant: false,
-      standardRate: 0
+      isConsultant: user.isConsultant,
+      standardRate: user.standardRate,
     };
     
     const response = await axiosInstance.put(`/api/user/${id}`, updateUserData);
