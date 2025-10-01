@@ -25,7 +25,7 @@ export const useDragAndDrop = (onDropIssue: (issueId: string, newStatus: Issue['
     dragCounter.current++;
   };
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = (_e: React.DragEvent<HTMLDivElement>) => {
     dragCounter.current--;
   };
 

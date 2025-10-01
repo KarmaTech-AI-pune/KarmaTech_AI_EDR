@@ -1,4 +1,4 @@
-import { Issue, TeamMember, Subtask } from '../types/todolist';
+import { Issue, TeamMember } from '../types/todolist';
 
 export const teamMembers: TeamMember[] = [
   { name: 'John Smith', avatar: 'JS', id: 'john' },

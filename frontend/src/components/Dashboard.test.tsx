@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { Dashboard } from './Dashboard'
 import { projectManagementAppContext } from '../App'
 import { PermissionType } from '../models'
 import { UserWithRole } from '../types'
+import Dashboard from './Dashboard'
 
 // Mock the child components
 vi.mock('./ResourceManagement', () => ({
