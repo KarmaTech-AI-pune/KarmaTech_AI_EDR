@@ -6,7 +6,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Commands
     /// <summary>
     /// Command to add a single new task to a Work Breakdown Structure.
     /// </summary>
-    public class AddWBSTaskCommand : IRequest<int> // Returns the ID of the new task
+    public class AddWBSTaskCommand : IRequest<WBSTaskDto> // Returns the full DTO of the new task
     {
         public int ProjectId { get; }
         public WBSTaskDto TaskDto { get; }

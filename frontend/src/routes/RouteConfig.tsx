@@ -5,8 +5,15 @@ import { adminRoutes } from './adminRoutes';
 import Layout from '../components/Layout';
 import ProtectedRoute from './ProtectedRoute';
 import LoginScreen from '../pages/LoginScreen';
+import EnhancedLoginScreen from '../pages/EnhancedLoginScreen';
+import Signup from '../pages/Signup';
 import Dashboard from '../components/Dashboard';
 import NotFound from '../pages/NotFound';
+import ForgotPassword from '../pages/ForgotPassword';
+import ResetPassword from '../pages/ResetPassword';
+import { lazy } from 'react';
+
+const UserProfile = lazy(() => import('../pages/UserProfile'));
 
 const protectedRoutes: RouteObject[] = [
   ...businessDevelopmentRoutes,
@@ -24,6 +31,22 @@ export const routes: RouteObject[] = [
         element: <LoginScreen />,
       },
       {
+        path: 'enhanced-login',
+        element: <EnhancedLoginScreen />,
+      },
+      {
+        path: 'signup', 
+        element: <Signup />,
+      },
+      {
+        path: 'forgot-password',
+        element: <ForgotPassword />,
+      },
+      {
+        path: 'reset-password',
+        element: <ResetPassword />,
+      },
+      {
         path: '',
         element: <ProtectedRoute />,
         children: [
@@ -31,6 +54,10 @@ export const routes: RouteObject[] = [
             index: true,
             element: <Dashboard />,
           },
+          {
+            path: 'profile',
+            element: <UserProfile />,
+          },                 
           ...protectedRoutes,
         ],
       },

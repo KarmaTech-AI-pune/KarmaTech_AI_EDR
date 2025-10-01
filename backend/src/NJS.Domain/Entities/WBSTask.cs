@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -12,10 +12,12 @@ namespace NJS.Domain.Entities
         ODC = 1
     }
 
-    public class WBSTask
+    public class WBSTask : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int WorkBreakdownStructureId { get; set; }
@@ -64,5 +66,10 @@ namespace NJS.Domain.Entities
         public ICollection<WBSTask> Children { get; set; } = new List<WBSTask>();
         public ICollection<WBSTaskPlannedHour> PlannedHours { get; set; } = new List<WBSTaskPlannedHour>();
         public ICollection<UserWBSTask> UserWBSTasks { get; set; } = new List<UserWBSTask>();
+
+        public int? TodoProjectScheduleId { get; set; }
+
+        [ForeignKey(nameof(TodoProjectScheduleId))]
+        public todoProjectSchedule TodoProjectSchedule { get; set; }
     }
 }

@@ -13,6 +13,13 @@ export interface UserWithRole extends User {
         name: string;
         permissions: string[];
     } | null;
+    isSuperAdmin?: boolean;
+    userType?: string;
+    tenantRole?: string;
+    tenantContext?: string;
+    tenantId?: number;
+    tenantDomain?: string;
+    twoFactorEnabled?: boolean;
 }
 
 export interface projectManagementAppContextType {
@@ -62,6 +69,7 @@ export interface LoginResponse {
     user?: UserWithRole;
     token?: string;
     message?: string;
+    requiresOtp?: boolean; 
 }
 
 export interface OpportunityItemProps {

@@ -1,10 +1,11 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Domain.Entities
 {
-    public class ProjectClosureWorkflowHistory
+    public class ProjectClosureWorkflowHistory : ITenantEntity
     {
         public ProjectClosureWorkflowHistory()
         {
@@ -13,6 +14,8 @@ namespace NJS.Domain.Entities
 
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
         
         public int ProjectClosureId { get; set; }
         
@@ -32,15 +35,19 @@ namespace NJS.Domain.Entities
 
         // Navigation properties
         [ForeignKey("ProjectClosureId")]
-        public ProjectClosure ProjectClosure { get; set; }
+        [DeleteBehavior(DeleteBehavior.Cascade)]
+        public virtual ProjectClosure ProjectClosure { get; set; }
         
         [ForeignKey("StatusId")]
-        public PMWorkflowStatus Status { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual PMWorkflowStatus Status { get; set; }
         
         [ForeignKey("ActionBy")]
-        public User ActionUser { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual User ActionUser { get; set; }
         
         [ForeignKey("AssignedToId")]
-        public User AssignedTo { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual User AssignedTo { get; set; }
     }
 }

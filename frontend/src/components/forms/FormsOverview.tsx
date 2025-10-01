@@ -3,7 +3,9 @@ import { Box, Paper } from '@mui/material';
 import { useProject } from '../../context/ProjectContext';
 import { GanttChart } from '../project/GanttChart';
 
-interface FormsOverviewProps {}
+interface FormsOverviewProps {
+  onFormSelect: () => void;
+}
 
 const FormsOverview: React.FC<FormsOverviewProps> = () => {
   const { projectId } = useProject();

@@ -1,4 +1,4 @@
-import { axiosInstance, ensureAuthHeader } from './axiosConfig.tsx';
+import { axiosInstance, ensureHeaders } from './axiosConfig.tsx';
 import { AxiosResponse } from 'axios';
 
 // Define interfaces for the API data
@@ -7,7 +7,7 @@ export interface InwardRow {
     projectId: number;
     incomingLetterNo: string;
     letterDate: string;
-    njsInwardNo: string;
+    inwardNo: string;
     receiptDate: string;
     from: string;
     subject: string;
@@ -55,7 +55,7 @@ export const getInwardRows = async (projectId: string | number): Promise<InwardR
     try {
         const response: AxiosResponse<InwardRow[]> = await axiosInstance.get(
             `${BASE_URL}/inward/project/${projectId}`,
-            ensureAuthHeader()
+            ensureHeaders()
         );
         return response.data;
     } catch (error) {
@@ -68,7 +68,7 @@ export const getInwardRowById = async (id: string | number): Promise<InwardRow> 
     try {
         const response: AxiosResponse<InwardRow> = await axiosInstance.get(
             `${BASE_URL}/inward/${id}`,
-            ensureAuthHeader()
+            ensureHeaders()
         );
         return response.data;
     } catch (error) {
@@ -83,7 +83,7 @@ export const createInwardRow = async (data: CreateInwardRow): Promise<InwardRow>
         const response: AxiosResponse<InwardRow> = await axiosInstance.post(
             `${BASE_URL}/inward`,
             data,
-            ensureAuthHeader()
+            ensureHeaders()
         );
         return response.data;
     } catch (error) {
@@ -97,7 +97,7 @@ export const updateInwardRow = async (id: string | number, data: UpdateInwardRow
         const response: AxiosResponse<InwardRow> = await axiosInstance.put(
             `${BASE_URL}/inward/${id}`,
             data,
-            ensureAuthHeader()
+            ensureHeaders()
         );
         return response.data;
     } catch (error) {
@@ -110,7 +110,7 @@ export const deleteInwardRow = async (id: string | number): Promise<void> => {
     try {
         await axiosInstance.delete(
             `${BASE_URL}/inward/${id}`,
-            ensureAuthHeader()
+            ensureHeaders()
         );
     } catch (error) {
         console.error(`Error deleting inward correspondence ${id}:`, error);
@@ -123,7 +123,7 @@ export const getOutwardRows = async (projectId: string | number): Promise<Outwar
     try {
         const response: AxiosResponse<OutwardRow[]> = await axiosInstance.get(
             `${BASE_URL}/outward/project/${projectId}`,
-            ensureAuthHeader()
+            ensureHeaders()
         );
         return response.data;
     } catch (error) {
@@ -136,7 +136,7 @@ export const getOutwardRowById = async (id: string | number): Promise<OutwardRow
     try {
         const response: AxiosResponse<OutwardRow> = await axiosInstance.get(
             `${BASE_URL}/outward/${id}`,
-            ensureAuthHeader()
+            ensureHeaders()
         );
         return response.data;
     } catch (error) {
@@ -151,7 +151,7 @@ export const createOutwardRow = async (data: CreateOutwardRow): Promise<OutwardR
         const response: AxiosResponse<OutwardRow> = await axiosInstance.post(
             `${BASE_URL}/outward`,
             data,
-            ensureAuthHeader()
+            ensureHeaders()
         );
         return response.data;
     } catch (error) {
@@ -165,7 +165,7 @@ export const updateOutwardRow = async (id: string | number, data: UpdateOutwardR
         const response: AxiosResponse<OutwardRow> = await axiosInstance.put(
             `${BASE_URL}/outward/${id}`,
             data,
-            ensureAuthHeader()
+            ensureHeaders()
         );
         return response.data;
     } catch (error) {
@@ -178,7 +178,7 @@ export const deleteOutwardRow = async (id: string | number): Promise<void> => {
     try {
         await axiosInstance.delete(
             `${BASE_URL}/outward/${id}`,
-            ensureAuthHeader()
+            ensureHeaders()
         );
     } catch (error) {
         console.error(`Error deleting outward correspondence ${id}:`, error);

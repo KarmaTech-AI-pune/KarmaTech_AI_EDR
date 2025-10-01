@@ -14,11 +14,12 @@ namespace NJS.Repositories.Repositories
         {
             _context = context;
         }
-       
+
 
         public async Task<GoNoGoDecisionOpportunity> GetByIdAsync(int opportunityId)
         {
-            var opportunity = await _context.GoNoGoDecisionOpportunities.FirstAsync(o => o.OpportunityId == opportunityId);
+            var opportunity =
+                await _context.GoNoGoDecisionOpportunities.FirstAsync(o => o.OpportunityId == opportunityId);
             //Include(x => x.ScoreRanges).Include(x => x.ScoringDescriptions).Include(x => x.ScoringCriterias).
 
             if (opportunity == null)

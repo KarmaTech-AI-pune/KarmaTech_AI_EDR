@@ -3,10 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
+    [Table("Permissions")]
     public class Permission
     {
         [Key]
-        public int Id { get; set; }
+        public int Id { get; set; }      
 
         [Required]
         [StringLength(100)]

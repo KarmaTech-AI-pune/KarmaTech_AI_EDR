@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using NJS.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Domain.Entities
 {
     /// <summary>
     /// Entity to track WBS version history with workflow support
     /// </summary>
-    public class WBSVersionHistory
+    public class WBSVersionHistory : ITenantEntity
     {
         public WBSVersionHistory()
         {
@@ -20,6 +21,8 @@ namespace NJS.Domain.Entities
 
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         public int WorkBreakdownStructureId { get; set; }
@@ -42,7 +45,8 @@ namespace NJS.Domain.Entities
         public int StatusId { get; set; } = (int)PMWorkflowStatusEnum.Initial;
 
         [ForeignKey("StatusId")]
-        public PMWorkflowStatus Status { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual PMWorkflowStatus Status { get; set; }
 
         // Version metadata
         public bool IsActive { get; set; } = false; // Only one version can be active
@@ -52,15 +56,19 @@ namespace NJS.Domain.Entities
 
         // Navigation properties
         [ForeignKey("WorkBreakdownStructureId")]
-        public WorkBreakdownStructure WorkBreakdownStructure { get; set; }
+        [InverseProperty("VersionHistory")]
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual WorkBreakdownStructure WorkBreakdownStructure { get; set; }
 
         [ForeignKey("CreatedBy")]
-        public User CreatedByUser { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual User CreatedByUser { get; set; }
 
         [ForeignKey("ApprovedBy")]
-        public User ApprovedByUser { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual User ApprovedByUser { get; set; }
 
         public ICollection<WBSTaskVersionHistory> TaskVersions { get; set; }
         public ICollection<WBSVersionWorkflowHistory> WorkflowHistories { get; set; }
     }
-} 
+}

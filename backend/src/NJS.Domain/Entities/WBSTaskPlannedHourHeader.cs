@@ -1,13 +1,19 @@
 using NJS.Domain.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Domain.Entities
 {
-    public class WBSTaskPlannedHourHeader
+    public class WBSTaskPlannedHourHeader : ITenantEntity
     {
         public int Id { get; set; }
+        public int TenantId { get; set; }
         public int ProjectId { get; set; }
-        public Project Project { get; set; }
+        
+        [ForeignKey("ProjectId")]
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual Project Project { get; set; }
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string CreatedBy { get; set; }
         public TaskType? TaskType { get; set; }
@@ -18,7 +24,8 @@ namespace NJS.Domain.Entities
         public string Version { get; set; } = "1.0";
 
         [ForeignKey("StatusId")]
-        public PMWorkflowStatus Status { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual PMWorkflowStatus Status { get; set; }
 
         public ICollection<WBSTaskPlannedHour> PlannedHours { get; set; } = new HashSet<WBSTaskPlannedHour>();
         public ICollection<WBSHistory> WBSHistories { get; set; } = [];

@@ -111,6 +111,21 @@ export const WBSStructureAPI = {
       console.error(`Error saving WBS for project ${projectId}:`, error);
       throw error;
     }
+  },
+
+  /**
+   * Delete a WBS task
+   * @param projectId Project ID
+   * @param taskId Task ID
+   * @returns Promise
+   */
+  deleteWBSTask: async (projectId: string, taskId: string): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/api/projects/${projectId}/wbs/tasks/${taskId}`);
+    } catch (error) {
+      console.error(`Error deleting WBS task ${taskId} for project ${projectId}:`, error);
+      throw error;
+    }
   }
 };
 

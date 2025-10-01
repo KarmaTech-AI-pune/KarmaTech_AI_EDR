@@ -1,13 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Domain.Entities
 {
     /// <summary>
     /// This model is used to track project workflow history
     /// </summary>
-    public class WBSHistory
+    public class WBSHistory : ITenantEntity
     {
         public WBSHistory()
         {
@@ -17,17 +18,21 @@ namespace NJS.Domain.Entities
         [Key]
         public int Id { get; set; }
 
+        public int TenantId { get; set; }
+
         [Required]
         public int WBSTaskPlannedHourHeaderId { get; set; }
 
         [ForeignKey("WBSTaskPlannedHourHeaderId")]
-        public WBSTaskPlannedHourHeader WBSTaskPlannedHourHeader { get; set; }
+        [DeleteBehavior(DeleteBehavior.Cascade)]
+        public virtual WBSTaskPlannedHourHeader WBSTaskPlannedHourHeader { get; set; }
 
         [Required]
         public int StatusId { get; set; }
 
         [ForeignKey("StatusId")]
-        public PMWorkflowStatus Status { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual PMWorkflowStatus Status { get; set; }
 
         public string Action { get; set; }
         public string Comments { get; set; }
@@ -37,13 +42,15 @@ namespace NJS.Domain.Entities
         public string ActionBy { get; set; }
 
         [ForeignKey("ActionBy")]
-        public User ActionUser { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual User ActionUser { get; set; }
 
         [StringLength(450)]
         public string AssignedToId { get; set; }
 
         [ForeignKey("AssignedToId")]
-        public User AssignedTo { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual User AssignedTo { get; set; }
         public bool IsDeleted { get; set; } = false;
     }
 }

@@ -20,7 +20,7 @@ export const useRoles = (): UseRolesReturn => {
       setLoading(true);
       setError(null);
       const data = await rolesApi.getAllRoles();
-      setRoles(data);
+      setRoles(data as unknown as RoleDefinition[]);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch roles'));
     } finally {

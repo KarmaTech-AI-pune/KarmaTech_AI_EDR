@@ -12,7 +12,7 @@ export const authApi = {
     try {
 
       // Use username from the Credentials type
-      const user = validateUser(credentials.username, credentials.password);
+      const user = validateUser(credentials.email, credentials.password);
 
       if (user) {
         // Simulate token generation

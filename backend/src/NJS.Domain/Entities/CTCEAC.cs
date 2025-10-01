@@ -1,8 +1,12 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace NJS.Domain.Entities
 {
-    public class CTCEAC
+    [Table("CTCEACs")]
+    public class CTCEAC : ITenantEntity
     {
         public int Id { get; set; }
+        public int TenantId { get; set; }
         public int MonthlyProgressId { get; set; }
         public MonthlyProgress MonthlyProgress { get; set; }
         public decimal? CtcODC { get; set; }

@@ -2,10 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace NJS.Domain.Entities
 {
-    public class Settings
+    public class Settings : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
         
         [Required]
         public string Key { get; set; }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   List,
@@ -9,12 +9,23 @@ import {
   Drawer,
   Tooltip,
 } from '@mui/material';
+import { useTenantContext } from '../hooks/useTenantContext';
+import { authApi } from '../services/authApi';
 import PeopleIcon from '@mui/icons-material/People';
 import SecurityIcon from '@mui/icons-material/Security';
+import BusinessIcon from '@mui/icons-material/Business';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import SettingsIcon from '@mui/icons-material/Settings';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UsersManagement from '../components/adminpanel/UsersManagement';
 import RolesManagement from '../components/adminpanel/RolesManagement';
+import TenantManagement from '../components/adminpanel/TenantManagement';
+import TenantUsersManagement from '../components/adminpanel/TenantUsersManagement';
+import SubscriptionManagement from '../components/adminpanel/SubscriptionManagement';
+import BillingManagement from '../components/adminpanel/BillingManagement';
+import SystemSettings from '../components/adminpanel/SystemSettings';
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
@@ -22,12 +33,98 @@ const NAVBAR_HEIGHT = '70px';
 
 const AdminPanel: React.FC = () => {
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(true);
-  const [selectedSection, setSelectedSection] = useState<'users' | 'roles'>('users');
+  const { isSuperAdmin } = useTenantContext();
+  const [hasSystemAdminPermission, setHasSystemAdminPermission] = useState(false);
+  const [hasTenantAdminPermission, setHasTenantAdminPermission] = useState(false);
+  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'settings'>('settings');
 
-  const menuItems = [
-    { id: 'users', text: 'Users Management', icon: <PeopleIcon /> },
-    { id: 'roles', text: 'Roles Management', icon: <SecurityIcon /> }
+  useEffect(() => {
+    const checkPermissions = async () => {
+      try {
+        const user = await authApi.getCurrentUser();
+        console.log('Current User:', user);
+        console.log('Role Details:', user?.roleDetails);
+        console.log('Permissions:', user?.roleDetails?.permissions);
+        
+        if (user?.roleDetails?.permissions) {
+          const isSystemAdmin = user.roleDetails.permissions.includes('SYSTEM_ADMIN');
+          const isTenantAdmin = user.roleDetails.permissions.includes('Tenant_ADMIN');
+          
+          console.log('Is System Admin?', isSystemAdmin);
+          console.log('Is Tenant Admin?', isTenantAdmin);
+          console.log('User Permissions:', user.roleDetails.permissions);
+          
+          setHasSystemAdminPermission(isSystemAdmin);
+          setHasTenantAdminPermission(isTenantAdmin);
+          
+          // Set initial section based on permissions
+          if (isSystemAdmin || isSuperAdmin) {
+            setSelectedSection('tenants');
+          } else if (isTenantAdmin) {
+            setSelectedSection('users');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking permissions:', error);
+      }
+    };
+    checkPermissions();
+  }, [isSuperAdmin]);
+
+  interface MenuItem {
+    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'settings';
+    text: string;
+    icon: JSX.Element;
+    requiresSystemAdmin?: boolean;
+    requiresTenantAdmin?: boolean;
+  }
+
+  const allMenuItems: MenuItem[] = [
+    // System Admin only menu items
+    { id: 'tenants', text: 'Tenant Management', icon: <BusinessIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
+    { id: 'tenantUsers', text: 'Tenant Users', icon: <PeopleIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
+    { id: 'subscriptions', text: 'Subscription Plans', icon: <AttachMoneyIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
+    { id: 'billing', text: 'Billing Management', icon: <ReceiptIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
+    // Tenant Admin menu items
+    { id: 'users', text: 'Users Management', icon: <PeopleIcon />, requiresTenantAdmin: true },
+    { id: 'roles', text: 'Roles Management', icon: <SecurityIcon />, requiresTenantAdmin: true },
+    { id: 'settings', text: 'System Settings', icon: <SettingsIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false}
   ];
+
+  // Ensure permissions are properly checked
+  const hasRequiredPermissions = (item: MenuItem): boolean => {
+    console.log('Checking permissions for:', item.text);
+    console.log('Current permissions state:', {
+      hasSystemAdminPermission,
+      isSuperAdmin,
+      hasTenantAdminPermission
+    });
+
+    // System Admin can see everything
+    if (hasSystemAdminPermission || isSuperAdmin) {
+      console.log(`${item.text} visible to System Admin`);
+      return true;
+    }
+
+    // For Tenant Admin users
+    if (hasTenantAdminPermission) {
+      // Hide items that are System Admin only
+      if (item.requiresSystemAdmin && item.requiresTenantAdmin === false) {
+        console.log(`${item.text} hidden from Tenant Admin (System Admin only)`);
+        return false;
+      }
+      // Show items that require Tenant Admin or have no special permissions
+      console.log(`${item.text} visible to Tenant Admin`);
+      return true;
+    }
+
+    // For regular users, only show items with no special permissions
+    const hasNoSpecialPermissions = !item.requiresSystemAdmin && !item.requiresTenantAdmin;
+    console.log(`${item.text} regular user access: ${hasNoSpecialPermissions}`);
+    return hasNoSpecialPermissions;
+  };
+
+  const visibleMenuItems = allMenuItems.filter(item => hasRequiredPermissions(item));
 
   const toggleDrawer = () => {
     setIsDrawerExpanded(!isDrawerExpanded);
@@ -35,10 +132,20 @@ const AdminPanel: React.FC = () => {
 
   const renderContent = () => {
     switch (selectedSection) {
+      case 'tenants':
+        return <TenantManagement />;
+      case 'tenantUsers':
+        return <TenantUsersManagement />;
+      case 'subscriptions':
+        return <SubscriptionManagement />;
+      case 'billing':
+        return <BillingManagement />;
       case 'users':
         return <UsersManagement />;
       case 'roles':
         return <RolesManagement />;
+      case 'settings':
+        return <SystemSettings />;
       default:
         return null;
     }
@@ -77,10 +184,10 @@ const AdminPanel: React.FC = () => {
           </IconButton>
         </Box>
         <List sx={{ width: '100%', p: 2 }}>
-          {menuItems.map((item) => (
+          {visibleMenuItems.map((item) => (
             <ListItemButton
               key={item.id}
-              onClick={() => setSelectedSection(item.id as 'users' | 'roles')}
+              onClick={() => setSelectedSection(item.id as 'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'settings')}
               selected={selectedSection === item.id}
               sx={{
                 minHeight: 48,

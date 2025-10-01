@@ -13,7 +13,7 @@ export interface PermissionGroup {
   permissions: Permission[];
 }
 
-// Basic role definition with simple permission names
+// Basic role definition with simple permission names hhh
 export interface RoleDefinition {
   id: string;
   name: string;
