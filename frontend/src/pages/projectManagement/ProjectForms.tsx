@@ -49,7 +49,7 @@ const ProjectForms: React.FC = () => {
         
         case "job-start":
             return(
-        <FeatureGate featureName={"change-control"} >
+        <FeatureGate featureName={"job-start"} >
           <JobStartForm />
         </FeatureGate>
             );
