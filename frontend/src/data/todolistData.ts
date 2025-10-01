@@ -1,0 +1,369 @@
+import { Issue, TeamMember, Subtask } from '../types/todolist';
+
+export const teamMembers: TeamMember[] = [
+  { name: 'John Smith', avatar: 'JS', id: 'john' },
+  { name: 'Sarah Wilson', avatar: 'SW', id: 'sarah' },
+  { name: 'Mike Johnson', avatar: 'MJ', id: 'mike' },
+  { name: 'Lisa Chen', avatar: 'LC', id: 'lisa' },
+  { name: 'David Kim', avatar: 'DK', id: 'david' },
+  { name: 'Emma Davis', avatar: 'ED', id: 'emma' },
+  { name: 'Chris Wilson', avatar: 'CW', id: 'chris' }
+];
+
+export const initialIssues: Issue[] = [
+  {
+    id: '1',
+    key: 'PROJ-123',
+    summary: 'Implement user authentication system',
+    description: 'Create login/logout functionality with JWT tokens and password reset',
+    issueType: 'Story',
+    priority: 'High',
+    assignee: { name: 'John Smith', avatar: 'JS', id: 'john' },
+    reporter: { name: 'Sarah Wilson', avatar: 'SW', id: 'sarah' },
+    status: 'To Do',
+    storyPoints: 8,
+    fixVersion: 'Version 1.0',
+    components: ['Authentication'],
+    flagged: false,
+    attachments: 2,
+    comments: [
+      {
+        id: 'comment-1-1',
+        author: teamMembers[1], // Sarah Wilson
+        text: 'Initial thoughts on authentication flow.',
+        createdDate: '2025-09-01',
+      },
+      {
+        id: 'comment-1-2',
+        author: teamMembers[0], // John Smith
+        text: 'Agreed, focusing on secure JWT implementation first.',
+        createdDate: '2025-09-02',
+      },
+    ],
+    isExpanded: false,
+    subtasks: [
+      {
+        id: 'sub-1-1',
+        parentIssueId: '1',
+        key: 'PROJ-123-1',
+        summary: 'Design login form UI',
+        description: 'Create responsive login form with validation',
+        status: 'Done',
+        assignee: { name: 'Emma Davis', avatar: 'ED', id: 'emma' },
+        reporter: { name: 'Sarah Wilson', avatar: 'SW', id: 'sarah' },
+        priority: 'Medium',
+        issueType: 'Sub-task',
+        storyPoints: 3,
+        createdDate: '2025-09-01',
+        updatedDate: '2025-09-02'
+      },
+      {
+        id: 'sub-1-2',
+        parentIssueId: '1',
+        key: 'PROJ-123-2',
+        summary: 'Implement JWT token handling',
+        description: 'Backend JWT token generation and validation',
+        status: 'In Progress',
+        assignee: { name: 'John Smith', avatar: 'JS', id: 'john' },
+        reporter: { name: 'Sarah Wilson', avatar: 'SW', id: 'sarah' },
+        priority: 'High',
+        issueType: 'Sub-task',
+        storyPoints: 5,
+        createdDate: '2025-09-01',
+        updatedDate: '2025-09-02'
+      },
+      {
+        id: 'sub-1-3',
+        parentIssueId: '1',
+        key: 'PROJ-123-3',
+        summary: 'Add password reset functionality',
+        description: 'Email-based password reset with secure tokens',
+        status: 'To Do',
+        assignee: { name: 'Mike Johnson', avatar: 'MJ', id: 'mike' },
+        reporter: { name: 'Sarah Wilson', avatar: 'SW', id: 'sarah' },
+        priority: 'Medium',
+        issueType: 'Sub-task',
+        createdDate: '2025-09-01',
+        updatedDate: '2025-09-01'
+      }
+    ],
+    createdDate: '2025-09-01',
+    updatedDate: '2025-09-02'
+  },
+  {
+    id: '2',
+    key: 'PROJ-124',
+    summary: 'Fix mobile responsive navigation',
+    description: 'Navigation menu breaks on mobile devices below 768px width',
+    issueType: 'Bug',
+    priority: 'Medium',
+    assignee: { name: 'Mike Johnson', avatar: 'MJ', id: 'mike' },
+    reporter: { name: 'Lisa Chen', avatar: 'LC', id: 'lisa' },
+    status: 'To Do',
+    storyPoints: 3,
+    fixVersion: 'Version 1.0',
+    components: ['UI'],
+    flagged: true,
+    attachments: 1,
+    comments: [
+      {
+        id: 'comment-2-1',
+        author: teamMembers[2], // Mike Johnson
+        text: 'Reproduced the bug on iPhone 12. It seems related to flexbox.',
+        createdDate: '2025-09-02',
+      },
+    ],
+    isExpanded: false,
+    subtasks: [],
+    createdDate: '2025-09-02',
+    updatedDate: '2025-09-02'
+  },
+  {
+    id: '3',
+    key: 'PROJ-125',
+    summary: 'Database query optimization',
+    description: 'Optimize slow queries on user dashboard causing 3+ second load times',
+    issueType: 'Task',
+    priority: 'High',
+    assignee: { name: 'David Kim', avatar: 'DK', id: 'david' },
+    reporter: { name: 'Anna Rodriguez', avatar: 'AR', id: 'anna' },
+    status: 'In Progress',
+    storyPoints: 13,
+    fixVersion: 'Version 1.1',
+    components: ['Database'],
+    flagged: false,
+    attachments: 0,
+    comments: [
+      {
+        id: 'comment-3-1',
+        author: teamMembers[4], // David Kim
+        text: 'Initial profiling shows heavy joins on the dashboard query.',
+        createdDate: '2025-08-28',
+      },
+      {
+        id: 'comment-3-2',
+        author: teamMembers[6], // Chris Wilson
+        text: 'Consider adding indexes to `user_id` and `project_id` columns.',
+        createdDate: '2025-08-29',
+      },
+    ],
+    isExpanded: true,
+    subtasks: [
+      {
+        id: 'sub-3-1',
+        parentIssueId: '3',
+        key: 'PROJ-125-1',
+        summary: 'Analyze slow query patterns',
+        description: 'Identify bottleneck queries using profiling tools',
+        status: 'Done',
+        assignee: { name: 'David Kim', avatar: 'DK', id: 'david' },
+        reporter: { name: 'Anna Rodriguez', avatar: 'AR', id: 'anna' },
+        priority: 'High',
+        issueType: 'Sub-task',
+        storyPoints: 3,
+        createdDate: '2025-08-28',
+        updatedDate: '2025-08-30'
+      },
+      {
+        id: 'sub-3-2',
+        parentIssueId: '3',
+        key: 'PROJ-125-2',
+        summary: 'Add database indexes',
+        description: 'Create indexes for frequently queried columns',
+        status: 'Done',
+        assignee: { name: 'David Kim', avatar: 'DK', id: 'david' },
+        reporter: { name: 'Anna Rodriguez', avatar: 'AR', id: 'anna' },
+        priority: 'High',
+        issueType: 'Sub-task',
+        storyPoints: 5,
+        createdDate: '2025-08-28',
+        updatedDate: '2025-08-31'
+      },
+      {
+        id: 'sub-3-3',
+        parentIssueId: '3',
+        key: 'PROJ-125-3',
+        summary: 'Implement query caching',
+        description: 'Add Redis caching for dashboard queries',
+        status: 'In Progress',
+        assignee: { name: 'Chris Wilson', avatar: 'CW', id: 'chris' },
+        reporter: { name: 'Anna Rodriguez', avatar: 'AR', id: 'anna' },
+        priority: 'Medium',
+        issueType: 'Sub-task',
+        storyPoints: 8,
+        createdDate: '2025-08-29',
+        updatedDate: '2025-09-01'
+      },
+      {
+        id: 'sub-3-4',
+        parentIssueId: '3',
+        key: 'PROJ-125-4',
+        summary: 'Performance testing',
+        description: 'Load test optimized queries and measure improvements',
+        status: 'To Do',
+        assignee: { name: 'Lisa Chen', avatar: 'LC', id: 'lisa' },
+        reporter: { name: 'Anna Rodriguez', avatar: 'AR', id: 'anna' },
+        priority: 'Medium',
+        issueType: 'Sub-task',
+        createdDate: '2025-08-29',
+        updatedDate: '2025-08-29'
+      }
+    ],
+    createdDate: '2025-08-28',
+    updatedDate: '2025-09-01'
+  },
+  {
+    id: '4',
+    key: 'PROJ-126',
+    summary: 'Update brand colors and typography',
+    description: 'Apply new brand guidelines across all UI components',
+    issueType: 'Story',
+    priority: 'Low',
+    assignee: { name: 'Emma Davis', avatar: 'ED', id: 'emma' },
+    reporter: { name: 'Tom Brown', avatar: 'TB', id: 'tom' },
+    status: 'In Progress',
+    storyPoints: 5,
+    fixVersion: 'Version 1.2',
+    components: ['UI', 'Design System'],
+    flagged: false,
+    attachments: 3,
+    comments: [
+      {
+        id: 'comment-4-1',
+        author: teamMembers[5], // Emma Davis
+        text: 'New color palette applied to primary buttons. Looks good!',
+        createdDate: '2025-08-30',
+      },
+    ],
+    isExpanded: false,
+    subtasks: [
+      {
+        id: 'sub-4-1',
+        parentIssueId: '4',
+        key: 'PROJ-126-1',
+        summary: 'Update color palette',
+        description: 'Replace old brand colors with new palette',
+        status: 'Done',
+        assignee: { name: 'Emma Davis', avatar: 'ED', id: 'emma' },
+        reporter: { name: 'Tom Brown', avatar: 'TB', id: 'tom' },
+        priority: 'Medium',
+        issueType: 'Sub-task',
+        storyPoints: 2,
+        createdDate: '2025-08-30',
+        updatedDate: '2025-09-01'
+      },
+      {
+        id: 'sub-4-2',
+        parentIssueId: '4',
+        key: 'PROJ-126-2',
+        summary: 'Update typography system',
+        description: 'Implement new font family and sizing scale',
+        status: 'Done',
+        assignee: { name: 'Emma Davis', avatar: 'ED', id: 'emma' },
+        reporter: { name: 'Tom Brown', avatar: 'TB', id: 'tom' },
+        priority: 'Medium',
+        issueType: 'Sub-task',
+        storyPoints: 3,
+        createdDate: '2025-08-30',
+        updatedDate: '2025-09-01'
+      }
+    ],
+    createdDate: '2025-08-30',
+    updatedDate: '2025-09-01'
+  },
+  {
+    id: '5',
+    key: 'PROJ-127',
+    summary: 'API endpoint security audit',
+    description: 'Comprehensive security review of all REST API endpoints',
+    issueType: 'Task',
+    priority: 'Medium',
+    assignee: { name: 'Chris Wilson', avatar: 'CW', id: 'chris' },
+    reporter: { name: 'Security Team', avatar: 'ST', id: 'security' },
+    status: 'Done',
+    storyPoints: 21,
+    fixVersion: 'Version 1.0',
+    components: ['Security', 'API'],
+    flagged: false,
+    attachments: 5,
+    comments: [
+      {
+        id: 'comment-5-1',
+        author: teamMembers[6], // Chris Wilson
+        text: 'Completed initial audit of authentication endpoints. Found minor issues.',
+        createdDate: '2025-08-27',
+      },
+      {
+        id: 'comment-5-2',
+        author: teamMembers[0], // John Smith
+        text: 'Working on fixing the identified auth issues.',
+        createdDate: '2025-08-28',
+      },
+    ],
+    isExpanded: false,
+    subtasks: [
+      {
+        id: 'sub-5-1',
+        parentIssueId: '5',
+        key: 'PROJ-127-1',
+        summary: 'Authentication endpoint review',
+        description: 'Security audit of login/logout endpoints',
+        status: 'Done',
+        assignee: { name: 'Chris Wilson', avatar: 'CW', id: 'chris' },
+        reporter: { name: 'Security Team', avatar: 'ST', id: 'security' },
+        priority: 'High',
+        issueType: 'Sub-task',
+        storyPoints: 5,
+        createdDate: '2025-08-25',
+        updatedDate: '2025-08-27'
+      },
+      {
+        id: 'sub-5-2',
+        parentIssueId: '5',
+        key: 'PROJ-127-2',
+        summary: 'User data endpoints audit',
+        description: 'Review data access controls and permissions',
+        status: 'Done',
+        assignee: { name: 'John Smith', avatar: 'JS', id: 'john' },
+        reporter: { name: 'Security Team', avatar: 'ST', id: 'security' },
+        priority: 'High',
+        issueType: 'Sub-task',
+        storyPoints: 8,
+        createdDate: '2025-08-25',
+        updatedDate: '2025-08-29'
+      },
+      {
+        id: 'sub-5-3',
+        parentIssueId: '5',
+        key: 'PROJ-127-3',
+        summary: 'Input validation review',
+        description: 'Audit all input validation and sanitization',
+        status: 'Done',
+        assignee: { name: 'Mike Johnson', avatar: 'MJ', id: 'mike' },
+        reporter: { name: 'Security Team', avatar: 'ST', id: 'security' },
+        priority: 'Medium',
+        issueType: 'Sub-task',
+        storyPoints: 3,
+        createdDate: '2025-08-26',
+        updatedDate: '2025-08-28'
+      },
+      {
+        id: 'sub-5-4',
+        parentIssueId: '5',
+        key: 'PROJ-127-4',
+        summary: 'Rate limiting implementation',
+        description: 'Add rate limiting to prevent abuse',
+        status: 'Done',
+        assignee: { name: 'David Kim', avatar: 'DK', id: 'david' },
+        reporter: { name: 'Security Team', avatar: 'ST', id: 'security' },
+        priority: 'Medium',
+        issueType: 'Sub-task',
+        storyPoints: 5,
+        createdDate: '2025-08-26',
+        updatedDate: '2025-08-30'
+      }
+    ],
+    createdDate: '2025-08-25',
+    updatedDate: '2025-08-31'
+  }
+];
