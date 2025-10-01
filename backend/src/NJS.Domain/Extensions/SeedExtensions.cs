@@ -362,12 +362,12 @@ namespace NJS.Domain.Extensions
 
                 var measurementUnits = new List<MeasurementUnit>
                 {
-                    new MeasurementUnit { Name = "Nos", FormType = 0, TenantId = 1 },
-                    new MeasurementUnit { Name = "LS", FormType = 0, TenantId = 1 },
-                    new MeasurementUnit { Name = "Km", FormType = 0, TenantId = 1 },
-                    new MeasurementUnit { Name = "Day", FormType = 0, TenantId = 1 },
-                    new MeasurementUnit { Name = "Month", FormType = 0, TenantId = 1 },
-                    new MeasurementUnit { Name = "Year", FormType = 0, TenantId = 1 }
+                    new MeasurementUnit { Name = "Nos", FormType = FormType.ODC, TenantId = 1 },
+                    new MeasurementUnit { Name = "LS", FormType = FormType.ODC, TenantId = 1 },
+                    new MeasurementUnit { Name = "Km", FormType = FormType.ODC, TenantId = 1 },
+                    new MeasurementUnit { Name = "Day", FormType = FormType.Manpower, TenantId = 1 },
+                    new MeasurementUnit { Name = "Month", FormType = FormType.Manpower, TenantId = 1 },
+                    new MeasurementUnit { Name = "Year", FormType = FormType.Manpower, TenantId = 1 }
                 };
 
                 try
