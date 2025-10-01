@@ -58,6 +58,7 @@ namespace NJS.Application.Extensions
 
             services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
             services.AddScoped<ICashflowRepository, CashflowRepository>();
+            services.AddScoped<IMeasurementUnitRepository, MeasurementUnitRepository>();
 
            // services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAuthService, EnhancedAuthService>();
