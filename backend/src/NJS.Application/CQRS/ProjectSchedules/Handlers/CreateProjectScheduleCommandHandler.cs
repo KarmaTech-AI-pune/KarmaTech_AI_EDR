@@ -6,10 +6,10 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.ProjectSchedules.Command;
 using NJS.Repositories.Interfaces;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Application.CQRS.ProjectSchedules.Handlers
 {
@@ -28,27 +28,27 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
         {
             var projectScheduleDto = request.ProjectSchedule;
 
-            if (projectScheduleDto == null)
+            if (projectScheduleDto == null || projectScheduleDto.Tasks == null || !projectScheduleDto.Tasks.Any())
             {
-                var emptyProject = new TodoNewProject();
-                return await _projectScheduleRepository.CreateProjectSchedule(emptyProject);
+                throw new ArgumentException("ProjectSchedule and Tasks cannot be null or empty");
             }
 
-            var project = new TodoNewProject
+            // Check if the project exists
+            var projectExists = await _context.Projects.AnyAsync(p => p.Id == projectScheduleDto.ProjectId, cancellationToken);
+            if (!projectExists)
             {
-                ProjectName = projectScheduleDto.ProjectName,
-                Description = projectScheduleDto.Description,
-                StartDate = projectScheduleDto.StartDate,
-                EndDate = projectScheduleDto.EndDate
-            };
+                throw new ArgumentException($"Project with ID {projectScheduleDto.ProjectId} not found.");
+            }
 
-            if (projectScheduleDto.Tasks != null && projectScheduleDto.Tasks.Any())
+            try
             {
-                project.Tasks = new List<TodoNewTask>();
-                
+                var tasksToAdd = new List<SprintTask>();
+                var subtasksToAdd = new List<SprintSubtask>();
+
+                // Create SprintTask entities and their subtasks
                 foreach (var taskDto in projectScheduleDto.Tasks.Where(t => t != null))
                 {
-                    var task = new TodoNewTask
+                    var task = new SprintTask
                     {
                         Taskid = taskDto.Taskid,
                         Taskkey = taskDto.Taskkey,
@@ -69,16 +69,15 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                         IsExpanded = taskDto.TaskisExpanded,
                         TaskcreatedDate = taskDto.TaskcreatedDate,
                         TaskupdatedDate = taskDto.TaskupdatedDate,
-                        Project = project
+                        ProjectId = projectScheduleDto.ProjectId // Set the foreign key
                     };
+                    tasksToAdd.Add(task);
 
                     if (taskDto.Subtasks != null && taskDto.Subtasks.Any())
                     {
-                        task.Subtasks = new List<TodoNewSubtask>();
-                        
                         foreach (var subtaskDto in taskDto.Subtasks.Where(s => s != null))
                         {
-                            var subtask = new TodoNewSubtask
+                            var subtask = new SprintSubtask
                             {
                                 Subtaskkey = subtaskDto.Subtaskkey,
                                 Subtasktitle = subtaskDto.Subtasktitle,
@@ -93,25 +92,32 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                                 SubtaskReporterAvatar = subtaskDto.SubtaskReporterAvatar,
                                 Attachments = subtaskDto.Subtaskattachments,
                                 Subtaskcomments = subtaskDto.Subtaskcomments,
+                                SubtaskisExpanded = subtaskDto.SubtaskisExpanded,
                                 SubtaskcreatedDate = subtaskDto.SubtaskcreatedDate,
                                 SubtaskupdatedDate = subtaskDto.SubtaskupdatedDate,
                                 SubtaskType = subtaskDto.SubtaskType,
-                                Taskid = task.Taskid,
-                                ParentTask = task
+                                Taskid = task.Taskid // Set the foreign key to SprintTask
                             };
-                            
-                            task.Subtasks.Add(subtask);
+                            subtasksToAdd.Add(subtask);
                         }
                     }
-                    
-                    project.Tasks.Add(task);
                 }
+
+                await _context.SprintTasks.AddRangeAsync(tasksToAdd, cancellationToken);
+                await _context.SprintSubtasks.AddRangeAsync(subtasksToAdd, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+                
+                // Log successful save
+                Console.WriteLine($"Successfully saved project tasks for project {projectScheduleDto.ProjectId}");
+                
+                return projectScheduleDto.ProjectId;
             }
-
-            _context.TodoNewProjects.Add(project);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return project.ProjectId;
+            catch (Exception ex)
+            {
+                // Log the error
+                Console.WriteLine($"Error saving project tasks: {ex.Message}");
+                throw;
+            }
         }
     }
 }

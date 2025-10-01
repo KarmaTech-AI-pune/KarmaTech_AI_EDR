@@ -120,10 +120,8 @@ namespace NJS.Domain.Database
         // Main Projects (tenant-based) - Note: This was already defined above
 
         // New Todo Project Management entities
-        public DbSet<TodoNewProject> TodoNewProjects { get; set; }
-        public DbSet<TodoNewTask> TodoNewTasks { get; set; }
-        public DbSet<TodoNewSubtask> TodoNewSubtasks { get; set; }
-        public DbSet<TodoNewTeamMember> TodoNewTeamMembers { get; set; }
+        public DbSet<SprintTask> SprintTasks { get; set; }
+        public DbSet<SprintSubtask> SprintSubtasks { get; set; }
         
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -148,20 +146,9 @@ namespace NJS.Domain.Database
         {
             base.OnModelCreating(modelBuilder);
 
-            // New Todo Project Management relationships (no tenant filtering)
-            modelBuilder.Entity<TodoNewTask>()
-                .HasOne(t => t.Project)
-                .WithMany(p => p.Tasks)
-                .HasForeignKey(t => t.ProjectId);
-
-            // TodoNewTask assignee/reporter fields are regular strings, no foreign key relationshipsc
-
-            modelBuilder.Entity<TodoNewSubtask>()
-                .HasOne(s => s.ParentTask)
-                .WithMany(t => t.Subtasks)
-                .HasForeignKey(s => s.Taskid);
-
-            // TodoNewSubtask assignee/reporter fields are regular strings, no foreign key relationships
+            // New Todo Project Management relationships
+            // Removing explicit relationship configuration since navigation properties were removed
+            // The relationships will be maintained through foreign keys only
 
             modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -1241,15 +1228,6 @@ namespace NJS.Domain.Database
                 .HasForeignKey(spf => spf.FeatureId);
 
             // TodoNew entities relationships
-            modelBuilder.Entity<TodoNewTask>()
-                .HasOne(t => t.Project)
-                .WithMany(p => p.Tasks)
-                .HasForeignKey(t => t.ProjectId);
-
-            modelBuilder.Entity<TodoNewSubtask>()
-                .HasOne(s => s.ParentTask)
-                .WithMany(t => t.Subtasks)
-                .HasForeignKey(s => s.Taskid);
         }
     }
 }

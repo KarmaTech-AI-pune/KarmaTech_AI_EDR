@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    public class TodoNewTask
+    public class SprintTask
     {
         [Key]
         public string? Taskid { get; set; }  // e.g. "T-101"
@@ -44,10 +44,12 @@ namespace NJS.Domain.Entities
 
         public DateTime? TaskupdatedDate { get; set; }
 
-        [ForeignKey("Project")]
+        // Foreign key to Project table
         public int ProjectId { get; set; }
-        public TodoNewProject? Project { get; set; }
+        [ForeignKey("ProjectId")]
+        public Project? Project { get; set; }
 
-        public ICollection<TodoNewSubtask>? Subtasks { get; set; }
+        // Navigation property to SprintSubtasks
+        public ICollection<SprintSubtask>? Subtasks { get; set; }
     }
 }

@@ -10,7 +10,8 @@ namespace NJS.Domain.Entities
         public int Id { get; set; }
         public DateTime? Date { get; set; }
 
-        public TodoNewProject? Project { get; set; }
+        public int ProjectId { get; set; }
+        public Project? Project { get; set; }
         // This was used by WBSTask - keeping for compatibility
     }
 }

@@ -1,18 +1,16 @@
 using MediatR;
 using NJS.Application.Dtos;
 using NJS.Domain.Database;
-using NJS.Domain.Entities;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.ProjectSchedules.Query;
+using System.Linq;
 
 namespace NJS.Application.CQRS.ProjectSchedules.Handlers
 {
-    public class GetProjectScheduleQueryHandler : IRequestHandler<GetProjectScheduleQuery, ProjectTasksOnlyDto?>
+    public class GetProjectScheduleQueryHandler : IRequestHandler<GetProjectScheduleQuery, ProjectScheduleDto?>
     {
         private readonly ProjectManagementContext _context;
 
@@ -21,25 +19,30 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<ProjectTasksOnlyDto?> Handle(GetProjectScheduleQuery request, CancellationToken cancellationToken)
+        public async Task<ProjectScheduleDto?> Handle(GetProjectScheduleQuery request, CancellationToken cancellationToken)
         {
             var projectId = request.ProjectId;
 
-            // Retrieve project and related entities from the database
-            var project = await _context.TodoNewProjects
-                .Include(p => p.Tasks!)
-                    .ThenInclude(t => t.Subtasks!)
-                .FirstOrDefaultAsync(p => p.ProjectId == projectId, cancellationToken);
+            // Check if project exists
+            var projectExists = await _context.Projects
+                .AnyAsync(p => p.Id == projectId, cancellationToken);
 
-            if (project == null)
+            if (!projectExists)
             {
-                return null; // Or throw a NotFoundException
+                return null;
             }
 
-            // Map the entity to the DTO - Only return tasks, no project details
-            var projectTasksDto = new ProjectTasksOnlyDto
+            // Fetch SprintTasks with their SprintSubtasks for the given project
+            var sprintTasks = await _context.SprintTasks
+                .Include(t => t.Subtasks!)
+                .Where(t => t.ProjectId == projectId)
+                .ToListAsync(cancellationToken);
+
+            // Convert to DTOs
+            var projectDto = new ProjectScheduleDto
             {
-                Tasks = project.Tasks?.Select(t => new TodoNewTaskDto
+                ProjectId = projectId,
+                Tasks = sprintTasks.Select(t => new SprintTaskDto
                 {
                     Taskid = t.Taskid,
                     Taskkey = t.Taskkey,
@@ -60,7 +63,8 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                     TaskisExpanded = t.IsExpanded,
                     TaskcreatedDate = t.TaskcreatedDate,
                     TaskupdatedDate = t.TaskupdatedDate,
-                    Subtasks = t.Subtasks?.Select(s => new TodoNewSubtaskDto
+                    ProjectId = t.ProjectId,
+                    Subtasks = t.Subtasks?.Select(s => new SprintSubtaskDto
                     {
                         Subtaskkey = s.Subtaskkey,
                         Subtasktitle = s.Subtasktitle,
@@ -75,16 +79,16 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                         SubtaskReporterAvatar = s.SubtaskReporterAvatar,
                         Subtaskattachments = s.Attachments,
                         Subtaskcomments = s.Subtaskcomments,
+                        SubtaskisExpanded = s.SubtaskisExpanded,
                         SubtaskcreatedDate = s.SubtaskcreatedDate,
                         SubtaskupdatedDate = s.SubtaskupdatedDate,
                         SubtaskType = s.SubtaskType,
-                        Taskid = s.Taskid,
-                        SubtaskisExpanded = null
+                        Taskid = s.Taskid
                     }).ToList()
                 }).ToList()
             };
 
-            return projectTasksDto;
+            return projectDto;
         }
     }
 }

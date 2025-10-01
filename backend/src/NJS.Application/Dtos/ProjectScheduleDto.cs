@@ -6,17 +6,14 @@ namespace NJS.Application.Dtos
     public class ProjectScheduleDto
     {
         public int ProjectId { get; set; }
-        public string? ProjectName { get; set; }
-        public string? Description { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public List<TodoNewTaskDto>? Tasks { get; set; }
+        public List<SprintTaskDto>? Tasks { get; set; }
+        
     }
 
-    public class TodoNewTaskDto
+    public class SprintTaskDto
     {
-        public string? Taskid { get; set; }  // e.g. "T-101"
-        public string? Taskkey { get; set; } // e.g. "PROJ-101"
+        public string? Taskid { get; set; }
+        public string? Taskkey { get; set; }
         public string? TaskTitle { get; set; }
         public string? Taskdescription { get; set; }
         public string? TaskType { get; set; }
@@ -34,12 +31,13 @@ namespace NJS.Application.Dtos
         public bool? TaskisExpanded { get; set; } // renamed from IsExpanded
         public DateTime? TaskcreatedDate { get; set; }
         public DateTime? TaskupdatedDate { get; set; }
-        public List<TodoNewSubtaskDto>? Subtasks { get; set; }
+        public int ProjectId { get; set; } // Foreign key to Project
+        public List<SprintSubtaskDto>? Subtasks { get; set; }
     }
 
-    public class TodoNewSubtaskDto
+    public class SprintSubtaskDto
     {
-        public string? Subtaskkey { get; set; }  // e.g. "PROJ-101-1"
+        public string? Subtaskkey { get; set; }
         public string? Subtasktitle { get; set; }
         public string? Subtaskdescription { get; set; }
         public string? Subtaskpriority { get; set; }
@@ -52,18 +50,11 @@ namespace NJS.Application.Dtos
         public string? SubtaskReporterAvatar { get; set; }
         public int? Subtaskattachments { get; set; } // renamed from Attachments
         public int? Subtaskcomments { get; set; }
+        public bool? SubtaskisExpanded { get; set; }
         public DateTime? SubtaskcreatedDate { get; set; }
         public DateTime? SubtaskupdatedDate { get; set; }
         public string? SubtaskType { get; set; }
-        public string? Taskid { get; set; }
-        public bool? SubtaskisExpanded { get; set; } // optional, not persisted yet
-    }
-
-    public class TodoNewTeamMemberDto
-    {
-        public string? Assineid { get; set; }
-        public string? Assinename { get; set; }
-        public string? Assineavatar { get; set; }
+        public string? Taskid { get; set; } // Foreign key to SprintTask
     }
 
     // Response DTO for POST endpoint  
@@ -74,10 +65,5 @@ namespace NJS.Application.Dtos
         public int ProjectId { get; set; }
         public string Message { get; set; } = "Project schedule created successfully!";
     }
-    
-    // Response DTO for GET endpoint - Only tasks
-    public class ProjectTasksOnlyDto
-    {
-        public List<TodoNewTaskDto>? Tasks { get; set; }
-    }
+
 }

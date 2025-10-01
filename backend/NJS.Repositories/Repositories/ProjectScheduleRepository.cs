@@ -16,19 +16,18 @@ namespace NJS.Repositories.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<TodoNewProject> GetProjectSchedule(int projectId)
+        public async Task<Project> GetProjectSchedule(int projectId)
         {
-            return await _context.TodoNewProjects
-                .Include(p => p.Tasks!)
-                    .ThenInclude(t => t.Subtasks!)
-                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+            // Adjusted to use Project instead of TodoNewProject
+            return await _context.Projects
+                .FirstOrDefaultAsync(p => p.Id == projectId);
         }
 
-        public async Task<int> CreateProjectSchedule(TodoNewProject project)
+        public async Task<int> CreateProjectSchedule(Project project)
         {
-            _context.TodoNewProjects.Add(project);
+            _context.Projects.Add(project);
             await _context.SaveChangesAsync();
-            return project.ProjectId;
+            return project.Id;
         }
     }
 }

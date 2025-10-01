@@ -5,7 +5,7 @@ namespace NJS.Repositories.Interfaces
 {
     public interface IProjectScheduleRepository
     {
-        Task<TodoNewProject> GetProjectSchedule(int projectId);
-        Task<int> CreateProjectSchedule(TodoNewProject project);
+        Task<Project> GetProjectSchedule(int projectId);
+        Task<int> CreateProjectSchedule(Project project);
     }
 }

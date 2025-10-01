@@ -27,7 +27,7 @@ namespace NJSAPI.Controllers
 
             // Set the ProjectId on the input DTO
             todoScheduleDto.ProjectId = createdId;
-            
+
             // Generate the access link
             var accessLink = $"{Request.Scheme}://{Request.Host}/api/project-schedule/{createdId}";
 
@@ -44,7 +44,7 @@ namespace NJSAPI.Controllers
 
 
         [HttpGet("{projectId}")]
-        public async Task<IActionResult> GetTodoSchedule(int projectId)
+        public async Task<ActionResult<ProjectScheduleDto>> GetTodoSchedule(int projectId)
         {
             var query = new GetProjectScheduleQuery { ProjectId = projectId };
             var todoSchedule = await _mediator.Send(query);
