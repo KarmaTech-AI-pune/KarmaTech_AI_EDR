@@ -56,7 +56,7 @@ const formSections = [
         },
         {
           id: 'todolist',
-          title: 'TodoList',
+          title: 'Sprint Planning',
           icon: <ChecklistRtlIcon />,
           path: 'forms/wbs/todo-list'
         }

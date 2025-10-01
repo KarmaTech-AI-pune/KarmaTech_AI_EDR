@@ -45,6 +45,8 @@ const ProjectForms: React.FC = () => {
                     return <WorkBreakdownStructureForm formType="manpower" />;
                 case "odc":
                     return <WorkBreakdownStructureForm formType="odc" />;
+                case "todo-list":
+                    return <TodoList />;
                 default:
                     return <FormsOverview onFormSelect={() => {}} />;
             }
