@@ -1,6 +1,5 @@
 using NJS.Repositories.Interfaces;
 using NJS.Domain.Entities;
-using System.Threading.Tasks;
 using NJS.Domain.Database;
 
 namespace NJS.Repositories.Repositories

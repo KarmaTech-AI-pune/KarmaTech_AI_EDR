@@ -25,6 +25,7 @@ namespace NJS.Domain.Database
                 new { Name = "Viewer", Description = "Read-only access to project information" }
             };
 
+
             foreach (var roleInfo in rolesToSeed)
             {
                 var existingRole = await _roleManager.FindByNameAsync(roleInfo.Name);

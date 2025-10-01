@@ -1,15 +1,16 @@
 ﻿namespace NJSAPI.Configurations
 {
-    public record SwaggerSettings
+    public class SwaggerSettings
     {
-        public string Title { get; init; }
-        public string Version { get; init; }
-        public string Description { get; init; }
-        public Contact Contact { get; init; }
+        public string Title { get; set; }
+        public string Version { get; set; }
+        public string Description { get; set; }
+        public SwaggerContact Contact { get; set; }
     }
-    public record Contact
+
+    public class SwaggerContact
     {
-        public string Name { get; init; }
-        public string Email { get; init; }
+        public string Name { get; set; }
+        public string Email { get; set; }
     }
 }

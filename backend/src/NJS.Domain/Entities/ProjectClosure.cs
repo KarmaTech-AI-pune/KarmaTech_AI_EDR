@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Domain.Entities
 {
@@ -17,6 +18,7 @@ namespace NJS.Domain.Entities
         public int ProjectId { get; set; }
 
         [ForeignKey("ProjectId")]
+        [DeleteBehavior(DeleteBehavior.NoAction)]
         public virtual Project Project { get; set; }
 
         // Section A: Overall Project Delivery
@@ -167,7 +169,8 @@ namespace NJS.Domain.Entities
         public int WorkflowStatusId { get; set; } = 1; // Default to Initial
 
         [ForeignKey("WorkflowStatusId")]
-        public PMWorkflowStatus WorkflowStatus { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual PMWorkflowStatus WorkflowStatus { get; set; }
 
         // Navigation property for workflow history
         public ICollection<ProjectClosureWorkflowHistory> WorkflowHistories { get; set; } = new List<ProjectClosureWorkflowHistory>();

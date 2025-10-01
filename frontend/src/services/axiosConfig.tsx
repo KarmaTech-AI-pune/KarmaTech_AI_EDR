@@ -1,21 +1,76 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+interface EnvironmentConfig {
+  apiBaseUrl: string;
+  staticIp: string;
+  useStaticIp: boolean;
+  tenantProtocol: string;
+  tenantDomain: string;
+  tenantPort: string;
+}
 
-// Function to get tenant context from domain
-const getTenantContext = () => {
-  const hostname = window.location.hostname;
+// Environment configuration with fallbacks
+const ENV_CONFIG: EnvironmentConfig = {
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+  staticIp: import.meta.env.VITE_STATIC_IP || '',
+  useStaticIp: import.meta.env.VITE_USE_STATIC_IP === 'true',
+  tenantProtocol: import.meta.env.VITE_TENANT_PROTOCOL,
+  tenantDomain: import.meta.env.VITE_TENANT_DOMAIN,
+  tenantPort: import.meta.env.VITE_TENANT_PORT,
+};
+
+/**
+ * Extracts tenant context from the current domain
+ * @returns {string | null} The tenant subdomain or null if not found
+ */
+export const getTenantContext = (): string | null => {
+  // debugger;
+  // const hostname = window.location.hostname;
   
-  // Extract subdomain (e.g., 'companyb' from 'companyb.localhost')
-  const subdomain = hostname.split('.')[0];
-  if(subdomain===null || subdomain === 'localhost' || subdomain === '') {
-    return null; 
+  // // Extract subdomain (e.g., 'companyb' from 'companyb.localhost')
+  // const subdomain = hostname.split('.')[0];
+  
+  // // Return null for localhost, empty string, or invalid subdomains
+  // if (!subdomain || subdomain === 'localhost' || subdomain === hostname) {
+  //   return null; 
+  // }
+  
+  // return subdomain;
+// debugger;
+  const hostname = window.location.hostname;
+  // debugger;
+  // Support "companya.localhost" and "companya.dev.localhost"
+  if (hostname.includes('localhost')) {
+    const parts = hostname.split('.');
+    if(parts[0]=="localhost"){
+      return parts[0];
+    }
+    return parts.length > 1 ? parts[0] : null;
   }
-  return subdomain;
+
+  // Normal subdomain logic
+  const subdomain = hostname.split('.')[0];
+  return subdomain && subdomain !== hostname ? subdomain : null;
+};
+
+
+/**
+ * Constructs the appropriate API base URL based on tenant context
+ * @returns {string} The API base URL
+ */
+const getApiBaseUrl = (): string => {
+//  const tenant = getTenantContext();
+//  debugger;
+//  if (tenant) {
+    // Construct tenant-specific API URL using environment variables
+   // const { tenantProtocol, tenantDomain, tenantPort } = ENV_CONFIG;
+   // return `${tenantProtocol}://${tenant}.${tenantDomain}:${tenantPort}/`;
+//  }  
+  return ENV_CONFIG.apiBaseUrl;
 };
 
 export const axiosInstance: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json'
   },

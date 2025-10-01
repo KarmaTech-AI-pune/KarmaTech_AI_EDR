@@ -1,16 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Entities;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
-using System;
 
 namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/resources")]
+    [Authorize]
     public class ResourceController : ControllerBase
     {
         private readonly UserManager<User> _userManager;

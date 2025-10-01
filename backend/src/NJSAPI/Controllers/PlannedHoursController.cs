@@ -1,11 +1,7 @@
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJSAPI.Controllers
 {

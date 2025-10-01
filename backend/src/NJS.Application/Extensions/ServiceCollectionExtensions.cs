@@ -74,18 +74,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IProjectScheduleRepository, ProjectScheduleRepository>();
 
             // Register DNS Management Service based on environment
-            var environment = services.BuildServiceProvider().GetService<IWebHostEnvironment>();
-            if (environment?.EnvironmentName == "Development")
-            {
-                services.AddScoped<IDNSManagementService, MockDNSManagementService>();
-            }
-            else
-            {
-                services.AddScoped<IDNSManagementService, DNSManagementService>();
-
-                // Note: For production, you'll need to configure AWS credentials and region
-                // services.AddAWSService<IAmazonRoute53>();
-            }
+           
 
             //Define Strategy pattern
             services.AddScoped<IEntityWorkflowStrategy, ChangeControlWorkflowStrategy>();
@@ -95,6 +84,8 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEntityWorkflowStrategy, JobStartFormWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
             services.AddScoped<IFeatureRepository, FeatureRepository>();
+            services.AddScoped<ITwoFactorService, TwoFactorService>();
+            services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 
             return services;
         }

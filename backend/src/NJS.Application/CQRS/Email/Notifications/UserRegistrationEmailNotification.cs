@@ -1,6 +1,7 @@
 using MediatR;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace NJS.Application.CQRS.Email.Notifications;
 
@@ -47,5 +48,123 @@ public class UserRegistrationEmailNotificationHandler : INotificationHandler<Use
         };
 
         await _emailService.SendEmailAsync(message);
+    }
+}
+
+public class AccountCreationEmailNotification : INotification
+{
+    public string FirstName { get; }
+    public string LastName { get; }
+    public string EmailAddress { get; }
+    public string PhoneNumber { get; }
+    public string CompanyName { get; }
+    public string CompanyAddress { get; }
+    public string Subdomain { get; }
+    public string SubscriptionPlan { get; }
+
+    public AccountCreationEmailNotification(
+        string firstName,
+        string lastName,
+        string emailAddress,
+        string phoneNumber,
+        string companyName,
+        string companyAddress,
+        string subdomain,
+        string subscriptionPlan)
+    {
+        FirstName = firstName;
+        LastName = lastName;
+        EmailAddress = emailAddress;
+        PhoneNumber = phoneNumber;
+        CompanyName = companyName;
+        CompanyAddress = companyAddress;
+        Subdomain = subdomain;
+        SubscriptionPlan = subscriptionPlan;
+    }
+}
+
+public class AccountCreationEmailNotificationHandler : INotificationHandler<AccountCreationEmailNotification>
+{
+    private readonly IEmailService _emailService;
+    private readonly ILogger<AccountCreationEmailNotificationHandler> _logger;
+
+    public AccountCreationEmailNotificationHandler(
+        IEmailService emailService,
+        ILogger<AccountCreationEmailNotificationHandler> logger)
+    {
+        _emailService = emailService;
+        _logger = logger;
+    }
+
+    public async Task Handle(AccountCreationEmailNotification notification, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var subject = $"New Account Created: {notification.FirstName} {notification.LastName}";
+            var body = GetEmailBody(notification);
+
+            var message = new EmailMessage
+            {
+                To = "ankursramapure@gmail.com",
+                Subject = subject,
+                Body = body,
+                IsHtml = true
+            };
+
+            await _emailService.SendEmailAsync(message);
+            _logger.LogInformation("Account creation notification email sent successfully for: {Email}", notification.EmailAddress);
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't throw - fail silently for email notifications
+            _logger.LogError(ex, "Failed to send account creation notification email for: {Email}", notification.EmailAddress);
+        }
+    }
+
+    private string GetEmailBody(AccountCreationEmailNotification notification)
+    {
+        return $@"
+            <h2>New Account Created</h2>
+            <p>A new account has been created in the NJS Project Management system.</p>
+
+            <h3>Account Details:</h3>
+            <table style='border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;'>
+                <tr style='background-color: #f2f2f2;'>
+                    <td style='border: 1px solid #ddd; padding: 8px; font-weight: bold;'>First Name:</td>
+                    <td style='border: 1px solid #ddd; padding: 8px;'>{notification.FirstName}</td>
+                </tr>
+                <tr>
+                    <td style='border: 1px solid #ddd; padding: 8px; font-weight: bold;'>Last Name:</td>
+                    <td style='border: 1px solid #ddd; padding: 8px;'>{notification.LastName}</td>
+                </tr>
+                <tr style='background-color: #f2f2f2;'>
+                    <td style='border: 1px solid #ddd; padding: 8px; font-weight: bold;'>Email Address:</td>
+                    <td style='border: 1px solid #ddd; padding: 8px;'>{notification.EmailAddress}</td>
+                </tr>
+                <tr>
+                    <td style='border: 1px solid #ddd; padding: 8px; font-weight: bold;'>Phone Number:</td>
+                    <td style='border: 1px solid #ddd; padding: 8px;'>{notification.PhoneNumber}</td>
+                </tr>
+                <tr style='background-color: #f2f2f2;'>
+                    <td style='border: 1px solid #ddd; padding: 8px; font-weight: bold;'>Company Name:</td>
+                    <td style='border: 1px solid #ddd; padding: 8px;'>{notification.CompanyName}</td>
+                </tr>
+                <tr>
+                    <td style='border: 1px solid #ddd; padding: 8px; font-weight: bold;'>Company Address:</td>
+                    <td style='border: 1px solid #ddd; padding: 8px;'>{notification.CompanyAddress}</td>
+                </tr>
+                <tr style='background-color: #f2f2f2;'>
+                    <td style='border: 1px solid #ddd; padding: 8px; font-weight: bold;'>Subdomain:</td>
+                    <td style='border: 1px solid #ddd; padding: 8px;'>{notification.Subdomain}</td>
+                </tr>
+                <tr>
+                    <td style='border: 1px solid #ddd; padding: 8px; font-weight: bold;'>Subscription Plan:</td>
+                    <td style='border: 1px solid #ddd; padding: 8px;'>{notification.SubscriptionPlan}</td>
+                </tr>
+            </table>
+
+            <p style='margin-top: 20px;'>Please review the account details and take any necessary action.</p>
+
+            <p>Best regards,<br>NJS Project Management System</p>";
     }
 }

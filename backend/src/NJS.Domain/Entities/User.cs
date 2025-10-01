@@ -6,7 +6,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    public class User : IdentityUser
+    [Table("AspNetUsers")]
+    public class User : IdentityUser, ITenantEntity
     {
         public string Name { get; set; }
         
@@ -22,6 +23,8 @@ namespace NJS.Domain.Entities
         public bool IsConsultant { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        public new bool TwoFactorEnabled { get; set; } = false; // Default to true for all users
 
         // Navigation property for WBS Tasks
         public ICollection<UserWBSTask> UserWBSTasks { get; set; }
@@ -40,6 +43,7 @@ namespace NJS.Domain.Entities
         public virtual ICollection<Project> SeniorManagedProjects { get; set; }
 
         public ICollection<OpportunityHistory> OpportunityHistories { get; set; } = [];
+        public int TenantId { get; set; }
 
         public User()
         {

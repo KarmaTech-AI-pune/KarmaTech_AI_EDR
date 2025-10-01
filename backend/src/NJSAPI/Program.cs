@@ -3,31 +3,53 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using NJSAPI.Extensions;
 using NLog.Web;
 using Microsoft.Extensions.Options;
 using NJSAPI.Configurations;
 using NJSAPI.Middleware;
+using NJS.Domain.Services;
+using NJS.Application.Services;
+using NJS.Application.Services.IContract;
 
 internal class Program
 {
     private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
        
 
         builder.Services.AddControllers();
-        builder.Services.AddHttpContextAccessor();
         builder.Services.AddLogging();
 
+        // Add HttpContextAccessor as singleton
+        builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+        // Add tenant resolution strategies in priority order
+        
+        builder.Services.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>();
+        builder.Services.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>();
+        builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
+       
+        // Add tenant services for tr
+        builder.Services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
+        //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
+
+        var environment = builder.Configuration.GetValue<string>("DNS:Env");
+        if (environment is "Development" or "Dev")
+        {
+            builder.Services.AddScoped<IDNSManagementService, MockDNSManagementService>();
+        }
+        else
+        {
+            builder.Services.AddScoped<IDNSManagementService, DNSManagementService>();
+
+            // Note: For production, you'll need to configure AWS credentials and region
+            // services.AddAWSService<IAmazonRoute53>();
+        }
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
         builder.Services.AddTenantServices(builder.Configuration);
-
-        // Add tenant connection resolver
-        //builder.Services.AddScoped<ProjectManagementContextFactory>();
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddConfiguredSwagger(builder.Configuration);
@@ -70,24 +92,24 @@ internal class Program
         });
 
         // Configure Authorization Policies
-        builder.Services.AddAuthorization(options =>
-        {
-            options.AddPolicy("RequireAdminRole", policy =>
-                policy.RequireRole("Admin"));
-
-            options.AddPolicy("RequireManagerRole", policy =>
-                policy.RequireRole("Manager"));
-
-            options.AddPolicy("RequireUserRole", policy =>
-                policy.RequireRole("User"));
-
-            options.AddPolicy("RequireAdminOrManager", policy =>
-                policy.RequireRole("Admin", "Manager"));
-
-            options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-        });
+        // builder.Services.AddAuthorization(options =>
+        // {
+        //     options.AddPolicy("RequireAdminRole", policy =>
+        //         policy.RequireRole("Admin"));
+        //
+        //     options.AddPolicy("RequireManagerRole", policy =>
+        //         policy.RequireRole("Manager"));
+        //
+        //     options.AddPolicy("RequireUserRole", policy =>
+        //         policy.RequireRole("User"));
+        //
+        //     options.AddPolicy("RequireAdminOrManager", policy =>
+        //         policy.RequireRole("Admin", "Manager"));
+        //
+        //     options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        //         .RequireAuthenticatedUser()
+        //         .Build();
+        // });
 
         builder.Services.AddCompression();
         builder.Host.UseNLog();
@@ -99,6 +121,7 @@ internal class Program
 
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");
+        
 
         app.UseSwagger();
         app.UseSwaggerUI(options =>
@@ -106,16 +129,18 @@ internal class Program
             var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
             options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", $"{swaggerSettings.Title}");
         });
-
-       // app.UseTenantCors();
+      
         app.UseResponseCompression();
-        app.UseHttpsRedirection();
+        app.UseHttpsRedirection();       
+       
         app.UseMiddleware<TenantResolverMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseMiddleware<TenantMiddleware>();
         app.SeedApplicationData();
         app.MapControllers();
 
         app.Run();
     }
 }
+

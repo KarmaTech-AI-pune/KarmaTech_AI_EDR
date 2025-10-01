@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NJS.Domain.Entities;
 using NJS.Domain.Database;
@@ -10,20 +11,24 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class SubscriptionsController : ControllerBase
     {
-        private readonly ProjectManagementContext _context;
+        private readonly TenantDbContext _context;
+        private readonly ProjectManagementContext _projectManagementContext;
         private readonly ISubscriptionService _subscriptionService;
         private readonly ILogger<SubscriptionsController> _logger;
 
         public SubscriptionsController(
-            ProjectManagementContext context,
+            TenantDbContext context,
             ISubscriptionService subscriptionService,
-            ILogger<SubscriptionsController> logger)
+            ILogger<SubscriptionsController> logger,
+            ProjectManagementContext projectManagementContext)
         {
             _context = context;
             _subscriptionService = subscriptionService;
             _logger = logger;
+            _projectManagementContext = projectManagementContext;
         }
 
         // GET: api/subscriptions/plans
@@ -63,6 +68,7 @@ namespace NJSAPI.Controllers
             {
                 return NotFound();
             }
+
             return plan;
         }
 
@@ -113,7 +119,7 @@ namespace NJSAPI.Controllers
                 return BadRequest();
             }
 
-            var existingPlan = await _context.SubscriptionPlans.FindAsync(id);
+            var existingPlan = await _projectManagementContext.SubscriptionPlans.FindAsync(id);
             if (existingPlan == null)
             {
                 return NotFound();
@@ -145,7 +151,7 @@ namespace NJSAPI.Controllers
         [HttpDelete("plans/{id}")]
         public async Task<IActionResult> DeleteSubscriptionPlan(int id)
         {
-            var plan = await _context.SubscriptionPlans.FindAsync(id);
+            var plan = await _projectManagementContext.SubscriptionPlans.FindAsync(id);
             if (plan == null)
             {
                 return NotFound();
@@ -155,10 +161,11 @@ namespace NJSAPI.Controllers
             var tenantsUsingPlan = await _context.Tenants.CountAsync(t => t.SubscriptionPlanId == id);
             if (tenantsUsingPlan > 0)
             {
-                return BadRequest(new { message = $"Cannot delete plan. {tenantsUsingPlan} tenants are currently using this plan." });
+                return BadRequest(new
+                    { message = $"Cannot delete plan. {tenantsUsingPlan} tenants are currently using this plan." });
             }
 
-            _context.SubscriptionPlans.Remove(plan);
+            _projectManagementContext.SubscriptionPlans.Remove(plan);
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Deleted subscription plan {PlanName}", plan.Name);
@@ -167,14 +174,16 @@ namespace NJSAPI.Controllers
 
         // POST: api/subscriptions/tenants/{tenantId}/subscribe
         [HttpPost("tenants/{tenantId}/subscribe")]
-        public async Task<ActionResult<object>> CreateTenantSubscription(int tenantId, [FromBody] CreateSubscriptionRequest request)
+        public async Task<ActionResult<object>> CreateTenantSubscription(int tenantId,
+            [FromBody] CreateSubscriptionRequest request)
         {
             try
             {
                 var success = await _subscriptionService.CreateTenantSubscriptionAsync(tenantId, request.PlanId);
                 if (success)
                 {
-                    _logger.LogInformation("Created subscription for tenant {TenantId} with plan {PlanId}", tenantId, request.PlanId);
+                    _logger.LogInformation("Created subscription for tenant {TenantId} with plan {PlanId}", tenantId,
+                        request.PlanId);
                     return Ok(new { success = true, message = "Subscription created successfully" });
                 }
                 else
@@ -185,7 +194,8 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating subscription for tenant {TenantId}", tenantId);
-                return StatusCode(500, new { success = false, message = "An error occurred while creating the subscription" });
+                return StatusCode(500,
+                    new { success = false, message = "An error occurred while creating the subscription" });
             }
         }
 
@@ -209,20 +219,23 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error cancelling subscription for tenant {TenantId}", tenantId);
-                return StatusCode(500, new { success = false, message = "An error occurred while cancelling the subscription" });
+                return StatusCode(500,
+                    new { success = false, message = "An error occurred while cancelling the subscription" });
             }
         }
 
         // PUT: api/subscriptions/tenants/{tenantId}/plan
         [HttpPut("tenants/{tenantId}/plan")]
-        public async Task<ActionResult<object>> UpdateTenantSubscription(int tenantId, [FromBody] UpdateSubscriptionRequest request)
+        public async Task<ActionResult<object>> UpdateTenantSubscription(int tenantId,
+            [FromBody] UpdateSubscriptionRequest request)
         {
             try
             {
                 var success = await _subscriptionService.UpdateTenantSubscriptionAsync(tenantId, request.PlanId);
                 if (success)
                 {
-                    _logger.LogInformation("Updated subscription for tenant {TenantId} to plan {PlanId}", tenantId, request.PlanId);
+                    _logger.LogInformation("Updated subscription for tenant {TenantId} to plan {PlanId}", tenantId,
+                        request.PlanId);
                     return Ok(new { success = true, message = "Subscription updated successfully" });
                 }
                 else
@@ -233,7 +246,8 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating subscription for tenant {TenantId}", tenantId);
-                return StatusCode(500, new { success = false, message = "An error occurred while updating the subscription" });
+                return StatusCode(500,
+                    new { success = false, message = "An error occurred while updating the subscription" });
             }
         }
 
@@ -241,8 +255,8 @@ namespace NJSAPI.Controllers
         [HttpGet("stats")]
         public async Task<ActionResult<object>> GetSubscriptionStats()
         {
-            var totalPlans = await _context.SubscriptionPlans.CountAsync();
-            var activePlans = await _context.SubscriptionPlans.CountAsync(p => p.IsActive);
+            var totalPlans = await _projectManagementContext.SubscriptionPlans.CountAsync();
+            var activePlans = await _projectManagementContext.SubscriptionPlans.CountAsync(p => p.IsActive);
             var totalSubscribers = await _context.Tenants.CountAsync(t => t.SubscriptionPlanId.HasValue);
 
             // Calculate monthly revenue
@@ -262,13 +276,14 @@ namespace NJSAPI.Controllers
 
         // POST: api/subscriptions/webhook
         [HttpPost("webhook")]
-        public async Task<ActionResult<object>> ProcessWebhook([FromBody] object webhookData, [FromHeader(Name = "Stripe-Signature")] string signature)
+        public async Task<ActionResult<object>> ProcessWebhook([FromBody] object webhookData,
+            [FromHeader(Name = "Stripe-Signature")] string signature)
         {
             try
             {
                 var json = System.Text.Json.JsonSerializer.Serialize(webhookData);
                 var success = await _subscriptionService.ProcessWebhookAsync(json, signature);
-                
+
                 if (success)
                 {
                     return Ok(new { received = true });
@@ -295,19 +310,22 @@ namespace NJSAPI.Controllers
 
                 var result = await _subscriptionService.GetAllSubscriptionFeaturesAsync();
 
-                _logger.LogInformation("Successfully retrieved {Count} subscription plans with details", result.Plans.Count);
+                _logger.LogInformation("Successfully retrieved {Count} subscription plans with details",
+                    result.Plans.Count);
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving subscription plans with features");
-                return StatusCode(500, new { message = "An error occurred while retrieving subscription plans with features" });
+                return StatusCode(500,
+                    new { message = "An error occurred while retrieving subscription plans with features" });
             }
         }
 
         // GET: api/subscriptions/features/by-plan/{planName} - Get specific plan with features, pricing, and limitations
         [HttpGet("features/by-plan/{planName}")]
-        public async Task<ActionResult<SubscriptionFeaturesResponseDto>> GetSubscriptionFeaturesByPlanName(string planName)
+        public async Task<ActionResult<SubscriptionFeaturesResponseDto>> GetSubscriptionFeaturesByPlanName(
+            string planName)
         {
             try
             {
@@ -316,7 +334,8 @@ namespace NJSAPI.Controllers
                     return BadRequest(new { message = "Plan name is required" });
                 }
 
-                _logger.LogInformation("Retrieving subscription plan '{PlanName}' with features, pricing, and limitations", planName);
+                _logger.LogInformation(
+                    "Retrieving subscription plan '{PlanName}' with features, pricing, and limitations", planName);
 
                 var result = await _subscriptionService.GetSubscriptionFeaturesByPlanNameAsync(planName);
 
@@ -331,13 +350,17 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving subscription plan '{PlanName}' with features", planName);
-                return StatusCode(500, new { message = $"An error occurred while retrieving subscription plan '{planName}' with features" });
+                return StatusCode(500,
+                    new
+                    {
+                        message = $"An error occurred while retrieving subscription plan '{planName}' with features"
+                    });
             }
         }
 
         private bool SubscriptionPlanExists(int id)
         {
-            return _context.SubscriptionPlans.Any(e => e.Id == id);
+            return _projectManagementContext.SubscriptionPlans.Any(e => e.Id == id);
         }
     }
 

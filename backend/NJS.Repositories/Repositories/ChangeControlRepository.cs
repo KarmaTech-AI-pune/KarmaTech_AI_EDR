@@ -2,10 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {
@@ -44,8 +40,7 @@ namespace NJS.Repositories.Repositories
         public async Task<int> AddAsync(ChangeControl changeControl)
         {
             if (changeControl == null) throw new ArgumentNullException(nameof(changeControl));
-
-            // Set creation timestamp
+           
             changeControl.CreatedAt = DateTime.Now;
 
             _context.ChangeControls.Add(changeControl);
@@ -61,9 +56,8 @@ namespace NJS.Repositories.Repositories
             var existingEntity = await _context.ChangeControls.FindAsync(changeControl.Id);
             if (existingEntity == null)
                 throw new KeyNotFoundException($"ChangeControl with ID {changeControl.Id} not found.");
-
-            // Update timestamp
-            changeControl.CreatedAt = existingEntity.CreatedAt; // Preserve original creation date
+          
+            changeControl.CreatedAt = existingEntity.CreatedAt;
             changeControl.UpdatedAt = DateTime.Now;
 
             _context.Entry(existingEntity).CurrentValues.SetValues(changeControl);

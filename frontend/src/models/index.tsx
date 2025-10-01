@@ -22,6 +22,9 @@ export interface User {
     avatar?: string;
     lastLogin?: string | null;
     password?: string;
+    tenantId?: number;
+    tenantDomain?: string;
+    twoFactorEnabled?: boolean;
 }
 
 export interface Role {
@@ -92,7 +95,9 @@ export enum PermissionType {
     //SUBMIT_FOR_REVIEW = 'SUBMIT_FOR_REVIEW',
     SUBMIT_FOR_APPROVAL = 'SUBMIT_FOR_APPROVAL',
 
-    SYSTEM_ADMIN = 'SYSTEM_ADMIN'
+    SYSTEM_ADMIN = 'SYSTEM_ADMIN',
+    Tenant_ADMIN = 'Tenant_ADMIN',
+
 }
 
 export interface RoleDefinition {

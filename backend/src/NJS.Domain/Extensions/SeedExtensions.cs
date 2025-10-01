@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
+using NJS.Domain.Services;
 
 namespace NJS.Domain.Extensions
 {
@@ -22,13 +23,35 @@ namespace NJS.Domain.Extensions
             try
             {
                 using var scope = app.ApplicationServices.CreateScope();
+                var tenantDbContext = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+
+
                 var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<ProjectManagementContext>>();
                 var httpContextAccessor = scope.ServiceProvider.GetService<IHttpContextAccessor>();
-                await using var context = new ProjectManagementContext(options, httpContextAccessor);
+
+                await using var context = new ProjectManagementContext(options, null);
+
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 
-               await context.Database.MigrateAsync();
+                await context.Database.MigrateAsync();
+
+                if (!tenantDbContext.Tenants.Any()) { 
+                    var tenet = new Tenant
+                    {
+                        Name = "Default Tenant",
+                        CreatedAt = DateTime.UtcNow,
+                        IsActive = true,
+                        CompanyName = "Default Company",
+                        Domain = "defaulttenant.com",
+                        MaxProjects=1000000,
+                        MaxUsers=10000000,
+                        Status = TenantStatus.Active                        
+                    };
+                    tenantDbContext.Tenants.Add(tenet);
+                   
+                    await tenantDbContext.SaveChangesAsync();
+                }
 
                 // Seed Permissions
                 var permissions = new[]
@@ -54,6 +77,7 @@ namespace NJS.Domain.Extensions
 
                     // System Permissions
                     new Permission { Name = "SYSTEM_ADMIN", Description = "Full system administration access", Category = "System" },
+                    new Permission { Name = "Tenant_ADMIN", Description = "Full system administration access", Category = "System" },
 
                     new Permission{Name="CHECKER", Description = "Only the checker", Category = "CheckerReviewer" },
                     new Permission{Name="REVIEWER", Description = "Only  the Reviewer", Category = "CheckerReviewer" }
@@ -95,7 +119,10 @@ namespace NJS.Domain.Extensions
                     }},
 
                     new { Name = "Reviewer", Description = "Review the check-review form", MinRate = 0.00m, IsResourceRole = false, Permissions = new[] {"REVIEWER"}},
-                    new { Name = "Checker", Description = "Check the check-review form", MinRate = 0.00m, IsResourceRole = false, Permissions = new[] {"CHECKER"}}
+                    new { Name = "Checker", Description = "Check the check-review form", MinRate = 0.00m, IsResourceRole = false, Permissions = new[] {"CHECKER"}},
+
+                     new { Name = "TenantAdmin", Description = "Tenant Administrator role", MinRate = 0m, IsResourceRole = false,  Permissions = new[] { "Tenant_ADMIN" } },
+
                 };
 
                 foreach (var roleData in roles)
