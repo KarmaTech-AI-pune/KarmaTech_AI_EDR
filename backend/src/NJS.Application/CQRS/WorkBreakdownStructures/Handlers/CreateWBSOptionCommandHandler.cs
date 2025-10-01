@@ -25,7 +25,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 Level = request.Level,
                 ParentValue = request.ParentValue,
                 FormType = (NJS.Domain.Entities.FormType)request.FormType,
-                Value = request.Label // Assuming Value is the same as Label for now
+                Value = request.Value
             };
 
             await _wbsOptionRepository.AddAsync(wbsOption);

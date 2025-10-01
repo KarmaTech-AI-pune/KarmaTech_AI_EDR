@@ -27,14 +27,14 @@ namespace NJSAPI.Extensions
            return services;
         }
 
-        public static IServiceCollection AddConfiguredSwagger(this IServiceCollection services, IConfiguration configuration)
-        {
-            
-            services.Configure<SwaggerSettings>(configuration.GetSection("Swagger"));
-            services.AddSwaggerGen();
-            services.ConfigureOptions<ConfigureSwaggerOptions>();
-
-            return services;
-        }
+        // public static IServiceCollection AddConfiguredSwagger(this IServiceCollection services, IConfiguration configuration)
+        // {
+        //     
+        //     services.Configure<SwaggerSettings>(configuration.GetSection("Swagger"));
+        //     services.AddSwaggerGen();
+        //     services.ConfigureOptions<ConfigureSwaggerOptions>();
+        //
+        //     return services;
+        // }
     }
 }

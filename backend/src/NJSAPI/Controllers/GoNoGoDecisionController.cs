@@ -1,15 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.ComponentModel.DataAnnotations;
 using NJS.Application.Dtos;
 using MediatR;
-using System.Threading.Tasks;
 using NJS.Domain.Enums;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using NJS.Application.Services.IContract;
 using NJS.Application.CQRS.Commands.GoNoGoDecision;
 
@@ -17,6 +13,7 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class GoNoGoDecisionController : ControllerBase
     {
         private readonly IGoNoGoDecisionRepository _repository;

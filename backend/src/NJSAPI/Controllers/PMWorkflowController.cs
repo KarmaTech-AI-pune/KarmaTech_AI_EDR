@@ -4,11 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.PMWorkflow.Commands;
 using NJS.Application.CQRS.PMWorkflow.Queries;
 using NJS.Application.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.OpenApi.Models;
 
 namespace NJSAPI.Controllers
 {

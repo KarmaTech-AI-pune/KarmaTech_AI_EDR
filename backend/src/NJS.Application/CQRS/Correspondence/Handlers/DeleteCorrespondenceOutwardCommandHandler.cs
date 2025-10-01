@@ -1,20 +1,13 @@
 using MediatR;
 using NJS.Application.CQRS.Correspondence.Commands;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.Correspondence.Handlers
 {
-    public class DeleteCorrespondenceOutwardCommandHandler : IRequestHandler<DeleteCorrespondenceOutwardCommand, bool>
+    public class DeleteCorrespondenceOutwardCommandHandler(ICorrespondenceOutwardRepository repository)
+        : IRequestHandler<DeleteCorrespondenceOutwardCommand, bool>
     {
-        private readonly ICorrespondenceOutwardRepository _repository;
-
-        public DeleteCorrespondenceOutwardCommandHandler(ICorrespondenceOutwardRepository repository)
-        {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        }
+        private readonly ICorrespondenceOutwardRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
 
         public async Task<bool> Handle(DeleteCorrespondenceOutwardCommand request, CancellationToken cancellationToken)
         {
@@ -23,12 +16,7 @@ namespace NJS.Application.CQRS.Correspondence.Handlers
             {
                 return false;
             }
-
             await _repository.DeleteAsync(request.Id);
-
-            // Reset the identity seed to ensure new entries start from the lowest available ID
-            await _repository.ResetIdentitySeedAsync();
-
             return true;
         }
     }

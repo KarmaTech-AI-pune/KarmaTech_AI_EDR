@@ -2,9 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {
@@ -38,7 +35,7 @@ namespace NJS.Repositories.Repositories
             var now = DateTime.Now;
             //settings.CreatedAt = now;
             //settings.UpdatedAt = now;
-            
+
             _context.Settings.Add(settings);
             await _context.SaveChangesAsync();
             return settings;
@@ -47,7 +44,7 @@ namespace NJS.Repositories.Repositories
         public async Task<int> GetNextBidNumberAsync()
         {
             var bidNumberSetting = await GetByKeyAsync(BID_NUMBER_KEY);
-            
+
             if (bidNumberSetting == null)
             {
                 // Initialize with 1 if not exists
@@ -60,7 +57,7 @@ namespace NJS.Repositories.Repositories
                 await AddAsync(bidNumberSetting);
                 return 1;
             }
-            
+
             // Parse current value, increment, and update
             if (int.TryParse(bidNumberSetting.Value, out int currentValue))
             {
@@ -69,7 +66,7 @@ namespace NJS.Repositories.Repositories
                 await UpdateAsync(bidNumberSetting);
                 return nextValue;
             }
-            
+
             // Fallback if parsing fails
             bidNumberSetting.Value = "1";
             await UpdateAsync(bidNumberSetting);

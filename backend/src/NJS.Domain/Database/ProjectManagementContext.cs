@@ -102,8 +102,7 @@ namespace NJS.Domain.Database
         public DbSet<CheckReview> CheckReviews { get; set; }
         public DbSet<ChangeControl> ChangeControls { get; set; }
         public DbSet<ProjectClosure> ProjectClosures { get; set; }
-        // Removed ProjectClosureComment to fix build issues
-        // public DbSet<ProjectClosureComment> ProjectClosureComments { get; set; }
+        public DbSet<Cashflow> Cashflows { get; set; }
 
         // PM Workflow entities
         public DbSet<PMWorkflowStatus> PMWorkflowStatuses { get; set; }
@@ -134,50 +133,39 @@ namespace NJS.Domain.Database
         public DbSet<Feature> Features { get; set; }
 
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
+        public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
 
-        public override int SaveChanges()
-        {
-            foreach (var entry in ChangeTracker.Entries<ITenantEntity>().ToList())
-            {
-                switch (entry.State)
-                {
-                    case EntityState.Added:
-                    case EntityState.Modified:
-                        entry.Entity.TenantId = (int)TenantId;
-                        break;
-                }
-            }
-            var result = base.SaveChanges();
-            return result;
-        }
+        // Main Projects (tenant-based) - Note: This was already defined above
 
-        //public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        //{
-        //    foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
-        //    {
-        //        switch (entry.State)
-        //        {
+        // New Todo Project Management entities
+        public DbSet<TodoNewProject> TodoNewProjects { get; set; }
+        public DbSet<TodoNewTask> TodoNewTasks { get; set; }
+        public DbSet<TodoNewSubtask> TodoNewSubtasks { get; set; }
+        public DbSet<TodoNewTeamMember> TodoNewTeamMembers { get; set; }
+        
 
-        //            case EntityState.Modified:
-        //            case EntityState.Added:
-        //                // Only set TenantId if it's not already set (for seeding scenarios)
-        //                if (entry.Entity.TenantId == 0)
-        //                {
-        //                    entry.Entity.TenantId = TenantId ?? throw new InvalidOperationException("TenantId cannot be null.");
-        //                }
-        //                break;
-        //        }
-        //    }
-        //    return await base.SaveChangesAsync(cancellationToken);
-        //}
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
-            modelBuilder.Entity<Role>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
-            modelBuilder.Entity<Project>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
+            // New Todo Project Management relationships (no tenant filtering)
+            modelBuilder.Entity<TodoNewTask>()
+                .HasOne(t => t.Project)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(t => t.ProjectId);
+
+            // TodoNewTask assignee/reporter fields are regular strings, no foreign key relationshipsc
+
+            modelBuilder.Entity<TodoNewSubtask>()
+                .HasOne(s => s.ParentTask)
+                .WithMany(t => t.Subtasks)
+                .HasForeignKey(s => s.Taskid);
+
+            // TodoNewSubtask assignee/reporter fields are regular strings, no foreign key relationships
+
+            modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CheckReview>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CorrespondenceInward>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -1302,7 +1290,16 @@ namespace NJS.Domain.Database
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
 
-            
+            // TodoNew entities relationships
+            modelBuilder.Entity<TodoNewTask>()
+                .HasOne(t => t.Project)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(t => t.ProjectId);
+
+            modelBuilder.Entity<TodoNewSubtask>()
+                .HasOne(s => s.ParentTask)
+                .WithMany(t => t.Subtasks)
+                .HasForeignKey(s => s.Taskid);
         }
        
     }

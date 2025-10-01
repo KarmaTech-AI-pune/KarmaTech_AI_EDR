@@ -3,14 +3,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using NJSAPI.Extensions;
 using NLog.Web;
 using Microsoft.Extensions.Options;
 using NJSAPI.Configurations;
 using NJSAPI.Middleware;
 using NJS.Domain.Services;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
 
@@ -19,7 +17,6 @@ internal class Program
     private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
        
 
         builder.Services.AddControllers();
@@ -28,24 +25,18 @@ internal class Program
         // Add HttpContextAccessor as singleton
         builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
+        // Add tenant resolution strategies in priority order
+        
         builder.Services.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>();
         builder.Services.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>();
         builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
-
-        // Add tenant resolution strategies in priority order
-        //builder.Services.TryAddEnumerable(new[]
-        //{
-          //  ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>(),
-            //ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>(),
-            //ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>()
-        //});
-
-        // Add tenant services
+       
+        // Add tenant services for tr
         builder.Services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
         //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
 
         var environment = builder.Configuration.GetValue<string>("DNS:Env");
-        if (environment == "Development" || environment=="Dev")
+        if (environment is "Development" or "Dev")
         {
             builder.Services.AddScoped<IDNSManagementService, MockDNSManagementService>();
         }
@@ -59,10 +50,6 @@ internal class Program
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
         builder.Services.AddTenantServices(builder.Configuration);
-       // builder.Services.AddAndMigrateTenantDatabases(builder.Configuration);
-
-        // Add tenant connection resolver
-        //builder.Services.AddScoped<ProjectManagementContextFactory>();
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddConfiguredSwagger(builder.Configuration);
@@ -105,24 +92,24 @@ internal class Program
         });
 
         // Configure Authorization Policies
-        builder.Services.AddAuthorization(options =>
-        {
-            options.AddPolicy("RequireAdminRole", policy =>
-                policy.RequireRole("Admin"));
-
-            options.AddPolicy("RequireManagerRole", policy =>
-                policy.RequireRole("Manager"));
-
-            options.AddPolicy("RequireUserRole", policy =>
-                policy.RequireRole("User"));
-
-            options.AddPolicy("RequireAdminOrManager", policy =>
-                policy.RequireRole("Admin", "Manager"));
-
-            options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-        });
+        // builder.Services.AddAuthorization(options =>
+        // {
+        //     options.AddPolicy("RequireAdminRole", policy =>
+        //         policy.RequireRole("Admin"));
+        //
+        //     options.AddPolicy("RequireManagerRole", policy =>
+        //         policy.RequireRole("Manager"));
+        //
+        //     options.AddPolicy("RequireUserRole", policy =>
+        //         policy.RequireRole("User"));
+        //
+        //     options.AddPolicy("RequireAdminOrManager", policy =>
+        //         policy.RequireRole("Admin", "Manager"));
+        //
+        //     options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        //         .RequireAuthenticatedUser()
+        //         .Build();
+        // });
 
         builder.Services.AddCompression();
         builder.Host.UseNLog();
@@ -134,6 +121,7 @@ internal class Program
 
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");
+        
 
         app.UseSwagger();
         app.UseSwaggerUI(options =>
@@ -141,17 +129,23 @@ internal class Program
             var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
             options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", $"{swaggerSettings.Title}");
         });
-        
-       // app.UseTenantCors();
+      
         app.UseResponseCompression();
         app.UseHttpsRedirection();       
        
         app.UseMiddleware<TenantResolverMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseMiddleware<TenantMiddleware>();
         app.SeedApplicationData();
         app.MapControllers();
 
+        // This will redirect all unhandled routes (that are not static files or API routes) to index.html
+        // This should be placed after UseStaticFiles, UseRouting, UseAuthentication, UseAuthorization, and MapControllers
+        app.MapFallbackToFile("index.html");
+
+        app.SeedApplicationData(); 
         app.Run();
     }
 }
+

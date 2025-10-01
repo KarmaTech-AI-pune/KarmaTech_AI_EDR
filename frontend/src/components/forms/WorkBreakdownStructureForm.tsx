@@ -53,6 +53,10 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const [level2Options, setLevel2Options] = useState<WBSOption[]>([]);
   const [level3OptionsMap, setLevel3OptionsMap] = useState<{ [key: string]: WBSOption[] }>({});
 
+  // State for calculated totals
+  const [calculatedTotalHours, setCalculatedTotalHours] = useState<number>(0);
+  const [calculatedTotalCost, setCalculatedTotalCost] = useState<number>(0);
+
   // We only use the setter function, not the value itself
   const [, setLastUpdateTime] = useState<number>(Date.now());
 
@@ -61,6 +65,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       setLoading(true);
       // Type the API response data using the updated WBSRowData interface
       let wbsData: WBSRowData[] = await WBSStructureAPI.getProjectWBS(projectId);
+      console.log('loadWBSData: Raw WBS data from API:', wbsData);
+      console.log('loadWBSData: Project ID:', projectId);
 
       // Transform all WBS data first
       const allTransformedRows = wbsData.map((task) => {
@@ -222,6 +228,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
         setManpowerRows(currentManpowerRows);
         setOdcRows(currentOdcRows);
+        console.log('loadWBSData: Manpower Rows after filtering and setting state:', currentManpowerRows);
+        console.log('loadWBSData: ODC Rows after filtering and setting state:', currentOdcRows);
 
         // Calculate months based on the currently visible form type's data
         calculateAndSetMonths(formType === 'manpower' ? currentManpowerRows : currentOdcRows);
@@ -465,10 +473,12 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleDeleteConfirm = async () => {
     if (deleteDialog.rowId && projectId) {
-      const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
       try {
-        // Filter the correct state based on formType
-        setRowsFunc(prevRows => prevRows.filter(row => row.id !== deleteDialog.rowId));
+        await WBSStructureAPI.deleteWBSTask(projectId, deleteDialog.rowId);
+        await loadWBSData(projectId);
+        setSnackbarMessage('WBS task deleted successfully!');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
       } catch (error) {
         console.error(`Error deleting WBS task from ${formType} form:`, error);
         setSnackbarMessage('Failed to delete WBS task');
@@ -643,13 +653,12 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const handleHoursChange = (rowId: string, month: string, value: string) => {
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
-    // Skip processing for odcHours since it's now calculated automatically
     if (month === 'odcHours') {
       return;
     }
 
     // Regular monthly hours
-    const hours = value === '' ? 0 : Math.min(Math.max(parseInt(value) || 0, 0), 160); // Keep validation
+    const hours = value === '' ? 0 : Math.min(Math.max(parseInt(value) || 0, 0));
 
     setRowsFunc(prevRows => prevRows.map(row => {
       if (row.id === rowId) {
@@ -778,6 +787,24 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         return;
       }
 
+        if (
+        !combinedWbsData ||
+        combinedWbsData.length === 0 ||
+        combinedWbsData == undefined
+      ) {
+        if (formType === "manpower") {
+          setIsManpowerEditing(!isManpowerEditing);
+        } else {
+          setIsOdcEditing(!isOdcEditing);
+        }
+
+        setSnackbarMessage("Add levels to save the tasks");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+
+        return;
+      }
+
       // Save the combined, complete WBS data
       await WBSStructureAPI.setProjectWBS(projectId, combinedWbsData);
 
@@ -811,14 +838,30 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
   const calculateOverallTotals = () => {
-    // Calculate totals based on the currently visible form
     const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
     const level3Rows = currentRows.filter(row => row.level === 3);
+    const totalHours = level3Rows.reduce((sum, row) => sum + (row.totalHours || 0), 0);
+    const totalCost = level3Rows.reduce((sum, row) => sum + row.totalCost, 0);
+    console.log('calculateOverallTotals: Current Rows:', currentRows);
+    console.log('calculateOverallTotals: Level 3 Rows:', level3Rows);
+    console.log('calculateOverallTotals: Total Hours:', totalHours);
+    console.log('calculateOverallTotals: Total Cost:', totalCost);
     return {
-      totalHours: level3Rows.reduce((sum, row) => sum + (row.totalHours || 0), 0), // Add fallback for potentially undefined totalHours
-      totalCost: level3Rows.reduce((sum, row) => sum + row.totalCost, 0)
+      totalHours: totalHours,
+      totalCost: totalCost
     };
   };
+
+  // Effect to recalculate totals whenever manpowerRows, odcRows, or formType changes
+  useEffect(() => {
+    console.log('useEffect: Recalculating totals...');
+    const { totalHours, totalCost } = calculateOverallTotals();
+    setCalculatedTotalHours(totalHours);
+    setCalculatedTotalCost(totalCost);
+    console.log('useEffect: Calculated Total Hours:', totalHours);
+    console.log('useEffect: Calculated Total Cost:', totalCost);
+  }, [manpowerRows, odcRows, formType]);
+
   // Loading indicator
   if (loading) {
     return (
@@ -887,8 +930,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
       <Paper>
         <WBSSummary
-          totalHours={calculateOverallTotals().totalHours}
-          totalCost={calculateOverallTotals().totalCost}
+          totalHours={calculatedTotalHours}
+          totalCost={calculatedTotalCost}
           currency={''} // Currency is not available in the new context, needs to be fetched if required.
           disabled={(formType === 'manpower' ? isManpowerEditing : isOdcEditing)}
           onSave={handleSubmit}

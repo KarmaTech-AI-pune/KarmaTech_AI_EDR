@@ -1,10 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.Feature.Commands;
-using NJS.Application.DTOs;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using System;
 using NJS.Application.CQRS.Feature.Queries;
 
 namespace NJSAPI.Controllers

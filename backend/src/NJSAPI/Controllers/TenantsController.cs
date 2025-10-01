@@ -1,15 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NJS.Domain.Entities;
 using NJS.Domain.Database;
 using Microsoft.EntityFrameworkCore;
 using NJS.Application.Services.IContract;
-using NJS.Application.Services;
-using Microsoft.Extensions.Logging;
 
 namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TenantsController : ControllerBase
     {
         private readonly ProjectManagementContext _context;
@@ -164,11 +164,11 @@ namespace NJSAPI.Controllers
                 await _subscriptionService.UpdateTenantSubscriptionAsync(tenant.Id, tenant.SubscriptionPlanId.Value);
             }
 
-            _context.Entry(existingTenant).CurrentValues.SetValues(tenant);
+            _tenantDbContext.Entry(existingTenant).CurrentValues.SetValues(tenant);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _tenantDbContext.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -189,7 +189,10 @@ namespace NJSAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTenant(int id)
         {
-            var tenant = await _tenantDbContext.Tenants.FindAsync(id);
+            var tenant = await _tenantDbContext.Tenants
+                .Include(t => t.TenantDatabases)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
             if (tenant == null)
             {
                 return NotFound();
@@ -203,8 +206,15 @@ namespace NJSAPI.Controllers
                 // Cancel subscription
                 await _subscriptionService.CancelTenantSubscriptionAsync(tenant.Id);
 
+                // Delete tenant database
+                var tenantDatabase = tenant.TenantDatabases.FirstOrDefault();
+                if (tenantDatabase != null)
+                {
+                    await _databaseManagementService.DeleteTenantDatabaseAsync(tenantDatabase.DatabaseName);
+                }
+
                 _tenantDbContext.Tenants.Remove(tenant);
-                await _context.SaveChangesAsync();
+                await _tenantDbContext.SaveChangesAsync();
 
                 _logger.LogInformation("Deleted tenant {TenantName} with subdomain {Subdomain}", tenant.Name, tenant.Domain);
 

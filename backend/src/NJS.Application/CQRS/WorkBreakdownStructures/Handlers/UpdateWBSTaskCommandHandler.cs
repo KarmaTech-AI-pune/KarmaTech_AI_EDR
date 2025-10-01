@@ -47,9 +47,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             taskEntity.EstimatedBudget = taskDto.EstimatedBudget;
             taskEntity.StartDate = taskDto.StartDate;
             taskEntity.EndDate = taskDto.EndDate;
-            taskEntity.TaskType = taskDto.TaskType; 
+            taskEntity.TaskType = taskDto.TaskType;
             taskEntity.UpdatedAt = DateTime.UtcNow;
-            taskEntity.UpdatedBy = _currentUser;           
+            taskEntity.UpdatedBy = _currentUser;
+            taskEntity.TodoProjectScheduleId = taskDto.TodoProjectScheduleId;
             UpdateUserAssignment(taskEntity, taskDto);
             UpdatePlannedHours(request.ProjectId, taskDto.TaskType,taskEntity, taskDto);
            
