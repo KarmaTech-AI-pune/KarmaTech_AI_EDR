@@ -60,27 +60,40 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateRole([FromBody] RoleDefination role)
+        public async Task<IActionResult> CreateRole([FromBody] List<RoleDefination> roles)
         {
-            try
+            var createdCount = 0;
+            foreach (var role in roles)
             {
-                var command = new CreateRoleCommands(role);
-                var result = await _mediator.Send(command);
-
-                if (result)
+                try
                 {
-                    return Ok(new { message = "Role permissions mapping successfully" });
-                }
+                    var command = new CreateRoleCommands(role);
+                    var result = await _mediator.Send(command);
 
-                return BadRequest(new { message = "Failed to add role permissions" });
+                    if (result)
+                    {
+                        createdCount++;
+                    }
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Log the error for individual role creation but continue processing others
+                    Console.WriteLine($"Error creating role: {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    // Log the error for individual role creation but continue processing others
+                    Console.WriteLine($"Error creating role: {ex.Message}");
+                }
             }
-            catch (InvalidOperationException ex)
+
+            if (createdCount > 0)
             {
-                return NotFound(new { message = ex.Message });
+                return Ok(new { CreatedCount = createdCount, message = $"{createdCount} roles created successfully." });
             }
-            catch (Exception ex)
+            else
             {
-                return StatusCode(500, new { message = ex.Message });
+                return BadRequest(new { message = "No roles were created." });
             }
         }
 

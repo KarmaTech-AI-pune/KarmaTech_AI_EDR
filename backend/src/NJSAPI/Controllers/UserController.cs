@@ -171,25 +171,38 @@ namespace NJSAPI.Controllers
 
         [HttpPost("Create")]
         [Authorize]
-        public async Task<IActionResult> Create([FromBody] CreateUserCommand command)
+        public async Task<IActionResult> Create([FromBody] List<CreateUserCommand> commands)
         {
-            command.Password = "Admin@123";
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            try
+            var createdUsers = new List<UserDto>();
+            foreach (var command in commands)
             {
-                var result = await _mediator.Send(command);
-                if(result == null)
+                command.Password = "Admin@123";
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                try
                 {
-                    return BadRequest(command);
+                    var result = await _mediator.Send(command);
+                    if (result != null)
+                    {
+                        createdUsers.Add(result);
+                    }
                 }
-                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+                catch (ApplicationException ex)
+                {
+                    // Log the error for individual user creation but continue processing others
+                    _logger.LogError(ex, "Error creating user: {Email}", command.Email);
+                }
             }
-            catch (ApplicationException ex)
+
+            if (createdUsers.Any())
             {
-                return BadRequest(new { message = ex.Message });
+                return Ok(new { CreatedCount = createdUsers.Count, CreatedUsers = createdUsers });
+            }
+            else
+            {
+                return BadRequest(new { message = "No users were created." });
             }
         }
 
