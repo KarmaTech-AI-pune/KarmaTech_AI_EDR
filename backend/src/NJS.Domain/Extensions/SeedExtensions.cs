@@ -28,13 +28,15 @@ namespace NJS.Domain.Extensions
 
                 var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<ProjectManagementContext>>();
                 var httpContextAccessor = scope.ServiceProvider.GetService<IHttpContextAccessor>();
+                var currentTenantService = scope.ServiceProvider.GetRequiredService<ICurrentTenantService>(); // Get ICurrentTenantService
 
-                await using var context = new ProjectManagementContext(options, null);
+                await using var context = new ProjectManagementContext(options, currentTenantService); // Pass currentTenantService
 
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 
-                await context.Database.MigrateAsync();
+                // Migrations are handled by AddAndMigrateTenantDatabases, so no need to call MigrateAsync here.
+                // This method focuses on seeding data.
 
                 if (!tenantDbContext.Tenants.Any()) { 
                     var tenet = new Tenant
