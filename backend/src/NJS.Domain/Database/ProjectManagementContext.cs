@@ -6,13 +6,13 @@ using NJS.Domain.Services;
 
 namespace NJS.Domain.Database
 {
-    public class ProjectManagementContext : IdentityDbContext<User,Role,string>
-{
+    public class ProjectManagementContext : IdentityDbContext<User, Role, string>
+    {
         public int? TenantId { get; private set; }
         private readonly ICurrentTenantService _currentTenantService;
         public string CurrentTenantConnectionString { get; set; }
 
-      
+
         public ProjectManagementContext(
             DbContextOptions<ProjectManagementContext> options,
             ICurrentTenantService currentTenantService
@@ -32,7 +32,7 @@ namespace NJS.Domain.Database
             base.OnConfiguring(optionsBuilder);
         }
 
-        
+
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -41,14 +41,22 @@ namespace NJS.Domain.Database
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                    case EntityState.Modified:
                         entry.Entity.TenantId = TenantId.Value;
                         break;
+
+                    case EntityState.Modified:
+                        var originalTenantId = (int)entry.OriginalValues[nameof(ITenantEntity.TenantId)];
+                        var newTenantId = entry.Entity.TenantId;
+                        if (originalTenantId != newTenantId)
+                        {
+                            entry.Entity.TenantId = newTenantId;
+                        }
+                        break;                        
                 }
             }
             return base.SaveChangesAsync(cancellationToken);
-        }   
-       
+        }
+
         // Tenant-specific tables only
         public DbSet<BidPreparation> BidPreparations { get; set; }
         public DbSet<BidVersionHistory> BidVersionHistories { get; set; }
@@ -220,8 +228,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<WBSVersionWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
-            
-           
+
+
 
 
 
@@ -1114,43 +1122,6 @@ namespace NJS.Domain.Database
                       .IsRequired(false);
             });
 
-            // Configure ChangeControlWorkflowHistory entity
-            //modelBuilder.Entity<ChangeControlWorkflowHistory>(entity =>
-            //{
-            //    entity.HasKey(e => e.Id);
-            //    entity.Property(e => e.Action).IsRequired();
-            //    entity.Property(e => e.Comments).IsRequired(false);
-
-            //    // Create indexes for faster lookups
-            //    entity.HasIndex(e => e.ChangeControlId);
-            //    entity.HasIndex(e => e.StatusId);
-            //    entity.HasIndex(e => e.ActionBy);
-
-            //    // Configure relationship with ChangeControl
-            //    entity.HasOne(h => h.ChangeControl)
-            //          .WithMany(h => h.WorkflowHistories)
-            //          .HasForeignKey(h => h.ChangeControlId)
-            //          .OnDelete(DeleteBehavior.Restrict);
-
-            //    // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
-            //    entity.HasOne(h => h.Status)
-            //          .WithMany()
-            //          .HasForeignKey(h => h.StatusId)
-            //          .OnDelete(DeleteBehavior.Restrict);
-
-            //    // Configure relationship with User (ActionBy)
-            //    entity.HasOne(h => h.ActionUser)
-            //          .WithMany()
-            //          .HasForeignKey(h => h.ActionBy)
-            //          .OnDelete(DeleteBehavior.Restrict);
-
-            //    // Configure relationship with User (AssignedTo)
-            //    entity.HasOne(h => h.AssignedTo)
-            //          .WithMany()
-            //          .HasForeignKey(h => h.AssignedToId)
-            //          .OnDelete(DeleteBehavior.Restrict)
-            //          .IsRequired(false);
-            //});
 
             // Configure ProjectClosureWorkflowHistory entity
             modelBuilder.Entity<ProjectClosureWorkflowHistory>(entity =>
@@ -1300,9 +1271,8 @@ namespace NJS.Domain.Database
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
 
-            
         }
-       
+
     }
-   
+
 }
