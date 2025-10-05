@@ -53,6 +53,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 StartDate = t.StartDate,
                 EndDate = t.EndDate,
                 TaskType = t.TaskType,
+                TodoProjectScheduleId = t.TodoProjectScheduleId,
                 // For Manpower tasks
                 AssignedUserId = t.TaskType == TaskType.Manpower ? t.UserWBSTasks?.FirstOrDefault()?.UserId : null,
                 AssignedUserName = t.TaskType == TaskType.Manpower ? t.UserWBSTasks?.FirstOrDefault()?.User?.Name : null,

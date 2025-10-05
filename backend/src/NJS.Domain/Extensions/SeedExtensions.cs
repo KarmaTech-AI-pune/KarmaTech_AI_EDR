@@ -343,11 +343,48 @@ namespace NJS.Domain.Extensions
 
                 // Seed Subscription Plans and Features
                 await SeedSubscriptionPlansAndFeaturesAsync(context);
+
+                // Seed Measurement Units
+                await SeedMeasurementUnitsAsync(context);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"An error occurred while seeding the database: {e.Message}");
                 throw;
+            }
+        }
+
+        private static async Task SeedMeasurementUnitsAsync(ProjectManagementContext context)
+        {
+            if (!context.Set<MeasurementUnit>().Any())
+            {
+                Console.WriteLine("MeasurementUnit table is empty, inserting data...");
+
+                var measurementUnits = new List<MeasurementUnit>
+                {
+                    new MeasurementUnit { Name = "Nos", FormType = FormType.ODC, TenantId = 1 },
+                    new MeasurementUnit { Name = "LS", FormType = FormType.ODC, TenantId = 1 },
+                    new MeasurementUnit { Name = "Km", FormType = FormType.ODC, TenantId = 1 },
+                    new MeasurementUnit { Name = "Day", FormType = FormType.Manpower, TenantId = 1 },
+                    new MeasurementUnit { Name = "Month", FormType = FormType.Manpower, TenantId = 1 },
+                    new MeasurementUnit { Name = "Year", FormType = FormType.Manpower, TenantId = 1 }
+                };
+
+                try
+                {
+                    await context.Set<MeasurementUnit>().AddRangeAsync(measurementUnits);
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("MeasurementUnit data inserted successfully");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"An error occurred while seeding measurement units: {e.Message}");
+                    throw;
+                }
+            }
+            else
+            {
+                Console.WriteLine("MeasurementUnit table already has data, skipping insert");
             }
         }
 
