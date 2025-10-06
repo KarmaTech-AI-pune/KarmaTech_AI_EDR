@@ -51,17 +51,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
             var taskDto = request.TaskDto;
             
-            // Handle WBSOptionId from Title field
-            if (int.TryParse(taskDto.Title, out int wbsOptionId))
-            {
-                taskEntity.WBSOptionId = wbsOptionId; // Store the integer ID in WBSOptionId column
-                taskEntity.Title = taskDto.Title; // Store the original string (which is the ID) in Title column
-            }
-            else
-            {
-                taskEntity.WBSOptionId = null; // Clear WBSOptionId if title is not an ID
-                taskEntity.Title = taskDto.Title; // Store raw title if it's not a valid ID
-            }
+            // Directly assign WBSOptionId from DTO
+            taskEntity.WBSOptionId = taskDto.WBSOptionId;
+            taskEntity.Title = taskDto.Title; // Assign Title from DTO
 
             taskEntity.Description = taskDto.Description;
             taskEntity.Level = taskDto.Level; 
