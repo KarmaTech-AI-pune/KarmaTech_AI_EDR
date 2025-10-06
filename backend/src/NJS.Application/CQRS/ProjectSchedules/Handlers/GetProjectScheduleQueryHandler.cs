@@ -32,17 +32,32 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                 return null;
             }
 
-            // Fetch SprintTasks with their SprintSubtasks for the given project
-            var sprintTasks = await _context.SprintTasks
-                .Include(t => t.Subtasks!)
-                .Where(t => t.ProjectId == projectId)
-                .ToListAsync(cancellationToken);
+            // Fetch SprintPlans for the given project, including their SprintTasks and SprintSubtasks
+            var sprintPlanEntity = await _context.SprintPlans
+                .Include(sp => sp.SprintTasks)
+                    .ThenInclude(st => st.Subtasks!)
+                .Where(sp => sp.ProjectId == projectId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (sprintPlanEntity == null)
+            {
+                return null; // No sprint plan found for this project
+            }
 
             // Convert to DTOs
-            var projectDto = new ProjectScheduleDto
+            var sprintPlanDto = new SprintPlanDto
             {
-                ProjectId = projectId,
-                Tasks = sprintTasks.Select(t => new SprintTaskDto
+                SprintId = sprintPlanEntity.SprintId,
+                SprintName = sprintPlanEntity.SprintName,
+                SprintNumber = sprintPlanEntity.SprintNumber,
+                StartDate = sprintPlanEntity.StartDate,
+                EndDate = sprintPlanEntity.EndDate,
+                SprintGoal = sprintPlanEntity.SprintGoal,
+                Status = sprintPlanEntity.Status,
+                CreatedDate = sprintPlanEntity.CreatedDate,
+                UpdatedDate = sprintPlanEntity.UpdatedDate,
+                ProjectId = sprintPlanEntity.ProjectId,
+                SprintTasks = sprintPlanEntity.SprintTasks.Select(t => new SprintTaskDto
                 {
                     Taskid = t.Taskid,
                     Taskkey = t.Taskkey,
@@ -63,7 +78,9 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                     TaskisExpanded = t.IsExpanded,
                     TaskcreatedDate = t.TaskcreatedDate,
                     TaskupdatedDate = t.TaskupdatedDate,
-                    ProjectId = t.ProjectId,
+                    SprintPlanId = t.SprintPlanId,
+                    WbsPlanId = t.WbsPlanId,
+                    UserTaskId = t.UserTaskId,
                     Subtasks = t.Subtasks?.Select(s => new SprintSubtaskDto
                     {
                         Subtaskkey = s.Subtaskkey,
@@ -88,7 +105,12 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                 }).ToList()
             };
 
-            return projectDto;
+            var projectScheduleDto = new ProjectScheduleDto
+            {
+                SprintPlan = sprintPlanDto
+            };
+
+            return projectScheduleDto;
         }
     }
 }

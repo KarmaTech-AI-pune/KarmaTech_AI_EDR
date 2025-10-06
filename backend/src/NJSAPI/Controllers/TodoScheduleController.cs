@@ -23,20 +23,24 @@ namespace NJSAPI.Controllers
         public async Task<IActionResult> CreateTodoSchedule([FromBody] ProjectScheduleDto todoScheduleDto)
         {
             var command = new CreateProjectScheduleCommand { ProjectSchedule = todoScheduleDto };
-            var createdId = await _mediator.Send(command);
+            var createdProjectId = await _mediator.Send(command);
 
-            // Set the ProjectId on the input DTO
-            todoScheduleDto.ProjectId = createdId;
+            // The createdId is the ProjectId from the handler.
+            // We need to ensure the SprintPlanDto within the response has the correct ProjectId.
+            if (todoScheduleDto?.SprintPlan != null)
+            {
+                todoScheduleDto.SprintPlan.ProjectId = createdProjectId;
+            }
 
             // Generate the access link
-            var accessLink = $"{Request.Scheme}://{Request.Host}/api/project-schedule/{createdId}";
+            var accessLink = $"{Request.Scheme}://{Request.Host}/api/project-schedule/{createdProjectId}";
 
-            // Return 200 OK with the input data and access link
+            // Return 200 OK with the SprintPlan data and access link
             var response = new ProjectScheduleResponseDto
             {
-                Data = todoScheduleDto,  // Return the input DTO with the created ProjectId
+                Data = todoScheduleDto?.SprintPlan,  // Return the SprintPlanDto
                 AccessLink = accessLink,
-                ProjectId = createdId
+                ProjectId = createdProjectId
             };
 
             return Ok(response);

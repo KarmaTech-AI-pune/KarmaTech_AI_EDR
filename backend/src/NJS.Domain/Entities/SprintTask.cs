@@ -2,13 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using NJS.Domain.GenericRepository; // Added for ITenantEntity
 
 namespace NJS.Domain.Entities
 {
-    public class SprintTask
+    public class SprintTask : ITenantEntity
     {
         [Key]
         public string? Taskid { get; set; }  // e.g. "T-101"
+
+        public int TenantId { get; set; } // Added TenantId
 
         public string? Taskkey { get; set; } // e.g. "PROJ-101"
 
@@ -44,12 +47,20 @@ namespace NJS.Domain.Entities
 
         public DateTime? TaskupdatedDate { get; set; }
 
-        // Foreign key to Project table
-        public int ProjectId { get; set; }
-        [ForeignKey("ProjectId")]
-        public Project? Project { get; set; }
-
         // Navigation property to SprintSubtasks
         public ICollection<SprintSubtask>? Subtasks { get; set; }
+
+        // New Foreign Keys and Navigation Properties
+        public int? SprintPlanId { get; set; }
+        [ForeignKey("SprintPlanId")]
+        public SprintPlan? SprintPlan { get; set; }
+
+        public int? WbsPlanId { get; set; }
+        [ForeignKey("WbsPlanId")]
+        public WBSTaskPlannedHour? WbsPlan { get; set; }
+
+        public int? UserTaskId { get; set; }
+        [ForeignKey("UserTaskId")]
+        public UserWBSTask? UserTask { get; set; }
     }
 }

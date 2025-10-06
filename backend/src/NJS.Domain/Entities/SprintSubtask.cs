@@ -1,13 +1,16 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using NJS.Domain.GenericRepository; // Added for ITenantEntity
 
 namespace NJS.Domain.Entities
 {
-    public class SprintSubtask
+    public class SprintSubtask : ITenantEntity
     {
         [Key]
         public string? Subtaskkey { get; set; }  // e.g. "PROJ-101-1"
+
+        public int TenantId { get; set; } // Added TenantId
 
         public string? Subtasktitle { get; set; }
 
@@ -30,7 +33,7 @@ namespace NJS.Domain.Entities
         public int? Attachments { get; set; }
 
         public int? Subtaskcomments { get; set; }
-        
+
         public bool? SubtaskisExpanded { get; set; }
 
         public DateTime? SubtaskcreatedDate { get; set; }

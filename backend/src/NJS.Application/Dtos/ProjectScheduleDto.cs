@@ -5,9 +5,7 @@ namespace NJS.Application.Dtos
 {
     public class ProjectScheduleDto
     {
-        public int ProjectId { get; set; }
-        public List<SprintTaskDto>? Tasks { get; set; }
-        
+        public SprintPlanDto? SprintPlan { get; set; }
     }
 
     public class SprintTaskDto
@@ -31,7 +29,9 @@ namespace NJS.Application.Dtos
         public bool? TaskisExpanded { get; set; } // renamed from IsExpanded
         public DateTime? TaskcreatedDate { get; set; }
         public DateTime? TaskupdatedDate { get; set; }
-        public int ProjectId { get; set; } // Foreign key to Project
+        public int? SprintPlanId { get; set; }
+        public int? WbsPlanId { get; set; }
+        public int? UserTaskId { get; set; }
         public List<SprintSubtaskDto>? Subtasks { get; set; }
     }
 
@@ -60,9 +60,9 @@ namespace NJS.Application.Dtos
     // Response DTO for POST endpoint  
     public class ProjectScheduleResponseDto
     {
-        public ProjectScheduleDto Data { get; set; }
+        public SprintPlanDto? Data { get; set; } // Changed to SprintPlanDto
         public string AccessLink { get; set; }
-        public int ProjectId { get; set; }
+        public int ProjectId { get; set; } // Keep ProjectId for response context
         public string Message { get; set; } = "Project schedule created successfully!";
     }
 

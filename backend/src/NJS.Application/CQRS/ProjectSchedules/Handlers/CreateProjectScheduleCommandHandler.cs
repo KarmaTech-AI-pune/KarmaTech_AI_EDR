@@ -28,25 +28,45 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
         {
             var projectScheduleDto = request.ProjectSchedule;
 
-            if (projectScheduleDto == null || projectScheduleDto.Tasks == null || !projectScheduleDto.Tasks.Any())
+            if (projectScheduleDto?.SprintPlan == null || projectScheduleDto.SprintPlan.ProjectId == 0 || projectScheduleDto.SprintPlan.SprintTasks == null || !projectScheduleDto.SprintPlan.SprintTasks.Any())
             {
-                throw new ArgumentException("ProjectSchedule and Tasks cannot be null or empty");
+                throw new ArgumentException("SprintPlan, ProjectId, and SprintTasks cannot be null or empty in the request.");
             }
 
+            var sprintPlanDto = projectScheduleDto.SprintPlan;
+            var projectId = sprintPlanDto.ProjectId;
+
             // Check if the project exists
-            var projectExists = await _context.Projects.AnyAsync(p => p.Id == projectScheduleDto.ProjectId, cancellationToken);
+            var projectExists = await _context.Projects.AnyAsync(p => p.Id == projectId, cancellationToken);
             if (!projectExists)
             {
-                throw new ArgumentException($"Project with ID {projectScheduleDto.ProjectId} not found.");
+                throw new ArgumentException($"Project with ID {projectId} not found.");
             }
 
             try
             {
+                // Create a new SprintPlan entity from the DTO
+                var sprintPlan = new SprintPlan
+                {
+                    ProjectId = projectId,
+                    SprintName = sprintPlanDto.SprintName ?? $"Sprint Plan for Project {projectId}",
+                    SprintNumber = sprintPlanDto.SprintNumber,
+                    StartDate = sprintPlanDto.StartDate,
+                    EndDate = sprintPlanDto.EndDate,
+                    SprintGoal = sprintPlanDto.SprintGoal,
+                    Status = sprintPlanDto.Status ?? "Active",
+                    CreatedDate = DateTime.UtcNow,
+                    UpdatedDate = DateTime.UtcNow,
+                    TenantId = _context.TenantId ?? 1
+                };
+                await _context.SprintPlans.AddAsync(sprintPlan, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken); // Save to get SprintPlanId
+
                 var tasksToAdd = new List<SprintTask>();
                 var subtasksToAdd = new List<SprintSubtask>();
 
                 // Create SprintTask entities and their subtasks
-                foreach (var taskDto in projectScheduleDto.Tasks.Where(t => t != null))
+                foreach (var taskDto in sprintPlanDto.SprintTasks.Where(t => t != null))
                 {
                     var task = new SprintTask
                     {
@@ -69,7 +89,10 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                         IsExpanded = taskDto.TaskisExpanded,
                         TaskcreatedDate = taskDto.TaskcreatedDate,
                         TaskupdatedDate = taskDto.TaskupdatedDate,
-                        ProjectId = projectScheduleDto.ProjectId // Set the foreign key
+                        SprintPlanId = sprintPlan.SprintId, // Assign to the new SprintPlan
+                        WbsPlanId = taskDto.WbsPlanId,
+                        UserTaskId = taskDto.UserTaskId,
+                        TenantId = _context.TenantId ?? 1
                     };
                     tasksToAdd.Add(task);
 
@@ -96,7 +119,8 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                                 SubtaskcreatedDate = subtaskDto.SubtaskcreatedDate,
                                 SubtaskupdatedDate = subtaskDto.SubtaskupdatedDate,
                                 SubtaskType = subtaskDto.SubtaskType,
-                                Taskid = task.Taskid // Set the foreign key to SprintTask
+                                Taskid = task.Taskid, // Set the foreign key to SprintTask
+                                TenantId = _context.TenantId ?? 1
                             };
                             subtasksToAdd.Add(subtask);
                         }
@@ -106,11 +130,11 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                 await _context.SprintTasks.AddRangeAsync(tasksToAdd, cancellationToken);
                 await _context.SprintSubtasks.AddRangeAsync(subtasksToAdd, cancellationToken);
                 await _context.SaveChangesAsync(cancellationToken);
-                
+
                 // Log successful save
-                Console.WriteLine($"Successfully saved project tasks for project {projectScheduleDto.ProjectId}");
-                
-                return projectScheduleDto.ProjectId;
+                Console.WriteLine($"Successfully saved project tasks for project {projectId} under SprintPlan {sprintPlan.SprintId}");
+
+                return projectId;
             }
             catch (Exception ex)
             {

@@ -129,6 +129,7 @@ namespace NJS.Domain.Database
         public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
         public DbSet<SprintTask> SprintTasks { get; set; }
         public DbSet<SprintSubtask> SprintSubtasks { get; set; }
+        public DbSet<SprintPlan> SprintPlans { get; set; }
 
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
         public DbSet<CreateAccount> CreateAccounts { get; set; }
@@ -226,16 +227,9 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<WBSVersionWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
-
-
-
-
-
-            // Configure MonthlyProgress to Project relationship
-            modelBuilder.Entity<MonthlyProgress>()
-                .HasOne(mp => mp.Project)
-                .WithMany()
-                .HasForeignKey(mp => mp.ProjectId);
+            modelBuilder.Entity<SprintPlan>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintTask>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintSubtask>().HasQueryFilter(p => p.TenantId == TenantId);
 
             // Configure one-to-one relationships with MonthlyProgress
             modelBuilder.Entity<MonthlyProgress>()
@@ -551,7 +545,13 @@ namespace NJS.Domain.Database
                 entity.HasOne(t => t.WorkBreakdownStructure)
                       .WithMany(w => w.Tasks)
                   .HasForeignKey(t => t.WorkBreakdownStructureId)
-                  .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+                  .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict to break cascade cycle
+
+                // Configure relationship with WBSTaskPlannedHour
+                entity.HasMany(t => t.PlannedHours) // Assuming WBSTask has a collection of PlannedHours
+                      .WithOne(ph => ph.WBSTask)
+                      .HasForeignKey(ph => ph.WBSTaskId)
+                      .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict to break cascade cycle
             });
 
             // Configure JobStartForm entity
@@ -1306,7 +1306,45 @@ namespace NJS.Domain.Database
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
 
-            // TodoNew entities relationships
+            // Sprint Planning Relationships
+            modelBuilder.Entity<SprintPlan>(entity =>
+            {
+                entity.HasOne(sp => sp.Project)
+                      .WithMany()
+                      .HasForeignKey(sp => sp.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade); // Or Restrict, depending on desired behavior
+                entity.HasMany(sp => sp.SprintTasks)
+                      .WithOne(st => st.SprintPlan)
+                      .HasForeignKey(st => st.SprintPlanId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(sp => sp.ProjectId);
+                entity.HasIndex(sp => sp.SprintName);
+                entity.HasIndex(sp => sp.StartDate);
+                entity.HasIndex(sp => sp.EndDate);
+            });
+
+            modelBuilder.Entity<SprintTask>(entity =>
+            {
+                entity.HasOne(st => st.SprintPlan)
+                      .WithMany(sp => sp.SprintTasks)
+                      .HasForeignKey(st => st.SprintPlanId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(st => st.WbsPlan)
+                      .WithMany() // Assuming WBSTaskPlannedHour does not have a navigation property back to SprintTask
+                      .HasForeignKey(st => st.WbsPlanId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(st => st.UserTask)
+                      .WithMany() // Assuming UserWBSTask does not have a navigation property back to SprintTask
+                      .HasForeignKey(st => st.UserTaskId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(st => st.SprintPlanId);
+                entity.HasIndex(st => st.WbsPlanId);
+                entity.HasIndex(st => st.UserTaskId);
+            });
         }
 
     }
