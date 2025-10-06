@@ -62,30 +62,32 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
-        /// Adds a new task to the Work Breakdown Structure for a project.
+        /// Adds new tasks to the Work Breakdown Structure for a project.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <param name="taskDto">The details of the task to add.</param>
-        /// <returns>The created task details or its ID.</returns>
+        /// <param name="tasksDto">A list of tasks to add.</param>
+        /// <returns>The list of created task details.</returns>
         [HttpPost("tasks")]
-        [ProducesResponseType(typeof(WBSTaskDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(List<WBSTaskDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)] // If WBS not found
-        public async Task<ActionResult<WBSTaskDto>> AddTask(int projectId, [FromBody] WBSTaskDto taskDto)
+        public async Task<ActionResult<List<WBSTaskDto>>> AddTask(int projectId, [FromBody] List<WBSTaskDto> tasksDto)
         {
-            if (taskDto == null)
+            if (tasksDto == null || !tasksDto.Any())
             {
-                return BadRequest("Task data cannot be null.");
+                return BadRequest("Task data cannot be null or empty.");
             }
-            if (taskDto.Id != 0)
+            if (tasksDto.Any(t => t.Id != 0))
             {
-                return BadRequest("ID must be 0 for a new task.");
+                return BadRequest("IDs must be 0 for new tasks.");
             }
 
-            var command = new AddWBSTaskCommand(projectId, taskDto);
-            var createdTaskDto = await _mediator.Send(command);
+            var command = new AddWBSTaskCommand(projectId, tasksDto);
+            var createdTasksDto = await _mediator.Send(command);
           
-            return CreatedAtAction(nameof(GetWBS), new { projectId }, createdTaskDto);
+            // For a list of created items, it's common to return 201 Created with the list in the body.
+            // CreatedAtAction is typically for a single resource.
+            return CreatedAtAction(nameof(GetWBS), new { projectId }, createdTasksDto);
         }
 
         /// <summary>
