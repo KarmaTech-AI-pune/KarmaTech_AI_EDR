@@ -72,6 +72,8 @@ namespace NJS.Domain.Database
 
         // WBS Versioning entities
         public DbSet<WBSVersionHistory> WBSVersionHistories { get; set; }
+
+        public DbSet<MeasurementUnit> MeasurementUnits { get; set; }
         public DbSet<WBSTaskVersionHistory> WBSTaskVersionHistories { get; set; }
         public DbSet<WBSVersionWorkflowHistory> WBSVersionWorkflowHistories { get; set; }
         public DbSet<WBSTaskPlannedHourVersionHistory> WBSTaskPlannedHourVersionHistories { get; set; }
@@ -100,8 +102,7 @@ namespace NJS.Domain.Database
         public DbSet<CheckReview> CheckReviews { get; set; }
         public DbSet<ChangeControl> ChangeControls { get; set; }
         public DbSet<ProjectClosure> ProjectClosures { get; set; }
-        // Removed ProjectClosureComment to fix build issues
-        // public DbSet<ProjectClosureComment> ProjectClosureComments { get; set; }
+        public DbSet<Cashflow> Cashflows { get; set; }
 
         // PM Workflow entities
         public DbSet<PMWorkflowStatus> PMWorkflowStatuses { get; set; }
@@ -137,53 +138,37 @@ namespace NJS.Domain.Database
 
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
 
-        public override int SaveChanges()
-        {
-            foreach (var entry in ChangeTracker.Entries<ITenantEntity>().ToList())
-            {
-                switch (entry.State)
-                {
-                    case EntityState.Added:
-                    case EntityState.Modified:
-                        entry.Entity.TenantId = (int)TenantId;
-                        break;
-                }
-            }
-            var result = base.SaveChanges();
-            return result;
-        }
+        // Main Projects (tenant-based) - Note: This was already defined above
 
-        //public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        //{
-        //    foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
-        //    {
-        //        switch (entry.State)
-        //        {
+        // New Todo Project Management entities
+        public DbSet<TodoNewProject> TodoNewProjects { get; set; }
+        public DbSet<TodoNewTask> TodoNewTasks { get; set; }
+        public DbSet<TodoNewSubtask> TodoNewSubtasks { get; set; }
+        public DbSet<TodoNewTeamMember> TodoNewTeamMembers { get; set; }
 
-        //            case EntityState.Modified:
-        //            case EntityState.Added:
-        //                // Only set TenantId if it's not already set (for seeding scenarios)
-        //                if (entry.Entity.TenantId == 0)
-        //                {
-        //                    entry.Entity.TenantId = TenantId ?? throw new InvalidOperationException("TenantId cannot be null.");
-        //                }
-        //                break;
-        //        }
-        //    }
-        //    return await base.SaveChangesAsync(cancellationToken);
-        //}
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // New Todo Project Management relationships
-            // Removing explicit relationship configuration since navigation properties were removed
-            // The relationships will be maintained through foreign keys only
+            // New Todo Project Management relationships (no tenant filtering)
+            modelBuilder.Entity<TodoNewTask>()
+                .HasOne(t => t.Project)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(t => t.ProjectId);
 
-            modelBuilder.Entity<User>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
-            modelBuilder.Entity<Role>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
-            modelBuilder.Entity<Project>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
+            // TodoNewTask assignee/reporter fields are regular strings, no foreign key relationshipsc
+
+            modelBuilder.Entity<TodoNewSubtask>()
+                .HasOne(s => s.ParentTask)
+                .WithMany(t => t.Subtasks)
+                .HasForeignKey(s => s.Taskid);
+
+            // TodoNewSubtask assignee/reporter fields are regular strings, no foreign key relationships
+
+            modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CheckReview>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CorrespondenceInward>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -226,10 +211,15 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<WBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<WBSVersionWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
-            modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
-            modelBuilder.Entity<SprintPlan>().HasQueryFilter(p => p.TenantId == TenantId);
-            modelBuilder.Entity<SprintTask>().HasQueryFilter(p => p.TenantId == TenantId);
-            modelBuilder.Entity<SprintSubtask>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<MeasurementUnit>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
+
+            // Configure MonthlyProgress to Project relationship
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.Project)
+                .WithMany()
+                .HasForeignKey(mp => mp.ProjectId);
+
+
 
             // Configure one-to-one relationships with MonthlyProgress
             modelBuilder.Entity<MonthlyProgress>()
@@ -639,7 +629,10 @@ namespace NJS.Domain.Database
                       .WithMany()
                       .HasForeignKey(ut => ut.ResourceRoleId)
                       .OnDelete(DeleteBehavior.SetNull);
+
             });
+
+
 
             // Configure WorkBreakdownStructure entity
             modelBuilder.Entity<WorkBreakdownStructure>(entity =>
@@ -1306,45 +1299,16 @@ namespace NJS.Domain.Database
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
 
-            // Sprint Planning Relationships
-            modelBuilder.Entity<SprintPlan>(entity =>
-            {
-                entity.HasOne(sp => sp.Project)
-                      .WithMany()
-                      .HasForeignKey(sp => sp.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade); // Or Restrict, depending on desired behavior
-                entity.HasMany(sp => sp.SprintTasks)
-                      .WithOne(st => st.SprintPlan)
-                      .HasForeignKey(st => st.SprintPlanId)
-                      .OnDelete(DeleteBehavior.SetNull);
+            // TodoNew entities relationships
+            modelBuilder.Entity<TodoNewTask>()
+                .HasOne(t => t.Project)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(t => t.ProjectId);
 
-                entity.HasIndex(sp => sp.ProjectId);
-                entity.HasIndex(sp => sp.SprintName);
-                entity.HasIndex(sp => sp.StartDate);
-                entity.HasIndex(sp => sp.EndDate);
-            });
-
-            modelBuilder.Entity<SprintTask>(entity =>
-            {
-                entity.HasOne(st => st.SprintPlan)
-                      .WithMany(sp => sp.SprintTasks)
-                      .HasForeignKey(st => st.SprintPlanId)
-                      .OnDelete(DeleteBehavior.SetNull);
-
-                entity.HasOne(st => st.WbsPlan)
-                      .WithMany() // Assuming WBSTaskPlannedHour does not have a navigation property back to SprintTask
-                      .HasForeignKey(st => st.WbsPlanId)
-                      .OnDelete(DeleteBehavior.SetNull);
-
-                entity.HasOne(st => st.UserTask)
-                      .WithMany() // Assuming UserWBSTask does not have a navigation property back to SprintTask
-                      .HasForeignKey(st => st.UserTaskId)
-                      .OnDelete(DeleteBehavior.SetNull);
-
-                entity.HasIndex(st => st.SprintPlanId);
-                entity.HasIndex(st => st.WbsPlanId);
-                entity.HasIndex(st => st.UserTaskId);
-            });
+            modelBuilder.Entity<TodoNewSubtask>()
+                .HasOne(s => s.ParentTask)
+                .WithMany(t => t.Subtasks)
+                .HasForeignKey(s => s.Taskid);
         }
 
     }

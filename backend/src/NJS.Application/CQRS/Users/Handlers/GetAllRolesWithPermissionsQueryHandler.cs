@@ -35,8 +35,8 @@ namespace NJS.Application.CQRS.Users.Handlers
                 {
                     Id = role.Id,
                     Name = role.Name,
-                    IsResourceRole=role.IsResourceRole!.Value,
-                    MinRate= role.MinRate!.Value,
+                    IsResourceRole=role.IsResourceRole?? false,
+                    MinRate= role.MinRate ?? 0,
                     Permissions = new List<PermissionCategoryGroup>()
                 };
 

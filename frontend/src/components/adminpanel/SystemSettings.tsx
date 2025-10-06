@@ -19,7 +19,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 const SystemSettings = () => {
   const [settings, setSettings] = useState({
     // General Settings
-    appName: 'NJS Project Management',
+    appName: 'Project Management',
     appVersion: '1.0.0',
     maintenanceMode: false,
     

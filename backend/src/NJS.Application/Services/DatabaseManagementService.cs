@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Database;
-using System;
 
 namespace NJS.Application.Services
 {
@@ -23,7 +22,7 @@ namespace NJS.Application.Services
             _logger = logger;
         }
 
-        public async Task<(bool isDbCreated,string dbName,string connectionString)> CreateTenantDatabaseAsync(string subDomain)
+        public async Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsync(string subDomain, bool isIsolated)
         {
 
             string mainConnectionString = _configuration.GetConnectionString("AppDbConnection");
@@ -32,10 +31,10 @@ namespace NJS.Application.Services
             string tenantDbName = mainDatabaseName + "-" + subDomain;
             builder.InitialCatalog = tenantDbName; // set new database name
             string modifiedConnectionString = builder.ConnectionString; // create new connection string
-            // Use the main database for all tenants
-            //var databaseName = mainConnectionString;
-            
-            
+                                                                        // Use the main database for all tenants
+                                                                        //var databaseName = mainConnectionString;
+
+
             //string modifiedConnectionString = builder.ConnectionString; // create new connection string
             //try
             //{
@@ -71,8 +70,8 @@ namespace NJS.Application.Services
             //}
             try
             {
-                bool Isolated = true;
-                if (Isolated == true)
+
+                if (isIsolated)
                 {
                     // create a new tenant database and bring current with any pending migrations from ApplicationDbContext
                     using IServiceScope scopeTenant = _serviceProvider.CreateScope();
@@ -85,15 +84,20 @@ namespace NJS.Application.Services
                         Console.ResetColor();
                         dbContext.Database.Migrate();
                     }
+                    return new(true, tenantDbName, modifiedConnectionString);
                 }
-                return new (true, tenantDbName, modifiedConnectionString);
-                    
+                else
+                {
+                    return new(true, mainDatabaseName, mainConnectionString!);
+                }
+
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating database {DatabaseName}", tenantDbName);
             }
-            return new (false, null, null);
+            return new(false, null!, null!);
         }
 
         public async Task<bool> DeleteTenantDatabaseAsync(string databaseName)

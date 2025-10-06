@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NJS.Domain.Entities;
-using NJS.Domain.Database;
 using Microsoft.EntityFrameworkCore;
 using NJS.Application.Services.IContract;
+using NJS.Domain.Database;
+using NJS.Domain.Entities;
+using NJS.Domain.Services;
 
 namespace NJSAPI.Controllers
 {
@@ -18,13 +19,14 @@ namespace NJSAPI.Controllers
         private readonly ISubscriptionService _subscriptionService;
         private readonly ILogger<TenantsController> _logger;
         private readonly IDatabaseManagementService _databaseManagementService;
-
+        private readonly ICurrentTenantService _currentTenantService;      
         public TenantsController(
             ProjectManagementContext context,
             TenantDbContext tenantDbContext,
             IDNSManagementService dnsService,
             ISubscriptionService subscriptionService,
             IDatabaseManagementService databaseManagementService,
+            ICurrentTenantService currentTenantService,
             ILogger<TenantsController> logger)
         {
             _context = context;
@@ -32,14 +34,16 @@ namespace NJSAPI.Controllers
             _subscriptionService = subscriptionService;
             _databaseManagementService = databaseManagementService;
             _tenantDbContext = tenantDbContext;
+            _currentTenantService = currentTenantService;
             _logger = logger;
+           
         }
 
         // GET: api/tenants
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Tenant>>> GetTenants()
         {
-            var result = await _tenantDbContext.Tenants
+            var result = await _tenantDbContext.Tenants.Where(x => x.IsActive)
                 .Include(t => t.SubscriptionPlan)
                 .Include(t => t.TenantUsers)
                 .Include(t => t.TenantDatabases)
@@ -86,8 +90,8 @@ namespace NJSAPI.Controllers
                 }
 
                 // Create tenant database
-                
-                (bool isDbCreated, string dbName, string connectionString) result = await _databaseManagementService.CreateTenantDatabaseAsync(tenant.Domain);
+
+                (bool isDbCreated, string dbName, string connectionString) result = await _databaseManagementService.CreateTenantDatabaseAsync(tenant.Domain, tenant.IsIsolated);
                 if (!result.isDbCreated)
                 {
                     return BadRequest(new { message = "Failed to create tenant database" });
@@ -164,11 +168,11 @@ namespace NJSAPI.Controllers
                 await _subscriptionService.UpdateTenantSubscriptionAsync(tenant.Id, tenant.SubscriptionPlanId.Value);
             }
 
-            _context.Entry(existingTenant).CurrentValues.SetValues(tenant);
+            _tenantDbContext.Entry(existingTenant).CurrentValues.SetValues(tenant);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _tenantDbContext.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -189,7 +193,10 @@ namespace NJSAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTenant(int id)
         {
-            var tenant = await _tenantDbContext.Tenants.FindAsync(id);
+            var tenant = await _tenantDbContext.Tenants
+                .Include(t => t.TenantDatabases)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
             if (tenant == null)
             {
                 return NotFound();
@@ -203,8 +210,15 @@ namespace NJSAPI.Controllers
                 // Cancel subscription
                 await _subscriptionService.CancelTenantSubscriptionAsync(tenant.Id);
 
+                // Delete tenant database
+                var tenantDatabase = tenant.TenantDatabases.FirstOrDefault();
+                if (tenantDatabase != null)
+                {
+                    await _databaseManagementService.DeleteTenantDatabaseAsync(tenantDatabase.DatabaseName);
+                }
+
                 _tenantDbContext.Tenants.Remove(tenant);
-                await _context.SaveChangesAsync();
+                await _tenantDbContext.SaveChangesAsync();
 
                 _logger.LogInformation("Deleted tenant {TenantName} with subdomain {Subdomain}", tenant.Name, tenant.Domain);
 
@@ -344,7 +358,55 @@ namespace NJSAPI.Controllers
             _tenantDbContext.TenantUsers.Add(tenantUser);
             await _tenantDbContext.SaveChangesAsync();
 
-            _logger.LogInformation("Added user {UserId} to tenant {TenantId} with role {Role}", 
+            if (tenant.IsIsolated)
+            {
+                //TODO: Meanwhile commented: Will need to migrate Roles and Permissions also
+                //var tenantDatabase = await _tenantDbContext.TenantDatabases
+                //    .FirstOrDefaultAsync(td => td.TenantId == tenant.Id);
+
+                //if (tenantDatabase == null || string.IsNullOrEmpty(tenantDatabase.ConnectionString))
+                //    return BadRequest("Tenant database not configured.");
+
+                //var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
+                //optionsBuilder.UseSqlServer(tenantDatabase.ConnectionString);
+
+                //await using var tenantContext = new ProjectManagementContext(optionsBuilder.Options, _currentTenantService);
+
+                //var existingUser = await tenantContext.Users.FindAsync(user.Id);
+                //if (existingUser == null)
+                //{
+                //    var clonedUser = new User
+                //    {
+                //        Id = user.Id,
+                //        UserName = user.UserName,
+                //        NormalizedUserName = user.NormalizedUserName,
+                //        Email = user.Email,
+                //        NormalizedEmail = user.NormalizedEmail,
+                //        PasswordHash = user.PasswordHash,
+                //        SecurityStamp = user.SecurityStamp,
+                //        ConcurrencyStamp = user.ConcurrencyStamp,
+                //        PhoneNumber = user.PhoneNumber,
+                //        PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+                //        TwoFactorEnabled = user.TwoFactorEnabled,
+                //        LockoutEnabled = user.LockoutEnabled,
+                //        AccessFailedCount = user.AccessFailedCount,
+                //        IsActive = user.IsActive,
+                //        Name = user.Name,
+                //        TenantId = id
+                //    };
+
+                //    tenantContext.Users.Add(clonedUser);
+                //    await tenantContext.SaveChangesAsync();
+                //}
+            }
+            else
+            {
+                user.TenantId = id;
+                _context.Users.Update(user);
+               await _context.SaveChangesAsync();
+            }
+
+            _logger.LogInformation("Added user {UserId} to tenant {TenantId} with role {Role}",
                 request.UserId, id, request.Role);
 
             return CreatedAtAction(nameof(GetTenantUsers), new { id }, tenantUser);
@@ -372,7 +434,7 @@ namespace NJSAPI.Controllers
 
             await _tenantDbContext.SaveChangesAsync();
 
-            _logger.LogInformation("Updated tenant user {TenantUserId} with role {Role} and active status {IsActive}", 
+            _logger.LogInformation("Updated tenant user {TenantUserId} with role {Role} and active status {IsActive}",
                 tenantUserId, tenantUser.Role, tenantUser.IsActive);
 
             return Ok(tenantUser);
@@ -391,7 +453,7 @@ namespace NJSAPI.Controllers
             _tenantDbContext.TenantUsers.Remove(tenantUser);
             await _tenantDbContext.SaveChangesAsync();
 
-            _logger.LogInformation("Removed user {UserId} from tenant {TenantId}", 
+            _logger.LogInformation("Removed user {UserId} from tenant {TenantId}",
                 tenantUser.UserId, tenantUser.TenantId);
 
             return NoContent();

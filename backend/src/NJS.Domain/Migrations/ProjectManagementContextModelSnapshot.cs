@@ -3316,6 +3316,9 @@ namespace NJS.Domain.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsIsolated")
+                        .HasColumnType("bit");
+
                     b.Property<int>("MaxProjects")
                         .HasColumnType("int");
 

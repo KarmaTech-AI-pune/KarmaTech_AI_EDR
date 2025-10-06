@@ -15,7 +15,6 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import LockIcon from '@mui/icons-material/Lock';
 import SecurityIcon from '@mui/icons-material/Security';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
@@ -54,7 +53,6 @@ export const Navbar = () => {
   useEffect(() => {
     const checkUserPermissions = async () => {
       const currentUser = await authApi.getCurrentUser();
-// debugger;
       if (!currentUser || !currentUser.roleDetails) {
         setAuthorizedPages([]);
         setIsAdmin(false);
