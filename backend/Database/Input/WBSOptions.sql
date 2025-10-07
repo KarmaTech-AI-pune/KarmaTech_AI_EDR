@@ -20,14 +20,14 @@ BEGIN
     ('tendering_documents', 'Tendering Documents', 1, NULL, 0),
     ('construction_supervision', 'Construction Supervision', 1, NULL, 0);
 
-    -- Insert Level 2 options for Manpower Form
+    -- Insert Level 2 options for Manpower Form with JSON array for ParentValue
     INSERT INTO WBSOptions (Value, Label, Level, ParentValue, FormType)
     VALUES
-    ('surveys', 'Surveys', 2, NULL, 0),
-    ('design', 'Design', 2, NULL, 0),
-    ('cost_estimation', 'Cost Estimation', 2, NULL, 0);
+    ('surveys', 'Surveys', 2, '["inception_report", "feasibility_report", "draft_detailed_project_report", "detailed_project_report", "tendering_documents", "construction_supervision"]', 0),
+    ('design', 'Design', 2, '["inception_report", "feasibility_report", "draft_detailed_project_report", "detailed_project_report", "tendering_documents", "construction_supervision"]', 0),
+    ('cost_estimation', 'Cost Estimation', 2, '["inception_report", "feasibility_report", "draft_detailed_project_report", "detailed_project_report", "tendering_documents", "construction_supervision"]', 0);
 
-    -- Insert Level 3 options for 'surveys' in Manpower Form
+    -- Insert Level 3 options for 'surveys'
     INSERT INTO WBSOptions (Value, Label, Level, ParentValue, FormType)
     VALUES
     ('topographical_survey', 'Topographical Survey', 3, 'surveys', 0),
@@ -37,7 +37,7 @@ BEGIN
     ('flow_measurement', 'Flow Measurement', 3, 'surveys', 0),
     ('water_quality_measurement', 'Water Quality Measurement', 3, 'surveys', 0);
 
-    -- Insert Level 3 options for 'design' in Manpower Form
+    -- Insert Level 3 options for 'design'
     INSERT INTO WBSOptions (Value, Label, Level, ParentValue, FormType)
     VALUES
     ('process_design', 'Process Design', 3, 'design', 0),
@@ -46,7 +46,7 @@ BEGIN
     ('electrical_design', 'Electrical Design', 3, 'design', 0),
     ('ica_design', 'ICA Design', 3, 'design', 0);
 
-    -- Insert Level 3 options for 'cost_estimation' in Manpower Form
+    -- Insert Level 3 options for 'cost_estimation'
     INSERT INTO WBSOptions (Value, Label, Level, ParentValue, FormType)
     VALUES
     ('cost_estimation', 'Cost Estimation', 3, 'cost_estimation', 0);

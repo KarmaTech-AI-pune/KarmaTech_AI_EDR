@@ -130,66 +130,21 @@ export const WBSStructureAPI = {
 };
 
 export const WBSOptionsAPI = {
-  // Fallback data for when API calls fail
-  fallbackData: {
-    level1: [
-      { value: 'inception_report', label: 'Inception Report' },
-      { value: 'feasibility_report', label: 'Feasibility Report' },
-      { value: 'draft_detailed_project_report', label: 'Draft Detailed Project Report' },
-      { value: 'detailed_project_report', label: 'Detailed Project Report' },
-      { value: 'tendering_documents', label: 'Construction Supervision' }
-    ],
-    level2: [
-      { value: 'surveys', label: 'Surveys' },
-      { value: 'design', label: 'Design' },
-      { value: 'cost_estimation', label: 'Cost Estimation' }
-    ],
-    level3: {
-      'surveys': [
-        { value: 'topographical_survey', label: 'Topographical Survey' },
-        { value: 'soil_investigation', label: 'Soil Investigation' },
-        { value: 'social_impact_assessment', label: 'Social Impact Assessment' },
-        { value: 'environmental_assessment', label: 'Environmental Assessment' },
-        { value: 'flow_measurement', label: 'Flow Measurement' },
-        { value: 'water_quality_measurement', label: 'Water Quality Measurement' }
-      ],
-      'design': [
-        { value: 'process_design', label: 'Process Design' },
-        { value: 'mechanical_design', label: 'Mechanical Design' },
-        { value: 'structural_design', label: 'Structural Design' },
-        { value: 'electrical_design', label: 'Electrical Design' },
-        { value: 'ica_design', label: 'ICA Design' }
-      ],
-      'cost_estimation': [
-        { value: 'cost_estimation', label: 'Cost Estimation' }
-      ]
-    } as { [key: string]: WBSOption[] }
-  },
-
   /**
    * Get all WBS options for all levels
    * @param formType Optional form type (0 = Manpower, 1 = ODC)
    * @returns Promise with WBS options
    */
   getAllOptions: async (formType?: number) => {
-    try {
-      const url = (formType === 0 || formType === 1)
-        ? `/api/wbsoptions?formType=${formType}`
-        : '/api/wbsoptions';
+    const url = (formType === 0 || formType === 1)
+      ? `/api/wbsoptions?formType=${formType}`
+      : '/api/wbsoptions';
 
-      console.log(`Calling API with URL: ${url}`);
-      const response = await axiosInstance.get(url);
-      console.log('WBS options API response:', response.data);
+    console.log(`Calling API with URL: ${url}`);
+    const response = await axiosInstance.get(url);
+    console.log('WBS options API response:', response.data);
 
-      return response.data;
-    } catch (error) {
-      console.warn('Using fallback data for WBS options due to API error:', error);
-      return {
-        level1: WBSOptionsAPI.fallbackData.level1,
-        level2: WBSOptionsAPI.fallbackData.level2,
-        level3: WBSOptionsAPI.fallbackData.level3
-      };
-    }
+    return response.data;
   },
 
   /**
@@ -198,20 +153,15 @@ export const WBSOptionsAPI = {
    * @returns Promise with level 1 options
    */
   getLevel1Options: async (formType?: number): Promise<WBSOption[]> => {
-    try {
-      const url = (formType === 0 || formType === 1)
-        ? `/api/wbsoptions/level1?formType=${formType}`
-        : '/api/wbsoptions/level1';
+    const url = (formType === 0 || formType === 1)
+      ? `/api/wbsoptions/level1?formType=${formType}`
+      : '/api/wbsoptions/level1';
 
-      console.log(`Calling API with URL: ${url}`);
-      const response = await axiosInstance.get(url);
-      console.log('WBS level 1 options API response:', response.data);
+    console.log(`Calling API with URL: ${url}`);
+    const response = await axiosInstance.get(url);
+    console.log('WBS level 1 options API response:', response.data);
 
-      return response.data;
-    } catch (error) {
-      console.warn('Using fallback data for level 1 WBS options due to API error:', error);
-      return WBSOptionsAPI.fallbackData.level1;
-    }
+    return response.data;
   },
 
   /**
@@ -220,20 +170,15 @@ export const WBSOptionsAPI = {
    * @returns Promise with level 2 options
    */
   getLevel2Options: async (formType?: number): Promise<WBSOption[]> => {
-    try {
-      const url = (formType === 0 || formType === 1)
-        ? `/api/wbsoptions/level2?formType=${formType}`
-        : '/api/wbsoptions/level2';
+    const url = (formType === 0 || formType === 1)
+      ? `/api/wbsoptions/level2?formType=${formType}`
+      : '/api/wbsoptions/level2';
 
-      console.log(`Calling API with URL: ${url}`);
-      const response = await axiosInstance.get(url);
-      console.log('WBS level 2 options API response:', response.data);
+    console.log(`Calling API with URL: ${url}`);
+    const response = await axiosInstance.get(url);
+    console.log('WBS level 2 options API response:', response.data);
 
-      return response.data;
-    } catch (error) {
-      console.warn('Using fallback data for level 2 WBS options due to API error:', error);
-      return WBSOptionsAPI.fallbackData.level2;
-    }
+    return response.data;
   },
 
   /**
@@ -243,20 +188,15 @@ export const WBSOptionsAPI = {
    * @returns Promise with level 3 options
    */
   getLevel3Options: async (level2Value: string, formType?: number): Promise<WBSOption[]> => {
-    try {
-      const url = (formType === 0 || formType === 1)
-        ? `/api/wbsoptions/level3/${level2Value}?formType=${formType}`
-        : `/api/wbsoptions/level3/${level2Value}`;
+    const url = (formType === 0 || formType === 1)
+      ? `/api/wbsoptions/level3/${level2Value}?formType=${formType}`
+      : `/api/wbsoptions/level3/${level2Value}`;
 
-      console.log(`Calling API with URL: ${url}`);
-      const response = await axiosInstance.get(url);
-      console.log(`WBS level 3 options for ${level2Value} API response:`, response.data);
+    console.log(`Calling API with URL: ${url}`);
+    const response = await axiosInstance.get(url);
+    console.log(`WBS level 3 options for ${level2Value} API response:`, response.data);
 
-      return response.data;
-    } catch (error) {
-      console.warn(`Using fallback data for level 3 WBS options for ${level2Value} due to API error:`, error);
-      return WBSOptionsAPI.fallbackData.level3[level2Value] || [];
-    }
+    return response.data;
   }
 };
 

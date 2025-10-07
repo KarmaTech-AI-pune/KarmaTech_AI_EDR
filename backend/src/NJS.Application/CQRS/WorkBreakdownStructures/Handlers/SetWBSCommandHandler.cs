@@ -9,6 +9,7 @@ using NJS.Domain.Enums;
 using NJS.Domain.UnitWork;
 using Microsoft.Extensions.Logging;
 using NJS.Repositories.Interfaces;
+using System.Linq; // Ensure this is present for .FirstOrDefault()
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
@@ -20,6 +21,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         private readonly IUserContext _userContext;
         private readonly ILogger<SetWBSCommandHandler> _logger;
         private readonly IWBSVersionRepository _wbsVersionRepository;
+        private readonly IWBSOptionRepository _wbsOptionRepository; // Inject IWBSOptionRepository
         private readonly string _currentUser = "System";
 
         public SetWBSCommandHandler(
@@ -28,7 +30,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             IProjectHistoryService projectHistoryService,
             IUserContext userContext,
             ILogger<SetWBSCommandHandler> logger,
-            IWBSVersionRepository wbsVersionRepository)
+            IWBSVersionRepository wbsVersionRepository,
+            IWBSOptionRepository wbsOptionRepository) // Add to constructor
         {
             _context = context;
             _unitOfWork = unitOfWork;
@@ -36,6 +39,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             _userContext = userContext;
             _logger = logger;
             _wbsVersionRepository = wbsVersionRepository;
+            _wbsOptionRepository = wbsOptionRepository; // Assign repository
         }
 
         public async Task<Unit> Handle(SetWBSCommand request, CancellationToken cancellationToken)
@@ -97,7 +101,18 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 WBSTask taskEntity = null!;
                 if (dto.Id > 0 && existingTasksDict.TryGetValue(dto.Id, out taskEntity))
                 {
-                    taskEntity.Title = dto.Title;
+                    // Handle WBSOptionId from Title field for existing tasks
+                    if (int.TryParse(dto.Title, out int wbsOptionId))
+                    {
+                        taskEntity.WBSOptionId = wbsOptionId; // Store the integer ID in WBSOptionId column
+                        taskEntity.Title = dto.Title; // Store the original string (which is the ID) in Title column
+                    }
+                    else
+                    {
+                        taskEntity.WBSOptionId = null; // Clear WBSOptionId if title is not an ID
+                        taskEntity.Title = dto.Title; // Store raw title if it's not a valid ID
+                    }
+
                     taskEntity.Description = dto.Description;
                     taskEntity.Level = dto.Level;
                     taskEntity.ParentId = dto.ParentId;
@@ -115,10 +130,25 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 }
                 else
                 {
+                    // Handle WBSOptionId from Title field for new tasks
+                    int? newWbsOptionId = null;
+                    string newTitle = dto.Title;
+
+                    if (int.TryParse(dto.Title, out int parsedWbsOptionId))
+                    {
+                        newWbsOptionId = parsedWbsOptionId;
+                        newTitle = dto.Title; // Store the original string (which is the ID) in Title column
+                    }
+                    else
+                    {
+                        // newWbsOptionId remains null
+                        // newTitle remains dto.Title
+                    }
+
                     taskEntity = new WBSTask
                     {
                         WorkBreakdownStructure = wbs,
-                        Title = dto.Title,
+                        Title = newTitle, // Use the processed title
                         Description = dto.Description,
                         Level = dto.Level,
                         DisplayOrder = dto.DisplayOrder,
@@ -131,7 +161,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         IsDeleted = false,
                         UserWBSTasks = new List<UserWBSTask>(),
                         PlannedHours = new List<WBSTaskPlannedHour>(),
-                        TodoProjectScheduleId = dto.TodoProjectScheduleId
+                        WBSOptionId = newWbsOptionId // Set the WBSOptionId
                     };
 
                     _context.WBSTasks.Add(taskEntity);
@@ -175,6 +205,31 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
             if (requiresSecondSave)
                 await _unitOfWork.SaveChangesAsync();
+
+            // After saving, update the DTOs with the actual WBSOptionLabel and Title for frontend display
+            foreach (var dto in request.Tasks)
+            {
+                var correspondingEntity = allTasks.FirstOrDefault(t => t.Id == dto.Id || (!string.IsNullOrEmpty(dto.FrontendTempId) && tempIdToEntityMap.ContainsKey(dto.FrontendTempId) && tempIdToEntityMap[dto.FrontendTempId].Id == t.Id));
+                if (correspondingEntity != null && correspondingEntity.WBSOptionId.HasValue)
+                {
+                    var wbsOption = await _wbsOptionRepository.GetByIdAsync(correspondingEntity.WBSOptionId.Value);
+                    if (wbsOption != null)
+                    {
+                        dto.WBSOptionLabel = wbsOption.Label;
+                        dto.Title = wbsOption.Label; // Set DTO Title to label for display
+                    }
+                    else
+                    {
+                        dto.WBSOptionLabel = null;
+                        dto.Title = correspondingEntity.Title; // Fallback to stored ID if label not found
+                    }
+                }
+                else if (correspondingEntity != null)
+                {
+                    dto.WBSOptionLabel = null;
+                    dto.Title = correspondingEntity.Title; // Use stored title if no WBSOptionId
+                }
+            }
 
             // Create separate WBS versions for each TaskType
             await CreateWBSVersionAfterUpdate(wbs, request.Tasks);
@@ -431,52 +486,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 }
             }
 
-            //var temp = _context.WBSHistories.Where(x => x.WBSTaskPlannedHourHeaderId == header.Id);
-            //if (temp.Any())
-            //{
-            //    if (project.ProjectManagerId is not null)
-            //    {
-            //        histories.Add(new WBSHistory
-            //        {
-            //            StatusId = (int)PMWorkflowStatusEnum.Initial,
-            //            Action = "Initial",
-            //            Comments = "WBS ODC data has been updated",
-            //            ActionDate = DateTime.UtcNow,
-            //            ActionBy = _userContext.GetCurrentUserId(),
-            //            AssignedToId = project.ProjectManagerId,
-            //            WBSTaskPlannedHourHeaderId = header.Id
-            //        });
-            //    }
-            //    if (project.SeniorProjectManagerId is not null)
-            //    {
-            //        histories.Add(new WBSHistory
-            //        {
-            //            StatusId = (int)PMWorkflowStatusEnum.Initial,
-            //            Action = "Initial",
-            //            Comments = "WBS ODC data has been updated",
-            //            ActionDate = DateTime.UtcNow,
-            //            ActionBy = _userContext.GetCurrentUserId(),
-            //            AssignedToId = project.SeniorProjectManagerId,
-            //            WBSTaskPlannedHourHeaderId = header.Id
-            //        });
-            //    }
-            //    if (project.RegionalManagerId is not null)
-            //    {
-            //        histories.Add(new WBSHistory
-            //        {
-            //            StatusId = (int)PMWorkflowStatusEnum.Initial,
-            //            Action = "Initial",
-            //            Comments = "WBS ODC data has been updated",
-            //            ActionDate = DateTime.UtcNow,
-            //            ActionBy = _userContext.GetCurrentUserId(),
-            //            AssignedToId = project.RegionalManagerId,
-            //            WBSTaskPlannedHourHeaderId = header.Id
-            //        });
-
-            //    }
-            //    header.WBSHistories = histories;
-            //    await _unitOfWork.SaveChangesAsync();
-            //}
+           
 
             return header!;
         }

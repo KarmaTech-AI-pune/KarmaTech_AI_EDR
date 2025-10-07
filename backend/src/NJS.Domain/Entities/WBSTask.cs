@@ -67,9 +67,9 @@ namespace NJS.Domain.Entities
         public ICollection<WBSTaskPlannedHour> PlannedHours { get; set; } = new List<WBSTaskPlannedHour>();
         public ICollection<UserWBSTask> UserWBSTasks { get; set; } = new List<UserWBSTask>();
 
-        public int? TodoProjectScheduleId { get; set; }
+        public int? WBSOptionId { get; set; } // Foreign key for WBSOption
 
-        [ForeignKey(nameof(TodoProjectScheduleId))]
-        public todoProjectSchedule TodoProjectSchedule { get; set; }
+        [ForeignKey("WBSOptionId")]
+        public virtual WBSOption WBSOption { get; set; } // Navigation property for WBSOption
     }
 }

@@ -79,19 +79,24 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<WBSOptionDto>> CreateWBSOption(WBSOptionDto request)
+        public async Task<ActionResult<List<WBSOptionDto>>> CreateWBSOption(List<WBSOptionDto> requests)
         {
-            var command = new CreateWBSOptionCommand
+            var createdOptions = new List<WBSOptionDto>();
+            foreach (var request in requests)
             {
-                Value = request.Value,
-                Label = request.Label,
-                Level = request.Level,
-                ParentValue = request.ParentValue,
-                FormType = request.FormType
-            };
+                var command = new CreateWBSOptionCommand
+                {
+                    Value = request.Value,
+                    Label = request.Label,
+                    Level = request.Level,
+                    ParentValue = request.ParentValue,
+                    FormType = request.FormType
+                };
 
-            var result = await _mediator.Send(command);
-            return CreatedAtAction(nameof(GetWBSOptions), new { id = result.Id }, result);
+                var result = await _mediator.Send(command);
+                createdOptions.Add(result);
+            }
+            return Ok(createdOptions);
         }
 
         [HttpPut("{id}")]

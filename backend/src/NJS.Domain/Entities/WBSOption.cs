@@ -31,5 +31,8 @@ namespace NJS.Domain.Entities
         public string ParentValue { get; set; }
         public FormType FormType { get; set; } =  FormType.Manpower; // Default to Manpower for backward compatibility
         public int? TodoProjectScheduleId { get; set; }
+
+        // Navigation property for the "many" side of the relationship
+        public virtual ICollection<WBSTask> WBSTasks { get; set; } = new List<WBSTask>();
     }
 }

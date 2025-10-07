@@ -12,29 +12,34 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging; // Add this for ILogger
+using NJS.Repositories.Interfaces; // Add this for IWBSOptionRepository
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
-    public class AddWBSTaskCommandHandler : IRequestHandler<AddWBSTaskCommand, WBSTaskDto>
+    public class AddWBSTaskCommandHandler : IRequestHandler<AddWBSTaskCommand, List<WBSTaskDto>>
     {
         private readonly ProjectManagementContext _context;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<AddWBSTaskCommandHandler> _logger; // Inject ILogger
+        private readonly ILogger<AddWBSTaskCommandHandler> _logger;
+        private readonly IWBSOptionRepository _wbsOptionRepository; // Inject IWBSOptionRepository
 
         // TODO: Inject ICurrentUserService or similar
         private readonly string _currentUser = "System"; // Placeholder
 
-        public AddWBSTaskCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork, ILogger<AddWBSTaskCommandHandler> logger)
+        public AddWBSTaskCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork, ILogger<AddWBSTaskCommandHandler> logger, IWBSOptionRepository wbsOptionRepository)
         {
             _context = context;
             _unitOfWork = unitOfWork;
-            _logger = logger; // Assign logger
+            _logger = logger;
+            _wbsOptionRepository = wbsOptionRepository; // Assign repository
         }
 
-        public async Task<WBSTaskDto> Handle(AddWBSTaskCommand request, CancellationToken cancellationToken)
+        public async Task<List<WBSTaskDto>> Handle(AddWBSTaskCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Handling AddWBSTaskCommand for ProjectId {ProjectId}, Payload {@Payload}",
-                request.ProjectId, request.TaskDto);
+                request.ProjectId, request.TasksDto);
+
+            var createdTasks = new List<WBSTaskDto>();
 
             // --- 1. Find the active WBS for the project ---
             var wbs = await _context.WorkBreakdownStructures
@@ -59,55 +64,81 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _logger.LogInformation("New Work Breakdown Structure created with ID {WBSId} for Project ID {ProjectId}.", wbs.Id, request.ProjectId);
             }
 
-            // Handle ParentId based on task level
-            if (request.TaskDto.Level == WBSTaskLevel.Level1)
+            foreach (var taskDto in request.TasksDto)
             {
-                request.TaskDto.ParentId = null; // Level 1 tasks do not have a parent
+                // Handle ParentId based on task level
+                if (taskDto.Level == WBSTaskLevel.Level1)
+                {
+                    taskDto.ParentId = null; // Level 1 tasks do not have a parent
+                }
+
+                // Optional: Validate ParentId if provided
+                if (taskDto.ParentId.HasValue && !wbs.Tasks.Any(t => t.Id == taskDto.ParentId.Value && !t.IsDeleted))
+                {
+                    _logger.LogError("Parent Task with ID {ParentId} not found in WBS {WBSId}.", taskDto.ParentId.Value, wbs.Id);
+                    throw new Exception($"Parent Task with ID {taskDto.ParentId.Value} not found in the WBS.");
+                }
+
+                // --- 2. Create the new WBSTask entity ---
+                var taskEntity = new WBSTask
+                {
+                    WorkBreakdownStructureId = wbs.Id, // Associate with the found or newly created WBS
+                    Description = taskDto.Description,
+                    Level = taskDto.Level,
+                    ParentId = taskDto.ParentId,
+                    DisplayOrder = taskDto.DisplayOrder,
+                    EstimatedBudget = taskDto.EstimatedBudget,
+                    StartDate = taskDto.StartDate,
+                    EndDate = taskDto.EndDate,
+                    TaskType = taskDto.TaskType,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = _currentUser,
+                    IsDeleted = false,
+                    UserWBSTasks = new List<UserWBSTask>(),
+                    PlannedHours = new List<WBSTaskPlannedHour>()
+                };
+
+                // Directly assign WBSOptionId from DTO
+                taskEntity.WBSOptionId = taskDto.WBSOptionId;
+                taskEntity.Title = taskDto.Title; // Assign Title from DTO
+
+                _logger.LogInformation("Mapped WBSTask entity: {@TaskEntity}", taskEntity);
+
+                // --- 3. Add User Assignment and Planned Hours ---
+                await UpdateUserAssignment(taskEntity, taskDto, cancellationToken);
+                UpdatePlannedHours(taskEntity, taskDto, wbs.ProjectId);
+
+                // --- 4. Add to context and save ---
+                _context.WBSTasks.Add(taskEntity);
+                _logger.LogInformation("Adding WBSTask to context. Attempting to save changes.");
+                await _unitOfWork.SaveChangesAsync(); // Save each task individually
+                _logger.LogInformation("WBSTask saved successfully. New Task ID: {TaskId}", taskEntity.Id);
+
+                // --- 5. Return the new Task ID ---
+                taskDto.Id = taskEntity.Id; // Populate the ID in the DTO
+                // Populate WBSOptionLabel and Title in DTO for frontend display
+                if (taskEntity.WBSOptionId.HasValue)
+                {
+                    var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskEntity.WBSOptionId.Value);
+                    if (wbsOption != null)
+                    {
+                        taskDto.WBSOptionLabel = wbsOption.Label;
+                        taskDto.Title = wbsOption.Label; // Set DTO Title to label for display
+                    }
+                    else
+                    {
+                        taskDto.WBSOptionLabel = null;
+                        taskDto.Title = taskEntity.Title; // Fallback to stored ID if label not found
+                    }
+                }
+                else
+                {
+                    taskDto.WBSOptionLabel = null;
+                    taskDto.Title = taskEntity.Title; // Use stored title if no WBSOptionId
+                }
+                createdTasks.Add(taskDto);
             }
-
-            // Optional: Validate ParentId if provided
-            if (request.TaskDto.ParentId.HasValue && !wbs.Tasks.Any(t => t.Id == request.TaskDto.ParentId.Value && !t.IsDeleted))
-            {
-                _logger.LogError("Parent Task with ID {ParentId} not found in WBS {WBSId}.", request.TaskDto.ParentId.Value, wbs.Id);
-                throw new Exception($"Parent Task with ID {request.TaskDto.ParentId.Value} not found in the WBS.");
-            }
-
-            // --- 2. Create the new WBSTask entity ---
-            var taskDto = request.TaskDto;
-            var taskEntity = new WBSTask
-            {
-                WorkBreakdownStructureId = wbs.Id, // Associate with the found or newly created WBS
-                Title = taskDto.Title,
-                Description = taskDto.Description,
-                Level = taskDto.Level,
-                ParentId = taskDto.ParentId,
-                DisplayOrder = taskDto.DisplayOrder,
-                EstimatedBudget = taskDto.EstimatedBudget,
-                StartDate = taskDto.StartDate,
-                EndDate = taskDto.EndDate,
-                TaskType = taskDto.TaskType,
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = _currentUser,
-                IsDeleted = false,
-                UserWBSTasks = new List<UserWBSTask>(),
-                PlannedHours = new List<WBSTaskPlannedHour>(),
-                TodoProjectScheduleId = taskDto.TodoProjectScheduleId
-            };
-            _logger.LogInformation("Mapped WBSTask entity: {@TaskEntity}", taskEntity);
-
-            // --- 3. Add User Assignment and Planned Hours ---
-            await UpdateUserAssignment(taskEntity, taskDto, cancellationToken);
-            UpdatePlannedHours(taskEntity, taskDto, wbs.ProjectId);
-
-            // --- 4. Add to context and save ---
-            _context.WBSTasks.Add(taskEntity);
-            _logger.LogInformation("Adding WBSTask to context. Attempting to save changes.");
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("WBSTask saved successfully. New Task ID: {TaskId}", taskEntity.Id);
-
-            // --- 5. Return the new Task ID ---
-            taskDto.Id = taskEntity.Id; // Populate the ID in the DTO
-            return taskDto;
+            return createdTasks;
         }
 
         // --- Helper methods copied from SetWBSCommandHandler ---
