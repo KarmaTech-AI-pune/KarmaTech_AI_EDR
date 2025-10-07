@@ -23,11 +23,10 @@ namespace NJS.Application.CQRS.Projects.Handlers
 
             try
             {
-                // The repository will handle the case when the project doesn't exist and return false
-                var isDeleted = await _repository.Delete(request.Id).ConfigureAwait(false);
-                // If isDeleted is false, it means the project was not found, and the repository handled it gracefully.
-                // In this case, we still return Unit.Value to indicate that from the command's perspective,
-                // the operation completed without needing to report a "not found" error up the chain.
+                // The repository will handle the deletion. Since it returns void, we just call it.
+                _repository.Delete(request.Id);
+                // The repository handles the case where the project doesn't exist.
+                // We return Unit.Value to indicate that the operation completed.
                 return Unit.Value;
             }
             catch (Exception ex)
