@@ -12,7 +12,7 @@ namespace NJS.Application.Dtos
         public int WorkBreakdownStructureId { get; set; } // Needed for context if creating WBS + tasks together
         public int? ParentId { get; set; }
         public WBSTaskLevel Level { get; set; }
-        public string Title { get; set; }
+        public string? Title { get; set; }
         public string Description { get; set; }
         public int DisplayOrder { get; set; } // To maintain order from frontend
         public decimal EstimatedBudget { get; set; }

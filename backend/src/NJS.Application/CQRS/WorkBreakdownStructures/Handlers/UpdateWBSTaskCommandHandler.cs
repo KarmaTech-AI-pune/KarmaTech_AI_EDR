@@ -53,7 +53,17 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             
             // Directly assign WBSOptionId from DTO
             taskEntity.WBSOptionId = taskDto.WBSOptionId;
-            taskEntity.Title = taskDto.Title; // Assign Title from DTO
+            taskEntity.Title = taskDto.Title; // Assign Title from DTO initially
+
+            // If WBSOptionId is provided, override Title with the WBSOption's label
+            if (taskDto.WBSOptionId.HasValue)
+            {
+                var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskDto.WBSOptionId.Value);
+                if (wbsOption != null)
+                {
+                    taskEntity.Title = wbsOption.Label; // Set entity Title to label for saving
+                }
+            }
 
             taskEntity.Description = taskDto.Description;
             taskEntity.Level = taskDto.Level; 
@@ -72,25 +82,23 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             await _unitOfWork.SaveChangesAsync();
             _logger.LogInformation("WBSTask with ID {TaskId} updated successfully.", taskEntity.Id);
 
-            // Populate WBSOptionLabel and Title in DTO for frontend display
+            // Populate WBSOptionLabel and Title in DTO for frontend display (using the saved entity's title)
+            taskDto.Title = taskEntity.Title; // Use the title that was actually saved
             if (taskEntity.WBSOptionId.HasValue)
             {
                 var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskEntity.WBSOptionId.Value);
                 if (wbsOption != null)
                 {
                     taskDto.WBSOptionLabel = wbsOption.Label;
-                    taskDto.Title = wbsOption.Label; // Set DTO Title to label for display
                 }
                 else
                 {
                     taskDto.WBSOptionLabel = null;
-                    taskDto.Title = taskEntity.Title; // Fallback to stored ID if label not found
                 }
             }
             else
             {
                 taskDto.WBSOptionLabel = null;
-                taskDto.Title = taskEntity.Title; // Use stored title if no WBSOptionId
             }
 
             return Unit.Value;

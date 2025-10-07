@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -17,6 +17,9 @@ namespace NJS.Domain.Entities
         [Key]
         public int Id { get; set; }
 
+        [NotMapped]
+        public string? FrontendTempId { get; set; } // For temporary frontend identification
+
         public int TenantId { get; set; }
 
         [Required]
@@ -27,9 +30,8 @@ namespace NJS.Domain.Entities
         [Required]
         public WBSTaskLevel Level { get; set; }
 
-        [Required]
         [StringLength(255)]
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
         [StringLength(1000)]
         public string Description { get; set; }

@@ -1,4 +1,4 @@
-﻿﻿﻿using MediatR;
+﻿﻿using MediatR;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Repositories.Interfaces;
 using System;
@@ -23,9 +23,11 @@ namespace NJS.Application.CQRS.Projects.Handlers
 
             try
             {
-                // We don't need to check if the project exists first
-                // The repository will handle the case when the project doesn't exist
-                _repository.Delete(request.Id);
+                // The repository will handle the case when the project doesn't exist and return false
+                var isDeleted = await _repository.Delete(request.Id).ConfigureAwait(false);
+                // If isDeleted is false, it means the project was not found, and the repository handled it gracefully.
+                // In this case, we still return Unit.Value to indicate that from the command's perspective,
+                // the operation completed without needing to report a "not found" error up the chain.
                 return Unit.Value;
             }
             catch (Exception ex)

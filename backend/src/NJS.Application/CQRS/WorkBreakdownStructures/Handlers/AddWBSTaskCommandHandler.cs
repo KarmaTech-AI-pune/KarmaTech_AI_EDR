@@ -100,7 +100,17 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                 // Directly assign WBSOptionId from DTO
                 taskEntity.WBSOptionId = taskDto.WBSOptionId;
-                taskEntity.Title = taskDto.Title; // Assign Title from DTO
+                taskEntity.Title = taskDto.Title; // Assign Title from DTO initially
+
+                // If WBSOptionId is provided, override Title with the WBSOption's label
+                if (taskDto.WBSOptionId.HasValue)
+                {
+                    var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskDto.WBSOptionId.Value);
+                    if (wbsOption != null)
+                    {
+                        taskEntity.Title = wbsOption.Label; // Set entity Title to label for saving
+                    }
+                }
 
                 _logger.LogInformation("Mapped WBSTask entity: {@TaskEntity}", taskEntity);
 
@@ -116,25 +126,23 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                 // --- 5. Return the new Task ID ---
                 taskDto.Id = taskEntity.Id; // Populate the ID in the DTO
-                // Populate WBSOptionLabel and Title in DTO for frontend display
+                // Populate WBSOptionLabel and Title in DTO for frontend display (using the saved entity's title)
+                taskDto.Title = taskEntity.Title; // Use the title that was actually saved
                 if (taskEntity.WBSOptionId.HasValue)
                 {
                     var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskEntity.WBSOptionId.Value);
                     if (wbsOption != null)
                     {
                         taskDto.WBSOptionLabel = wbsOption.Label;
-                        taskDto.Title = wbsOption.Label; // Set DTO Title to label for display
                     }
                     else
                     {
                         taskDto.WBSOptionLabel = null;
-                        taskDto.Title = taskEntity.Title; // Fallback to stored ID if label not found
                     }
                 }
                 else
                 {
                     taskDto.WBSOptionLabel = null;
-                    taskDto.Title = taskEntity.Title; // Use stored title if no WBSOptionId
                 }
                 createdTasks.Add(taskDto);
             }
@@ -149,22 +157,32 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             // Handle Manpower tasks
             if (taskEntity.TaskType == TaskType.Manpower)
             {
-                // Only proceed if UserId is not null/empty and not a placeholder "string"
-                if (!string.IsNullOrEmpty(taskDto.AssignedUserId) && taskDto.AssignedUserId != "string")
-                {
-                    // Validate if the assigned user exists
-                    var userExists = await _context.Users.AnyAsync(u => u.Id == taskDto.AssignedUserId, cancellationToken);
+                // For Level 3 tasks, always create a UserWBSTask entry.
+                // For other levels, only create if AssignedUserId is provided.
+                bool shouldCreateUserWBSTask = taskEntity.Level == WBSTaskLevel.Level3 ||
+                                               (!string.IsNullOrEmpty(taskDto.AssignedUserId) && taskDto.AssignedUserId != "string");
 
-                    if (!userExists)
+                if (shouldCreateUserWBSTask)
+                {
+                    // Determine the actual UserId and ResourceRoleId to save (null if "string" or empty)
+                    string? actualUserId = (string.IsNullOrEmpty(taskDto.AssignedUserId) || taskDto.AssignedUserId == "string") ? null : taskDto.AssignedUserId;
+                    string? actualResourceRoleId = (string.IsNullOrEmpty(taskDto.ResourceRoleId) || taskDto.ResourceRoleId == "string") ? null : taskDto.ResourceRoleId;
+
+                    // Validate if the assigned user exists, but only if an ID is actually provided
+                    if (!string.IsNullOrEmpty(actualUserId))
                     {
-                        throw new Exception($"Assigned User with ID '{taskDto.AssignedUserId}' not found. Cannot assign task.");
+                        var userExists = await _context.Users.AnyAsync(u => u.Id == actualUserId, cancellationToken);
+                        if (!userExists)
+                        {
+                            throw new Exception($"Assigned User with ID '{actualUserId}' not found. Cannot assign task.");
+                        }
                     }
 
                     // Create new assignment for Manpower task
                     var newUserTask = new UserWBSTask
                     {
                         WBSTask = taskEntity,
-                        UserId = taskDto.AssignedUserId,
+                        UserId = actualUserId,
                         Name = null, // No Name for Manpower tasks
                         CostRate = taskDto.CostRate,
                         Unit = taskDto.ResourceUnit,
@@ -172,7 +190,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         TotalCost = (decimal)taskEntity.PlannedHours.Sum(ph => ph.PlannedHours) * taskDto.CostRate,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = _currentUser,
-                        ResourceRoleId = taskDto.ResourceRoleId // Add ResourceRoleId
+                        ResourceRoleId = actualResourceRoleId
                     };
                     taskEntity.UserWBSTasks.Add(newUserTask);
                 }
