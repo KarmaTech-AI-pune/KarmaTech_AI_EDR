@@ -49,14 +49,10 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                 var sprintPlan = new SprintPlan
                 {
                     ProjectId = projectId,
-                    SprintName = sprintPlanDto.SprintName ?? $"Sprint Plan for Project {projectId}",
                     SprintNumber = sprintPlanDto.SprintNumber,
                     StartDate = sprintPlanDto.StartDate,
                     EndDate = sprintPlanDto.EndDate,
                     SprintGoal = sprintPlanDto.SprintGoal,
-                    Status = sprintPlanDto.Status ?? "Active",
-                    CreatedDate = DateTime.UtcNow,
-                    UpdatedDate = DateTime.UtcNow,
                     TenantId = _context.TenantId ?? 1
                 };
                 await _context.SprintPlans.AddAsync(sprintPlan, cancellationToken);

@@ -13,10 +13,6 @@ namespace NJS.Domain.Entities
 
         public int TenantId { get; set; } // Added TenantId
 
-        [Required]
-        [StringLength(100)]
-        public string SprintName { get; set; }
-
         public int? SprintNumber { get; set; }
 
         public DateTime? StartDate { get; set; }
@@ -25,13 +21,6 @@ namespace NJS.Domain.Entities
 
         [StringLength(500)]
         public string? SprintGoal { get; set; }
-
-        [StringLength(50)]
-        public string? Status { get; set; }
-
-        public DateTime? CreatedDate { get; set; }
-
-        public DateTime? UpdatedDate { get; set; }
 
         [ForeignKey("Project")]
         public int ProjectId { get; set; }

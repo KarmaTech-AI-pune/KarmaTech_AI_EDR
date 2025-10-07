@@ -48,14 +48,10 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
             var sprintPlanDto = new SprintPlanDto
             {
                 SprintId = sprintPlanEntity.SprintId,
-                SprintName = sprintPlanEntity.SprintName,
                 SprintNumber = sprintPlanEntity.SprintNumber,
                 StartDate = sprintPlanEntity.StartDate,
                 EndDate = sprintPlanEntity.EndDate,
                 SprintGoal = sprintPlanEntity.SprintGoal,
-                Status = sprintPlanEntity.Status,
-                CreatedDate = sprintPlanEntity.CreatedDate,
-                UpdatedDate = sprintPlanEntity.UpdatedDate,
                 ProjectId = sprintPlanEntity.ProjectId,
                 SprintTasks = sprintPlanEntity.SprintTasks.Select(t => new SprintTaskDto
                 {
