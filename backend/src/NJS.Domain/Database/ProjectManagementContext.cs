@@ -208,6 +208,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<WBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<WBSVersionWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId); // Added matching query filter
             modelBuilder.Entity<MeasurementUnit>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
@@ -421,6 +422,8 @@ namespace NJS.Domain.Database
             // Configure decimal precisions
             modelBuilder.Entity<Project>().Property(f => f.EstimatedProjectCost).HasPrecision(18, 2);
             modelBuilder.Entity<Project>().Property(f => f.EstimatedProjectFee).HasPrecision(18, 2);
+            modelBuilder.Entity<Project>().Property(p => p.CapitalValue).HasPrecision(18, 2); // Added precision for CapitalValue
+            modelBuilder.Entity<Project>().Property(p => p.Percentage).HasPrecision(18, 2); // Added precision for Percentage
             modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
             modelBuilder.Entity<Role>().ToTable("AspNetRoles");
             modelBuilder.Entity<Permission>().ToTable("Permissions");
