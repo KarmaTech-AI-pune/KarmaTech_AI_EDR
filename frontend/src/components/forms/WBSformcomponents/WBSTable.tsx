@@ -210,10 +210,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
     if (row.level === 2) return levelOptions.level2;
     if (row.level === 3) {
       const parentRow = rows.find(r => r.id === row.parentId);
-      if (parentRow && parentRow.title) {
-        // Use the parent row's title as the key to look up level 3 options
-        return levelOptions.level3[parentRow.title] || [];
-      }
+      if (parentRow && parentRow.title) return levelOptions.level3[parentRow.title] || [];
     }
     return [];
   };

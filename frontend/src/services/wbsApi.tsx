@@ -82,7 +82,7 @@ export const WBSStructureAPI = {
           ParentId: realParentId,
           ParentFrontendTempId: parentFrontendTempId,
           Level: row.level,
-          Title: row.title,
+          Title: null,
           AssignedUserId: isOdcTask ? null : row.name,
           ResourceName: isOdcTask ? row.name : null,
           CostRate: row.costRate,
@@ -96,7 +96,8 @@ export const WBSStructureAPI = {
           EstimatedBudget: 0,
           StartDate: null,
           EndDate: null,
-          ResourceRoleId: row.resource_role // Add ResourceRoleId to the payload
+          ResourceRoleId: row.resource_role, // Add ResourceRoleId to the payload
+          WBSOptionId: row.wbsOptionId // Add WBSOptionId to the payload
         };
       };
 
@@ -130,23 +131,6 @@ export const WBSStructureAPI = {
 };
 
 export const WBSOptionsAPI = {
-  /**
-   * Get all WBS options for all levels
-   * @param formType Optional form type (0 = Manpower, 1 = ODC)
-   * @returns Promise with WBS options
-   */
-  getAllOptions: async (formType?: number) => {
-    const url = (formType === 0 || formType === 1)
-      ? `/api/wbsoptions?formType=${formType}`
-      : '/api/wbsoptions';
-
-    console.log(`Calling API with URL: ${url}`);
-    const response = await axiosInstance.get(url);
-    console.log('WBS options API response:', response.data);
-
-    return response.data;
-  },
-
   /**
    * Get level 1 WBS options
    * @param formType Optional form type (0 = Manpower, 1 = ODC)
@@ -232,7 +216,6 @@ export const PlannedHoursAPI = {
       return response.data;
     } catch (error) {
       console.error(`Error updating planned hours for task ${taskId}:`, error);
-      // For update operations, we still throw the error as we can't provide a meaningful fallback
       throw error;
     }
   }

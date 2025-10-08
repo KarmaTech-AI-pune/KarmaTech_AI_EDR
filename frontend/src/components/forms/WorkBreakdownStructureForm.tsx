@@ -53,199 +53,32 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   const [level2Options, setLevel2Options] = useState<WBSOption[]>([]);
   const [level3OptionsMap, setLevel3OptionsMap] = useState<{ [key: string]: WBSOption[] }>({});
 
+  // Helper function to find a WBS option by its ID
+  const findWBSOptionById = (optionId: string, l1: WBSOption[], l2: WBSOption[], l3Map: { [key: string]: WBSOption[] }): WBSOption | undefined => {
+    // Search in level 1 options
+    let found = l1.find(opt => opt.id === optionId);
+    if (found) return found;
+
+    // Search in level 2 options
+    found = l2.find(opt => opt.id === optionId);
+    if (found) return found;
+
+    // Search in level 3 options map
+    for (const key in l3Map) {
+      if (l3Map.hasOwnProperty(key)) {
+        found = l3Map[key].find(opt => opt.id === optionId);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
+
   // State for calculated totals
   const [calculatedTotalHours, setCalculatedTotalHours] = useState<number>(0);
   const [calculatedTotalCost, setCalculatedTotalCost] = useState<number>(0);
 
   // We only use the setter function, not the value itself
   const [, setLastUpdateTime] = useState<number>(Date.now());
-
-  const loadWBSData = async (projectId: string) => {
-    try {
-      setLoading(true);
-      // Type the API response data using the updated WBSRowData interface
-      let wbsData: WBSRowData[] = await WBSStructureAPI.getProjectWBS(projectId);
-      console.log('loadWBSData: Raw WBS data from API:', wbsData);
-      console.log('loadWBSData: Project ID:', projectId);
-
-      // Transform all WBS data first
-      const allTransformedRows = wbsData.map((task) => {
-        // Transform plannedHours from potential array to nested object
-        const transformedPlannedHours: PlannedHours = {};
-        if (task.plannedHours && Array.isArray(task.plannedHours)) {
-          task.plannedHours.forEach((monthEntry: any) => {
-            if (monthEntry && typeof monthEntry === 'object' && monthEntry.year && monthEntry.month && typeof monthEntry.plannedHours === 'number') {
-              const yearStr = monthEntry.year.toString();
-              const monthName = monthEntry.month;
-              if (!transformedPlannedHours[yearStr]) {
-                transformedPlannedHours[yearStr] = {};
-              }
-              transformedPlannedHours[yearStr][monthName] = monthEntry.plannedHours;
-            }
-          });
-        } else if (task.plannedHours && typeof task.plannedHours === 'object') {
-          // Assume it's already in the correct format or handle other potential formats
-          Object.assign(transformedPlannedHours, task.plannedHours);
-        }
-
-        // Determine if this is an ODC task
-        const isOdcTask = task.taskType === TaskType.ODC;
-
-        return {
-          id: task.id,
-          level: task.level,
-          title: task.title,
-          role: isOdcTask ? null : (task.assignedUserId || null),
-          // For ODC tasks, use ResourceName; for Manpower tasks, use AssignedUserId
-          // Use optional chaining and nullish coalescing for safe access
-          name: isOdcTask ? (task.resourceName ?? null) : (task.assignedUserId?.toString() || null),
-          costRate: task.costRate || 0,
-          plannedHours: transformedPlannedHours,
-          // For ODC tasks, use TotalCost as odc value
-          odc: isOdcTask ? task.totalCost : (task.odc || 0),
-          // For ODC tasks, set odcHours to TotalHours
-          odcHours: isOdcTask ? task.totalHours : 0,
-          totalHours: task.totalHours || 0,
-          totalCost: task.totalCost || 0,
-          parentId: task.parentId,
-          taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
-          // For Manpower tasks, always set unit to 'month'; for ODC tasks, use resourceUnit or empty string
-          unit: isOdcTask ? (task.resourceUnit ?? '') : 'month',
-          resource_role: (task as any).resourceRoleId ?? null, // Map resource_role from API response (backend sends resourceRoleId)
-          resource_role_name: (task as any).resourceRoleName ?? null // Map resource role name for display
-        };
-      });
-
-      // Helper function to get sequence number for a row
-      const getSequenceNumber = (row: WBSRowData, allRows: WBSRowData[]): string => {
-        if (row.level === 1) {
-          const level1Index = allRows.filter(r => r.level === 1).findIndex(r => r.id === row.id) + 1;
-          // Sequence number is calculated based on position
-          // Note: This is only used for initial data loading. The actual display numbering is handled in WBSTable.tsx
-          return level1Index.toString();
-        } else if (row.level === 2) {
-          const parentRow = allRows.find(r => r.id === row.parentId);
-          if (parentRow) {
-            const parentSequence = getSequenceNumber(parentRow, allRows);
-            const level2Index = allRows.filter(r => r.level === 2 && r.parentId === parentRow.id)
-              .findIndex(r => r.id === row.id) + 1;
-            return `${parentSequence}.${level2Index}`;
-          }
-        } else if (row.level === 3) {
-          const level2Parent = allRows.find(r => r.id === row.parentId);
-          if (level2Parent) {
-            const parentSequence = getSequenceNumber(level2Parent, allRows);
-            const level3Index = allRows.filter(r => r.level === 3 && r.parentId === level2Parent.id)
-              .findIndex(r => r.id === row.id) + 1;
-            return `${parentSequence}.${level3Index}`;
-          }
-        }
-        return '';
-      };
-
-      // Fetch roles and update the complete transformed data
-      const fetchRolesAndUpdateAllData = async (dataToProcess: WBSRowData[]) => {
-        const dataWithRoles = await Promise.all(
-          dataToProcess.map(async (row) => {
-            if (row.role) { // Assuming role initially holds the employee ID
-              try {
-                const employee = await ResourceAPI.getEmployeeById(row.role); // Fetch employee by ID
-                return {
-                  ...row,
-                  role: employee?.role_id || null, // Set role to role_id
-                  // name: row.role, // Keep original employee ID in name for now if needed, or clear it
-                  // costRate: employee?.standard_rate || row.costRate // Optionally update cost rate
-                };
-              } catch (error) {
-                console.error(`Error fetching employee details for ID ${row.role}:`, error);
-                return row; // Return original row if fetch fails
-              }
-            }
-            return row; // Return row if no role ID
-          })
-        );
-
-
-        // Filter rows based on TaskType
-        // If taskType is not set (for backward compatibility), we'll infer it from the title
-        const currentManpowerRows = dataWithRoles.filter(row => {
-          // If taskType is explicitly set, use it
-          if (row.taskType !== undefined) {
-            return row.taskType === TaskType.Manpower;
-          }
-
-          // For backward compatibility: check if this row is part of a hierarchy
-          if (row.level === 2 || row.level === 3) {
-            // For child rows, check the parent's taskType
-            const parent = dataWithRoles.find(r => r.id === row.parentId);
-            if (!parent) return false;
-
-            if (parent.taskType !== undefined) {
-              return parent.taskType === TaskType.Manpower;
-            }
-
-            // If parent doesn't have taskType, check grandparent for level 3
-            if (row.level === 3) {
-              const grandparent = dataWithRoles.find(r => r.id === parent.parentId);
-              if (grandparent?.taskType !== undefined) {
-                return grandparent.taskType === TaskType.Manpower;
-              }
-            }
-          }
-
-          // Default to Manpower for backward compatibility if we can't determine
-          return true;
-        });
-
-        const currentOdcRows = dataWithRoles.filter(row => {
-          // If taskType is explicitly set, use it
-          if (row.taskType !== undefined) {
-            return row.taskType === TaskType.ODC;
-          }
-
-          // For backward compatibility: check if this row is part of a hierarchy
-          if (row.level === 2 || row.level === 3) {
-            // For child rows, check the parent's taskType
-            const parent = dataWithRoles.find(r => r.id === row.parentId);
-            if (!parent) return false;
-
-            if (parent.taskType !== undefined) {
-              return parent.taskType === TaskType.ODC;
-            }
-
-            // If parent doesn't have taskType, check grandparent for level 3
-            if (row.level === 3) {
-              const grandparent = dataWithRoles.find(r => r.id === parent.parentId);
-              if (grandparent?.taskType !== undefined) {
-                return grandparent.taskType === TaskType.ODC;
-              }
-            }
-          }
-
-          // Default to not showing in ODC form if we can't determine
-          return false;
-        });
-
-        setManpowerRows(currentManpowerRows);
-        setOdcRows(currentOdcRows);
-        console.log('loadWBSData: Manpower Rows after filtering and setting state:', currentManpowerRows);
-        console.log('loadWBSData: ODC Rows after filtering and setting state:', currentOdcRows);
-
-        // Calculate months based on the currently visible form type's data
-        calculateAndSetMonths(formType === 'manpower' ? currentManpowerRows : currentOdcRows);
-      };
-
-      await fetchRolesAndUpdateAllData(allTransformedRows); // Process all transformed rows
-
-    } catch (error) {
-      console.error('Error loading WBS data:', error);
-      setSnackbarMessage('Failed to load WBS data');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Separate function to calculate and set months based on provided rows
   const calculateAndSetMonths = (rowsToCalculateFrom: WBSRowData[]) => {
@@ -299,72 +132,174 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
   };
 
 
-  useEffect(() => {
-    const loadInitialData = async () => {
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+
+      // Convert formType to numeric value for API
+      const formTypeValue = formType === 'odc' ? 1 : 0; // 0 = Manpower, 1 = ODC
+
+      let l1Options: WBSOption[] = [];
+      let l2Options: WBSOption[] = [];
+      let newLevel3OptionsMap: { [key: string]: WBSOption[] } = {};
+
+      // Load WBS options (level 1 and 2)
       try {
-        setLoading(true);
+        const [fetchedL1Options, fetchedL2Options] = await Promise.all([
+          WBSOptionsAPI.getLevel1Options(formTypeValue),
+          WBSOptionsAPI.getLevel2Options(formTypeValue)
+        ]);
 
-        // Load WBS options with better error handling
-        try {
-          // Convert formType to numeric value for API
-          const formTypeValue = formType === 'odc' ? 1 : 0; // 0 = Manpower, 1 = ODC
+        l1Options = fetchedL1Options;
+        l2Options = fetchedL2Options;
 
-          const [l1Options, l2Options, allOptions] = await Promise.all([
-            WBSOptionsAPI.getLevel1Options(formTypeValue),
-            WBSOptionsAPI.getLevel2Options(formTypeValue),
-            WBSOptionsAPI.getAllOptions(formTypeValue)
-          ]);
-
-          setLevel1Options(l1Options);
-          setLevel2Options(l2Options);
-          setLevel3OptionsMap(allOptions.level3 || {});
-        } catch (error) {
-          console.error('Error loading WBS options:', error);
-          setSnackbarMessage('Failed to load work description options. Please ensure the backend service is running and database is properly configured with WBS options.');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-          // Set empty arrays to prevent null reference errors
-          setLevel1Options([]);
-          setLevel2Options([]);
-          setLevel3OptionsMap({});
-        }
-
-        // Load roles and employees
-        try {
-          const [allRoles, employees] = await Promise.all([
-            ResourceAPI.getAllRoles(),
-            ResourceAPI.getAllEmployees()
-          ]);
-          setRoles(allRoles);
-          setAllEmployees(employees);
-        } catch (error) {
-          console.error('Error loading roles and employees:', error);
-          setSnackbarMessage('Failed to load resource roles and employees.');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-          setRoles([]);
-          setAllEmployees([]);
-        }
-
-        // Load existing WBS data if project is selected
-        // loadWBSData will now handle setting initial months if needed based on filtered data
-        if (projectId) {
-          await loadWBSData(projectId);
-        } else {
-          // If no project selected, reset states
-          setManpowerRows([]);
-          setOdcRows([]);
-          setMonths([]); // Reset months if no project
-        }
+        setLevel1Options(l1Options);
+        setLevel2Options(l2Options);
       } catch (error) {
-        console.error('Error loading initial data:', error);
-        setSnackbarMessage('Failed to load initial data');
+        console.error('Error loading WBS options (level 1 & 2):', error);
+        setSnackbarMessage('Failed to load work description options. Please ensure the backend service is running and database is properly configured with WBS options.');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
-      } finally {
-        setLoading(false);
+        setLevel1Options([]);
+        setLevel2Options([]);
       }
-    };
+
+      // Load roles and employees
+      try {
+        const [allRoles, employees] = await Promise.all([
+          ResourceAPI.getAllRoles(),
+          ResourceAPI.getAllEmployees()
+        ]);
+        setRoles(allRoles);
+        setAllEmployees(employees);
+      } catch (error) {
+        console.error('Error loading roles and employees:', error);
+        setSnackbarMessage('Failed to load resource roles and employees.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        setRoles([]);
+        setAllEmployees([]);
+      }
+
+      // Load existing WBS data if project is selected
+      let initialManpowerRows: WBSRowData[] = [];
+      let initialOdcRows: WBSRowData[] = [];
+      if (projectId) {
+        try {
+          let wbsData: WBSRowData[] = await WBSStructureAPI.getProjectWBS(projectId);
+         
+
+          const allTransformedRows = wbsData.map((task) => {
+            const transformedPlannedHours: PlannedHours = {};
+            if (task.plannedHours && Array.isArray(task.plannedHours)) {
+              task.plannedHours.forEach((monthEntry: any) => {
+                if (monthEntry && typeof monthEntry === 'object' && monthEntry.year && monthEntry.month && typeof monthEntry.plannedHours === 'number') {
+                  const yearStr = monthEntry.year.toString();
+                  const monthName = monthEntry.month;
+                  if (!transformedPlannedHours[yearStr]) {
+                    transformedPlannedHours[yearStr] = {};
+                  }
+                  transformedPlannedHours[yearStr][monthName] = monthEntry.plannedHours;
+                }
+              });
+            } else if (task.plannedHours && typeof task.plannedHours === 'object') {
+              Object.assign(transformedPlannedHours, task.plannedHours);
+            }
+
+            const isOdcTask = task.taskType === TaskType.ODC;
+
+            return {
+              id: task.id,
+              level: task.level,
+              title: task.title,
+              role: isOdcTask ? null : (task.assignedUserId || null),
+              name: isOdcTask ? (task.resourceName ?? null) : (task.assignedUserId?.toString() || null),
+              costRate: task.costRate || 0,
+              plannedHours: transformedPlannedHours,
+              odc: isOdcTask ? task.totalCost : (task.odc || 0),
+              odcHours: isOdcTask ? task.totalHours : 0,
+              totalHours: task.totalHours || 0,
+              totalCost: task.totalCost || 0,
+              parentId: task.parentId,
+              taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
+              unit: isOdcTask ? (task.resourceUnit ?? '') : 'month',
+              resource_role: (task as any).resourceRoleId ?? null,
+              resource_role_name: (task as any).resourceRoleName ?? null,
+              wbsOptionId: (task as any).wbsOptionId ?? null // Capture wbsOptionId from backend
+            };
+          });
+
+          // Filter rows based on TaskType
+          initialManpowerRows = allTransformedRows.filter(row => row.taskType === TaskType.Manpower);
+          initialOdcRows = allTransformedRows.filter(row => row.taskType === TaskType.ODC);
+
+          setManpowerRows(initialManpowerRows);
+          setOdcRows(initialOdcRows);
+          calculateAndSetMonths(formType === 'manpower' ? initialManpowerRows : initialOdcRows);
+
+          // Dynamically load level 3 options for existing level 2 tasks
+          const uniqueLevel2Titles = new Set<string>();
+          const rowsToProcess = formType === 'manpower' ? initialManpowerRows : initialOdcRows;
+          rowsToProcess.filter(row => row.level === 2 && row.title).forEach(row => uniqueLevel2Titles.add(row.title));
+
+          await Promise.all(
+            Array.from(uniqueLevel2Titles).map(async (level2Title) => {
+              try {
+                const options = await WBSOptionsAPI.getLevel3Options(level2Title, formTypeValue);
+                newLevel3OptionsMap[level2Title.toLowerCase()] = options;
+              } catch (error) {
+                console.error(`Error loading level 3 options for ${level2Title}:`, error);
+              }
+            })
+          );
+          setLevel3OptionsMap(newLevel3OptionsMap);
+
+          // After all options are loaded, re-process allTransformedRows to set titles based on wbsOptionId
+          const finalTransformedRows = allTransformedRows.map(row => {
+            if (row.wbsOptionId) {
+              const option = findWBSOptionById(row.wbsOptionId, l1Options, l2Options, newLevel3OptionsMap);
+              if (option) {
+                return { ...row, title: option.value.toLowerCase() };
+              }
+            }
+            return row;
+          });
+
+          // Filter rows based on TaskType
+          initialManpowerRows = finalTransformedRows.filter(row => row.taskType === TaskType.Manpower);
+          initialOdcRows = finalTransformedRows.filter(row => row.taskType === TaskType.ODC);
+
+          setManpowerRows(initialManpowerRows);
+          setOdcRows(initialOdcRows);
+          calculateAndSetMonths(formType === 'manpower' ? initialManpowerRows : initialOdcRows);
+
+        } catch (error) {
+          console.error('Error loading WBS data:', error);
+          setSnackbarMessage('Failed to load WBS data');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+          setManpowerRows([]);
+          setOdcRows([]);
+          setMonths([]);
+          setLevel3OptionsMap({});
+        }
+      } else {
+        setManpowerRows([]);
+        setOdcRows([]);
+        setMonths([]);
+        setLevel3OptionsMap({});
+      }
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      setSnackbarMessage('Failed to load initial data');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadInitialData();
   }, [projectId, formType]);
 
@@ -431,7 +366,8 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       taskType: formType === 'manpower' ? TaskType.Manpower : TaskType.ODC, // Set taskType based on formType
       unit: formType === 'manpower' ? 'month' : '', // Set 'month' as default for manpower, empty for ODC
       resource_role: null, // Initialize resource_role for new rows
-      resource_role_name: null // Initialize resource_role_name for new rows
+      resource_role_name: null, // Initialize resource_role_name for new rows
+      wbsOptionId: null // Initialize wbsOptionId for new rows
     };
 
     // For ODC form, ensure odcHours and odc are initialized to 0
@@ -475,7 +411,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     if (deleteDialog.rowId && projectId) {
       try {
         await WBSStructureAPI.deleteWBSTask(projectId, deleteDialog.rowId);
-        await loadWBSData(projectId);
+        await loadInitialData();
         setSnackbarMessage('WBS task deleted successfully!');
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
@@ -724,16 +660,35 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
     const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
     const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
 
-    // Update the row with the new value
+    // Find the selected WBS option to get its ID
+    let selectedOptionId: string | null = null;
+    const changedRow = currentRows.find(r => r.id === rowId);
+
+    if (changedRow) {
+      let optionsToSearch: WBSOption[] = [];
+      if (changedRow.level === 1) {
+        optionsToSearch = level1Options;
+      } else if (changedRow.level === 2) {
+        optionsToSearch = level2Options;
+      } else if (changedRow.level === 3 && changedRow.parentId) {
+        const parentRow = currentRows.find(r => r.id === changedRow.parentId);
+        if (parentRow && parentRow.title && level3OptionsMap[parentRow.title]) {
+          optionsToSearch = level3OptionsMap[parentRow.title];
+        }
+      }
+      const foundOption = optionsToSearch.find(option => option.value === value);
+      selectedOptionId = foundOption ? foundOption.id : null;
+    }
+
+    // Update the row with the new title and wbsOptionId
     setRowsFunc(prevRows => prevRows.map(r => {
       if (r.id === rowId) {
-        return { ...r, title: value };
+        return { ...r, title: value, wbsOptionId: selectedOptionId };
       }
       return r;
     }));
 
     // Check if this is a level 2 row and fetch level 3 options if needed
-    const changedRow = currentRows.find(r => r.id === rowId);
     if (changedRow && changedRow.level === 2 && value) {
       try {
         // Convert formType to numeric value for API
@@ -812,7 +767,7 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       setLastUpdateTime(Date.now()); // This will call loadWBSData again
       
       // Reload the WBS data to refresh the status
-      await loadWBSData(projectId);
+      await loadInitialData();
       
       // Toggle edit mode after successful save
       if (formType === 'manpower') {

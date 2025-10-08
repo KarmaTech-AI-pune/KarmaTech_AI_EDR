@@ -1,4 +1,5 @@
 export interface WBSOption {
+  id: string;
   value: string;
   label: string;
 }
@@ -28,6 +29,7 @@ export interface WBSRowData {
   resourceUnit?: string | null;
   resource_role: string | null; // Store role ID
   resource_role_name?: string | null; // Display role name
+  wbsOptionId?: string | null; // Store the ID of the selected WBS option
 }
 
 export interface WBSChildTotals {
