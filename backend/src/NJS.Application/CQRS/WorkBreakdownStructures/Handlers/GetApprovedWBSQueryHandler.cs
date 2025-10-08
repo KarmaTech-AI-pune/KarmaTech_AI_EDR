@@ -57,7 +57,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         StartDate = task.StartDate,
                         EndDate = task.EndDate,
                         TaskType = task.TaskType,
-                        TodoProjectScheduleId = task.TodoProjectScheduleId,
                         // Re-adding properties as per user request to map all fields in WBSTaskDto
                         AssignedUserId = task.UserWBSTasks.FirstOrDefault()?.UserId,
                         AssignedUserName = task.UserWBSTasks.FirstOrDefault()?.User?.Name, // Use Name from User entity

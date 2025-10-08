@@ -9,6 +9,7 @@ using NJS.Domain.Enums;
 using NJS.Domain.UnitWork;
 using Microsoft.Extensions.Logging;
 using NJS.Repositories.Interfaces;
+using System.Linq; // Ensure this is present for .FirstOrDefault()
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
@@ -20,6 +21,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         private readonly IUserContext _userContext;
         private readonly ILogger<SetWBSCommandHandler> _logger;
         private readonly IWBSVersionRepository _wbsVersionRepository;
+        private readonly IWBSOptionRepository _wbsOptionRepository; // Inject IWBSOptionRepository
         private readonly string _currentUser = "System";
 
         public SetWBSCommandHandler(
@@ -28,7 +30,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             IProjectHistoryService projectHistoryService,
             IUserContext userContext,
             ILogger<SetWBSCommandHandler> logger,
-            IWBSVersionRepository wbsVersionRepository)
+            IWBSVersionRepository wbsVersionRepository,
+            IWBSOptionRepository wbsOptionRepository) // Add to constructor
         {
             _context = context;
             _unitOfWork = unitOfWork;
@@ -36,6 +39,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             _userContext = userContext;
             _logger = logger;
             _wbsVersionRepository = wbsVersionRepository;
+            _wbsOptionRepository = wbsOptionRepository; // Assign repository
         }
 
         public async Task<Unit> Handle(SetWBSCommand request, CancellationToken cancellationToken)
@@ -97,7 +101,19 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 WBSTask taskEntity = null!;
                 if (dto.Id > 0 && existingTasksDict.TryGetValue(dto.Id, out taskEntity))
                 {
-                    taskEntity.Title = dto.Title;
+                    taskEntity.WBSOptionId = dto.WBSOptionId;
+                    taskEntity.Title = dto.Title; // Assign Title from DTO initially
+
+                    // If WBSOptionId is provided, override Title with the WBSOption's label
+                    if (dto.WBSOptionId.HasValue)
+                    {
+                        var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId.Value);
+                        if (wbsOption != null)
+                        {
+                            taskEntity.Title = wbsOption.Label; // Set entity Title to label for saving
+                        }
+                    }
+
                     taskEntity.Description = dto.Description;
                     taskEntity.Level = dto.Level;
                     taskEntity.ParentId = dto.ParentId;
@@ -118,7 +134,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     taskEntity = new WBSTask
                     {
                         WorkBreakdownStructure = wbs,
-                        Title = dto.Title,
                         Description = dto.Description,
                         Level = dto.Level,
                         DisplayOrder = dto.DisplayOrder,
@@ -131,8 +146,19 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         IsDeleted = false,
                         UserWBSTasks = new List<UserWBSTask>(),
                         PlannedHours = new List<WBSTaskPlannedHour>(),
-                        TodoProjectScheduleId = dto.TodoProjectScheduleId
+                        WBSOptionId = dto.WBSOptionId, // Set the WBSOptionId
+                        Title = dto.Title // Assign Title from DTO initially
                     };
+
+                    // If WBSOptionId is provided, override Title with the WBSOption's label
+                    if (dto.WBSOptionId.HasValue)
+                    {
+                        var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId.Value);
+                        if (wbsOption != null)
+                        {
+                            taskEntity.Title = wbsOption.Label; // Set entity Title to label for saving
+                        }
+                    }
 
                     _context.WBSTasks.Add(taskEntity);
                     wbs.Tasks.Add(taskEntity);
@@ -176,6 +202,32 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             if (requiresSecondSave)
                 await _unitOfWork.SaveChangesAsync();
 
+            // After saving, update the DTOs with the actual WBSOptionLabel and Title for frontend display
+            foreach (var dto in request.Tasks)
+            {
+                var correspondingEntity = allTasks.FirstOrDefault(t => t.Id == dto.Id || (!string.IsNullOrEmpty(dto.FrontendTempId) && tempIdToEntityMap.ContainsKey(dto.FrontendTempId) && tempIdToEntityMap[dto.FrontendTempId].Id == t.Id));
+                if (correspondingEntity != null)
+                {
+                    dto.Title = correspondingEntity.Title; // Use the title that was actually saved
+                    if (correspondingEntity.WBSOptionId.HasValue)
+                    {
+                        var wbsOption = await _wbsOptionRepository.GetByIdAsync(correspondingEntity.WBSOptionId.Value);
+                        if (wbsOption != null)
+                        {
+                            dto.WBSOptionLabel = wbsOption.Label;
+                        }
+                        else
+                        {
+                            dto.WBSOptionLabel = null;
+                        }
+                    }
+                    else
+                    {
+                        dto.WBSOptionLabel = null;
+                    }
+                }
+            }
+
             // Create separate WBS versions for each TaskType
             await CreateWBSVersionAfterUpdate(wbs, request.Tasks);
             return Unit.Value;
@@ -187,76 +239,111 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             var totalHours = task.PlannedHours.Sum(mh => mh.PlannedHours);
             var totalCost = (decimal)totalHours * dto.CostRate;
 
-            if (task.TaskType == TaskType.Manpower && !string.IsNullOrEmpty(dto.AssignedUserId))
+            if (task.TaskType == TaskType.Manpower)
             {
-                if (userTask != null)
+                // Determine if a UserWBSTask should exist for this task
+                // For Level 3 tasks, always create/update. For other levels, only if AssignedUserId is provided.
+                bool shouldHaveUserWBSTask = task.Level == WBSTaskLevel.Level3 ||
+                                              (!string.IsNullOrEmpty(dto.AssignedUserId) && dto.AssignedUserId != "string");
+
+                if (shouldHaveUserWBSTask)
                 {
-                    userTask.UserId = dto.AssignedUserId;
-                    userTask.Name = null;
-                    userTask.CostRate = dto.CostRate;
-                    userTask.Unit = dto.ResourceUnit;
-                    userTask.TotalHours = totalHours;
-                    userTask.TotalCost = totalCost;
-                    userTask.UpdatedAt = DateTime.UtcNow;
-                    userTask.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
-                    if (!string.IsNullOrEmpty(dto.ResourceRoleId) || (userTask.UserId != dto.AssignedUserId && userTask.Name != dto.ResourceName))
+                    // Determine the actual UserId and ResourceRoleId to save (null if "string" or empty)
+                    string? actualUserId = (string.IsNullOrEmpty(dto.AssignedUserId) || dto.AssignedUserId == "string") ? null : dto.AssignedUserId;
+                    string? actualResourceRoleId = (string.IsNullOrEmpty(dto.ResourceRoleId) || dto.ResourceRoleId == "string") ? null : dto.ResourceRoleId;
+
+                    // Validate if the assigned user exists, but only if an ID is actually provided
+                    if (!string.IsNullOrEmpty(actualUserId))
                     {
-                        userTask.ResourceRoleId = dto.ResourceRoleId;
+                        var userExists = await _context.Users.AnyAsync(u => u.Id == actualUserId);
+                        if (!userExists)
+                        {
+                            throw new Exception($"Assigned User with ID '{actualUserId}' not found. Cannot assign task.");
+                        }
+                    }
+
+                    if (userTask != null)
+                    {
+                        userTask.UserId = actualUserId;
+                        userTask.Name = null;
+                        userTask.CostRate = dto.CostRate;
+                        userTask.Unit = dto.ResourceUnit;
+                        userTask.TotalHours = totalHours;
+                        userTask.TotalCost = totalCost;
+                        userTask.UpdatedAt = DateTime.UtcNow;
+                        userTask.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
+                        userTask.ResourceRoleId = actualResourceRoleId;
+                    }
+                    else
+                    {
+                        task.UserWBSTasks.Add(new UserWBSTask
+                        {
+                            WBSTask = task,
+                            UserId = actualUserId,
+                            Name = null,
+                            CostRate = dto.CostRate,
+                            Unit = dto.ResourceUnit,
+                            TotalHours = totalHours,
+                            TotalCost = totalCost,
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
+                            ResourceRoleId = actualResourceRoleId
+                        });
                     }
                 }
-                else
+                else if (userTask != null)
                 {
-                    task.UserWBSTasks.Add(new UserWBSTask
-                    {
-                        WBSTask = task,
-                        UserId = dto.AssignedUserId,
-                        Name = null,
-                        CostRate = dto.CostRate,
-                        Unit = dto.ResourceUnit,
-                        TotalHours = totalHours,
-                        TotalCost = totalCost,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
-                        ResourceRoleId = dto.ResourceRoleId
-                    });
+                    // If it's a Manpower task but should no longer have a UserWBSTask (e.g., AssignedUserId became null for non-Level3)
+                    _context.UserWBSTasks.Remove(userTask);
                 }
             }
-            else if (task.TaskType == TaskType.ODC && !string.IsNullOrEmpty(dto.ResourceName))
+            else if (task.TaskType == TaskType.ODC) // ODC tasks
             {
-                if (userTask != null)
+                // Determine if a UserWBSTask should exist for this task
+                bool shouldHaveUserWBSTask = !string.IsNullOrEmpty(dto.ResourceName);
+
+                if (shouldHaveUserWBSTask)
                 {
-                    userTask.UserId = null;
-                    userTask.Name = dto.ResourceName;
-                    userTask.CostRate = dto.CostRate;
-                    userTask.Unit = dto.ResourceUnit;
-                    userTask.TotalHours = totalHours;
-                    userTask.TotalCost = totalCost;
-                    userTask.UpdatedAt = DateTime.UtcNow;
-                    userTask.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
-                    if (!string.IsNullOrEmpty(dto.ResourceRoleId) || (userTask.UserId != dto.AssignedUserId && userTask.Name != dto.ResourceName))
+                    string? actualResourceRoleId = (string.IsNullOrEmpty(dto.ResourceRoleId) || dto.ResourceRoleId == "string") ? null : dto.ResourceRoleId;
+
+                    if (userTask != null)
                     {
-                        userTask.ResourceRoleId = dto.ResourceRoleId;
+                        userTask.UserId = null; // No UserId for ODC tasks
+                        userTask.Name = dto.ResourceName;
+                        userTask.CostRate = dto.CostRate;
+                        userTask.Unit = dto.ResourceUnit;
+                        userTask.TotalHours = totalHours;
+                        userTask.TotalCost = totalCost;
+                        userTask.UpdatedAt = DateTime.UtcNow;
+                        userTask.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
+                        userTask.ResourceRoleId = actualResourceRoleId;
+                    }
+                    else
+                    {
+                        task.UserWBSTasks.Add(new UserWBSTask
+                        {
+                            WBSTask = task,
+                            UserId = null, // No UserId for ODC tasks
+                            Name = dto.ResourceName,
+                            CostRate = dto.CostRate,
+                            Unit = dto.ResourceUnit,
+                            TotalHours = totalHours,
+                            TotalCost = totalCost,
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
+                            ResourceRoleId = actualResourceRoleId
+                        });
                     }
                 }
-                else
+                else if (userTask != null)
                 {
-                    task.UserWBSTasks.Add(new UserWBSTask
-                    {
-                        WBSTask = task,
-                        UserId = null,
-                        Name = dto.ResourceName,
-                        CostRate = dto.CostRate,
-                        Unit = dto.ResourceUnit,
-                        TotalHours = totalHours,
-                        TotalCost = totalCost,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
-                        ResourceRoleId = dto.ResourceRoleId
-                    });
+                    // If it's an ODC task but should no longer have a UserWBSTask (e.g., ResourceName became null)
+                    _context.UserWBSTasks.Remove(userTask);
                 }
             }
             else if (userTask != null)
             {
+                // If task type changed or no longer qualifies for UserWBSTask
                 _context.UserWBSTasks.Remove(userTask);
             }
         }
@@ -431,52 +518,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 }
             }
 
-            //var temp = _context.WBSHistories.Where(x => x.WBSTaskPlannedHourHeaderId == header.Id);
-            //if (temp.Any())
-            //{
-            //    if (project.ProjectManagerId is not null)
-            //    {
-            //        histories.Add(new WBSHistory
-            //        {
-            //            StatusId = (int)PMWorkflowStatusEnum.Initial,
-            //            Action = "Initial",
-            //            Comments = "WBS ODC data has been updated",
-            //            ActionDate = DateTime.UtcNow,
-            //            ActionBy = _userContext.GetCurrentUserId(),
-            //            AssignedToId = project.ProjectManagerId,
-            //            WBSTaskPlannedHourHeaderId = header.Id
-            //        });
-            //    }
-            //    if (project.SeniorProjectManagerId is not null)
-            //    {
-            //        histories.Add(new WBSHistory
-            //        {
-            //            StatusId = (int)PMWorkflowStatusEnum.Initial,
-            //            Action = "Initial",
-            //            Comments = "WBS ODC data has been updated",
-            //            ActionDate = DateTime.UtcNow,
-            //            ActionBy = _userContext.GetCurrentUserId(),
-            //            AssignedToId = project.SeniorProjectManagerId,
-            //            WBSTaskPlannedHourHeaderId = header.Id
-            //        });
-            //    }
-            //    if (project.RegionalManagerId is not null)
-            //    {
-            //        histories.Add(new WBSHistory
-            //        {
-            //            StatusId = (int)PMWorkflowStatusEnum.Initial,
-            //            Action = "Initial",
-            //            Comments = "WBS ODC data has been updated",
-            //            ActionDate = DateTime.UtcNow,
-            //            ActionBy = _userContext.GetCurrentUserId(),
-            //            AssignedToId = project.RegionalManagerId,
-            //            WBSTaskPlannedHourHeaderId = header.Id
-            //        });
-
-            //    }
-            //    header.WBSHistories = histories;
-            //    await _unitOfWork.SaveChangesAsync();
-            //}
+           
 
             return header!;
         }

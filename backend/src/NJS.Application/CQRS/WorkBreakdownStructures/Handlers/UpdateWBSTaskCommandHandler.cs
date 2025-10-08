@@ -5,6 +5,8 @@ using NJS.Application.Dtos;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.UnitWork;
+using NJS.Repositories.Interfaces; // Add this for IWBSOptionRepository
+using Microsoft.Extensions.Logging; // Add this for ILogger
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
@@ -12,16 +14,23 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
     {
         private readonly ProjectManagementContext _context;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IWBSOptionRepository _wbsOptionRepository; // Inject IWBSOptionRepository
+        private readonly ILogger<UpdateWBSTaskCommandHandler> _logger; // Inject ILogger
         private readonly string _currentUser = "System";
 
-        public UpdateWBSTaskCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork)
+        public UpdateWBSTaskCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork, IWBSOptionRepository wbsOptionRepository, ILogger<UpdateWBSTaskCommandHandler> logger)
         {
             _context = context;
             _unitOfWork = unitOfWork;
+            _wbsOptionRepository = wbsOptionRepository; // Assign repository
+            _logger = logger; // Assign logger
         }
 
         public async Task<Unit> Handle(UpdateWBSTaskCommand request, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Handling UpdateWBSTaskCommand for ProjectId {ProjectId}, TaskId {TaskId}, Payload {@Payload}",
+                request.ProjectId, request.TaskId, request.TaskDto);
+
             var taskEntity = await _context.WBSTasks
                 .Include(t => t.WorkBreakdownStructure)
                 .Include(t => t.UserWBSTasks)
@@ -30,16 +39,32 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
             if (taskEntity == null)
             {
+                _logger.LogWarning("WBSTask with ID {TaskId} not found.", request.TaskId);
                 throw new Exception($"WBSTask with ID {request.TaskId} not found.");
             }
 
             if (taskEntity.WorkBreakdownStructure == null || taskEntity.WorkBreakdownStructure.ProjectId != request.ProjectId)
             {
+                _logger.LogError("Task {TaskId} does not belong to Project {ProjectId}.", request.TaskId, request.ProjectId);
                 throw new Exception($"Task {request.TaskId} does not belong to Project {request.ProjectId}.");
             }
 
             var taskDto = request.TaskDto;
-            taskEntity.Title = taskDto.Title;
+            
+            // Directly assign WBSOptionId from DTO
+            taskEntity.WBSOptionId = taskDto.WBSOptionId;
+            taskEntity.Title = taskDto.Title; // Assign Title from DTO initially
+
+            // If WBSOptionId is provided, override Title with the WBSOption's label
+            if (taskDto.WBSOptionId.HasValue)
+            {
+                var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskDto.WBSOptionId.Value);
+                if (wbsOption != null)
+                {
+                    taskEntity.Title = wbsOption.Label; // Set entity Title to label for saving
+                }
+            }
+
             taskEntity.Description = taskDto.Description;
             taskEntity.Level = taskDto.Level; 
             taskEntity.ParentId = taskDto.ParentId; 
@@ -50,11 +75,31 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             taskEntity.TaskType = taskDto.TaskType;
             taskEntity.UpdatedAt = DateTime.UtcNow;
             taskEntity.UpdatedBy = _currentUser;
-            taskEntity.TodoProjectScheduleId = taskDto.TodoProjectScheduleId;
+            
             UpdateUserAssignment(taskEntity, taskDto);
             UpdatePlannedHours(request.ProjectId, taskDto.TaskType,taskEntity, taskDto);
            
             await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("WBSTask with ID {TaskId} updated successfully.", taskEntity.Id);
+
+            // Populate WBSOptionLabel and Title in DTO for frontend display (using the saved entity's title)
+            taskDto.Title = taskEntity.Title; // Use the title that was actually saved
+            if (taskEntity.WBSOptionId.HasValue)
+            {
+                var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskEntity.WBSOptionId.Value);
+                if (wbsOption != null)
+                {
+                    taskDto.WBSOptionLabel = wbsOption.Label;
+                }
+                else
+                {
+                    taskDto.WBSOptionLabel = null;
+                }
+            }
+            else
+            {
+                taskDto.WBSOptionLabel = null;
+            }
 
             return Unit.Value;
         }
@@ -74,7 +119,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         existingUserTask.Name = null; 
                         existingUserTask.CostRate = taskDto.CostRate;
                         existingUserTask.Unit = taskDto.ResourceUnit;
-                        existingUserTask.TotalHours = taskDto.PlannedHours.Sum(ph => ph.PlannedHours);
+                        existingUserTask.TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours);
                         existingUserTask.TotalCost = (decimal)taskDto.TotalHours * taskDto.CostRate;
                         existingUserTask.UpdatedAt = DateTime.UtcNow;
                         existingUserTask.UpdatedBy = _currentUser;

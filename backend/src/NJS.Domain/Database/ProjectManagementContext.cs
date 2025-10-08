@@ -504,14 +504,15 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.Value).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Label).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Level).IsRequired();
-                entity.Property(e => e.ParentValue).HasMaxLength(100);
+                entity.Property(e => e.ParentValue).HasColumnType("nvarchar(max)");
                 entity.Property(e => e.FormType).IsRequired();
 
                 // Create index on Level for faster lookups
                 entity.HasIndex(e => e.Level);
 
-                // Create index on ParentValue for faster hierarchical queries
-                entity.HasIndex(e => e.ParentValue);
+                // Removed index on ParentValue. SQL Server does not allow standard indexes on nvarchar(max) columns,
+                // especially when they contain JSON arrays, which is the intended use for this column.
+                // Hierarchical queries will need to parse the JSON in the application or use database-specific JSON functions.
 
                 // Create index on FormType for faster filtering
                 entity.HasIndex(e => e.FormType);
@@ -559,7 +560,7 @@ namespace NJS.Domain.Database
                       .WithMany(wbs => wbs.JobStartForms)
                       .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
                       .IsRequired(false)
-                      .OnDelete(DeleteBehavior.NoAction);
+                      .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasMany(jsf => jsf.Selections)
                       .WithOne(s => s.JobStartForm)
@@ -641,13 +642,13 @@ namespace NJS.Domain.Database
                 entity.HasOne(w => w.LatestVersion)
                       .WithMany()
                       .HasForeignKey(w => w.LatestVersionHistoryId)
-                      .OnDelete(DeleteBehavior.NoAction)
+                      .OnDelete(DeleteBehavior.Restrict)
                       .IsRequired(false);
 
                 entity.HasOne(w => w.ActiveVersion)
                       .WithMany()
                       .HasForeignKey(w => w.ActiveVersionHistoryId)
-                      .OnDelete(DeleteBehavior.NoAction)
+                      .OnDelete(DeleteBehavior.Restrict)
                       .IsRequired(false);
             });
 
@@ -959,14 +960,14 @@ namespace NJS.Domain.Database
                 entity.HasOne(cc => cc.Project)
                       .WithMany()
                       .HasForeignKey(cc => cc.ProjectId)
-                      .OnDelete(DeleteBehavior.NoAction)
+                      .OnDelete(DeleteBehavior.Cascade) // Changed from NoAction to Cascade
                       .IsRequired();
 
-                // Configure relationship with PMWorkflowStatus - Use NO ACTION to prevent cascade delete cycles
+                // Configure relationship with PMWorkflowStatus - Use RESTRICT to prevent cascade delete cycles
                 entity.HasOne(cc => cc.WorkflowStatus)
                       .WithMany()
                       .HasForeignKey(cc => cc.WorkflowStatusId)
-                      .OnDelete(DeleteBehavior.NoAction)
+                      .OnDelete(DeleteBehavior.Restrict)
                       .IsRequired();
             });
 
@@ -1082,25 +1083,25 @@ namespace NJS.Domain.Database
                       .HasForeignKey(h => h.ChangeControlId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // PMWorkflowStatus: NO ACTION (prevent multiple cascade paths)
+                // PMWorkflowStatus: RESTRICT (prevent multiple cascade paths)
                 entity.HasOne(h => h.Status)
                       .WithMany()
                       .HasForeignKey(h => h.StatusId)
-                      .OnDelete(DeleteBehavior.NoAction)
+                      .OnDelete(DeleteBehavior.Restrict)
                       .IsRequired();
 
-                // User (ActionBy): NO ACTION (prevent multiple cascade paths)
+                // User (ActionBy): RESTRICT (prevent multiple cascade paths)
                 entity.HasOne(h => h.ActionUser)
                       .WithMany()
                       .HasForeignKey(h => h.ActionBy)
-                      .OnDelete(DeleteBehavior.NoAction)
+                      .OnDelete(DeleteBehavior.Restrict)
                       .IsRequired();
 
                 // User (AssignedTo): NO ACTION, optional (prevent multiple cascade paths)
                 entity.HasOne(h => h.AssignedTo)
                       .WithMany()
                       .HasForeignKey(h => h.AssignedToId)
-                      .OnDelete(DeleteBehavior.NoAction)
+                      .OnDelete(DeleteBehavior.Restrict)
                       .IsRequired(false);
             });
 
@@ -1200,13 +1201,13 @@ namespace NJS.Domain.Database
                 entity.HasOne(h => h.JobStartForm)
                       .WithOne(f => f.Header)
                       .HasForeignKey<JobStartFormHeader>(h => h.FormId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                      .OnDelete(DeleteBehavior.Restrict);
 
                 // Configure relationship with Project
                 entity.HasOne(h => h.Project)
                       .WithMany()
                       .HasForeignKey(h => h.ProjectId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict to resolve potential multiple cascade paths
 
                 // Configure relationship with PMWorkflowStatus
                 entity.HasOne(h => h.Status)
