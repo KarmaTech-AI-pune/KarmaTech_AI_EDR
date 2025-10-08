@@ -18,6 +18,7 @@ export interface Tenant {
   maxUsers: number;
   maxProjects: number;
   isActive: boolean;
+  isIsolated: boolean;
   tenantUsers?: TenantUser[];
   tenantDatabases?: TenantDatabase[];
 }
