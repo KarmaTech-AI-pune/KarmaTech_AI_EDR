@@ -5,7 +5,7 @@ namespace NJS.Application.Dtos
 {
     public class ProjectScheduleDto
     {
-        public SprintPlanDto? SprintPlan { get; set; }
+        public List<SprintPlanDto>? SprintPlans { get; set; }
     }
 
     public class SprintTaskDto

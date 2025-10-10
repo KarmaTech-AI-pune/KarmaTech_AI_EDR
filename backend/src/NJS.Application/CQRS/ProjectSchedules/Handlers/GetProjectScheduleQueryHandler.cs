@@ -103,7 +103,7 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
 
             var projectScheduleDto = new ProjectScheduleDto
             {
-                SprintPlan = sprintPlanDto
+                SprintPlans = new List<SprintPlanDto> { sprintPlanDto }
             };
 
             return projectScheduleDto;

@@ -40,6 +40,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 request.ProjectId, request.TasksDto);
 
             var createdTasks = new List<WBSTaskDto>();
+            var tempIdToActualIdMap = new Dictionary<string, int>(); // Map FrontendTempId to actual DB Id
 
             // --- 1. Find the active WBS for the project ---
             var wbs = await _context.WorkBreakdownStructures
@@ -56,7 +57,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = _currentUser,
-                    // Set other default properties as needed
                     Tasks = new List<WBSTask>() // Initialize tasks collection
                 };
                 _context.WorkBreakdownStructures.Add(wbs);
@@ -64,19 +64,25 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _logger.LogInformation("New Work Breakdown Structure created with ID {WBSId} for Project ID {ProjectId}.", wbs.Id, request.ProjectId);
             }
 
-            foreach (var taskDto in request.TasksDto)
+            foreach (var taskDto in request.TasksDto.OrderBy(t => t.Level).ThenBy(t => t.DisplayOrder)) // Process in order of level and display order
             {
-                // Handle ParentId based on task level
-                if (taskDto.Level == WBSTaskLevel.Level1)
+                // Resolve ParentId for new tasks within the same batch
+                if (taskDto.ParentFrontendTempId != null && tempIdToActualIdMap.TryGetValue(taskDto.ParentFrontendTempId, out int actualParentId))
+                {
+                    taskDto.ParentId = actualParentId;
+                }
+                else if (taskDto.Level == WBSTaskLevel.Level1)
                 {
                     taskDto.ParentId = null; // Level 1 tasks do not have a parent
                 }
 
-                // Optional: Validate ParentId if provided
-                if (taskDto.ParentId.HasValue && !wbs.Tasks.Any(t => t.Id == taskDto.ParentId.Value && !t.IsDeleted))
+                // Validate ParentId if provided
+                if (taskDto.ParentId.HasValue &&
+                    !wbs.Tasks.Any(t => t.Id == taskDto.ParentId.Value && !t.IsDeleted) && // Check existing tasks
+                    !tempIdToActualIdMap.ContainsValue(taskDto.ParentId.Value)) // Check tasks created in this batch
                 {
-                    _logger.LogError("Parent Task with ID {ParentId} not found in WBS {WBSId}.", taskDto.ParentId.Value, wbs.Id);
-                    throw new Exception($"Parent Task with ID {taskDto.ParentId.Value} not found in the WBS.");
+                    _logger.LogError("Parent Task with ID {ParentId} not found in WBS {WBSId} or current batch.", taskDto.ParentId.Value, wbs.Id);
+                    throw new Exception($"Parent Task with ID {taskDto.ParentId.Value} not found in the WBS or current batch.");
                 }
 
                 // --- 2. Create the new WBSTask entity ---
@@ -98,7 +104,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     PlannedHours = new List<WBSTaskPlannedHour>()
                 };
 
-                // Directly assign WBSOptionId from DTO
+                // Directly assign WBSOptionId and Title from DTO
                 taskEntity.WBSOptionId = taskDto.WBSOptionId;
                 taskEntity.Title = taskDto.Title; // Assign Title from DTO
 
@@ -114,27 +120,44 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 await _unitOfWork.SaveChangesAsync(); // Save each task individually
                 _logger.LogInformation("WBSTask saved successfully. New Task ID: {TaskId}", taskEntity.Id);
 
-                // --- 5. Return the new Task ID ---
+                // Store the mapping for subsequent tasks in the same batch
+                if (taskDto.FrontendTempId != null)
+                {
+                    tempIdToActualIdMap[taskDto.FrontendTempId] = taskEntity.Id;
+                }
+
+                // --- 5. Return the new Task ID and populate DTO for frontend display ---
                 taskDto.Id = taskEntity.Id; // Populate the ID in the DTO
-                // Populate WBSOptionLabel and Title in DTO for frontend display
                 if (taskEntity.WBSOptionId.HasValue)
                 {
                     var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskEntity.WBSOptionId.Value);
                     if (wbsOption != null)
                     {
                         taskDto.WBSOptionLabel = wbsOption.Label;
-                        taskDto.Title = wbsOption.Label; // Set DTO Title to label for display
+                        // Only set DTO Title to label if DTO Title was null or empty, otherwise keep user-provided
+                        if (string.IsNullOrEmpty(taskDto.Title))
+                        {
+                            taskDto.Title = wbsOption.Label;
+                        }
                     }
                     else
                     {
                         taskDto.WBSOptionLabel = null;
-                        taskDto.Title = taskEntity.Title; // Fallback to stored ID if label not found
+                        // Fallback to stored ID if label not found, but keep user-provided title if present
+                        if (string.IsNullOrEmpty(taskDto.Title))
+                        {
+                            taskDto.Title = taskEntity.Title;
+                        }
                     }
                 }
                 else
                 {
                     taskDto.WBSOptionLabel = null;
-                    taskDto.Title = taskEntity.Title; // Use stored title if no WBSOptionId
+                    // Use stored title if no WBSOptionId, but keep user-provided title if present
+                    if (string.IsNullOrEmpty(taskDto.Title))
+                    {
+                        taskDto.Title = taskEntity.Title;
+                    }
                 }
                 createdTasks.Add(taskDto);
             }
@@ -157,7 +180,11 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                     if (!userExists)
                     {
-                        throw new Exception($"Assigned User with ID '{taskDto.AssignedUserId}' not found. Cannot assign task.");
+                        _logger.LogWarning("Assigned User with ID '{AssignedUserId}' not found. Task will be created without this user assignment.", taskDto.AssignedUserId);
+                        // Do not throw an exception, allow task creation without a valid user assignment
+                        // Or, if a valid user is strictly required, the user must provide one.
+                        // For now, we proceed without assigning the user if not found.
+                        return; // Exit the method if user not found and we don't want to assign
                     }
 
                     // Create new assignment for Manpower task
