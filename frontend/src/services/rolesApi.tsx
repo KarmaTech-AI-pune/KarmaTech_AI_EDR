@@ -69,7 +69,7 @@ export const createRole = async (role: RoleWithPermissionsDto[]): Promise<RoleWi
   }
 };
 
-export const updateRole = async (id: string, role: RoleWithPermissionsDto[]): Promise<RoleWithPermissionsDto> => {
+export const updateRole = async (id: string, role: RoleWithPermissionsDto): Promise<RoleWithPermissionsDto> => {
   try {
     const response = await axiosInstance.put(`/api/role/${id}`, role);
     return response.data;
