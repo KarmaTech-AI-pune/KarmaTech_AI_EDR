@@ -109,7 +109,7 @@ const RolesManagement = () => {
       if (editingRole) {
         await rolesApi.updateRole(editingRole.id, roleData);
       } else {
-        await rolesApi.createRole(roleData);
+        await rolesApi.createRole([roleData]);
       }
       await loadRoles();
       handleClose();

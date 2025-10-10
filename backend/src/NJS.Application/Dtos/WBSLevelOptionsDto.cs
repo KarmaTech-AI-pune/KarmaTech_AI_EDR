@@ -17,6 +17,5 @@ namespace NJS.Application.Dtos
         public int Level { get; set; }
         public string ParentValue { get; set; }
         public int FormType { get; set; }
-        public int? TodoProjectScheduleId { get; set; }
     }
 }
