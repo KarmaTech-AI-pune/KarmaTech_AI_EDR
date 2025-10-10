@@ -59,7 +59,7 @@ export const getRoleById = async (id: string): Promise<RoleDefinition> => {
   }
 };
 
-export const createRole = async (role: RoleWithPermissionsDto): Promise<RoleWithPermissionsDto> => {
+export const createRole = async (role: RoleWithPermissionsDto[]): Promise<RoleWithPermissionsDto> => {
   try {
     const response = await axiosInstance.post('/api/role', role);
     return response.data;
@@ -69,7 +69,7 @@ export const createRole = async (role: RoleWithPermissionsDto): Promise<RoleWith
   }
 };
 
-export const updateRole = async (id: string, role: RoleWithPermissionsDto): Promise<RoleWithPermissionsDto> => {
+export const updateRole = async (id: string, role: RoleWithPermissionsDto[]): Promise<RoleWithPermissionsDto> => {
   try {
     const response = await axiosInstance.put(`/api/role/${id}`, role);
     return response.data;

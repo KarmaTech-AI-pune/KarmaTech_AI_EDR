@@ -107,9 +107,9 @@ const RolesManagement = () => {
   const handleSubmit = async (roleData: RoleWithPermissionsDto) => {
     try {
       if (editingRole) {
-        await rolesApi.updateRole(editingRole.id, roleData);
+        await rolesApi.updateRole(editingRole.id, [roleData]);
       } else {
-        await rolesApi.createRole(roleData);
+        await rolesApi.createRole([roleData]);
       }
       await loadRoles();
       handleClose();
