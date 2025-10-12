@@ -49,7 +49,6 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
 
   const {
     deleteDialog,
-    setDeleteDialog,
     addNewMonth,
     addNewRow,
     handleDeleteClick,

@@ -43,7 +43,6 @@ export const useWBSFormLogic = ({
   months,
   setMonths,
   roles,
-  allEmployees,
   level1Options,
   level2Options,
   level3OptionsMap,
@@ -52,7 +51,6 @@ export const useWBSFormLogic = ({
   setSnackbarMessage,
   setSnackbarSeverity,
   reloadWBSData,
-  getProjectStartDate,
 }: UseWBSFormLogicProps) => {
   const [deleteDialog, setDeleteDialog] = useState<DeleteDialog>({
     open: false,
