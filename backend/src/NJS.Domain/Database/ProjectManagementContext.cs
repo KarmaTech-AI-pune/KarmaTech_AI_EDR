@@ -137,33 +137,9 @@ namespace NJS.Domain.Database
 
         // Main Projects (tenant-based) - Note: This was already defined above
 
-        // New Todo Project Management entities
-        public DbSet<TodoNewProject> TodoNewProjects { get; set; }
-        public DbSet<TodoNewTask> TodoNewTasks { get; set; }
-        public DbSet<TodoNewSubtask> TodoNewSubtasks { get; set; }
-        public DbSet<TodoNewTeamMember> TodoNewTeamMembers { get; set; }
-        
-
-
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // New Todo Project Management relationships (no tenant filtering)
-            modelBuilder.Entity<TodoNewTask>()
-                .HasOne(t => t.Project)
-                .WithMany(p => p.Tasks)
-                .HasForeignKey(t => t.ProjectId);
-
-            // TodoNewTask assignee/reporter fields are regular strings, no foreign key relationshipsc
-
-            modelBuilder.Entity<TodoNewSubtask>()
-                .HasOne(s => s.ParentTask)
-                .WithMany(t => t.Subtasks)
-                .HasForeignKey(s => s.Taskid);
-
-            // TodoNewSubtask assignee/reporter fields are regular strings, no foreign key relationships
 
             modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -560,7 +536,7 @@ namespace NJS.Domain.Database
                       .WithMany(wbs => wbs.JobStartForms)
                       .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
                       .IsRequired(false)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasMany(jsf => jsf.Selections)
                       .WithOne(s => s.JobStartForm)
@@ -642,13 +618,13 @@ namespace NJS.Domain.Database
                 entity.HasOne(w => w.LatestVersion)
                       .WithMany()
                       .HasForeignKey(w => w.LatestVersionHistoryId)
-                      .OnDelete(DeleteBehavior.Restrict)
+                      .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired(false);
 
                 entity.HasOne(w => w.ActiveVersion)
                       .WithMany()
                       .HasForeignKey(w => w.ActiveVersionHistoryId)
-                      .OnDelete(DeleteBehavior.Restrict)
+                      .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired(false);
             });
 
@@ -960,14 +936,14 @@ namespace NJS.Domain.Database
                 entity.HasOne(cc => cc.Project)
                       .WithMany()
                       .HasForeignKey(cc => cc.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade) // Changed from NoAction to Cascade
+                      .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired();
 
-                // Configure relationship with PMWorkflowStatus - Use RESTRICT to prevent cascade delete cycles
+                // Configure relationship with PMWorkflowStatus - Use NO ACTION to prevent cascade delete cycles
                 entity.HasOne(cc => cc.WorkflowStatus)
                       .WithMany()
                       .HasForeignKey(cc => cc.WorkflowStatusId)
-                      .OnDelete(DeleteBehavior.Restrict)
+                      .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired();
             });
 
@@ -1083,65 +1059,27 @@ namespace NJS.Domain.Database
                       .HasForeignKey(h => h.ChangeControlId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // PMWorkflowStatus: RESTRICT (prevent multiple cascade paths)
+                // PMWorkflowStatus: NO ACTION (prevent multiple cascade paths)
                 entity.HasOne(h => h.Status)
                       .WithMany()
                       .HasForeignKey(h => h.StatusId)
-                      .OnDelete(DeleteBehavior.Restrict)
+                      .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired();
 
-                // User (ActionBy): RESTRICT (prevent multiple cascade paths)
+                // User (ActionBy): NO ACTION (prevent multiple cascade paths)
                 entity.HasOne(h => h.ActionUser)
                       .WithMany()
                       .HasForeignKey(h => h.ActionBy)
-                      .OnDelete(DeleteBehavior.Restrict)
+                      .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired();
 
                 // User (AssignedTo): NO ACTION, optional (prevent multiple cascade paths)
                 entity.HasOne(h => h.AssignedTo)
                       .WithMany()
                       .HasForeignKey(h => h.AssignedToId)
-                      .OnDelete(DeleteBehavior.Restrict)
+                      .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired(false);
             });
-
-            // Configure ChangeControlWorkflowHistory entity
-            //modelBuilder.Entity<ChangeControlWorkflowHistory>(entity =>
-            //{
-            //    entity.HasKey(e => e.Id);
-            //    entity.Property(e => e.Action).IsRequired();
-            //    entity.Property(e => e.Comments).IsRequired(false);
-
-            //    // Create indexes for faster lookups
-            //    entity.HasIndex(e => e.ChangeControlId);
-            //    entity.HasIndex(e => e.StatusId);
-            //    entity.HasIndex(e => e.ActionBy);
-
-            //    // Configure relationship with ChangeControl
-            //    entity.HasOne(h => h.ChangeControl)
-            //          .WithMany(h => h.WorkflowHistories)
-            //          .HasForeignKey(h => h.ChangeControlId)
-            //          .OnDelete(DeleteBehavior.Restrict);
-
-            //    // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
-            //    entity.HasOne(h => h.Status)
-            //          .WithMany()
-            //          .HasForeignKey(h => h.StatusId)
-            //          .OnDelete(DeleteBehavior.Restrict);
-
-            //    // Configure relationship with User (ActionBy)
-            //    entity.HasOne(h => h.ActionUser)
-            //          .WithMany()
-            //          .HasForeignKey(h => h.ActionBy)
-            //          .OnDelete(DeleteBehavior.Restrict);
-
-            //    // Configure relationship with User (AssignedTo)
-            //    entity.HasOne(h => h.AssignedTo)
-            //          .WithMany()
-            //          .HasForeignKey(h => h.AssignedToId)
-            //          .OnDelete(DeleteBehavior.Restrict)
-            //          .IsRequired(false);
-            //});
 
             // Configure ProjectClosureWorkflowHistory entity
             modelBuilder.Entity<ProjectClosureWorkflowHistory>(entity =>
@@ -1201,13 +1139,13 @@ namespace NJS.Domain.Database
                 entity.HasOne(h => h.JobStartForm)
                       .WithOne(f => f.Header)
                       .HasForeignKey<JobStartFormHeader>(h => h.FormId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 // Configure relationship with Project
                 entity.HasOne(h => h.Project)
                       .WithMany()
                       .HasForeignKey(h => h.ProjectId)
-                      .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict to resolve potential multiple cascade paths
+                      .OnDelete(DeleteBehavior.Restrict);
 
                 // Configure relationship with PMWorkflowStatus
                 entity.HasOne(h => h.Status)
@@ -1291,16 +1229,6 @@ namespace NJS.Domain.Database
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
 
-            // TodoNew entities relationships
-            modelBuilder.Entity<TodoNewTask>()
-                .HasOne(t => t.Project)
-                .WithMany(p => p.Tasks)
-                .HasForeignKey(t => t.ProjectId);
-
-            modelBuilder.Entity<TodoNewSubtask>()
-                .HasOne(s => s.ParentTask)
-                .WithMany(t => t.Subtasks)
-                .HasForeignKey(s => s.Taskid);
         }
        
     }

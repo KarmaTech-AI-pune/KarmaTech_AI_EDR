@@ -1,4 +1,4 @@
-﻿﻿using MediatR;
+﻿﻿﻿using MediatR;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Repositories.Interfaces;
 using System;
@@ -23,10 +23,9 @@ namespace NJS.Application.CQRS.Projects.Handlers
 
             try
             {
-                // The repository will handle the deletion. Since it returns void, we just call it.
+                // We don't need to check if the project exists first
+                // The repository will handle the case when the project doesn't exist
                 _repository.Delete(request.Id);
-                // The repository handles the case where the project doesn't exist.
-                // We return Unit.Value to indicate that the operation completed.
                 return Unit.Value;
             }
             catch (Exception ex)

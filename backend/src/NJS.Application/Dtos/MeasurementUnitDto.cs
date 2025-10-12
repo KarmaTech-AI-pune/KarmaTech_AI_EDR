@@ -1,6 +1,8 @@
+using NJS.Domain.Entities;
+
 namespace NJS.Application.DTOs
 {
-using NJS.Domain.Entities;
+
 
     public class MeasurementUnitDto
     {

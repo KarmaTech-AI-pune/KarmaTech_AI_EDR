@@ -73,7 +73,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             Level = o.Level,
                             ParentValue = o.ParentValue,
                             FormType = (int)o.FormType,
-                            TodoProjectScheduleId = o.TodoProjectScheduleId
                         }).ToList()
                     )
             };
