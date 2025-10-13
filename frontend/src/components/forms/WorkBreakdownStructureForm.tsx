@@ -8,87 +8,43 @@ import WBSHeader from './WBSformcomponents/WBSHeader';
 import WBSTable from './WBSformcomponents/WBSTable';
 import WBSSummary from './WBSformcomponents/WBSSummary';
 import { TaskType } from '../../types/wbs';
-
-import { useWBSData } from '../../hooks/wbs/useWBSData';
-import { useWBSFormLogic } from '../../hooks/wbs/useWBSFormLogic';
-import { useWBSTotals } from '../../hooks/wbs/useWBSTotals';
+import { WBSProvider, useWBSDataContext, useWBSActionsContext, useWBSUIStateContext } from '../../context/wbs/WBSContext';
 
 interface WorkBreakdownStructureFormProps {
   formType?: 'manpower' | 'odc';
 }
 
-const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({ formType = 'manpower' }) => {
+// Inner component that uses context
+const WBSFormContent: React.FC = () => {
   const { projectId } = useProject();
   const [saveLoading, setSaveLoading] = useState<boolean>(false);
-  const [isManpowerEditing, setIsManpowerEditing] = useState<boolean>(true);
-  const [isOdcEditing, setIsOdcEditing] = useState<boolean>(true);
-
+  
   const {
     manpowerRows,
-    setManpowerRows,
     odcRows,
-    setOdcRows,
-    months,
-    setMonths,
-    roles,
-    allEmployees,
+    editMode,
+    totalHours,
+    totalCost,
     loading,
-    snackbarOpen,
-    setSnackbarOpen,
-    snackbarMessage,
-    setSnackbarMessage,
-    snackbarSeverity,
-    setSnackbarSeverity,
-    level1Options,
-    level2Options,
-    level3OptionsMap,
-    setLevel3OptionsMap,
-    reloadWBSData,
     getProjectStartDate,
-  } = useWBSData({ formType });
-
+  } = useWBSDataContext();
+  
   const {
+    setSnackbarOpen,
+    setSnackbarMessage,
+    setSnackbarSeverity,
+    reloadWBSData,
     deleteDialog,
-    addNewMonth,
-    addNewRow,
-    handleDeleteClick,
     handleDeleteCancel,
     handleDeleteConfirm,
-    handleRoleChange,
-    handleUnitChange,
-    handleResourceRoleChange,
-    handleEmployeeChange,
-    handleCostRateChange,
-    handleHoursChange,
-    handleODCChange,
-    handleLevelChange,
-  } = useWBSFormLogic({
-    projectId,
-    formType,
-    manpowerRows,
-    setManpowerRows,
-    odcRows,
-    setOdcRows,
-    months,
-    setMonths,
-    roles,
-    allEmployees,
-    level1Options,
-    level2Options,
-    level3OptionsMap,
-    setLevel3OptionsMap,
-    setSnackbarOpen,
-    setSnackbarMessage,
-    setSnackbarSeverity,
-    reloadWBSData,
-    getProjectStartDate,
-  });
-
-  const { calculatedTotalHours, calculatedTotalCost } = useWBSTotals({
-    manpowerRows,
-    odcRows,
-    formType,
-  });
+    onEditModeToggle,
+  } = useWBSActionsContext();
+  
+  const {
+    snackbarOpen,
+    snackbarMessage,
+    snackbarSeverity,
+  } = useWBSUIStateContext();
 
   const projectStartDate = getProjectStartDate();
   const isProject = !!projectId;
@@ -125,27 +81,19 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       }
 
       if (!combinedWbsData || combinedWbsData.length === 0 || combinedWbsData == undefined) {
-        if (formType === "manpower") {
-          setIsManpowerEditing(!isManpowerEditing);
-        } else {
-          setIsOdcEditing(!isOdcEditing);
-        }
-
         setSnackbarMessage("Add levels to save the tasks");
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
-
+        setSaveLoading(false);
         return;
       }
 
       await WBSStructureAPI.setProjectWBS(projectId, combinedWbsData);
       reloadWBSData();
 
-      if (formType === 'manpower') {
-        setIsManpowerEditing(!isManpowerEditing);
-      } else {
-        setIsOdcEditing(!isOdcEditing);
-      }
+      // Toggle edit mode after successful save
+      onEditModeToggle();
+
       setSnackbarMessage('WBS data saved successfully!');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -185,54 +133,19 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
       }}
     >
       <Paper>
-        <WBSHeader
-          title={
-            formType === 'manpower'
-              ? 'Manpower Form'
-              : formType === 'odc'
-              ? 'ODC Form'
-               : 'Work Breakdown Structure'
-           }
-           editMode={formType === 'manpower' ? isManpowerEditing : isOdcEditing}
-           onEditModeToggle={() => formType === 'manpower' ? setIsManpowerEditing(!isManpowerEditing) : setIsOdcEditing(!isOdcEditing)}
-           onAddMonth={addNewMonth}
-           formType={formType === 'manpower'? TaskType.Manpower: TaskType.ODC}
-         />
+        <WBSHeader />
       </Paper>
 
       <Paper>
-        <WBSTable
-           rows={formType === 'manpower' ? manpowerRows : odcRows}
-           months={months}
-           roles={roles}
-           employees={allEmployees}
-           editMode={formType === 'manpower' ? isManpowerEditing : isOdcEditing}
-           formType={formType}
-           manpowerCount={manpowerRows.filter(row => row.level === 1).length}
-           levelOptions={{
-             level1: level1Options,
-            level2: level2Options,
-            level3: level3OptionsMap
-          }}
-          onAddRow={addNewRow}
-          onDeleteRow={handleDeleteClick}
-          onLevelChange={handleLevelChange}
-          onRoleChange={handleRoleChange}
-          onUnitChange={handleUnitChange}
-          onEmployeeChange={handleEmployeeChange}
-          onCostRateChange={handleCostRateChange}
-          onHoursChange={handleHoursChange}
-          onODCChange={handleODCChange}
-          onResourceRoleChange={handleResourceRoleChange}
-        />
+        <WBSTable />
       </Paper>
 
       <Paper>
         <WBSSummary
-          totalHours={calculatedTotalHours}
-          totalCost={calculatedTotalCost}
+          totalHours={totalHours}
+          totalCost={totalCost}
           currency={''}
-          disabled={(formType === 'manpower' ? isManpowerEditing : isOdcEditing)}
+          disabled={editMode}
           onSave={handleSubmit}
           loading={saveLoading}
         />
@@ -267,6 +180,27 @@ const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({
         onClose={() => setSnackbarOpen(false)}
       />
     </>
+  );
+};
+
+// Main component with provider
+const WorkBreakdownStructureForm: React.FC<WorkBreakdownStructureFormProps> = ({ formType = 'manpower' }) => {
+  const [isManpowerEditing, setIsManpowerEditing] = useState<boolean>(true);
+  const [isOdcEditing, setIsOdcEditing] = useState<boolean>(true);
+  
+  const editMode = formType === 'manpower' ? isManpowerEditing : isOdcEditing;
+  const onEditModeToggle = () => {
+    if (formType === 'manpower') {
+      setIsManpowerEditing(!isManpowerEditing);
+    } else {
+      setIsOdcEditing(!isOdcEditing);
+    }
+  };
+  
+  return (
+    <WBSProvider formType={formType} editMode={editMode} onEditModeToggle={onEditModeToggle}>
+      <WBSFormContent />
+    </WBSProvider>
   );
 };
 

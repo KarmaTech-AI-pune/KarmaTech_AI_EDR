@@ -11,6 +11,7 @@ import { ProjectTrackingWorkflow } from '../../common/ProjectTrackingWorkflow';
 import { projectManagementAppContext } from '../../../App';
 import { TaskType } from '../../../types/wbs';
 import { wbsHeaderApi } from '../../../services/wbsHeaderApi';
+import { useWBSDataContext, useWBSActionsContext } from '../../../context/wbs/WBSContext';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -22,36 +23,33 @@ const StyledHeaderBox = styled(Box)(({ theme }) => ({
   }
 }));
 
-interface WBSHeaderProps {
-  title: string;
-  editMode: boolean;
-  onEditModeToggle: () => void;
-  onAddMonth: () => void;
-  formType?: TaskType;
-}
-
-const WBSHeader: React.FC<WBSHeaderProps> = ({
-  title,
-  editMode,
-  onEditModeToggle,
-  onAddMonth,
-  formType = TaskType.Manpower
-}) => {
+const WBSHeader: React.FC = () => {
   const context = useContext(projectManagementAppContext);
   const projectId = context?.selectedProject?.id;
+  
+  // Get data and actions from context
+  const { formType, editMode } = useWBSDataContext();
+  const { addNewMonth, onEditModeToggle } = useWBSActionsContext();
+  
   const [wbsHeaderId, setWbsHeaderId] = useState<number | null>(null);
   const [status, setStatus] = useState<string>("Initial");
   const [statusId, setStatusId] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
 
+  // Determine title based on formType
+  const title = formType === 'manpower' ? 'Manpower Form' : formType === 'odc' ? 'ODC Form' : 'Work Breakdown Structure';
+  
+  // Convert formType to TaskType
+  const taskType = formType === 'manpower' ? TaskType.Manpower : TaskType.ODC;
+  
   // Function to fetch the header status
   const fetchWBSHeaderStatus = async () => {
     if (!projectId) return;
 
     try {
       // Fetch the WBS header status using the API
-      const headerStatus = await wbsHeaderApi.getWBSHeaderStatus(Number(projectId), formType);
+      const headerStatus = await wbsHeaderApi.getWBSHeaderStatus(Number(projectId), taskType);
 
       
       if (headerStatus) {
@@ -113,15 +111,10 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
   }, [editMode, projectId]);
 
   // Handle status update from workflow component
-  const handleStatusUpdate = (newStatus: string) => {
+  const handleStatusUpdate = async(newStatus: string) => {
     console.log("WBSHeader - Status updated to:", newStatus);
     setStatus(newStatus);
-
-    // Refresh the header status from the backend after a short delay
-    // to ensure the backend has processed the status change
-    setTimeout(() => {
-      fetchWBSHeaderStatus();
-    }, 1000);
+    await fetchWBSHeaderStatus();
   };
 
   return (
@@ -145,7 +138,7 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
               statusId={statusId}
               entityId={wbsHeaderId}
               entityType="WBS"
-              formType={formType}
+              formType={taskType}
               onStatusUpdate={handleStatusUpdate}
             />
           )}
@@ -160,7 +153,7 @@ const WBSHeader: React.FC<WBSHeaderProps> = ({
             <Button
               variant="outlined"
               startIcon={<AddIcon />}
-              onClick={onAddMonth}
+              onClick={addNewMonth}
             >
               Add Month
             </Button>

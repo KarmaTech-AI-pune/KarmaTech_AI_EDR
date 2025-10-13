@@ -135,18 +135,53 @@ export const useWBSFormLogic = ({
   };
 
   const handleDeleteConfirm = async () => {
-    if (deleteDialog.rowId && projectId) {
-      try {
-        await WBSStructureAPI.deleteWBSTask(projectId, deleteDialog.rowId);
-        reloadWBSData(); // Use the reload function from useWBSData
-        setSnackbarMessage('WBS task deleted successfully!');
+    if (deleteDialog.rowId) {
+      const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
+      const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
+      const rowToDelete = currentRows.find(r => r.id === deleteDialog.rowId);
+      
+      // Check if this is a newly added row (timestamp ID = 13 digits) or an existing row from backend
+      // Timestamp IDs are created with Date.now().toString() which gives exactly 13 digits
+      const isNewRow = /^\d{13}$/.test(deleteDialog.rowId || '');
+      
+      if (isNewRow || !projectId) {
+        // For newly added rows that haven't been saved yet, just remove from local state
+        // Also remove child rows if any
+        const rowsToKeep = currentRows.filter(r => {
+          // Remove the row itself
+          if (r.id === deleteDialog.rowId) return false;
+          
+          // Remove direct children (level 2 if deleting level 1, level 3 if deleting level 2)
+          if (r.parentId === deleteDialog.rowId) return false;
+          
+          // Remove grandchildren (level 3 if deleting level 1)
+          if (rowToDelete?.level === 1) {
+            const level2Children = currentRows.filter(row => row.parentId === deleteDialog.rowId && row.level === 2);
+            const level2ChildIds = level2Children.map(row => row.id);
+            if (level2ChildIds.includes(r.parentId || '')) return false;
+          }
+          
+          return true;
+        });
+        
+        setRowsFunc(rowsToKeep);
+        setSnackbarMessage('WBS task removed successfully!');
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
-      } catch (error) {
-        console.error(`Error deleting WBS task from ${formType} form:`, error);
-        setSnackbarMessage('Failed to delete WBS task');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
+      } else {
+        // For existing rows saved in backend, call the API
+        try {
+          await WBSStructureAPI.deleteWBSTask(projectId, deleteDialog.rowId);
+          reloadWBSData(); // Use the reload function from useWBSData
+          setSnackbarMessage('WBS task deleted successfully!');
+          setSnackbarSeverity('success');
+          setSnackbarOpen(true);
+        } catch (error) {
+          console.error(`Error deleting WBS task from ${formType} form:`, error);
+          setSnackbarMessage('Failed to delete WBS task');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        }
       }
     }
     handleDeleteCancel();
