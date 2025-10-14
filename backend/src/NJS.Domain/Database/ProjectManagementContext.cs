@@ -72,6 +72,8 @@ namespace NJS.Domain.Database
 
         // WBS Versioning entities
         public DbSet<WBSVersionHistory> WBSVersionHistories { get; set; }
+
+        public DbSet<MeasurementUnit> MeasurementUnits { get; set; }
         public DbSet<WBSTaskVersionHistory> WBSTaskVersionHistories { get; set; }
         public DbSet<WBSVersionWorkflowHistory> WBSVersionWorkflowHistories { get; set; }
         public DbSet<WBSTaskPlannedHourVersionHistory> WBSTaskPlannedHourVersionHistories { get; set; }
@@ -135,33 +137,9 @@ namespace NJS.Domain.Database
 
         // Main Projects (tenant-based) - Note: This was already defined above
 
-        // New Todo Project Management entities
-        public DbSet<TodoNewProject> TodoNewProjects { get; set; }
-        public DbSet<TodoNewTask> TodoNewTasks { get; set; }
-        public DbSet<TodoNewSubtask> TodoNewSubtasks { get; set; }
-        public DbSet<TodoNewTeamMember> TodoNewTeamMembers { get; set; }
-        
-
-
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // New Todo Project Management relationships (no tenant filtering)
-            modelBuilder.Entity<TodoNewTask>()
-                .HasOne(t => t.Project)
-                .WithMany(p => p.Tasks)
-                .HasForeignKey(t => t.ProjectId);
-
-            // TodoNewTask assignee/reporter fields are regular strings, no foreign key relationshipsc
-
-            modelBuilder.Entity<TodoNewSubtask>()
-                .HasOne(s => s.ParentTask)
-                .WithMany(t => t.Subtasks)
-                .HasForeignKey(s => s.Taskid);
-
-            // TodoNewSubtask assignee/reporter fields are regular strings, no foreign key relationships
 
             modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -206,17 +184,15 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<WBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<WBSVersionWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
-            modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
-            
-           
-
-
+            modelBuilder.Entity<MeasurementUnit>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
                 .HasOne(mp => mp.Project)
                 .WithMany()
                 .HasForeignKey(mp => mp.ProjectId);
+
+
 
             // Configure one-to-one relationships with MonthlyProgress
             modelBuilder.Entity<MonthlyProgress>()
@@ -504,14 +480,15 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.Value).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Label).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Level).IsRequired();
-                entity.Property(e => e.ParentValue).HasMaxLength(100);
+                entity.Property(e => e.ParentValue).HasColumnType("nvarchar(max)");
                 entity.Property(e => e.FormType).IsRequired();
 
                 // Create index on Level for faster lookups
                 entity.HasIndex(e => e.Level);
 
-                // Create index on ParentValue for faster hierarchical queries
-                entity.HasIndex(e => e.ParentValue);
+                // Removed index on ParentValue. SQL Server does not allow standard indexes on nvarchar(max) columns,
+                // especially when they contain JSON arrays, which is the intended use for this column.
+                // Hierarchical queries will need to parse the JSON in the application or use database-specific JSON functions.
 
                 // Create index on FormType for faster filtering
                 entity.HasIndex(e => e.FormType);
@@ -620,7 +597,10 @@ namespace NJS.Domain.Database
                       .WithMany()
                       .HasForeignKey(ut => ut.ResourceRoleId)
                       .OnDelete(DeleteBehavior.SetNull);
+
             });
+
+
 
             // Configure WorkBreakdownStructure entity
             modelBuilder.Entity<WorkBreakdownStructure>(entity =>
@@ -1101,44 +1081,6 @@ namespace NJS.Domain.Database
                       .IsRequired(false);
             });
 
-            // Configure ChangeControlWorkflowHistory entity
-            //modelBuilder.Entity<ChangeControlWorkflowHistory>(entity =>
-            //{
-            //    entity.HasKey(e => e.Id);
-            //    entity.Property(e => e.Action).IsRequired();
-            //    entity.Property(e => e.Comments).IsRequired(false);
-
-            //    // Create indexes for faster lookups
-            //    entity.HasIndex(e => e.ChangeControlId);
-            //    entity.HasIndex(e => e.StatusId);
-            //    entity.HasIndex(e => e.ActionBy);
-
-            //    // Configure relationship with ChangeControl
-            //    entity.HasOne(h => h.ChangeControl)
-            //          .WithMany(h => h.WorkflowHistories)
-            //          .HasForeignKey(h => h.ChangeControlId)
-            //          .OnDelete(DeleteBehavior.Restrict);
-
-            //    // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
-            //    entity.HasOne(h => h.Status)
-            //          .WithMany()
-            //          .HasForeignKey(h => h.StatusId)
-            //          .OnDelete(DeleteBehavior.Restrict);
-
-            //    // Configure relationship with User (ActionBy)
-            //    entity.HasOne(h => h.ActionUser)
-            //          .WithMany()
-            //          .HasForeignKey(h => h.ActionBy)
-            //          .OnDelete(DeleteBehavior.Restrict);
-
-            //    // Configure relationship with User (AssignedTo)
-            //    entity.HasOne(h => h.AssignedTo)
-            //          .WithMany()
-            //          .HasForeignKey(h => h.AssignedToId)
-            //          .OnDelete(DeleteBehavior.Restrict)
-            //          .IsRequired(false);
-            //});
-
             // Configure ProjectClosureWorkflowHistory entity
             modelBuilder.Entity<ProjectClosureWorkflowHistory>(entity =>
             {
@@ -1287,16 +1229,6 @@ namespace NJS.Domain.Database
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
 
-            // TodoNew entities relationships
-            modelBuilder.Entity<TodoNewTask>()
-                .HasOne(t => t.Project)
-                .WithMany(p => p.Tasks)
-                .HasForeignKey(t => t.ProjectId);
-
-            modelBuilder.Entity<TodoNewSubtask>()
-                .HasOne(s => s.ParentTask)
-                .WithMany(t => t.Subtasks)
-                .HasForeignKey(s => s.Taskid);
         }
        
     }

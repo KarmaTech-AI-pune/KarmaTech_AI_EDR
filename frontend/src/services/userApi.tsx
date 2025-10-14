@@ -78,7 +78,7 @@ export const createUser = async (user: Omit<AuthUser, 'id'>): Promise<AuthUser> 
     // Convert Role[] to RoleDto[]
     const roles = user.roles;
     
-    const createUserData = {
+    const createUserData = [{
       userName: user.userName,
       name: user.name,
       email: user.email,
@@ -87,7 +87,7 @@ export const createUser = async (user: Omit<AuthUser, 'id'>): Promise<AuthUser> 
       IsConsultant: user.isConsultant,
       StandardRate: user.standardRate
       // Note: Password is set to "Admin@123" by backend
-    };
+    }];
     
     const response = await axiosInstance.post('/api/user/Create', createUserData);
     return response.data;

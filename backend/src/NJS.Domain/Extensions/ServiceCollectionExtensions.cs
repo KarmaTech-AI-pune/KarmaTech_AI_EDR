@@ -89,14 +89,17 @@ namespace NJS.Domain.Extensions
         }
         public static IServiceCollection AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddHttpContextAccessor();
             services.AddScoped<ICurrentTenantService, CurrentTenantService>();        
             
 
             // Register ProjectManagementContext after tenant services
             services.AddDbContext<ProjectManagementContext>((provider, options) =>
             {
-                var tenantService = provider.GetService<ICurrentTenantService>();
-                var connectionString = tenantService?.ConnectionString ?? configuration.GetConnectionString("AppDbConnection");
+                var tenantConnectionResolver = provider.GetService<ITenantConnectionResolver>();
+                // Use the default connection string during service registration.
+                // The actual tenant-specific connection will be resolved at runtime by TenantConnectionResolver.
+                var connectionString = tenantConnectionResolver?.GetDefaultConnectionStringAsync().Result ?? configuration.GetConnectionString("AppDbConnection");
 
                 options.UseSqlServer(connectionString,
                     sqlServerOptionsAction: sqlOptions =>
@@ -116,7 +119,6 @@ namespace NJS.Domain.Extensions
                     options.AddInterceptors(new NJS.Domain.Interceptors.AuditSaveChangesInterceptor(auditSubject, auditContext));
                 }
             });
-            services.AddHttpContextAccessor();
 
 
             services.AddIdentity<User, Role>()

@@ -11,13 +11,15 @@ using NJSAPI.Middleware;
 using NJS.Domain.Services;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
+using NJS.Domain.Database;
+using Microsoft.EntityFrameworkCore;
 
 internal class Program
 {
     private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-       
+
 
         builder.Services.AddControllers();
         builder.Services.AddLogging();
@@ -26,11 +28,11 @@ internal class Program
         builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
         // Add tenant resolution strategies in priority order
-        
+
         builder.Services.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>();
         builder.Services.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>();
         builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
-       
+
         // Add tenant services for tr
         builder.Services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
         //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
@@ -63,7 +65,7 @@ internal class Program
 
             options.AddPolicy("AllowSpecificOrigin",
                 builder => builder
-                    .SetIsOriginAllowedToAllowWildcardSubdomains()  
+                    .SetIsOriginAllowedToAllowWildcardSubdomains()
                     .WithOrigins(allOrigins.ToArray())
                     .AllowAnyHeader()
                     .AllowAnyMethod()
@@ -121,7 +123,7 @@ internal class Program
 
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");
-        
+
 
         app.UseSwagger();
         app.UseSwaggerUI(options =>
@@ -129,22 +131,36 @@ internal class Program
             var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
             options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", $"{swaggerSettings.Title}");
         });
-      
+
         app.UseResponseCompression();
-        app.UseHttpsRedirection();       
-       
+        app.UseHttpsRedirection();
+
         app.UseMiddleware<TenantResolverMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseMiddleware<TenantMiddleware>();
-        app.SeedApplicationData();
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+
+            // ✅ 1. Apply all pending migrations before seeding
+            db.Database.Migrate();
+
+            // ✅ 2. Then seed your data
+            await SeedExtensions.InitializeDatabaseAsync(app);
+        }
+
+        // ✅ Map controllers and run the app
+        app.MapControllers();
+        app.MapFallbackToFile("index.html");
+        app.Run();
+
         app.MapControllers();
 
         // This will redirect all unhandled routes (that are not static files or API routes) to index.html
         // This should be placed after UseStaticFiles, UseRouting, UseAuthentication, UseAuthorization, and MapControllers
         app.MapFallbackToFile("index.html");
 
-        app.SeedApplicationData(); 
         app.Run();
     }
 }

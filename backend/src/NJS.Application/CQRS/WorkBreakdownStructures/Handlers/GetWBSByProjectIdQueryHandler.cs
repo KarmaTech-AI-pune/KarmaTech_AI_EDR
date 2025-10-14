@@ -24,6 +24,16 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         public async Task<WBSStructureDto> Handle(GetWBSByProjectIdQuery request, CancellationToken cancellationToken)
         {
             var wbsDto = await _context.WorkBreakdownStructures
+                .Include(w => w.Tasks.Where(t => !t.IsDeleted))
+                    .ThenInclude(t => t.UserWBSTasks)
+                        .ThenInclude(ut => ut.User) // Include User details for name
+                .Include(w => w.Tasks.Where(t => !t.IsDeleted))
+                    .ThenInclude(t => t.UserWBSTasks)
+                        .ThenInclude(ut => ut.ResourceRole) // Include Role details for name
+                .Include(w => w.Tasks.Where(t => !t.IsDeleted))
+                    .ThenInclude(t => t.PlannedHours) // Include planned hours
+                .Include(w => w.Tasks.Where(t => !t.IsDeleted))
+                    .ThenInclude(t => t.WBSOption) // Include WBSOption for label
                 .Where(w => w.ProjectId == request.ProjectId && w.IsActive)
                 .Select(w => new WBSStructureDto
                 {
@@ -42,14 +52,15 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             WorkBreakdownStructureId = t.WorkBreakdownStructureId,
                             ParentId = t.ParentId,
                             Level = t.Level,
-                            Title = t.Title,
+                            Title = t.WBSOption != null ? t.WBSOption.Label : t.Title, // Set DTO Title to label for display
                             Description = t.Description,
                             DisplayOrder = t.DisplayOrder,
                             EstimatedBudget = t.EstimatedBudget,
                             StartDate = t.StartDate,
                             EndDate = t.EndDate,
                             TaskType = t.TaskType,
-                            TodoProjectScheduleId = t.TodoProjectScheduleId,
+                            WBSOptionId = t.WBSOptionId, // Include the new WBSOptionId
+                            WBSOptionLabel = t.WBSOption != null ? t.WBSOption.Label : null, // Map WBS Option Label
 
                             PlannedHours = t.PlannedHours.Select(ph => new PlannedHourDto
                             {

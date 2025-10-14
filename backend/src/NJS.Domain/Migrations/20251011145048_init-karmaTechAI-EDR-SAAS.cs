@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace NJS.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateChangeControlRelationships3 : Migration
+    public partial class initkarmaTechAIEDRSAAS : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -41,6 +41,7 @@ namespace NJS.Domain.Migrations
                     StandardRate = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     IsConsultant = table.Column<bool>(type: "bit", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -52,7 +53,6 @@ namespace NJS.Domain.Migrations
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
                     LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
                     AccessFailedCount = table.Column<int>(type: "int", nullable: false)
@@ -82,6 +82,28 @@ namespace NJS.Domain.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AuditLogs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Cashflows",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<int>(type: "int", nullable: true),
+                    Month = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TotalHours = table.Column<int>(type: "int", nullable: true),
+                    PersonnelCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    OdcCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    TotalProjectCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CumulativeCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Revenue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CumulativeRevenue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CashFlow = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Cashflows", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -139,6 +161,25 @@ namespace NJS.Domain.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Features", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MeasurementUnits",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    FormType = table.Column<int>(type: "int", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MeasurementUnits", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -295,7 +336,7 @@ namespace NJS.Domain.Migrations
                     Value = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Label = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Level = table.Column<int>(type: "int", nullable: false),
-                    ParentValue = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ParentValue = table.Column<string>(type: "nvarchar(max)", maxLength: 100, nullable: true),
                     FormType = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -472,6 +513,90 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Projects",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ClientName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProjectNo = table.Column<int>(type: "int", nullable: false),
+                    TypeOfClient = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProjectManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    SeniorProjectManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    RegionalManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Office = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Region = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TypeOfJob = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Sector = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FeeType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EstimatedProjectCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    EstimatedProjectFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    Percentage = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Details = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Priority = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Currency = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CapitalValue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Progress = table.Column<int>(type: "int", nullable: false),
+                    DurationInMonths = table.Column<int>(type: "int", nullable: true),
+                    FundingStream = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContractType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LetterOfAcceptance = table.Column<bool>(type: "bit", nullable: false),
+                    OpportunityTrackingId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Projects", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Projects_AspNetUsers_ProjectManagerId",
+                        column: x => x.ProjectManagerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Projects_AspNetUsers_RegionalManagerId",
+                        column: x => x.RegionalManagerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Projects_AspNetUsers_SeniorProjectManagerId",
+                        column: x => x.SeniorProjectManagerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TwoFactorCodes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(6)", maxLength: 6, nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TwoFactorCodes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TwoFactorCodes_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RolePermissions",
                 columns: table => new
                 {
@@ -604,7 +729,8 @@ namespace NJS.Domain.Migrations
                     SubscriptionPlanId = table.Column<int>(type: "int", nullable: true),
                     MaxUsers = table.Column<int>(type: "int", nullable: false),
                     MaxProjects = table.Column<int>(type: "int", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsIsolated = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -734,213 +860,6 @@ namespace NJS.Domain.Migrations
                         name: "FK_OpportunityHistories_OpportunityTrackings_OpportunityId",
                         column: x => x.OpportunityId,
                         principalTable: "OpportunityTrackings",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Projects",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ProjectNo = table.Column<int>(type: "int", nullable: false),
-                    ClientName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    TypeOfClient = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ProjectManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    SeniorProjectManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    RegionalManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    Office = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Region = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    TypeOfJob = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Sector = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    FeeType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    EstimatedProjectCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    EstimatedProjectFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Percentage = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
-                    Details = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    Priority = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Currency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CapitalValue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    Progress = table.Column<int>(type: "int", nullable: false),
-                    DurationInMonths = table.Column<int>(type: "int", nullable: true),
-                    FundingStream = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    ContractType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    OpportunityTrackingId = table.Column<int>(type: "int", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    LetterOfAcceptance = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Projects", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Projects_AspNetUsers_ProjectManagerId",
-                        column: x => x.ProjectManagerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Projects_AspNetUsers_RegionalManagerId",
-                        column: x => x.RegionalManagerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Projects_AspNetUsers_SeniorProjectManagerId",
-                        column: x => x.SeniorProjectManagerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Projects_OpportunityTrackings_OpportunityTrackingId",
-                        column: x => x.OpportunityTrackingId,
-                        principalTable: "OpportunityTrackings",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TenantDatabases",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantId = table.Column<int>(type: "int", nullable: false),
-                    DatabaseName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    ConnectionString = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastBackup = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TenantDatabases", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TenantDatabases_Tenant_TenantId",
-                        column: x => x.TenantId,
-                        principalTable: "Tenant",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TenantUsers",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Role = table.Column<int>(type: "int", nullable: false),
-                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TenantUsers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TenantUsers_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_TenantUsers_Tenant_TenantId",
-                        column: x => x.TenantId,
-                        principalTable: "Tenant",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "BidVersionHistories",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    BidPreparationId = table.Column<int>(type: "int", nullable: false),
-                    Version = table.Column<int>(type: "int", nullable: false),
-                    DocumentCategoriesJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BidVersionHistories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_BidVersionHistories_BidPreparations_BidPreparationId",
-                        column: x => x.BidPreparationId,
-                        principalTable: "BidPreparations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "GoNoGoDecisionTransactions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantId = table.Column<int>(type: "int", nullable: false),
-                    Score = table.Column<int>(type: "int", nullable: false),
-                    Commits = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    GoNoGoDecisionHeaderId = table.Column<int>(type: "int", nullable: true),
-                    ScoringCriteriaId = table.Column<int>(type: "int", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_GoNoGoDecisionTransactions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_GoNoGoDecisionTransactions_GoNoGoDecisionHeaders_GoNoGoDecisionHeaderId",
-                        column: x => x.GoNoGoDecisionHeaderId,
-                        principalTable: "GoNoGoDecisionHeaders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_GoNoGoDecisionTransactions_ScoringCriteria_ScoringCriteriaId",
-                        column: x => x.ScoringCriteriaId,
-                        principalTable: "ScoringCriteria",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "GoNoGoVersions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantId = table.Column<int>(type: "int", nullable: false),
-                    GoNoGoDecisionHeaderId = table.Column<int>(type: "int", nullable: false),
-                    VersionNumber = table.Column<int>(type: "int", nullable: false),
-                    FormData = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ApprovedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ActonBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_GoNoGoVersions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_GoNoGoVersions_GoNoGoDecisionHeaders_GoNoGoDecisionHeaderId",
-                        column: x => x.GoNoGoDecisionHeaderId,
-                        principalTable: "GoNoGoDecisionHeaders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1397,6 +1316,145 @@ namespace NJS.Domain.Migrations
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TenantDatabases",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    DatabaseName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    ConnectionString = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LastBackup = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TenantDatabases", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TenantDatabases_Tenant_TenantId",
+                        column: x => x.TenantId,
+                        principalTable: "Tenant",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TenantUsers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Role = table.Column<int>(type: "int", nullable: false),
+                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TenantUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TenantUsers_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TenantUsers_Tenant_TenantId",
+                        column: x => x.TenantId,
+                        principalTable: "Tenant",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BidVersionHistories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BidPreparationId = table.Column<int>(type: "int", nullable: false),
+                    Version = table.Column<int>(type: "int", nullable: false),
+                    DocumentCategoriesJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BidVersionHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BidVersionHistories_BidPreparations_BidPreparationId",
+                        column: x => x.BidPreparationId,
+                        principalTable: "BidPreparations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GoNoGoDecisionTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    Score = table.Column<int>(type: "int", nullable: false),
+                    Commits = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    GoNoGoDecisionHeaderId = table.Column<int>(type: "int", nullable: true),
+                    ScoringCriteriaId = table.Column<int>(type: "int", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GoNoGoDecisionTransactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GoNoGoDecisionTransactions_GoNoGoDecisionHeaders_GoNoGoDecisionHeaderId",
+                        column: x => x.GoNoGoDecisionHeaderId,
+                        principalTable: "GoNoGoDecisionHeaders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_GoNoGoDecisionTransactions_ScoringCriteria_ScoringCriteriaId",
+                        column: x => x.ScoringCriteriaId,
+                        principalTable: "ScoringCriteria",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GoNoGoVersions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    GoNoGoDecisionHeaderId = table.Column<int>(type: "int", nullable: false),
+                    VersionNumber = table.Column<int>(type: "int", nullable: false),
+                    FormData = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApprovedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ActonBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GoNoGoVersions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GoNoGoVersions_GoNoGoDecisionHeaders_GoNoGoDecisionHeaderId",
+                        column: x => x.GoNoGoDecisionHeaderId,
+                        principalTable: "GoNoGoDecisionHeaders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -2196,7 +2254,7 @@ namespace NJS.Domain.Migrations
                     WorkBreakdownStructureId = table.Column<int>(type: "int", nullable: false),
                     ParentId = table.Column<int>(type: "int", nullable: true),
                     Level = table.Column<int>(type: "int", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
@@ -2207,11 +2265,17 @@ namespace NJS.Domain.Migrations
                     EstimatedBudget = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TaskType = table.Column<int>(type: "int", nullable: false)
+                    TaskType = table.Column<int>(type: "int", nullable: false),
+                    WBSOptionId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WBSTasks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WBSTasks_WBSOptions_WBSOptionId",
+                        column: x => x.WBSOptionId,
+                        principalTable: "WBSOptions",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_WBSTasks_WBSTasks_ParentId",
                         column: x => x.ParentId,
@@ -2781,11 +2845,6 @@ namespace NJS.Domain.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Projects_OpportunityTrackingId",
-                table: "Projects",
-                column: "OpportunityTrackingId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Projects_ProjectManagerId",
                 table: "Projects",
                 column: "ProjectManagerId");
@@ -2852,6 +2911,11 @@ namespace NJS.Domain.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_TwoFactorCodes_UserId",
+                table: "TwoFactorCodes",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserWBSTasks_ResourceRoleId",
                 table: "UserWBSTasks",
                 column: "ResourceRoleId");
@@ -2912,11 +2976,6 @@ namespace NJS.Domain.Migrations
                 column: "Level");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WBSOptions_ParentValue",
-                table: "WBSOptions",
-                column: "ParentValue");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_WBSTaskPlannedHourHeaders_ProjectId",
                 table: "WBSTaskPlannedHourHeaders",
                 column: "ProjectId");
@@ -2945,6 +3004,11 @@ namespace NJS.Domain.Migrations
                 name: "IX_WBSTasks_ParentId",
                 table: "WBSTasks",
                 column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WBSTasks_WBSOptionId",
+                table: "WBSTasks",
+                column: "WBSOptionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WBSTasks_WorkBreakdownStructureId",
@@ -3135,18 +3199,6 @@ namespace NJS.Domain.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_OpportunityTrackings_AspNetUsers_ApprovalManagerId",
-                table: "OpportunityTrackings");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_OpportunityTrackings_AspNetUsers_BidManagerId",
-                table: "OpportunityTrackings");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_OpportunityTrackings_AspNetUsers_ReviewManagerId",
-                table: "OpportunityTrackings");
-
-            migrationBuilder.DropForeignKey(
                 name: "FK_Projects_AspNetUsers_ProjectManagerId",
                 table: "Projects");
 
@@ -3165,10 +3217,6 @@ namespace NJS.Domain.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_WBSVersionHistories_AspNetUsers_CreatedBy",
                 table: "WBSVersionHistories");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Projects_OpportunityTrackings_OpportunityTrackingId",
-                table: "Projects");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_WBSVersionHistories_PMWorkflowStatuses_StatusId",
@@ -3202,6 +3250,9 @@ namespace NJS.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "BidVersionHistories");
+
+            migrationBuilder.DropTable(
+                name: "Cashflows");
 
             migrationBuilder.DropTable(
                 name: "ChangeControlWorkflowHistories");
@@ -3273,6 +3324,9 @@ namespace NJS.Domain.Migrations
                 name: "ManpowerPlannings");
 
             migrationBuilder.DropTable(
+                name: "MeasurementUnits");
+
+            migrationBuilder.DropTable(
                 name: "OpportunityHistories");
 
             migrationBuilder.DropTable(
@@ -3318,6 +3372,9 @@ namespace NJS.Domain.Migrations
                 name: "TenantUsers");
 
             migrationBuilder.DropTable(
+                name: "TwoFactorCodes");
+
+            migrationBuilder.DropTable(
                 name: "UserWBSTasks");
 
             migrationBuilder.DropTable(
@@ -3325,9 +3382,6 @@ namespace NJS.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "WBSHistories");
-
-            migrationBuilder.DropTable(
-                name: "WBSOptions");
 
             migrationBuilder.DropTable(
                 name: "WBSTaskPlannedHours");
@@ -3390,6 +3444,9 @@ namespace NJS.Domain.Migrations
                 name: "WBSTaskVersionHistories");
 
             migrationBuilder.DropTable(
+                name: "OpportunityTrackings");
+
+            migrationBuilder.DropTable(
                 name: "JobStartForms");
 
             migrationBuilder.DropTable(
@@ -3399,10 +3456,10 @@ namespace NJS.Domain.Migrations
                 name: "SubscriptionPlans");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "WBSOptions");
 
             migrationBuilder.DropTable(
-                name: "OpportunityTrackings");
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "PMWorkflowStatuses");

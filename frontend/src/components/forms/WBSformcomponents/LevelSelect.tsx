@@ -1,4 +1,5 @@
 import React from 'react';
+import {WBSOption} from '../../../types/wbs'
 import {
   Box,
   Select,
@@ -13,10 +14,6 @@ const StyledSelect = styled(Select)({
   }
 });
 
-interface WBSOption {
-  value: string;
-  label: string;
-}
 
 interface LevelSelectProps {
   level: 1 | 2 | 3;
@@ -49,7 +46,7 @@ const LevelSelect: React.FC<LevelSelectProps> = ({
       >
         <MenuItem value="">Select</MenuItem>
         {options.map(option => (
-          <MenuItem key={option.value} value={option.value}>
+          <MenuItem key={option.id} value={option.value}>
             {option.label}
           </MenuItem>
         ))}

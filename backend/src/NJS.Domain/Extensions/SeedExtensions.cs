@@ -343,11 +343,48 @@ namespace NJS.Domain.Extensions
 
                 // Seed Subscription Plans and Features
                 await SeedSubscriptionPlansAndFeaturesAsync(context);
+
+                // Seed Measurement Units
+                await SeedMeasurementUnitsAsync(context);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"An error occurred while seeding the database: {e.Message}");
                 throw;
+            }
+        }
+
+        private static async Task SeedMeasurementUnitsAsync(ProjectManagementContext context)
+        {
+            if (!context.Set<MeasurementUnit>().Any())
+            {
+                Console.WriteLine("MeasurementUnit table is empty, inserting data...");
+
+                var measurementUnits = new List<MeasurementUnit>
+                {
+                    new MeasurementUnit { Name = "Nos", FormType = FormType.ODC, TenantId = 1 },
+                    new MeasurementUnit { Name = "LS", FormType = FormType.ODC, TenantId = 1 },
+                    new MeasurementUnit { Name = "Km", FormType = FormType.ODC, TenantId = 1 },
+                    new MeasurementUnit { Name = "Day", FormType = FormType.Manpower, TenantId = 1 },
+                    new MeasurementUnit { Name = "Month", FormType = FormType.Manpower, TenantId = 1 },
+                    new MeasurementUnit { Name = "Year", FormType = FormType.Manpower, TenantId = 1 }
+                };
+
+                try
+                {
+                    await context.Set<MeasurementUnit>().AddRangeAsync(measurementUnits);
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("MeasurementUnit data inserted successfully");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"An error occurred while seeding measurement units: {e.Message}");
+                    throw;
+                }
+            }
+            else
+            {
+                Console.WriteLine("MeasurementUnit table already has data, skipping insert");
             }
         }
 
@@ -577,16 +614,16 @@ namespace NJS.Domain.Extensions
                 };
                 context.WBSOptions.AddRange(manpowerLevel1Options);
 
-                // Insert Level 2 options for Manpower Form
+                // Insert Level 2 options for Manpower Form with JSON array for ParentValue
                 var manpowerLevel2Options = new List<WBSOption>
                 {
-                    new WBSOption { Value = "surveys", Label = "Surveys", Level = 2, ParentValue = null, FormType = FormType.Manpower },
-                    new WBSOption { Value = "design", Label = "Design", Level = 2, ParentValue = null, FormType = FormType.Manpower },
-                    new WBSOption { Value = "cost_estimation", Label = "Cost Estimation", Level = 2, ParentValue = null, FormType = FormType.Manpower }
+                    new WBSOption { Value = "surveys", Label = "Surveys", Level = 2, ParentValue = "[\"inception_report\", \"feasibility_report\", \"draft_detailed_project_report\", \"detailed_project_report\", \"tendering_documents\", \"construction_supervision\"]", FormType = FormType.Manpower },
+                    new WBSOption { Value = "design", Label = "Design", Level = 2, ParentValue = "[\"inception_report\", \"feasibility_report\", \"draft_detailed_project_report\", \"detailed_project_report\", \"tendering_documents\", \"construction_supervision\"]", FormType = FormType.Manpower },
+                    new WBSOption { Value = "cost_estimation", Label = "Cost Estimation", Level = 2, ParentValue = "[\"inception_report\", \"feasibility_report\", \"draft_detailed_project_report\", \"detailed_project_report\", \"tendering_documents\", \"construction_supervision\"]", FormType = FormType.Manpower }
                 };
                 context.WBSOptions.AddRange(manpowerLevel2Options);
 
-                // Insert Level 3 options for 'surveys' in Manpower Form
+                // Insert Level 3 options for 'surveys'
                 var surveysLevel3Options = new List<WBSOption>
                 {
                     new WBSOption { Value = "topographical_survey", Label = "Topographical Survey", Level = 3, ParentValue = "surveys", FormType = FormType.Manpower },
@@ -598,7 +635,7 @@ namespace NJS.Domain.Extensions
                 };
                 context.WBSOptions.AddRange(surveysLevel3Options);
 
-                // Insert Level 3 options for 'design' in Manpower Form
+                // Insert Level 3 options for 'design'
                 var designLevel3Options = new List<WBSOption>
                 {
                     new WBSOption { Value = "process_design", Label = "Process Design", Level = 3, ParentValue = "design", FormType = FormType.Manpower },
