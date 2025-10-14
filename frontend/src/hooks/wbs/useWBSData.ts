@@ -30,7 +30,7 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
   const [level1Options, setLevel1Options] = useState<WBSOption[]>([]);
   const [level2Options, setLevel2Options] = useState<WBSOption[]>([]);
   const [level3OptionsMap, setLevel3OptionsMap] = useState<{ [key: string]: WBSOption[] }>({});
-  const [, setLastUpdateTime] = useState<number>(Date.now()); // We only use the setter function, not the value itself
+  const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
 
   // Helper function to find a WBS option by its ID
   const findWBSOptionById = (optionId: string, l1: WBSOption[], l2: WBSOption[], l3Map: { [key: string]: WBSOption[] }): WBSOption | undefined => {
@@ -219,7 +219,14 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
           // Dynamically load level 3 options for existing level 2 tasks
           const uniqueLevel2Titles = new Set<string>();
           const rowsToProcess = formType === 'manpower' ? initialManpowerRows : initialOdcRows;
-          rowsToProcess.filter(row => row.level === 2 && row.title).forEach(row => uniqueLevel2Titles.add(row.title));
+          rowsToProcess.filter(row => row.level === 2 && row.wbsOptionId).forEach(row => {
+            if (row.wbsOptionId) {
+              const option = findWBSOptionById(row.wbsOptionId, l1Options, l2Options, {});
+              if (option) {
+                uniqueLevel2Titles.add(option.value);
+              }
+            }
+          });
 
           await Promise.all(
             Array.from(uniqueLevel2Titles).map(async (level2Title) => {
@@ -280,7 +287,7 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
 
   useEffect(() => {
     loadInitialData();
-  }, [projectId, formType]);
+  }, [projectId, formType, lastUpdateTime]);
 
   const reloadWBSData = () => setLastUpdateTime(Date.now());
 
@@ -310,6 +317,6 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
     level3OptionsMap,
     setLevel3OptionsMap,
     reloadWBSData,
-    getProjectStartDate, // Expose for now, will be removed later
+    getProjectStartDate,
   };
 };
