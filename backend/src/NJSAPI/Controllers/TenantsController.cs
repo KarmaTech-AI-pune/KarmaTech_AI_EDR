@@ -210,12 +210,12 @@ namespace NJSAPI.Controllers
                 // Cancel subscription
                 await _subscriptionService.CancelTenantSubscriptionAsync(tenant.Id);
 
-                // Delete tenant database
-                var tenantDatabase = tenant.TenantDatabases.FirstOrDefault();
-                if (tenantDatabase != null)
-                {
-                    await _databaseManagementService.DeleteTenantDatabaseAsync(tenantDatabase.DatabaseName);
-                }
+                // Commented out to prevent database deletion
+                // var tenantDatabase = tenant.TenantDatabases.FirstOrDefault();
+                // if (tenantDatabase != null)
+                // {
+                //     await _databaseManagementService.DeleteTenantDatabaseAsync(tenantDatabase.DatabaseName);
+                // }
 
                 _tenantDbContext.Tenants.Remove(tenant);
                 await _tenantDbContext.SaveChangesAsync();
