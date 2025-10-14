@@ -23,88 +23,137 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         public async Task<WBSStructureDto> Handle(GetWBSByProjectIdQuery request, CancellationToken cancellationToken)
         {
-            var wbsDto = await _context.WorkBreakdownStructures
-                .Include(w => w.Tasks.Where(t => !t.IsDeleted))
-                    .ThenInclude(t => t.UserWBSTasks)
-                        .ThenInclude(ut => ut.User) // Include User details for name
-                .Include(w => w.Tasks.Where(t => !t.IsDeleted))
-                    .ThenInclude(t => t.UserWBSTasks)
-                        .ThenInclude(ut => ut.ResourceRole) // Include Role details for name
-                .Include(w => w.Tasks.Where(t => !t.IsDeleted))
-                    .ThenInclude(t => t.PlannedHours) // Include planned hours
-                .Include(w => w.Tasks.Where(t => !t.IsDeleted))
-                    .ThenInclude(t => t.WBSOption) // Include WBSOption for label
+            // 1. Fetch the main WorkBreakdownStructure and its tasks
+            var wbs = await _context.WorkBreakdownStructures
+                .AsNoTracking()
                 .Where(w => w.ProjectId == request.ProjectId && w.IsActive)
-                .Select(w => new WBSStructureDto
+                .Select(w => new
                 {
-                    Id = w.Id,
-                    ProjectId = w.ProjectId,
-                    Version = w.CurrentVersion,
-                    IsActive = w.IsActive,
-                    CreatedAt = w.CreatedAt,
-                    CreatedBy = w.CreatedBy,
+                    w.Id,
+                    w.ProjectId,
+                    w.CurrentVersion,
+                    w.IsActive,
+                    w.CreatedAt,
+                    w.CreatedBy,
                     Tasks = w.Tasks
                         .Where(t => !t.IsDeleted)
                         .OrderBy(t => t.DisplayOrder)
-                        .Select(t => new WBSTaskDto
+                        .Select(t => new
                         {
-                            Id = t.Id,
-                            WorkBreakdownStructureId = t.WorkBreakdownStructureId,
-                            ParentId = t.ParentId,
-                            Level = t.Level,
-                            Title = t.WBSOption != null ? t.WBSOption.Label : t.Title, // Set DTO Title to label for display
-                            Description = t.Description,
-                            DisplayOrder = t.DisplayOrder,
-                            EstimatedBudget = t.EstimatedBudget,
-                            StartDate = t.StartDate,
-                            EndDate = t.EndDate,
-                            TaskType = t.TaskType,
-                            WBSOptionId = t.WBSOptionId, // Include the new WBSOptionId
-                            WBSOptionLabel = t.WBSOption != null ? t.WBSOption.Label : null, // Map WBS Option Label
-
-                            PlannedHours = t.PlannedHours.Select(ph => new PlannedHourDto
-                            {
-                                Year = int.Parse(ph.Year),
-                                Month = ph.Month,
-                                PlannedHours = ph.PlannedHours
-                            }).ToList(),
-
-                            // Use null-safe projections
-                            CostRate = t.UserWBSTasks.FirstOrDefault() != null ? t.UserWBSTasks.FirstOrDefault().CostRate : 0,
-                            ResourceUnit = t.UserWBSTasks.FirstOrDefault() != null ? t.UserWBSTasks.FirstOrDefault().Unit : null,
-                            AssignedUserId = t.TaskType == TaskType.Manpower && t.UserWBSTasks.FirstOrDefault() != null
-                                ? t.UserWBSTasks.FirstOrDefault().UserId
-                                : null,
-                            AssignedUserName = t.TaskType == TaskType.Manpower && t.UserWBSTasks.FirstOrDefault() != null
-                                ? t.UserWBSTasks.FirstOrDefault().User.Name
-                                : null,
-                            ResourceName = t.TaskType == TaskType.ODC && t.UserWBSTasks.FirstOrDefault() != null
-                                ? t.UserWBSTasks.FirstOrDefault().Name
-                                : null,
-                            ResourceRoleId = t.UserWBSTasks.FirstOrDefault() != null ? t.UserWBSTasks.FirstOrDefault().ResourceRoleId : null,
-                            ResourceRoleName = t.UserWBSTasks.FirstOrDefault() != null && t.UserWBSTasks.FirstOrDefault().ResourceRole != null
-                                ? t.UserWBSTasks.FirstOrDefault().ResourceRole.Name
-                                : null,
-
-                            TotalHours = t.TaskType == TaskType.ODC && t.UserWBSTasks.FirstOrDefault() != null
-                                ? t.UserWBSTasks.FirstOrDefault().TotalHours
-                                : t.PlannedHours.Sum(ph => ph.PlannedHours),
-
-                            TotalCost = t.TaskType == TaskType.ODC && t.UserWBSTasks.FirstOrDefault() != null
-                                ? t.UserWBSTasks.FirstOrDefault().TotalCost
-                                : (decimal)t.PlannedHours.Sum(ph => ph.PlannedHours) *
-                                  (t.UserWBSTasks.FirstOrDefault() != null ? t.UserWBSTasks.FirstOrDefault().CostRate : 0)
-                        }).ToList()
+                            t.Id,
+                            t.WorkBreakdownStructureId,
+                            t.ParentId,
+                            t.Level,
+                            t.Title,
+                            t.Description,
+                            t.DisplayOrder,
+                            t.EstimatedBudget,
+                            t.StartDate,
+                            t.EndDate,
+                            t.TaskType,
+                            t.WBSOptionId
+                        })
                 })
-                .AsNoTracking()
-                .AsSplitQuery()
                 .FirstOrDefaultAsync(cancellationToken);
 
-            return wbsDto ?? new WBSStructureDto
+            if (wbs == null)
             {
-                ProjectId = request.ProjectId,
-                Tasks = new List<WBSTaskDto>()
+                return new WBSStructureDto
+                {
+                    ProjectId = request.ProjectId,
+                    Tasks = new List<WBSTaskDto>()
+                };
+            }
+
+            var taskIds = wbs.Tasks.Select(t => t.Id).ToList();
+
+            // 2. Fetch related data in separate queries
+            var userWBSTasks = await _context.UserWBSTasks
+                .AsNoTracking()
+                .Where(ut => taskIds.Contains(ut.WBSTaskId))
+                .Include(ut => ut.User)
+                .Include(ut => ut.ResourceRole)
+                .ToListAsync(cancellationToken);
+
+            var plannedHours = await _context.WBSTaskPlannedHours
+                .AsNoTracking()
+                .Where(ph => taskIds.Contains(ph.WBSTaskId))
+                .ToListAsync(cancellationToken);
+
+            var wbsOptions = await _context.WBSOptions
+                .AsNoTracking()
+                .Where(wo => wbs.Tasks.Select(t => t.WBSOptionId).Contains(wo.Id))
+                .ToDictionaryAsync(wo => wo.Id, wo => wo.Label, cancellationToken);
+
+            // 3. Manually map the data to DTOs
+            var wbsDto = new WBSStructureDto
+            {
+                Id = wbs.Id,
+                ProjectId = wbs.ProjectId,
+                Version = wbs.CurrentVersion,
+                IsActive = wbs.IsActive,
+                CreatedAt = wbs.CreatedAt,
+                CreatedBy = wbs.CreatedBy,
+                Tasks = wbs.Tasks.Select(t =>
+                {
+                    var taskUserWBSTasks = userWBSTasks.Where(ut => ut.WBSTaskId == t.Id).ToList();
+                    var taskPlannedHours = plannedHours.Where(ph => ph.WBSTaskId == t.Id).ToList();
+                    wbsOptions.TryGetValue(t.WBSOptionId ?? 0, out var wbsOptionLabel); // Handle null WBSOptionId
+
+                    var firstUserWBSTask = taskUserWBSTasks.FirstOrDefault();
+
+                    double totalPlannedHours = taskPlannedHours.Sum(ph => ph.PlannedHours);
+                    decimal calculatedTotalCost = 0;
+                    double finalTotalHours = 0;
+
+                    if (t.TaskType == TaskType.ODC && firstUserWBSTask != null)
+                    {
+                        finalTotalHours = firstUserWBSTask.TotalHours;
+                        calculatedTotalCost = firstUserWBSTask.TotalCost;
+                    }
+                    else
+                    {
+                        finalTotalHours = totalPlannedHours;
+                        calculatedTotalCost = (decimal)totalPlannedHours * (firstUserWBSTask?.CostRate ?? 0);
+                    }
+
+                    return new WBSTaskDto
+                    {
+                        Id = t.Id,
+                        WorkBreakdownStructureId = t.WorkBreakdownStructureId,
+                        ParentId = t.ParentId,
+                        Level = t.Level,
+                        Title = wbsOptionLabel ?? t.Title, // Use WBSOptionLabel if available, otherwise use Title
+                        Description = t.Description,
+                        DisplayOrder = t.DisplayOrder,
+                        EstimatedBudget = t.EstimatedBudget,
+                        StartDate = t.StartDate,
+                        EndDate = t.EndDate,
+                        TaskType = t.TaskType,
+                        WBSOptionId = t.WBSOptionId,
+                        WBSOptionLabel = wbsOptionLabel,
+
+                        PlannedHours = taskPlannedHours.Select(ph => new PlannedHourDto
+                        {
+                            Year = int.Parse(ph.Year),
+                            Month = ph.Month,
+                            PlannedHours = ph.PlannedHours
+                        }).ToList(),
+
+                        CostRate = firstUserWBSTask?.CostRate ?? 0,
+                        ResourceUnit = firstUserWBSTask?.Unit,
+                        AssignedUserId = t.TaskType == TaskType.Manpower ? firstUserWBSTask?.UserId : null,
+                        AssignedUserName = t.TaskType == TaskType.Manpower ? firstUserWBSTask?.User?.Name : null,
+                        ResourceName = t.TaskType == TaskType.ODC ? firstUserWBSTask?.Name : null,
+                        ResourceRoleId = firstUserWBSTask?.ResourceRoleId,
+                        ResourceRoleName = firstUserWBSTask?.ResourceRole?.Name,
+                        TotalHours = finalTotalHours,
+                        TotalCost = calculatedTotalCost
+                    };
+                }).ToList()
             };
+
+            return wbsDto;
         }
     }
 }
