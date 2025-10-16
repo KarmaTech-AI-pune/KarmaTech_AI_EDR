@@ -32,20 +32,20 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                 return null;
             }
 
-            // Fetch SprintPlans for the given project, including their SprintTasks and SprintSubtasks
-            var sprintPlanEntity = await _context.SprintPlans
+            // Fetch all SprintPlans for the given project, including their SprintTasks and SprintSubtasks
+            var sprintPlanEntities = await _context.SprintPlans
                 .Include(sp => sp.SprintTasks)
                     .ThenInclude(st => st.Subtasks!)
                 .Where(sp => sp.ProjectId == projectId)
-                .FirstOrDefaultAsync(cancellationToken);
+                .ToListAsync(cancellationToken);
 
-            if (sprintPlanEntity == null)
+            if (!sprintPlanEntities.Any())
             {
-                return null; // No sprint plan found for this project
+                return null; // No sprint plans found for this project
             }
 
             // Convert to DTOs
-            var sprintPlanDto = new SprintPlanDto
+            var sprintPlanDtos = sprintPlanEntities.Select(sprintPlanEntity => new SprintPlanDto
             {
                 SprintId = sprintPlanEntity.SprintId,
                 SprintNumber = sprintPlanEntity.SprintNumber,
@@ -99,11 +99,11 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                         Taskid = s.Taskid
                     }).ToList()
                 }).ToList()
-            };
+            }).ToList();
 
             var projectScheduleDto = new ProjectScheduleDto
             {
-                SprintPlans = new List<SprintPlanDto> { sprintPlanDto }
+                SprintPlans = sprintPlanDtos
             };
 
             return projectScheduleDto;
