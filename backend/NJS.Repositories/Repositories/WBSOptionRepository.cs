@@ -93,5 +93,13 @@ namespace NJS.Repositories.Repositories
         {
             return await _context.WBSOptions.FindAsync(id);
         }
+
+        public async Task<IEnumerable<WBSOption>> GetByIdsAsync(List<int> ids)
+        {
+            return await _context.WBSOptions
+                .Where(o => ids.Contains(o.Id))
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }

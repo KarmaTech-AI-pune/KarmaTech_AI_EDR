@@ -66,6 +66,21 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _logger.LogInformation("New Work Breakdown Structure created with ID {WBSId} for Project ID {ProjectId}.", wbs.Id, request.ProjectId);
             }
 
+            // Pre-fetch all WBS options and users needed for the batch
+            var wbsOptionIds = request.TasksDto.Where(t => t.WBSOptionId.HasValue).Select(t => t.WBSOptionId.Value).Distinct().ToList();
+            var wbsOptionsMap = (await _wbsOptionRepository.GetByIdsAsync(wbsOptionIds))
+                                .ToDictionary(o => o.Id, o => o.Label);
+
+            var assignedUserIds = request.TasksDto
+                .Where(t => t.TaskType == TaskType.Manpower && !string.IsNullOrEmpty(t.AssignedUserId) && t.AssignedUserId != "string")
+                .Select(t => t.AssignedUserId!)
+                .Distinct()
+                .ToList();
+            var existingUserIds = new HashSet<string>(await _context.Users
+                .Where(u => assignedUserIds.Contains(u.Id))
+                .Select(u => u.Id)
+                .ToListAsync(cancellationToken));
+
             foreach (var taskDto in request.TasksDto)
             {
                 // Handle ParentId based on task level
@@ -102,20 +117,16 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     Title = taskDto.Title // Assign Title from DTO initially
                 };
 
-                // If WBSOptionId is provided, override Title with the WBSOption's label
-                if (taskDto.WBSOptionId.HasValue)
+                // If WBSOptionId is provided, override Title with the WBSOption's label using pre-fetched map
+                if (taskDto.WBSOptionId.HasValue && wbsOptionsMap.TryGetValue(taskDto.WBSOptionId.Value, out var wbsOptionLabel))
                 {
-                    var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskDto.WBSOptionId.Value);
-                    if (wbsOption != null)
-                    {
-                        taskEntity.Title = wbsOption.Label; // Set entity Title to label for saving
-                    }
+                    taskEntity.Title = wbsOptionLabel; // Set entity Title to label for saving
                 }
 
                 _logger.LogInformation("Mapped WBSTask entity: {@TaskEntity}", taskEntity);
 
                 // --- 3. Add User Assignment and Planned Hours ---
-                await UpdateUserAssignment(taskEntity, taskDto, cancellationToken);
+                UpdateUserAssignment(taskEntity, taskDto, existingUserIds); // Pass pre-fetched user IDs
                 UpdatePlannedHours(taskEntity, taskDto, wbs.ProjectId);
 
                 _context.WBSTasks.Add(taskEntity);
@@ -180,14 +191,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     // Populate other fields as needed from the entity
                 };
 
-                // Populate WBSOptionLabel
-                if (entity.WBSOptionId.HasValue)
+                // Populate WBSOptionLabel using pre-fetched map
+                if (entity.WBSOptionId.HasValue && wbsOptionsMap.TryGetValue(entity.WBSOptionId.Value, out var wbsOptionLabel))
                 {
-                    var wbsOption = await _wbsOptionRepository.GetByIdAsync(entity.WBSOptionId.Value);
-                    if (wbsOption != null)
-                    {
-                        dto.WBSOptionLabel = wbsOption.Label;
-                    }
+                    dto.WBSOptionLabel = wbsOptionLabel;
                 }
 
                 // Populate User Assignment details if available
@@ -221,7 +228,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         // --- Helper methods copied from SetWBSCommandHandler ---
         // (Consider refactoring into a shared service/utility class later)
 
-        private async Task UpdateUserAssignment(WBSTask taskEntity, WBSTaskDto taskDto, CancellationToken cancellationToken)
+        private void UpdateUserAssignment(WBSTask taskEntity, WBSTaskDto taskDto, HashSet<string> existingUserIds)
         {
             // Handle Manpower tasks
             if (taskEntity.TaskType == TaskType.Manpower)
@@ -237,14 +244,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     string? actualUserId = (string.IsNullOrEmpty(taskDto.AssignedUserId) || taskDto.AssignedUserId == "string") ? null : taskDto.AssignedUserId;
                     string? actualResourceRoleId = (string.IsNullOrEmpty(taskDto.ResourceRoleId) || taskDto.ResourceRoleId == "string") ? null : taskDto.ResourceRoleId;
 
-                    // Validate if the assigned user exists, but only if an ID is actually provided
-                    if (!string.IsNullOrEmpty(actualUserId))
+                    // Validate if the assigned user exists using pre-fetched data, but only if an ID is actually provided
+                    if (!string.IsNullOrEmpty(actualUserId) && !existingUserIds.Contains(actualUserId))
                     {
-                        var userExists = await _context.Users.AnyAsync(u => u.Id == actualUserId, cancellationToken);
-                        if (!userExists)
-                        {
-                            throw new Exception($"Assigned User with ID '{actualUserId}' not found. Cannot assign task.");
-                        }
+                        throw new Exception($"Assigned User with ID '{actualUserId}' not found. Cannot assign task.");
                     }
 
                     // Create new assignment for Manpower task
