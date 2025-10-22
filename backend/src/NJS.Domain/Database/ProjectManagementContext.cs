@@ -134,6 +134,7 @@ namespace NJS.Domain.Database
 
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
         public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
+        public DbSet<MigrationResult> MigrationResults { get; set; }
 
         // Main Projects (tenant-based) - Note: This was already defined above
 
