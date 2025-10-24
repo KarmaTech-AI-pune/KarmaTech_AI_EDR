@@ -41,8 +41,8 @@ const AdminPanel: React.FC = () => {
   const { isSuperAdmin } = useTenantContext();
   const [hasSystemAdminPermission, setHasSystemAdminPermission] = useState(false);
   const [hasTenantAdminPermission, setHasTenantAdminPermission] = useState(false);
-const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'settings'>('settings');
-  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'settings' | 'migrations'>('settings');
+const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' |  'migrations'|'settings'>('settings');
+
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -78,8 +78,7 @@ const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tena
   }, [isSuperAdmin]);
 
   interface MenuItem {
-    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'settings'; 
-    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'settings' | 'migrations';
+    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings'| 'migrations' | 'settings'; 
     text: string;
     icon: JSX.Element;
     requiresSystemAdmin?: boolean;
