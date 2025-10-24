@@ -17,6 +17,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import SettingsIcon from '@mui/icons-material/Settings';
+import TuneIcon from '@mui/icons-material/Tune'; // New import
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UsersManagement from '../components/adminpanel/UsersManagement';
@@ -26,6 +27,7 @@ import TenantUsersManagement from '../components/adminpanel/TenantUsersManagemen
 import SubscriptionManagement from '../components/adminpanel/SubscriptionManagement';
 import BillingManagement from '../components/adminpanel/BillingManagement';
 import SystemSettings from '../components/adminpanel/SystemSettings';
+import GeneralSettings from './GeneralSettings';
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
@@ -36,7 +38,7 @@ const AdminPanel: React.FC = () => {
   const { isSuperAdmin } = useTenantContext();
   const [hasSystemAdminPermission, setHasSystemAdminPermission] = useState(false);
   const [hasTenantAdminPermission, setHasTenantAdminPermission] = useState(false);
-  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'settings'>('settings');
+const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'settings'>('settings');
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -72,7 +74,7 @@ const AdminPanel: React.FC = () => {
   }, [isSuperAdmin]);
 
   interface MenuItem {
-    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'settings';
+    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'settings'; 
     text: string;
     icon: JSX.Element;
     requiresSystemAdmin?: boolean;
@@ -88,6 +90,7 @@ const AdminPanel: React.FC = () => {
     // Tenant Admin menu items
     { id: 'users', text: 'Users Management', icon: <PeopleIcon />, requiresTenantAdmin: true },
     { id: 'roles', text: 'Roles Management', icon: <SecurityIcon />, requiresTenantAdmin: true },
+    { id: 'generalSettings', text: 'General Setting', icon: <TuneIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
     { id: 'settings', text: 'System Settings', icon: <SettingsIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false}
   ];
 
@@ -144,6 +147,8 @@ const AdminPanel: React.FC = () => {
         return <UsersManagement />;
       case 'roles':
         return <RolesManagement />;
+      case 'generalSettings':
+        return <GeneralSettings />;
       case 'settings':
         return <SystemSettings />;
       default:
@@ -187,7 +192,7 @@ const AdminPanel: React.FC = () => {
           {visibleMenuItems.map((item) => (
             <ListItemButton
               key={item.id}
-              onClick={() => setSelectedSection(item.id as 'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'settings')}
+              onClick={() => setSelectedSection(item.id as 'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'generalSettings' | 'settings')}
               selected={selectedSection === item.id}
               sx={{
                 minHeight: 48,
