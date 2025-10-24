@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { applyMigrations } from '../services/migrationService';
 
 interface MigrationResult {
   tenantId: number;
@@ -16,12 +16,8 @@ const MigrationManagement: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post('/api/tenants/apply-migrations', {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`, // Assuming token is stored in localStorage
-        },
-      });
-      setMigrationResults(response.data.results);
+      const results = await applyMigrations();
+      setMigrationResults(results);
     } catch (err) {
       console.error('Error applying migrations:', err);
       setError('Failed to apply migrations. Please check console for details.');
