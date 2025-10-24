@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NJS.Application.Services.IContract;
+using NJS.Domain; // For MigrationResult
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Services;
@@ -19,7 +23,8 @@ namespace NJSAPI.Controllers
         private readonly ISubscriptionService _subscriptionService;
         private readonly ILogger<TenantsController> _logger;
         private readonly IDatabaseManagementService _databaseManagementService;
-        private readonly ICurrentTenantService _currentTenantService;      
+        private readonly ICurrentTenantService _currentTenantService;
+
         public TenantsController(
             ProjectManagementContext context,
             TenantDbContext tenantDbContext,
@@ -36,7 +41,6 @@ namespace NJSAPI.Controllers
             _tenantDbContext = tenantDbContext;
             _currentTenantService = currentTenantService;
             _logger = logger;
-           
         }
 
         // GET: api/tenants
@@ -457,6 +461,22 @@ namespace NJSAPI.Controllers
                 tenantUser.UserId, tenantUser.TenantId);
 
             return NoContent();
+        }
+
+        [HttpPost("apply-migrations")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ApplyMigrationsToAllTenants()
+        {
+            try
+            {
+                var results = await _currentTenantService.ApplyMigrationsToAllTenantsAsync();
+                return Ok(new { Results = results });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error applying migrations to all tenants");
+                return StatusCode(500, new { Error = ex.Message });
+            }
         }
 
         private bool TenantExists(int id)
