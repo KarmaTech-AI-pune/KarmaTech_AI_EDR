@@ -148,7 +148,7 @@ export const WBSOptionsAPI = {
    */
   createOption: async (newOption: WBSOption): Promise<WBSOption> => {
     try {
-      const response = await axiosInstance.post('/api/WBSOptions', newOption);
+      const response = await axiosInstance.post('/api/WBSOptions', [newOption]);
       return response.data;
     } catch (error) {
       console.error(`Error creating new WBS option:`, error);
@@ -164,7 +164,25 @@ export const WBSOptionsAPI = {
    */
   updateOption: async (id: string, updatedOption: WBSOption): Promise<WBSOption> => {
     try {
-      const response = await axiosInstance.put(`/api/WBSOptions/${id}`, updatedOption);
+      // Convert string ID to number for backend
+      const numericId = parseInt(id, 10);
+      if (isNaN(numericId)) {
+        throw new Error(`Invalid ID format: ${id}`);
+      }
+      
+      // Format payload to match backend WBSOptionDto exactly
+      const payload = {
+        Id: numericId,
+        Value: updatedOption.value,
+        Label: updatedOption.label,
+        Level: updatedOption.level || 1,
+        ParentValue: updatedOption.parentValue || String,
+        FormType: updatedOption.formType || 0
+      };
+      
+      console.log('Update payload:', payload);
+      
+      const response = await axiosInstance.put(`/api/WBSOptions/${numericId}`, payload);
       return response.data;
     } catch (error) {
       console.error(`Error updating WBS option ${id}:`, error);
