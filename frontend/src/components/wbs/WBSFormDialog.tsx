@@ -23,6 +23,7 @@ interface WBSFormDialogProps {
   level: number;
   allLevelsData: IWBSData;
   dialogTitle: string;
+  disabled?: boolean;
 }
 
 const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
@@ -33,6 +34,7 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
   level,
   allLevelsData,
   dialogTitle,
+  disabled = false,
 }) => {
   const {
     control,
@@ -93,6 +95,7 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
                 margin="normal"
                 error={!!errors.label}
                 helperText={errors.label ? errors.label.message : ''}
+                disabled={disabled}
               />
             )}
           />
@@ -110,6 +113,7 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
                     labelId="parent-level-label"
                     label="Parent Level"
                     value={field.value || ''} // Ensure controlled component
+                    disabled={disabled}
                   >
                     {getParentOptions()}
                   </Select>
@@ -125,10 +129,10 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
         </form>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={onClose} color="secondary" disabled={disabled}>
           Cancel
         </Button>
-        <Button type="submit" form="wbs-form" variant="contained" color="primary">
+        <Button type="submit" form="wbs-form" variant="contained" color="primary" disabled={disabled}>
           {initialData ? 'Update' : 'Add'}
         </Button>
       </DialogActions>

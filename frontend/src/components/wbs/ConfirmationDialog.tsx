@@ -14,6 +14,7 @@ interface ConfirmationDialogProps {
   onConfirm: () => void;
   message: string;
   dialogTitle: string;
+  disabled?: boolean;
 }
 
 const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -22,6 +23,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   onConfirm,
   message,
   dialogTitle,
+  disabled = false,
 }) => {
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="xs" fullWidth>
@@ -30,10 +32,10 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         <Typography>{message}</Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={onClose} color="secondary" disabled={disabled}>
           Cancel
         </Button>
-        <Button onClick={onConfirm} variant="contained" color="error">
+        <Button onClick={onConfirm} variant="contained" color="error" disabled={disabled}>
           Confirm
         </Button>
       </DialogActions>

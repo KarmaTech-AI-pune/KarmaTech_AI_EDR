@@ -3,6 +3,9 @@ export interface WBSOption {
   id: string;
   value: string;
   label: string;
+  level?: number;
+  parentValue?: string | null;
+  formType?: number;
 }
 
 export enum TaskType {
