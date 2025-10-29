@@ -33,6 +33,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
             var taskEntity = await _context.WBSTasks
                 .Include(t => t.WorkBreakdownStructure)
+                    .ThenInclude(wbs => wbs.WBSHeader) // Eagerly load WBSHeader
                 .Include(t => t.UserWBSTasks)
                 .Include(t => t.PlannedHours)
                 .FirstOrDefaultAsync(t => t.Id == request.TaskId && !t.IsDeleted, cancellationToken);
@@ -43,7 +44,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 throw new Exception($"WBSTask with ID {request.TaskId} not found.");
             }
 
-            if (taskEntity.WorkBreakdownStructure == null || taskEntity.WorkBreakdownStructure.ProjectId != request.ProjectId)
+            if (taskEntity.WorkBreakdownStructure == null || taskEntity.WorkBreakdownStructure.WBSHeader == null || taskEntity.WorkBreakdownStructure.WBSHeader.ProjectId != request.ProjectId)
             {
                 _logger.LogError("Task {TaskId} does not belong to Project {ProjectId}.", request.TaskId, request.ProjectId);
                 throw new Exception($"Task {request.TaskId} does not belong to Project {request.ProjectId}.");

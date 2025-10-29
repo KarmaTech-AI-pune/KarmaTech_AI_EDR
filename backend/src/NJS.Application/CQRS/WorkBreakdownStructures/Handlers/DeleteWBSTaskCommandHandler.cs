@@ -28,7 +28,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         {
             // --- 1. Find the task to delete ---
             var taskEntity = await _context.WBSTasks
-                .Include(t => t.WorkBreakdownStructure) // Include WBS to check ProjectId
+                .Include(t => t.WorkBreakdownStructure)
+                    .ThenInclude(wbs => wbs.WBSHeader) // Include WBSHeader to check ProjectId
                 .FirstOrDefaultAsync(t => t.Id == request.TaskId, cancellationToken);
 
             if (taskEntity == null)
@@ -40,7 +41,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
 
             // --- 2. Verify task belongs to the correct project's WBS ---
-            if (taskEntity.WorkBreakdownStructure == null || taskEntity.WorkBreakdownStructure.ProjectId != request.ProjectId)
+            if (taskEntity.WorkBreakdownStructure == null || taskEntity.WorkBreakdownStructure.WBSHeader == null || taskEntity.WorkBreakdownStructure.WBSHeader.ProjectId != request.ProjectId)
             {
                 // Or throw an authorization/forbidden exception
                 throw new Exception($"Task {request.TaskId} does not belong to Project {request.ProjectId}.");
@@ -62,7 +63,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         {
             var childTasks = await _context.WBSTasks
                 .Include(t => t.WorkBreakdownStructure)
-                .Where(t => t.WorkBreakdownStructure.ProjectId == projectId && t.ParentId == taskId && !t.IsDeleted && t.WorkBreakdownStructure.ProjectId == projectId)
+                    .ThenInclude(wbs => wbs.WBSHeader) // Include WBSHeader for ProjectId check
+                .Where(t => t.WorkBreakdownStructure.WBSHeader.ProjectId == projectId && t.ParentId == taskId && !t.IsDeleted) // Corrected ProjectId access and removed duplicate check
                 .ToListAsync(cancellationToken);
 
             foreach (var childTask in childTasks)

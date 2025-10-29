@@ -26,7 +26,6 @@ namespace NJS.Application.Services
             {
                 throw new ArgumentException("Project not found", nameof(projectId));
             }
-            wbs.ProjectId = projectId;
             _wbsRepository.Add(wbs);
         }
 

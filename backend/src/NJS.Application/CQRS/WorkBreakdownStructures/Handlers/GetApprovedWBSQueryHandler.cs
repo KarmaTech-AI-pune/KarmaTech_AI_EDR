@@ -38,7 +38,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 var wbsDto = new WBSDetailsDto
                 {
                     Id = wbs.Id,
-                    ProjectId = wbs.ProjectId,
+                    ProjectId = wbs.WBSHeader.ProjectId, // Access ProjectId through WBSHeader
                     Tasks = new List<WBSTaskDto>()
                 };
 

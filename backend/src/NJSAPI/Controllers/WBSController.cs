@@ -42,21 +42,21 @@ namespace NJSAPI.Controllers
         /// Creates or replaces the entire Work Breakdown Structure for a project.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <param name="tasks">A list representing the desired state of WBS tasks.</param>
+        /// <param name="wbsHeader">The WBS header data including tasks.</param>
         /// <returns>No content if successful.</returns>
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)] // If handler throws NotFoundException for project
-        public async Task<IActionResult> SetWBS(int projectId, [FromBody] List<WBSTaskDto> tasks)
+        public async Task<IActionResult> SetWBS(int projectId, [FromBody] WBSHeaderDto wbsHeader)
         {
-            if (tasks == null)
+            if (wbsHeader == null)
             {
-                return BadRequest("WBS task list cannot be null.");
+                return BadRequest("WBS header cannot be null.");
             }
             // Basic validation: Check if ParentIds point to valid Ids within the list for new tasks? Optional.
 
-            var command = new SetWBSCommand(projectId, tasks);
+            var command = new SetWBSCommand(projectId, wbsHeader);
             await _mediator.Send(command);
             return NoContent();
         }
@@ -86,8 +86,7 @@ namespace NJSAPI.Controllers
             var createdTasksDto = await _mediator.Send(command);
           
             // For a list of created items, it's common to return 201 Created with the list in the body.
-            // CreatedAtAction is typically for a single resource.
-            return CreatedAtAction(nameof(GetWBS), new { projectId }, createdTasksDto);
+            return StatusCode(StatusCodes.Status201Created, createdTasksDto);
         }
 
         /// <summary>

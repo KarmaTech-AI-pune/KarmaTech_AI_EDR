@@ -37,15 +37,16 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             {
                 // Get the current WBS for the project
                 var wbs = await _context.WorkBreakdownStructures
+                    .Include(w => w.WBSHeader) // Eagerly load WBSHeader
                     .Include(w => w.Tasks)
                         .ThenInclude(t => t.PlannedHours)
                     .Include(w => w.Tasks)
                         .ThenInclude(t => t.UserWBSTasks)
-                    .FirstOrDefaultAsync(w => w.ProjectId == request.ProjectId, cancellationToken);
+                    .FirstOrDefaultAsync(w => w.WBSHeader.ProjectId == request.ProjectId, cancellationToken);
 
-                if (wbs == null)
+                if (wbs == null || wbs.WBSHeader == null)
                 {
-                    throw new InvalidOperationException($"WBS not found for project {request.ProjectId}");
+                    throw new InvalidOperationException($"WBS or WBSHeader not found for project {request.ProjectId}");
                 }
 
                 // Generate next version number
@@ -54,7 +55,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 // Create new WBS version
                 var wbsVersion = new WBSVersionHistory
                 {
-                    WorkBreakdownStructureId = wbs.Id,
+                    WBSHeaderId = wbs.WBSHeaderId, // Link to WBSHeader
                     Version = nextVersion,
                     Comments = request.Comments,
                     CreatedBy = "system", // This should come from the current user context
@@ -77,10 +78,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 // Copy tasks to version history
                 await CopyTasksToVersion(wbs.Tasks, wbsVersion.Id, cancellationToken);
 
-                // Update the WBS to point to the latest version
-                wbs.LatestVersionHistoryId = wbsVersion.Id;
-                wbs.CurrentVersion = nextVersion;
-                _context.Entry(wbs).State = EntityState.Modified;
+                // Update the WBSHeader to point to the latest version
+                wbs.WBSHeader.LatestVersionHistoryId = wbsVersion.Id;
+                wbs.WBSHeader.Version = nextVersion; // Update version on WBSHeader
+                _context.Entry(wbs.WBSHeader).State = EntityState.Modified;
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"Created WBS version {nextVersion} for project {request.ProjectId}");
@@ -164,4 +165,4 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
         }
     }
-} 
+}

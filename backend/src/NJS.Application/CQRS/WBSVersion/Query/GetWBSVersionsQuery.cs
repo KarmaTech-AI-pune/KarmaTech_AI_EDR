@@ -15,11 +15,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Queries
     public record GetWBSVersionQuery(int ProjectId, string Version) : IRequest<WBSVersionDetailsDto>;
 
     /// <summary>
-    /// Query to get the latest WBS version
-    /// </summary>
-    public record GetLatestWBSVersionQuery(int ProjectId) : IRequest<WBSVersionDetailsDto>;
-
-    /// <summary>
     /// Query to get the active WBS version
     /// </summary>
     public record GetActiveWBSVersionQuery(int ProjectId) : IRequest<WBSVersionDetailsDto>;
@@ -33,4 +28,4 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Queries
     /// Query to get WBS version workflow history
     /// </summary>
     public record GetWBSVersionWorkflowHistoryQuery(int WBSVersionHistoryId) : IRequest<List<WBSVersionWorkflowHistoryDto>>;
-} 
+}

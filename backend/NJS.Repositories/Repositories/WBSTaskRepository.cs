@@ -25,6 +25,7 @@ namespace NJS.Repositories.Repositories
             try
             {
                 var query = _context.WorkBreakdownStructures
+                    .Include(wbs => wbs.WBSHeader) // Include WBSHeader to access ProjectId
                     .Include(wbs => wbs.Tasks)
                     .ThenInclude(task => task.PlannedHours)
                     .ThenInclude(ph => ph.WBSTaskPlannedHourHeader) // Include header for status check
@@ -38,7 +39,7 @@ namespace NJS.Repositories.Repositories
 
                 if (projectId.HasValue)
                 {
-                    query = query.Where(wbs => wbs.ProjectId == projectId.Value);
+                    query = query.Where(wbs => wbs.WBSHeader != null && wbs.WBSHeader.ProjectId == projectId.Value);
                 }
 
                 var result = await query.ToListAsync();

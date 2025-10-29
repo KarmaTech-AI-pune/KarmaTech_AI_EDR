@@ -57,10 +57,11 @@ namespace NJS.Domain.Database
         public new DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<GoNoGoDecision> GoNoGoDecisions { get; set; }
-        public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; }
+        public DbSet<WBSHeader> WBSHeaders { get; set; } // Added for WBS Master
+        public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; } // Now represents WBS Groups
         public DbSet<WBSTask> WBSTasks { get; set; }
-        public DbSet<WBSTaskPlannedHourHeader> WBSTaskPlannedHourHeaders { get; set; } // Added
-        public DbSet<WBSTaskPlannedHour> WBSTaskPlannedHours { get; set; } // Added
+        public DbSet<WBSTaskPlannedHourHeader> WBSTaskPlannedHourHeaders { get; set; }
+        public DbSet<WBSTaskPlannedHour> WBSTaskPlannedHours { get; set; }
         public DbSet<UserWBSTask> UserWBSTasks { get; set; }
         public DbSet<WBSOption> WBSOptions { get; set; }
         public DbSet<OpportunityTracking> OpportunityTrackings { get; set; }
@@ -70,9 +71,8 @@ namespace NJS.Domain.Database
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
         public DbSet<WBSHistory> WBSHistories { get; set; }
 
-        // WBS Versioning entities
+        // WBS Versioning entities (all retained as per feedback)
         public DbSet<WBSVersionHistory> WBSVersionHistories { get; set; }
-
         public DbSet<MeasurementUnit> MeasurementUnits { get; set; }
         public DbSet<WBSTaskVersionHistory> WBSTaskVersionHistories { get; set; }
         public DbSet<WBSVersionWorkflowHistory> WBSVersionWorkflowHistories { get; set; }
@@ -136,8 +136,6 @@ namespace NJS.Domain.Database
         public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
         public DbSet<MigrationResult> MigrationResults { get; set; }
 
-        // Main Projects (tenant-based) - Note: This was already defined above
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -155,8 +153,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<ProjectClosure>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ProjectResource>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<WBSTaskPlannedHourHeader>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSHeader>().HasQueryFilter(p => p.TenantId == TenantId); // Added
             modelBuilder.Entity<WorkBreakdownStructure>().HasQueryFilter(p => p.TenantId == TenantId);
-            // Add other entities that need to be filtered by TenantId here
             modelBuilder.Entity<BudgetTable>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CTCEAC>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControlWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -192,8 +190,6 @@ namespace NJS.Domain.Database
                 .HasOne(mp => mp.Project)
                 .WithMany()
                 .HasForeignKey(mp => mp.ProjectId);
-
-
 
             // Configure one-to-one relationships with MonthlyProgress
             modelBuilder.Entity<MonthlyProgress>()
@@ -603,39 +599,74 @@ namespace NJS.Domain.Database
 
 
 
-            // Configure WorkBreakdownStructure entity
-            modelBuilder.Entity<WorkBreakdownStructure>(entity =>
+            // Configure WBSHeader entity
+            modelBuilder.Entity<WBSHeader>(entity =>
             {
-                // Optional: Add index on ProjectId if frequent lookups by project are expected
-                entity.HasIndex(w => w.ProjectId);
+                entity.HasQueryFilter(h => h.TenantId == TenantId);
 
-                // Configure relationships with version history
-                entity.HasMany(w => w.VersionHistory)
-                      .WithOne(v => v.WorkBreakdownStructure)
-                      .HasForeignKey(v => v.WorkBreakdownStructureId)
+                entity.HasOne(h => h.Project)
+                      .WithMany()
+                      .HasForeignKey(h => h.ProjectId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Configure navigation properties for version management
-                entity.HasOne(w => w.LatestVersion)
+                entity.HasMany(h => h.WorkBreakdownStructures)
+                      .WithOne(wbs => wbs.WBSHeader)
+                      .HasForeignKey(wbs => wbs.WBSHeaderId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(h => h.VersionHistories)
+                      .WithOne(vh => vh.WBSHeader)
+                      .HasForeignKey(vh => vh.WBSHeaderId)
+                      .OnDelete(DeleteBehavior.Restrict); // Restrict deletion of WBSHeader if it has version histories
+
+                // Configure the relationship for ActiveVersion
+                entity.HasOne(h => h.ActiveVersion)
                       .WithMany()
-                      .HasForeignKey(w => w.LatestVersionHistoryId)
+                      .HasForeignKey(h => h.ActiveVersionHistoryId)
                       .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired(false);
 
-                entity.HasOne(w => w.ActiveVersion)
+                // Configure the relationship for LatestVersion
+                entity.HasOne(h => h.LatestVersion)
                       .WithMany()
-                      .HasForeignKey(w => w.ActiveVersionHistoryId)
+                      .HasForeignKey(h => h.LatestVersionHistoryId)
                       .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired(false);
+            });
+
+            // Configure WorkBreakdownStructure entity (now WBS Groups)
+            modelBuilder.Entity<WorkBreakdownStructure>(entity =>
+            {
+                entity.HasQueryFilter(w => w.TenantId == TenantId);
+                entity.HasIndex(w => w.WBSHeaderId); // Index for faster lookups by WBSHeader
+                entity.HasIndex(w => w.Name); // Index for faster lookups by Name
+
+                // Remove old versioning relationships from WorkBreakdownStructure
+                // entity.HasMany(w => w.VersionHistory)
+                //       .WithOne(v => v.WorkBreakdownStructure)
+                //       .HasForeignKey(v => v.WorkBreakdownStructureId)
+                //       .OnDelete(DeleteBehavior.Cascade);
+
+                // entity.HasOne(w => w.LatestVersion)
+                //       .WithMany()
+                //       .HasForeignKey(w => w.LatestVersionHistoryId)
+                //       .OnDelete(DeleteBehavior.NoAction)
+                //       .IsRequired(false);
+
+                // entity.HasOne(w => w.ActiveVersion)
+                //       .WithMany()
+                //       .HasForeignKey(w => w.ActiveVersionHistoryId)
+                //       .OnDelete(DeleteBehavior.NoAction)
+                //       .IsRequired(false);
             });
 
             // Configure WBS Version History entity
             modelBuilder.Entity<WBSVersionHistory>(entity =>
             {
+                entity.HasQueryFilter(v => v.TenantId == TenantId);
                 entity.Property(v => v.Version).HasMaxLength(20).IsRequired();
                 entity.Property(v => v.Comments).HasMaxLength(1000);
 
-                // Configure relationships
                 entity.HasOne(v => v.Status)
                       .WithMany()
                       .HasForeignKey(v => v.StatusId)
@@ -651,47 +682,47 @@ namespace NJS.Domain.Database
                       .HasForeignKey(v => v.ApprovedBy)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // Indexes for performance
-                entity.HasIndex(v => v.WorkBreakdownStructureId);
+                entity.HasIndex(v => v.WBSHeaderId); // Updated to WBSHeaderId
                 entity.HasIndex(v => v.Version);
                 entity.HasIndex(v => v.IsActive);
                 entity.HasIndex(v => v.IsLatest);
                 entity.HasIndex(v => v.CreatedAt);
+
+                // Remove duplicate relationship configuration
+                // The relationships are already defined in the WBSHeader configuration
             });
 
-            // Configure WBS Task Version History entity
+            // Configure WBSTaskVersionHistory entity
             modelBuilder.Entity<WBSTaskVersionHistory>(entity =>
             {
+                entity.HasQueryFilter(t => t.TenantId == TenantId);
                 entity.Property(t => t.EstimatedBudget).HasPrecision(18, 2);
                 entity.Property(t => t.Title).HasMaxLength(255).IsRequired();
                 entity.Property(t => t.Description).HasMaxLength(1000);
 
-                // Configure self-referencing relationship for hierarchy
                 entity.HasOne(t => t.Parent)
                       .WithMany(t => t.Children)
                       .HasForeignKey(t => t.ParentId)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // Configure relationship with WBS Version History
                 entity.HasOne(t => t.WBSVersionHistory)
                       .WithMany(v => v.TaskVersions)
                       .HasForeignKey(t => t.WBSVersionHistoryId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Indexes for performance
                 entity.HasIndex(t => t.WBSVersionHistoryId);
                 entity.HasIndex(t => t.OriginalTaskId);
                 entity.HasIndex(t => t.ParentId);
                 entity.HasIndex(t => t.DisplayOrder);
             });
 
-            // Configure WBS Version Workflow History entity
+            // Configure WBSVersionWorkflowHistory entity
             modelBuilder.Entity<WBSVersionWorkflowHistory>(entity =>
             {
+                entity.HasQueryFilter(h => h.TenantId == TenantId);
                 entity.Property(h => h.Action).HasMaxLength(100);
                 entity.Property(h => h.Comments).HasMaxLength(1000);
 
-                // Configure relationships
                 entity.HasOne(h => h.Status)
                       .WithMany()
                       .HasForeignKey(h => h.StatusId)
@@ -707,31 +738,30 @@ namespace NJS.Domain.Database
                       .HasForeignKey(h => h.AssignedToId)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // Indexes for performance
                 entity.HasIndex(h => h.WBSVersionHistoryId);
                 entity.HasIndex(h => h.ActionDate);
             });
 
-            // Configure WBS Task Planned Hour Version History entity
+            // Configure WBSTaskPlannedHourVersionHistory entity
             modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>(entity =>
             {
+                entity.HasQueryFilter(ph => ph.TenantId == TenantId);
                 entity.Property(ph => ph.Year).HasMaxLength(4).IsRequired();
                 entity.Property(ph => ph.Month).HasMaxLength(20).IsRequired();
                 entity.Property(ph => ph.CreatedBy).HasMaxLength(100);
 
-                // Configure relationship with WBS Task Version History
                 entity.HasOne(ph => ph.WBSTaskVersionHistory)
                       .WithMany(t => t.PlannedHours)
                       .HasForeignKey(ph => ph.WBSTaskVersionHistoryId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Indexes for performance
                 entity.HasIndex(ph => ph.WBSTaskVersionHistoryId);
             });
 
-            // Configure User WBS Task Version History entity
+            // Configure UserWBSTaskVersionHistory entity
             modelBuilder.Entity<UserWBSTaskVersionHistory>(entity =>
             {
+                entity.HasQueryFilter(ut => ut.TenantId == TenantId);
                 entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
                 entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
                 entity.Property(ut => ut.Name).HasMaxLength(255);
@@ -739,7 +769,6 @@ namespace NJS.Domain.Database
                 entity.Property(ut => ut.CreatedBy).HasMaxLength(100);
                 entity.Property(ut => ut.ResourceRoleId).IsRequired(false);
 
-                // Configure relationships
                 entity.HasOne(ut => ut.WBSTaskVersionHistory)
                       .WithMany(t => t.UserAssignments)
                       .HasForeignKey(ut => ut.WBSTaskVersionHistoryId)
@@ -755,7 +784,6 @@ namespace NJS.Domain.Database
                       .HasForeignKey(ut => ut.ResourceRoleId)
                       .OnDelete(DeleteBehavior.SetNull);
 
-                // Indexes for performance
                 entity.HasIndex(ut => ut.WBSTaskVersionHistoryId);
                 entity.HasIndex(ut => ut.UserId);
             });

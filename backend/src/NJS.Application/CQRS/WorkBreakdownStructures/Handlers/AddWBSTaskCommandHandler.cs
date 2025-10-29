@@ -46,24 +46,39 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
             // --- 1. Find the active WBS for the project ---
             var wbs = await _context.WorkBreakdownStructures
+                .Include(w => w.WBSHeader) // Eagerly load WBSHeader
                 .Include(w => w.Tasks) // Include tasks to potentially validate ParentId if needed
-                .FirstOrDefaultAsync(w => w.ProjectId == request.ProjectId && w.IsActive, cancellationToken);
+                .FirstOrDefaultAsync(w => w.WBSHeader.ProjectId == request.ProjectId && w.WBSHeader.IsActive, cancellationToken);
 
             if (wbs == null)
             {
-                _logger.LogWarning("No active Work Breakdown Structure found for Project ID {ProjectId}. Creating a new one.", request.ProjectId);
-                // Create a new WBS if none exists
-                wbs = new WorkBreakdownStructure
+                _logger.LogWarning("No active Work Breakdown Structure found for Project ID {ProjectId}. Creating a new WBSHeader and WorkBreakdownStructure.", request.ProjectId);
+                
+                // Create a new WBSHeader
+                var newWBSHeader = new WBSHeader
                 {
                     ProjectId = request.ProjectId,
                     IsActive = true,
+                    Version = "1.0", // Default version
+                    VersionDate = DateTime.UtcNow,
+                    CreatedBy = _currentUser,
+                    ApprovalStatus = PMWorkflowStatusEnum.Initial // Default status
+                };
+                _context.WBSHeaders.Add(newWBSHeader);
+                await _unitOfWork.SaveChangesAsync(); // Save the new WBSHeader to get its ID
+
+                // Create a new WorkBreakdownStructure and link it to the new WBSHeader
+                wbs = new WorkBreakdownStructure
+                {
+                    WBSHeaderId = newWBSHeader.Id,
+                    WBSHeader = newWBSHeader, // Set navigation property
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = _currentUser,
                     Tasks = new List<WBSTask>() // Initialize tasks collection
                 };
                 _context.WorkBreakdownStructures.Add(wbs);
                 await _unitOfWork.SaveChangesAsync(); // Save the new WBS to get its ID
-                _logger.LogInformation("New Work Breakdown Structure created with ID {WBSId} for Project ID {ProjectId}.", wbs.Id, request.ProjectId);
+                _logger.LogInformation("New WBSHeader with ID {WBSHeaderId} and Work Breakdown Structure with ID {WBSId} created for Project ID {ProjectId}.", newWBSHeader.Id, wbs.Id, request.ProjectId);
             }
 
             // Pre-fetch all WBS options and users needed for the batch
@@ -127,7 +142,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                 // --- 3. Add User Assignment and Planned Hours ---
                 UpdateUserAssignment(taskEntity, taskDto, existingUserIds); // Pass pre-fetched user IDs
-                UpdatePlannedHours(taskEntity, taskDto, wbs.ProjectId);
+                UpdatePlannedHours(taskEntity, taskDto, wbs.WBSHeader.ProjectId);
 
                 _context.WBSTasks.Add(taskEntity);
                 allNewTasks.Add(taskEntity);

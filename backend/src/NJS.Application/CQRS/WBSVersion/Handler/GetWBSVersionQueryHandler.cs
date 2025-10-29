@@ -4,34 +4,31 @@ using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
 using NJS.Application.Dtos;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
-    public class GetLatestWBSVersionQueryHandler : IRequestHandler<GetLatestWBSVersionQuery, WBSVersionDetailsDto>
+    public class GetWBSVersionQueryHandler : IRequestHandler<GetWBSVersionQuery, WBSVersionDetailsDto>
     {
         private readonly IWBSVersionRepository _wbsVersionRepository;
-        private readonly ILogger<GetLatestWBSVersionQueryHandler> _logger;
+        private readonly ILogger<GetWBSVersionQueryHandler> _logger;
 
-        public GetLatestWBSVersionQueryHandler(
+        public GetWBSVersionQueryHandler(
             IWBSVersionRepository wbsVersionRepository,
-            ILogger<GetLatestWBSVersionQueryHandler> logger)
+            ILogger<GetWBSVersionQueryHandler> logger)
         {
             _wbsVersionRepository = wbsVersionRepository;
             _logger = logger;
         }
 
-        public async Task<WBSVersionDetailsDto> Handle(GetLatestWBSVersionQuery request, CancellationToken cancellationToken)
+        public async Task<WBSVersionDetailsDto> Handle(GetWBSVersionQuery request, CancellationToken cancellationToken)
         {
             try
             {
-                var version = await _wbsVersionRepository.GetLatestVersionAsync(request.ProjectId);
+                var version = await _wbsVersionRepository.GetByVersionAsync(request.ProjectId, request.Version);
 
                 if (version == null)
                 {
-                    _logger.LogWarning($"No latest WBS version found for project {request.ProjectId}");
+                    _logger.LogWarning($"WBS version {request.Version} not found for project {request.ProjectId}");
                     return null;
                 }
 
@@ -41,7 +38,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 var versionDto = new WBSVersionDetailsDto
                 {
                     Id = version.Id,
-                    WorkBreakdownStructureId = version.WorkBreakdownStructureId,
+                    WBSHeaderId = version.WBSHeaderId, // Use WBSHeaderId
                     Version = version.Version,
                     Comments = version.Comments,
                     CreatedAt = version.CreatedAt,
@@ -71,13 +68,13 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     }).ToList()
                 };
 
-                _logger.LogInformation($"Retrieved latest WBS version {version.Version} for project {request.ProjectId}");
+                _logger.LogInformation($"Retrieved WBS version {request.Version} for project {request.ProjectId}");
 
                 return versionDto;
             }
             catch (System.Exception ex)
             {
-                _logger.LogError(ex, $"Error retrieving latest WBS version for project {request.ProjectId}");
+                _logger.LogError(ex, $"Error retrieving WBS version {request.Version} for project {request.ProjectId}");
                 throw;
             }
         }
@@ -99,8 +96,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 Description = taskVersion.Description,
                 DisplayOrder = taskVersion.DisplayOrder,
                 EstimatedBudget = taskVersion.EstimatedBudget,
-                StartDate = taskVersion.StartDate,
-                EndDate = taskVersion.EndDate,
+                StartDate = taskVersion.StartDate ?? DateTime.MinValue,
+                EndDate = taskVersion.EndDate ?? DateTime.MinValue,
                 TaskType = taskVersion.TaskType,
                 AssignedUserId = taskVersion.UserAssignments?.FirstOrDefault()?.UserId,
                 AssignedUserName = taskVersion.UserAssignments?.FirstOrDefault()?.User?.UserName,
@@ -115,10 +112,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     Month = ph.Month,
                     PlannedHours = ph.PlannedHours
                 }).ToList() ?? new System.Collections.Generic.List<PlannedHourDto>(),
-                TotalHours = totalHours,
+                TotalHours = (decimal)totalHours,
                 TotalCost = totalCost,
                 Children = new System.Collections.Generic.List<WBSTaskVersionDto>() // Will be populated by parent handler
             };
         }
     }
-} 
+}

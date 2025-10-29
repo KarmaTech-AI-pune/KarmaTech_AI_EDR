@@ -25,13 +25,14 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         {
             // Fetch all WBS tasks for the given project, including child tasks and related data
             var wbsTasks = await _context.WBSTasks
-                .Where(t => t.WorkBreakdownStructure.ProjectId == request.ProjectId && !t.IsDeleted)
                 .Include(t => t.WorkBreakdownStructure)
+                    .ThenInclude(wbs => wbs.WBSHeader) // Eagerly load WBSHeader
                 .Include(t => t.UserWBSTasks)
                     .ThenInclude(ut => ut.User)
                 .Include(t => t.UserWBSTasks)
                     .ThenInclude(ut => ut.ResourceRole)
                 .Include(t => t.PlannedHours)
+                .Where(t => t.WorkBreakdownStructure.WBSHeader.ProjectId == request.ProjectId && t.WorkBreakdownStructure.WBSHeader.IsActive && !t.IsDeleted)
                 .ToListAsync(cancellationToken);
 
             // Convert to hierarchical DTO structure

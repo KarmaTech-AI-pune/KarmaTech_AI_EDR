@@ -39,13 +39,13 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _logger.LogWarning("Project with ID {ProjectId} not found", request.ProjectId);
                 return new WBSStructureDto
                 {
-                    ProjectId = request.ProjectId,
                     Tasks = new List<WBSTaskDto>()
                 };
             }
 
             // Fetch the WBS with all related data - Load entities first, project later
             var wbs = await _context.WorkBreakdownStructures
+                .Include(w => w.WBSHeader) // Eagerly load WBSHeader
                 .Include(w => w.Tasks.Where(t => !t.IsDeleted))
                     .ThenInclude(t => t.UserWBSTasks)
                         .ThenInclude(ut => ut.User)
@@ -56,7 +56,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     .ThenInclude(t => t.PlannedHours)
                 .Include(w => w.Tasks.Where(t => !t.IsDeleted))
                     .ThenInclude(t => t.WBSOption)
-                .Where(w => w.ProjectId == request.ProjectId && w.IsActive)
+                .Where(w => w.WBSHeader.ProjectId == request.ProjectId && w.WBSHeader.IsActive)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -65,7 +65,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _logger.LogInformation("No active WBS found for ProjectId: {ProjectId}", request.ProjectId);
                 return new WBSStructureDto
                 {
-                    ProjectId = request.ProjectId,
                     Tasks = new List<WBSTaskDto>()
                 };
             }
@@ -74,9 +73,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             var wbsDto = new WBSStructureDto
             {
                 Id = wbs.Id,
-                ProjectId = wbs.ProjectId,
-                Version = wbs.CurrentVersion,
-                IsActive = wbs.IsActive,
+                WBSHeaderId = wbs.WBSHeaderId, // Keep WBSHeaderId
                 CreatedAt = wbs.CreatedAt,
                 CreatedBy = wbs.CreatedBy,
                 Tasks = wbs.Tasks

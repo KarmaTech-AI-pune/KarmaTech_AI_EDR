@@ -4,55 +4,58 @@ using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
 using NJS.Application.Dtos;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
-    public class GetWBSVersionQueryHandler : IRequestHandler<GetWBSVersionQuery, WBSVersionDetailsDto>
+    public class GetLatestWBSVersionQueryHandler : IRequestHandler<GetLatestWBSVersionQuery, WBSVersionDto>
     {
         private readonly IWBSVersionRepository _wbsVersionRepository;
-        private readonly ILogger<GetWBSVersionQueryHandler> _logger;
+        private readonly ILogger<GetLatestWBSVersionQueryHandler> _logger;
 
-        public GetWBSVersionQueryHandler(
+        public GetLatestWBSVersionQueryHandler(
             IWBSVersionRepository wbsVersionRepository,
-            ILogger<GetWBSVersionQueryHandler> logger)
+            ILogger<GetLatestWBSVersionQueryHandler> logger)
         {
             _wbsVersionRepository = wbsVersionRepository;
             _logger = logger;
         }
 
-        public async Task<WBSVersionDetailsDto> Handle(GetWBSVersionQuery request, CancellationToken cancellationToken)
+        public async Task<WBSVersionDto> Handle(GetLatestWBSVersionQuery request, CancellationToken cancellationToken)
         {
             try
             {
-                var version = await _wbsVersionRepository.GetByVersionAsync(request.ProjectId, request.Version);
+                var version = await _wbsVersionRepository.GetLatestVersionAsync(request.ProjectId);
 
                 if (version == null)
                 {
-                    _logger.LogWarning($"WBS version {request.Version} not found for project {request.ProjectId}");
+                    _logger.LogWarning($"No latest WBS version found for project {request.ProjectId}");
                     return null;
                 }
 
                 var taskVersions = await _wbsVersionRepository.GetTaskVersionsAsync(version.Id);
                 var workflowHistory = await _wbsVersionRepository.GetWorkflowHistoryAsync(version.Id);
 
-                var versionDto = new WBSVersionDetailsDto
+                var versionDto = new WBSVersionDto
                 {
                     Id = version.Id,
-                    WorkBreakdownStructureId = version.WorkBreakdownStructureId,
+                    WBSHeaderId = version.WBSHeaderId,
                     Version = version.Version,
                     Comments = version.Comments,
                     CreatedAt = version.CreatedAt,
                     CreatedBy = version.CreatedBy,
-                    CreatedByName = version.CreatedByUser?.UserName ?? version.CreatedBy,
+                    CreatedByName = version.CreatedByUser?.UserName ?? version.CreatedBy, // Now in WBSVersionDto
                     StatusId = version.StatusId,
-                    Status = version.Status?.Status ?? "Unknown",
+                    Status = version.Status?.Status ?? "Unknown", // Now in WBSVersionDto
                     IsActive = version.IsActive,
                     IsLatest = version.IsLatest,
                     ApprovedAt = version.ApprovedAt,
                     ApprovedBy = version.ApprovedBy,
-                    ApprovedByName = version.ApprovedByUser?.UserName ?? version.ApprovedBy,
-                    Tasks = taskVersions.Select(t => MapTaskVersionToDto(t)).ToList(),
-                    WorkflowHistory = workflowHistory.Select(h => new WBSVersionWorkflowHistoryDto
+                    ApprovedByName = version.ApprovedByUser?.UserName ?? version.ApprovedBy, // Now in WBSVersionDto
+                    TaskVersions = taskVersions.Select(t => MapTaskVersionToDto(t)).ToList(),
+                    WorkflowHistory = workflowHistory.Select(h => new WBSVersionWorkflowHistoryDto // Use WorkflowHistory (singular)
                     {
                         Id = h.Id,
                         WBSVersionHistoryId = h.WBSVersionHistoryId,
@@ -68,24 +71,23 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     }).ToList()
                 };
 
-                _logger.LogInformation($"Retrieved WBS version {request.Version} for project {request.ProjectId}");
+                _logger.LogInformation($"Retrieved latest WBS version {version.Version} for project {request.ProjectId}");
 
                 return versionDto;
             }
             catch (System.Exception ex)
             {
-                _logger.LogError(ex, $"Error retrieving WBS version {request.Version} for project {request.ProjectId}");
+                _logger.LogError(ex, $"Error retrieving latest WBS version for project {request.ProjectId}");
                 throw;
             }
         }
 
-        private WBSTaskVersionDto MapTaskVersionToDto(WBSTaskVersionHistory taskVersion)
+        private WBSTaskVersionHistoryDto MapTaskVersionToDto(WBSTaskVersionHistory taskVersion)
         {
             var totalHours = taskVersion.PlannedHours?.Sum(ph => ph.PlannedHours) ?? 0;
-            // Note: Cost calculation would need to be implemented based on business logic
-            var totalCost = 0m; // Placeholder - would need cost rate from elsewhere
+            var totalCost = 0m;
 
-            return new WBSTaskVersionDto
+            return new WBSTaskVersionHistoryDto
             {
                 Id = taskVersion.Id,
                 WBSVersionHistoryId = taskVersion.WBSVersionHistoryId,
@@ -96,14 +98,14 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 Description = taskVersion.Description,
                 DisplayOrder = taskVersion.DisplayOrder,
                 EstimatedBudget = taskVersion.EstimatedBudget,
-                StartDate = taskVersion.StartDate,
-                EndDate = taskVersion.EndDate,
+                StartDate = taskVersion.StartDate ?? DateTime.MinValue, // Explicit cast
+                EndDate = taskVersion.EndDate ?? DateTime.MinValue, // Explicit cast
                 TaskType = taskVersion.TaskType,
                 AssignedUserId = taskVersion.UserAssignments?.FirstOrDefault()?.UserId,
                 AssignedUserName = taskVersion.UserAssignments?.FirstOrDefault()?.User?.UserName,
-                CostRate = 0, // Placeholder - would need to get from user assignment or other source
-                ResourceName = null, // Not available in version history
-                ResourceUnit = null, // Not available in version history
+                CostRate = 0,
+                ResourceName = null,
+                ResourceUnit = null,
                 ResourceRoleId = taskVersion.UserAssignments?.FirstOrDefault()?.ResourceRoleId,
                 ResourceRoleName = taskVersion.UserAssignments?.FirstOrDefault()?.ResourceRole?.Name,
                 PlannedHours = taskVersion.PlannedHours?.Select(ph => new PlannedHourDto
@@ -112,10 +114,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     Month = ph.Month,
                     PlannedHours = ph.PlannedHours
                 }).ToList() ?? new System.Collections.Generic.List<PlannedHourDto>(),
-                TotalHours = totalHours,
-                TotalCost = totalCost,
-                Children = new System.Collections.Generic.List<WBSTaskVersionDto>() // Will be populated by parent handler
+                TotalHours = (decimal)totalHours,
+                TotalCost = (decimal)totalCost,
+                Children = new System.Collections.Generic.List<WBSTaskVersionHistoryDto>()
             };
         }
     }
-} 
+}

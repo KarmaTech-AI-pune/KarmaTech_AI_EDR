@@ -32,7 +32,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 var versionDtos = versions.Select(v => new WBSVersionDto
                 {
                     Id = v.Id,
-                    WorkBreakdownStructureId = v.WorkBreakdownStructureId,
                     Version = v.Version,
                     Comments = v.Comments,
                     CreatedAt = v.CreatedAt,
@@ -73,4 +72,4 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
         }
     }
-} 
+}

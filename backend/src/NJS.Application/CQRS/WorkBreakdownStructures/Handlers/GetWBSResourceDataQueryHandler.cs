@@ -31,11 +31,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         {
             // Get the active WBS for the project
             var wbs = await _context.WorkBreakdownStructures
+                .Include(w => w.WBSHeader) // Eagerly load WBSHeader
                 .Include(w => w.Tasks)
                     .ThenInclude(t => t.UserWBSTasks)
                         .ThenInclude(ut => ut.User)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(w => w.ProjectId == request.ProjectId && w.IsActive, cancellationToken);
+                .FirstOrDefaultAsync(w => w.WBSHeader.ProjectId == request.ProjectId && w.WBSHeader.IsActive, cancellationToken);
 
             var result = new WBSResourceDataDto
             {

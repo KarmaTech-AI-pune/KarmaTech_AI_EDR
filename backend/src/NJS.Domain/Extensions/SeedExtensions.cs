@@ -274,7 +274,6 @@ namespace NJS.Domain.Extensions
                     // Create WBS for the project
                     var wbs = new WorkBreakdownStructure
                     {
-                        ProjectId = project.Id,
                         Structure = "Sample Project Structure"
                     };
                     context.WorkBreakdownStructures.Add(wbs);
