@@ -40,9 +40,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 request.ProjectId, request.TasksDto);
 
             var createdTasks = new List<WBSTaskDto>();
-            var tempIdToEntityMap = new Dictionary<string, WBSTask>();
-            var pendingParentUpdates = new Dictionary<WBSTask, string>();
-            var allNewTasks = new List<WBSTask>();
+            var tempIdToActualIdMap = new Dictionary<string, int>(); // Map FrontendTempId to actual DB Id
 
             // --- 1. Find the active WBS for the project ---
             var wbs = await _context.WorkBreakdownStructures
@@ -66,34 +64,25 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _logger.LogInformation("New Work Breakdown Structure created with ID {WBSId} for Project ID {ProjectId}.", wbs.Id, request.ProjectId);
             }
 
-            // Pre-fetch all WBS options and users needed for the batch
-            var wbsOptionIds = request.TasksDto.Where(t => t.WBSOptionId.HasValue).Select(t => t.WBSOptionId.Value).Distinct().ToList();
-            var wbsOptionsMap = (await _wbsOptionRepository.GetByIdsAsync(wbsOptionIds))
-                                .ToDictionary(o => o.Id, o => o.Label);
-
-            var assignedUserIds = request.TasksDto
-                .Where(t => t.TaskType == TaskType.Manpower && !string.IsNullOrEmpty(t.AssignedUserId) && t.AssignedUserId != "string")
-                .Select(t => t.AssignedUserId!)
-                .Distinct()
-                .ToList();
-            var existingUserIds = new HashSet<string>(await _context.Users
-                .Where(u => assignedUserIds.Contains(u.Id))
-                .Select(u => u.Id)
-                .ToListAsync(cancellationToken));
-
-            foreach (var taskDto in request.TasksDto)
+            foreach (var taskDto in request.TasksDto.OrderBy(t => t.Level).ThenBy(t => t.DisplayOrder)) // Process in order of level and display order
             {
-                // Handle ParentId based on task level
-                if (taskDto.Level == WBSTaskLevel.Level1)
+                // Resolve ParentId for new tasks within the same batch
+                if (taskDto.ParentFrontendTempId != null && tempIdToActualIdMap.TryGetValue(taskDto.ParentFrontendTempId, out int actualParentId))
+                {
+                    taskDto.ParentId = actualParentId;
+                }
+                else if (taskDto.Level == WBSTaskLevel.Level1)
                 {
                     taskDto.ParentId = null; // Level 1 tasks do not have a parent
                 }
 
-                // Optional: Validate ParentId if provided (only for existing parents)
-                if (taskDto.ParentId.HasValue && !wbs.Tasks.Any(t => t.Id == taskDto.ParentId.Value && !t.IsDeleted))
+                // Validate ParentId if provided
+                if (taskDto.ParentId.HasValue &&
+                    !wbs.Tasks.Any(t => t.Id == taskDto.ParentId.Value && !t.IsDeleted) && // Check existing tasks
+                    !tempIdToActualIdMap.ContainsValue(taskDto.ParentId.Value)) // Check tasks created in this batch
                 {
-                    _logger.LogError("Parent Task with ID {ParentId} not found in WBS {WBSId}.", taskDto.ParentId.Value, wbs.Id);
-                    throw new Exception($"Parent Task with ID {taskDto.ParentId.Value} not found in the WBS.");
+                    _logger.LogError("Parent Task with ID {ParentId} not found in WBS {WBSId} or current batch.", taskDto.ParentId.Value, wbs.Id);
+                    throw new Exception($"Parent Task with ID {taskDto.ParentId.Value} not found in the WBS or current batch.");
                 }
 
                 // --- 2. Create the new WBSTask entity ---
@@ -112,16 +101,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     CreatedBy = _currentUser,
                     IsDeleted = false,
                     UserWBSTasks = new List<UserWBSTask>(),
-                    PlannedHours = new List<WBSTaskPlannedHour>(),
-                    WBSOptionId = taskDto.WBSOptionId, // Set the WBSOptionId
-                    Title = taskDto.Title // Assign Title from DTO initially
+                    PlannedHours = new List<WBSTaskPlannedHour>()
                 };
 
-                // If WBSOptionId is provided, override Title with the WBSOption's label using pre-fetched map
-                if (taskDto.WBSOptionId.HasValue && wbsOptionsMap.TryGetValue(taskDto.WBSOptionId.Value, out var wbsOptionLabel))
-                {
-                    taskEntity.Title = wbsOptionLabel; // Set entity Title to label for saving
-                }
+                // Directly assign WBSOptionId and Title from DTO
+                taskEntity.WBSOptionId = taskDto.WBSOptionId;
+                taskEntity.Title = taskDto.Title; // Assign Title from DTO
 
                 _logger.LogInformation("Mapped WBSTask entity: {@TaskEntity}", taskEntity);
 
@@ -135,92 +120,46 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 if (!string.IsNullOrEmpty(taskDto.FrontendTempId))
                     tempIdToEntityMap[taskDto.FrontendTempId] = taskEntity;
 
-                if (!string.IsNullOrEmpty(taskDto.ParentFrontendTempId))
+                // Store the mapping for subsequent tasks in the same batch
+                if (taskDto.FrontendTempId != null)
                 {
-                    taskEntity.ParentId = null; // Temporarily set to null, will be resolved later
-                    pendingParentUpdates[taskEntity] = taskDto.ParentFrontendTempId;
+                    tempIdToActualIdMap[taskDto.FrontendTempId] = taskEntity.Id;
                 }
-                else if (taskDto.ParentId.HasValue)
-                {
-                    taskEntity.ParentId = taskDto.ParentId;
-                }
-            }
 
-            _logger.LogInformation("Adding all WBSTasks to context. Attempting first save changes.");
-            await _unitOfWork.SaveChangesAsync(); // First save to get IDs for all new tasks
-            _logger.LogInformation("All new WBSTasks saved successfully. Resolving parent IDs.");
-
-            bool requiresSecondSave = false;
-            foreach (var kv in pendingParentUpdates)
-            {
-                if (tempIdToEntityMap.TryGetValue(kv.Value, out var parentEntity) && parentEntity.Id > 0)
+                // --- 5. Return the new Task ID and populate DTO for frontend display ---
+                taskDto.Id = taskEntity.Id; // Populate the ID in the DTO
+                if (taskEntity.WBSOptionId.HasValue)
                 {
-                    kv.Key.ParentId = parentEntity.Id;
-                    requiresSecondSave = true;
+                    var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskEntity.WBSOptionId.Value);
+                    if (wbsOption != null)
+                    {
+                        taskDto.WBSOptionLabel = wbsOption.Label;
+                        // Only set DTO Title to label if DTO Title was null or empty, otherwise keep user-provided
+                        if (string.IsNullOrEmpty(taskDto.Title))
+                        {
+                            taskDto.Title = wbsOption.Label;
+                        }
+                    }
+                    else
+                    {
+                        taskDto.WBSOptionLabel = null;
+                        // Fallback to stored ID if label not found, but keep user-provided title if present
+                        if (string.IsNullOrEmpty(taskDto.Title))
+                        {
+                            taskDto.Title = taskEntity.Title;
+                        }
+                    }
                 }
                 else
                 {
-                    _logger.LogWarning("Unable to resolve parent task for temp ID {TempId}", kv.Value);
+                    taskDto.WBSOptionLabel = null;
+                    // Use stored title if no WBSOptionId, but keep user-provided title if present
+                    if (string.IsNullOrEmpty(taskDto.Title))
+                    {
+                        taskDto.Title = taskEntity.Title;
+                    }
                 }
-            }
-
-            if (requiresSecondSave)
-            {
-                _logger.LogInformation("Updating parent IDs. Attempting second save changes.");
-                await _unitOfWork.SaveChangesAsync(); // Second save for parent ID updates
-                _logger.LogInformation("Parent IDs updated successfully.");
-            }
-
-            // Now that all entities are saved and parent IDs are resolved, populate the DTOs for the response.
-            foreach (var entity in allNewTasks)
-            {
-                var dto = new WBSTaskDto
-                {
-                    Id = entity.Id,
-                    WorkBreakdownStructureId = entity.WorkBreakdownStructureId,
-                    ParentId = entity.ParentId,
-                    Level = entity.Level,
-                    Title = entity.Title,
-                    Description = entity.Description,
-                    DisplayOrder = entity.DisplayOrder,
-                    EstimatedBudget = entity.EstimatedBudget,
-                    StartDate = entity.StartDate,
-                    EndDate = entity.EndDate,
-                    TaskType = entity.TaskType,
-                    WBSOptionId = entity.WBSOptionId,
-                    // Populate other fields as needed from the entity
-                };
-
-                // Populate WBSOptionLabel using pre-fetched map
-                if (entity.WBSOptionId.HasValue && wbsOptionsMap.TryGetValue(entity.WBSOptionId.Value, out var wbsOptionLabel))
-                {
-                    dto.WBSOptionLabel = wbsOptionLabel;
-                }
-
-                // Populate User Assignment details if available
-                var userTask = entity.UserWBSTasks.FirstOrDefault();
-                if (userTask != null)
-                {
-                    dto.AssignedUserId = userTask.UserId;
-                    dto.AssignedUserName = userTask.Name; // Assuming Name is populated for ODC or can be looked up for Manpower
-                    dto.CostRate = userTask.CostRate;
-                    dto.ResourceName = userTask.Name; // For ODC
-                    dto.ResourceUnit = userTask.Unit;
-                    dto.ResourceRoleId = userTask.ResourceRoleId;
-                    // ResourceRoleName would need another lookup if not directly stored
-                    dto.TotalHours = userTask.TotalHours;
-                    dto.TotalCost = userTask.TotalCost;
-                }
-
-                // Populate Planned Hours
-                dto.PlannedHours = entity.PlannedHours.Select(ph => new PlannedHourDto
-                {
-                    Year = int.TryParse(ph.Year, out int year) ? year : 0,
-                    Month = ph.Month,
-                    PlannedHours = ph.PlannedHours
-                }).ToList();
-
-                createdTasks.Add(dto);
+                createdTasks.Add(taskDto);
             }
             return createdTasks;
         }
@@ -247,7 +186,11 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     // Validate if the assigned user exists using pre-fetched data, but only if an ID is actually provided
                     if (!string.IsNullOrEmpty(actualUserId) && !existingUserIds.Contains(actualUserId))
                     {
-                        throw new Exception($"Assigned User with ID '{actualUserId}' not found. Cannot assign task.");
+                        _logger.LogWarning("Assigned User with ID '{AssignedUserId}' not found. Task will be created without this user assignment.", taskDto.AssignedUserId);
+                        // Do not throw an exception, allow task creation without a valid user assignment
+                        // Or, if a valid user is strictly required, the user must provide one.
+                        // For now, we proceed without assigning the user if not found.
+                        return; // Exit the method if user not found and we don't want to assign
                     }
 
                     // Create new assignment for Manpower task

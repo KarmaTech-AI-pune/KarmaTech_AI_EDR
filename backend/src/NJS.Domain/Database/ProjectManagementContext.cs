@@ -6,13 +6,13 @@ using NJS.Domain.Services;
 
 namespace NJS.Domain.Database
 {
-    public class ProjectManagementContext : IdentityDbContext<User,Role,string>
-{
+    public class ProjectManagementContext : IdentityDbContext<User, Role, string>
+    {
         public int? TenantId { get; private set; }
         private readonly ICurrentTenantService _currentTenantService;
         public string CurrentTenantConnectionString { get; set; }
 
-      
+
         public ProjectManagementContext(
             DbContextOptions<ProjectManagementContext> options,
             ICurrentTenantService currentTenantService
@@ -32,7 +32,7 @@ namespace NJS.Domain.Database
             base.OnConfiguring(optionsBuilder);
         }
 
-        
+
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -47,8 +47,8 @@ namespace NJS.Domain.Database
                 }
             }
             return base.SaveChangesAsync(cancellationToken);
-        }   
-       
+        }
+
         // Tenant-specific tables only
         public DbSet<BidPreparation> BidPreparations { get; set; }
         public DbSet<BidVersionHistory> BidVersionHistories { get; set; }
@@ -127,13 +127,16 @@ namespace NJS.Domain.Database
         public DbSet<CurrentBudgetInMIS> CurrentBudgetInMIS { get; set; }
         public DbSet<PercentCompleteOnCosts> PercentCompleteOnCosts { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
+        public DbSet<SprintTask> SprintTasks { get; set; }
+        public DbSet<SprintSubtask> SprintSubtasks { get; set; }
+        public DbSet<SprintPlan> SprintPlans { get; set; }
 
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
         public DbSet<CreateAccount> CreateAccounts { get; set; }
         public DbSet<Feature> Features { get; set; }
 
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
-        public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
 
         // Main Projects (tenant-based) - Note: This was already defined above
 
@@ -509,7 +512,13 @@ namespace NJS.Domain.Database
                 entity.HasOne(t => t.WorkBreakdownStructure)
                       .WithMany(w => w.Tasks)
                   .HasForeignKey(t => t.WorkBreakdownStructureId)
-                  .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+                  .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict to break cascade cycle
+
+                // Configure relationship with WBSTaskPlannedHour
+                entity.HasMany(t => t.PlannedHours) // Assuming WBSTask has a collection of PlannedHours
+                      .WithOne(ph => ph.WBSTask)
+                      .HasForeignKey(ph => ph.WBSTaskId)
+                      .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict to break cascade cycle
             });
 
             // Configure JobStartForm entity
@@ -1230,7 +1239,7 @@ namespace NJS.Domain.Database
                 .HasForeignKey(spf => spf.FeatureId);
 
         }
-       
+
     }
-   
+
 }
