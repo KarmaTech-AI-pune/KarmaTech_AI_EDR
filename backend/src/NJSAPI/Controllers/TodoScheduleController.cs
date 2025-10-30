@@ -5,54 +5,174 @@ using NJS.Application.CQRS.ProjectSchedules.Query;
 using NJS.Application.Dtos;
 using System.Threading.Tasks;
 using System;
+using Microsoft.Extensions.Logging; // Added for ILogger
+using NJS.Application.CQRS.SprintPlans.Commands; // Added for CreateSingleSprintPlanCommand
+using NJS.Application.CQRS.SprintPlans.Queries; // Added for GetSingleSprintPlanQuery
+using Microsoft.AspNetCore.Authorization; // Assuming authorization is needed
 
 namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/project-schedule")]
+    [Authorize] // Apply authorization if needed
     public class TodoScheduleController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ILogger<TodoScheduleController> _logger; // Inject ILogger
 
-        public TodoScheduleController(IMediator mediator)
+        public TodoScheduleController(IMediator mediator, ILogger<TodoScheduleController> logger)
         {
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <summary>
+        /// Creates a project schedule including multiple sprint plans, tasks, and subtasks.
+        /// </summary>
+        /// <param name="todoScheduleDto">The project schedule data.</param>
+        /// <returns>The ID of the created project.</returns>
         [HttpPost]
+        [ProducesResponseType(typeof(int), 201)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> CreateTodoSchedule([FromBody] ProjectScheduleDto todoScheduleDto)
         {
-            var command = new CreateProjectScheduleCommand { ProjectSchedule = todoScheduleDto };
-            var createdProjectId = await _mediator.Send(command); // This will now return the ProjectId for the first sprint plan, or a generic ID if multiple are created.
-
-            // Generate the access link (might need adjustment if multiple project IDs are created)
-            var accessLink = $"{Request.Scheme}://{Request.Host}/api/project-schedule/{createdProjectId}";
-
-            // Return 200 OK with the list of SprintPlan data and access link
-            var response = new ProjectScheduleResponseDto
+            if (!ModelState.IsValid)
             {
-                Data = todoScheduleDto?.SprintPlans?.FirstOrDefault(), // Return the first SprintPlanDto for now, or adjust response DTO
-                AccessLink = accessLink,
-                ProjectId = createdProjectId,
-                Message = "Project schedule(s) created successfully!"
-            };
-
-            return Ok(response);
-        }
-
-
-        [HttpGet("{projectId}")]
-        public async Task<ActionResult<ProjectScheduleDto>> GetTodoSchedule(int projectId)
-        {
-            var query = new GetProjectScheduleQuery { ProjectId = projectId };
-            var todoSchedule = await _mediator.Send(query);
-
-            if (todoSchedule == null)
-            {
-                return NotFound();
+                _logger.LogWarning("Invalid ModelState for CreateTodoSchedule: {@ModelState}", ModelState);
+                return BadRequest(ModelState);
             }
 
-            return Ok(todoSchedule);
+            try
+            {
+                var command = new CreateProjectScheduleCommand { ProjectSchedule = todoScheduleDto };
+                var createdProjectId = await _mediator.Send(command);
+
+                var accessLink = $"{Request.Scheme}://{Request.Host}/api/project-schedule/{createdProjectId}";
+
+                var response = new ProjectScheduleResponseDto
+                {
+                    Data = todoScheduleDto?.SprintPlans?.FirstOrDefault(),
+                    AccessLink = accessLink,
+                    ProjectId = createdProjectId,
+                    Message = "Project schedule(s) created successfully!"
+                };
+
+                _logger.LogInformation("Project schedule(s) created successfully for Project ID: {ProjectId}", createdProjectId);
+                return CreatedAtAction(nameof(GetTodoSchedule), new { projectId = createdProjectId }, response);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error creating project schedule: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating project schedule.");
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets a project schedule by Project ID, including all associated sprint plans, tasks, and subtasks.
+        /// </summary>
+        /// <param name="projectId">The ID of the project.</param>
+        /// <returns>The full project schedule data.</returns>
+        [HttpGet("{projectId}")]
+        [ProducesResponseType(typeof(ProjectScheduleDto), 200)]
+        [ProducesResponseType(404)]
+        public async Task<ActionResult<ProjectScheduleDto>> GetTodoSchedule(int projectId)
+        {
+            _logger.LogInformation("Attempting to retrieve Project Schedule for Project ID: {ProjectId}", projectId);
+            try
+            {
+                var query = new GetProjectScheduleQuery { ProjectId = projectId };
+                var todoSchedule = await _mediator.Send(query);
+
+                if (todoSchedule == null)
+                {
+                    _logger.LogWarning("Project Schedule for Project ID {ProjectId} not found.", projectId);
+                    return NotFound($"Project Schedule for Project ID {projectId} not found.");
+                }
+
+                _logger.LogInformation("Project Schedule for Project ID {ProjectId} found.", projectId);
+                return Ok(todoSchedule);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving Project Schedule for Project ID: {ProjectId}.", projectId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Creates a single SprintPlan entry without associated tasks or subtasks.
+        /// </summary>
+        /// <param name="sprintPlanDto">The SprintPlan data to create.</param>
+        /// <returns>The ID of the newly created SprintPlan.</returns>
+        [HttpPost("single-sprint-plan")] // New endpoint for single sprint plan
+        [ProducesResponseType(typeof(int), 201)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> CreateSingleSprintPlan([FromBody] SprintPlanDto sprintPlanDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid ModelState for CreateSingleSprintPlan: {@ModelState}", ModelState);
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var command = new CreateSingleSprintPlanCommand { SprintPlan = sprintPlanDto };
+                var sprintPlanId = await _mediator.Send(command);
+
+                _logger.LogInformation("Single SprintPlan created successfully with ID: {SprintPlanId}", sprintPlanId);
+                return CreatedAtAction(nameof(GetSingleSprintPlan), new { sprintId = sprintPlanId }, sprintPlanId);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error creating single SprintPlan: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating single SprintPlan.");
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets a single SprintPlan by its ID.
+        /// </summary>
+        /// <param name="sprintId">The ID of the SprintPlan.</param>
+        /// <returns>The SprintPlan data.</returns>
+        [HttpGet("single-sprint-plan/{sprintId}")] // New endpoint for single sprint plan retrieval
+        [ProducesResponseType(typeof(SprintPlanDto), 200)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetSingleSprintPlan(int sprintId)
+        {
+            _logger.LogInformation("Attempting to retrieve single SprintPlan with ID: {SprintId}", sprintId);
+
+            try
+            {
+                var query = new GetSingleSprintPlanQuery { SprintId = sprintId };
+                var sprintPlanDto = await _mediator.Send(query);
+
+                if (sprintPlanDto == null)
+                {
+                    _logger.LogWarning("SprintPlan with ID {SprintId} not found.", sprintId);
+                    return NotFound($"SprintPlan with ID {sprintId} not found.");
+                }
+
+                _logger.LogInformation("SprintPlan with ID {SprintId} found.", sprintId);
+                return Ok(sprintPlanDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving single SprintPlan with ID: {SprintId}.", sprintId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
     }
 }

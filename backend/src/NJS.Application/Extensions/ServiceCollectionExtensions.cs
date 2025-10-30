@@ -59,8 +59,9 @@ namespace NJS.Application.Extensions
             services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
             services.AddScoped<ICashflowRepository, CashflowRepository>();
             services.AddScoped<IMeasurementUnitRepository, MeasurementUnitRepository>();
+            services.AddScoped<IProjectScheduleRepository, ProjectScheduleRepository>();
 
-           // services.AddScoped<IAuthService, AuthService>();
+            // services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAuthService, EnhancedAuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
@@ -72,10 +73,10 @@ namespace NJS.Application.Extensions
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
 
-           
+
 
             // Register DNS Management Service based on environment
-           
+
 
             //Define Strategy pattern
             services.AddScoped<IEntityWorkflowStrategy, ChangeControlWorkflowStrategy>();
@@ -83,13 +84,13 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEntityWorkflowStrategy, WBSWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategy, WBSVersionWorkflowStrategy>(); // Add WBS version workflow strategy
             services.AddScoped<IEntityWorkflowStrategy, JobStartFormWorkflowStrategy>();
-            services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
+            services.AddScoped<IEntityWorkflowStrategySelector, EntityWorkflowStrategySelector>();
             services.AddScoped<IFeatureRepository, FeatureRepository>();
             services.AddScoped<ITwoFactorService, TwoFactorService>();
             services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 
             return services;
         }
-        
+
     }
 }

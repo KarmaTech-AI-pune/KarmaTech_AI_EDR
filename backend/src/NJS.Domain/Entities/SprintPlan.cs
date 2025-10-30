@@ -25,6 +25,7 @@ namespace NJS.Domain.Entities
         [ForeignKey("Project")]
         public int ProjectId { get; set; }
         public Project Project { get; set; }
+        public int? SprintEmployee { get; set; } // New column for SprintEmployee
 
         public ICollection<SprintTask> SprintTasks { get; set; } = new List<SprintTask>();
     }
