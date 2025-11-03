@@ -42,12 +42,12 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
             {
                 foreach (var sprintPlanDto in projectScheduleDto.SprintPlans)
                 {
-                    if (sprintPlanDto == null || sprintPlanDto.ProjectId == 0 || sprintPlanDto.SprintTasks == null || !sprintPlanDto.SprintTasks.Any())
+                    if (sprintPlanDto == null || sprintPlanDto.ProjectId == null || sprintPlanDto.SprintTasks == null || !sprintPlanDto.SprintTasks.Any())
                     {
                         throw new ArgumentException("Each SprintPlan, its ProjectId, and SprintTasks cannot be null or empty.");
                     }
 
-                    var projectId = sprintPlanDto.ProjectId;
+                    var projectId = sprintPlanDto.ProjectId ?? 0; // Use null-coalescing operator
 
                     // Check if the project exists
                     _logger.LogInformation("Checking if Project with ID {ProjectId} exists for SprintPlan.", projectId);
@@ -102,9 +102,9 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                             TaskReporterAvatar = taskDto.TaskReporterAvatar,
                             Taskstatus = taskDto.Taskstatus,
                             StoryPoints = taskDto.StoryPoints,
-                            Attachments = taskDto.Taskattachments,
-                            Comments = taskDto.Taskcomments,
-                            IsExpanded = taskDto.TaskisExpanded,
+                            Attachments = taskDto.Attachments,
+                            Comments = taskDto.Comments,
+                            IsExpanded = taskDto.IsExpanded,
                             TaskcreatedDate = taskDto.TaskcreatedDate,
                             TaskupdatedDate = taskDto.TaskupdatedDate,
                             SprintPlanId = sprintPlan.SprintId, // Assign to the new SprintPlan
@@ -131,7 +131,7 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                                     SubtaskReporterId = subtaskDto.SubtaskReporterId,
                                     SubtaskReporterName = subtaskDto.SubtaskReporterName,
                                     SubtaskReporterAvatar = subtaskDto.SubtaskReporterAvatar,
-                                    Attachments = subtaskDto.Subtaskattachments,
+                                    Attachments = subtaskDto.Attachments,
                                     Subtaskcomments = subtaskDto.Subtaskcomments,
                                     SubtaskisExpanded = subtaskDto.SubtaskisExpanded,
                                     SubtaskcreatedDate = subtaskDto.SubtaskcreatedDate,

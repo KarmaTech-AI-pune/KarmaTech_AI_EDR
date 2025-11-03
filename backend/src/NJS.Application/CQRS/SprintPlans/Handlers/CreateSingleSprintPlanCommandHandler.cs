@@ -26,7 +26,7 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
         {
             var sprintPlanDto = request.SprintPlan;
 
-            if (sprintPlanDto == null || sprintPlanDto.ProjectId == 0)
+            if (sprintPlanDto == null || sprintPlanDto.ProjectId == null)
             {
                 _logger.LogError("SprintPlanDto or ProjectId is null or empty in the request.");
                 throw new ArgumentException("SprintPlan or ProjectId cannot be null or empty.");
@@ -42,14 +42,23 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
             }
             _logger.LogInformation("Project with ID {ProjectId} exists for SprintPlan.", sprintPlanDto.ProjectId);
 
+            // Automatically generate SprintNumber
+            var maxSprintNumber = await _context.SprintPlans
+                                                .Where(sp => sp.ProjectId == sprintPlanDto.ProjectId)
+                                                .Select(sp => sp.SprintNumber)
+                                                .DefaultIfEmpty(0)
+                                                .MaxAsync(cancellationToken);
+            int nextSprintNumber = maxSprintNumber + 1;
+            _logger.LogInformation("Generated next SprintNumber: {NextSprintNumber} for Project ID: {ProjectId}", nextSprintNumber, sprintPlanDto.ProjectId);
+
             // Create a new SprintPlan entity from the DTO
             var sprintPlan = new SprintPlan
             {
-                SprintNumber = sprintPlanDto.SprintNumber,
+                SprintNumber = nextSprintNumber, // Automatically generated
                 StartDate = sprintPlanDto.StartDate,
                 EndDate = sprintPlanDto.EndDate,
                 SprintGoal = sprintPlanDto.SprintGoal,
-                ProjectId = sprintPlanDto.ProjectId,
+                ProjectId = sprintPlanDto.ProjectId.Value, // Assign to a local variable first
                 SprintEmployee = sprintPlanDto.SprintEmployee, // Map the new column
                 TenantId = _context.TenantId ?? 1 // Assuming TenantId is handled by context
             };

@@ -10,8 +10,8 @@ namespace NJS.Application.Dtos
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string? SprintGoal { get; set; }
-        public int ProjectId { get; set; }
-        public int? SprintEmployee { get; set; } // New column for SprintEmployee
+        public int? ProjectId { get; set; }
+        public int? SprintEmployee { get; set; }
         public List<SprintTaskDto>? SprintTasks { get; set; }
     }
 }

@@ -1,50 +1,28 @@
 using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using NJS.Domain.GenericRepository; // Added for ITenantEntity
 
-namespace NJS.Domain.Entities
+namespace NJS.Application.Dtos
 {
-    public class SprintSubtask : ITenantEntity
+    public class SprintSubtaskDto
     {
-        [Key]
-        public string? Subtaskkey { get; set; }  // e.g. "PROJ-101-1"
-
-        public int TenantId { get; set; } // Added TenantId
-
+        public int? SubtaskId { get; set; } // New primary key
+        public string? Subtaskkey { get; set; } // Now a regular property
+        public int TenantId { get; set; }
         public string? Subtasktitle { get; set; }
-
         public string? Subtaskdescription { get; set; }
-
         public string? Subtaskpriority { get; set; }
-
         public string? Subtaskstatus { get; set; }
-
-        // Assignee fields (stored as regular strings, not foreign keys)
         public string? SubtaskAssineid { get; set; }
         public string? SubtaskAssigneeName { get; set; }
         public string? SubtaskAssigneeAvatar { get; set; }
-
-        // Reporter fields (stored as regular strings, not foreign keys)
         public string? SubtaskReporterId { get; set; }
         public string? SubtaskReporterName { get; set; }
         public string? SubtaskReporterAvatar { get; set; }
-
         public int? Attachments { get; set; }
-
-        public string? Subtaskcomments { get; set; } // Ensure this is string?
-
+        public string? Subtaskcomments { get; set; } // Changed from int? to string?
         public bool? SubtaskisExpanded { get; set; }
-
         public DateTime? SubtaskcreatedDate { get; set; }
-
         public DateTime? SubtaskupdatedDate { get; set; }
-
-        public string? SubtaskType { get; set; } = "Sub-task";
-
-        // Foreign key to SprintTask table
+        public string? SubtaskType { get; set; }
         public string? Taskid { get; set; }
-        [ForeignKey("Taskid")]
-        public SprintTask? ParentTask { get; set; }
     }
 }

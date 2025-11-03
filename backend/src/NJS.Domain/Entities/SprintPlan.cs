@@ -23,7 +23,7 @@ namespace NJS.Domain.Entities
         public string? SprintGoal { get; set; }
 
         [ForeignKey("Project")]
-        public int ProjectId { get; set; }
+        public int? ProjectId { get; set; }
         public Project Project { get; set; }
         public int? SprintEmployee { get; set; } // New column for SprintEmployee
 
