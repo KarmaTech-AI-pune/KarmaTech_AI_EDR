@@ -46,11 +46,16 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         public async Task<Unit> Handle(SetWBSCommand request, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("SetWBSCommandHandler: Processing WBS for ProjectId {ProjectId}, WbsHeaderId {WbsHeaderId}, TenantId {TenantId}",
+                request.ProjectId, request.WBSMaster.WbsHeaderId, _context.TenantId);
+
             // 1. Handle WBSHeader creation/update based on WBSMaster.WbsHeaderId
             WBSHeader wbsHeader;
 
             if (request.WBSMaster.WbsHeaderId > 0)
             {
+                _logger.LogInformation("SetWBSCommandHandler: Loading existing WBSHeader with ID {WbsHeaderId}", request.WBSMaster.WbsHeaderId);
+
                 // Load existing WBSHeader
                 wbsHeader = await _context.WBSHeaders
                     .Include(h => h.WorkBreakdownStructures) // Include all WorkBreakdownStructures
@@ -65,8 +70,13 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                 if (wbsHeader == null)
                 {
+                    _logger.LogError("SetWBSCommandHandler: WBSHeader with ID {WbsHeaderId} not found for project {ProjectId}",
+                        request.WBSMaster.WbsHeaderId, request.ProjectId);
                     throw new ArgumentException($"WBSHeader with ID {request.WBSMaster.WbsHeaderId} not found for project {request.ProjectId}.");
                 }
+
+                _logger.LogInformation("SetWBSCommandHandler: Found existing WBSHeader with {Count} WBS groups",
+                    wbsHeader.WorkBreakdownStructures.Count);
 
                 // Update existing header
                 wbsHeader.VersionDate = DateTime.UtcNow;
@@ -75,9 +85,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             }
             else
             {
+                _logger.LogInformation("SetWBSCommandHandler: Creating new WBSHeader for ProjectId {ProjectId}", request.ProjectId);
+
                 // Create new WBSHeader
                 wbsHeader = new WBSHeader
                 {
+                    TenantId = _context.TenantId ?? 0, // Set TenantId from context
                     ProjectId = request.ProjectId,
                     Version = "1.0",
                     VersionDate = DateTime.UtcNow,
@@ -89,33 +102,50 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 };
                 _context.WBSHeaders.Add(wbsHeader);
                 await _unitOfWork.SaveChangesAsync(); // Save to get ID
+
+                _logger.LogInformation("SetWBSCommandHandler: Created new WBSHeader with ID {WbsHeaderId}, TenantId {TenantId}",
+                    wbsHeader.Id, wbsHeader.TenantId);
             }
 
             // 2. Handle WorkBreakdownStructures (WBS Groups)
+            // NOTE: WorkBreakdownStructureId in DTO maps to Id in WorkBreakdownStructure entity
             var existingWBSGroupsDict = wbsHeader.WorkBreakdownStructures.ToDictionary(w => w.Id);
             var incomingWBSGroupIds = request.WBSMaster.WorkBreakdownStructures
                 .Where(dto => dto.WorkBreakdownStructureId > 0)
                 .Select(dto => dto.WorkBreakdownStructureId)
                 .ToHashSet();
 
+            _logger.LogInformation("SetWBSCommandHandler: Processing {Count} WBS groups. Existing groups: {ExistingIds}",
+                request.WBSMaster.WorkBreakdownStructures.Count,
+                string.Join(", ", existingWBSGroupsDict.Keys));
+
             foreach (var wbsGroupDto in request.WBSMaster.WorkBreakdownStructures)
             {
                 WorkBreakdownStructure wbsGroupEntity;
                 if (wbsGroupDto.WorkBreakdownStructureId > 0 && existingWBSGroupsDict.TryGetValue(wbsGroupDto.WorkBreakdownStructureId, out wbsGroupEntity))
                 {
+                    _logger.LogInformation("SetWBSCommandHandler: Updating existing WBS group ID {Id}, Name: {Name}",
+                        wbsGroupDto.WorkBreakdownStructureId, wbsGroupDto.Name);
+
                     // Update existing WBS Group
                     wbsGroupEntity.Name = wbsGroupDto.Name;
                     wbsGroupEntity.Description = wbsGroupDto.Description;
                     wbsGroupEntity.DisplayOrder = wbsGroupDto.DisplayOrder;
+                    wbsGroupEntity.TenantId = wbsHeader.TenantId; // Ensure TenantId is set
                     // Removed UpdatedAt and UpdatedBy as WorkBreakdownStructure no longer has these properties
                     _context.WorkBreakdownStructures.Update(wbsGroupEntity);
                 }
                 else
                 {
+                    _logger.LogInformation("SetWBSCommandHandler: Creating new WBS group, Name: {Name}",
+                        wbsGroupDto.Name);
+
                     // Create new WBS Group
                     wbsGroupEntity = new WorkBreakdownStructure
                     {
+                        TenantId = wbsHeader.TenantId, // IMPORTANT: Set TenantId for tenant isolation
                         WBSHeader = wbsHeader,
+                        WBSHeaderId = wbsHeader.Id,
                         Name = wbsGroupDto.Name,
                         Description = wbsGroupDto.Description,
                         DisplayOrder = wbsGroupDto.DisplayOrder,
@@ -127,15 +157,41 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     wbsHeader.WorkBreakdownStructures.Add(wbsGroupEntity);
                 }
 
+                // Save changes to get the WorkBreakdownStructure ID before processing tasks
+                _logger.LogInformation("SetWBSCommandHandler: Saving WBS group '{Name}' to get ID", wbsGroupDto.Name);
+                await _unitOfWork.SaveChangesAsync();
+                _logger.LogInformation("SetWBSCommandHandler: WBS group saved with ID {Id}", wbsGroupEntity.Id);
+
                 // 3. Handle WBSTasks within each WBS Group recursively
                 var tempIdToEntityMap = new Dictionary<string, WBSTask>();
                 var pendingParentUpdates = new Dictionary<WBSTask, string>();
                 var allTasks = new List<WBSTask>();
+                var newTasksNeedingChildData = new List<(WBSTask task, WBSTaskDto dto)>();
+
+                _logger.LogInformation("SetWBSCommandHandler: Processing {Count} tasks for WBS group '{Name}'",
+                    wbsGroupDto.Tasks.Count, wbsGroupDto.Name);
 
                 // Process tasks and their children recursively
-                await ProcessTasksRecursively(wbsGroupDto.Tasks, wbsGroupEntity, null, null, tempIdToEntityMap, pendingParentUpdates, allTasks, wbsHeader);
+                await ProcessTasksRecursively(wbsGroupDto.Tasks, wbsGroupEntity, null, null, tempIdToEntityMap, pendingParentUpdates, allTasks, wbsHeader, newTasksNeedingChildData);
 
+                _logger.LogInformation("SetWBSCommandHandler: Saving changes after processing tasks");
                 await _unitOfWork.SaveChangesAsync();
+                _logger.LogInformation("SetWBSCommandHandler: Successfully saved {Count} tasks", allTasks.Count);
+
+                // Now update UserWBSTasks and PlannedHours for newly created tasks (they now have IDs)
+                _logger.LogInformation("SetWBSCommandHandler: Updating UserWBSTasks and PlannedHours for {Count} new tasks", newTasksNeedingChildData.Count);
+                foreach (var (task, dto) in newTasksNeedingChildData)
+                {
+                    await UpdateUserAssignment(task, dto);
+                    await UpdatePlannedHours(task, dto, wbsHeader.Version, wbsHeader.ProjectId);
+                }
+
+                if (newTasksNeedingChildData.Count > 0)
+                {
+                    _logger.LogInformation("SetWBSCommandHandler: Saving UserWBSTasks and PlannedHours");
+                    await _unitOfWork.SaveChangesAsync();
+                    _logger.LogInformation("SetWBSCommandHandler: Successfully saved UserWBSTasks and PlannedHours");
+                }
 
                 // Resolve parent-child relationships for newly created tasks using temp IDs
                 bool requiresSecondSave = false;
@@ -201,7 +257,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             Dictionary<string, WBSTask> tempIdToEntityMap,
             Dictionary<WBSTask, string> pendingParentUpdates,
             List<WBSTask> allTasks,
-            WBSHeader wbsHeader)
+            WBSHeader wbsHeader,
+            List<(WBSTask task, WBSTaskDto dto)> newTasksNeedingChildData)
         {
             var existingTasksDict = wbsGroupEntity.Tasks.ToDictionary(t => t.Id);
             var incomingTaskIds = taskDtos.Where(t => t.Id > 0).Select(t => t.Id).ToHashSet();
@@ -223,6 +280,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 if (!isNewTask && existingTasksDict.TryGetValue(dto.Id, out taskEntity))
                 {
                     // Update existing task
+                    taskEntity.TenantId = wbsHeader.TenantId; // Ensure TenantId is set
+                    taskEntity.WorkBreakdownStructureId = wbsGroupEntity.Id; // Ensure foreign key is set
                     taskEntity.WBSOptionId = dto.WBSOptionId;
                     taskEntity.Title = dto.Title;
                     taskEntity.Description = dto.Description;
@@ -252,9 +311,13 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         taskEntity.ParentId = null; // Clear existing ParentId if using temp ID
                         pendingParentUpdates[taskEntity] = dto.ParentFrontendTempId;
                     }
+                    else if (dto.ParentId.HasValue && dto.ParentId.Value > 0)
+                    {
+                        taskEntity.ParentId = dto.ParentId; // Use DTO's ParentId if available and valid
+                    }
                     else
                     {
-                        taskEntity.ParentId = dto.ParentId; // Use DTO's ParentId if available
+                        taskEntity.ParentId = null; // No parent
                     }
 
                     await UpdateUserAssignment(taskEntity, dto);
@@ -265,7 +328,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     // Create new task
                     taskEntity = new WBSTask
                     {
+                        TenantId = wbsHeader.TenantId, // IMPORTANT: Set TenantId for tenant isolation
                         WorkBreakdownStructure = wbsGroupEntity,
+                        WorkBreakdownStructureId = wbsGroupEntity.Id, // IMPORTANT: Set foreign key explicitly
                         Description = dto.Description,
                         Level = dto.Level,
                         DisplayOrder = dto.DisplayOrder,
@@ -298,16 +363,20 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         taskEntity.ParentId = null; // Clear existing ParentId if using temp ID
                         pendingParentUpdates[taskEntity] = dto.ParentFrontendTempId;
                     }
+                    else if (dto.ParentId.HasValue && dto.ParentId.Value > 0)
+                    {
+                        taskEntity.ParentId = dto.ParentId; // Use DTO's ParentId if available and valid
+                    }
                     else
                     {
-                        taskEntity.ParentId = dto.ParentId; // Use DTO's ParentId if available
+                        taskEntity.ParentId = null; // No parent
                     }
 
                     _context.WBSTasks.Add(taskEntity);
                     wbsGroupEntity.Tasks.Add(taskEntity);
 
-                    await UpdateUserAssignment(taskEntity, dto);
-                    await UpdatePlannedHours(taskEntity, dto, wbsHeader.Version, wbsHeader.ProjectId);
+                    // Defer UserWBSTasks and PlannedHours creation until after task is saved and has an ID
+                    newTasksNeedingChildData.Add((taskEntity, dto));
 
                     // Map temporary IDs for resolving parent-child relationships later
                     if (!string.IsNullOrEmpty(dto.FrontendTempId))
