@@ -116,108 +116,17 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     wbsHeader.WorkBreakdownStructures.Add(wbsGroupEntity);
                 }
 
-                // 3. Handle WBSTasks within each WBS Group
-                var existingTasksDict = wbsGroupEntity.Tasks.ToDictionary(t => t.Id);
-                var incomingTaskIds = wbsGroupDto.Tasks.Where(t => t.Id > 0).Select(t => t.Id).ToHashSet();
-
-                var tasksToDelete = wbsGroupEntity.Tasks.Where(t => !t.IsDeleted && !incomingTaskIds.Contains(t.Id)).ToList();
-                foreach (var task in tasksToDelete)
-                {
-                    task.IsDeleted = true;
-                    task.UpdatedAt = DateTime.UtcNow;
-                    task.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
-                }
-
+                // 3. Handle WBSTasks within each WBS Group recursively
                 var tempIdToEntityMap = new Dictionary<string, WBSTask>();
                 var pendingParentUpdates = new Dictionary<WBSTask, string>();
                 var allTasks = new List<WBSTask>();
 
-                foreach (var dto in wbsGroupDto.Tasks)
-                {
-                    WBSTask taskEntity = null!;
-                    if (dto.Id > 0 && existingTasksDict.TryGetValue(dto.Id, out taskEntity))
-                    {
-                        taskEntity.WBSOptionId = dto.WBSOptionId;
-                        taskEntity.Title = dto.Title;
-
-                        if (dto.WBSOptionId.HasValue)
-                        {
-                            var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId.Value);
-                            if (wbsOption != null)
-                            {
-                                taskEntity.Title = wbsOption.Label;
-                            }
-                        }
-
-                        taskEntity.Description = dto.Description;
-                        taskEntity.Level = dto.Level;
-                        taskEntity.ParentId = dto.ParentId;
-                        taskEntity.DisplayOrder = dto.DisplayOrder;
-                        taskEntity.EstimatedBudget = dto.EstimatedBudget;
-                        taskEntity.StartDate = dto.StartDate;
-                        taskEntity.EndDate = dto.EndDate;
-                        taskEntity.TaskType = dto.TaskType;
-                        taskEntity.UpdatedAt = DateTime.UtcNow;
-                        taskEntity.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
-                        taskEntity.IsDeleted = false;
-
-                        await UpdateUserAssignment(taskEntity, dto);
-                        await UpdatePlannedHours(taskEntity, dto, wbsHeader.Version, wbsHeader.ProjectId);
-                    }
-                    else
-                    {
-                        taskEntity = new WBSTask
-                        {
-                            WorkBreakdownStructure = wbsGroupEntity,
-                            Description = dto.Description,
-                            Level = dto.Level,
-                            DisplayOrder = dto.DisplayOrder,
-                            EstimatedBudget = dto.EstimatedBudget,
-                            StartDate = dto.StartDate,
-                            EndDate = dto.EndDate,
-                            TaskType = dto.TaskType,
-                            CreatedAt = DateTime.UtcNow,
-                            CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
-                            IsDeleted = false,
-                            UserWBSTasks = new List<UserWBSTask>(),
-                            PlannedHours = new List<WBSTaskPlannedHour>(),
-                            WBSOptionId = dto.WBSOptionId,
-                            Title = dto.Title
-                        };
-
-                        if (dto.WBSOptionId.HasValue)
-                        {
-                            var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId.Value);
-                            if (wbsOption != null)
-                            {
-                                taskEntity.Title = wbsOption.Label;
-                            }
-                        }
-
-                        _context.WBSTasks.Add(taskEntity);
-                        wbsGroupEntity.Tasks.Add(taskEntity);
-
-                        await UpdateUserAssignment(taskEntity, dto);
-                        await UpdatePlannedHours(taskEntity, dto, wbsHeader.Version, wbsHeader.ProjectId);
-
-                        if (!string.IsNullOrEmpty(dto.FrontendTempId))
-                            tempIdToEntityMap[dto.FrontendTempId] = taskEntity;
-
-                        if (!string.IsNullOrEmpty(dto.ParentFrontendTempId))
-                        {
-                            taskEntity.ParentId = null;
-                            pendingParentUpdates[taskEntity] = dto.ParentFrontendTempId;
-                        }
-                        else if (dto.ParentId.HasValue)
-                        {
-                            taskEntity.ParentId = dto.ParentId;
-                        }
-                    }
-                    allTasks.Add(taskEntity);
-                }
+                // Process tasks and their children recursively
+                await ProcessTasksRecursively(wbsGroupDto.Tasks, wbsGroupEntity, null, null, tempIdToEntityMap, pendingParentUpdates, allTasks, wbsHeader);
 
                 await _unitOfWork.SaveChangesAsync();
 
+                // Resolve parent-child relationships for newly created tasks using temp IDs
                 bool requiresSecondSave = false;
                 foreach (var kv in pendingParentUpdates)
                 {
@@ -235,12 +144,14 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 if (requiresSecondSave)
                     await _unitOfWork.SaveChangesAsync();
 
+                // Update DTOs with final values after saving (e.g., WBSOptionLabel)
                 foreach (var dto in wbsGroupDto.Tasks)
                 {
                     var correspondingEntity = allTasks.FirstOrDefault(t => t.Id == dto.Id || (!string.IsNullOrEmpty(dto.FrontendTempId) && tempIdToEntityMap.ContainsKey(dto.FrontendTempId) && tempIdToEntityMap[dto.FrontendTempId].Id == t.Id));
                     if (correspondingEntity != null)
                     {
                         dto.Title = correspondingEntity.Title;
+                        // Update WBSOptionLabel
                         if (correspondingEntity.WBSOptionId.HasValue)
                         {
                             var wbsOption = await _wbsOptionRepository.GetByIdAsync(correspondingEntity.WBSOptionId.Value);
@@ -265,6 +176,148 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             await CreateWBSVersionAfterUpdate(wbsHeader);
 
             return Unit.Value;
+        }
+
+        /// <summary>
+        /// Recursively processes a list of WBSTaskDto, handling creation, updates, and parent-child relationships.
+        /// </summary>
+        private async Task ProcessTasksRecursively(
+            ICollection<WBSTaskDto> taskDtos,
+            WorkBreakdownStructure wbsGroupEntity,
+            int? parentId, // This parameter is not directly used for setting ParentId in this recursive call, but is conceptually the parent's ID.
+            string? parentFrontendTempId, // This is used to link children to their parent's temp ID.
+            Dictionary<string, WBSTask> tempIdToEntityMap,
+            Dictionary<WBSTask, string> pendingParentUpdates,
+            List<WBSTask> allTasks,
+            WBSHeader wbsHeader)
+        {
+            var existingTasksDict = wbsGroupEntity.Tasks.ToDictionary(t => t.Id);
+            var incomingTaskIds = taskDtos.Where(t => t.Id > 0).Select(t => t.Id).ToHashSet();
+
+            // Mark tasks for deletion if they exist in DB but not in incoming DTOs
+            var tasksToDelete = wbsGroupEntity.Tasks.Where(t => !t.IsDeleted && !incomingTaskIds.Contains(t.Id)).ToList();
+            foreach (var task in tasksToDelete)
+            {
+                task.IsDeleted = true;
+                task.UpdatedAt = DateTime.UtcNow;
+                task.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
+            }
+
+            foreach (var dto in taskDtos)
+            {
+                WBSTask taskEntity;
+                bool isNewTask = dto.Id <= 0; // Assuming 0 or negative means new
+
+                if (!isNewTask && existingTasksDict.TryGetValue(dto.Id, out taskEntity))
+                {
+                    // Update existing task
+                    taskEntity.WBSOptionId = dto.WBSOptionId;
+                    taskEntity.Title = dto.Title;
+                    taskEntity.Description = dto.Description;
+                    taskEntity.Level = dto.Level;
+                    taskEntity.DisplayOrder = dto.DisplayOrder;
+                    taskEntity.EstimatedBudget = dto.EstimatedBudget;
+                    taskEntity.StartDate = dto.StartDate;
+                    taskEntity.EndDate = dto.EndDate;
+                    taskEntity.TaskType = dto.TaskType;
+                    taskEntity.UpdatedAt = DateTime.UtcNow;
+                    taskEntity.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
+                    taskEntity.IsDeleted = false; // Ensure it's not marked as deleted
+
+                    // Handle WBS Option Label
+                    if (dto.WBSOptionId.HasValue)
+                    {
+                        var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId.Value);
+                        if (wbsOption != null)
+                        {
+                            taskEntity.Title = wbsOption.Label; // Overwrite title if WBS Option has a label
+                        }
+                    }
+
+                    // Set ParentId based on DTO's ParentId or ParentFrontendTempId
+                    if (!string.IsNullOrEmpty(dto.ParentFrontendTempId))
+                    {
+                        taskEntity.ParentId = null; // Clear existing ParentId if using temp ID
+                        pendingParentUpdates[taskEntity] = dto.ParentFrontendTempId;
+                    }
+                    else
+                    {
+                        taskEntity.ParentId = dto.ParentId; // Use DTO's ParentId if available
+                    }
+
+                    await UpdateUserAssignment(taskEntity, dto);
+                    await UpdatePlannedHours(taskEntity, dto, wbsHeader.Version, wbsHeader.ProjectId);
+                }
+                else
+                {
+                    // Create new task
+                    taskEntity = new WBSTask
+                    {
+                        WorkBreakdownStructure = wbsGroupEntity,
+                        Description = dto.Description,
+                        Level = dto.Level,
+                        DisplayOrder = dto.DisplayOrder,
+                        EstimatedBudget = dto.EstimatedBudget,
+                        StartDate = dto.StartDate,
+                        EndDate = dto.EndDate,
+                        TaskType = dto.TaskType,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
+                        IsDeleted = false,
+                        UserWBSTasks = new List<UserWBSTask>(),
+                        PlannedHours = new List<WBSTaskPlannedHour>(),
+                        WBSOptionId = dto.WBSOptionId,
+                        Title = dto.Title
+                    };
+
+                    // Handle WBS Option Label
+                    if (dto.WBSOptionId.HasValue)
+                    {
+                        var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId.Value);
+                        if (wbsOption != null)
+                        {
+                            taskEntity.Title = wbsOption.Label; // Overwrite title if WBS Option has a label
+                        }
+                    }
+
+                    // Set ParentId based on DTO's ParentId or ParentFrontendTempId
+                    if (!string.IsNullOrEmpty(dto.ParentFrontendTempId))
+                    {
+                        taskEntity.ParentId = null; // Clear existing ParentId if using temp ID
+                        pendingParentUpdates[taskEntity] = dto.ParentFrontendTempId;
+                    }
+                    else
+                    {
+                        taskEntity.ParentId = dto.ParentId; // Use DTO's ParentId if available
+                    }
+
+                    _context.WBSTasks.Add(taskEntity);
+                    wbsGroupEntity.Tasks.Add(taskEntity);
+
+                    await UpdateUserAssignment(taskEntity, dto);
+                    await UpdatePlannedHours(taskEntity, dto, wbsHeader.Version, wbsHeader.ProjectId);
+
+                    // Map temporary IDs for resolving parent-child relationships later
+                    if (!string.IsNullOrEmpty(dto.FrontendTempId))
+                        tempIdToEntityMap[dto.FrontendTempId] = taskEntity;
+                }
+
+                allTasks.Add(taskEntity);
+
+                // Recursively process child tasks
+                if (dto.ChildTasks != null && dto.ChildTasks.Any())
+                {
+                    await ProcessTasksRecursively(
+                        dto.ChildTasks,
+                        wbsGroupEntity,
+                        taskEntity.Id, // Pass the current task's ID as the parent for its children
+                        dto.FrontendTempId, // Pass the current task's temp ID as the parent temp ID for its children
+                        tempIdToEntityMap,
+                        pendingParentUpdates,
+                        allTasks,
+                        wbsHeader);
+                }
+            }
         }
 
         private async Task CreateWBSVersionAfterUpdate(WBSHeader wbsHeader)
