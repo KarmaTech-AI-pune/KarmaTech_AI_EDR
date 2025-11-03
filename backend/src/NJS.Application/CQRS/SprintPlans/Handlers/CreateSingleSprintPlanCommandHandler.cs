@@ -42,19 +42,10 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
             }
             _logger.LogInformation("Project with ID {ProjectId} exists for SprintPlan.", sprintPlanDto.ProjectId);
 
-            // Automatically generate SprintNumber
-            var maxSprintNumber = await _context.SprintPlans
-                                                .Where(sp => sp.ProjectId == sprintPlanDto.ProjectId)
-                                                .Select(sp => sp.SprintNumber)
-                                                .DefaultIfEmpty(0)
-                                                .MaxAsync(cancellationToken);
-            int nextSprintNumber = maxSprintNumber + 1;
-            _logger.LogInformation("Generated next SprintNumber: {NextSprintNumber} for Project ID: {ProjectId}", nextSprintNumber, sprintPlanDto.ProjectId);
-
             // Create a new SprintPlan entity from the DTO
             var sprintPlan = new SprintPlan
             {
-                SprintNumber = nextSprintNumber, // Automatically generated
+                SprintNumber = sprintPlanDto.SprintNumber, // Directly assign from DTO
                 StartDate = sprintPlanDto.StartDate,
                 EndDate = sprintPlanDto.EndDate,
                 SprintGoal = sprintPlanDto.SprintGoal,
