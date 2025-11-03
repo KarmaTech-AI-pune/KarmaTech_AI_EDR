@@ -1,4 +1,3 @@
-// This will be adjusted later if needed
 using NJS.Domain.Enums;
 using System;
 using System.Collections.Generic;
@@ -17,7 +16,7 @@ namespace NJS.Application.Dtos
         public int? LatestVersionHistoryId { get; set; }
         public int? ActiveVersionHistoryId { get; set; }
 
-        public ICollection<WBSStructureDto> WorkBreakdownStructures { get; set; } // This will be adjusted later if needed
-        public ICollection<WBSVersionDto> VersionHistories { get; set; } // This will be adjusted later if needed
+        public ICollection<WBSStructureDto> WorkBreakdownStructures { get; set; }
+        public ICollection<WBSVersionDto> VersionHistories { get; set; }
     }
 }

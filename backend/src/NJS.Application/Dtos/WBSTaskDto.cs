@@ -31,7 +31,6 @@ namespace NJS.Application.Dtos
 
         // Planned Hours
         public List<PlannedHourDto> PlannedHours { get; set; } = new();
-        public ICollection<WBSTaskDto> ChildTasks { get; set; } = new List<WBSTaskDto>();
 
         // Calculated Totals (Calculated in backend query/handler, not expected from frontend on save)
         public double TotalHours { get; set; }

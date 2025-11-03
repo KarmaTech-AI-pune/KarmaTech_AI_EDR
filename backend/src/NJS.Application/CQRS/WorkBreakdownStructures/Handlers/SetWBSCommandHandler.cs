@@ -46,51 +46,62 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         public async Task<Unit> Handle(SetWBSCommand request, CancellationToken cancellationToken)
         {
-            // 1. Handle WBSHeader creation/update
-            var wbsHeader = await _context.WBSHeaders
-                .Include(h => h.WorkBreakdownStructures) // Include all WorkBreakdownStructures
-                    .ThenInclude(wbs => wbs.Tasks.Where(t => !t.IsDeleted)) // Only include non-deleted tasks
-                        .ThenInclude(t => t.UserWBSTasks)
-                .Include(h => h.WorkBreakdownStructures) // Include all WorkBreakdownStructures
-                    .ThenInclude(wbs => wbs.Tasks.Where(t => !t.IsDeleted)) // Only include non-deleted tasks
-                        .ThenInclude(t => t.PlannedHours)
-                .Include(h => h.VersionHistories)
-                .AsSplitQuery()
-                .FirstOrDefaultAsync(h => h.ProjectId == request.ProjectId, cancellationToken);
+            // 1. Handle WBSHeader creation/update based on WBSMaster.WbsHeaderId
+            WBSHeader wbsHeader;
 
-            if (wbsHeader == null)
+            if (request.WBSMaster.WbsHeaderId > 0)
             {
+                // Load existing WBSHeader
+                wbsHeader = await _context.WBSHeaders
+                    .Include(h => h.WorkBreakdownStructures) // Include all WorkBreakdownStructures
+                        .ThenInclude(wbs => wbs.Tasks.Where(t => !t.IsDeleted)) // Only include non-deleted tasks
+                            .ThenInclude(t => t.UserWBSTasks)
+                    .Include(h => h.WorkBreakdownStructures) // Include all WorkBreakdownStructures
+                        .ThenInclude(wbs => wbs.Tasks.Where(t => !t.IsDeleted)) // Only include non-deleted tasks
+                            .ThenInclude(t => t.PlannedHours)
+                    .Include(h => h.VersionHistories)
+                    .AsSplitQuery()
+                    .FirstOrDefaultAsync(h => h.Id == request.WBSMaster.WbsHeaderId && h.ProjectId == request.ProjectId, cancellationToken);
+
+                if (wbsHeader == null)
+                {
+                    throw new ArgumentException($"WBSHeader with ID {request.WBSMaster.WbsHeaderId} not found for project {request.ProjectId}.");
+                }
+
+                // Update existing header
+                wbsHeader.VersionDate = DateTime.UtcNow;
+                wbsHeader.CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
+                _context.WBSHeaders.Update(wbsHeader);
+            }
+            else
+            {
+                // Create new WBSHeader
                 wbsHeader = new WBSHeader
                 {
                     ProjectId = request.ProjectId,
-                    Version = request.WBSHeader.Version,
+                    Version = "1.0",
                     VersionDate = DateTime.UtcNow,
                     CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser,
-                    IsActive = request.WBSHeader.IsActive,
-                    ApprovalStatus = request.WBSHeader.ApprovalStatus,
+                    IsActive = true,
+                    ApprovalStatus = PMWorkflowStatusEnum.Initial,
                     WorkBreakdownStructures = new List<WorkBreakdownStructure>(),
                     VersionHistories = new List<WBSVersionHistory>()
                 };
                 _context.WBSHeaders.Add(wbsHeader);
-            }
-            else
-            {
-                wbsHeader.Version = request.WBSHeader.Version;
-                wbsHeader.VersionDate = DateTime.UtcNow;
-                wbsHeader.CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
-                wbsHeader.IsActive = request.WBSHeader.IsActive;
-                wbsHeader.ApprovalStatus = request.WBSHeader.ApprovalStatus;
-                _context.WBSHeaders.Update(wbsHeader);
+                await _unitOfWork.SaveChangesAsync(); // Save to get ID
             }
 
             // 2. Handle WorkBreakdownStructures (WBS Groups)
             var existingWBSGroupsDict = wbsHeader.WorkBreakdownStructures.ToDictionary(w => w.Id);
-            var incomingWBSGroupIds = request.WBSHeader.WorkBreakdownStructures.Where(dto => dto.Id > 0).Select(dto => dto.Id).ToHashSet();
+            var incomingWBSGroupIds = request.WBSMaster.WorkBreakdownStructures
+                .Where(dto => dto.WorkBreakdownStructureId > 0)
+                .Select(dto => dto.WorkBreakdownStructureId)
+                .ToHashSet();
 
-            foreach (var wbsGroupDto in request.WBSHeader.WorkBreakdownStructures)
+            foreach (var wbsGroupDto in request.WBSMaster.WorkBreakdownStructures)
             {
                 WorkBreakdownStructure wbsGroupEntity;
-                if (wbsGroupDto.Id > 0 && existingWBSGroupsDict.TryGetValue(wbsGroupDto.Id, out wbsGroupEntity))
+                if (wbsGroupDto.WorkBreakdownStructureId > 0 && existingWBSGroupsDict.TryGetValue(wbsGroupDto.WorkBreakdownStructureId, out wbsGroupEntity))
                 {
                     // Update existing WBS Group
                     wbsGroupEntity.Name = wbsGroupDto.Name;
@@ -179,7 +190,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         }
 
         /// <summary>
-        /// Recursively processes a list of WBSTaskDto, handling creation, updates, and parent-child relationships.
+        /// Processes a flat list of WBSTaskDto, handling creation, updates, and parent-child relationships.
+        /// Parent-child relationships are managed through ParentId and ParentFrontendTempId properties.
         /// </summary>
         private async Task ProcessTasksRecursively(
             ICollection<WBSTaskDto> taskDtos,
@@ -303,20 +315,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 }
 
                 allTasks.Add(taskEntity);
-
-                // Recursively process child tasks
-                if (dto.ChildTasks != null && dto.ChildTasks.Any())
-                {
-                    await ProcessTasksRecursively(
-                        dto.ChildTasks,
-                        wbsGroupEntity,
-                        taskEntity.Id, // Pass the current task's ID as the parent for its children
-                        dto.FrontendTempId, // Pass the current task's temp ID as the parent temp ID for its children
-                        tempIdToEntityMap,
-                        pendingParentUpdates,
-                        allTasks,
-                        wbsHeader);
-                }
             }
         }
 

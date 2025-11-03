@@ -1,12 +1,18 @@
 using System;
 using System.Collections.Generic;
-using NJS.Application.Dtos; // For WBSTaskDto
 
 namespace NJS.Application.Dtos
 {
     public class WBSStructureDto
     {
         public int Id { get; set; }
+
+        /// <summary>
+        /// WorkBreakdownStructureId - maps to WorkBreakdownStructure.Id in database
+        /// Use 0 for new WBS groups, or existing ID for updates
+        /// </summary>
+        public int WorkBreakdownStructureId { get; set; }
+
         public int WBSHeaderId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
@@ -14,6 +20,6 @@ namespace NJS.Application.Dtos
         public DateTime CreatedAt { get; set; }
         public string CreatedBy { get; set; }
 
-        public ICollection<WBSTaskDto> Tasks { get; set; } // Assuming WBSTaskDto exists
+        public ICollection<WBSTaskDto> Tasks { get; set; } = new List<WBSTaskDto>();
     }
 }

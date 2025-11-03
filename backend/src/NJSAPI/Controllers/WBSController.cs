@@ -25,16 +25,28 @@ namespace NJSAPI.Controllers
         /// Gets the active Work Breakdown Structure for a project.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <returns>The WBS structure including tasks.</returns>
+        /// <returns>The WBS header with all workBreakdownStructures array and tasks.</returns>
+        /// <remarks>
+        /// Response structure:
+        /// {
+        ///   "id": 101,  // wbsHeaderId
+        ///   "workBreakdownStructures": [
+        ///     {
+        ///       "workBreakdownStructureId": 1,
+        ///       "name": "Foundation",
+        ///       "description": "Base structure",
+        ///       "displayOrder": 1,
+        ///       "tasks": [...]
+        ///     }
+        ///   ]
+        /// }
+        /// </remarks>
         [HttpGet]
-        [ProducesResponseType(typeof(WBSStructureDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)] // If handler throws NotFoundException
-        public async Task<ActionResult<WBSStructureDto>> GetWBS(int projectId)
+        [ProducesResponseType(typeof(WBSHeaderDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<WBSHeaderDto>> GetWBS(int projectId)
         {
-            // Use the renamed query GetWBSByProjectIdQuery
             var result = await _mediator.Send(new GetWBSByProjectIdQuery(projectId));
-            // The handler now returns an empty structure instead of throwing NotFound,
-            // so we might not need specific 404 handling here unless requirements change.
             return Ok(result);
         }
 
@@ -42,19 +54,68 @@ namespace NJSAPI.Controllers
         /// Creates or replaces the entire Work Breakdown Structure for a project.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <param name="wbsHeader">The WBS header data including tasks.</param>
+        /// <param name="wbsMaster">The WBS master data including workBreakdownStructures array with tasks.</param>
         /// <returns>No content if successful.</returns>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     PUT /api/projects/1/wbs
+        ///     {
+        ///       "wbsHeaderId": 101,
+        ///       "workBreakdownStructures": [
+        ///         {
+        ///           "workBreakdownStructureId": 1,
+        ///           "name": "Foundation",
+        ///           "description": "Base structure for building foundation",
+        ///           "displayOrder": 1,
+        ///           "tasks": [
+        ///             {
+        ///               "id": 0,
+        ///               "workBreakdownStructureId": 1,
+        ///               "parentId": 0,
+        ///               "level": 1,
+        ///               "title": "Site Preparation",
+        ///               "description": "Prepare site for construction",
+        ///               "displayOrder": 1,
+        ///               "wbsOptionId": 1,
+        ///               "wbsOptionLabel": "Standard Work"
+        ///             }
+        ///           ]
+        ///         }
+        ///       ]
+        ///     }
+        ///
+        /// </remarks>
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)] // If handler throws NotFoundException for project
-        public async Task<IActionResult> SetWBS(int projectId, [FromBody] WBSHeaderDto wbsHeader)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> SetWBS(int projectId, [FromBody] WBSMasterDto wbsMaster)
         {
-            if (wbsHeader == null)
+            if (wbsMaster == null)
             {
-                return BadRequest("WBS header cannot be null.");
+                return BadRequest("WBS master data cannot be null.");
             }
-            // Basic validation: Check if ParentIds point to valid Ids within the list for new tasks? Optional.
+
+            if (wbsMaster.WorkBreakdownStructures == null || !wbsMaster.WorkBreakdownStructures.Any())
+            {
+                return BadRequest("WorkBreakdownStructures array cannot be null or empty.");
+            }
+
+            // Map WBSMasterDto to WBSHeaderDto for the command
+            var wbsHeader = new WBSHeaderDto
+            {
+                Id = wbsMaster.WbsHeaderId,
+                ProjectId = projectId,
+                WorkBreakdownStructures = wbsMaster.WorkBreakdownStructures.Select(wbs => new WBSStructureDto
+                {
+                    WorkBreakdownStructureId = wbs.WorkBreakdownStructureId,
+                    Name = wbs.Name,
+                    Description = wbs.Description,
+                    DisplayOrder = wbs.DisplayOrder,
+                    Tasks = wbs.Tasks
+                }).ToList()
+            };
 
             var command = new SetWBSCommand(projectId, wbsHeader);
             await _mediator.Send(command);
