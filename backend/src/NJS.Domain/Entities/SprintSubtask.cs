@@ -8,7 +8,10 @@ namespace NJS.Domain.Entities
     public class SprintSubtask : ITenantEntity
     {
         [Key]
-        public string? Subtaskkey { get; set; }  // e.g. "PROJ-101-1"
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // Assuming auto-generated primary key
+        public int SubtaskId { get; set; } // New primary key
+
+        public string? Subtaskkey { get; set; }  // e.g. "PROJ-101-1" - now a regular property
 
         public int TenantId { get; set; } // Added TenantId
 
@@ -45,6 +48,6 @@ namespace NJS.Domain.Entities
         // Foreign key to SprintTask table
         public string? Taskid { get; set; }
         [ForeignKey("Taskid")]
-        public SprintTask? ParentTask { get; set; }
+        public SprintTask? ParentTask { get; set; } // Keep this relation
     }
 }

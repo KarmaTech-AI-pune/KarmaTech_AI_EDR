@@ -424,6 +424,46 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
+        /// Updates an existing SprintSubtask based on its SubtaskId and TaskId.
+        /// </summary>
+        /// <param name="subtaskId">The ID of the SprintSubtask to update.</param>
+        /// <param name="taskId">The ID of the parent SprintTask.</param>
+        /// <param name="sprintSubtaskDto">The SprintSubtask data to update.</param>
+        /// <returns>A status indicating success or failure of the update operation.</returns>
+        [HttpPut("task/{taskId}/subtask/{subtaskId}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateSprintSubtask(int subtaskId, string taskId, [FromBody] SprintSubtaskDto sprintSubtaskDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid ModelState for UpdateSprintSubtask: {@ModelState}", ModelState);
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var command = new UpdateSprintSubtaskCommand { SubtaskId = subtaskId, TaskId = taskId, SprintSubtask = sprintSubtaskDto };
+                await _mediator.Send(command);
+
+                _logger.LogInformation("SprintSubtask with SubtaskId: {SubtaskId} and TaskId: {TaskId} updated successfully.", subtaskId, taskId);
+                return Ok(new { message = $"SprintSubtask with ID {subtaskId} and Task ID {taskId} updated successfully." });
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error updating SprintSubtask: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating SprintSubtask with SubtaskId: {SubtaskId} and TaskId: {TaskId}.", subtaskId, taskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Gets all SprintTasks for a specific Project ID, returning only summary fields.
         /// </summary>
         /// <param name="projectId">The ID of the Project.</param>
