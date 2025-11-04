@@ -131,6 +131,7 @@ namespace NJS.Domain.Database
         public DbSet<SprintTask> SprintTasks { get; set; }
         public DbSet<SprintSubtask> SprintSubtasks { get; set; }
         public DbSet<SprintPlan> SprintPlans { get; set; }
+        public DbSet<SprintTaskComment> SprintTaskComments { get; set; }
 
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
         public DbSet<CreateAccount> CreateAccounts { get; set; }
@@ -188,6 +189,10 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<WBSVersionWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<MeasurementUnit>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
+            modelBuilder.Entity<SprintTask>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintSubtask>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintPlan>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintTaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()

@@ -2,14 +2,17 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NJS.Application.CQRS.SprintTasks.Queries;
-using NJS.Domain.Database;
+using NJS.Application.Dtos; // Added for SprintTaskCommentDto
+using NJS.Domain.Database; // Added for ProjectManagementContext
 using System;
+using System.Collections.Generic; // Added for List
+using System.Linq; // Added for LINQ
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.SprintTasks.Handlers
 {
-    public class GetSprintTaskCommentQueryHandler : IRequestHandler<GetSprintTaskCommentQuery, string?>
+    public class GetSprintTaskCommentQueryHandler : IRequestHandler<GetSprintTaskCommentQuery, List<SprintTaskCommentDto>>
     {
         private readonly ProjectManagementContext _context;
         private readonly ILogger<GetSprintTaskCommentQueryHandler> _logger;
@@ -20,7 +23,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<string?> Handle(GetSprintTaskCommentQuery request, CancellationToken cancellationToken)
+        public async Task<List<SprintTaskCommentDto>> Handle(GetSprintTaskCommentQuery request, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(request.TaskId))
             {
@@ -28,21 +31,31 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 throw new ArgumentException("TaskId cannot be null or empty.");
             }
 
-            _logger.LogInformation("Attempting to retrieve comment for SprintTask with ID: {TaskId}", request.TaskId);
+            _logger.LogInformation("Attempting to retrieve comments for SprintTask with ID: {TaskId}", request.TaskId);
 
-            var sprintTask = await _context.SprintTasks
-                                           .AsNoTracking()
-                                           .Select(st => new { st.Taskid, st.Comments })
-                                           .FirstOrDefaultAsync(st => st.Taskid == request.TaskId, cancellationToken);
+            var comments = await _context.SprintTaskComments
+                                         .AsNoTracking()
+                                         .Where(c => c.Taskid == request.TaskId)
+                                         .Select(c => new SprintTaskCommentDto
+                                         {
+                                             CommentId = c.CommentId,
+                                             Taskid = c.Taskid,
+                                             CommentText = c.CommentText,
+                                             CreatedBy = c.CreatedBy,
+                                             CreatedDate = c.CreatedDate,
+                                             UpdatedBy = c.UpdatedBy,
+                                             UpdatedDate = c.UpdatedDate
+                                         })
+                                         .ToListAsync(cancellationToken);
 
-            if (sprintTask == null)
+            if (comments == null || !comments.Any())
             {
-                _logger.LogWarning("SprintTask with ID {TaskId} not found for retrieving comment.", request.TaskId);
-                return null;
+                _logger.LogWarning("No SprintTask comments found for Task ID {TaskId}.", request.TaskId);
+                return new List<SprintTaskCommentDto>(); // Return empty list instead of null
             }
 
-            _logger.LogInformation("Comment retrieved for SprintTask with ID {TaskId}.", request.TaskId);
-            return sprintTask.Comments;
+            _logger.LogInformation("Comments retrieved for SprintTask with ID {TaskId}. Count: {Count}", request.TaskId, comments.Count);
+            return comments;
         }
     }
 }

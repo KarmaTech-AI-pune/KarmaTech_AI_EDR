@@ -5,6 +5,6 @@ namespace NJS.Application.CQRS.SprintTasks.Commands
 {
     public class CreateSprintSubtaskCommand : IRequest<int>
     {
-        public SprintSubtaskDto SprintSubtask { get; set; }
+        public SprintSubtaskDto? SprintSubtask { get; set; }
     }
 }

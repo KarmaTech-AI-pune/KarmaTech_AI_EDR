@@ -39,8 +39,6 @@ namespace NJS.Domain.Entities
 
         public int? Attachments { get; set; }
 
-        public string? Comments { get; set; } // Ensure this is string?
-
         public bool? IsExpanded { get; set; }
 
         public DateTime? TaskcreatedDate { get; set; }

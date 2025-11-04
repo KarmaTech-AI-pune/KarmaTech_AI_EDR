@@ -79,7 +79,6 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 Taskstatus = sprintTaskDto.Taskstatus,
                 StoryPoints = sprintTaskDto.StoryPoints,
                 Attachments = sprintTaskDto.Attachments,
-                Comments = sprintTaskDto.Comments, // Changed from int? to string?
                 IsExpanded = sprintTaskDto.IsExpanded,
                 TaskcreatedDate = DateTime.UtcNow,
                 TaskupdatedDate = DateTime.UtcNow,

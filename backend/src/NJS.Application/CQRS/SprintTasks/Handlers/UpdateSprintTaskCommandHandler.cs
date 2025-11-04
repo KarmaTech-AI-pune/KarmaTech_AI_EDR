@@ -58,7 +58,6 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             existingSprintTask.Taskstatus = sprintTaskInputDto.Taskstatus;
             existingSprintTask.StoryPoints = sprintTaskInputDto.StoryPoints;
             existingSprintTask.Attachments = sprintTaskInputDto.Attachments;
-            existingSprintTask.Comments = sprintTaskInputDto.Comments;
             existingSprintTask.IsExpanded = sprintTaskInputDto.IsExpanded;
             existingSprintTask.TaskupdatedDate = DateTime.UtcNow;
             existingSprintTask.SprintPlanId = sprintTaskInputDto.SprintPlanId;

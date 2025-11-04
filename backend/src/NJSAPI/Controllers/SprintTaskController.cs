@@ -541,5 +541,215 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Gets all comments for a specific SprintTask.
+        /// </summary>
+        /// <param name="taskId">The ID of the parent SprintTask.</param>
+        /// <returns>A list of SprintTaskCommentDto.</returns>
+        [HttpGet("{taskId}/comments")]
+        [ProducesResponseType(typeof(IEnumerable<SprintTaskCommentDto>), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetSprintTaskCommentsByTaskId(string taskId)
+        {
+            _logger.LogInformation("Attempting to retrieve SprintTask comments for Task ID: {TaskId}", taskId);
+
+            try
+            {
+                var query = new GetSprintTaskCommentsByTaskIdQuery { Taskid = taskId };
+                var comments = await _mediator.Send(query);
+
+                if (comments == null || !comments.Any())
+                {
+                    _logger.LogWarning("No SprintTask comments found for Task ID {TaskId}.", taskId);
+                    return NotFound($"No SprintTask comments found for Task ID {taskId}.");
+                }
+
+                _logger.LogInformation("Found {Count} SprintTask comments for Task ID {TaskId}.", comments.Count(), taskId);
+                return Ok(comments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving SprintTask comments for Task ID: {TaskId}.", taskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets a single SprintTask comment by its ID.
+        /// </summary>
+        /// <param name="commentId">The ID of the SprintTask comment.</param>
+        /// <returns>The SprintTaskComment data.</returns>
+        [HttpGet("comments/{commentId}")]
+        [ProducesResponseType(typeof(SprintTaskCommentDto), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetSprintTaskCommentById(int commentId)
+        {
+            _logger.LogInformation("Attempting to retrieve SprintTask comment with ID: {CommentId}", commentId);
+
+            try
+            {
+                var query = new GetSprintTaskCommentByIdQuery { CommentId = commentId };
+                var comment = await _mediator.Send(query);
+
+                if (comment == null)
+                {
+                    _logger.LogWarning("SprintTask comment with ID {CommentId} not found.", commentId);
+                    return NotFound($"SprintTask comment with ID {commentId} not found.");
+                }
+
+                _logger.LogInformation("SprintTask comment with ID {CommentId} found.", commentId);
+                return Ok(comment);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving SprintTask comment with ID: {CommentId}.", commentId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Creates a new comment for a specific SprintTask.
+        /// </summary>
+        /// <param name="taskId">The ID of the parent SprintTask.</param>
+        /// <param name="commentDto">The SprintTaskComment data to create.</param>
+        /// <returns>A status indicating success or failure of the creation operation.</returns>
+        [HttpPost("{taskId}/comments")]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> AddSprintTaskComment(string taskId, [FromBody] AddSprintTaskCommentCommand commentDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid ModelState for AddSprintTaskComment: {@ModelState}", ModelState);
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                commentDto.TaskId = taskId; // Set TaskId from route
+                var success = await _mediator.Send(commentDto);
+
+                if (success)
+                {
+                    _logger.LogInformation("Comment added successfully to SprintTask with ID: {TaskId}", taskId);
+                    return StatusCode(201, new { message = $"Comment added successfully to SprintTask with ID {taskId}." });
+                }
+                else
+                {
+                    _logger.LogWarning("SprintTask with ID {TaskId} not found for adding comment.", taskId);
+                    return NotFound(new { message = $"SprintTask with ID {taskId} not found." });
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error adding SprintTask comment: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding SprintTask comment to Task ID: {TaskId}.", taskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing comment for a specific SprintTask.
+        /// </summary>
+        /// <param name="taskId">The ID of the parent SprintTask.</param>
+        /// <param name="commentId">The ID of the comment to update.</param>
+        /// <param name="commentDto">The SprintTaskComment data to update.</param>
+        /// <returns>A status indicating success or failure of the update operation.</returns>
+        [HttpPut("{taskId}/comments/{commentId}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateSprintTaskComment(string taskId, int commentId, [FromBody] UpdateSprintTaskCommentCommand commentDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid ModelState for UpdateSprintTaskComment: {@ModelState}", ModelState);
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                commentDto.Taskid = taskId; // Set Taskid from route
+                commentDto.CommentId = commentId; // Set CommentId from route
+                var success = await _mediator.Send(commentDto);
+
+                if (success)
+                {
+                    _logger.LogInformation("Comment with ID {CommentId} for Task ID {TaskId} updated successfully.", commentId, taskId);
+                    return Ok(new { message = $"Comment with ID {commentId} for Task ID {taskId} updated successfully." });
+                }
+                else
+                {
+                    _logger.LogWarning("Comment with ID {CommentId} for Task ID {TaskId} not found for update or no changes were made.", commentId, taskId);
+                    return NotFound(new { message = $"Comment with ID {commentId} for Task ID {taskId} not found or no changes were made." });
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error updating SprintTask comment: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating SprintTask comment with ID: {CommentId} for Task ID: {TaskId}.", commentId, taskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Deletes a SprintTask comment by its ID.
+        /// </summary>
+        /// <param name="commentId">The ID of the comment to delete.</param>
+        /// <returns>A status indicating success or failure of the deletion operation.</returns>
+        [HttpDelete("comments/{commentId}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> DeleteSprintTaskComment(int commentId)
+        {
+            if (commentId <= 0)
+            {
+                _logger.LogWarning("CommentId is invalid for DeleteSprintTaskComment request.");
+                return BadRequest(new { message = "CommentId cannot be invalid." });
+            }
+
+            try
+            {
+                var command = new DeleteSprintTaskCommentCommand { CommentId = commentId };
+                var success = await _mediator.Send(command);
+
+                if (success)
+                {
+                    _logger.LogInformation("SprintTask comment with ID {CommentId} deleted successfully.", commentId);
+                    return Ok(new { message = $"SprintTask comment with ID {commentId} deleted successfully." });
+                }
+                else
+                {
+                    _logger.LogWarning("SprintTask comment with ID {CommentId} not found for deletion or no changes were made.", commentId);
+                    return NotFound(new { message = $"SprintTask comment with ID {commentId} not found or no changes were made." });
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error deleting SprintTask comment: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting SprintTask comment with ID: {CommentId}.", commentId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
     }
 }

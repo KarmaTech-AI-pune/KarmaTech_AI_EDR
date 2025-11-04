@@ -103,7 +103,6 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                             Taskstatus = taskDto.Taskstatus,
                             StoryPoints = taskDto.StoryPoints,
                             Attachments = taskDto.Attachments,
-                            Comments = taskDto.Comments,
                             IsExpanded = taskDto.IsExpanded,
                             TaskcreatedDate = taskDto.TaskcreatedDate,
                             TaskupdatedDate = taskDto.TaskupdatedDate,

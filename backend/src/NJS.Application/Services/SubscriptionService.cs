@@ -695,7 +695,7 @@ namespace NJS.Application.Services
             }
         }
 
-        private static string MapFeatureToSlug(string featureName)
+        private static string? MapFeatureToSlug(string featureName)
         {
             return featureName?.ToLower() switch
             {
