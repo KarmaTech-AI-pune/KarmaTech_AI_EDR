@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Filters;
+using NJSAPI.Examples;
 
 namespace NJSAPI.Controllers
 {
@@ -37,7 +39,8 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(int), 201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> CreateSingleSprintPlan([FromBody] SprintPlanDto sprintPlanDto)
+        [SwaggerRequestExample(typeof(SprintPlanInputDto), typeof(SprintPlanInputDtoExample))]
+        public async Task<IActionResult> CreateSingleSprintPlan([FromBody] SprintPlanInputDto sprintPlanInputDto)
         {
             if (!ModelState.IsValid)
             {
@@ -47,7 +50,7 @@ namespace NJSAPI.Controllers
 
             try
             {
-                var command = new CreateSingleSprintPlanCommand { SprintPlan = sprintPlanDto };
+                var command = new CreateSingleSprintPlanCommand { SprintPlan = sprintPlanInputDto };
                 var sprintPlanId = await _mediator.Send(command);
 
                 _logger.LogInformation("Single SprintPlan created successfully with ID: {SprintPlanId}", sprintPlanId);
@@ -108,7 +111,8 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateSingleSprintPlan([FromBody] SprintPlanDto sprintPlanDto)
+        [SwaggerRequestExample(typeof(SprintPlanInputDto), typeof(SprintPlanInputDtoExample))]
+        public async Task<IActionResult> UpdateSingleSprintPlan([FromBody] SprintPlanInputDto sprintPlanInputDto)
         {
             if (!ModelState.IsValid)
             {
@@ -118,18 +122,18 @@ namespace NJSAPI.Controllers
 
             try
             {
-                var command = new UpdateSingleSprintPlanCommand { SprintPlan = sprintPlanDto };
+                var command = new UpdateSingleSprintPlanCommand { SprintPlan = sprintPlanInputDto };
                 var success = await _mediator.Send(command);
 
                 if (success)
                 {
-                    _logger.LogInformation("SprintPlan with ID {SprintId} updated successfully.", sprintPlanDto.SprintId);
-                    return Ok(new { message = $"SprintPlan with ID {sprintPlanDto.SprintId} updated successfully." });
+                    _logger.LogInformation("SprintPlan with ID {SprintId} updated successfully.", sprintPlanInputDto.SprintId);
+                    return Ok(new { message = $"SprintPlan with ID {sprintPlanInputDto.SprintId} updated successfully." });
                 }
                 else
                 {
-                    _logger.LogWarning("SprintPlan with ID {SprintId} not found for update or no changes were made.", sprintPlanDto.SprintId);
-                    return NotFound(new { message = $"SprintPlan with ID {sprintPlanDto.SprintId} not found or no changes were made." });
+                    _logger.LogWarning("SprintPlan with ID {SprintId} not found for update or no changes were made.", sprintPlanInputDto.SprintId);
+                    return NotFound(new { message = $"SprintPlan with ID {sprintPlanInputDto.SprintId} not found or no changes were made." });
                 }
             }
             catch (ArgumentException ex)
@@ -139,7 +143,7 @@ namespace NJSAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating single SprintPlan with ID: {SprintId}.", sprintPlanDto.SprintId);
+                _logger.LogError(ex, "Error updating single SprintPlan with ID: {SprintId}.", sprintPlanInputDto.SprintId);
                 return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
             }
         }
@@ -153,7 +157,8 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(string), 201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> CreateSingleSprintTask([FromBody] SprintTaskDto sprintTaskDto)
+        [SwaggerRequestExample(typeof(SprintTaskInputDto), typeof(SprintTaskInputDtoExample))]
+        public async Task<IActionResult> CreateSingleSprintTask([FromBody] SprintTaskInputDto sprintTaskInputDto)
         {
             if (!ModelState.IsValid)
             {
@@ -163,7 +168,7 @@ namespace NJSAPI.Controllers
 
             try
             {
-                var command = new CreateSprintTaskCommand { SprintTask = sprintTaskDto };
+                var command = new CreateSprintTaskCommand { SprintTask = sprintTaskInputDto };
                 var taskId = await _mediator.Send(command);
 
                 _logger.LogInformation("Single SprintTask created successfully with ID: {TaskId}", taskId);
@@ -191,7 +196,8 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateSingleSprintTask([FromBody] SprintTaskDto sprintTaskDto)
+        [SwaggerRequestExample(typeof(SprintTaskInputDto), typeof(SprintTaskInputDtoExample))]
+        public async Task<IActionResult> UpdateSingleSprintTask([FromBody] SprintTaskInputDto sprintTaskInputDto)
         {
             if (!ModelState.IsValid)
             {
@@ -201,18 +207,18 @@ namespace NJSAPI.Controllers
 
             try
             {
-                var command = new UpdateSprintTaskCommand { SprintTask = sprintTaskDto };
+                var command = new UpdateSprintTaskCommand { SprintTask = sprintTaskInputDto };
                 var success = await _mediator.Send(command);
 
                 if (success)
                 {
-                    _logger.LogInformation("SprintTask with ID {TaskId} updated successfully.", sprintTaskDto.Taskid);
-                    return Ok(new { message = $"SprintTask with ID {sprintTaskDto.Taskid} updated successfully." });
+                    _logger.LogInformation("SprintTask with ID {TaskId} updated successfully.", sprintTaskInputDto.Taskid);
+                    return Ok(new { message = $"SprintTask with ID {sprintTaskInputDto.Taskid} updated successfully." });
                 }
                 else
                 {
-                    _logger.LogWarning("SprintTask with ID {TaskId} not found for update or no changes were made.", sprintTaskDto.Taskid);
-                    return NotFound(new { message = $"SprintTask with ID {sprintTaskDto.Taskid} not found or no changes were made." });
+                    _logger.LogWarning("SprintTask with ID {TaskId} not found for update or no changes were made.", sprintTaskInputDto.Taskid);
+                    return NotFound(new { message = $"SprintTask with ID {sprintTaskInputDto.Taskid} not found or no changes were made." });
                 }
             }
             catch (ArgumentException ex)
@@ -222,7 +228,7 @@ namespace NJSAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating single SprintTask with ID: {TaskId}.", sprintTaskDto.Taskid);
+                _logger.LogError(ex, "Error updating single SprintTask with ID: {TaskId}.", sprintTaskInputDto.Taskid);
                 return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
             }
         }

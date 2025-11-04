@@ -5,6 +5,6 @@ namespace NJS.Application.CQRS.SprintPlans.Commands
 {
     public class CreateSingleSprintPlanCommand : IRequest<int>
     {
-        public SprintPlanDto SprintPlan { get; set; }
+        public SprintPlanInputDto SprintPlan { get; set; }
     }
 }

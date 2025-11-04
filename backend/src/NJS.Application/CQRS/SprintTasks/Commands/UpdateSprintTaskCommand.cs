@@ -5,6 +5,6 @@ namespace NJS.Application.CQRS.SprintTasks.Commands
 {
     public class UpdateSprintTaskCommand : IRequest<bool>
     {
-        public SprintTaskDto SprintTask { get; set; }
+        public SprintTaskInputDto SprintTask { get; set; }
     }
 }
