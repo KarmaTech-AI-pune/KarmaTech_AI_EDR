@@ -48,7 +48,7 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
             existingSprintPlan.EndDate = sprintPlanDto.EndDate;
             existingSprintPlan.SprintGoal = sprintPlanDto.SprintGoal;
             existingSprintPlan.ProjectId = sprintPlanDto.ProjectId.Value; // Cast to non-nullable int
-            existingSprintPlan.SprintEmployee = sprintPlanDto.SprintEmployee;
+            existingSprintPlan.RequiredSprintEmployees = sprintPlanDto.RequiredSprintEmployees;
 
             // SprintTasks and SprintSubtasks are NOT handled by this API, as per requirement.
 

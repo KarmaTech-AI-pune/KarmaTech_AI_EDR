@@ -48,10 +48,52 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
                 EndDate = sprintPlanEntity.EndDate,
                 SprintGoal = sprintPlanEntity.SprintGoal,
                 ProjectId = sprintPlanEntity.ProjectId,
-                SprintEmployee = sprintPlanEntity.SprintEmployee, // Map the new column
-                // Tasks and Subtasks are not included as per the "SprintPlan table only" requirement
+                // SprintEmployee will be dynamically populated
                 SprintTasks = null
             };
+
+            // Step 1 & 2: Get required employee count for the current sprint
+            int requiredEmployees = sprintPlanEntity.RequiredSprintEmployees;
+
+            if (requiredEmployees > 0)
+            {
+                // Step 3: Get all user IDs already assigned to previous sprints
+                var previouslyAssignedUserIds = await _context.SprintPlans
+                    .Where(sp => sp.SprintId < request.SprintId)
+                    .OrderBy(sp => sp.SprintId)
+                    .SelectMany(sp => _context.UserWBSTasks
+                        .OrderBy(uwt => uwt.Id)
+                        .Select(uwt => uwt.UserId)
+                        .Take(sp.RequiredSprintEmployees)
+                    )
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+
+                // Step 4: Get available user IDs not assigned to previous sprints
+                var availableUserWBSTasks = await _context.UserWBSTasks
+                    .Where(uwt => !previouslyAssignedUserIds.Contains(uwt.UserId))
+                    .OrderBy(uwt => uwt.Id)
+                    .Take(requiredEmployees)
+                    .Select(uwt => uwt.UserId)
+                    .ToListAsync(cancellationToken);
+
+                // Step 5: Get employee names for the selected user IDs
+                var sprintEmployees = await _context.Users
+                    .Where(u => availableUserWBSTasks.Contains(u.Id))
+                    .Select(u => new SprintEmployeeDto
+                    {
+                        EmployeeId = u.Id,
+                        EmployeeName = u.Name
+                    })
+                    .ToListAsync(cancellationToken);
+
+                // Step 6: Combine these employee details and include them in the sprintEmployee array
+                sprintPlanDto.SprintEmployee = sprintEmployees;
+            }
+            else
+            {
+                sprintPlanDto.SprintEmployee = new List<SprintEmployeeDto>();
+            }
 
             return sprintPlanDto;
         }

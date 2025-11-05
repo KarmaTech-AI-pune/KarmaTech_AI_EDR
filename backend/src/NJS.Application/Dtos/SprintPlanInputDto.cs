@@ -11,6 +11,6 @@ namespace NJS.Application.Dtos
         public DateTime? EndDate { get; set; }
         public string? SprintGoal { get; set; }
         public int? ProjectId { get; set; }
-        public int? SprintEmployee { get; set; }
+        public int RequiredSprintEmployees { get; set; }
     }
 }

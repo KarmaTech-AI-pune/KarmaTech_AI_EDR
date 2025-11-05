@@ -17,7 +17,7 @@ namespace NJSAPI.Examples
                 EndDate = DateTime.Parse("2025-11-15T17:00:00Z"),
                 SprintGoal = "string",
                 ProjectId = 1,
-                SprintEmployee = 10
+                RequiredSprintEmployees = 10
             };
         }
     }

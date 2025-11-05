@@ -27,9 +27,9 @@ namespace NJS.Domain.Entities
         [Required]
         public int Level { get; set; }
 
-        [StringLength(100)]
+        [StringLength(500)] // Increased length to accommodate longer ParentValue strings (e.g., JSON arrays)
         public string ParentValue { get; set; }
-        public FormType FormType { get; set; } =  FormType.Manpower; // Default to Manpower for backward compatibility
+        public FormType FormType { get; set; } = FormType.Manpower; // Default to Manpower for backward compatibility
 
         // Navigation property for the "many" side of the relationship
         public virtual ICollection<WBSTask> WBSTasks { get; set; } = new List<WBSTask>();
