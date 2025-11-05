@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Filters;
 using NJSAPI.Examples;
+using NJS.Application.CQRS.SprintSubtasks.Commands; // Added for SprintSubtaskComment commands
+using NJS.Application.CQRS.SprintSubtasks.Queries; // Added for SprintSubtaskComment queries
+using NJS.Application.Dtos; // Ensure this is included for SprintSubtaskCommentDto
 
 namespace NJSAPI.Controllers
 {
@@ -748,6 +751,220 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting SprintTask comment with ID: {CommentId}.", commentId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets all comments for a specific SprintSubtask.
+        /// </summary>
+        /// <param name="subtaskId">The ID of the parent SprintSubtask.</param>
+        /// <returns>A list of SprintSubtaskCommentDto.</returns>
+        [HttpGet("{taskId}/subtasks/{subtaskId}/comments")]
+        [ProducesResponseType(typeof(IEnumerable<SprintSubtaskCommentDto>), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetSprintSubtaskCommentsBySubtaskId(string taskId, int subtaskId)
+        {
+            _logger.LogInformation("Attempting to retrieve SprintSubtask comments for Task ID: {TaskId}, Subtask ID: {SubtaskId}", taskId, subtaskId);
+
+            try
+            {
+                var query = new GetSprintSubtaskCommentsBySubtaskIdQuery { SubtaskId = subtaskId };
+                var comments = await _mediator.Send(query);
+
+                if (comments == null || !comments.Any())
+                {
+                    _logger.LogWarning("No SprintSubtask comments found for Subtask ID {SubtaskId}.", subtaskId);
+                    return NotFound($"No SprintSubtask comments found for Subtask ID {subtaskId}.");
+                }
+
+                _logger.LogInformation("Found {Count} SprintSubtask comments for Subtask ID {SubtaskId}.", comments.Count(), subtaskId);
+                return Ok(comments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving SprintSubtask comments for Subtask ID: {SubtaskId}.", subtaskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets a single SprintSubtask comment by its ID.
+        /// </summary>
+        /// <param name="subtaskCommentId">The ID of the SprintSubtask comment.</param>
+        /// <returns>The SprintSubtaskComment data.</returns>
+        [HttpGet("subtask-comments/{subtaskCommentId}")]
+        [ProducesResponseType(typeof(SprintSubtaskCommentDto), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetSprintSubtaskCommentById(int subtaskCommentId)
+        {
+            _logger.LogInformation("Attempting to retrieve SprintSubtask comment with ID: {SubtaskCommentId}", subtaskCommentId);
+
+            try
+            {
+                var query = new GetSprintSubtaskCommentByIdQuery { SubtaskCommentId = subtaskCommentId };
+                var comment = await _mediator.Send(query);
+
+                if (comment == null)
+                {
+                    _logger.LogWarning("SprintSubtask comment with ID {SubtaskCommentId} not found.", subtaskCommentId);
+                    return NotFound($"SprintSubtask comment with ID {subtaskCommentId} not found.");
+                }
+
+                _logger.LogInformation("SprintSubtask comment with ID {SubtaskCommentId} found.", subtaskCommentId);
+                return Ok(comment);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving SprintSubtask comment with ID: {SubtaskCommentId}.", subtaskCommentId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Creates a new comment for a specific SprintSubtask.
+        /// </summary>
+        /// <param name="taskId">The ID of the parent SprintTask.</param>
+        /// <param name="subtaskId">The ID of the parent SprintSubtask.</param>
+        /// <param name="commentDto">The SprintSubtaskComment data to create.</param>
+        /// <returns>A status indicating success or failure of the creation operation.</returns>
+        [HttpPost("{taskId}/subtasks/{subtaskId}/comments")]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> AddSprintSubtaskComment(string taskId, int subtaskId, [FromBody] AddSprintSubtaskCommentCommand commentDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid ModelState for AddSprintSubtaskComment: {@ModelState}", ModelState);
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                commentDto.Taskid = taskId; // Set Taskid from route
+                commentDto.SubtaskId = subtaskId; // Set SubtaskId from route
+                var success = await _mediator.Send(commentDto);
+
+                if (success)
+                {
+                    _logger.LogInformation("Comment added successfully to SprintSubtask with ID: {SubtaskId} under Task ID: {TaskId}", subtaskId, taskId);
+                    return StatusCode(201, new { message = $"Comment added successfully to SprintSubtask with ID {subtaskId} under Task ID {taskId}." });
+                }
+                else
+                {
+                    _logger.LogWarning("SprintSubtask with ID {SubtaskId} or Task ID {TaskId} not found for adding comment.", subtaskId, taskId);
+                    return NotFound(new { message = $"SprintSubtask with ID {subtaskId} or Task ID {taskId} not found." });
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error adding SprintSubtask comment: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding SprintSubtask comment to Subtask ID: {SubtaskId} under Task ID: {TaskId}.", subtaskId, taskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing comment for a specific SprintSubtask.
+        /// </summary>
+        /// <param name="taskId">The ID of the parent SprintTask.</param>
+        /// <param name="subtaskId">The ID of the parent SprintSubtask.</param>
+        /// <param name="subtaskCommentId">The ID of the comment to update.</param>
+        /// <param name="commentDto">The SprintSubtaskComment data to update.</param>
+        /// <returns>A status indicating success or failure of the update operation.</returns>
+        [HttpPut("{taskId}/subtasks/{subtaskId}/comments/{subtaskCommentId}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateSprintSubtaskComment(string taskId, int subtaskId, int subtaskCommentId, [FromBody] UpdateSprintSubtaskCommentCommand commentDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid ModelState for UpdateSprintSubtaskComment: {@ModelState}", ModelState);
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                commentDto.Taskid = taskId; // Set Taskid from route
+                commentDto.SubtaskId = subtaskId; // Set SubtaskId from route
+                commentDto.SubtaskCommentId = subtaskCommentId; // Set SubtaskCommentId from route
+                var success = await _mediator.Send(commentDto);
+
+                if (success)
+                {
+                    _logger.LogInformation("Comment with ID {SubtaskCommentId} for Subtask ID {SubtaskId} under Task ID {TaskId} updated successfully.", subtaskCommentId, subtaskId, taskId);
+                    return Ok(new { message = $"Comment with ID {subtaskCommentId} for Subtask ID {subtaskId} under Task ID {taskId} updated successfully." });
+                }
+                else
+                {
+                    _logger.LogWarning("Comment with ID {SubtaskCommentId} for Subtask ID {SubtaskId} under Task ID {TaskId} not found for update or no changes were made.", subtaskCommentId, subtaskId, taskId);
+                    return NotFound(new { message = $"Comment with ID {subtaskCommentId} for Subtask ID {subtaskId} under Task ID {taskId} not found or no changes were made." });
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error updating SprintSubtask comment: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating SprintSubtask comment with ID: {SubtaskCommentId} for Subtask ID: {SubtaskId} under Task ID: {TaskId}.", subtaskCommentId, subtaskId, taskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Deletes a SprintSubtask comment by its ID.
+        /// </summary>
+        /// <param name="subtaskCommentId">The ID of the comment to delete.</param>
+        /// <returns>A status indicating success or failure of the deletion operation.</returns>
+        [HttpDelete("subtask-comments/{subtaskCommentId}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> DeleteSprintSubtaskComment(int subtaskCommentId)
+        {
+            if (subtaskCommentId <= 0)
+            {
+                _logger.LogWarning("SubtaskCommentId is invalid for DeleteSprintSubtaskComment request.");
+                return BadRequest(new { message = "SubtaskCommentId cannot be invalid." });
+            }
+
+            try
+            {
+                var command = new DeleteSprintSubtaskCommentCommand { SubtaskCommentId = subtaskCommentId };
+                var success = await _mediator.Send(command);
+
+                if (success)
+                {
+                    _logger.LogInformation("SprintSubtask comment with ID {SubtaskCommentId} deleted successfully.", subtaskCommentId);
+                    return Ok(new { message = $"SprintSubtask comment with ID {subtaskCommentId} deleted successfully." });
+                }
+                else
+                {
+                    _logger.LogWarning("SprintSubtask comment with ID {SubtaskCommentId} not found for deletion or no changes were made.", subtaskCommentId);
+                    return NotFound(new { message = $"SprintSubtask comment with ID {subtaskCommentId} not found or no changes were made." });
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error deleting SprintSubtask comment: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting SprintSubtask comment with ID: {SubtaskCommentId}.", subtaskCommentId);
                 return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
             }
         }

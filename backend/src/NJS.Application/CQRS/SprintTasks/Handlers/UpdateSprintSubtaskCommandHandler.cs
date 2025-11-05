@@ -7,6 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq;
+using NJS.Application.Dtos;
 
 namespace NJS.Application.CQRS.SprintTasks.Handlers
 {
@@ -23,48 +25,44 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
 
         public async Task<Unit> Handle(UpdateSprintSubtaskCommand request, CancellationToken cancellationToken)
         {
-            var subtaskDto = request.SprintSubtask;
+            var sprintSubtaskDto = request.SprintSubtask;
 
-            if (subtaskDto == null)
+            if (sprintSubtaskDto == null || sprintSubtaskDto.SubtaskId <= 0)
             {
-                _logger.LogError("SprintSubtaskDto is null in the update request.");
-                throw new ArgumentException("SprintSubtask data cannot be null.");
+                _logger.LogError("SprintSubtaskDto or SubtaskId is invalid in the request.");
+                throw new ArgumentException("SprintSubtask or SubtaskId cannot be null or invalid for update.");
             }
 
-            _logger.LogInformation("Attempting to update SprintSubtask with SubtaskId: {SubtaskId} and TaskId: {TaskId}", request.SubtaskId, request.TaskId);
+            var existingSubtask = await _context.SprintSubtasks
+                                                .FirstOrDefaultAsync(st => st.SubtaskId == sprintSubtaskDto.SubtaskId && st.Taskid == request.TaskId, cancellationToken);
 
-            var subtask = await _context.SprintSubtasks
-                                        .FirstOrDefaultAsync(s => s.SubtaskId == request.SubtaskId && s.Taskid == request.TaskId, cancellationToken);
-
-            if (subtask == null)
+            if (existingSubtask == null)
             {
-                _logger.LogWarning("SprintSubtask with SubtaskId: {SubtaskId} and TaskId: {TaskId} not found.", request.SubtaskId, request.TaskId);
-                throw new ArgumentException($"SprintSubtask with ID {request.SubtaskId} and Task ID {request.TaskId} not found.");
+                _logger.LogWarning("SprintSubtask with ID {SubtaskId} and Task ID {TaskId} not found for update.", sprintSubtaskDto.SubtaskId, request.TaskId);
+                return Unit.Value; // Or throw NotFoundException
             }
 
-            // Update properties from DTO
-            subtask.Subtaskkey = subtaskDto.Subtaskkey;
-            subtask.Subtasktitle = subtaskDto.Subtasktitle;
-            subtask.Subtaskdescription = subtaskDto.Subtaskdescription;
-            subtask.Subtaskpriority = subtaskDto.Subtaskpriority;
-            subtask.Subtaskstatus = subtaskDto.Subtaskstatus;
-            subtask.SubtaskAssineid = subtaskDto.SubtaskAssineid;
-            subtask.SubtaskAssigneeName = subtaskDto.SubtaskAssigneeName;
-            subtask.SubtaskAssigneeAvatar = subtaskDto.SubtaskAssigneeAvatar;
-            subtask.SubtaskReporterId = subtaskDto.SubtaskReporterId;
-            subtask.SubtaskReporterName = subtaskDto.SubtaskReporterName;
-            subtask.SubtaskReporterAvatar = subtaskDto.SubtaskReporterAvatar;
-            subtask.Attachments = subtaskDto.Attachments;
-            subtask.Subtaskcomments = subtaskDto.Subtaskcomments;
-            subtask.SubtaskisExpanded = subtaskDto.SubtaskisExpanded;
-            subtask.SubtaskcreatedDate = subtaskDto.SubtaskcreatedDate;
-            subtask.SubtaskupdatedDate = subtaskDto.SubtaskupdatedDate;
-            subtask.SubtaskType = subtaskDto.SubtaskType;
-            // Taskid and TenantId should not be changed in an update based on current logic.
+            // Update properties from DTO to entity
+            existingSubtask.Subtaskkey = sprintSubtaskDto.Subtaskkey;
+            existingSubtask.Subtasktitle = sprintSubtaskDto.Subtasktitle;
+            existingSubtask.Subtaskdescription = sprintSubtaskDto.Subtaskdescription;
+            existingSubtask.Subtaskpriority = sprintSubtaskDto.Subtaskpriority;
+            existingSubtask.Subtaskstatus = sprintSubtaskDto.Subtaskstatus;
+            existingSubtask.SubtaskAssineid = sprintSubtaskDto.SubtaskAssineid;
+            existingSubtask.SubtaskAssigneeName = sprintSubtaskDto.SubtaskAssigneeName;
+            existingSubtask.SubtaskAssigneeAvatar = sprintSubtaskDto.SubtaskAssigneeAvatar;
+            existingSubtask.SubtaskReporterId = sprintSubtaskDto.SubtaskReporterId;
+            existingSubtask.SubtaskReporterName = sprintSubtaskDto.SubtaskReporterName;
+            existingSubtask.SubtaskReporterAvatar = sprintSubtaskDto.SubtaskReporterAvatar;
+            existingSubtask.Attachments = sprintSubtaskDto.Attachments;
+            existingSubtask.SubtaskisExpanded = sprintSubtaskDto.SubtaskisExpanded;
+            existingSubtask.SubtaskupdatedDate = DateTime.UtcNow;
+            existingSubtask.SubtaskType = sprintSubtaskDto.SubtaskType;
+            // Taskid is part of the composite key and should not be changed here.
 
-            await _context.SaveChangesAsync(cancellationToken);
+            var changesSaved = await _context.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("SprintSubtask with SubtaskId: {SubtaskId} and TaskId: {TaskId} updated successfully.", request.SubtaskId, request.TaskId);
+            _logger.LogInformation("SprintSubtask with ID {SubtaskId} updated successfully. Changes saved: {Changes}", existingSubtask.SubtaskId, changesSaved);
 
             return Unit.Value;
         }

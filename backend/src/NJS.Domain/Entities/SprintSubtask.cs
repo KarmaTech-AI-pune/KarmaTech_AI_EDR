@@ -35,8 +35,6 @@ namespace NJS.Domain.Entities
 
         public int? Attachments { get; set; }
 
-        public string? Subtaskcomments { get; set; } // Ensure this is string?
-
         public bool? SubtaskisExpanded { get; set; }
 
         public DateTime? SubtaskcreatedDate { get; set; }

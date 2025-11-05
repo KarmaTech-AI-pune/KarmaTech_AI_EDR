@@ -131,7 +131,6 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                                     SubtaskReporterName = subtaskDto.SubtaskReporterName,
                                     SubtaskReporterAvatar = subtaskDto.SubtaskReporterAvatar,
                                     Attachments = subtaskDto.Attachments,
-                                    Subtaskcomments = subtaskDto.Subtaskcomments,
                                     SubtaskisExpanded = subtaskDto.SubtaskisExpanded,
                                     SubtaskcreatedDate = subtaskDto.SubtaskcreatedDate,
                                     SubtaskupdatedDate = subtaskDto.SubtaskupdatedDate,
