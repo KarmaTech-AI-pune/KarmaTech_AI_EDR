@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization; // Added for JsonIgnore attribute
 
 namespace NJS.Application.Dtos
 {
@@ -12,6 +13,8 @@ namespace NJS.Application.Dtos
         public string? SprintGoal { get; set; }
         public int? ProjectId { get; set; }
         public List<SprintEmployeeDto>? SprintEmployee { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<SprintTaskDto>? SprintTasks { get; set; }
     }
 }

@@ -11,7 +11,6 @@ namespace NJSAPI.Examples
             return new SprintPlanInputDto
             {
                 SprintId = 1,
-                SprintNumber = 1,
                 TenantId = 1,
                 StartDate = DateTime.Parse("2025-11-01T09:00:00Z"),
                 EndDate = DateTime.Parse("2025-11-15T17:00:00Z"),

@@ -43,7 +43,7 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
             }
 
             // Update properties from DTO to entity
-            existingSprintPlan.SprintNumber = sprintPlanDto.SprintNumber;
+            // SprintNumber is automatically generated and should not be updated from DTO
             existingSprintPlan.StartDate = sprintPlanDto.StartDate;
             existingSprintPlan.EndDate = sprintPlanDto.EndDate;
             existingSprintPlan.SprintGoal = sprintPlanDto.SprintGoal;
