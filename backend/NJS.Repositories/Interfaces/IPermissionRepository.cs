@@ -4,13 +4,13 @@ namespace NJS.Repositories.Interfaces
 {
     public interface IPermissionRepository
     {
-        Task<IEnumerable<Permission>> GetAll();
-        Task<Permission> GetById(int id);
-        Task Add(Permission permission);
-        Task Update(Permission permission);
-        Task Delete(int id);
-        Task<IEnumerable<Permission>> GetPermissionsByCategory(string category);
-        Task<IEnumerable<Permission>> GetPermissionsByRoleId(string roleId);
-        
+        Task<IEnumerable<Permission>> GetAllAsync();
+        Task<Permission?> GetByIdAsync(int id);
+        Task<int> AddAsync(Permission permission);
+        Task UpdateAsync(Permission permission);
+        Task DeleteAsync(int id);
+        Task<IEnumerable<Permission>> GetPermissionsByCategoryAsync(string category);
+        Task<IEnumerable<Permission>> GetPermissionsByRoleIdAsync(string roleId);
+        Task<Permission?> GetByNameAsync(string name);
     }
 }
