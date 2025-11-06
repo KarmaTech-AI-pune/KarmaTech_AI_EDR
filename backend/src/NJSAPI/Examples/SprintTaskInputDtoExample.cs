@@ -26,7 +26,6 @@ namespace NJSAPI.Examples
                 Taskstatus = "To Do",
                 StoryPoints = 5,
                 Attachments = 0,
-                Comments = "0",
                 IsExpanded = false,
                 TaskcreatedDate = DateTime.Parse("2025-10-31T11:00:00Z"),
                 TaskupdatedDate = DateTime.Parse("2025-10-31T11:00:00Z"),
