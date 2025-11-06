@@ -16,6 +16,10 @@ The platform supports enterprise-level project management with the following cap
 - Change Control Management
 - Project Closure Documentation
 - Comprehensive Audit Logging
+- Sprint Management
+- Kanban Board (To Do, In Progress, Testing, Done)
+- Cashflow
+- Dashboard
 
 ### Technical Architecture
 
