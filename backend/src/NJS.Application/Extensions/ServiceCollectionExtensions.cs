@@ -17,6 +17,10 @@ using NJS.Repositories.Repositories;
 using NJS.Repositories.Interfaces;
 using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
+using NJS.Application.CQRS.SprintTasks.Commands; // Added for SprintTask commands
+using NJS.Application.CQRS.SprintTasks.Queries; // Added for SprintTask queries
+using NJS.Application.CQRS.SprintSubtasks.Commands; // Added for SprintSubtask commands
+using NJS.Application.CQRS.SprintSubtasks.Queries; // Added for SprintSubtask queries
 
 namespace NJS.Application.Extensions
 {
@@ -27,8 +31,9 @@ namespace NJS.Application.Extensions
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
             services.AddMediatR(cfg =>
             {
-                cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-                cfg.RegisterServicesFromAssembly(typeof(IMonthlyProgressRepository).Assembly); // Register repository assembly
+                cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly); // NJS.Application assembly
+                cfg.RegisterServicesFromAssembly(typeof(ProjectManagementContext).Assembly); // NJS.Domain assembly
+                cfg.RegisterServicesFromAssembly(typeof(ProjectRepository).Assembly); // NJS.Repositories assembly
             });
 
             services.AddScoped<IProjectRepository, ProjectRepository>();
