@@ -21,7 +21,6 @@ namespace NJS.Application.Dtos
         public string? Taskstatus { get; set; }
         public int? StoryPoints { get; set; }
         public int? Attachments { get; set; }
-        public string? Comments { get; set; } // Changed from int? to string?
         public bool? IsExpanded { get; set; }
         public DateTime? TaskcreatedDate { get; set; }
         public DateTime? TaskupdatedDate { get; set; }

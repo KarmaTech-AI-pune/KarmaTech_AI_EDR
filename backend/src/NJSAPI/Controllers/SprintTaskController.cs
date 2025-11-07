@@ -34,7 +34,131 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
-        /// Creates a single SprintPlan entry without associated tasks or subtasks.
+        /// Creates a new SprintSubtask for a given SprintTask.
+        /// </summary>
+        /// <param name="taskId">The ID of the parent SprintTask.</param>
+        /// <param name="subtaskDto">The subtask data to create.</param>
+        /// <returns>The created SprintSubtask.</returns>
+        [HttpPost("{taskId}/subtasks")]
+        [ProducesResponseType(typeof(SprintSubtaskDto), 201)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> CreateSprintSubtask(string taskId, [FromBody] SprintSubtaskDto subtaskDto)
+        {
+            if (taskId != subtaskDto.Taskid)
+            {
+                return BadRequest("Task ID in the route does not match Task ID in the body.");
+            }
+
+            var command = new CreateSprintSubtaskCommand { SprintSubtask = subtaskDto };
+            var subtask = await _mediator.Send(command);
+            return CreatedAtAction(nameof(CreateSprintSubtask), new { taskId = taskId, subtaskId = subtask }, subtask);
+        }
+
+        /// <summary>
+        /// Updates an existing SprintSubtask.
+        /// </summary>
+        /// <param name="subtaskId">The ID of the subtask to update.</param>
+        /// <param name="subtaskDto">The subtask data to update.</param>
+        /// <returns>The updated SprintSubtask.</returns>
+        [HttpPut("subtasks/{subtaskId}")]
+        [ProducesResponseType(typeof(SprintSubtaskDto), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> UpdateSprintSubtask(int subtaskId, [FromBody] SprintSubtaskDto subtaskDto)
+        {
+            if (subtaskId != subtaskDto.SubtaskId)
+            {
+                return BadRequest("Subtask ID in the route does not match Subtask ID in the body.");
+            }
+
+            var command = new UpdateSprintSubtaskCommand { SubtaskId = subtaskId, SprintSubtask = subtaskDto, TaskId = subtaskDto.Taskid };
+            await _mediator.Send(command);
+            return Ok(subtaskDto); // Return the updated DTO for a user-friendly response
+        }
+
+        /// <summary>
+        /// Deletes a SprintSubtask by its SubtaskId.
+        /// </summary>
+        /// <param name="subtaskId">The ID of the SprintSubtask to delete.</param>
+        /// <returns>A status indicating success or failure of the deletion operation.</returns>
+        [HttpDelete("subtasks/{subtaskId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> DeleteSprintSubtask(int subtaskId)
+        {
+            if (subtaskId <= 0)
+            {
+                _logger.LogWarning("SubtaskId is invalid for DeleteSprintSubtask request.");
+                return BadRequest(new { message = "SubtaskId cannot be invalid." });
+            }
+
+            try
+            {
+                var command = new DeleteSprintSubtaskCommand { SubtaskId = subtaskId };
+                var success = await _mediator.Send(command);
+
+                if (success)
+                {
+                    _logger.LogInformation("SprintSubtask with ID {SubtaskId} deleted successfully.", subtaskId);
+                    return Ok(new { message = $"SprintSubtask with ID {subtaskId} deleted successfully." });
+                }
+                else
+                {
+                    _logger.LogWarning("SprintSubtask with ID {SubtaskId} not found for deletion or no changes were made.", subtaskId);
+                    return NotFound(new { message = $"SprintSubtask with ID {subtaskId} not found or no changes were made." });
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error deleting SprintSubtask: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting SprintSubtask with ID: {SubtaskId}.", subtaskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets a single SprintSubtask by its ID.
+        /// </summary>
+        /// <param name="subtaskId">The ID of the SprintSubtask.</param>
+        /// <returns>The SprintSubtask data.</returns>
+        [HttpGet("subtasks/{subtaskId}")]
+        [ProducesResponseType(typeof(SprintSubtaskDto), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetSprintSubtaskById(int subtaskId)
+        {
+            _logger.LogInformation("Attempting to retrieve SprintSubtask with ID: {SubtaskId}", subtaskId);
+
+            try
+            {
+                var query = new GetSprintSubtaskByIdQuery { SubtaskId = subtaskId };
+                var subtaskDto = await _mediator.Send(query);
+
+                if (subtaskDto == null)
+                {
+                    _logger.LogWarning("SprintSubtask with ID {SubtaskId} not found.", subtaskId);
+                    return NotFound($"SprintSubtask with ID {subtaskId} not found.");
+                }
+
+                _logger.LogInformation("SprintSubtask with ID {SubtaskId} found.", subtaskId);
+                return Ok(subtaskDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving SprintSubtask with ID: {SubtaskId}.", subtaskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Deletes a SprintSubtask by its SubtaskId.
         /// </summary>
         /// <param name="sprintPlanDto">The SprintPlan data to create.</param>
         /// <returns>The ID of the newly created SprintPlan.</returns>
@@ -175,7 +299,7 @@ namespace NJSAPI.Controllers
                 var taskId = await _mediator.Send(command);
 
                 _logger.LogInformation("Single SprintTask created successfully with ID: {TaskId}", taskId);
-                return CreatedAtAction(nameof(GetSingleSprintTask), new { taskId = taskId }, new { taskId = taskId, message = $"SprintTask with ID {taskId} created successfully." });
+                return CreatedAtAction(null, new { taskId = taskId }, new { taskId = taskId, message = $"SprintTask with ID {taskId} created successfully." });
             }
             catch (ArgumentException ex)
             {
@@ -185,6 +309,40 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating single SprintTask.");
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets a single SprintTask by its ID.
+        /// </summary>
+        /// <param name="taskId">The ID of the SprintTask.</param>
+        /// <returns>The SprintTask data.</returns>
+        [HttpGet("{taskId}")]
+        [ProducesResponseType(typeof(SprintTaskDto), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetSingleSprintTask(string taskId)
+        {
+            _logger.LogInformation("Attempting to retrieve SprintTask with ID: {TaskId}", taskId);
+
+            try
+            {
+                var query = new GetSingleSprintTaskQuery { TaskId = taskId };
+                var sprintTaskDto = await _mediator.Send(query);
+
+                if (sprintTaskDto == null)
+                {
+                    _logger.LogWarning("SprintTask with ID {TaskId} not found.", taskId);
+                    return NotFound($"SprintTask with ID {taskId} not found.");
+                }
+
+                _logger.LogInformation("SprintTask with ID {TaskId} found.", taskId);
+                return Ok(sprintTaskDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving SprintTask with ID: {TaskId}.", taskId);
                 return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
             }
         }
@@ -236,56 +394,119 @@ namespace NJSAPI.Controllers
             }
         }
 
-
-
-
         /// <summary>
-        /// Deletes a SprintSubtask by its SubtaskId.
+        /// Gets all subtasks for a specific SprintTask.
         /// </summary>
-        /// <param name="subtaskId">The ID of the SprintSubtask to delete.</param>
-        /// <returns>A status indicating success or failure of the deletion operation.</returns>
-        [HttpDelete("single-sprint-subtask/{subtaskId}")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
+        /// <param name="taskId">The ID of the parent SprintTask.</param>
+        /// <returns>A list of SprintSubtaskDto.</returns>
+        [HttpGet("{taskId}/subtasks")]
+        [ProducesResponseType(typeof(IEnumerable<SprintSubtaskDto>), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> DeleteSingleSprintSubtask(int subtaskId)
+        public async Task<IActionResult> GetAllSprintSubtasksByTaskId(string taskId)
         {
-            if (subtaskId <= 0)
-            {
-                _logger.LogWarning("SubtaskId is invalid for DeleteSingleSprintSubtask request.");
-                return BadRequest(new { message = "SubtaskId cannot be invalid." });
-            }
+            _logger.LogInformation("Attempting to retrieve all SprintSubtasks for Task ID: {TaskId}", taskId);
 
             try
             {
-                var command = new DeleteSprintSubtaskCommand { SubtaskId = subtaskId };
-                var success = await _mediator.Send(command);
+                var query = new GetAllSprintSubtasksByTaskIdQuery { TaskId = taskId };
+                var subtasks = await _mediator.Send(query);
 
-                if (success)
+                if (subtasks == null || !subtasks.Any())
                 {
-                    _logger.LogInformation("SprintSubtask with ID {SubtaskId} deleted successfully.", subtaskId);
-                    return Ok(new { message = $"SprintSubtask with ID {subtaskId} deleted successfully." });
+                    _logger.LogWarning("No SprintSubtasks found for Task ID {TaskId}.", taskId);
+                    return NotFound($"No SprintSubtasks found for Task ID {taskId}.");
                 }
-                else
-                {
-                    _logger.LogWarning("SprintSubtask with ID {SubtaskId} not found for deletion or no changes were made.", subtaskId);
-                    return NotFound(new { message = $"SprintSubtask with ID {subtaskId} not found or no changes were made." });
-                }
-            }
-            catch (ArgumentException ex)
-            {
-                _logger.LogError(ex, "Validation error deleting single SprintSubtask: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message });
+
+                _logger.LogInformation("Found {Count} SprintSubtasks for Task ID {TaskId}.", subtasks.Count(), taskId);
+                return Ok(subtasks);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting single SprintSubtask with ID: {SubtaskId}.", subtaskId);
+                _logger.LogError(ex, "Error retrieving SprintSubtasks for Task ID: {TaskId}.", taskId);
                 return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
             }
         }
 
+        /// <summary>
+        /// Gets all sprint tasks for a specific Project ID, returning a summary of each task.
+        /// </summary>
+        /// <param name="projectId">The ID of the Project.</param>
+        /// <returns>A list of SprintTaskSummaryDto.</returns>
+        [HttpGet("project/{projectId}/tasks")]
+        [ProducesResponseType(typeof(IEnumerable<SprintTaskSummaryDto>), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetSprintTasksByProjectId(int projectId)
+        {
+            _logger.LogInformation("Attempting to retrieve SprintTasks for Project ID: {ProjectId}", projectId);
 
+            try
+            {
+                var query = new GetSprintTasksByProjectIdQuery { ProjectId = projectId };
+                var sprintTasks = await _mediator.Send(query);
+
+                if (sprintTasks == null || !sprintTasks.Any())
+                {
+                    _logger.LogWarning("No SprintTasks found for Project ID {ProjectId}.", projectId);
+                    return NotFound($"No SprintTasks found for Project ID {projectId}.");
+                }
+
+                _logger.LogInformation("Found {Count} SprintTasks for Project ID {ProjectId}.", sprintTasks.Count(), projectId);
+                return Ok(sprintTasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving SprintTasks for Project ID: {ProjectId}.", projectId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Deletes a SprintTask by its TaskId, including all associated subtasks.
+        /// </summary>
+        /// <param name="taskId">The ID of the SprintTask to delete.</param>
+        /// <returns>A status indicating success or failure of the deletion operation.</returns>
+        [HttpDelete("{taskId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> DeleteSprintTask(string taskId)
+        {
+            if (string.IsNullOrEmpty(taskId))
+            {
+                _logger.LogWarning("TaskId is invalid for DeleteSprintTask request.");
+                return BadRequest(new { message = "TaskId cannot be invalid." });
+            }
+
+            try
+            {
+                var command = new DeleteSprintTaskCommand { TaskId = taskId };
+                var success = await _mediator.Send(command);
+
+                if (success)
+                {
+                    _logger.LogInformation("SprintTask with ID {TaskId} and its subtasks deleted successfully.", taskId);
+                    return Ok(new { message = $"SprintTask with ID {taskId} and its subtasks deleted successfully." });
+                }
+                else
+                {
+                    _logger.LogWarning("SprintTask with ID {TaskId} not found for deletion or no changes were made.", taskId);
+                    return NotFound(new { message = $"SprintTask with ID {taskId} not found or no changes were made." });
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Validation error deleting SprintTask: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting SprintTask with ID: {TaskId}.", taskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
 
 
         /// <summary>

@@ -4,8 +4,9 @@ namespace NJS.Application.Dtos
     {
         public string? Taskid { get; set; }
         public string? TaskTitle { get; set; }
-        public string? Taskstatus { get; set; }
         public int? StoryPoints { get; set; }
+        public string? TaskAssigneeName { get; set; }
+        public string? Taskstatus { get; set; }
         public string? Taskpriority { get; set; }
     }
 }

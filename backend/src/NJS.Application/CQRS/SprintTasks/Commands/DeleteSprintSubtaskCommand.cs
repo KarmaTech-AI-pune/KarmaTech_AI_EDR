@@ -1,5 +1,4 @@
 using MediatR;
-using System;
 
 namespace NJS.Application.CQRS.SprintTasks.Commands
 {
