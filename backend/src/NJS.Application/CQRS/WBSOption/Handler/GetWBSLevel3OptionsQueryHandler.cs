@@ -1,6 +1,7 @@
 using MediatR;
 using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
 using NJS.Application.Dtos;
+using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -26,15 +27,24 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 return new List<WBSOptionDto>();
             }
 
+            // First, get the Level2 option by its value to get its ID
+            var level2Options = await _wbsOptionRepository.GetByLevelAndFormTypeAsync(2, request.FormType ?? FormType.Manpower);
+            var level2Option = level2Options.FirstOrDefault(o => o.Value == request.Level2Value);
+            
+            if (level2Option == null)
+            {
+                return new List<WBSOptionDto>();
+            }
+
             IEnumerable<NJS.Domain.Entities.WBSOption> options;
 
             if (request.FormType.HasValue)
             {
-                options = await _wbsOptionRepository.GetByLevelParentAndFormTypeAsync(3, request.Level2Value, request.FormType.Value);
+                options = await _wbsOptionRepository.GetByLevelParentAndFormTypeAsync(3, level2Option.Id, request.FormType.Value);
             }
             else
             {
-                options = await _wbsOptionRepository.GetByLevelAndParentAsync(3, request.Level2Value);
+                options = await _wbsOptionRepository.GetByLevelAndParentAsync(3, level2Option.Id);
             }
 
             return options
@@ -44,7 +54,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     Value = o.Value,
                     Label = o.Label,
                     Level = o.Level,
-                    ParentValue = o.ParentValue,
+                    ParentId = o.ParentId,
                     FormType = (int)o.FormType
                 })
                 .ToList();

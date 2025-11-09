@@ -66,8 +66,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         PlannedHours = new List<PlannedHourDto>(),
                         TotalHours = task.PlannedHours.Sum(ph => ph.PlannedHours), // Calculate total hours
                         TotalCost = (decimal)task.PlannedHours.Sum(ph => ph.PlannedHours) * (task.UserWBSTasks.FirstOrDefault()?.User?.StandardRate ?? 0), // Calculate total cost using StandardRate from User entity
-                        FrontendTempId = null, // FrontendTempId is not part of the entity, keep null
-                        ParentFrontendTempId = null // ParentFrontendTempId is not part of the entity, keep null
                     };
 
                     foreach (var plannedHour in task.PlannedHours)

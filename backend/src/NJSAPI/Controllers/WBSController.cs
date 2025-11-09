@@ -78,7 +78,20 @@ namespace NJSAPI.Controllers
         ///               "description": "Prepare site for construction",
         ///               "displayOrder": 1,
         ///               "wbsOptionId": 1,
-        ///               "wbsOptionLabel": "Standard Work"
+        ///               "wbsOptionLabel": "Standard Work",
+        ///               "children": [
+        ///                 {
+        ///                   "id": 0,
+        ///                   "workBreakdownStructureId": 0,
+        ///                   "parentId": 0, // This would be the ID of "Site Preparation"
+        ///                   "level": 2,
+        ///                   "title": "Sub-task 1",
+        ///                   "description": "Details of sub-task 1",
+        ///                   "displayOrder": 1,
+        ///                   "wbsOptionId": 2,
+        ///                   "wbsOptionLabel": "Specific Task"
+        ///                 }
+        ///               ]
         ///             }
         ///           ]
         ///         }

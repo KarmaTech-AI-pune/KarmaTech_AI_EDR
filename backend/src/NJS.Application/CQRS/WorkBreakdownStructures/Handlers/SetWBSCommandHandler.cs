@@ -162,17 +162,15 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 await _unitOfWork.SaveChangesAsync();
                 _logger.LogInformation("SetWBSCommandHandler: WBS group saved with ID {Id}", wbsGroupEntity.Id);
 
-                // 3. Handle WBSTasks within each WBS Group recursively
-                var tempIdToEntityMap = new Dictionary<string, WBSTask>();
-                var pendingParentUpdates = new Dictionary<WBSTask, string>();
-                var allTasks = new List<WBSTask>();
-                var newTasksNeedingChildData = new List<(WBSTask task, WBSTaskDto dto)>();
+            // 3. Handle WBSTasks within each WBS Group recursively
+            var allTasks = new List<WBSTask>();
+            var newTasksNeedingChildData = new List<(WBSTask task, WBSTaskDto dto)>();
 
-                _logger.LogInformation("SetWBSCommandHandler: Processing {Count} tasks for WBS group '{Name}'",
-                    wbsGroupDto.Tasks.Count, wbsGroupDto.Name);
+            _logger.LogInformation("SetWBSCommandHandler: Processing {Count} tasks for WBS group '{Name}'",
+                wbsGroupDto.Tasks.Count, wbsGroupDto.Name);
 
-                // Process tasks and their children recursively
-                await ProcessTasksRecursively(wbsGroupDto.Tasks, wbsGroupEntity, null, null, tempIdToEntityMap, pendingParentUpdates, allTasks, wbsHeader, newTasksNeedingChildData);
+            // Process tasks and their children recursively
+            await ProcessTasksRecursively(wbsGroupDto.Tasks, wbsGroupEntity, null, allTasks, wbsHeader, newTasksNeedingChildData);
 
                 _logger.LogInformation("SetWBSCommandHandler: Saving changes after processing tasks");
                 await _unitOfWork.SaveChangesAsync();
@@ -190,38 +188,20 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     _logger.LogInformation("SetWBSCommandHandler: Saving UserWBSTasks and PlannedHours");
                     await _unitOfWork.SaveChangesAsync();
-                    _logger.LogInformation("SetWBSCommandHandler: Successfully saved UserWBSTasks and PlannedHours");
+                _logger.LogInformation("SetWBSCommandHandler: Successfully saved UserWBSTasks and PlannedHours");
                 }
-
-                // Resolve parent-child relationships for newly created tasks using temp IDs
-                bool requiresSecondSave = false;
-                foreach (var kv in pendingParentUpdates)
-                {
-                    if (tempIdToEntityMap.TryGetValue(kv.Value, out var parentEntity) && parentEntity.Id > 0)
-                    {
-                        kv.Key.ParentId = parentEntity.Id;
-                        requiresSecondSave = true;
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Unable to resolve parent task for temp ID {TempId}", kv.Value);
-                    }
-                }
-
-                if (requiresSecondSave)
-                    await _unitOfWork.SaveChangesAsync();
 
                 // Update DTOs with final values after saving (e.g., WBSOptionLabel)
                 foreach (var dto in wbsGroupDto.Tasks)
                 {
-                    var correspondingEntity = allTasks.FirstOrDefault(t => t.Id == dto.Id || (!string.IsNullOrEmpty(dto.FrontendTempId) && tempIdToEntityMap.ContainsKey(dto.FrontendTempId) && tempIdToEntityMap[dto.FrontendTempId].Id == t.Id));
+                    var correspondingEntity = allTasks.FirstOrDefault(t => t.Id == dto.Id);
                     if (correspondingEntity != null)
                     {
                         dto.Title = correspondingEntity.Title;
                         // Update WBSOptionLabel
-                        if (correspondingEntity.WBSOptionId.HasValue)
+                        if (correspondingEntity.WBSOptionId > 0)
                         {
-                            var wbsOption = await _wbsOptionRepository.GetByIdAsync(correspondingEntity.WBSOptionId.Value);
+                            var wbsOption = await _wbsOptionRepository.GetByIdAsync(correspondingEntity.WBSOptionId);
                             if (wbsOption != null)
                             {
                                 dto.WBSOptionLabel = wbsOption.Label;
@@ -247,15 +227,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         /// <summary>
         /// Processes a flat list of WBSTaskDto, handling creation, updates, and parent-child relationships.
-        /// Parent-child relationships are managed through ParentId and ParentFrontendTempId properties.
+        /// Parent-child relationships are managed through ParentId property.
         /// </summary>
         private async Task ProcessTasksRecursively(
             ICollection<WBSTaskDto> taskDtos,
             WorkBreakdownStructure wbsGroupEntity,
-            int? parentId, // This parameter is not directly used for setting ParentId in this recursive call, but is conceptually the parent's ID.
-            string? parentFrontendTempId, // This is used to link children to their parent's temp ID.
-            Dictionary<string, WBSTask> tempIdToEntityMap,
-            Dictionary<WBSTask, string> pendingParentUpdates,
+            int? parentId,
             List<WBSTask> allTasks,
             WBSHeader wbsHeader,
             List<(WBSTask task, WBSTaskDto dto)> newTasksNeedingChildData)
@@ -295,29 +272,31 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     taskEntity.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
                     taskEntity.IsDeleted = false; // Ensure it's not marked as deleted
 
-                    // Handle WBS Option Label
-                    if (dto.WBSOptionId.HasValue)
+                    // Handle WBS Option Label and ParentId
+                    if (dto.WBSOptionId > 0)
                     {
-                        var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId.Value);
+                        var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId);
                         if (wbsOption != null)
                         {
                             taskEntity.Title = wbsOption.Label; // Overwrite title if WBS Option has a label
+                            
+                            // NEW: Set ParentId from WBSOption if available
+                            if (wbsOption.ParentId.HasValue)
+                            {
+                                // Find the corresponding parent task in the current group
+                                var parentTask = allTasks.FirstOrDefault(t => 
+                                    t.WBSOptionId == wbsOption.ParentId.Value && 
+                                    t.WorkBreakdownStructureId == wbsGroupEntity.Id);
+                                
+                                taskEntity.ParentId = parentTask?.Id;
+                            }
                         }
                     }
 
-                    // Set ParentId based on DTO's ParentId or ParentFrontendTempId
-                    if (!string.IsNullOrEmpty(dto.ParentFrontendTempId))
+                    // Fallback to DTO's ParentId if no WBSOption parent found
+                    if (taskEntity.ParentId == null)
                     {
-                        taskEntity.ParentId = null; // Clear existing ParentId if using temp ID
-                        pendingParentUpdates[taskEntity] = dto.ParentFrontendTempId;
-                    }
-                    else if (dto.ParentId.HasValue && dto.ParentId.Value > 0)
-                    {
-                        taskEntity.ParentId = dto.ParentId; // Use DTO's ParentId if available and valid
-                    }
-                    else
-                    {
-                        taskEntity.ParentId = null; // No parent
+                        taskEntity.ParentId = dto.ParentId;
                     }
 
                     await UpdateUserAssignment(taskEntity, dto);
@@ -347,29 +326,31 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         Title = dto.Title
                     };
 
-                    // Handle WBS Option Label
-                    if (dto.WBSOptionId.HasValue)
+                    // Handle WBS Option Label and ParentId
+                    if (dto.WBSOptionId > 0)
                     {
-                        var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId.Value);
+                        var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId);
                         if (wbsOption != null)
                         {
                             taskEntity.Title = wbsOption.Label; // Overwrite title if WBS Option has a label
+                            
+                            // NEW: Set ParentId from WBSOption if available
+                            if (wbsOption.ParentId.HasValue)
+                            {
+                                // Find the corresponding parent task in the current group
+                                var parentTask = allTasks.FirstOrDefault(t => 
+                                    t.WBSOptionId == wbsOption.ParentId.Value && 
+                                    t.WorkBreakdownStructureId == wbsGroupEntity.Id);
+                                
+                                taskEntity.ParentId = parentTask?.Id;
+                            }
                         }
                     }
 
-                    // Set ParentId based on DTO's ParentId or ParentFrontendTempId
-                    if (!string.IsNullOrEmpty(dto.ParentFrontendTempId))
+                    // Fallback to DTO's ParentId if no WBSOption parent found
+                    if (taskEntity.ParentId == null)
                     {
-                        taskEntity.ParentId = null; // Clear existing ParentId if using temp ID
-                        pendingParentUpdates[taskEntity] = dto.ParentFrontendTempId;
-                    }
-                    else if (dto.ParentId.HasValue && dto.ParentId.Value > 0)
-                    {
-                        taskEntity.ParentId = dto.ParentId; // Use DTO's ParentId if available and valid
-                    }
-                    else
-                    {
-                        taskEntity.ParentId = null; // No parent
+                        taskEntity.ParentId = dto.ParentId;
                     }
 
                     _context.WBSTasks.Add(taskEntity);
@@ -377,10 +358,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                     // Defer UserWBSTasks and PlannedHours creation until after task is saved and has an ID
                     newTasksNeedingChildData.Add((taskEntity, dto));
-
-                    // Map temporary IDs for resolving parent-child relationships later
-                    if (!string.IsNullOrEmpty(dto.FrontendTempId))
-                        tempIdToEntityMap[dto.FrontendTempId] = taskEntity;
                 }
 
                 allTasks.Add(taskEntity);

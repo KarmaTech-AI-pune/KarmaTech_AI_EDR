@@ -14,11 +14,13 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
     {
         private readonly IMediator _mediator;
         private readonly ILogger<UpdateWBSTaskCommandHandler> _logger;
+        private readonly IWBSOptionRepository _wbsOptionRepository; // Inject IWBSOptionRepository
 
-        public UpdateWBSTaskCommandHandler(IMediator mediator, ILogger<UpdateWBSTaskCommandHandler> logger)
+        public UpdateWBSTaskCommandHandler(IMediator mediator, ILogger<UpdateWBSTaskCommandHandler> logger, IWBSOptionRepository wbsOptionRepository) // Added IWBSOptionRepository
         {
             _mediator = mediator;
             _logger = logger;
+            _wbsOptionRepository = wbsOptionRepository; // Assign repository
         }
 
         public async Task<WBSMasterDto> Handle(UpdateWBSTaskCommand request, CancellationToken cancellationToken)

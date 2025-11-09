@@ -89,7 +89,7 @@ namespace NJSAPI.Controllers
                     Value = request.Value,
                     Label = request.Label,
                     Level = request.Level,
-                    ParentValue = request.ParentValue,
+                    ParentId = request.ParentId,
                     FormType = request.FormType
                 };
 
@@ -113,7 +113,7 @@ namespace NJSAPI.Controllers
                 Value = request.Value,
                 Label = request.Label,
                 Level = request.Level,
-                ParentValue = request.ParentValue,
+                ParentId = request.ParentId,
                 FormType = request.FormType
             };
 

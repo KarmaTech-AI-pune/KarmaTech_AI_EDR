@@ -241,6 +241,9 @@ namespace NJS.Domain.Extensions
                     }
                 }
 
+                // Seed WBSOptions if they don't exist
+                await SeedWBSOptionsAsync(context);
+
                 // Create a sample project if none exists
                 if (!context.Projects.Any())
                 {
@@ -272,9 +275,17 @@ namespace NJS.Domain.Extensions
                     await context.SaveChangesAsync();
 
                     // Create WBS for the project
+                    var wbsHeader = new WBSHeader
+                    {
+                        ProjectId = project.Id
+                    };
+                    context.WBSHeaders.Add(wbsHeader);
+                    await context.SaveChangesAsync();
+
                     var wbs = new WorkBreakdownStructure
                     {
-                        Structure = "Sample Project Structure"
+                        Structure = "Sample Project Structure",
+                        WBSHeaderId = wbsHeader.Id
                     };
                     context.WorkBreakdownStructures.Add(wbs);
                     await context.SaveChangesAsync();
@@ -287,24 +298,24 @@ namespace NJS.Domain.Extensions
                             Title = "Project Planning",
                             Description = "Initial project planning phase",
                             Level = WBSTaskLevel.Level1,
-                            WorkBreakdownStructureId = wbs.Id
-                            // ResourceAllocation = 100 // Commented out - Property does not exist
+                            WorkBreakdownStructureId = wbs.Id,
+                            WBSOptionId = context.WBSOptions.FirstOrDefault(wo => wo.Value == "inception_report")?.Id ?? 1
                         },
                         new WBSTask
                         {
                             Title = "Design",
                             Description = "Design phase activities",
                             Level = WBSTaskLevel.Level2,
-                            WorkBreakdownStructureId = wbs.Id
-                            // ResourceAllocation = 150 // Commented out - Property does not exist
+                            WorkBreakdownStructureId = wbs.Id,
+                            WBSOptionId = context.WBSOptions.FirstOrDefault(wo => wo.Value == "design" && wo.ParentId == 1)?.Id ?? 8
                         },
                         new WBSTask
                         {
                             Title = "Development",
                             Description = "Development phase activities",
                             Level = WBSTaskLevel.Level3,
-                            WorkBreakdownStructureId = wbs.Id
-                            // ResourceAllocation = 200 // Commented out - Property does not exist
+                            WorkBreakdownStructureId = wbs.Id,
+                            WBSOptionId = context.WBSOptions.FirstOrDefault(wo => wo.Value == "process_design")?.Id ?? 31
                         }
                     };
 
@@ -327,12 +338,9 @@ namespace NJS.Domain.Extensions
                         new Region() { Name = "Central", Code = "CEN" }
                     };
 
-                    context.AddRangeAsync(regions);
-                    context.SaveChanges();
+                    await context.AddRangeAsync(regions);
+                    await context.SaveChangesAsync();
                 }
-
-                // Seed WBSOptions if they don't exist
-                await SeedWBSOptionsAsync(context);
 
                 // Seed Scoring Tables if they don't exist
                 await SeedScoringTablesAsync(context);
@@ -597,180 +605,113 @@ namespace NJS.Domain.Extensions
         private static async Task SeedWBSOptionsAsync(ProjectManagementContext context)
         {
             // Check if WBSOptions table has data
-            if (!context.WBSOptions.Any())
+            if (!await context.WBSOptions.AnyAsync())
             {
                 Console.WriteLine("WBSOptions table is empty, inserting data...");
 
-                // Insert Level 1 options for Manpower Form
-                var manpowerLevel1Options = new List<WBSOption>
+                var wbsOptions = new List<WBSOption>
                 {
-                    new WBSOption { Value = "inception_report", Label = "Inception Report", Level = 1, ParentValue = null, FormType = FormType.Manpower },
-                    new WBSOption { Value = "feasibility_report", Label = "Feasibility Report", Level = 1, ParentValue = null, FormType = FormType.Manpower },
-                    new WBSOption { Value = "draft_detailed_project_report", Label = "Draft Detailed Project Report", Level = 1, ParentValue = null, FormType = FormType.Manpower },
-                    new WBSOption { Value = "detailed_project_report", Label = "Detailed Project Report", Level = 1, ParentValue = null, FormType = FormType.Manpower },
-                    new WBSOption { Value = "tendering_documents", Label = "Tendering Documents", Level = 1, ParentValue = null, FormType = FormType.Manpower },
-                    new WBSOption { Value = "construction_supervision", Label = "Construction Supervision", Level = 1, ParentValue = null, FormType = FormType.Manpower }
-                };
-                context.WBSOptions.AddRange(manpowerLevel1Options);
+                    // Manpower
+                    new WBSOption { Id = 1, TenantId = 1, Value = "inception_report", Label = "Inception Report", Level = 1, ParentId = null, FormType = FormType.Manpower },
+                    new WBSOption { Id = 2, TenantId = 1, Value = "feasibility_report", Label = "Feasibility Report", Level = 1, ParentId = null, FormType = FormType.Manpower },
+                    new WBSOption { Id = 3, TenantId = 1, Value = "draft_detailed_project_report", Label = "Draft Detailed Project Report", Level = 1, ParentId = null, FormType = FormType.Manpower },
+                    new WBSOption { Id = 4, TenantId = 1, Value = "detailed_project_report", Label = "Detailed Project Report", Level = 1, ParentId = null, FormType = FormType.Manpower },
+                    new WBSOption { Id = 5, TenantId = 1, Value = "tendering_documents", Label = "Tendering Documents", Level = 1, ParentId = null, FormType = FormType.Manpower },
+                    new WBSOption { Id = 6, TenantId = 1, Value = "construction_supervision", Label = "Construction Supervision", Level = 1, ParentId = null, FormType = FormType.Manpower },
+                    new WBSOption { Id = 7, TenantId = 1, Value = "surveys", Label = "Surveys", Level = 2, ParentId = 1, FormType = FormType.Manpower },
+                    new WBSOption { Id = 8, TenantId = 1, Value = "design", Label = "Design", Level = 2, ParentId = 1, FormType = FormType.Manpower },
+                    new WBSOption { Id = 9, TenantId = 1, Value = "cost_estimation", Label = "Cost Estimation", Level = 2, ParentId = 1, FormType = FormType.Manpower },
+                    new WBSOption { Id = 10, TenantId = 1, Value = "surveys", Label = "Surveys", Level = 2, ParentId = 2, FormType = FormType.Manpower },
+                    new WBSOption { Id = 11, TenantId = 1, Value = "design", Label = "Design", Level = 2, ParentId = 2, FormType = FormType.Manpower },
+                    new WBSOption { Id = 12, TenantId = 1, Value = "cost_estimation", Label = "Cost Estimation", Level = 2, ParentId = 2, FormType = FormType.Manpower },
+                    new WBSOption { Id = 13, TenantId = 1, Value = "surveys", Label = "Surveys", Level = 2, ParentId = 3, FormType = FormType.Manpower },
+                    new WBSOption { Id = 14, TenantId = 1, Value = "design", Label = "Design", Level = 2, ParentId = 3, FormType = FormType.Manpower },
+                    new WBSOption { Id = 15, TenantId = 1, Value = "cost_estimation", Label = "Cost Estimation", Level = 2, ParentId = 3, FormType = FormType.Manpower },
+                    new WBSOption { Id = 16, TenantId = 1, Value = "surveys", Label = "Surveys", Level = 2, ParentId = 4, FormType = FormType.Manpower },
+                    new WBSOption { Id = 17, TenantId = 1, Value = "design", Label = "Design", Level = 2, ParentId = 4, FormType = FormType.Manpower },
+                    new WBSOption { Id = 18, TenantId = 1, Value = "cost_estimation", Label = "Cost Estimation", Level = 2, ParentId = 4, FormType = FormType.Manpower },
+                    new WBSOption { Id = 19, TenantId = 1, Value = "surveys", Label = "Surveys", Level = 2, ParentId = 5, FormType = FormType.Manpower },
+                    new WBSOption { Id = 20, TenantId = 1, Value = "design", Label = "Design", Level = 2, ParentId = 5, FormType = FormType.Manpower },
+                    new WBSOption { Id = 21, TenantId = 1, Value = "cost_estimation", Label = "Cost Estimation", Level = 2, ParentId = 5, FormType = FormType.Manpower },
+                    new WBSOption { Id = 22, TenantId = 1, Value = "surveys", Label = "Surveys", Level = 2, ParentId = 6, FormType = FormType.Manpower },
+                    new WBSOption { Id = 23, TenantId = 1, Value = "design", Label = "Design", Level = 2, ParentId = 6, FormType = FormType.Manpower },
+                    new WBSOption { Id = 24, TenantId = 1, Value = "cost_estimation", Label = "Cost Estimation", Level = 2, ParentId = 6, FormType = FormType.Manpower },
+                    new WBSOption { Id = 25, TenantId = 1, Value = "topographical_survey", Label = "Topographical Survey", Level = 3, ParentId = 7, FormType = FormType.Manpower },
+                    new WBSOption { Id = 26, TenantId = 1, Value = "soil_investigation", Label = "Soil Investigation", Level = 3, ParentId = 7, FormType = FormType.Manpower },
+                    new WBSOption { Id = 27, TenantId = 1, Value = "social_impact_assessment", Label = "Social Impact Assessment", Level = 3, ParentId = 7, FormType = FormType.Manpower },
+                    new WBSOption { Id = 28, TenantId = 1, Value = "environmental_assessment", Label = "Environmental Assessment", Level = 3, ParentId = 7, FormType = FormType.Manpower },
+                    new WBSOption { Id = 29, TenantId = 1, Value = "flow_measurement", Label = "Flow Measurement", Level = 3, ParentId = 7, FormType = FormType.Manpower },
+                    new WBSOption { Id = 30, TenantId = 1, Value = "water_quality_measurement", Label = "Water Quality Measurement", Level = 3, ParentId = 7, FormType = FormType.Manpower },
+                    new WBSOption { Id = 31, TenantId = 1, Value = "process_design", Label = "Process Design", Level = 3, ParentId = 8, FormType = FormType.Manpower },
+                    new WBSOption { Id = 32, TenantId = 1, Value = "mechanical_design", Label = "Mechanical Design", Level = 3, ParentId = 8, FormType = FormType.Manpower },
+                    new WBSOption { Id = 33, TenantId = 1, Value = "structural_design", Label = "Structural Design", Level = 3, ParentId = 8, FormType = FormType.Manpower },
+                    new WBSOption { Id = 34, TenantId = 1, Value = "electrical_design", Label = "Electrical Design", Level = 3, ParentId = 8, FormType = FormType.Manpower },
+                    new WBSOption { Id = 35, TenantId = 1, Value = "ica_design", Label = "ICA Design", Level = 3, ParentId = 8, FormType = FormType.Manpower },
+                    new WBSOption { Id = 36, TenantId = 1, Value = "cost_estimation", Label = "Cost Estimation", Level = 3, ParentId = 9, FormType = FormType.Manpower },
 
-                // Insert Level 2 options for Manpower Form with JSON array for ParentValue
-                var manpowerLevel2Options = new List<WBSOption>
+                    // ODC
+                    new WBSOption { Id = 37, TenantId = 1, Value = "general_odcs", Label = "General ODCS", Level = 1, ParentId = null, FormType = FormType.ODC },
+                    new WBSOption { Id = 38, TenantId = 1, Value = "odcs_feasibility_report", Label = "ODCs Feasibility Report", Level = 1, ParentId = null, FormType = FormType.ODC },
+                    new WBSOption { Id = 39, TenantId = 1, Value = "odcs_draft_dpr", Label = "ODCS Draft DPR", Level = 1, ParentId = null, FormType = FormType.ODC },
+                    new WBSOption { Id = 40, TenantId = 1, Value = "travel", Label = "Travel", Level = 2, ParentId = 37, FormType = FormType.ODC },
+                    new WBSOption { Id = 41, TenantId = 1, Value = "subsistence", Label = "Subsistence", Level = 2, ParentId = 37, FormType = FormType.ODC },
+                    new WBSOption { Id = 42, TenantId = 1, Value = "local_conveyance", Label = "Local conveyance", Level = 2, ParentId = 37, FormType = FormType.ODC },
+                    new WBSOption { Id = 43, TenantId = 1, Value = "communications", Label = "Communications", Level = 2, ParentId = 37, FormType = FormType.ODC },
+                    new WBSOption { Id = 44, TenantId = 1, Value = "office", Label = "office", Level = 2, ParentId = 37, FormType = FormType.ODC },
+                    new WBSOption { Id = 45, TenantId = 1, Value = "stationery_and_printing", Label = "Stationery and printing", Level = 2, ParentId = 37, FormType = FormType.ODC },
+                    new WBSOption { Id = 46, TenantId = 1, Value = "travel_1", Label = "Travel 1", Level = 3, ParentId = 40, FormType = FormType.ODC },
+                    new WBSOption { Id = 47, TenantId = 1, Value = "travel_2", Label = "Travel 2", Level = 3, ParentId = 40, FormType = FormType.ODC },
+                    new WBSOption { Id = 48, TenantId = 1, Value = "travel_3", Label = "Travel 3", Level = 3, ParentId = 40, FormType = FormType.ODC },
+                    new WBSOption { Id = 49, TenantId = 1, Value = "travel_4", Label = "Travel 4", Level = 3, ParentId = 40, FormType = FormType.ODC },
+                    new WBSOption { Id = 50, TenantId = 1, Value = "s1", Label = "S1", Level = 3, ParentId = 41, FormType = FormType.ODC },
+                    new WBSOption { Id = 51, TenantId = 1, Value = "s2", Label = "S2", Level = 3, ParentId = 41, FormType = FormType.ODC },
+                    new WBSOption { Id = 52, TenantId = 1, Value = "s3", Label = "S3", Level = 3, ParentId = 41, FormType = FormType.ODC },
+                    new WBSOption { Id = 53, TenantId = 1, Value = "car_1", Label = "Car 1", Level = 3, ParentId = 42, FormType = FormType.ODC },
+                    new WBSOption { Id = 54, TenantId = 1, Value = "cell_phones", Label = "Cell Phones", Level = 3, ParentId = 43, FormType = FormType.ODC },
+                    new WBSOption { Id = 55, TenantId = 1, Value = "internet", Label = "Internet", Level = 3, ParentId = 43, FormType = FormType.ODC },
+                    new WBSOption { Id = 56, TenantId = 1, Value = "office_1", Label = "Office 1", Level = 3, ParentId = 44, FormType = FormType.ODC },
+                    new WBSOption { Id = 57, TenantId = 1, Value = "printing", Label = "Printing", Level = 3, ParentId = 45, FormType = FormType.ODC },
+                    new WBSOption { Id = 58, TenantId = 1, Value = "photocopy", Label = "Photocopy", Level = 3, ParentId = 45, FormType = FormType.ODC },
+                    new WBSOption { Id = 59, TenantId = 1, Value = "topographical_surveys", Label = "Topographical Surveys", Level = 2, ParentId = 38, FormType = FormType.ODC },
+                    new WBSOption { Id = 60, TenantId = 1, Value = "alignment_survey", Label = "Alignment Survey", Level = 3, ParentId = 59, FormType = FormType.ODC },
+                    new WBSOption { Id = 61, TenantId = 1, Value = "plan_table_survey", Label = "Plan table survey", Level = 3, ParentId = 59, FormType = FormType.ODC },
+                    new WBSOption { Id = 62, TenantId = 1, Value = "geotechnical_surveys", Label = "Geotechnical Surveys", Level = 2, ParentId = 39, FormType = FormType.ODC },
+                    new WBSOption { Id = 63, TenantId = 1, Value = "water_quality_survey", Label = "Water Quality Survey", Level = 2, ParentId = 39, FormType = FormType.ODC },
+                    new WBSOption { Id = 64, TenantId = 1, Value = "flow_measurement", Label = "Flow Measurement", Level = 2, ParentId = 39, FormType = FormType.ODC },
+                    new WBSOption { Id = 65, TenantId = 1, Value = "part_1", Label = "Part 1", Level = 3, ParentId = 62, FormType = FormType.ODC },
+                    new WBSOption { Id = 66, TenantId = 1, Value = "part_2", Label = "Part 2", Level = 3, ParentId = 62, FormType = FormType.ODC },
+                    new WBSOption { Id = 67, TenantId = 1, Value = "part_3", Label = "Part 3", Level = 3, ParentId = 62, FormType = FormType.ODC },
+                    new WBSOption { Id = 68, TenantId = 1, Value = "part_4", Label = "Part 4", Level = 3, ParentId = 62, FormType = FormType.ODC },
+                    new WBSOption { Id = 69, TenantId = 1, Value = "wq1", Label = "WQ1", Level = 3, ParentId = 63, FormType = FormType.ODC },
+                    new WBSOption { Id = 70, TenantId = 1, Value = "fm1", Label = "Fm1", Level = 3, ParentId = 64, FormType = FormType.ODC }
+                };
+
+                try
                 {
-                    new WBSOption { Value = "surveys", Label = "Surveys", Level = 2, ParentValue = "[\"inception_report\", \"feasibility_report\", \"draft_detailed_project_report\", \"detailed_project_report\", \"tendering_documents\", \"construction_supervision\"]", FormType = FormType.Manpower },
-                    new WBSOption { Value = "design", Label = "Design", Level = 2, ParentValue = "[\"inception_report\", \"feasibility_report\", \"draft_detailed_project_report\", \"detailed_project_report\", \"tendering_documents\", \"construction_supervision\"]", FormType = FormType.Manpower },
-                    new WBSOption { Value = "cost_estimation", Label = "Cost Estimation", Level = 2, ParentValue = "[\"inception_report\", \"feasibility_report\", \"draft_detailed_project_report\", \"detailed_project_report\", \"tendering_documents\", \"construction_supervision\"]", FormType = FormType.Manpower }
-                };
-                context.WBSOptions.AddRange(manpowerLevel2Options);
-
-                // Insert Level 3 options for 'surveys'
-                var surveysLevel3Options = new List<WBSOption>
+                    var strategy = context.Database.CreateExecutionStrategy();
+                    await strategy.ExecuteAsync(async () =>
+                    {
+                        await using var transaction = await context.Database.BeginTransactionAsync();
+                        try
+                        {
+                            await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT dbo.WBSOptions ON");
+                            await context.WBSOptions.AddRangeAsync(wbsOptions);
+                            await context.SaveChangesAsync();
+                            await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT dbo.WBSOptions OFF");
+                            await transaction.CommitAsync();
+                        }
+                        catch
+                        {
+                            await transaction.RollbackAsync();
+                            throw;
+                        }
+                    });
+                }
+                catch (Exception ex)
                 {
-                    new WBSOption { Value = "topographical_survey", Label = "Topographical Survey", Level = 3, ParentValue = "surveys", FormType = FormType.Manpower },
-                    new WBSOption { Value = "soil_investigation", Label = "Soil Investigation", Level = 3, ParentValue = "surveys", FormType = FormType.Manpower },
-                    new WBSOption { Value = "social_impact_assessment", Label = "Social Impact Assessment", Level = 3, ParentValue = "surveys", FormType = FormType.Manpower },
-                    new WBSOption { Value = "environmental_assessment", Label = "Environmental Assessment", Level = 3, ParentValue = "surveys", FormType = FormType.Manpower },
-                    new WBSOption { Value = "flow_measurement", Label = "Flow Measurement", Level = 3, ParentValue = "surveys", FormType = FormType.Manpower },
-                    new WBSOption { Value = "water_quality_measurement", Label = "Water Quality Measurement", Level = 3, ParentValue = "surveys", FormType = FormType.Manpower }
-                };
-                context.WBSOptions.AddRange(surveysLevel3Options);
-
-                // Insert Level 3 options for 'design'
-                var designLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "process_design", Label = "Process Design", Level = 3, ParentValue = "design", FormType = FormType.Manpower },
-                    new WBSOption { Value = "mechanical_design", Label = "Mechanical Design", Level = 3, ParentValue = "design", FormType = FormType.Manpower },
-                    new WBSOption { Value = "structural_design", Label = "Structural Design", Level = 3, ParentValue = "design", FormType = FormType.Manpower },
-                    new WBSOption { Value = "electrical_design", Label = "Electrical Design", Level = 3, ParentValue = "design", FormType = FormType.Manpower },
-                    new WBSOption { Value = "ica_design", Label = "ICA Design", Level = 3, ParentValue = "design", FormType = FormType.Manpower }
-                };
-                context.WBSOptions.AddRange(designLevel3Options);
-
-                // Insert Level 3 options for 'cost_estimation' in Manpower Form
-                var costEstimationLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "cost_estimation", Label = "Cost Estimation", Level = 3, ParentValue = "cost_estimation", FormType = FormType.Manpower }
-                };
-                context.WBSOptions.AddRange(costEstimationLevel3Options);
-
-                // Insert Level 1 options for ODC Form
-                var odcLevel1Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "general_odcs", Label = "General ODCS", Level = 1, ParentValue = null, FormType = FormType.ODC },
-                    new WBSOption { Value = "odcs_feasibility_report", Label = "ODCs Feasibility Report", Level = 1, ParentValue = null, FormType = FormType.ODC },
-                    new WBSOption { Value = "odcs_draft_dpr", Label = "ODCS Draft DPR", Level = 1, ParentValue = null, FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(odcLevel1Options);
-
-                // Insert Level 2 options for ODC Form Level 1 'General ODCS'
-                var generalOdcsLevel2Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "travel", Label = "Travel", Level = 2, ParentValue = "general_odcs", FormType = FormType.ODC },
-                    new WBSOption { Value = "subsistence", Label = "Subsistence", Level = 2, ParentValue = "general_odcs", FormType = FormType.ODC },
-                    new WBSOption { Value = "local_conveyance", Label = "Local conveyance", Level = 2, ParentValue = "general_odcs", FormType = FormType.ODC },
-                    new WBSOption { Value = "communications", Label = "Communications", Level = 2, ParentValue = "general_odcs", FormType = FormType.ODC },
-                    new WBSOption { Value = "office", Label = "office", Level = 2, ParentValue = "general_odcs", FormType = FormType.ODC },
-                    new WBSOption { Value = "stationery_and_printing", Label = "Stationery and printing", Level = 2, ParentValue = "general_odcs", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(generalOdcsLevel2Options);
-
-                // Insert Level 3 options for ODC Form Level 2 'Travel'
-                var travelLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "travel_1", Label = "Travel 1", Level = 3, ParentValue = "travel", FormType = FormType.ODC },
-                    new WBSOption { Value = "travel_2", Label = "Travel 2", Level = 3, ParentValue = "travel", FormType = FormType.ODC },
-                    new WBSOption { Value = "travel_3", Label = "Travel 3", Level = 3, ParentValue = "travel", FormType = FormType.ODC },
-                    new WBSOption { Value = "travel_4", Label = "Travel 4", Level = 3, ParentValue = "travel", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(travelLevel3Options);
-
-                // Insert Level 3 options for ODC Form Level 2 'Subsistence'
-                var subsistenceLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "s1", Label = "S1", Level = 3, ParentValue = "subsistence", FormType = FormType.ODC },
-                    new WBSOption { Value = "s2", Label = "S2", Level = 3, ParentValue = "subsistence", FormType = FormType.ODC },
-                    new WBSOption { Value = "s3", Label = "S3", Level = 3, ParentValue = "subsistence", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(subsistenceLevel3Options);
-
-                // Insert Level 3 options for ODC Form Level 2 'Local conveyance'
-                var localConveyanceLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "car_1", Label = "Car 1", Level = 3, ParentValue = "local_conveyance", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(localConveyanceLevel3Options);
-
-                // Insert Level 3 options for ODC Form Level 2 'Communications'
-                var communicationsLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "cell_phones", Label = "Cell Phones", Level = 3, ParentValue = "communications", FormType = FormType.ODC },
-                    new WBSOption { Value = "internet", Label = "Internet", Level = 3, ParentValue = "communications", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(communicationsLevel3Options);
-
-                // Insert Level 3 options for ODC Form Level 2 'office'
-                var officeLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "office_1", Label = "Office 1", Level = 3, ParentValue = "office", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(officeLevel3Options);
-
-                // Insert Level 3 options for ODC Form Level 2 'Stationery and printing'
-                var stationeryLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "printing", Label = "Printing", Level = 3, ParentValue = "stationery_and_printing", FormType = FormType.ODC },
-                    new WBSOption { Value = "photocopy", Label = "Photocopy", Level = 3, ParentValue = "stationery_and_printing", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(stationeryLevel3Options);
-
-                // Insert Level 2 options for ODC Form Level 1 'ODCs Feasibility Report'
-                var odcsFeasibilityReportLevel2Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "topographical_surveys", Label = "Topographical Surveys", Level = 2, ParentValue = "odcs_feasibility_report", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(odcsFeasibilityReportLevel2Options);
-
-                // Insert Level 3 options for ODC Form Level 2 'Topographical Surveys'
-                var topographicalSurveysLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "alignment_survey", Label = "Alignment Survey", Level = 3, ParentValue = "topographical_surveys", FormType = FormType.ODC },
-                    new WBSOption { Value = "plan_table_survey", Label = "Plan table survey", Level = 3, ParentValue = "topographical_surveys", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(topographicalSurveysLevel3Options);
-
-                // Insert Level 2 options for ODC Form Level 1 'ODCS Draft DPR'
-                var odcsDraftDprLevel2Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "geotechnical_surveys", Label = "Geotechnical Surveys", Level = 2, ParentValue = "odcs_draft_dpr", FormType = FormType.ODC },
-                    new WBSOption { Value = "water_quality_survey", Label = "Water Quality Survey", Level = 2, ParentValue = "odcs_draft_dpr", FormType = FormType.ODC },
-                    new WBSOption { Value = "flow_measurement", Label = "Flow Measurement", Level = 2, ParentValue = "odcs_draft_dpr", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(odcsDraftDprLevel2Options);
-
-                // Insert Level 3 options for ODC Form Level 2 'Geotechnical Surveys'
-                var geotechnicalSurveysLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "part_1", Label = "Part 1", Level = 3, ParentValue = "geotechnical_surveys", FormType = FormType.ODC },
-                    new WBSOption { Value = "part_2", Label = "Part 2", Level = 3, ParentValue = "geotechnical_surveys", FormType = FormType.ODC },
-                    new WBSOption { Value = "part_3", Label = "Part 3", Level = 3, ParentValue = "geotechnical_surveys", FormType = FormType.ODC },
-                    new WBSOption { Value = "part_4", Label = "Part 4", Level = 3, ParentValue = "geotechnical_surveys", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(geotechnicalSurveysLevel3Options);
-
-                // Insert Level 3 options for ODC Form Level 2 'Water Quality Survey'
-                var waterQualitySurveyLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "wq1", Label = "WQ1", Level = 3, ParentValue = "water_quality_survey", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(waterQualitySurveyLevel3Options);
-
-                // Insert Level 3 options for ODC Form Level 2 'Flow Measurement'
-                var flowMeasurementLevel3Options = new List<WBSOption>
-                {
-                    new WBSOption { Value = "fm1", Label = "Fm1", Level = 3, ParentValue = "flow_measurement", FormType = FormType.ODC }
-                };
-                context.WBSOptions.AddRange(flowMeasurementLevel3Options);
-
-                await context.SaveChangesAsync();
+                    Console.WriteLine($"Warning: Could not seed WBSOptions due to identity constraint: {ex.Message}");
+                    Console.WriteLine("The backend will continue to run. You can manually populate WBSOptions later.");
+                }
                 Console.WriteLine("WBSOptions data inserted successfully");
             }
             else

@@ -17,9 +17,6 @@ namespace NJS.Domain.Entities
         [Key]
         public int Id { get; set; }
 
-        [NotMapped]
-        public string? FrontendTempId { get; set; } // For temporary frontend identification
-
         public int TenantId { get; set; }
 
         [Required]
@@ -69,7 +66,7 @@ namespace NJS.Domain.Entities
         public ICollection<WBSTaskPlannedHour> PlannedHours { get; set; } = new List<WBSTaskPlannedHour>();
         public ICollection<UserWBSTask> UserWBSTasks { get; set; } = new List<UserWBSTask>();
 
-        public int? WBSOptionId { get; set; } // Foreign key for WBSOption
+        public int WBSOptionId { get; set; } // Foreign key for WBSOption
 
         [ForeignKey("WBSOptionId")]
         public virtual WBSOption WBSOption { get; set; } // Navigation property for WBSOption

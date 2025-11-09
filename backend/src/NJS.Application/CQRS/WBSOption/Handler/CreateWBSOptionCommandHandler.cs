@@ -23,7 +23,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             {
                 Label = request.Label,
                 Level = request.Level,
-                ParentValue = request.ParentValue,
+                ParentId = request.ParentId,
                 FormType = (NJS.Domain.Entities.FormType)request.FormType,
                 Value = request.Value
             };
@@ -35,7 +35,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 Id = wbsOption.Id,
                 Label = wbsOption.Label,
                 Level = wbsOption.Level,
-                ParentValue = wbsOption.ParentValue,
+                ParentId = wbsOption.ParentId,
                 FormType = (int)wbsOption.FormType,
                 Value = wbsOption.Value
             };

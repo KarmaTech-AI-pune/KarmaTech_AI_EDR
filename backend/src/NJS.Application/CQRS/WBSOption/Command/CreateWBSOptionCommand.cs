@@ -8,7 +8,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Commands
         public string Value { get; set; }
         public string Label { get; set; }
         public int Level { get; set; }
-        public string ParentValue { get; set; }
+        public int? ParentId { get; set; }
         public int FormType { get; set; }
     }
 }

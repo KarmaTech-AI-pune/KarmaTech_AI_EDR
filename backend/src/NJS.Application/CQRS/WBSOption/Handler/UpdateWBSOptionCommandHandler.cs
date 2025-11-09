@@ -29,7 +29,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             wbsOption.Value = request.Value;
             wbsOption.Label = request.Label;
             wbsOption.Level = request.Level;
-            wbsOption.ParentValue = request.ParentValue;
+            wbsOption.ParentId = request.ParentId;
             wbsOption.FormType = (NJS.Domain.Entities.FormType)request.FormType;
 
             await _wbsOptionRepository.UpdateAsync(wbsOption);
@@ -39,7 +39,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 Id = wbsOption.Id,
                 Label = wbsOption.Label,
                 Level = wbsOption.Level,
-                ParentValue = wbsOption.ParentValue,
+                ParentId = wbsOption.ParentId,
                 FormType = (int)wbsOption.FormType,
                 Value = wbsOption.Value
             };

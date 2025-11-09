@@ -477,15 +477,14 @@ namespace NJS.Domain.Database
                 entity.Property(e => e.Value).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Label).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Level).IsRequired();
-                entity.Property(e => e.ParentValue).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.ParentId).IsRequired(false);
                 entity.Property(e => e.FormType).IsRequired();
 
                 // Create index on Level for faster lookups
                 entity.HasIndex(e => e.Level);
 
-                // Removed index on ParentValue. SQL Server does not allow standard indexes on nvarchar(max) columns,
-                // especially when they contain JSON arrays, which is the intended use for this column.
-                // Hierarchical queries will need to parse the JSON in the application or use database-specific JSON functions.
+                // Create index on ParentId for faster hierarchical queries
+                entity.HasIndex(e => e.ParentId);
 
                 // Create index on FormType for faster filtering
                 entity.HasIndex(e => e.FormType);
