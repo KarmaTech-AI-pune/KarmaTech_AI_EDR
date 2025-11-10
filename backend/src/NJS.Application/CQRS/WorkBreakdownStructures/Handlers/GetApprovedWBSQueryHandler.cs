@@ -48,7 +48,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     {
                         Id = task.Id,
                         WorkBreakdownStructureId = task.WorkBreakdownStructureId,
-                        ParentId = task.ParentId,
                         Level = task.Level,
                         Title = task.Title,
                         Description = task.Description,

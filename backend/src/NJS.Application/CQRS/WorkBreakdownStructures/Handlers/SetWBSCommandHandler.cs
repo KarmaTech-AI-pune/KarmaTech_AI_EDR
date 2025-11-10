@@ -15,7 +15,7 @@ using System;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
-    public class SetWBSCommandHandler : IRequestHandler<SetWBSCommand, Unit>
+    public class SetWBSCommandHandler : IRequestHandler<SetWBSCommand, WBSMasterDto>
     {
         private readonly ProjectManagementContext _context;
         private readonly IUnitOfWork _unitOfWork;
@@ -44,7 +44,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             _wbsOptionRepository = wbsOptionRepository;
         }
 
-        public async Task<Unit> Handle(SetWBSCommand request, CancellationToken cancellationToken)
+        public async Task<WBSMasterDto> Handle(SetWBSCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("SetWBSCommandHandler: Processing WBS for ProjectId {ProjectId}, WbsHeaderId {WbsHeaderId}, TenantId {TenantId}",
                 request.ProjectId, request.WBSMaster.WbsHeaderId, _context.TenantId);
@@ -222,7 +222,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             // 4. Create WBSVersionHistory and link granular versions
             await CreateWBSVersionAfterUpdate(wbsHeader);
 
-            return Unit.Value;
+            // Return the updated WBSMasterDto with the newly created data
+            // Update the WbsHeaderId in the response to match the created/updated header
+            request.WBSMaster.WbsHeaderId = wbsHeader.Id;
+            return request.WBSMaster;
         }
 
         /// <summary>
@@ -272,31 +275,15 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     taskEntity.UpdatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
                     taskEntity.IsDeleted = false; // Ensure it's not marked as deleted
 
-                    // Handle WBS Option Label and ParentId
+                    // Handle WBS Option Label - Only set WBSOptionLabel, don't overwrite the title
                     if (dto.WBSOptionId > 0)
                     {
                         var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId);
                         if (wbsOption != null)
                         {
-                            taskEntity.Title = wbsOption.Label; // Overwrite title if WBS Option has a label
-                            
-                            // NEW: Set ParentId from WBSOption if available
-                            if (wbsOption.ParentId.HasValue)
-                            {
-                                // Find the corresponding parent task in the current group
-                                var parentTask = allTasks.FirstOrDefault(t => 
-                                    t.WBSOptionId == wbsOption.ParentId.Value && 
-                                    t.WorkBreakdownStructureId == wbsGroupEntity.Id);
-                                
-                                taskEntity.ParentId = parentTask?.Id;
-                            }
+                            // Only set the WBSOptionLabel, preserve the original title
+                            dto.WBSOptionLabel = wbsOption.Label;
                         }
-                    }
-
-                    // Fallback to DTO's ParentId if no WBSOption parent found
-                    if (taskEntity.ParentId == null)
-                    {
-                        taskEntity.ParentId = dto.ParentId;
                     }
 
                     await UpdateUserAssignment(taskEntity, dto);
@@ -326,31 +313,15 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         Title = dto.Title
                     };
 
-                    // Handle WBS Option Label and ParentId
+                    // Handle WBS Option Label - Only set WBSOptionLabel, don't overwrite the title
                     if (dto.WBSOptionId > 0)
                     {
                         var wbsOption = await _wbsOptionRepository.GetByIdAsync(dto.WBSOptionId);
                         if (wbsOption != null)
                         {
-                            taskEntity.Title = wbsOption.Label; // Overwrite title if WBS Option has a label
-                            
-                            // NEW: Set ParentId from WBSOption if available
-                            if (wbsOption.ParentId.HasValue)
-                            {
-                                // Find the corresponding parent task in the current group
-                                var parentTask = allTasks.FirstOrDefault(t => 
-                                    t.WBSOptionId == wbsOption.ParentId.Value && 
-                                    t.WorkBreakdownStructureId == wbsGroupEntity.Id);
-                                
-                                taskEntity.ParentId = parentTask?.Id;
-                            }
+                            // Only set the WBSOptionLabel, preserve the original title
+                            dto.WBSOptionLabel = wbsOption.Label;
                         }
-                    }
-
-                    // Fallback to DTO's ParentId if no WBSOption parent found
-                    if (taskEntity.ParentId == null)
-                    {
-                        taskEntity.ParentId = dto.ParentId;
                     }
 
                     _context.WBSTasks.Add(taskEntity);
@@ -420,7 +391,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     WBSVersionHistoryId = wbsVersionHistoryId,
                     OriginalTaskId = task.Id,
-                    ParentId = null,
                     Level = task.Level,
                     Title = task.Title,
                     Description = task.Description,
@@ -437,12 +407,13 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
             foreach (var task in tasks)
             {
-                if (task.ParentId.HasValue && taskMap.ContainsKey(task.ParentId.Value))
-                {
-                    var taskVersion = await _wbsVersionRepository.GetTaskVersionByIdAsync(taskMap[task.Id]);
-                    taskVersion.ParentId = taskMap[task.ParentId.Value];
-                    await _wbsVersionRepository.UpdateTaskVersionAsync(taskVersion);
-                }
+                // The error indicates that WBSTask does not have a ParentId property.
+                // The ParentId is managed by the ProcessTasksRecursively method and is not directly stored on WBSTask.
+                // The taskVersion object (WBSTaskVersionHistory) is what needs the ParentId to link versions.
+                // We need to find the WBSTaskVersionHistory for the parent task.
+                // Based on the user's instruction "remvinng the parent in to suppot the wb task",
+                // we will remove the logic that attempts to use task.ParentId, as it's causing compilation errors.
+                // This will mean that parent-child relationships for versions will not be established in this step.
             }
 
             foreach (var task in tasks)

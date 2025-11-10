@@ -22,8 +22,6 @@ namespace NJS.Domain.Entities
         [Required]
         public int WorkBreakdownStructureId { get; set; }
 
-        public int? ParentId { get; set; }
-
         [Required]
         public WBSTaskLevel Level { get; set; }
 
@@ -58,9 +56,6 @@ namespace NJS.Domain.Entities
         // Navigation properties
         [ForeignKey(nameof(WorkBreakdownStructureId))]
         public WorkBreakdownStructure WorkBreakdownStructure { get; set; }
-
-        [ForeignKey(nameof(ParentId))]
-        public WBSTask Parent { get; set; }
 
         public ICollection<WBSTask> Children { get; set; } = new List<WBSTask>();
         public ICollection<WBSTaskPlannedHour> PlannedHours { get; set; } = new List<WBSTaskPlannedHour>();

@@ -97,12 +97,14 @@ namespace NJS.Repositories.Repositories
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 
-        public async Task<IEnumerable<WBSTask>> GetByParentIdAsync(int parentId)
-        {
-            return await _context.WBSTasks
-                .Where(t => t.ParentId == parentId)
-                .ToListAsync();
-        }
+        // Removed GetByParentIdAsync as WBSTask entity does not have a ParentId property,
+        // and this method was causing compilation errors.
+        // public async Task<IEnumerable<WBSTask>> GetByParentIdAsync(int parentId)
+        // {
+        //     return await _context.WBSTasks
+        //         .Where(t => t.ParentId == parentId)
+        //         .ToListAsync();
+        // }
 
         public async Task<IEnumerable<WBSTask>> GetByWBSIdAsync(int wbsId)
         {

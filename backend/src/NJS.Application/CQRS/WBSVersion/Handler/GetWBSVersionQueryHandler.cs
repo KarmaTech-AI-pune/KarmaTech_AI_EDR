@@ -90,7 +90,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 Id = taskVersion.Id,
                 WBSVersionHistoryId = taskVersion.WBSVersionHistoryId,
                 OriginalTaskId = taskVersion.OriginalTaskId,
-                ParentId = taskVersion.ParentId,
                 Level = taskVersion.Level,
                 Title = taskVersion.Title,
                 Description = taskVersion.Description,

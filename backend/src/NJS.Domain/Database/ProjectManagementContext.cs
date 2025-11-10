@@ -495,12 +495,6 @@ namespace NJS.Domain.Database
             {
                 entity.Property(t => t.EstimatedBudget).HasPrecision(18, 2);
 
-                // Configure self-referencing relationship for hierarchy
-                entity.HasOne(t => t.Parent)
-                      .WithMany(t => t.Children)
-                      .HasForeignKey(t => t.ParentId)
-                      .OnDelete(DeleteBehavior.Restrict); // Prevent deleting a task if it has children
-
                 // Configure relationship with WorkBreakdownStructure
                 entity.HasOne(t => t.WorkBreakdownStructure)
                       .WithMany(w => w.Tasks)
@@ -699,11 +693,6 @@ namespace NJS.Domain.Database
                 entity.Property(t => t.Title).HasMaxLength(255).IsRequired();
                 entity.Property(t => t.Description).HasMaxLength(1000);
 
-                entity.HasOne(t => t.Parent)
-                      .WithMany(t => t.Children)
-                      .HasForeignKey(t => t.ParentId)
-                      .OnDelete(DeleteBehavior.Restrict);
-
                 entity.HasOne(t => t.WBSVersionHistory)
                       .WithMany(v => v.TaskVersions)
                       .HasForeignKey(t => t.WBSVersionHistoryId)
@@ -711,7 +700,6 @@ namespace NJS.Domain.Database
 
                 entity.HasIndex(t => t.WBSVersionHistoryId);
                 entity.HasIndex(t => t.OriginalTaskId);
-                entity.HasIndex(t => t.ParentId);
                 entity.HasIndex(t => t.DisplayOrder);
             });
 

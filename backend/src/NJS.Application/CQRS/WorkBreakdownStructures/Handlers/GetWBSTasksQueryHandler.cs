@@ -65,7 +65,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         Title = displayTitle, // Display the label
                         Description = t.Description,
                         Level = (WBSTaskLevel)t.Level,
-                        ParentId = t.ParentId,
                         StartDate = t.StartDate,
                         EndDate = t.EndDate,
                         TaskType = t.TaskType,

@@ -56,48 +56,6 @@ namespace NJSAPI.Controllers
         /// <param name="projectId">The ID of the project.</param>
         /// <param name="wbsMaster">The WBS master data including workBreakdownStructures array with tasks.</param>
         /// <returns>The saved WBS master data with generated IDs.</returns>
-        /// <remarks>
-        /// Sample request:
-        ///
-        ///     PUT /api/projects/1/wbs
-        ///     {
-        ///       "wbsHeaderId": 0,
-        ///       "workBreakdownStructures": [
-        ///         {
-        ///           "workBreakdownStructureId": 0,
-        ///           "name": "Foundation",
-        ///           "description": "Base structure for building foundation",
-        ///           "displayOrder": 1,
-        ///           "tasks": [
-        ///             {
-        ///               "id": 0,
-        ///               "workBreakdownStructureId": 0,
-        ///               "parentId": 0,
-        ///               "level": 1,
-        ///               "title": "Site Preparation",
-        ///               "description": "Prepare site for construction",
-        ///               "displayOrder": 1,
-        ///               "wbsOptionId": 1,
-        ///               "wbsOptionLabel": "Standard Work",
-        ///               "children": [
-        ///                 {
-        ///                   "id": 0,
-        ///                   "workBreakdownStructureId": 0,
-        ///                   "parentId": 0, // This would be the ID of "Site Preparation"
-        ///                   "level": 2,
-        ///                   "title": "Sub-task 1",
-        ///                   "description": "Details of sub-task 1",
-        ///                   "displayOrder": 1,
-        ///                   "wbsOptionId": 2,
-        ///                   "wbsOptionLabel": "Specific Task"
-        ///                 }
-        ///               ]
-        ///             }
-        ///           ]
-        ///         }
-        ///       ]
-        ///     }
-        ///
         /// Note: For new entities, use 0 for IDs (wbsHeaderId, workBreakdownStructureId, id).
         /// The response will contain the saved data with generated IDs.
         /// </remarks>
@@ -129,21 +87,18 @@ namespace NJSAPI.Controllers
                     wbsMaster.WorkBreakdownStructures.Sum(w => w.Tasks?.Count ?? 0));
 
                 var command = new SetWBSCommand(projectId, wbsMaster);
-                await _mediator.Send(command);
+                var savedData = await _mediator.Send(command);
 
                 _logger.LogInformation("SetWBS command executed successfully for ProjectId: {ProjectId}", projectId);
 
-                // Fetch the saved data to return to the client
-                var savedData = await _mediator.Send(new GetWBSByProjectIdQuery(projectId));
-
                 if (savedData == null)
                 {
-                    _logger.LogError("SetWBS: Failed to retrieve saved data for ProjectId: {ProjectId}", projectId);
+                    _logger.LogError("SetWBS: Failed to save WBS data for ProjectId: {ProjectId}", projectId);
                     return StatusCode(StatusCodes.Status500InternalServerError,
-                        new { message = "WBS was saved but failed to retrieve the saved data." });
+                        new { message = "WBS was not saved successfully." });
                 }
 
-                _logger.LogInformation("Retrieved saved WBS data for ProjectId: {ProjectId}, WbsHeaderId: {WbsHeaderId}, WBS Groups: {Count}, Total Tasks: {TaskCount}",
+                _logger.LogInformation("Returning saved WBS data for ProjectId: {ProjectId}, WbsHeaderId: {WbsHeaderId}, WBS Groups: {Count}, Total Tasks: {TaskCount}",
                     projectId,
                     savedData.WbsHeaderId,
                     savedData.WorkBreakdownStructures?.Count ?? 0,

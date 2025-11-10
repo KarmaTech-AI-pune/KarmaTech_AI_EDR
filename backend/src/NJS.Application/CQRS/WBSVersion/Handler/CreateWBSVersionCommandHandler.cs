@@ -106,7 +106,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 {
                     WBSVersionHistoryId = wbsVersionHistoryId,
                     OriginalTaskId = task.Id,
-                    ParentId = null, // Will be updated in second pass
                     Level = task.Level,
                     Title = task.Title,
                     Description = task.Description,
@@ -121,16 +120,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 taskMap[task.Id] = taskVersion.Id;
             }
 
-            // Second pass: Update parent relationships
-            foreach (var task in tasks)
-            {
-                if (task.ParentId.HasValue && taskMap.ContainsKey(task.ParentId.Value))
-                {
-                    var taskVersion = await _wbsVersionRepository.GetTaskVersionByIdAsync(taskMap[task.Id]);
-                    taskVersion.ParentId = taskMap[task.ParentId.Value];
-                    await _wbsVersionRepository.UpdateTaskVersionAsync(taskVersion);
-                }
-            }
 
             // Copy planned hours and user assignments
             foreach (var task in tasks)

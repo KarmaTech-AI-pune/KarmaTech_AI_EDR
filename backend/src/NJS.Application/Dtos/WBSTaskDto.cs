@@ -9,7 +9,6 @@ namespace NJS.Application.Dtos
     {
         public int Id { get; set; }
         public int WorkBreakdownStructureId { get; set; } // Needed for context if creating WBS + tasks together
-        public int? ParentId { get; set; } // This will now be used to link to existing parent tasks
         public WBSTaskLevel Level { get; set; }
         public string? Title { get; set; }
         public string Description { get; set; }

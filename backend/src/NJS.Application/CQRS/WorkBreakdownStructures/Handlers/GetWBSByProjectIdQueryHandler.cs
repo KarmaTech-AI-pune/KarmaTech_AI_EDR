@@ -44,25 +44,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 };
             }
 
-            // Fetch the WBSHeader with all WorkBreakdownStructures and related data
+            // Optimized data retrieval: Load all necessary data in single operations
             var wbsHeader = await _context.WBSHeaders
-                .Include(h => h.WorkBreakdownStructures)
-                    .ThenInclude(wbs => wbs.Tasks.Where(t => !t.IsDeleted))
-                        .ThenInclude(t => t.UserWBSTasks)
-                            .ThenInclude(ut => ut.User)
-                .Include(h => h.WorkBreakdownStructures)
-                    .ThenInclude(wbs => wbs.Tasks.Where(t => !t.IsDeleted))
-                        .ThenInclude(t => t.UserWBSTasks)
-                            .ThenInclude(ut => ut.ResourceRole)
-                .Include(h => h.WorkBreakdownStructures)
-                    .ThenInclude(wbs => wbs.Tasks.Where(t => !t.IsDeleted))
-                        .ThenInclude(t => t.PlannedHours)
-                .Include(h => h.WorkBreakdownStructures)
-                    .ThenInclude(wbs => wbs.Tasks.Where(t => !t.IsDeleted))
-                        .ThenInclude(t => t.WBSOption)
                 .Where(h => h.ProjectId == request.ProjectId && h.IsActive)
                 .AsNoTracking()
-                .AsSplitQuery()
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (wbsHeader == null)
@@ -75,11 +60,50 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 };
             }
 
-            // Project to DTO in memory - Map all WorkBreakdownStructures to WBSMasterDto
+            // Load all WBSTasks for the project with related data in optimized queries
+            var wbsTasks = await _context.WBSTasks
+                .Include(t => t.UserWBSTasks)
+                    .ThenInclude(ut => ut.User)
+                .Include(t => t.UserWBSTasks)
+                    .ThenInclude(ut => ut.ResourceRole)
+                .Include(t => t.PlannedHours)
+                .Include(t => t.WBSOption)
+                .Where(t => t.WorkBreakdownStructure.WBSHeader.ProjectId == request.ProjectId && 
+                           !t.IsDeleted)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            // Load all WBSOptions for the tenant to build hierarchy
+            var tenantId = await _context.Projects
+                .Where(p => p.Id == request.ProjectId)
+                .Select(p => p.TenantId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            var wbsOptions = await _context.WBSOptions
+                .Where(o => o.TenantId == tenantId)
+                .AsNoTracking()
+                .ToDictionaryAsync(o => o.Id, cancellationToken);
+
+            // Load WorkBreakdownStructures for the project
+            var wbsStructures = await _context.WorkBreakdownStructures
+                .Where(wbs => wbs.WBSHeader.ProjectId == request.ProjectId)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            // Build in-memory hierarchy using WBSOption relationships
+            var tasksByWbsOptionId = wbsTasks.ToDictionary(t => t.WBSOptionId);
+            var taskDtos = BuildTaskHierarchy(wbsTasks, wbsOptions, tasksByWbsOptionId);
+
+            // Group tasks by their WorkBreakdownStructure
+            var tasksByStructure = taskDtos
+                .GroupBy(t => t.WorkBreakdownStructureId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // Project to DTO with hierarchical structure
             var wbsMasterDto = new WBSMasterDto
             {
                 WbsHeaderId = wbsHeader.Id,
-                WorkBreakdownStructures = wbsHeader.WorkBreakdownStructures
+                WorkBreakdownStructures = wbsStructures
                     .OrderBy(wbs => wbs.DisplayOrder)
                     .Select(wbs => new WBSStructureMasterDto
                     {
@@ -87,64 +111,98 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         Name = wbs.Name,
                         Description = wbs.Description,
                         DisplayOrder = wbs.DisplayOrder,
-                        Tasks = wbs.Tasks
-                            .Where(t => !t.IsDeleted)
-                            .OrderBy(t => t.DisplayOrder)
-                            .Select(t =>
-                            {
-                                var firstUserTask = t.UserWBSTasks.FirstOrDefault();
-                                var totalPlannedHours = t.PlannedHours.Sum(ph => ph.PlannedHours);
-
-                                return new WBSTaskDto
-                                {
-                                    Id = t.Id,
-                                    WorkBreakdownStructureId = t.WorkBreakdownStructureId,
-                                    ParentId = t.ParentId,
-                                    Level = t.Level,
-                                    Title = t.WBSOption != null ? t.WBSOption.Label : t.Title,
-                                    Description = t.Description,
-                                    DisplayOrder = t.DisplayOrder,
-                                    EstimatedBudget = t.EstimatedBudget,
-                                    StartDate = t.StartDate,
-                                    EndDate = t.EndDate,
-                                    TaskType = t.TaskType,
-                                    WBSOptionId = t.WBSOptionId,
-                                    WBSOptionLabel = t.WBSOption?.Label,
-
-                                    PlannedHours = t.PlannedHours.Select(ph => new PlannedHourDto
-                                    {
-                                        Year = int.Parse(ph.Year),
-                                        Month = ph.Month,
-                                        PlannedHours = ph.PlannedHours
-                                    }).ToList(),
-
-                                    // Resource/cost fields
-                                    CostRate = firstUserTask?.CostRate ?? 0,
-                                    ResourceUnit = firstUserTask?.Unit,
-                                    AssignedUserId = t.TaskType == TaskType.Manpower ? firstUserTask?.UserId : null,
-                                    AssignedUserName = t.TaskType == TaskType.Manpower ? firstUserTask?.User?.Name : null,
-                                    ResourceName = t.TaskType == TaskType.ODC ? firstUserTask?.Name : null,
-                                    ResourceRoleId = firstUserTask?.ResourceRoleId,
-                                    ResourceRoleName = firstUserTask?.ResourceRole?.Name,
-
-                                    TotalHours = t.TaskType == TaskType.ODC ? (firstUserTask?.TotalHours ?? 0) : totalPlannedHours,
-                                    TotalCost = t.TaskType == TaskType.ODC
-                                        ? (firstUserTask?.TotalCost ?? 0)
-                                        : (decimal)totalPlannedHours * (firstUserTask?.CostRate ?? 0)
-                                };
-                            })
-                            .ToList()
+                        Tasks = tasksByStructure.ContainsKey(wbs.Id) 
+                            ? tasksByStructure[wbs.Id].Where(t => t.Children.Count == 0).ToList() // Root tasks only
+                            : new List<WBSTaskDto>()
                     })
                     .ToList()
             };
 
             _logger.LogInformation(
-                "Successfully fetched WBSHeader (Id: {WbsHeaderId}) with {WbsGroupCount} WBS groups for ProjectId: {ProjectId}",
+                "Successfully fetched WBSHeader (Id: {WbsHeaderId}) with {WbsGroupCount} WBS groups and {TaskCount} tasks for ProjectId: {ProjectId}",
                 wbsMasterDto.WbsHeaderId,
                 wbsMasterDto.WorkBreakdownStructures.Count,
+                taskDtos.Count,
                 request.ProjectId);
 
             return wbsMasterDto;
+        }
+
+        /// <summary>
+        /// Builds hierarchical task structure using WBSOption parent-child relationships
+        /// </summary>
+        private List<WBSTaskDto> BuildTaskHierarchy(
+            List<WBSTask> wbsTasks, 
+            Dictionary<int, WBSOption> wbsOptions,
+            Dictionary<int, WBSTask> tasksByWbsOptionId)
+        {
+            var taskDtos = new List<WBSTaskDto>();
+
+            // First, create all task DTOs without children
+            foreach (var task in wbsTasks)
+            {
+                var firstUserTask = task.UserWBSTasks.FirstOrDefault();
+                var totalPlannedHours = task.PlannedHours.Sum(ph => ph.PlannedHours);
+
+                var taskDto = new WBSTaskDto
+                {
+                    Id = task.Id,
+                    WorkBreakdownStructureId = task.WorkBreakdownStructureId,
+                    Level = task.Level,
+                    Title = task.WBSOption != null ? task.WBSOption.Label : task.Title,
+                    Description = task.Description,
+                    DisplayOrder = task.DisplayOrder,
+                    EstimatedBudget = task.EstimatedBudget,
+                    StartDate = task.StartDate,
+                    EndDate = task.EndDate,
+                    TaskType = task.TaskType,
+                    WBSOptionId = task.WBSOptionId,
+                    WBSOptionLabel = task.WBSOption?.Label,
+
+                    PlannedHours = task.PlannedHours.Select(ph => new PlannedHourDto
+                    {
+                        Year = int.Parse(ph.Year),
+                        Month = ph.Month,
+                        PlannedHours = ph.PlannedHours
+                    }).ToList(),
+
+                    // Resource/cost fields
+                    CostRate = firstUserTask?.CostRate ?? 0,
+                    ResourceUnit = firstUserTask?.Unit,
+                    AssignedUserId = task.TaskType == TaskType.Manpower ? firstUserTask?.UserId : null,
+                    AssignedUserName = task.TaskType == TaskType.Manpower ? firstUserTask?.User?.Name : null,
+                    ResourceName = task.TaskType == TaskType.ODC ? firstUserTask?.Name : null,
+                    ResourceRoleId = firstUserTask?.ResourceRoleId,
+                    ResourceRoleName = firstUserTask?.ResourceRole?.Name,
+
+                    TotalHours = task.TaskType == TaskType.ODC ? (firstUserTask?.TotalHours ?? 0) : totalPlannedHours,
+                    TotalCost = task.TaskType == TaskType.ODC
+                        ? (firstUserTask?.TotalCost ?? 0)
+                        : (decimal)totalPlannedHours * (firstUserTask?.CostRate ?? 0),
+
+                    Children = new List<WBSTaskDto>()
+                };
+
+                taskDtos.Add(taskDto);
+            }
+
+            // Now build parent-child relationships using WBSOption hierarchy
+            var taskDtoLookup = taskDtos.ToDictionary(t => t.WBSOptionId);
+            
+            foreach (var taskDto in taskDtos)
+            {
+                if (wbsOptions.TryGetValue(taskDto.WBSOptionId, out var wbsOption) && 
+                    wbsOption.ParentId.HasValue)
+                {
+                    // Find parent task by parent WBSOption ID
+                    if (taskDtoLookup.TryGetValue(wbsOption.ParentId.Value, out var parentTaskDto))
+                    {
+                        parentTaskDto.Children.Add(taskDto);
+                    }
+                }
+            }
+
+            return taskDtos;
         }
     }
 }
