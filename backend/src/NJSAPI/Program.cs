@@ -3,34 +3,70 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using NJSAPI.Extensions;
 using NLog.Web;
 using Microsoft.Extensions.Options;
 using NJSAPI.Configurations;
-using NJS.Domain.Extensions;
+using NJSAPI.Middleware;
+using NJS.Domain.Services;
+using NJS.Application.Services;
+using NJS.Application.Services.IContract;
+using NJS.Domain.Database;
+using Microsoft.EntityFrameworkCore;
 
 internal class Program
 {
     private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+
         builder.Services.AddControllers();
-        builder.Services.AddHttpContextAccessor();
         builder.Services.AddLogging();
 
+        // Add HttpContextAccessor as singleton
+        builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+        // Add tenant resolution strategies in priority order
+
+        builder.Services.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>();
+        builder.Services.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>();
+        builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
+
+        // Add tenant services for tr
+        builder.Services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
+        //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
+
+        var environment = builder.Configuration.GetValue<string>("DNS:Env");
+        if (environment is "Development" or "Dev")
+        {
+            builder.Services.AddScoped<IDNSManagementService, MockDNSManagementService>();
+        }
+        else
+        {
+            builder.Services.AddScoped<IDNSManagementService, DNSManagementService>();
+
+            // Note: For production, you'll need to configure AWS credentials and region
+            // services.AddAWSService<IAmazonRoute53>();
+        }
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
+        builder.Services.AddTenantServices(builder.Configuration);
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddConfiguredSwagger(builder.Configuration);
 
+        // Configure CORS for tenant
         builder.Services.AddCors(options =>
         {
             var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+
+            var allOrigins = allowedOrigins?.ToList();
+
             options.AddPolicy("AllowSpecificOrigin",
                 builder => builder
-                    .WithOrigins(allowedOrigins)
+                    .SetIsOriginAllowedToAllowWildcardSubdomains()
+                    .WithOrigins(allOrigins.ToArray())
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials());
@@ -58,50 +94,74 @@ internal class Program
         });
 
         // Configure Authorization Policies
-        builder.Services.AddAuthorization(options =>
-        {
-            options.AddPolicy("RequireAdminRole", policy =>
-                policy.RequireRole("Admin"));
-
-            options.AddPolicy("RequireManagerRole", policy =>
-                policy.RequireRole("Manager"));
-
-            options.AddPolicy("RequireUserRole", policy =>
-                policy.RequireRole("User"));
-
-            options.AddPolicy("RequireAdminOrManager", policy =>
-                policy.RequireRole("Admin", "Manager"));
-
-            // Default policy requiring authentication
-            options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-        });
+        // builder.Services.AddAuthorization(options =>
+        // {
+        //     options.AddPolicy("RequireAdminRole", policy =>
+        //         policy.RequireRole("Admin"));
+        //
+        //     options.AddPolicy("RequireManagerRole", policy =>
+        //         policy.RequireRole("Manager"));
+        //
+        //     options.AddPolicy("RequireUserRole", policy =>
+        //         policy.RequireRole("User"));
+        //
+        //     options.AddPolicy("RequireAdminOrManager", policy =>
+        //         policy.RequireRole("Admin", "Manager"));
+        //
+        //     options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        //         .RequireAuthenticatedUser()
+        //         .Build();
+        // });
 
         builder.Services.AddCompression();
         builder.Host.UseNLog();
         builder.Services.AddAuditServices();
         builder.Services.ConfigureAuditObservers();
 
+        // Configure the app
         var app = builder.Build();
+
+        // Use CORS before other middleware
+        app.UseCors("AllowSpecificOrigin");
+
 
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
             var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
-            options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", swaggerSettings.Title);
+            options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", $"{swaggerSettings.Title}");
         });
 
-
-        // Use CORS before other middleware
-        app.UseCors("AllowSpecificOrigin");
         app.UseResponseCompression();
         app.UseHttpsRedirection();
+
+        app.UseMiddleware<TenantResolverMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
-        app.SeedApplicationData();
-        app.MapControllers(); 
+        app.UseMiddleware<TenantMiddleware>();
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+
+            // ✅ 1. Apply all pending migrations before seeding
+            db.Database.Migrate();
+
+            // ✅ 2. Then seed your data
+            await SeedExtensions.InitializeDatabaseAsync(app);
+        }
+
+        // ✅ Map controllers and run the app
+        app.MapControllers();
+        app.MapFallbackToFile("index.html");
+        app.Run();
+
+        app.MapControllers();
+
+        // This will redirect all unhandled routes (that are not static files or API routes) to index.html
+        // This should be placed after UseStaticFiles, UseRouting, UseAuthentication, UseAuthorization, and MapControllers
+        app.MapFallbackToFile("index.html");
 
         app.Run();
     }
 }
+

@@ -72,7 +72,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             Label = o.Label,
                             Level = o.Level,
                             ParentValue = o.ParentValue,
-                            FormType = (int)o.FormType
+                            FormType = (int)o.FormType,
                         }).ToList()
                     )
             };

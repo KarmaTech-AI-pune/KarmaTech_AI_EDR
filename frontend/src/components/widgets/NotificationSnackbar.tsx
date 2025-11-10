@@ -1,11 +1,12 @@
 import React from 'react';
-import { Snackbar, Alert, AlertProps } from '@mui/material';
+import { Snackbar, Alert, AlertProps, SnackbarOrigin } from '@mui/material';
 
 interface NotificationSnackbarProps {
   open: boolean;
   message: string;
   severity: AlertProps['severity'];
   onClose: () => void;
+  anchorOrigin?: SnackbarOrigin; // Make anchorOrigin optional
 }
 
 const NotificationSnackbar: React.FC<NotificationSnackbarProps> = ({
@@ -13,13 +14,14 @@ const NotificationSnackbar: React.FC<NotificationSnackbarProps> = ({
   message,
   severity,
   onClose,
+  anchorOrigin = { vertical: 'bottom', horizontal: 'center' }, // Default to bottom-center
 }) => {
   return (
     <Snackbar
       open={open}
       autoHideDuration={3000}
       onClose={onClose}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      anchorOrigin={anchorOrigin}
     >
       <Alert onClose={onClose} severity={severity} variant="filled" sx={{ width: '100%' }}>
         {message}

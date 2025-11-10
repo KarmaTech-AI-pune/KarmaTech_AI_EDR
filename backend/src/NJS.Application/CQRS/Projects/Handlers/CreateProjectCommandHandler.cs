@@ -25,6 +25,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             var dto = request.ProjectDto;
             var project = new Project
             {
+                TenantId = dto.TenantId ?? 0, // Set to 0 to let database context handle it
                 Name = dto.Name,
                 ClientName = dto.ClientName,
                 ProjectNo = dto.ProjectNo,
@@ -56,7 +57,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 CreatedBy = dto.ProjectManagerId, // Using Project Manager as creator
                 LastModifiedBy = dto.ProjectManagerId,
                 LetterOfAcceptance = dto.LetterOfAcceptance,
-                OpportunityTrackingId = dto.OpportunityTrackingId == 0 ? null : dto.OpportunityTrackingId,
+                OpportunityTrackingId = dto.OpportunityTrackingId,
             };
 
             // Calculate duration in months if not provided and dates are available

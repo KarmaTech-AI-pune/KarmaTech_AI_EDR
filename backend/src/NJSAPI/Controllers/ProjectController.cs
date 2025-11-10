@@ -5,23 +5,37 @@ using NJS.Application.CQRS.Projects.Queries;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
+using NJS.Repositories.Interfaces;
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NJSAPI.Controllers
 {
+   
     [ApiController]
     [Route("api/[controller]")]
-    public class ProjectController : ControllerBase
+    [Authorize]
+    public class ProjectController : BaseController
     {
         private readonly IMediator _mediator;
         private readonly IProjectManagementService _projectManagementService;
+        private readonly ITenantService tenantService;
+        private readonly ICurrentUserService currentUserService;
         private readonly ILogger<ProjectController> _logger;
 
-        public ProjectController(IMediator mediator, IProjectManagementService projectManagementService, ILogger<ProjectController> logger)
+        public ProjectController(
+            IMediator mediator, 
+            IProjectManagementService projectManagementService, 
+            ITenantService tenantService,
+            ICurrentUserService currentUserService,
+            ILogger<ProjectController> logger)
+            : base(tenantService, currentUserService)
         {
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _projectManagementService = projectManagementService ?? throw new ArgumentNullException(nameof(projectManagementService));
+            this.tenantService = tenantService;
+            this.currentUserService = currentUserService;
             _logger = logger;
         }
 
@@ -39,12 +53,23 @@ namespace NJSAPI.Controllers
 
             try
             {
+                // Ensure user has access to current tenant
+                if (CurrentTenantId.HasValue)
+                {
+                    var accessCheck = await EnsureTenantAccessAsync(CurrentTenantId.Value);
+                    if (accessCheck != null) return accessCheck;
+                }
+
+                // Set the tenant ID in the project data
+                projectData.TenantId = CurrentTenantId;
+
                 var command = new CreateProjectCommand(projectData);
                 var projectId = await _mediator.Send(command);
                 return CreatedAtAction(nameof(GetById), new { id = projectId }, projectId);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error creating project for tenant {TenantId}", CurrentTenantId);
                 return StatusCode(500, new { message = ex.Message });
             }
         }
@@ -57,13 +82,28 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetById(int id)
         {
-            var query = new GetProjectByIdQuery { Id = id };
-            var result = await _mediator.Send(query);
+            try
+            {
+                // Ensure user has access to current tenant
+                if (CurrentTenantId.HasValue)
+                {
+                    var accessCheck = await EnsureTenantAccessAsync(CurrentTenantId.Value);
+                    if (accessCheck != null) return accessCheck;
+                }
 
-            if (result == null)
-                return NotFound();
+                var query = new GetProjectByIdQuery { Id = id };
+                var result = await _mediator.Send(query);
 
-            return Ok(result);
+                if (result == null)
+                    return NotFound();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting project {ProjectId} for tenant {TenantId}", id, CurrentTenantId);
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         /// <summary>
@@ -90,9 +130,24 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(Project[]), 200)]
         public async Task<IActionResult> GetAll()
         {
-            var query = new GetAllProjectsQuery();
-            var result = await _mediator.Send(query);
-            return Ok(result);
+            try
+            {
+                // Ensure user has access to current tenant
+                if (CurrentTenantId.HasValue)
+                {
+                    var accessCheck = await EnsureTenantAccessAsync(CurrentTenantId.Value);
+                    if (accessCheck != null) return accessCheck;
+                }
+
+                var query = new GetAllProjectsQuery();
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting projects for tenant {TenantId}", CurrentTenantId);
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         /// <summary>
@@ -179,6 +234,36 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex,$"Error deleting project: {ex.Message}");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Debug endpoint to check current tenant context
+        /// </summary>
+        [HttpGet("debug/tenant-context")]
+        public async Task<IActionResult> GetTenantContext()
+        {
+            try
+            {
+                var tenantInfo = new
+                {
+                    CurrentTenantId = CurrentTenantId,
+                    CurrentTenantDomain = CurrentTenantDomain,
+                    CurrentUserType = CurrentUserType,
+                    CurrentTenantRole = CurrentTenantRole,
+                    IsSuperAdmin = IsSuperAdmin,
+                    CurrentUserId = CurrentUserId,
+                    CurrentUserName = CurrentUserName,
+                    HttpContextTenantId = HttpContext.Items.ContainsKey("TenantId") ? HttpContext.Items["TenantId"] : null,
+                    HttpContextTenantDomain = HttpContext.Items.ContainsKey("TenantDomain") ? HttpContext.Items["TenantDomain"] : null
+                };
+
+                return Ok(new { success = true, data = tenantInfo });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting tenant context");
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }

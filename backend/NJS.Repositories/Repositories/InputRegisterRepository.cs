@@ -2,10 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {
@@ -39,9 +35,6 @@ namespace NJS.Repositories.Repositories
         public async Task<int> AddAsync(InputRegister inputRegister)
         {
             if (inputRegister == null) throw new ArgumentNullException(nameof(inputRegister));
-
-            // Check if we need to reset the identity seed before adding a new entry
-            await ResetIdentitySeedAsync();
 
             inputRegister.CreatedAt = DateTime.Now;
 
@@ -122,11 +115,13 @@ namespace NJS.Repositories.Repositories
                         {
                             break;
                         }
+
                         nextId++;
                     }
 
                     // Reset the identity seed to the next available ID - 1
-                    await _context.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT ('InputRegisters', RESEED, {nextId - 1})");
+                    await _context.Database.ExecuteSqlRawAsync(
+                        $"DBCC CHECKIDENT ('InputRegisters', RESEED, {nextId - 1})");
                 }
             }
         }

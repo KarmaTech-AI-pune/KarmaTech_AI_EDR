@@ -23,7 +23,7 @@ namespace NJS.Application.Services
 
         public async Task<PMWorkflowDto> ExecuteAsync(WorkflowActionContext context, CancellationToken cancellationToken)
         {
-            var wbsHeader = await _context.Set<WBSTaskMonthlyHourHeader>()
+            var wbsHeader = await _context.Set<WBSTaskPlannedHourHeader>()
                 .Include(w => w.WBSHistories)
                 .FirstOrDefaultAsync(w => w.Id == context.EntityId, cancellationToken);
 
@@ -74,7 +74,7 @@ namespace NJS.Application.Services
             // Create a new history entry
             var history = new WBSHistory
             {
-                WBSTaskMonthlyHourHeaderId = wbsHeader.Id,
+                WBSTaskPlannedHourHeaderId = wbsHeader.Id,
                 StatusId = (int)status,
                 Action = context.Action,
                 Comments = context.Comments ?? $"WBS {status.ToString()} action",
@@ -101,6 +101,8 @@ namespace NJS.Application.Services
 
             // Add the history entry
             _context.WBSHistories.Add(history);
+            wbsHeader.StatusId = (int)status;
+            _context.WBSTaskPlannedHourHeaders.Update(wbsHeader);
 
             // Save changes to the database
             await _context.SaveChangesAsync(cancellationToken);

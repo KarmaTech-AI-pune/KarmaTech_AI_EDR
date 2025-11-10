@@ -14,9 +14,10 @@ namespace NJS.Domain.Entities
 
 
 
-    public class BidPreparation : IAuditableEntity
+    public class BidPreparation : IAuditableEntity, ITenantEntity
     {
         public int Id { get; set; }
+        public int TenantId { get; set; }
         public string DocumentCategoriesJson { get; set; }
         public int OpportunityId { get; set; }
         [ForeignKey("OpportunityId")]

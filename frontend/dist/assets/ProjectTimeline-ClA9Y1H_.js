@@ -1,0 +1,1 @@
+import{j as e,X as r,T as t}from"./index-_VJtkHCC.js";const o=()=>e.jsxs(r,{sx:{p:3},children:[e.jsx(t,{variant:"h6",gutterBottom:!0,children:"Timeline"}),e.jsx(t,{variant:"body1",color:"text.secondary",children:"Project timeline section will be implemented here"})]});export{o as default};

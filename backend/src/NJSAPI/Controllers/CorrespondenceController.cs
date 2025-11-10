@@ -9,21 +9,27 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using NJS.Application.Services.IContract;
+using NJS.Repositories.Interfaces;
 
 namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize] 
-    public class CorrespondenceController : ControllerBase
+    public class CorrespondenceController:BaseController
     {
         private readonly IMediator _mediator;
         private readonly ILogger<CorrespondenceController> _logger;
+        private readonly ITenantService tenantService;
+        private readonly ICurrentUserService currentUserService;
 
-        public CorrespondenceController(IMediator mediator, ILogger<CorrespondenceController> logger)
+        public CorrespondenceController(IMediator mediator, ILogger<CorrespondenceController> logger, ITenantService tenantService, ICurrentUserService currentUserService) : base(tenantService, currentUserService)
         {
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.tenantService = tenantService;
+            this.currentUserService = currentUserService;
         }
 
         #region Inward Correspondence
@@ -84,9 +90,8 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, new { message = $"An error occurred while retrieving inward correspondence for project {projectId}.", error = ex.Message });
             }
         }
-
+    
         [HttpPost("inward")]
-        [AllowAnonymous] // Allow anonymous access for testing
         public async Task<ActionResult<CorrespondenceInwardDto>> CreateInward([FromBody] CreateCorrespondenceInwardCommand command)
         {
             try

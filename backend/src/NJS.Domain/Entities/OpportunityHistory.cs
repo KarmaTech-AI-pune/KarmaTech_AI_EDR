@@ -6,7 +6,7 @@ namespace NJS.Domain.Entities
     /// <summary>
     /// This is model used to opportunity workflow
     /// </summary>
-    public class OpportunityHistory
+    public class OpportunityHistory : ITenantEntity
     {
         public OpportunityHistory()
         {
@@ -15,6 +15,8 @@ namespace NJS.Domain.Entities
 
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
         public int OpportunityId { get; set; }
         public OpportunityTracking Opportunity { get; set; }
         public int StatusId { get; set; }
@@ -23,6 +25,9 @@ namespace NJS.Domain.Entities
         public string Comments { get; set; }
         public DateTime ActionDate { get; set; }
         public string ActionBy { get; set; }
+        
+        [ForeignKey("ActionBy")]
+        [InverseProperty("OpportunityHistories")]
         public User ActionUser { get; set; }
 
         public string? AssignedToId { get; set; }

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import { NavLink, Link } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -10,54 +11,64 @@ import {
   Button,
   MenuItem,
   Avatar,
-  Tooltip
+  Tooltip,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import { useContext } from 'react';
+import SecurityIcon from '@mui/icons-material/Security';
 import { projectManagementAppContext } from '../../App';
 import { projectManagementAppContextType } from '../../types';
-import { authApi } from '../../dummyapi/authApi';
+import { authApi } from '../../services/authApi';
 import { PermissionType } from '../../models';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
+import PasswordChangeDropdown from './PasswordChangeDropdown';
+
+const navLinks = [
+  {
+    label: 'Business Development',
+    path: '/business-development',
+    permission: PermissionType.VIEW_BUSINESS_DEVELOPMENT,
+  },
+  {
+    label: 'Project Management',
+    path: '/project-management',
+    permission: PermissionType.VIEW_PROJECT,
+  },
+];
 
 export const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-  const { setIsAuthenticated, user } = useContext(projectManagementAppContext) as projectManagementAppContextType;
+  const [showPasswordDropdown, setShowPasswordDropdown] = useState(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
+  const { setIsAuthenticated, user } = useContext(
+    projectManagementAppContext,
+  ) as projectManagementAppContextType;
   const navigation = useAppNavigation();
 
-  // Pages based on permissions
-  const [pages, setPages] = useState<string[]>([]);
+  const [authorizedPages, setAuthorizedPages] = useState<typeof navLinks>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTenantAdmin, setIsTenantAdmin] = useState(false);  
 
   useEffect(() => {
     const checkUserPermissions = async () => {
       const currentUser = await authApi.getCurrentUser();
-
-      // If no user is logged in, clear pages
       if (!currentUser || !currentUser.roleDetails) {
-        setPages([]);
+        setAuthorizedPages([]);
         setIsAdmin(false);
+        setIsTenantAdmin(false)
         return;
       }
 
-      // Determine pages based on user's permissions
-      const availablePages = [];
-      // Check for Business Development permissions
-      if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_BUSINESS_DEVELOPMENT)) {
-        availablePages.push('Business Development');
-      }
+      const { permissions } = currentUser.roleDetails;
+      const availablePages = navLinks.filter((link) =>
+        permissions.includes(link.permission),
+      );
 
-      // Check for Project Management permissions
-      if (currentUser.roleDetails.permissions.includes(PermissionType.VIEW_PROJECT)) {
-        availablePages.push('Project Management');
-      }
-
-      // Check for System Admin permissions
-      setIsAdmin(currentUser.roleDetails.permissions.includes(PermissionType.SYSTEM_ADMIN));
-
-      setPages(availablePages);
+      setAuthorizedPages(availablePages);
+      setIsAdmin(permissions.includes(PermissionType.SYSTEM_ADMIN));
+      setIsTenantAdmin(permissions.includes(PermissionType.Tenant_ADMIN));
+      
     };
 
     checkUserPermissions();
@@ -79,27 +90,26 @@ export const Navbar = () => {
     setAnchorElUser(null);
   };
 
-  const handleNavClick = (page: string) => {
-    switch (page) {
-      case 'Business Development':
-        navigation.navigateToBusinessDevelopment();
-        break;
-      case 'Project Management':
-        navigation.navigateToProjectManagement();
-        break;
-      default:
-        break;
+
+  const handleClosePasswordDropdown = useCallback(() => {
+    setShowPasswordDropdown(false);
+  }, []);
+
+  // Handle click outside to close password dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showPasswordDropdown && avatarRef.current && !avatarRef.current.contains(event.target as Node)) {
+        setShowPasswordDropdown(false);
+      }
+    };
+
+    if (showPasswordDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
     }
-    handleCloseNavMenu();
-  };
-
-  const handleLogoClick = () => {
-    navigation.navigateToDashboard();
-  };
-
-  const handleAdminClick = () => {
-    navigation.navigateToAdmin();
-  };
+  }, [showPasswordDropdown]);
 
   const handleLogout = async () => {
     try {
@@ -113,21 +123,26 @@ export const Navbar = () => {
   };
 
   const LogoComponent = () => (
-    <Box
-      onClick={handleLogoClick}
-      style={{ cursor: 'pointer' }}
-      sx={{ height: '50px', display: 'flex', alignItems: 'center' }}
-    >
-      <img
-        src="/KarmaTech_logo.jpg"
-        alt="KarmaTech AI"
-        style={{
-          height: '100%',
-          width: 'auto',
-          objectFit: 'contain'
+    <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Box
+        sx={{
+          height: '50px',
+          display: 'flex',
+          alignItems: 'center',
+          cursor: 'pointer',
         }}
-      />
-    </Box>
+      >
+        <img
+          src="/KarmaTech_logo.png"
+          alt="KarmaTech AI"
+          style={{
+            height: '100%',
+            width: 'auto',
+            objectFit: 'contain',
+          }}
+        />
+      </Box>
+    </Link>
   );
 
   return (
@@ -136,7 +151,7 @@ export const Navbar = () => {
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
         background: 'linear-gradient(45deg, #1976d2 30%, #2196f3 90%)',
-        boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .3)'
+        boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .3)',
       }}
     >
       <Container maxWidth="xl">
@@ -176,69 +191,103 @@ export const Navbar = () => {
                 display: { xs: 'block', md: 'none' },
               }}
             >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={() => handleNavClick(page)} data-testid={`mobile-nav-${page.replace(/\s+/g, '-').toLowerCase()}`}>
-                  <Typography textAlign="center">{page}</Typography>
+              {authorizedPages.map((page) => (
+                <MenuItem
+                  key={page.label}
+                  component={NavLink}
+                  to={page.path}
+                  onClick={handleCloseNavMenu}
+                  data-testid={`mobile-nav-${page.label.replace(/\s+/g, '-').toLowerCase()}`}
+                >
+                  <Typography textAlign="center">{page.label}</Typography>
                 </MenuItem>
               ))}
             </Menu>
           </Box>
 
           {/* Mobile Logo */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }, justifyContent: 'center' }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: { xs: 'flex', md: 'none' },
+              justifyContent: 'center',
+            }}
+          >
             <LogoComponent />
           </Box>
 
           {/* Desktop Navigation */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
-            {pages.map((page) => (
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: { xs: 'none', md: 'flex' },
+              justifyContent: 'center',
+            }}
+          >
+            {authorizedPages.map((page) => (
               <Button
-                key={page}
-                onClick={() => handleNavClick(page)}
-                data-testid={`desktop-nav-${page.replace(/\s+/g, '-').toLowerCase()}`}
+                key={page.label}
+                component={NavLink}
+                to={page.path}
+                data-testid={`desktop-nav-${page.label.replace(/\s+/g, '-').toLowerCase()}`}
                 sx={{
                   my: 2,
                   color: 'white',
                   display: 'block',
                   mx: 1,
                   px: 2,
+                  '&.active': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    fontWeight: 'bold',
+                  },
                   '&:hover': {
                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  }
+                  },
                 }}
               >
-                {page}
+                {page.label}
               </Button>
             ))}
           </Box>
 
           {/* Admin Icon */}
-          {isAdmin && (
+          {(isAdmin || isTenantAdmin) && (
             <Box sx={{ mr: 2 }}>
               <Tooltip title="Admin Panel">
-                <IconButton onClick={handleAdminClick} sx={{ color: 'white' }}>
+                <IconButton
+                  component={Link}
+                  to="/admin"
+                  sx={{ color: 'white' }}
+                >
                   <AdminPanelSettingsIcon />
                 </IconButton>
               </Tooltip>
             </Box>
-          )}
+          )}        
 
           {/* User Menu */}
-          <Box sx={{ flexGrow: 0 }}>
-            <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-              <Avatar
-                alt={user?.name || 'User'}
-                src={user?.avatar}
-                sx={{
-                  width: 40,
-                  height: 40,
-                  bgcolor: 'primary.light',
-                  border: '2px solid white'
-                }}
-              >
-                {user?.name?.[0] || 'U'}
-              </Avatar>
-            </IconButton>
+          <Box sx={{ flexGrow: 0, position: 'relative' }}>
+            <Box ref={avatarRef}>
+              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                <Avatar
+                  alt={user?.name || 'User'}
+                  src={user?.avatar}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: 'primary.light',
+                    border: '2px solid white',
+                  }}
+                >
+                  {user?.name?.[0] || 'U'}
+                </Avatar>
+              </IconButton>
+            </Box>
+            
+            {/* Password Change Dropdown */}
+            {showPasswordDropdown && (
+              <PasswordChangeDropdown onClose={handleClosePasswordDropdown} />
+            )}
             <Menu
               sx={{ mt: '45px' }}
               id="menu-appbar"
@@ -256,16 +305,26 @@ export const Navbar = () => {
               onClose={handleCloseUserMenu}
               data-testid="menu"
             >
-              <MenuItem onClick={handleCloseUserMenu}>
+              <MenuItem 
+                component={Link} 
+                to="/profile" 
+                onClick={handleCloseUserMenu}
+              >
                 <Typography textAlign="center">Profile</Typography>
               </MenuItem>
+              <MenuItem 
+                component={Link} 
+                to="/profile?section=2fa" 
+                onClick={handleCloseUserMenu}
+              >
+                <SecurityIcon sx={{ mr: 1, fontSize: 20 }} />
+                <Typography textAlign="center">2FA Settings</Typography>
+              </MenuItem>                        
               <MenuItem onClick={handleCloseUserMenu}>
                 <Typography textAlign="center">Settings</Typography>
               </MenuItem>
               <MenuItem onClick={handleCloseUserMenu}>
-                <Typography textAlign="center">
-                  Notifications
-                </Typography>
+                <Typography textAlign="center">Notifications</Typography>
               </MenuItem>
               <MenuItem onClick={handleLogout}>
                 <Typography textAlign="center">Logout</Typography>

@@ -3,10 +3,12 @@ using System.Web;
 
 namespace NJS.Domain.Entities
 {
-    public  class ScoringCriteria
+    public  class ScoringCriteria : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         public string Label { get; set; }
 

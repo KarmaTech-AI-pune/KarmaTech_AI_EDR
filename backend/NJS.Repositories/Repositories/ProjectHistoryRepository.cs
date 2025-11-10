@@ -2,10 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {
@@ -21,7 +17,7 @@ namespace NJS.Repositories.Repositories
         public async Task<WBSHistory> GetByIdAsync(int id)
         {
             return await _context.WBSHistories
-                .Include(ph => ph.WBSTaskMonthlyHourHeader)
+                .Include(ph => ph.WBSTaskPlannedHourHeader)
                 .Include(ph => ph.ActionUser)
                 .FirstOrDefaultAsync(ph => ph.Id == id);
         }
@@ -29,7 +25,7 @@ namespace NJS.Repositories.Repositories
         public async Task<List<WBSHistory>> GetAllAsync()
         {
             return await _context.WBSHistories
-                .Include(ph => ph.WBSTaskMonthlyHourHeader)
+                .Include(ph => ph.WBSTaskPlannedHourHeader)
                 .Include(ph => ph.ActionUser)
                 .ToListAsync();
         }
@@ -55,6 +51,5 @@ namespace NJS.Repositories.Repositories
                 await _context.SaveChangesAsync();
             }
         }
-       
     }
 }

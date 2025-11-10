@@ -4,7 +4,7 @@ export interface InwardRow {
     srNo: number;
     incomingLetterNo: string;
     letterDate: string;
-    njsInwardNo: string;
+    inwardNo: string;
     receiptDate: string;
     from: string;
     subject: string;

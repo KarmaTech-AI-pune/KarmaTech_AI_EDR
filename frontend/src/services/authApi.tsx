@@ -1,6 +1,7 @@
 import { Credentials, LoginResponse, UserWithRole } from '../types';
-import {  PermissionType } from '../models';
+import { PermissionType } from '../models';
 import { axiosInstance } from './axiosConfig';
+import { getTenantContext } from './axiosConfig';
 import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {
@@ -13,24 +14,43 @@ interface DecodedToken {
   iss: string;
   aud: string;
   jti: string;
+  SubscriptionPlanId?: number; // Add SubscriptionPlanId to the decoded token interface
 }
 
 export const authApi = {
   login: async (credentials: Credentials): Promise<LoginResponse> => {
     try {
-      const response = await axiosInstance.post('api/user/login', credentials);
+      const tenantContext = getTenantContext();
+      
+      // Ensure we have a tenant context
+      if (!tenantContext) {
+        console.error('No tenant context available');
+        return {
+          success: false,
+          message: 'Invalid tenant configuration'
+        };
+      }
+
+      // Ensure proper headers are set for the login request
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Context': tenantContext
+        }
+      };
+      const response = await axiosInstance.post('api/user/login', credentials, config);
       const { success, token } = response.data;
       
       if (success && token) {
         // Store token
         localStorage.setItem('token', token);
-        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
         // Decode token and store user data
         const decodedToken = jwtDecode<DecodedToken>(token);
         const role = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-        const permissions = decodedToken.Permissions;//join(',').split(',').map(p => p.trim());
+        const permissions = decodedToken.Permissions;
         const temp = normalizePermissions(permissions);
+
         // Create user with role details
         const userWithRole: UserWithRole = {
           id: decodedToken.sub,
@@ -50,7 +70,10 @@ export const authApi = {
           },
           standardRate: response.data.user.standardRate,
           isConsultant: response.data.user.isConsultant,
-          createdAt: response.data.user.createdAt
+          createdAt: response.data.user.createdAt,
+          tenantId: response.data.user.tenantId,
+          tenantDomain: response.data.user.tenantDomain,
+          twoFactorEnabled: response.data.user.twoFactorEnabled,
         };
 
         // Store user information
@@ -131,8 +154,23 @@ export const authApi = {
     } catch (error) {
       return true;
     }
+  },
+
+  signup: async (signupData: any): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const response = await axiosInstance.post('/api/CreateAccount', signupData);
+      if (response.status === 201) {
+        return { success: true, message: 'Account created successfully!' };
+      } else {
+        return { success: false, message: response.data?.message || 'Account creation failed.' };
+      }
+    } catch (error: any) {
+      console.error('Signup API error:', error);
+      return { success: false, message: error.response?.data?.message || 'An unexpected error occurred during signup.' };
+    }
   }
 };
+
 function normalizePermissions(permissions: any) {
  
     // If permissions is an array, join it into a single string and split by commas

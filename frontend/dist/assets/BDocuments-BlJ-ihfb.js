@@ -1,0 +1,1 @@
+import{j as e,B as r,X as s,T as t}from"./index-_VJtkHCC.js";const o=()=>e.jsx(r,{sx:{p:3},children:e.jsxs(s,{sx:{p:3},children:[e.jsx(t,{variant:"h6",gutterBottom:!0,children:"Documents"}),e.jsx(t,{variant:"body1",color:"text.secondary",children:"Document management section will be implemented here"})]})});export{o as BDocuments,o as default};

@@ -4,10 +4,6 @@ using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.GenericRepository;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {
@@ -17,7 +13,8 @@ namespace NJS.Repositories.Repositories
         private readonly ProjectManagementContext _context;
         private readonly ILogger<ProjectClosureRepository> _logger;
 
-        public ProjectClosureRepository(IRepository<ProjectClosure> repository, ProjectManagementContext context, ILogger<ProjectClosureRepository> logger)
+        public ProjectClosureRepository(IRepository<ProjectClosure> repository, ProjectManagementContext context,
+            ILogger<ProjectClosureRepository> logger)
         {
             _repository = repository;
             _context = context;
@@ -51,7 +48,7 @@ namespace NJS.Repositories.Repositories
         public async Task<IEnumerable<ProjectClosure>> GetAllByProjectId(int projectId)
         {
             return await _repository.Query()
-                .Include(x=>x.WorkflowHistories)
+                .Include(x => x.WorkflowHistories)
                 .Where(pc => pc.ProjectId == projectId)
                 .OrderByDescending(pc => pc.CreatedAt)
                 .ToListAsync()
@@ -72,12 +69,14 @@ namespace NJS.Repositories.Repositories
                     .Take(10)
                     .ToListAsync();
 
-                _logger.LogInformation($"Available projects (showing first 10): {string.Join(", ", availableProjects.Select(p => $"{p.Id}:{p.Name}"))}");
+                _logger.LogInformation(
+                    $"Available projects (showing first 10): {string.Join(", ", availableProjects.Select(p => $"{p.Id}:{p.Name}"))}");
 
                 // If there are no projects at all, create a sample project
                 if (!availableProjects.Any())
                 {
-                    _logger.LogInformation("No projects found in the database. This should not happen as there should be at least one sample project.");
+                    _logger.LogInformation(
+                        "No projects found in the database. This should not happen as there should be at least one sample project.");
                 }
                 else
                 {
@@ -105,7 +104,8 @@ namespace NJS.Repositories.Repositories
                 var existingClosure = await GetByProjectId(projectClosure.ProjectId);
                 if (existingClosure != null)
                 {
-                    _logger.LogInformation($"Project closure already exists for project ID {projectClosure.ProjectId} with ID {existingClosure.Id}");
+                    _logger.LogInformation(
+                        $"Project closure already exists for project ID {projectClosure.ProjectId} with ID {existingClosure.Id}");
 
                     // Set the ID to match the existing one so we update instead of creating a new entry
                     projectClosure.Id = existingClosure.Id;
@@ -124,14 +124,6 @@ namespace NJS.Repositories.Repositories
                     // Return early since we've handled the update
                     return;
                 }
-
-                // If no existing closure, create a new one
-                // Explicitly set ID to 0 to ensure the database generates a new ID
-               // projectClosure.Id = 0;
-
-                // Reset the identity seed to ensure we get the next available ID
-               // await ResetIdentitySeedAsync();
-
                 _logger.LogInformation("Creating new project closure entry");
 
                 // Ensure required fields are set
@@ -172,7 +164,7 @@ namespace NJS.Repositories.Repositories
                 }
 
                 // Log all the values being updated
-                
+
                 // Ensure required fields are set
                 if (string.IsNullOrEmpty(projectClosure.CreatedBy))
                 {
@@ -228,14 +220,16 @@ namespace NJS.Repositories.Repositories
                     {
                         // First try direct SQL approach - most reliable and works for all IDs including 0
                         _logger.LogInformation($"Attempting to delete project closure with ID {id} using direct SQL");
-                        var rowsAffected = _context.Database.ExecuteSqlRaw($"DELETE FROM ProjectClosures WHERE Id = {id}");
+                        var rowsAffected =
+                            _context.Database.ExecuteSqlRaw($"DELETE FROM ProjectClosures WHERE Id = {id}");
                         _logger.LogInformation($"Direct SQL delete affected {rowsAffected} rows");
 
                         if (rowsAffected > 0)
                         {
                             // Commit the transaction
                             transaction.Commit();
-                            _logger.LogInformation($"Successfully deleted project closure with ID {id} using direct SQL");
+                            _logger.LogInformation(
+                                $"Successfully deleted project closure with ID {id} using direct SQL");
 
                             // Reset identity seed after successful deletion
                             ResetIdentitySeedAsync().GetAwaiter().GetResult();
@@ -260,7 +254,8 @@ namespace NJS.Repositories.Repositories
                             {
                                 // Commit the transaction
                                 transaction.Commit();
-                                _logger.LogInformation($"Successfully deleted project closure with ID {id} using EF Core");
+                                _logger.LogInformation(
+                                    $"Successfully deleted project closure with ID {id} using EF Core");
 
                                 // Reset identity seed after successful deletion
                                 ResetIdentitySeedAsync().GetAwaiter().GetResult();
@@ -293,6 +288,7 @@ namespace NJS.Repositories.Repositories
                         {
                             _logger.LogInformation($"Inner exception: {ex.InnerException.Message}");
                         }
+
                         throw; // Re-throw to be handled by the caller
                     }
                 }
@@ -304,6 +300,7 @@ namespace NJS.Repositories.Repositories
                 {
                     _logger.LogInformation($"Inner exception: {ex.InnerException.Message}");
                 }
+
                 throw;
             }
         }
@@ -338,11 +335,13 @@ namespace NJS.Repositories.Repositories
                         {
                             break;
                         }
+
                         nextId++;
                     }
 
                     // Reset the identity seed to the next available ID - 1
-                    await _context.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT ('ProjectClosures', RESEED, {nextId - 1})");
+                    await _context.Database.ExecuteSqlRawAsync(
+                        $"DBCC CHECKIDENT ('ProjectClosures', RESEED, {nextId - 1})");
                     _logger.LogInformation($"Reset ProjectClosures identity seed to {nextId - 1}");
                 }
             }

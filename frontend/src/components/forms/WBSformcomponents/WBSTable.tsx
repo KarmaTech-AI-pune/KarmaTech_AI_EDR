@@ -11,8 +11,8 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import WBSRow from './WBSRow';
-import { resourceRole as ResourceRole, Employee } from  "../../../models";
-import { WBSRowData, WBSOption } from '../../../types/wbs';
+import { WBSRowData } from '../../../types/wbs';
+import { useWBSDataContext, useWBSActionsContext } from '../../../context/wbs/WBSContext';
 
 const HeaderCell = styled(TableCell)(({ theme }) => ({
   textAlign: 'center',
@@ -53,51 +53,19 @@ const AddButtonRow = styled(TableRow)({
   }
 });
 
-interface WBSTableProps {
-  rows: WBSRowData[];
-  months: string[];
-  roles: ResourceRole[];
-  employees: Employee[];
-  editMode: boolean;
-  formType?: 'manpower' | 'odc';
-  manpowerCount?: number; // Add explicit prop for manpower count
-  levelOptions: {
-    level1: WBSOption[];
-    level2: WBSOption[];
-    level3: { [key: string]: WBSOption[] };
-  };
-  onAddRow: (level: 1 | 2 | 3, parentId?: string) => void;
-  onDeleteRow: (id: string) => void;
-  onLevelChange: (id: string, value: string) => void;
-  onRoleChange: (id: string, roleId: string) => void;
-  onUnitChange: (id: string, unitValue: string) => void;
-  onEmployeeChange: (id: string, employeeId: string) => void;
-  onCostRateChange: (id: string, value: string) => void;
-  onHoursChange: (id: string, month: string, value: string) => void;
-  onODCChange: (id: string, value: string) => void;
-  onResourceRoleChange: (id: string, value: string) => void; // New prop for resource_role
-}
-
-const WBSTable: React.FC<WBSTableProps> = ({
-  rows,
-  months,
-  roles,
-  employees,
-  editMode,
-  formType,
-  manpowerCount = 0, // Default to 0 if not provided
-  levelOptions,
-  onAddRow,
-  onDeleteRow,
-  onLevelChange,
-  onRoleChange,
-  onUnitChange,
-  onEmployeeChange,
-  onCostRateChange,
-  onHoursChange,
-  onODCChange,
-  onResourceRoleChange, // Destructure new prop
-}) => {
+const WBSTable: React.FC = () => {
+  const {
+    manpowerRows,
+    odcRows,
+    months,
+    formType,
+    editMode,
+  } = useWBSDataContext();
+  
+  const { addNewRow } = useWBSActionsContext();
+  
+  const rows = formType === 'manpower' ? manpowerRows : odcRows;
+  const manpowerCount = manpowerRows.filter(row => row.level === 1).length;
 
   const calculateChildTotals = (parentRow: WBSRowData) => {
     let childRows: WBSRowData[] = [];
@@ -111,7 +79,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
     }
 
     const totals = {
-      monthlyHours: {} as { [key: string]: { [key: string]: number } },
+      plannedHours: {} as { [key: string]: { [key: string]: number } },
       totalHours: 0,
       odc: 0,
       odcHours: 0,
@@ -122,12 +90,12 @@ const WBSTable: React.FC<WBSTableProps> = ({
       months.forEach(month => {
         const [monthName, yearStr] = month.split(' ');
         const year = `20${yearStr}`;
-        const monthlyHours = child.monthlyHours[year]?.[monthName] || 0;
+        const monthlyHours = child.plannedHours[year]?.[monthName] || 0;
 
-        if (!totals.monthlyHours[year]) {
-          totals.monthlyHours[year] = {};
+        if (!totals.plannedHours[year]) {
+          totals.plannedHours[year] = {};
         }
-        totals.monthlyHours[year][monthName] = (totals.monthlyHours[year][monthName] || 0) + monthlyHours;
+        totals.plannedHours[year][monthName] = (totals.plannedHours[year][monthName] || 0) + monthlyHours;
       });
 
       totals.totalHours += child.totalHours;
@@ -195,7 +163,7 @@ const WBSTable: React.FC<WBSTableProps> = ({
                 bgcolor: '#F5F5F5'
               }
             }}
-            onClick={() => onAddRow(level, parentId)}
+            onClick={() => addNewRow(level, parentId)}
           >
             <AddIcon fontSize="small" sx={{ mr: 1 }} />
             Add Level {level}
@@ -203,19 +171,6 @@ const WBSTable: React.FC<WBSTableProps> = ({
         </TableCell>
       </AddButtonRow>
     );
-  };
-
-  const getLevelOptions = (row: WBSRowData): WBSOption[] => {
-    if (row.level === 1) return levelOptions.level1;
-    if (row.level === 2) return levelOptions.level2;
-    if (row.level === 3) {
-      const parentRow = rows.find(r => r.id === row.parentId);
-      if (parentRow && parentRow.title) {
-        // Use the parent row's title as the key to look up level 3 options
-        return levelOptions.level3[parentRow.title] || [];
-      }
-    }
-    return [];
   };
 
   const getSequenceNumber = (row: WBSRowData): string => {
@@ -258,23 +213,8 @@ const WBSTable: React.FC<WBSTableProps> = ({
         <WBSRow
           key={level1Row.id}
           row={level1Row}
-          months={months}
-          roles={roles}
-          employees={employees}
-          editMode={editMode}
-          formType={formType}
-          levelOptions={getLevelOptions(level1Row)}
           childTotals={calculateChildTotals(level1Row)}
           sequenceNumber={getSequenceNumber(level1Row)}
-          onDelete={onDeleteRow}
-          onLevelChange={onLevelChange}
-          onRoleChange={onRoleChange}
-          onUnitChange={onUnitChange}
-          onEmployeeChange={onEmployeeChange}
-          onCostRateChange={onCostRateChange}
-          onHoursChange={onHoursChange}
-          onODCChange={onODCChange}
-          onResourceRoleChange={onResourceRoleChange} // Pass new prop
           stickyColumn={true}
         />
       );
@@ -285,23 +225,8 @@ const WBSTable: React.FC<WBSTableProps> = ({
           <WBSRow
             key={level2Row.id}
             row={level2Row}
-            months={months}
-            roles={roles}
-            employees={employees}
-            editMode={editMode}
-            formType={formType}
-            levelOptions={getLevelOptions(level2Row)}
             childTotals={calculateChildTotals(level2Row)}
             sequenceNumber={getSequenceNumber(level2Row)}
-            onDelete={onDeleteRow}
-            onLevelChange={onLevelChange}
-            onRoleChange={onRoleChange}
-            onUnitChange={onUnitChange}
-            onEmployeeChange={onEmployeeChange}
-            onCostRateChange={onCostRateChange}
-            onHoursChange={onHoursChange}
-            onODCChange={onODCChange}
-            onResourceRoleChange={onResourceRoleChange} // Pass new prop
             stickyColumn={true}
           />
         );
@@ -312,23 +237,8 @@ const WBSTable: React.FC<WBSTableProps> = ({
             <WBSRow
               key={level3Row.id}
               row={level3Row}
-              months={months}
-              roles={roles}
-              employees={employees}
-              editMode={editMode}
-              formType={formType}
-              levelOptions={getLevelOptions(level3Row)}
               childTotals={null}
               sequenceNumber={getSequenceNumber(level3Row)}
-              onDelete={onDeleteRow}
-              onLevelChange={onLevelChange}
-              onRoleChange={onRoleChange}
-              onUnitChange={onUnitChange}
-              onEmployeeChange={onEmployeeChange}
-              onCostRateChange={onCostRateChange}
-              onHoursChange={onHoursChange}
-              onODCChange={onODCChange}
-              onResourceRoleChange={onResourceRoleChange} // Pass new prop
               stickyColumn={true}
             />
           );

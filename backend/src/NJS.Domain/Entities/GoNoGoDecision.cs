@@ -6,10 +6,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NJS.Domain.Entities
 {
     [Table("GoNoGoDecisions")]
-    public class GoNoGoDecision
+    public class GoNoGoDecision : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         // Foreign key to Project
         [Required]

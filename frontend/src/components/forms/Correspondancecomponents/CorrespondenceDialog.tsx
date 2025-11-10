@@ -51,7 +51,7 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
       return {
         incomingLetterNo: '',
         letterDate: '',
-        njsInwardNo: '',
+        inwardNo: '',
         receiptDate: '',
         from: '',
         subject: '',
@@ -91,7 +91,7 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
         newFormData = {
           incomingLetterNo: inwardData.incomingLetterNo,
           letterDate: inwardData.letterDate ? new Date(inwardData.letterDate).toISOString().split('T')[0] : '',
-          njsInwardNo: inwardData.njsInwardNo,
+          inwardNo: inwardData.inwardNo,
           receiptDate: inwardData.receiptDate ? new Date(inwardData.receiptDate).toISOString().split('T')[0] : '',
           from: inwardData.from,
           subject: inwardData.subject,
@@ -139,7 +139,7 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
     if (type === 'inward') {
       if (!formData.incomingLetterNo) errors.incomingLetterNo = 'Incoming Letter No is required';
       if (!formData.letterDate) errors.letterDate = 'Letter Date is required';
-      if (!formData.njsInwardNo) errors.njsInwardNo = 'NJS Inward No is required';
+      if (!formData.inwardNo) errors.inwardNo = 'Inward No is required';
       if (!formData.receiptDate) errors.receiptDate = 'Receipt Date is required';
       if (!formData.from) errors.from = 'From is required';
       if (!formData.subject) errors.subject = 'Subject is required';
@@ -296,13 +296,13 @@ export default function CorrespondenceDialog({ open, onClose, onSave, type, edit
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
-                    label="NJS Inward No"
-                    value={formData.njsInwardNo}
-                    onChange={handleChange('njsInwardNo')}
+                    label="Inward No"
+                    value={formData.inwardNo}
+                    onChange={handleChange('inwardNo')}
                     sx={textFieldStyle}
                     required
-                    error={!!formErrors.njsInwardNo}
-                    helperText={formErrors.njsInwardNo}
+                    error={!!formErrors.inwardNo}
+                    helperText={formErrors.inwardNo}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>

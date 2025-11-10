@@ -9,10 +9,12 @@ namespace NJS.Domain.Entities
         ODC = 1
     }
 
-    public class WBSOption
+    public class WBSOption : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         [Required]
         [StringLength(100)]
@@ -27,7 +29,9 @@ namespace NJS.Domain.Entities
 
         [StringLength(100)]
         public string ParentValue { get; set; }
+        public FormType FormType { get; set; } =  FormType.Manpower; // Default to Manpower for backward compatibility
 
-        public FormType FormType { get; set; } = FormType.Manpower; // Default to Manpower for backward compatibility
+        // Navigation property for the "many" side of the relationship
+        public virtual ICollection<WBSTask> WBSTasks { get; set; } = new List<WBSTask>();
     }
 }

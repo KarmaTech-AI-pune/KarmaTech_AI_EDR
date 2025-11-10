@@ -24,6 +24,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
 import { projectManagementAppContextType } from '../../types';
+import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
 import { GoNoGoStatus, TypeOfBid } from "../../models/types";
 import { CreateGoNoGoVersionDto, GoNoGoVersionDto } from "../../models/goNoGoVersionModel";
 import { GoNoGoVersionStatus } from "../../models/workflowModel";
@@ -56,15 +57,16 @@ interface HeaderInfo {
 }
 
 const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNumber: number) => void }> = ({ onDecisionStatusChange }) => {
+  const { opportunityId } = useBusinessDevelopment();
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [descriptions, setDescriptions] = useState<ScoringDescriptionsResponse>({ descriptions: {} });
 
   // Load initial Go/No Go decision data
   useEffect(() => {
     const loadInitialData = async () => {
-      if (context.selectedProject?.id) {
+      if (opportunityId) {
         try {
-          const response = await goNoGoApi.getByOpportunityId(Number(context.selectedProject.id));
+          const response = await goNoGoApi.getByOpportunityId(Number(opportunityId));
           if (response && response.id) {
             setTotalScore(response.totalScore);
             setDecisionId(response.id);
@@ -122,7 +124,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     };
 
     loadInitialData();
-  }, [context.selectedProject?.id, onDecisionStatusChange]);
+  }, [opportunityId, onDecisionStatusChange]);
 
   useEffect(() => {
     const getScoringDescription = async () => {
@@ -424,8 +426,8 @@ const isHeaderReadOnly = useCallback((): boolean => {
 
   const handleSubmit = async () => {
     try {
-      if (!context.selectedProject?.id) {
-        console.error('No project ID found in context');
+      if (!opportunityId) {
+        console.error('No opportunity ID found in context');
         return;
       }
 
@@ -510,7 +512,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
           ActionPlan: ''
         },
         MetaData: {
-          OpprotunityId: Number(context.selectedProject.id),
+          OpprotunityId: Number(opportunityId),
           Id: decisionId || 0,
           CompletedDate: new Date().toLocaleString(),
           CompletedBy: context?.user?.name?.substring(0, 100) || '',

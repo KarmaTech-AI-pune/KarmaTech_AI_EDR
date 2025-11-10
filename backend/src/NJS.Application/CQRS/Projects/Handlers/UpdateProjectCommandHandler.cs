@@ -70,8 +70,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             // Update audit fields
             existingProject.LastModifiedAt = DateTime.UtcNow;
             existingProject.LastModifiedBy = dto.ProjectManagerId;
-            existingProject.UpdatedAt = DateTime.UtcNow;
-            existingProject.UpdatedBy = dto.ProjectManagerId;
+            // Remove UpdatedAt and UpdatedBy as they don't exist in the Project entity
 
             // Calculate duration in months if not provided and dates are available
             if (!dto.DurationInMonths.HasValue && dto.StartDate.HasValue && dto.EndDate.HasValue)

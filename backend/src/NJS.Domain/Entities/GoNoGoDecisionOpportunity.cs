@@ -6,10 +6,12 @@ using NJS.Domain.Enums;
 
 namespace NJS.Domain.Entities
 {
-    public class GoNoGoDecisionOpportunity
+    public class GoNoGoDecisionOpportunity : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
         public TypeOfBid TypeOfBid { get; set; }
         public string Sector { get; set; }
         public string BdHead { get; set; }

@@ -37,7 +37,7 @@ namespace NJS.Application.CQRS.Users.Handlers
             user.UserName = request.UserName ?? user.UserName;
             user.Name = request.Name ?? user.Name;
             user.Email = request.Email ?? user.Email;
-            user.StandardRate = request.StandardRate;
+            user.StandardRate = request.StandardRate ?? user.StandardRate;
             user.IsConsultant = request.IsConsultant;
             user.Avatar = request.Avatar ?? user.Avatar;
             //user.UpdatedAt = DateTime.UtcNow;

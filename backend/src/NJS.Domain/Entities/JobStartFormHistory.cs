@@ -1,11 +1,12 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Domain.Entities
 {
     [Table("JobStartFormHistories")]
-    public class JobStartFormHistory
+    public class JobStartFormHistory : ITenantEntity
     {
         public JobStartFormHistory()
         {
@@ -15,17 +16,21 @@ namespace NJS.Domain.Entities
         [Key]
         public int Id { get; set; }
 
+        public int TenantId { get; set; }
+
         [Required]
         public int JobStartFormHeaderId { get; set; }
 
         [ForeignKey("JobStartFormHeaderId")]
-        public JobStartFormHeader JobStartFormHeader { get; set; }
+        [DeleteBehavior(DeleteBehavior.Cascade)]
+        public virtual JobStartFormHeader JobStartFormHeader { get; set; }
 
         [Required]
         public int StatusId { get; set; }
 
         [ForeignKey("StatusId")]
-        public PMWorkflowStatus Status { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual PMWorkflowStatus Status { get; set; }
 
         public string Action { get; set; }
         
@@ -37,12 +42,14 @@ namespace NJS.Domain.Entities
         public string ActionBy { get; set; }
 
         [ForeignKey("ActionBy")]
-        public User ActionUser { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual User ActionUser { get; set; }
 
         [StringLength(450)]
         public string AssignedToId { get; set; }
 
         [ForeignKey("AssignedToId")]
-        public User AssignedTo { get; set; }
+        [DeleteBehavior(DeleteBehavior.NoAction)]
+        public virtual User AssignedTo { get; set; }
     }
 }

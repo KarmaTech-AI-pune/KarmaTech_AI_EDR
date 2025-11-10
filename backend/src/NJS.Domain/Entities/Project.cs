@@ -1,152 +1,85 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
-    [Table("Projects")]
-    public class Project : IAuditableEntity
+    public class Project : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
 
+        public int TenantId { get; set; }
+
         [Required]
-        [StringLength(100)]
-        public string? Name { get; set; }
+        public string Name { get; set; }
+
+        public string ClientName { get; set; }
+
         public int ProjectNo { get; set; }
 
-        [Required]
-        [StringLength(100)]
-        public string? ClientName { get; set; }
-
-        [Required]
-        [StringLength(50)]
         public string? TypeOfClient { get; set; }
 
-		[ForeignKey("ProjectManager")]
-		public string? ProjectManagerId { get; set; }
-		public virtual User ProjectManager { get; set; }
+        public string ProjectManagerId { get; set; }
+        [ForeignKey("ProjectManagerId")]
+        public User? ProjectManager { get; set; }
 
-		[ForeignKey("SeniorProjectManager")]
-		public string? SeniorProjectManagerId { get; set; }
-		public virtual User SeniorProjectManager { get; set; }
+        public string? SeniorProjectManagerId { get; set; }
+        [ForeignKey("SeniorProjectManagerId")]
+        public User? SeniorProjectManager { get; set; }
 
-		[ForeignKey("RegionalManager")]
-		public string? RegionalManagerId { get; set; }
-		public virtual User RegionalManager { get; set; }
+        public string RegionalManagerId { get; set; }
+        [ForeignKey("RegionalManagerId")]
+        public User? RegionalManager { get; set; }
 
-        [Required]
-        [StringLength(100)]
-        public string Office {  get; set; } = string.Empty;
+        public string Office { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(100)]
-		public string Region { get; set; } = string.Empty;
+        public string Region { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(100)]
         public string TypeOfJob { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(50)]
-        public string? Sector { get; set; }
-        [Required]
-        [StringLength(50)]
+        public string Sector { get; set; }
+
         public string FeeType { get; set; } = string.Empty;
 
-
-        [Column(TypeName = "decimal(18,2)")]
         public decimal EstimatedProjectCost { get; set; }
 
-        [Column(TypeName ="decimal(18,2)")]
-        public decimal EstimatedProjectFee {  get; set; }
+        public decimal EstimatedProjectFee { get; set; }
 
-        [Column(TypeName = "decimal(5,2)")]
         public decimal? Percentage { get; set; }
 
-        [StringLength(1000)]
         public string? Details { get; set; }
 
-        [Required]
-        [StringLength(50)]
-        public string Priority {  get; set; } = string.Empty;
+        public string Priority { get; set; } = string.Empty;
 
-		[Required]
-		[StringLength(3)]
-		public string? Currency { get; set; }
-		public DateTime? StartDate { get; set; }
+        public string Currency { get; set; }
 
-		public DateTime? EndDate { get; set; }
+        public DateTime? StartDate { get; set; }
 
+        public DateTime? EndDate { get; set; }
 
-
-		[Column(TypeName = "decimal(18,2)")]
         public decimal? CapitalValue { get; set; }
 
-        [Required]
         public ProjectStatus Status { get; set; }
 
         public int Progress { get; set; }
 
         public int? DurationInMonths { get; set; }
 
-        [StringLength(100)]
         public string? FundingStream { get; set; }
 
-
-        [StringLength(50)]
         public string? ContractType { get; set; }
 
-        [ForeignKey("OpportunityTrackingId")]
-        public int? OpportunityTrackingId { get; set; }
-        public virtual OpportunityTracking OpportunityTracking { get; set; }
+        public bool LetterOfAcceptance { get; set; }
 
-        public virtual ICollection<ProjectResource> ProjectResources { get; set; }       
+        public int OpportunityTrackingId { get; set; }
 
-        [Required]
         public DateTime CreatedAt { get; set; }
 
-        [Required]
-        [StringLength(100)]
         public string? CreatedBy { get; set; }
 
         public DateTime? LastModifiedAt { get; set; }
 
-        [StringLength(100)]
         public string? LastModifiedBy { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public string? UpdatedBy { get; set; }
-        public bool IsDeleted { get; set; } = false;
-        public bool LetterOfAcceptance { get; set; }
-
-        public void SoftDelete(string user)
-        {
-            IsDeleted = true;
-            UpdatedBy = user;
-            UpdatedAt = DateTime.Now;
-        }
-
-        public Project()
-        {
-
-            ProjectResources = [];
-            var dateTime = DateTime.Now;
-            UpdatedAt = dateTime;
-            CreatedAt = dateTime;
-
-        }
-    }
-
-    public enum ProjectStatus
-    {
-        Opportunity,
-        DecisionPending,
-        Cancelled,
-        BidSubmitted,
-        BidRejected,
-        BidAccepted,
-        InProgress,
-        Completed
     }
 }

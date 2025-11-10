@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
 using NJS.Application.Dtos;
@@ -9,6 +10,7 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class WBSOptionsController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -68,7 +70,8 @@ namespace NJSAPI.Controllers
         /// <returns>List of level 3 WBS options for the specified level 2 value</returns>
         [HttpGet("level3/{level2Value}")]
         [ProducesResponseType(typeof(List<WBSOptionDto>), 200)]
-        public async Task<ActionResult<List<WBSOptionDto>>> GetLevel3Options(string level2Value, [FromQuery] FormType? formType = null)
+        public async Task<ActionResult<List<WBSOptionDto>>> GetLevel3Options(string level2Value,
+            [FromQuery] FormType? formType = null)
         {
             var query = new GetWBSLevel3OptionsQuery { Level2Value = level2Value, FormType = formType };
             var result = await _mediator.Send(query);
@@ -76,18 +79,24 @@ namespace NJSAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<WBSOptionDto>> CreateWBSOption(WBSOptionDto request)
+        public async Task<ActionResult<List<WBSOptionDto>>> CreateWBSOption(List<WBSOptionDto> requests)
         {
-            var command = new CreateWBSOptionCommand
+            var createdOptions = new List<WBSOptionDto>();
+            foreach (var request in requests)
             {
-                Label = request.Label,
-                Level = request.Level,
-                ParentValue = request.ParentValue,
-                FormType = request.FormType
-            };
+                var command = new CreateWBSOptionCommand
+                {
+                    Value = request.Value,
+                    Label = request.Label,
+                    Level = request.Level,
+                    ParentValue = request.ParentValue,
+                    FormType = request.FormType
+                };
 
-            var result = await _mediator.Send(command);
-            return CreatedAtAction(nameof(GetWBSOptions), new { id = result.Id }, result);
+                var result = await _mediator.Send(command);
+                createdOptions.Add(result);
+            }
+            return Ok(createdOptions);
         }
 
         [HttpPut("{id}")]

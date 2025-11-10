@@ -3,9 +3,10 @@ using System.Collections.Generic;
 
 namespace NJS.Domain.Entities
 {
-    public class MonthlyProgress
+    public class MonthlyProgress : ITenantEntity
     {
         public int Id { get; set; }
+        public int TenantId { get; set; }
         public int ProjectId { get; set; }
         public Project Project { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

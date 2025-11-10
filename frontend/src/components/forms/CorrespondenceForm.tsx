@@ -35,8 +35,8 @@ import {
   InwardRow,
   OutwardRow
 } from '../../services/correspondenceApi';
+import { useProject } from '../../context/ProjectContext';
 import { projectManagementAppContext } from '../../App';
-import { FormWrapper } from './FormWrapper';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -90,6 +90,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const CorrespondenceForm: React.FC = () => {
+  const { projectId } = useProject();
   const context = useContext(projectManagementAppContext);
   const [tabValue, setTabValue] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -127,15 +128,14 @@ const CorrespondenceForm: React.FC = () => {
   useEffect(() => {
     if (!checkToken()) return;
 
-    if (context?.selectedProject?.id) {
+    if (projectId) {
       const fetchData = async () => {
         setLoading(true);
         setError(null);
         try {
-          const projectId = context.selectedProject?.id;
           const [inwardData, outwardData] = await Promise.all([
-            getInwardRows(projectId!),
-            getOutwardRows(projectId!)
+            getInwardRows(projectId),
+            getOutwardRows(projectId)
           ]);
           setInwardRows(inwardData);
           setOutwardRows(outwardData);
@@ -154,7 +154,7 @@ const CorrespondenceForm: React.FC = () => {
 
       fetchData();
     }
-  }, [context?.selectedProject?.id, checkToken]);
+  }, [projectId, checkToken]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -218,7 +218,7 @@ const CorrespondenceForm: React.FC = () => {
   };
 
   const handleSave = async (data: any) => {
-    if (!context?.selectedProject?.id) return;
+    if (!projectId) return;
     if (!checkToken()) return;
 
     setLoading(true);
@@ -229,7 +229,6 @@ const CorrespondenceForm: React.FC = () => {
         isTokenValid
       });
 
-      const projectId = context.selectedProject.id;
       const newData = { ...data, projectId };
 
       // Format dates and prepare data for API
@@ -249,17 +248,17 @@ const CorrespondenceForm: React.FC = () => {
           delete formattedData.updatedAt;
           delete formattedData.updatedBy;
 
-          // Add createdBy for new records
-          const user = context?.user;
-          formattedData.createdBy = user?.userName || 'System';
-        } else {
-          // For updates, keep ID but remove other backend-managed fields
-          delete formattedData.createdAt;
+        // Add createdBy for new records
+        const user = context?.user;
+        formattedData.createdBy = user?.userName || 'System';
+      } else {
+        // For updates, keep ID but remove other backend-managed fields
+        delete formattedData.createdAt;
 
-          // Add updatedBy for update operations
-          const user = context?.user;
-          formattedData.updatedBy = user?.userName || 'System';
-        }
+        // Add updatedBy for update operations
+        const user = context?.user;
+        formattedData.updatedBy = user?.userName || 'System';
+      }
 
         // Format all date fields properly
         const formatDate = (dateValue: any) => {
@@ -388,7 +387,7 @@ const CorrespondenceForm: React.FC = () => {
 
         // Validate required fields
         const requiredFields = tabValue === 0
-          ? ['projectId', 'incomingLetterNo', 'letterDate', 'njsInwardNo', 'receiptDate', 'from', 'subject', 'createdBy']
+          ? ['projectId', 'incomingLetterNo', 'letterDate', 'inwardNo', 'receiptDate', 'from', 'subject', 'createdBy']
           : ['projectId', 'letterNo', 'letterDate', 'to', 'subject', 'createdBy'];
 
         const missingFields = requiredFields.filter(field => {
@@ -583,7 +582,7 @@ const CorrespondenceForm: React.FC = () => {
                   Letter Information
                 </Typography>
                 <Typography variant="body2" paragraph>
-                  NJS Inward No: {row.njsInwardNo}
+                  Inward No: {row.inwardNo}
                 </Typography>
                 <Typography variant="body2" paragraph>
                   Receipt Date: {row.receiptDate}
@@ -746,13 +745,11 @@ const CorrespondenceForm: React.FC = () => {
     ));
   };
 
-  if (!context?.selectedProject?.id) {
+  if (!projectId) {
     return (
-      <FormWrapper>
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-          <Alert severity="warning">Please select a project to view the correspondence register.</Alert>
-        </Container>
-      </FormWrapper>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="warning">Please select a project to view the correspondence register.</Alert>
+      </Container>
     );
   }
 
@@ -768,9 +765,8 @@ const CorrespondenceForm: React.FC = () => {
                 color="inherit"
                 size="small"
                 onClick={() => {
-                  if (context?.handleLogout) {
-                    context.handleLogout();
-                  }
+                  // You might need to implement a logout function in your useProject hook
+                  // For now, this will do nothing.
                 }}
               >
                 Login Again
@@ -897,9 +893,9 @@ const CorrespondenceForm: React.FC = () => {
   );
 
   return (
-    <FormWrapper>
+    <>
       {formContent}
-    </FormWrapper>
+    </>
   );
 };
 

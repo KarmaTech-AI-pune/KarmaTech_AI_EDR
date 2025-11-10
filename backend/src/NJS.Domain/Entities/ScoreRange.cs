@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 
 namespace NJS.Domain.Entities
 {
-    public class ScoreRange
+    public class ScoreRange : ITenantEntity
     {
         [Key]
         public int Id { get; set; }
+
+        public int TenantId { get; set; }
 
         public int value { get; set; }
 
