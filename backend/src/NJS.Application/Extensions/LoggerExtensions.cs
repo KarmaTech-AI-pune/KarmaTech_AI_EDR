@@ -48,8 +48,12 @@ public static class LoggerExtensions
             logger.Log(
                 level,
                 exception,
-                "{@timestamp}|{@level}|{@logger}|{@correlationId}",
-                state
+                "{@timestamp}|{@level}|{@logger}|{@correlationId}|{@exception}",
+                state["@timestamp"],
+                state["@level"],
+                state["@logger"],
+                state["@correlationId"],
+                state["@exception"]
             );
         }
     }

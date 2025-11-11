@@ -1,5 +1,4 @@
 using MediatR;
-using MediatR;
 using NJS.Application.DTOs;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;

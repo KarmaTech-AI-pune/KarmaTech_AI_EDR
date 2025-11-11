@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace NJSAPI.Controllers
 {
-   
+
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
@@ -25,8 +25,8 @@ namespace NJSAPI.Controllers
         private readonly ILogger<ProjectController> _logger;
 
         public ProjectController(
-            IMediator mediator, 
-            IProjectManagementService projectManagementService, 
+            IMediator mediator,
+            IProjectManagementService projectManagementService,
             ITenantService tenantService,
             ICurrentUserService currentUserService,
             ILogger<ProjectController> logger)
@@ -169,7 +169,7 @@ namespace NJSAPI.Controllers
 
             if (id != projectData.Id)
             {
-               _logger.LogWarning($"ID mismatch: URL ID {id} != DTO ID {projectData.Id}");
+                _logger.LogWarning($"ID mismatch: URL ID {id} != DTO ID {projectData.Id}");
                 return BadRequest("ID mismatch");
             }
 
@@ -196,7 +196,7 @@ namespace NJSAPI.Controllers
             }
             catch (ArgumentException ex) // Project not found
             {
-                _logger.LogError(ex,$"Project not found error: {ex.Message}");
+                _logger.LogError(ex, $"Project not found error: {ex.Message}");
                 return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
@@ -226,14 +226,14 @@ namespace NJSAPI.Controllers
                 }
                 catch (ArgumentException ex) // Project not found
                 {
-                    _logger.LogError(ex,$"Project not found, but returning success: {ex.Message}");
+                    _logger.LogError(ex, $"Project not found, but returning success: {ex.Message}");
                     // Return success even if project doesn't exist
                     return Ok(new { success = true, message = $"Project with ID {id} deleted successfully" });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,$"Error deleting project: {ex.Message}");
+                _logger.LogError(ex, $"Error deleting project: {ex.Message}");
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
@@ -242,7 +242,7 @@ namespace NJSAPI.Controllers
         /// Debug endpoint to check current tenant context
         /// </summary>
         [HttpGet("debug/tenant-context")]
-        public async Task<IActionResult> GetTenantContext()
+        public IActionResult GetTenantContext()
         {
             try
             {
