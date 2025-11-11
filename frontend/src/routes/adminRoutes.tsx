@@ -3,6 +3,7 @@ import { RouteObject } from 'react-router-dom';
 import { PermissionType } from '../models';
 
 const AdminPanel = lazy(() => import('../pages/AdminPanel'));
+const MigrationManagement = lazy(() => import('../pages/MigrationManagement'));
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -12,6 +13,10 @@ export const adminRoutes: RouteObject[] = [
       {
         index: true,
         element: <AdminPanel />,
+      },
+      {
+        path: 'migrations',
+        element: <MigrationManagement />,
       },
     ],
   },

@@ -40,7 +40,7 @@ namespace NJS.Application.CQRS.Users.Handlers
                     Permissions = new List<PermissionCategoryGroup>()
                 };
 
-                var permissions = await _permissionRepository.GetPermissionsByRoleId(role.Id).ConfigureAwait(false);
+                var permissions = await _permissionRepository.GetPermissionsByRoleIdAsync(role.Id).ConfigureAwait(false);
                 var permissionDtos = permissions.Select(permission => new PermissionDto
                 {
                     Id = permission.Id,

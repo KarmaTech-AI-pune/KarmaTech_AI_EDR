@@ -14,7 +14,7 @@ namespace NJS.Application.CQRS.Users.Handlers
         }
         public async Task<List<PermissionCategoryGroup>> Handle(GetPermissionsByGroupedByCategoryQuery request, CancellationToken cancellationToken)
         {
-            var permissions = await _permissionRepository.GetAll().ConfigureAwait(false);
+            var permissions = await _permissionRepository.GetAllAsync().ConfigureAwait(false);
             var permissionDtos = permissions.Select(permission => new PermissionDto
             {
                 Id = permission.Id,
