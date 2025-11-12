@@ -49,6 +49,8 @@ namespace NJS.Domain.Entities
         public int MaxProjects { get; set; } = 50;
 
         public bool IsActive { get; set; } = true;
+        public bool IsIsolated { get; set; } = false;
+
 
         // Navigation properties
         public virtual ICollection<TenantUser> TenantUsers { get; set; } = new List<TenantUser>();

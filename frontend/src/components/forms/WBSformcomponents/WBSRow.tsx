@@ -13,7 +13,8 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
-import { WBSOption, WBSRowData, WBSChildTotals } from '../../../types/wbs';
+import { WBSRowData, WBSChildTotals } from '../../../types/wbs';
+import { useWBSDataContext, useWBSActionsContext } from '../../../context/wbs/WBSContext';
 
 const NumberInput = styled('input')({
   width: '100%',
@@ -51,15 +52,6 @@ const StickyCell = styled(TableCell)(({ theme }) => ({
   }
 }));
 
-interface Employee {
-  id: string;
-  name: string;
-  standard_rate: number;
-  role_id: string;
-}
-
-import { resourceRole as Role } from "../../../models";
-
 // Define unit options for ODC form
 const unitOptions = [
   { value: 'nos', label: 'Nos' },
@@ -72,54 +64,59 @@ const unitOptions = [
 
 interface WBSRowProps {
   row: WBSRowData;
-  months: string[];
-  roles: Role[];
-  employees: Employee[];
-  editMode: boolean;
-  formType?: 'manpower' | 'odc';
-  levelOptions: WBSOption[];
   childTotals: WBSChildTotals | null;
   sequenceNumber: string;
   stickyColumn?: boolean;
-  onDelete: (id: string) => void;
-  onLevelChange: (id: string, value: string) => void;
-  onRoleChange: (id: string, roleId: string) => void;
-  onUnitChange: (id: string, unitValue: string) => void;
-  onEmployeeChange: (id: string, employeeId: string) => void;
-  onCostRateChange: (id: string, value: string) => void;
-  onHoursChange: (id: string, month: string, value: string) => void;
-  onODCChange: (id: string, value: string) => void;
-  onResourceRoleChange: (id: string, value: string) => void; // New prop for resource_role
 }
 
 const WBSRow: React.FC<WBSRowProps> = ({
   row,
-  months,
-  roles,
-  employees,
-  editMode,
-  formType,
-  levelOptions,
   childTotals,
   sequenceNumber,
   stickyColumn,
-  onDelete,
-  onLevelChange,
-  onUnitChange,
-  onEmployeeChange,
-  onCostRateChange,
-  onHoursChange,
-  onODCChange,
-  onResourceRoleChange, // Destructure new prop
 }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown visibility
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // Get data and actions from context
+  const {
+    months,
+    roles,
+    employees,
+    editMode,
+    formType,
+    level1Options,
+    level2Options,
+    level3OptionsMap,
+    manpowerRows,
+    odcRows,
+  } = useWBSDataContext();
+  
+  const {
+    handleDeleteClick,
+    handleLevelChange,
+    handleUnitChange,
+    handleEmployeeChange,
+    handleCostRateChange,
+    handleHoursChange,
+    handleODCChange,
+    handleResourceRoleChange,
+  } = useWBSActionsContext();
+  
+  const rows = formType === 'manpower' ? manpowerRows : odcRows;
   const roleId = row.role ? row.role : null;
   const selectedRole = roleId !== null ? roles.find(r => r.id === roleId) : undefined;
   const rateTooltip = selectedRole ? `Min Rate: ${selectedRole.min_rate}` : '';
   const employeesForRole = employees;
 
-  // Find the selected resource role for display
-  // const selectedResourceRole = row.resource_role ? roles.find(r => r.id === row.resource_role) : undefined;
+  const getLevelOptions = () => {
+    if (row.level === 1) return level1Options;
+    if (row.level === 2) return level2Options;
+    if (row.level === 3) {
+      const parentRow = rows.find(r => r.id === row.parentId);
+      if (parentRow && parentRow.title) return level3OptionsMap[parentRow.title] || [];
+    }
+    return [];
+  };
 
   const getPlannedHours = (month: string): string => {
     const [monthName, yearStr] = month.split(' ');
@@ -155,7 +152,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
         <TableCell sx={{ width: '48px', bgcolor: backgroundColor }}>
           <IconButton
             size="small"
-            onClick={() => onDelete(row.id)}
+            onClick={() => handleDeleteClick(row.id)}
             sx={{
               p: 0.5,
               '&:hover': {
@@ -187,9 +184,9 @@ const WBSRow: React.FC<WBSRowProps> = ({
           <LevelSelect
             level={row.level}
             value={row.title}
-            options={levelOptions}
+            options={getLevelOptions()}
             disabled={editMode}
-            onChange={(value) => onLevelChange(row.id, value)}
+            onChange={(value) => handleLevelChange(row.id, value)}
           />
         </Box>
       </WorkDescriptionCell>
@@ -200,7 +197,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
               fullWidth
               size="small"
               value={row.name || ''}
-              onChange={(e) => onEmployeeChange(row.id, e.target.value)}
+              onChange={(e) => handleEmployeeChange(row.id, e.target.value)}
               disabled={editMode}
               sx={{
                 bgcolor: 'background.paper',
@@ -217,7 +214,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             {row.level === 3 && formType === 'manpower' ? (
               <StyledSelect
                 value={row.resource_role || ''}
-                onChange={(e) => onResourceRoleChange(row.id, e.target.value as string)}
+                onChange={(e) => handleResourceRoleChange(row.id, e.target.value as string)}
                 size="small"
                 sx={{ bgcolor: 'background.paper' }}
                 disabled={editMode}
@@ -249,31 +246,27 @@ const WBSRow: React.FC<WBSRowProps> = ({
                 options={employeesForRole}
                 getOptionLabel={(option) => option.name}
                 value={employeesForRole.find(emp => emp.id === row.name) || null}
-                open={isDropdownOpen} // Control open state
-                popupIcon={null} // Remove the dropdown arrow icon
+                open={isDropdownOpen}
+                popupIcon={null}
                 onInputChange={(_event, value, reason) => {
-                  // Open only on actual input, not on focus/clear/reset
                   if (reason === 'input') {
-                    setIsDropdownOpen(!!value); // Open if there's text, close if empty
+                    setIsDropdownOpen(!!value);
                   }
                 }}
                 onChange={(_event, newValue) => {
-                  onEmployeeChange(row.id, newValue ? newValue.id : '');
-                  setIsDropdownOpen(false); // Close after selection
+                  handleEmployeeChange(row.id, newValue ? newValue.id : '');
+                  setIsDropdownOpen(false);
                 }}
-                onClose={() => setIsDropdownOpen(false)} // Close when clicking away
+                onClose={() => setIsDropdownOpen(false)}
                 disabled={editMode}
                 size="small"
                 slotProps={{
                   listbox: {
                     sx: {
-                      // Hide scrollbar for Webkit browsers
                       '&::-webkit-scrollbar': {
                         display: 'none',
                       },
-                      // Hide scrollbar for Firefox
                       scrollbarWidth: 'none',
-                      // Hide scrollbar for IE/Edge (older versions)
                       msOverflowStyle: 'none',
                     }
                   }
@@ -282,7 +275,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
                   bgcolor: 'background.paper',
                   width: '100%',
                   '& .MuiAutocomplete-inputRoot': {
-                    paddingRight: '0 !important' // Remove any right padding from the input root
+                    paddingRight: '0 !important'
                   }
                 }}
                 renderInput={(params) => (
@@ -292,15 +285,15 @@ const WBSRow: React.FC<WBSRowProps> = ({
                     sx={{
                       '& .MuiInputBase-root': {
                         height: '40px',
-                        padding: '0 0 0 6px', // Removed right padding
-                        width: '100%' // Ensure full width is used
+                        padding: '0 0 0 6px',
+                        width: '100%'
                       },
                       '& .MuiAutocomplete-input': {
-                        padding: '7.5px 0 7.5px 6px !important', // Removed right padding
-                        textOverflow: 'initial', // Prevent text truncation
-                        whiteSpace: 'normal', // Allow text to wrap if needed
-                        width: '100%', // Use full width
-                        fontSize: '0.875rem' // Slightly smaller font to fit more text
+                        padding: '7.5px 0 7.5px 6px !important',
+                        textOverflow: 'initial',
+                        whiteSpace: 'normal',
+                        width: '100%',
+                        fontSize: '0.875rem'
                       }
                     }}
                   />
@@ -318,7 +311,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             <NumberInput
               type="text"
               value={row.costRate || ''}
-              onChange={(e) => onCostRateChange(row.id, e.target.value)}
+              onChange={(e) => handleCostRateChange(row.id, e.target.value)}
               min="0"
               disabled={editMode}
               style={{
@@ -329,7 +322,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             <NumberInput
               type="text"
               value={row.costRate || ''}
-              onChange={(e) => onCostRateChange(row.id, e.target.value)}
+              onChange={(e) => handleCostRateChange(row.id, e.target.value)}
               disabled={editMode || !row.role}
               title={rateTooltip}
               style={{
@@ -345,10 +338,10 @@ const WBSRow: React.FC<WBSRowProps> = ({
         {row.level === 3 ? (
           <StyledSelect
             value={formType === 'manpower' ? 'month' : (row.unit || '')}
-            onChange={(e) => onUnitChange(row.id, e.target.value as string)}
+            onChange={(e) => handleUnitChange(row.id, e.target.value as string)}
             size="small"
             sx={{ bgcolor: 'background.paper' }}
-            disabled={editMode || formType === 'manpower'} // Always disable for manpower form
+            disabled={editMode || formType === 'manpower'}
           >
             <MenuItem value="">Select Unit</MenuItem>
             {unitOptions.map(unit => (
@@ -367,7 +360,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             <NumberInput
               type="text"
               value={getPlannedHours(month)}
-              onChange={(e) => onHoursChange(row.id, month, e.target.value)}
+              onChange={(e) => handleHoursChange(row.id, month, e.target.value)}
               min="0"
               style={{
                 backgroundColor: editMode ? '#f5f5f5' : 'white'
@@ -445,7 +438,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
                 <NumberInput
                   type="text"
                   value={row.odc || ''}
-                  onChange={(e) => onODCChange(row.id, e.target.value)}
+                  onChange={(e) => handleODCChange(row.id, e.target.value)}
                   min="0"
                   style={{
                     backgroundColor: editMode ? '#f5f5f5' : 'white'

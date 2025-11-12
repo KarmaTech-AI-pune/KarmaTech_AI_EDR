@@ -59,8 +59,7 @@ const NPVProfitability: React.FC<NPVProfitabilityProps> = ({ metrics }) => {
                 color="success.main"
                 sx={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }}
               >
-                {/* {formatCurrency(metrics.npv)} */}
-                {formatCurrency(2)}
+                {formatCurrency(metrics.totalRevenue)}
               </Typography>
             </Box>
             <TrendingUp sx={{ fontSize: isMobile ? 32 : 40, color: theme.palette.success.main }} />

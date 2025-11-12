@@ -322,38 +322,33 @@ namespace NJSAPI.Controllers
             }
         }
 
-        // GET: api/subscriptions/features/by-plan/{planName} - Get specific plan with features, pricing, and limitations
-        [HttpGet("features/by-plan/{planName}")]
-        public async Task<ActionResult<SubscriptionFeaturesResponseDto>> GetSubscriptionFeaturesByPlanName(
-            string planName)
+        // GET: api/subscriptions/features/by-plan/{planId} - Get specific plan with features, pricing, and limitations
+        [HttpGet("features/by-plan/{planId}")]
+        public async Task<ActionResult<SubscriptionFeaturesResponseDto>> GetSubscriptionFeaturesByPlanId(
+            int planId)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(planName))
-                {
-                    return BadRequest(new { message = "Plan name is required" });
-                }
-
                 _logger.LogInformation(
-                    "Retrieving subscription plan '{PlanName}' with features, pricing, and limitations", planName);
+                    "Retrieving subscription plan with ID '{PlanId}' with features, pricing, and limitations", planId);
 
-                var result = await _subscriptionService.GetSubscriptionFeaturesByPlanNameAsync(planName);
+                var result = await _subscriptionService.GetSubscriptionFeaturesByPlanIdAsync(planId);
 
                 if (result.Plans.Count == 0)
                 {
-                    return NotFound(new { message = $"Subscription plan '{planName}' not found" });
+                    return NotFound(new { message = $"Subscription plan with ID '{planId}' not found" });
                 }
 
-                _logger.LogInformation("Successfully retrieved subscription plan '{PlanName}' with details", planName);
+                _logger.LogInformation("Successfully retrieved subscription plan with ID '{PlanId}' with details", planId);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving subscription plan '{PlanName}' with features", planName);
+                _logger.LogError(ex, "Error retrieving subscription plan with ID '{PlanId}' with features", planId);
                 return StatusCode(500,
                     new
                     {
-                        message = $"An error occurred while retrieving subscription plan '{planName}' with features"
+                        message = $"An error occurred while retrieving subscription plan with ID '{planId}' with features"
                     });
             }
         }

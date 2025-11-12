@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, Chip, LinearProgress, Avatar, IconButton } from '@mui/material';
+import { Card, CardContent, Typography, Box, LinearProgress, Avatar, IconButton } from '@mui/material';
 import { AttachFile, Message, MoreHoriz, Flag } from '@mui/icons-material';
 import { Issue } from '../../types/todolist';
 import { IssueTypeIcon } from './common/IssueTypeIcon';
@@ -86,10 +86,10 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue, onClick, onToggleFl
               </Box>
             )}
 
-            {issue.comments > 0 && (
+            {issue.comments.length > 0 && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.75rem', color: 'text.secondary' }}>
                 <Message sx={{ width: 12, height: 12 }} />
-                <Typography variant="caption">{issue.comments}</Typography>
+                <Typography variant="caption">{issue.comments.length}</Typography>
               </Box>
             )}
           </Box>

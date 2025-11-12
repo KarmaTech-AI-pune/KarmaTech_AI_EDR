@@ -8,10 +8,9 @@ import {
   Select,
   MenuItem,
   FormControl,
-  Chip,
   Tooltip,
 } from "@mui/material";
-import { Edit, Delete, Check, Close } from "@mui/icons-material";
+import { Delete } from "@mui/icons-material";
 import { Subtask, TeamMember } from "../../types/todolist";
 import { IssueTypeIcon } from "./common/IssueTypeIcon";
 import { PriorityIcon } from "./common/PriorityIcon";
@@ -32,9 +31,9 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
   onDeleteSubtask,
   onSubtaskClick,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, _setIsEditing] = useState(false);
   const [editingSummary, setEditingSummary] = useState(subtask.summary);
-  const [editingStatus, setEditingStatus] = useState(subtask.status);
+  const [_editingStatus, _setEditingStatus] = useState(subtask.status);
   const [editingAssignee, setEditingAssignee] = useState(
     subtask.assignee?.id || ""
   );
@@ -47,25 +46,7 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
     { value: "Done", label: "Done", color: "#36B37E" },
   ];
 
-  const handleSave = () => {
-    const assignedMember = teamMembers.find(
-      (member) => member.id === editingAssignee
-    );
-    onUpdateSubtask(subtask.id, {
-      summary: editingSummary,
-      status: editingStatus as Subtask["status"],
-      assignee: assignedMember || null,
-      updatedDate: new Date().toISOString().split("T")[0],
-    });
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditingSummary(subtask.summary);
-    setEditingStatus(subtask.status);
-    setEditingAssignee(subtask.assignee?.id || "");
-    setIsEditing(false);
-  };
+ 
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -81,9 +62,6 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
     setIsDeleteDialogOpen(false); // Close the dialog if cancelled
   };
 
-  const statusColor =
-    statusOptions.find((opt) => opt.value === subtask.status)?.color ||
-    "#DFE1E6";
 
   return (
     <Box

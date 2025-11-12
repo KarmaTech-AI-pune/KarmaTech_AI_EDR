@@ -30,6 +30,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
+import DnsIcon from '@mui/icons-material/Dns'; // New icon for migrations
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
@@ -56,7 +57,7 @@ const formSections = [
         },
         {
           id: 'todolist',
-          title: 'TodoList',
+          title: 'Sprint Planning',
           icon: <ChecklistRtlIcon />,
           path: 'forms/wbs/todo-list'
         }
@@ -137,6 +138,12 @@ const formSections = [
       title: 'Timeline',
       icon: <TimelineIcon />,
       path: 'timeline'
+    },
+    {
+      id: 'migrationManagement',
+      title: 'Migration Management',
+      icon: <DnsIcon />,
+      path: 'admin/migrations' // Path to the new migration page
     },
   ];
 

@@ -3,31 +3,20 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
-  Grid,
-  Chip,
   Avatar,
   IconButton,
-  LinearProgress,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   TextField,
-  Checkbox,
-  FormControlLabel,
 } from "@mui/material";
 import {
   Close,
-  Edit,
   Delete,
   Flag,
-  AttachFile,
-  Message,
-  CalendarMonth,
 } from "@mui/icons-material";
 import { Issue, TeamMember, Subtask, NewSubtaskFormState, Comment } from "../../../types/todolist"; // Added Comment
 import { IssueTypeIcon } from "../common/IssueTypeIcon";
@@ -52,7 +41,6 @@ interface IssueDetailModalProps {
 export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   showIssueDetail,
   setShowIssueDetail,
-  setEditingIssue,
   onDeleteIssue,
   onToggleFlag,
   onUpdateIssue,
@@ -71,7 +59,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     onDeleteIssue(showIssueDetail.id);
     handleClose();
   };
-  const handleEdit = () => setEditingIssue(showIssueDetail);
   const handleToggleFlag = () => onToggleFlag(showIssueDetail.id);
 
   const handleDeleteSubtask = (subtaskId: string) => {

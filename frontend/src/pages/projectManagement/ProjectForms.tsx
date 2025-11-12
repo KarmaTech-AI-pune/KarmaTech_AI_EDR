@@ -14,6 +14,7 @@ import {
 import { useParams } from 'react-router-dom';
 import { FormWrapper } from '../../components/forms/FormWrapper';
 import NotFound from '../NotFound';
+import FeatureGate from '../../components/subscription/FeatureGate';
 
 const TodoList = lazy(() => import('../../pages/projectManagement/WBS/TodoList'));
 
@@ -37,43 +38,51 @@ const ProjectForms: React.FC = () => {
             return <NotFound />;
         }
 
-        if (formId === 'wbs') {
-            if (subFormId === 'manpower') {
-                return <WorkBreakdownStructureForm formType="manpower" />;
+        switch (formId) {
+        case "wbs":
+            switch (subFormId) {
+                case "manpower":
+                    return <WorkBreakdownStructureForm formType="manpower" />;
+                case "odc":
+                    return <WorkBreakdownStructureForm formType="odc" />;
+                case "todo-list":
+                    return <TodoList />;
+                default:
+                    return <FormsOverview onFormSelect={() => {}} />;
             }
-            if (subFormId === 'odc') {
-                return <WorkBreakdownStructureForm formType="odc" />;
-            }
-            if (subFormId === 'todo-list') {
-                return <TodoList />
-            }
-        }
-        if (formId === 'job-start') {
-            return <JobStartForm />;
-        }
-        if (formId === 'input-register') {
+        
+        case "job-start":
+            return(
+        <FeatureGate featureName={"job-start"} >
+          <JobStartForm />
+        </FeatureGate>
+            );
+
+        case "input-register":
             return <InputRegisterForm />;
-        }
-        if (formId === 'correspondence') {
+            
+        case "correspondence":
             return <CorrespondenceForm />;
-        }
-        if (formId === 'check&review') {
+            
+        case "check&review":
             return <CheckReviewForm />;
-        }
-        if (formId === 'change-control') {
+
+        case "change-control":
             return <ChangeControlForm />;
-        }
-        if (formId === 'progress-review') {
+
+        case "progress-review":
             return <MonthlyProgressForm />;
-        }
-        if (formId === 'closure') {
+
+        case "closure":
             return <ProjectClosureForm />;
-        }
-        if (formId === 'monthly-reports') {
+
+        case "monthly-reports":
             return <MonthlyReports />;
-        }
+
+        default:
         return <FormsOverview onFormSelect={() => {}} />;
     }
+}
 
   return (
     <FormWrapper>

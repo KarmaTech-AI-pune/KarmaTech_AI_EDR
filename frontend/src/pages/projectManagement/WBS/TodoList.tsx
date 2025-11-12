@@ -38,14 +38,10 @@ export default function TodoList() {
     setShowCreateModal,
     showIssueDetail,
     setShowIssueDetail,
-    editingIssue,
     setEditingIssue,
   } = useModalState();
 
   const {
-    handleDragStart,
-    handleDragEnd,
-    handleDragOver,
     handleDrop,
   } = useDragAndDrop(moveIssue);
 

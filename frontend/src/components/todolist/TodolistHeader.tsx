@@ -1,6 +1,6 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, TextField, InputAdornment, Chip, Box } from '@mui/material';
-import { Search, Settings, Visibility, Add } from '@mui/icons-material';
+import { Typography, TextField, InputAdornment, Chip, Box } from '@mui/material';
+import { Search } from '@mui/icons-material';
 
 interface TodolistHeaderProps {
   searchTerm: string;
@@ -15,7 +15,6 @@ export const TodolistHeader: React.FC<TodolistHeaderProps> = ({
   setSearchTerm,
   quickFilters,
   setQuickFilters,
-  setShowCreateModal,
 }) => {
   return (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

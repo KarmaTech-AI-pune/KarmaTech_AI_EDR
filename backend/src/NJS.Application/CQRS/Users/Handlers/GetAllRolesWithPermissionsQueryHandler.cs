@@ -35,12 +35,12 @@ namespace NJS.Application.CQRS.Users.Handlers
                 {
                     Id = role.Id,
                     Name = role.Name,
-                    IsResourceRole=role.IsResourceRole!.Value,
-                    MinRate= role.MinRate!.Value,
+                    IsResourceRole=role.IsResourceRole?? false,
+                    MinRate= role.MinRate ?? 0,
                     Permissions = new List<PermissionCategoryGroup>()
                 };
 
-                var permissions = await _permissionRepository.GetPermissionsByRoleId(role.Id).ConfigureAwait(false);
+                var permissions = await _permissionRepository.GetPermissionsByRoleIdAsync(role.Id).ConfigureAwait(false);
                 var permissionDtos = permissions.Select(permission => new PermissionDto
                 {
                     Id = permission.Id,

@@ -372,7 +372,7 @@ namespace NJS.Application.Services
                 var roleEntity = await _roleManager.FindByNameAsync(role);
                 if (roleEntity != null)
                 {
-                    var rolePermissions = await _permissionRepository.GetPermissionsByRoleId(roleEntity.Id);
+                    var rolePermissions = await _permissionRepository.GetPermissionsByRoleIdAsync(roleEntity.Id);
                     if (rolePermissions != null && rolePermissions.Any())
                     {
                         claims.Add(new Claim(ClaimTypes.Role, role));
@@ -406,7 +406,7 @@ namespace NJS.Application.Services
                 var roleEntity = await _roleManager.FindByNameAsync(role);
                 if (roleEntity != null)
                 {
-                    var permissions = await _permissionRepository.GetPermissionsByRoleId(roleEntity.Id);
+                    var permissions = await _permissionRepository.GetPermissionsByRoleIdAsync(roleEntity.Id);
                     if (permissions.Any(p => p.Name == "SYSTEM_ADMIN"))
                     {
                         return true;
@@ -436,7 +436,7 @@ namespace NJS.Application.Services
                 var roleEntity = await _roleManager.FindByNameAsync(roleName);
                 if (roleEntity != null)
                 {
-                    var rolePermissions = await _permissionRepository.GetPermissionsByRoleId(roleEntity.Id);
+                    var rolePermissions = await _permissionRepository.GetPermissionsByRoleIdAsync(roleEntity.Id);
                     if (rolePermissions != null && rolePermissions.Any())
                     {
                         roleDtos.Add(new RoleDto

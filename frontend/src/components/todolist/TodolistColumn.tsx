@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Typography, Button, Divider, IconButton } from '@mui/material';
-import { MoreHoriz, Add } from '@mui/icons-material';
+import { Box, Typography, Divider, IconButton } from '@mui/material';
+import { MoreHoriz } from '@mui/icons-material';
 import { Issue } from '../../types/todolist';
 import { IssueCard } from './IssueCard';
 
@@ -31,7 +31,7 @@ export const TodolistColumn: React.FC<TodolistColumnProps> = ({
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const issueId = e.dataTransfer.getData('text/plain');
+    // const issueId = e.dataTransfer.getData('text/plain');
     onDrop(e, id); // Pass the event and column id to the parent handler
   };
 

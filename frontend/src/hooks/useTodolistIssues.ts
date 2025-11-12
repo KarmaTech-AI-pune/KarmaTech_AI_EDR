@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { initialIssues, teamMembers } from '../data/todolistData';
-import { Issue, TeamMember, NewIssueFormState, Subtask, NewSubtaskFormState, Comment } from '../types/todolist'; // Added Comment
+import { Issue, NewIssueFormState, Subtask, NewSubtaskFormState, Comment } from '../types/todolist'; // Added Comment
 
 export const useTodolistIssues = () => {
   const [issues, setIssues] = useState<Issue[]>(initialIssues);

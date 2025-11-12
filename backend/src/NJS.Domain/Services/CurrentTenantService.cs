@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NJS.Domain.Database;
 using System;
@@ -8,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NJS.Domain.Entities;
 
 namespace NJS.Domain.Services
 {
@@ -17,6 +20,8 @@ namespace NJS.Domain.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly TenantDbContext _context;
         private readonly ILogger<CurrentTenantService> _logger;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IConfiguration _configuration;
         private int? _tenantId;
         private string? _connectionString;
 
@@ -33,13 +38,17 @@ namespace NJS.Domain.Services
         }
 
         public CurrentTenantService(
-            IHttpContextAccessor httpContextAccessor, 
+            IHttpContextAccessor httpContextAccessor,
             TenantDbContext context,
-            ILogger<CurrentTenantService> logger)
+            ILogger<CurrentTenantService> logger,
+            IServiceProvider serviceProvider,
+            IConfiguration configuration)
         {
             _httpContextAccessor = httpContextAccessor;
             _context = context;
             _logger = logger;
+            _serviceProvider = serviceProvider;
+            _configuration = configuration;
             _logger.LogInformation("CurrentTenantService initialized");
         }
 
@@ -110,6 +119,50 @@ namespace NJS.Domain.Services
                 _logger.LogError(ex, "Error setting tenant ID: {TenantId}", tenant);
                 throw;
             }
+        }
+
+        public async Task<List<MigrationResult>> ApplyMigrationsToAllTenantsAsync()
+        {
+            var results = new List<MigrationResult>();
+            var tenants = await _context.TenantDatabases.ToListAsync();
+
+            foreach (var tenant in tenants)
+            {
+                var tenantResult = new MigrationResult { TenantId = tenant.Id };
+                try
+                {
+                    string connectionString = !string.IsNullOrEmpty(tenant.ConnectionString)
+                        ? tenant.ConnectionString
+                        : _configuration.GetConnectionString("AppDbConnection");
+
+                    using var scope = _serviceProvider.CreateScope();
+                    var dbContext = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+                    dbContext.Database.SetConnectionString(connectionString);
+
+                    var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+
+                    if (pendingMigrations.Any())
+                    {
+                        _logger.LogInformation($"Applying {pendingMigrations.Count()} migration(s) to tenant {tenant.Id}");
+                        await dbContext.Database.MigrateAsync();
+                        tenantResult.Success = true;
+                        tenantResult.Message = $"Applied {pendingMigrations.Count()} migration(s)";
+                    }
+                    else
+                    {
+                        tenantResult.Success = true;
+                        tenantResult.Message = "No pending migrations";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error applying migrations to tenant {tenant.Id}");
+                    tenantResult.Success = false;
+                    tenantResult.Message = ex.Message;
+                }
+                results.Add(tenantResult);
+            }
+            return results;
         }
     }
 }
