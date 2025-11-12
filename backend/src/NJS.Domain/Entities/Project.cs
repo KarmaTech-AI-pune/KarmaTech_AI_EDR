@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using NJS.Domain.Enums;
 
 namespace NJS.Domain.Entities
 {
@@ -73,6 +74,10 @@ namespace NJS.Domain.Entities
         public bool LetterOfAcceptance { get; set; }
 
         public int OpportunityTrackingId { get; set; }
+
+        public int ProgramId { get; set; }
+        [ForeignKey("ProgramId")]
+        public virtual Program? Program { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

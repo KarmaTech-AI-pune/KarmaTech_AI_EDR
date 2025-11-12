@@ -53,6 +53,7 @@ namespace NJS.Domain.Database
         public DbSet<BidPreparation> BidPreparations { get; set; }
         public DbSet<BidVersionHistory> BidVersionHistories { get; set; }
         public DbSet<Project> Projects { get; set; }
+        public DbSet<Program> Programs { get; set; }
         public new DbSet<User> Users { get; set; }
         public new DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }

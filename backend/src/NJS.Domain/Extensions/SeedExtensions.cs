@@ -244,10 +244,29 @@ namespace NJS.Domain.Extensions
                 // Seed WBSOptions if they don't exist
                 await SeedWBSOptionsAsync(context);
 
+                // Create a default program if none exists
+                if (!context.Set<Program>().Any())
+                {
+                    var defaultProgram = new Program
+                    {
+                        Name = "Default Program",
+                        Description = "Default program for sample projects",
+                        StartDate = DateTime.UtcNow,
+                        EndDate = DateTime.UtcNow.AddYears(1),
+                        CreatedBy = "System",
+                        LastModifiedAt = DateTime.UtcNow,
+                        LastModifiedBy = "System"
+                    };
+                    context.Set<Program>().Add(defaultProgram);
+                    await context.SaveChangesAsync();
+                }
+
                 // Create a sample project if none exists
                 if (!context.Projects.Any())
                 {
                     var projectManager = await userManager.FindByNameAsync("pm1");
+                    var defaultProgram = await context.Set<Program>().FirstOrDefaultAsync();
+                    
                     var project = new Project
                     {
                         Name = "Sample Project",
@@ -266,6 +285,7 @@ namespace NJS.Domain.Extensions
                         ContractType = "Fixed",
                         Currency = "USD",
                         ProjectManagerId = projectManager?.Id,
+                        ProgramId = defaultProgram?.Id ?? 1,
                         CreatedAt = DateTime.UtcNow,
                         CreatedBy = "System",
                         LastModifiedAt = DateTime.UtcNow,

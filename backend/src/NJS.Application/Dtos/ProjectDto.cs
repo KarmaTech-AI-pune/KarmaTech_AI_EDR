@@ -36,6 +36,7 @@ namespace NJS.Application.Dtos
         public string? ContractType { get; set; }
         public bool LetterOfAcceptance { get; set; }
         public int OpportunityTrackingId { get; set; }
+        public int ProgramId { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? LastModifiedAt { get; set; }
