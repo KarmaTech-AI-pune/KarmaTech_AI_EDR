@@ -26,7 +26,6 @@ export const WBSStructureAPI = {
    */
   setProjectWBS: async (projectId: string, wbsData: WBSRowData[]): Promise<void> => {
     try {
-      // Sort the data by level to ensure we process parent items first
       // Create a map of temporary IDs for quick lookup
       const tempIdMap = new Map(wbsData.map(row => [row.id, row]));
 
@@ -47,67 +46,83 @@ export const WBSStructureAPI = {
         // Check if the current row's ID is temporary
         const isTemporaryId = !row.id || isNaN(parseInt(row.id)) || row.id.length > 10; // More robust check
 
-        let realParentId: number | null = null;
-        let parentFrontendTempId: string | null = null;
-
-        if (row.parentId) {
-          const parentRow = tempIdMap.get(row.parentId);
-          if (parentRow) {
-            // Check if the parent's ID is also temporary
-            const isParentTemporaryId = !parentRow.id || isNaN(parseInt(parentRow.id)) || parentRow.id.length > 10;
-            if (isParentTemporaryId) {
-              // Parent is new, send its temporary ID
-              parentFrontendTempId = row.parentId;
-              realParentId = null; // Set real ParentId to null
-            } else {
-              // Parent exists, send its real ID
-              realParentId = parseInt(row.parentId);
-              parentFrontendTempId = null;
-            }
-          } else {
-             // Parent ID exists but not found in current data (should ideally not happen if data is consistent)
-             // Attempt to parse it as a real ID, otherwise nullify
-             realParentId = !isNaN(parseInt(row.parentId)) ? parseInt(row.parentId) : null;
-             parentFrontendTempId = null;
-          }
-        }
-
-        
         const isOdcTask = row.taskType === TaskType.ODC;
 
-        // Transform the row data to match WBSTaskDto
+        // Transform the row data to match the new backend contract
         return {
-          Id: isTemporaryId ? 0 : parseInt(row.id), // Use 0 for new tasks
-          FrontendTempId: isTemporaryId ? row.id : null, // Send temp ID if new
-          ParentId: realParentId,
-          ParentFrontendTempId: parentFrontendTempId,
-          Level: row.level,
-          Title: null,
-          AssignedUserId: isOdcTask ? null : row.name,
-          ResourceName: isOdcTask ? row.name : null,
-          CostRate: row.costRate,
-          ResourceUnit: isOdcTask ? (row.unit || "") : (row.unit || ""),
-          TotalHours: row.totalHours,
-          TotalCost: row.totalCost,
-          PlannedHours: monthlyHours,
-          TaskType: row.taskType !== undefined ? row.taskType : (row.title.toLowerCase().includes('odc') ? TaskType.ODC : TaskType.Manpower), // Use taskType if set, otherwise infer from title
-          Description: "",
-          DisplayOrder: 0,
-          EstimatedBudget: 0,
-          StartDate: null,
-          EndDate: null,
-          ResourceRoleId: row.resource_role, // Add ResourceRoleId to the payload
-          WBSOptionId: row.wbsOptionId // Add WBSOptionId to the payload
+          id: isTemporaryId ? 0 : parseInt(row.id), // Use 0 for new tasks, otherwise parse existing ID
+          workBreakdownStructureId: 0, // Placeholder, will be set at a higher level if needed
+          level: row.level,
+          title: row.title, // Use row.title directly
+          description: "", // Default empty description
+          displayOrder: 0, // Placeholder
+          estimatedBudget: 0, // Placeholder
+          startDate: null, // Placeholder
+          endDate: null, // Placeholder
+          taskType: row.taskType !== undefined ? row.taskType : (row.title.toLowerCase().includes('odc') ? TaskType.ODC : TaskType.Manpower), // Use taskType if set, otherwise infer from title
+          assignedUserId: isOdcTask ? null : row.assignedUserId, // Use assignedUserId from row
+          assignedUserName: isOdcTask ? null : row.name, // Use row.name as assignedUserName
+          costRate: row.costRate,
+          resourceName: isOdcTask ? row.name : null, // Use row.name as resourceName for ODC tasks
+          resourceUnit: isOdcTask ? (row.unit || "") : (row.unit || ""),
+          resourceRoleId: row.resource_role, // Add ResourceRoleId to the payload
+          resourceRoleName: row.resource_role_name || "", // Add ResourceRoleName to the payload
+          plannedHours: monthlyHours.map(ph => ({ // Convert to lowercase keys
+            year: ph.Year,
+            month: ph.Month,
+            plannedHours: ph.PlannedHours
+          })),
+          totalHours: row.totalHours,
+          totalCost: row.totalCost,
+          children: [], // Initialize as empty array as per new contract example
+          wbsOptionId: row.wbsOptionId, // Add WBSOptionId to the payload
+          wbsOptionLabel: row.title // Use row.title as wbsOptionLabel
         };
       };
 
-      // Process all tasks using the updated transform function
-      const transformedData = wbsData.map(task => transformRowToBackendFormat(task));
+      // Group tasks by their top-level parent (level 1 task) to form workBreakdownStructures
+      const wbsStructuresMap = new Map<string, any>();
 
-      console.log("Sending transformed WBS data:", JSON.stringify(transformedData, null, 2));
+      wbsData.forEach(task => {
+        let topLevelParentId: string | null = task.id;
+        let currentTask = task;
+        while (currentTask.parentId) {
+          const parent = tempIdMap.get(currentTask.parentId);
+          if (parent) {
+            topLevelParentId = parent.id;
+            currentTask = parent;
+          } else {
+            break; // Should not happen if data is consistent
+          }
+        }
+
+        if (!wbsStructuresMap.has(topLevelParentId)) {
+          wbsStructuresMap.set(topLevelParentId, {
+            wbsHeaderId: 0, // Placeholder
+            workBreakdownStructureId: 0, // Placeholder
+            name: currentTask.title, // Use the title of the top-level parent as the name
+            description: "", // Placeholder
+            displayOrder: 0, // Placeholder
+            tasks: []
+          });
+        }
+        wbsStructuresMap.get(topLevelParentId).tasks.push(transformRowToBackendFormat(task));
+      });
+
+      const workBreakdownStructures = Array.from(wbsStructuresMap.values());
+
+      const finalPayload = {
+        wbsHeaderId: 0, // Placeholder, assuming 0 for new or existing header
+        workBreakdownStructures: workBreakdownStructures.map((wbs, index) => ({
+          ...wbs,
+          displayOrder: index + 1 // Assign display order based on array index
+        }))
+      };
+
+      console.log("Sending transformed WBS data:", JSON.stringify(finalPayload, null, 2));
 
       // Send all tasks to the backend in a single request
-      await axiosInstance.put(`/api/projects/${projectId}/wbs`, transformedData);
+      await axiosInstance.put(`/api/projects/${projectId}/wbs`, finalPayload);
     } catch (error) {
       console.error(`Error saving WBS for project ${projectId}:`, error);
       throw error;
