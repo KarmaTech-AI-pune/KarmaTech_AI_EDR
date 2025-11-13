@@ -40,5 +40,6 @@ namespace NJS.Application.Dtos
         public string? CreatedBy { get; set; }
         public DateTime? LastModifiedAt { get; set; }
         public string? LastModifiedBy { get; set; }
+        public string? BudgetReason { get; set; } // Optional reason for budget changes
     }
 }

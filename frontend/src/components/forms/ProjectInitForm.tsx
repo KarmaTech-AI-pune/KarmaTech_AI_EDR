@@ -58,6 +58,22 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     percentage: project?.percentage || 0,
   })
 
+  // Track original budget values for comparison
+  const [originalBudget] = useState({
+    estimatedProjectCost: project?.estimatedProjectCost || 0,
+    estimatedProjectFee: project?.estimatedProjectFee || 0,
+  });
+
+  const [budgetReason, setBudgetReason] = useState('');
+
+  // Check if budget values have changed
+  const hasBudgetChanged = () => {
+    return (
+      Number(formData.estimatedProjectCost) !== Number(originalBudget.estimatedProjectCost) ||
+      Number(formData.estimatedProjectFee) !== Number(originalBudget.estimatedProjectFee)
+    );
+  };
+
   useEffect(() => {
     if (formData.feeType === 'Percentage') {
       const fee = percentageCalculation(formData.percentage || 0, Number(formData.estimatedProjectCost));
@@ -86,7 +102,7 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const submissionData: ProjectFormData = {
+    const submissionData: ProjectFormData & { budgetReason?: string } = {
       ...formData,
       estimatedProjectCost: Number(formData.estimatedProjectCost),
       estimatedProjectFee: Number(formData.estimatedProjectFee || 0),
@@ -100,6 +116,11 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         priority: formData.priority || '',
       updatedAt: new Date().toISOString()
     };
+
+    // Include budget reason if budget has changed
+    if (project && hasBudgetChanged() && budgetReason) {
+      submissionData.budgetReason = budgetReason;
+    }
 
     onSubmit(submissionData);
   };
@@ -305,6 +326,22 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               // disabled={formData.feeType === 'Percentage'}
             />
           </Grid>
+          {project && hasBudgetChanged() && (
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Reason for Budget Change (Optional)"
+                name="budgetReason"
+                value={budgetReason}
+                onChange={(e) => setBudgetReason(e.target.value)}
+                multiline
+                rows={2}
+                placeholder="Explain why the budget values are being changed..."
+                helperText="Provide context for the budget change to maintain audit trail"
+                inputProps={{ maxLength: 500 }}
+              />
+            </Grid>
+          )}
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
