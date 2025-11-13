@@ -90,16 +90,15 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
-            // Build in-memory hierarchy using WBSOption relationships
-            var tasksByWbsOptionId = wbsTasks.ToDictionary(t => t.WBSOptionId);
-            var taskDtos = BuildTaskHierarchy(wbsTasks, wbsOptions, tasksByWbsOptionId);
+            // Create flat task DTOs with parent-child relationships indicated by WBSOptionId
+            var taskDtos = BuildFlatTaskStructure(wbsTasks, wbsOptions);
 
             // Group tasks by their WorkBreakdownStructure
             var tasksByStructure = taskDtos
                 .GroupBy(t => t.WorkBreakdownStructureId)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            // Project to DTO with hierarchical structure
+            // Project to DTO with flat structure
             var wbsMasterDto = new WBSMasterDto
             {
                 WbsHeaderId = wbsHeader.Id,
@@ -112,7 +111,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         Description = wbs.Description,
                         DisplayOrder = wbs.DisplayOrder,
                         Tasks = tasksByStructure.ContainsKey(wbs.Id) 
-                            ? tasksByStructure[wbs.Id].Where(t => t.Children.Count == 0).ToList() // Root tasks only
+                            ? tasksByStructure[wbs.Id] // Include all tasks for this structure
                             : new List<WBSTaskDto>()
                     })
                     .ToList()
@@ -129,27 +128,48 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         }
 
         /// <summary>
-        /// Builds hierarchical task structure using WBSOption parent-child relationships
+        /// Builds flat task structure with parent-child relationships indicated by WBSOption IDs
         /// </summary>
-        private List<WBSTaskDto> BuildTaskHierarchy(
+        private List<WBSTaskDto> BuildFlatTaskStructure(
             List<WBSTask> wbsTasks, 
-            Dictionary<int, WBSOption> wbsOptions,
-            Dictionary<int, WBSTask> tasksByWbsOptionId)
+            Dictionary<int, WBSOption> wbsOptions)
         {
+            _logger.LogInformation("Building flat task structure from {TaskCount} tasks and {OptionCount} WBS options", 
+                wbsTasks.Count, wbsOptions.Count);
+                
             var taskDtos = new List<WBSTaskDto>();
 
-            // First, create all task DTOs without children
+            // Create all task DTOs with parent-child relationship info
             foreach (var task in wbsTasks)
             {
                 var firstUserTask = task.UserWBSTasks.FirstOrDefault();
                 var totalPlannedHours = task.PlannedHours.Sum(ph => ph.PlannedHours);
+                
+                // Get WBS Option details and label
+                string title = task.Title;
+                string optionLabel = null;
+                int? parentWbsOptionId = null;
+                
+                // Get option details from the loaded option or directly from the task's WBSOption property
+                if (task.WBSOption != null)
+                {
+                    title = task.WBSOption.Label ?? task.Title;
+                    optionLabel = task.WBSOption.Label;
+                    parentWbsOptionId = task.WBSOption.ParentId;
+                }
+                else if (wbsOptions.TryGetValue(task.WBSOptionId, out var option))
+                {
+                    title = option.Label ?? task.Title;
+                    optionLabel = option.Label;
+                    parentWbsOptionId = option.ParentId;
+                }
 
                 var taskDto = new WBSTaskDto
                 {
                     Id = task.Id,
                     WorkBreakdownStructureId = task.WorkBreakdownStructureId,
                     Level = task.Level,
-                    Title = task.WBSOption != null ? task.WBSOption.Label : task.Title,
+                    Title = title,
                     Description = task.Description,
                     DisplayOrder = task.DisplayOrder,
                     EstimatedBudget = task.EstimatedBudget,
@@ -157,7 +177,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     EndDate = task.EndDate,
                     TaskType = task.TaskType,
                     WBSOptionId = task.WBSOptionId,
-                    WBSOptionLabel = task.WBSOption?.Label,
+                    WBSOptionLabel = optionLabel,
 
                     PlannedHours = task.PlannedHours.Select(ph => new PlannedHourDto
                     {
@@ -179,29 +199,23 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     TotalCost = task.TaskType == TaskType.ODC
                         ? (firstUserTask?.TotalCost ?? 0)
                         : (decimal)totalPlannedHours * (firstUserTask?.CostRate ?? 0),
-
+                    
+                    // Keep empty children list instead of null for backward compatibility
                     Children = new List<WBSTaskDto>()
                 };
 
                 taskDtos.Add(taskDto);
             }
 
-            // Now build parent-child relationships using WBSOption hierarchy
-            var taskDtoLookup = taskDtos.ToDictionary(t => t.WBSOptionId);
+            _logger.LogDebug("Created {Count} flat task DTOs", taskDtos.Count);
             
-            foreach (var taskDto in taskDtos)
-            {
-                if (wbsOptions.TryGetValue(taskDto.WBSOptionId, out var wbsOption) && 
-                    wbsOption.ParentId.HasValue)
-                {
-                    // Find parent task by parent WBSOption ID
-                    if (taskDtoLookup.TryGetValue(wbsOption.ParentId.Value, out var parentTaskDto))
-                    {
-                        parentTaskDto.Children.Add(taskDto);
-                    }
-                }
-            }
-
+            // Build a dictionary mapping WBSOptionIds to their parent ids for the frontend to use
+            var optionParentMapping = wbsOptions
+                .Where(o => o.Value.ParentId.HasValue)
+                .ToDictionary(o => o.Key, o => o.Value.ParentId.Value);
+            
+            _logger.LogDebug("Parent-child mappings in WBSOptions: {Count}", optionParentMapping.Count);
+            
             return taskDtos;
         }
     }
