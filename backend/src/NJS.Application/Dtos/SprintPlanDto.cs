@@ -16,5 +16,15 @@ namespace NJS.Application.Dtos
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<SprintTaskDto>? SprintTasks { get; set; }
+
+        public string? SprintName { get; set; }
+        public int PlannedStoryPoints { get; set; }
+        public int ActualStoryPoints { get; set; }
+        public decimal Velocity { get; set; }
+        public int Status { get; set; }
+        public DateTime? StartedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }

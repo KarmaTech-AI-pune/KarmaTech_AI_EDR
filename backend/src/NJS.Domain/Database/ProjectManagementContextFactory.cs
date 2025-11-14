@@ -7,6 +7,7 @@ using NJS.Domain.Services;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using NJS.Domain.Entities; // Added for MigrationResult
 
 namespace NJS.Domain.Database
 {
@@ -95,6 +96,13 @@ namespace NJS.Domain.Database
         {
             _tenantId = tenant;
             return Task.FromResult(true);
+        }
+
+        public Task<List<MigrationResult>> ApplyMigrationsToAllTenantsAsync()
+        {
+            // For design-time, this method is not actively used for applying migrations.
+            // It's a mock implementation to satisfy the interface.
+            return Task.FromResult(new List<MigrationResult>());
         }
     }
 #nullable restore

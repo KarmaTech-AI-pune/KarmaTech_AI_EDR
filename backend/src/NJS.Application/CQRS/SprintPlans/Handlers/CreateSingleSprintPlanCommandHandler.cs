@@ -59,6 +59,15 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
                 SprintGoal = sprintPlanDto.SprintGoal,
                 ProjectId = sprintPlanDto.ProjectId.Value, // Assign to a local variable first
                 RequiredSprintEmployees = sprintPlanDto.RequiredSprintEmployees, // Map the new column
+                SprintName = sprintPlanDto.SprintName,
+                PlannedStoryPoints = sprintPlanDto.PlannedStoryPoints,
+                ActualStoryPoints = sprintPlanDto.ActualStoryPoints,
+                Velocity = sprintPlanDto.Velocity,
+                Status = sprintPlanDto.Status,
+                StartedAt = sprintPlanDto.StartedAt,
+                CompletedAt = sprintPlanDto.CompletedAt,
+                CreatedAt = sprintPlanDto.CreatedAt,
+                UpdatedAt = sprintPlanDto.UpdatedAt,
                 TenantId = _context.TenantId ?? 1 // Assuming TenantId is handled by context
             };
 
