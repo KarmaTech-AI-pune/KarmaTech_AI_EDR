@@ -28,5 +28,6 @@ namespace NJS.Domain.Entities
         public int RequiredSprintEmployees { get; set; } // Number of employees required for this sprint
 
         public ICollection<SprintTask> SprintTasks { get; set; } = new List<SprintTask>();
+        public ICollection<SprintDailyProgress> SprintDailyProgresses { get; set; } = new List<SprintDailyProgress>();
     }
 }

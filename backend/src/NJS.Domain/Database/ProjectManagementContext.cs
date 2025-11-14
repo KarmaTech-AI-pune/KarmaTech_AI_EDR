@@ -133,6 +133,7 @@ namespace NJS.Domain.Database
         public DbSet<SprintPlan> SprintPlans { get; set; }
         public DbSet<SprintTaskComment> SprintTaskComments { get; set; }
         public DbSet<SprintSubtaskComment> SprintSubtaskComments { get; set; }
+        public DbSet<SprintDailyProgress> SprintDailyProgresses { get; set; }
 
 
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
@@ -196,6 +197,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<SprintPlan>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintTaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintSubtaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintDailyProgress>().HasQueryFilter(p => p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
