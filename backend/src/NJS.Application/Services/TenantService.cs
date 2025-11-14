@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using NJS.Domain.Database;
+using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 using System.Security.Claims;
 
@@ -196,5 +200,6 @@ namespace NJS.Application.Services
             // For now, return true (implement actual validation)
             return true;
         }
+
     }
 }

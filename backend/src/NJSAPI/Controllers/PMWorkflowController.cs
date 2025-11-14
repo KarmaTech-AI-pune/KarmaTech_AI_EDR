@@ -31,7 +31,7 @@ namespace NJSAPI.Controllers
         /// <param name="command">The command containing the document details</param>
         /// <returns>The workflow status after sending for review</returns>
         [HttpPost("sendToReview")]
-        [Authorize(Roles = "Project Manager,Admin")] // Only PM can send for review
+        [Authorize(Roles = "Project Manager,Admin,TenantAdmin")] // Only PM, Admin, or TenantAdmin can send for review
         [ProducesResponseType(typeof(PMWorkflowDto), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
@@ -73,7 +73,7 @@ namespace NJSAPI.Controllers
         /// <param name="command">The command containing the document details</param>
         /// <returns>The workflow status after sending for approval</returns>
         [HttpPost("sendToApproval")]
-        [Authorize(Roles = "Senior Project Manager,Admin")] // Only SPM can send for approval
+[Authorize(Roles = "Senior Project Manager,Admin,TenantAdmin")] // Only SPM, Admin, or TenantAdmin can send for approval
         [ProducesResponseType(typeof(PMWorkflowDto), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
@@ -115,7 +115,7 @@ namespace NJSAPI.Controllers
         /// <param name="command">The command containing the document details</param>
         /// <returns>The workflow status after requesting changes</returns>
         [HttpPost("requestChanges")]
-        [Authorize(Roles = "Senior Project Manager,Regional Manager,Regional Director,Admin")] // SPM or RM/RD can request changes
+[Authorize(Roles = "Senior Project Manager,Regional Manager,Regional Director,Admin,TenantAdmin")] // SPM or RM/RD or TenantAdmin can request changes
         [ProducesResponseType(typeof(PMWorkflowDto), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
@@ -158,7 +158,7 @@ namespace NJSAPI.Controllers
         /// <param name="command">The command containing the document details</param>
         /// <returns>The workflow status after approval</returns>
         [HttpPost("approve")]
-        [Authorize(Roles = "Regional Manager,Regional Director,Admin")] // Only RM/RD can approve
+[Authorize(Roles = "Regional Manager,Regional Director,Admin,TenantAdmin")] // Only RM/RD or TenantAdmin can approve
         [ProducesResponseType(typeof(PMWorkflowDto), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]

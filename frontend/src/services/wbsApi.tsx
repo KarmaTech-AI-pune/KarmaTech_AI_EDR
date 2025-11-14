@@ -1,5 +1,5 @@
 import { axiosInstance } from './axiosConfig';
-import { WBSRowData, WBSOption, TaskType } from '../types/wbs';
+import { WBSRowData, WBSOption, TaskType } from '../types/wbs.ts'; // Corrected import path for WBSOption and TaskType
 import { PlannedHour } from '../models/plannedHourModel';
 
 export const WBSStructureAPI = {
@@ -131,6 +131,76 @@ export const WBSStructureAPI = {
 };
 
 export const WBSOptionsAPI = {
+
+  getWBSOptions: async (): Promise<WBSOption[]> => {
+    try {
+      const response = await axiosInstance.get('/api/wbsoptions');
+      return response.data;
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Create a new WBS option
+   * @param newOption The new option object
+   * @returns Promise with created WBSOption
+   */
+  createOption: async (newOption: WBSOption): Promise<WBSOption> => {
+    try {
+      const response = await axiosInstance.post('/api/WBSOptions', [newOption]);
+      return response.data;
+    } catch (error) {
+      console.error(`Error creating new WBS option:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update an existing WBS option
+   * @param id WBS option ID
+   * @param updatedOption The updated option object
+   * @returns Promise with updated WBSOption
+   */
+  updateOption: async (id: string, updatedOption: WBSOption): Promise<WBSOption> => {
+    try {
+      // Convert string ID to number for backend
+      const numericId = parseInt(id, 10);
+      if (isNaN(numericId)) {
+        throw new Error(`Invalid ID format: ${id}`);
+      }
+      
+      // Format payload to match backend WBSOptionDto exactly
+      const payload = {
+        Id: numericId,
+        Value: updatedOption.value,
+        Label: updatedOption.label,
+        Level: updatedOption.level || 1,
+        ParentValue: updatedOption.parentValue || String,
+        FormType: updatedOption.formType || 0
+      };
+      
+      console.log('Update payload:', payload);
+      
+      const response = await axiosInstance.put(`/api/WBSOptions/${numericId}`, payload);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating WBS option ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  deleteOption: async (id: string): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/api/WBSOptions/${id}`);
+    } catch (error) {
+      console.error(`Error deleting WBS option ${id}:`, error);
+      throw error;
+    }
+  },
+
+  
+  
   /**
    * Get level 1 WBS options
    * @param formType Optional form type (0 = Manpower, 1 = ODC)
@@ -181,7 +251,8 @@ export const WBSOptionsAPI = {
     console.log(`WBS level 3 options for ${level2Value} API response:`, response.data);
 
     return response.data;
-  }
+  },
+
 };
 
 export const PlannedHoursAPI = {

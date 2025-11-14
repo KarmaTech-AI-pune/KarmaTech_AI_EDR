@@ -103,12 +103,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                             WBSOptionId = t.WBSOptionId,
                             WBSOptionLabel = t.WBSOption?.Label,
 
-                            PlannedHours = t.PlannedHours.Select(ph => new PlannedHourDto
-                            {
-                                Year = int.Parse(ph.Year),
-                                Month = ph.Month,
-                                PlannedHours = ph.PlannedHours
-                            }).ToList(),
+                        PlannedHours = t.PlannedHours.Select(ph => new PlannedHourDto
+                        {
+                            Year = int.Parse(ph.Year),
+                            Month = ph.Month,
+                            PlannedHours = ph.PlannedHours
+                        }).ToList(),
 
                             // Resource/cost fields
                             CostRate = firstUserTask?.CostRate ?? 0,
