@@ -534,9 +534,9 @@ namespace NJSAPI.Controllers
             {
                 TenantUserRole.Owner => "TenantAdmin",
                 TenantUserRole.Admin => "TenantAdmin",
-                TenantUserRole.Manager => "Project Manager",
-                TenantUserRole.User => "User",
-                _ => "User"
+                TenantUserRole.Manager => "TenantAdmin",
+                TenantUserRole.User => "TenantAdmin",
+                _ => "TenantAdmin"
             };
         }
 
@@ -549,9 +549,9 @@ namespace NJSAPI.Controllers
             {
                 TenantUserRole.Owner => "Tenant_ADMIN",
                 TenantUserRole.Admin => "Tenant_ADMIN",
-                TenantUserRole.Manager => "CREATE_PROJECT", // Manager gets project creation permission
-                TenantUserRole.User => "VIEW_PROJECT", // User gets view permission
-                _ => "VIEW_PROJECT"
+                TenantUserRole.Manager => "Tenant_ADMIN",
+                TenantUserRole.User => "Tenant_ADMIN", 
+                _ => "Tenant_ADMIN"
             };
         }
     }
