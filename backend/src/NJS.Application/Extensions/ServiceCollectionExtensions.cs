@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -71,6 +71,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
+            services.AddScoped<ITenantMigrationService, TenantMigrationService>();
 
            
 
