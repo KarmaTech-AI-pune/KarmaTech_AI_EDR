@@ -91,7 +91,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 .ToListAsync(cancellationToken);
 
             // Build in-memory hierarchy using WBSOption relationships
-            var tasksByWbsOptionId = wbsTasks.ToDictionary(t => t.WBSOptionId);
+            // Use GroupBy + ToDictionary with First() to handle potential duplicate WBSOptionIds
+            var tasksByWbsOptionId = wbsTasks
+                .GroupBy(t => t.WBSOptionId)
+                .ToDictionary(g => g.Key, g => g.First());
             var taskDtos = BuildTaskHierarchy(wbsTasks, wbsOptions, tasksByWbsOptionId);
 
             // Group tasks by their WorkBreakdownStructure
@@ -180,14 +183,19 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         ? (firstUserTask?.TotalCost ?? 0)
                         : (decimal)totalPlannedHours * (firstUserTask?.CostRate ?? 0),
 
-                    Children = new List<WBSTaskDto>()
+                    Children = new List<WBSTaskDto>(),
+                    ParentId = task.ParentId // Map ParentId from the entity to the DTO
                 };
 
                 taskDtos.Add(taskDto);
             }
 
             // Now build parent-child relationships using WBSOption hierarchy
-            var taskDtoLookup = taskDtos.ToDictionary(t => t.WBSOptionId);
+            // Group tasks by WBSOptionId to handle potential duplicates - only include non-zero WBSOptionId values
+            var taskDtoLookup = taskDtos
+                .Where(t => t.WBSOptionId != 0) // Filter out default/null WBSOptionId (0 is default for int)
+                .GroupBy(t => t.WBSOptionId)
+                .ToDictionary(g => g.Key, g => g.First()); // Select the first task for each WBSOptionId
             
             foreach (var taskDto in taskDtos)
             {

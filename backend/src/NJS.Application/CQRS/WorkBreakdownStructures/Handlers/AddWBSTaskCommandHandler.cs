@@ -216,6 +216,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 throw new Exception("Task Title is required.");
             }
 
+            // Fetch the WBSOption to get its ParentId
+            var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskDto.WBSOptionId);
+            int? parentWbsOptionId = wbsOption?.ParentId; // Get the ParentId from WBSOption
+
             // Get WBS Option Label but preserve the original title
             string? wbsOptionLabel = null;
             wbsOptionsMap.TryGetValue(taskDto.WBSOptionId, out wbsOptionLabel);
@@ -238,7 +242,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 UserWBSTasks = new List<UserWBSTask>(),
                 PlannedHours = new List<WBSTaskPlannedHour>(),
                 WBSOptionId = taskDto.WBSOptionId,
-                Title = taskTitle
+                Title = taskTitle,
+                ParentId = parentWbsOptionId // Assign the ParentId from WBSOption
             };
 
             // Add user assignment and planned hours

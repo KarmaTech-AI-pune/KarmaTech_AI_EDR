@@ -65,5 +65,10 @@ namespace NJS.Domain.Entities
 
         [ForeignKey("WBSOptionId")]
         public virtual WBSOption WBSOption { get; set; } // Navigation property for WBSOption
+
+        public int? ParentId { get; set; } // Foreign key for Parent WBSTask
+
+        [ForeignKey("ParentId")]
+        public virtual WBSTask? Parent { get; set; } // Navigation property for Parent WBSTask
     }
 }

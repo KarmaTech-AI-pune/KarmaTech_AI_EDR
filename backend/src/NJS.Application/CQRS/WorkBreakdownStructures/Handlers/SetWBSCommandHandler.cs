@@ -310,7 +310,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         UserWBSTasks = new List<UserWBSTask>(),
                         PlannedHours = new List<WBSTaskPlannedHour>(),
                         WBSOptionId = dto.WBSOptionId,
-                        Title = dto.Title
+                        Title = dto.Title,
+                        ParentId = await GetWbsOptionParentId(dto.WBSOptionId) // Set ParentId from WBSOption
                     };
 
                     // Handle WBS Option Label - Only set WBSOptionLabel, don't overwrite the title
@@ -333,6 +334,14 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                 allTasks.Add(taskEntity);
             }
+        }
+
+        private async Task<int?> GetWbsOptionParentId(int wbsOptionId)
+        {
+            if (wbsOptionId <= 0) return null;
+
+            var wbsOption = await _wbsOptionRepository.GetByIdAsync(wbsOptionId);
+            return wbsOption?.ParentId;
         }
 
         private async Task CreateWBSVersionAfterUpdate(WBSHeader wbsHeader)
