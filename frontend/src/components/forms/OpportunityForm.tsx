@@ -25,12 +25,14 @@ interface OpportunityFormProps {
   onSubmit: (data: OpportunityTracking) => void | Promise<void>;
   project?: Partial<OpportunityTracking>;
   error?: string;
+  actionButtons?: React.ReactNode;
 }
 
 export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   onSubmit,
   project,
-  error
+  error,
+  actionButtons
 }) => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [bdManagers, setBdManagers] = useState<{id: string, name: string}[]>([]);
@@ -657,7 +659,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
             </Grid>
           </Grid>
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+          {actionButtons}
           <Button type="submit" variant="contained" color="primary">
             {project?.id ? 'Update Opportunity' : 'Create Opportunity'}
           </Button>

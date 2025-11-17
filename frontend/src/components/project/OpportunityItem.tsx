@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { BDChips } from '../common/BDChips';
-import { OpportunityTrackingWorkflow } from '../common/OpportunityTrackingWorkflow';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { OpportunityItemProps } from '../../types';
 import { useState, useEffect } from 'react';
@@ -291,13 +290,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
           }}>
             <Box>
               <BDChips opportunityId={currentOpportunity.id} />
-            </Box>
-
-            <Box>
-              <OpportunityTrackingWorkflow
-                opportunity={currentOpportunity}
-                onOpportunityUpdated={handleOpportunityUpdate}
-              />
             </Box>
           </Box>
         </Box>
