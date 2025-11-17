@@ -67,7 +67,12 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 SubtaskcreatedDate = DateTime.UtcNow,
                 SubtaskupdatedDate = DateTime.UtcNow,
                 SubtaskType = sprintSubtaskDto.SubtaskType,
-                Taskid = sprintSubtaskDto.Taskid // Foreign key to SprintTask
+                Taskid = sprintSubtaskDto.Taskid, // Foreign key to SprintTask
+                DisplayOrder = sprintSubtaskDto.DisplayOrder,
+                EstimatedHours = sprintSubtaskDto.EstimatedHours,
+                ActualHours = sprintSubtaskDto.ActualHours,
+                StartedAt = sprintSubtaskDto.StartedAt,
+                CompletedAt = sprintSubtaskDto.CompletedAt
             };
 
             await _context.SprintSubtasks.AddAsync(subtask, cancellationToken);

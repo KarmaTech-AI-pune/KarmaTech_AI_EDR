@@ -24,5 +24,10 @@ namespace NJS.Application.Dtos
         public DateTime? SubtaskupdatedDate { get; set; }
         public string? SubtaskType { get; set; }
         public string? Taskid { get; set; }
+        public int DisplayOrder { get; set; }
+        public int EstimatedHours { get; set; }
+        public int ActualHours { get; set; }
+        public DateTime? StartedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
     }
 }
