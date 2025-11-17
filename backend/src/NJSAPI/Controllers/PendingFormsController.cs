@@ -21,7 +21,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<PendingFormDto>>> GetPendingForms()
+        public async Task<ActionResult<PendingFormsResponseDto>> GetPendingForms()
         {
             var query = new GetPendingFormsQuery();
             var pendingForms = await _mediator.Send(query);

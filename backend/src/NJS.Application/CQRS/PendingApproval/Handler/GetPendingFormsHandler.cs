@@ -12,11 +12,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NJS.Domain.Database;
-using Microsoft.EntityFrameworkCore;
 
 namespace NJS.Application.CQRS.PendingApproval.Handler
 {
-    public class GetPendingFormsHandler : IRequestHandler<GetPendingFormsQuery, int>
+    public class GetPendingFormsHandler : IRequestHandler<GetPendingFormsQuery, PendingFormsResponseDto>
     {
         private readonly ProjectManagementContext _context;
 
@@ -25,37 +24,102 @@ namespace NJS.Application.CQRS.PendingApproval.Handler
             _context = context;
         }
 
-        public async Task<int> Handle(GetPendingFormsQuery request, CancellationToken cancellationToken)
+        public async Task<PendingFormsResponseDto> Handle(GetPendingFormsQuery request, CancellationToken cancellationToken)
         {
-            var totalPendingForms = 0;
+            var pendingFormsList = new List<PendingFormDto>();
 
             // Get pending Change Controls
-            var changeControlsCount = await _context.ChangeControls
+            var changeControls = await _context.ChangeControls
+                .Include(cc => cc.Project)
+                .Include(cc => cc.WorkflowHistories)
+                    .ThenInclude(hist => hist.AssignedTo)
                 .Where(cc => cc.WorkflowStatusId != (int)PMWorkflowStatusEnum.Approved)
-                .CountAsync(cancellationToken);
-            totalPendingForms += changeControlsCount;
+                .Select(cc => new PendingFormDto
+                {
+                    FormType = "ChangeControl",
+                    FormId = cc.Id,
+                    ProjectId = cc.ProjectId,
+                    StatusId = cc.WorkflowStatusId,
+                    FormName = cc.Description, // Using Description as form name
+                    ProjectName = cc.Project.Name,
+                    HoldingUserName = cc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
+                })
+                .ToListAsync(cancellationToken);
+            pendingFormsList.AddRange(changeControls);
 
             // Get pending Job Start Forms
-            var jobStartFormsCount = await _context.JobStartForms
+            var jobStartForms = await _context.JobStartForms
+                .Include(jsf => jsf.Project)
                 .Include(jsf => jsf.Header)
+                    .ThenInclude(header => header.JobStartFormHistories)
+                        .ThenInclude(hist => hist.AssignedTo)
                 .Where(jsf => jsf.Header == null || jsf.Header.StatusId != (int)PMWorkflowStatusEnum.Approved)
-                .CountAsync(cancellationToken);
-            totalPendingForms += jobStartFormsCount;
+                .Select(jsf => new PendingFormDto
+                {
+                    FormType = "JobStartForm",
+                    FormId = jsf.FormId,
+                    ProjectId = jsf.ProjectId,
+                    StatusId = jsf.Header == null ? 0 : jsf.Header.StatusId,
+                    FormName = jsf.FormTitle, // Using FormTitle as form name
+                    ProjectName = jsf.Project.Name,
+                    HoldingUserName = jsf.Header.JobStartFormHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
+                })
+                .ToListAsync(cancellationToken);
+            pendingFormsList.AddRange(jobStartForms);
 
             // Get pending Project Closures
-            var projectClosuresCount = await _context.ProjectClosures
+            var projectClosures = await _context.ProjectClosures
+                .Include(pc => pc.Project)
+                .Include(pc => pc.WorkflowHistories)
+                    .ThenInclude(hist => hist.AssignedTo)
                 .Where(pc => pc.WorkflowStatusId != (int)PMWorkflowStatusEnum.Approved)
-                .CountAsync(cancellationToken);
-            totalPendingForms += projectClosuresCount;
+                .Select(pc => new PendingFormDto
+                {
+                    FormType = "ProjectClosure",
+                    FormId = pc.Id,
+                    ProjectId = pc.ProjectId,
+                    StatusId = pc.WorkflowStatusId,
+                    FormName = "Project Closure", // Using fixed name for Project Closure
+                    ProjectName = pc.Project.Name,
+                    HoldingUserName = pc.WorkflowHistories.OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
+                })
+                .ToListAsync(cancellationToken);
+            pendingFormsList.AddRange(projectClosures);
 
-            // Get pending WBS Forms (WorkBreakdownStructure entities)
-            var wbsFormsCount = await _context.WorkBreakdownStructures
+            // Get pending WBS Forms (WorkBreakdownStructure entities) with TaskType differentiation
+            var wbsForms = await _context.WorkBreakdownStructures
+                .Include(wbs => wbs.Project)
                 .Include(wbs => wbs.ActiveVersion)
-                .Where(wbs => wbs.ActiveVersion == null || wbs.ActiveVersion.StatusId != (int)PMWorkflowStatusEnum.Approved)
-                .CountAsync(cancellationToken);
-            totalPendingForms += wbsFormsCount;
+                    .ThenInclude(av => av.WorkflowHistories)
+                        .ThenInclude(hist => hist.AssignedTo)
+                .Include(wbs => wbs.LatestVersion)
+                    .ThenInclude(lv => lv.WorkflowHistories)
+                        .ThenInclude(hist => hist.AssignedTo)
+                .Where(wbs => (wbs.ActiveVersion == null || wbs.ActiveVersion.StatusId != (int)PMWorkflowStatusEnum.Approved) && (wbs.TaskType == TaskType.Manpower || wbs.TaskType == TaskType.ODC))
+                .Select(wbs => new PendingFormDto
+                {
+                    FormType = (wbs.TaskType == TaskType.Manpower) ? "Manpower" : (wbs.TaskType == TaskType.ODC) ? "ODC" : "WorkBreakdownStructure",
+                    FormId = wbs.Id,
+                    ProjectId = wbs.ProjectId,
+                    StatusId = wbs.ActiveVersion == null ? (wbs.LatestVersion == null ? 0 : wbs.LatestVersion.StatusId) : wbs.ActiveVersion.StatusId,
+                    FormName = (wbs.TaskType == TaskType.Manpower) ? "Manpower Task" : (wbs.TaskType == TaskType.ODC) ? "ODC Task" : "Work Breakdown Structure",
+                    ProjectName = wbs.Project.Name,
+                    HoldingUserName = 
+                        (wbs.ActiveVersion != null && wbs.ActiveVersion.WorkflowHistories != null && wbs.ActiveVersion.WorkflowHistories.Any(h => h.AssignedTo != null)) 
+                            ? wbs.ActiveVersion.WorkflowHistories.Where(h => h.AssignedTo != null).OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name 
+                            : (wbs.LatestVersion != null && wbs.LatestVersion.WorkflowHistories != null && wbs.LatestVersion.WorkflowHistories.Any(h => h.AssignedTo != null))
+                                ? wbs.LatestVersion.WorkflowHistories.Where(h => h.AssignedTo != null).OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
+                                : "Not Assigned"
+                })
+                .ToListAsync(cancellationToken);
+            pendingFormsList.AddRange(wbsForms);
 
-            return totalPendingForms;
+            // Create the response with total count and forms list
+            return new PendingFormsResponseDto
+            {
+                TotalPendingForms = pendingFormsList.Count,
+                PendingForms = pendingFormsList
+            };
         }
     }
 }
