@@ -70,19 +70,27 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                     _context.WBSTasks.Add(taskEntity);
                     allNewTasks.Add(taskEntity);
-                    // Add the newly created task to the in-memory dictionary for parent tracking
-                    if (taskDto.Id > 0) // Ensure taskDto.Id is valid
+                }
+
+                // Save tasks first to get their IDs
+                await _unitOfWork.SaveChangesAsync();
+
+                // Now that all tasks are saved with IDs, we can build the in-memory dictionary
+                foreach (var task in allNewTasks)
+                {
+                    var dto = wbsGroupDto.Tasks.FirstOrDefault(t => t.Title == task.Title && t.Level == task.Level);
+                    if (dto != null && dto.Id > 0)
                     {
-                        _inMemoryTasks.Add(taskDto.Id, taskEntity);
+                        _inMemoryTasks[dto.Id] = task;
                     }
                 }
+
+                // Resolve parent-child relationships for tasks
+                await ResolveParentIds(wbsGroupDto.Tasks, allNewTasks, _inMemoryTasks);
 
                 // Update DTOs with saved entity data
                 await UpdateTaskDtos(wbsGroupDto.Tasks, allNewTasks, wbsOptionsMap);
             }
-
-            // Save all changes
-            await _unitOfWork.SaveChangesAsync();
 
             return request.WBSMaster;
         }
@@ -216,9 +224,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 throw new Exception("Task Title is required.");
             }
 
-            // Fetch the WBSOption to get its ParentId
+            // We should use taskDto.ParentId which should reference another WBS task ID directly
+            // No need to look up parent from WBSOption
             var wbsOption = await _wbsOptionRepository.GetByIdAsync(taskDto.WBSOptionId);
-            int? parentWbsOptionId = wbsOption?.ParentId; // Get the ParentId from WBSOption
 
             // Get WBS Option Label but preserve the original title
             string? wbsOptionLabel = null;
@@ -243,7 +251,8 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 PlannedHours = new List<WBSTaskPlannedHour>(),
                 WBSOptionId = taskDto.WBSOptionId,
                 Title = taskTitle,
-                ParentId = parentWbsOptionId // Assign the ParentId from WBSOption
+                // ParentId will be resolved in a second pass after all tasks are created and have IDs.
+                ParentId = null // Placeholder, will be set in the second pass
             };
 
             // Add user assignment and planned hours
@@ -251,6 +260,128 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             UpdatePlannedHours(taskEntity, taskDto, projectId);
 
             return taskEntity;
+        }
+
+        // This method is called after all tasks are created and added to _context.
+        // It's responsible for resolving the ParentId for newly created tasks.
+        private async Task ResolveParentIds(
+            List<WBSTaskDto> taskDtos,
+            List<WBSTask> allNewTasks,
+            Dictionary<int, WBSTask> inMemoryTasks)
+        {
+            foreach (var taskDto in taskDtos)
+            {
+                // Find the corresponding task entity that was just created.
+                // We use taskDto.Id as the key to find the entity in allNewTasks.
+                // Note: If taskDto.Id is 0 or less, it means it's a new task and its actual Id will be assigned by EF Core.
+                // We need to ensure that the inMemoryTasks dictionary is populated correctly with these new IDs.
+                var taskEntity = allNewTasks.FirstOrDefault(t => t.Id == taskDto.Id);
+
+                if (taskEntity != null)
+                {
+                    // If the DTO has a ParentId, it refers to the parent WBSTask's ID.
+                    if (taskDto.ParentId.HasValue && taskDto.ParentId.Value > 0)
+                    {
+                        // Look up the parent task entity in the in-memory dictionary.
+                        if (inMemoryTasks.TryGetValue(taskDto.ParentId.Value, out var parentTaskEntity))
+                        {
+                            taskEntity.ParentId = parentTaskEntity.Id;
+                        }
+                        else
+                        {
+                            // This case should ideally not happen if the DTOs are structured correctly
+                            // and all parent tasks are processed before their children.
+                            // Log a warning or throw an exception if a parent task is not found.
+                            _logger.LogWarning("Parent task with ID {ParentId} not found for task {TaskId} (DTO ID: {DtoId})",
+                                taskDto.ParentId.Value, taskEntity.Id, taskDto.Id);
+                            // Optionally, you might want to set ParentId to null or handle this error.
+                            // For now, we'll leave it as null if the parent isn't found.
+                        }
+                    }
+                    else
+                    {
+                        // If ParentId is null in DTO, it's a top-level task for this WBS group.
+                        // Ensure ParentId is null for now, we'll infer it based on task level later
+                        taskEntity.ParentId = null;
+                    }
+                }
+            }
+
+            // Now infer parent-child relationships based on task level and position in sequence for tasks with null ParentId
+            await InferParentChildRelationships(allNewTasks);
+        }
+
+        /// <summary>
+        /// Infers parent-child relationships for tasks based on their level and position in the sequence.
+        /// Level 1 tasks are top-level, Level 2 tasks are children of the most recent Level 1 task,
+        /// and Level 3 tasks are children of the most recent Level 2 task.
+        /// </summary>
+        private async Task InferParentChildRelationships(List<WBSTask> tasks)
+        {
+            _logger.LogInformation("AddWBSTaskCommandHandler: Inferring parent-child relationships based on task levels");
+
+            // Sort tasks by display order to ensure proper sequence
+            var orderedTasks = tasks.OrderBy(t => t.DisplayOrder).ToList();
+
+            // Track the most recent task of each level
+            Dictionary<WBSTaskLevel, WBSTask> latestTaskByLevel = new Dictionary<WBSTaskLevel, WBSTask>();
+
+            foreach (var task in orderedTasks)
+            {
+                // Skip if ParentId is already set (either from DTO or previous inference)
+                if (task.ParentId.HasValue)
+                {
+                    continue;
+                }
+
+                // Set parent relationship based on level
+                switch (task.Level)
+                {
+                    case WBSTaskLevel.Level1:
+                        // Level 1 tasks are top-level, no parent needed
+                        task.ParentId = null;
+                        break;
+
+                    case WBSTaskLevel.Level2:
+                        // Level 2 tasks should be children of the most recent Level 1 task
+                        if (latestTaskByLevel.TryGetValue(WBSTaskLevel.Level1, out var parentLevel1))
+                        {
+                            task.ParentId = parentLevel1.Id;
+                            _logger.LogInformation("AddWBSTaskCommandHandler: Setting Level 2 task {TaskId} parent to Level 1 task {ParentId}",
+                                task.Id, parentLevel1.Id);
+                        }
+                        break;
+
+                    case WBSTaskLevel.Level3:
+                        // Level 3 tasks should be children of the most recent Level 2 task
+                        if (latestTaskByLevel.TryGetValue(WBSTaskLevel.Level2, out var parentLevel2))
+                        {
+                            task.ParentId = parentLevel2.Id;
+                            _logger.LogInformation("AddWBSTaskCommandHandler: Setting Level 3 task {TaskId} parent to Level 2 task {ParentId}",
+                                task.Id, parentLevel2.Id);
+                        }
+                        break;
+
+                    default:
+                        // For any other levels (if added in the future), follow the same pattern
+                        int previousLevel = (int)task.Level - 1;
+                        if (previousLevel >= 1 &&
+                            Enum.IsDefined(typeof(WBSTaskLevel), previousLevel) &&
+                            latestTaskByLevel.TryGetValue((WBSTaskLevel)previousLevel, out var parentTask))
+                        {
+                            task.ParentId = parentTask.Id;
+                            _logger.LogInformation("AddWBSTaskCommandHandler: Setting Level {Level} task {TaskId} parent to Level {ParentLevel} task {ParentId}",
+                                (int)task.Level, task.Id, previousLevel, parentTask.Id);
+                        }
+                        break;
+                }
+
+                // Update the latest task of this level
+                latestTaskByLevel[task.Level] = task;
+            }
+
+            // Apply the changes to the database
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private async Task UpdateTaskDtos(
