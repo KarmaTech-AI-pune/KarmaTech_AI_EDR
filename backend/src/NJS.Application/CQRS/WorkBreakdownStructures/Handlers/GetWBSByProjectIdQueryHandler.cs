@@ -95,7 +95,39 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             var tasksByWbsOptionId = wbsTasks
                 .GroupBy(t => t.WBSOptionId)
                 .ToDictionary(g => g.Key, g => g.First());
-            var taskDtos = BuildTaskHierarchy(wbsTasks, wbsOptions, tasksByWbsOptionId);
+            var taskDtos = wbsTasks.Select(task => new WBSTaskDto
+            {
+                Id = task.Id,
+                WorkBreakdownStructureId = task.WorkBreakdownStructureId,
+                Level = task.Level,
+                Title = task.WBSOption != null ? task.WBSOption.Label : task.Title,
+                Description = task.Description,
+                DisplayOrder = task.DisplayOrder,
+                EstimatedBudget = task.EstimatedBudget,
+                StartDate = task.StartDate,
+                EndDate = task.EndDate,
+                TaskType = task.TaskType,
+                WBSOptionId = task.WBSOptionId,
+                WBSOptionLabel = task.WBSOption?.Label,
+                PlannedHours = task.PlannedHours.Select(ph => new PlannedHourDto
+                {
+                    Year = int.Parse(ph.Year),
+                    Month = ph.Month,
+                    PlannedHours = ph.PlannedHours
+                }).ToList(),
+                CostRate = task.UserWBSTasks.FirstOrDefault()?.CostRate ?? 0,
+                ResourceUnit = task.UserWBSTasks.FirstOrDefault()?.Unit,
+                AssignedUserId = task.TaskType == TaskType.Manpower ? task.UserWBSTasks.FirstOrDefault()?.UserId : null,
+                AssignedUserName = task.TaskType == TaskType.Manpower ? task.UserWBSTasks.FirstOrDefault()?.User?.Name : null,
+                ResourceName = task.TaskType == TaskType.ODC ? task.UserWBSTasks.FirstOrDefault()?.Name : null,
+                ResourceRoleId = task.UserWBSTasks.FirstOrDefault()?.ResourceRoleId,
+                ResourceRoleName = task.UserWBSTasks.FirstOrDefault()?.ResourceRole?.Name,
+                TotalHours = task.TaskType == TaskType.ODC ? (task.UserWBSTasks.FirstOrDefault()?.TotalHours ?? 0) : task.PlannedHours.Sum(ph => ph.PlannedHours),
+                TotalCost = task.TaskType == TaskType.ODC
+                    ? (task.UserWBSTasks.FirstOrDefault()?.TotalCost ?? 0)
+                    : (decimal)task.PlannedHours.Sum(ph => ph.PlannedHours) * (task.UserWBSTasks.FirstOrDefault()?.CostRate ?? 0),
+                ParentId = task.ParentId
+            }).ToList();
 
             // Group tasks by their WorkBreakdownStructure
             var tasksByStructure = taskDtos
@@ -115,7 +147,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         Description = wbs.Description,
                         DisplayOrder = wbs.DisplayOrder,
                         Tasks = tasksByStructure.ContainsKey(wbs.Id) 
-                            ? tasksByStructure[wbs.Id].Where(t => t.Children.Count == 0).ToList() // Root tasks only
+                            ? tasksByStructure[wbs.Id].ToList()
                             : new List<WBSTaskDto>()
                     })
                     .ToList()
@@ -129,88 +161,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 request.ProjectId);
 
             return wbsMasterDto;
-        }
-
-        /// <summary>
-        /// Builds hierarchical task structure using WBSOption parent-child relationships
-        /// </summary>
-        private List<WBSTaskDto> BuildTaskHierarchy(
-            List<WBSTask> wbsTasks, 
-            Dictionary<int, WBSOption> wbsOptions,
-            Dictionary<int, WBSTask> tasksByWbsOptionId)
-        {
-            var taskDtos = new List<WBSTaskDto>();
-
-            // First, create all task DTOs without children
-            foreach (var task in wbsTasks)
-            {
-                var firstUserTask = task.UserWBSTasks.FirstOrDefault();
-                var totalPlannedHours = task.PlannedHours.Sum(ph => ph.PlannedHours);
-
-                var taskDto = new WBSTaskDto
-                {
-                    Id = task.Id,
-                    WorkBreakdownStructureId = task.WorkBreakdownStructureId,
-                    Level = task.Level,
-                    Title = task.WBSOption != null ? task.WBSOption.Label : task.Title,
-                    Description = task.Description,
-                    DisplayOrder = task.DisplayOrder,
-                    EstimatedBudget = task.EstimatedBudget,
-                    StartDate = task.StartDate,
-                    EndDate = task.EndDate,
-                    TaskType = task.TaskType,
-                    WBSOptionId = task.WBSOptionId,
-                    WBSOptionLabel = task.WBSOption?.Label,
-
-                    PlannedHours = task.PlannedHours.Select(ph => new PlannedHourDto
-                    {
-                        Year = int.Parse(ph.Year),
-                        Month = ph.Month,
-                        PlannedHours = ph.PlannedHours
-                    }).ToList(),
-
-                    // Resource/cost fields
-                    CostRate = firstUserTask?.CostRate ?? 0,
-                    ResourceUnit = firstUserTask?.Unit,
-                    AssignedUserId = task.TaskType == TaskType.Manpower ? firstUserTask?.UserId : null,
-                    AssignedUserName = task.TaskType == TaskType.Manpower ? firstUserTask?.User?.Name : null,
-                    ResourceName = task.TaskType == TaskType.ODC ? firstUserTask?.Name : null,
-                    ResourceRoleId = firstUserTask?.ResourceRoleId,
-                    ResourceRoleName = firstUserTask?.ResourceRole?.Name,
-
-                    TotalHours = task.TaskType == TaskType.ODC ? (firstUserTask?.TotalHours ?? 0) : totalPlannedHours,
-                    TotalCost = task.TaskType == TaskType.ODC
-                        ? (firstUserTask?.TotalCost ?? 0)
-                        : (decimal)totalPlannedHours * (firstUserTask?.CostRate ?? 0),
-
-                    Children = new List<WBSTaskDto>(),
-                    ParentId = task.ParentId // Map ParentId from the entity to the DTO
-                };
-
-                taskDtos.Add(taskDto);
-            }
-
-            // Now build parent-child relationships using WBSOption hierarchy
-            // Group tasks by WBSOptionId to handle potential duplicates - only include non-zero WBSOptionId values
-            var taskDtoLookup = taskDtos
-                .Where(t => t.WBSOptionId != 0) // Filter out default/null WBSOptionId (0 is default for int)
-                .GroupBy(t => t.WBSOptionId)
-                .ToDictionary(g => g.Key, g => g.First()); // Select the first task for each WBSOptionId
-            
-            foreach (var taskDto in taskDtos)
-            {
-                if (wbsOptions.TryGetValue(taskDto.WBSOptionId, out var wbsOption) && 
-                    wbsOption.ParentId.HasValue)
-                {
-                    // Find parent task by parent WBSOption ID
-                    if (taskDtoLookup.TryGetValue(wbsOption.ParentId.Value, out var parentTaskDto))
-                    {
-                        parentTaskDto.Children.Add(taskDto);
-                    }
-                }
-            }
-
-            return taskDtos;
         }
     }
 }

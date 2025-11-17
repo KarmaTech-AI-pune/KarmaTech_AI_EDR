@@ -22,7 +22,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Queries
     /// <summary>
     /// Query to compare two WBS versions
     /// </summary>
-    public record CompareWBSVersionsQuery(int ProjectId, string Version1, string Version2) : IRequest<WBSVersionComparisonDto>;
+    // public record CompareWBSVersionsQuery(int ProjectId, string Version1, string Version2) : IRequest<WBSVersionComparisonDto>;
 
     /// <summary>
     /// Query to get WBS version workflow history

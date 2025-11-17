@@ -57,7 +57,6 @@ namespace NJS.Domain.Entities
         [ForeignKey(nameof(WorkBreakdownStructureId))]
         public WorkBreakdownStructure WorkBreakdownStructure { get; set; }
 
-        public ICollection<WBSTask> Children { get; set; } = new List<WBSTask>();
         public ICollection<WBSTaskPlannedHour> PlannedHours { get; set; } = new List<WBSTaskPlannedHour>();
         public ICollection<UserWBSTask> UserWBSTasks { get; set; } = new List<UserWBSTask>();
 
