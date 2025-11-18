@@ -39,7 +39,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             existingProject.Name = dto.Name;
             existingProject.ClientName = dto.ClientName;
             existingProject.TypeOfClient = dto.TypeOfClient;
-            existingProject.Sector = dto.Sector;
+            existingProject.Sector = dto.Sector ?? string.Empty; // Handle null value
             existingProject.EstimatedProjectCost = dto.EstimatedProjectCost;
             existingProject.CapitalValue = dto.CapitalValue;
             existingProject.StartDate = dto.StartDate;
@@ -53,15 +53,15 @@ namespace NJS.Application.CQRS.Projects.Handlers
             existingProject.SeniorProjectManagerId = dto.SeniorProjectManagerId;
             existingProject.ProjectNo = dto.ProjectNo;
 
-            // Explicitly set the problematic fields with direct assignment
-            existingProject.Office = !string.IsNullOrWhiteSpace(dto.Office) ? dto.Office : existingProject.Office;
-            existingProject.Region = !string.IsNullOrWhiteSpace(dto.Region) ? dto.Region : existingProject.Region;
-            existingProject.TypeOfJob = !string.IsNullOrWhiteSpace(dto.TypeOfJob) ? dto.TypeOfJob : existingProject.TypeOfJob;
-            existingProject.FeeType = !string.IsNullOrWhiteSpace(dto.FeeType) ? dto.FeeType : existingProject.FeeType;
+            // Update fields that were previously non-nullable in DTO but are now nullable, or have specific handling
+            existingProject.Office = dto.Office;
+            existingProject.Region = dto.Region;
+            existingProject.TypeOfJob = dto.TypeOfJob;
+            existingProject.FeeType = dto.FeeType;
             existingProject.EstimatedProjectFee = dto.EstimatedProjectFee;
             existingProject.Percentage = dto.Percentage;
             existingProject.Details = dto.Details;
-            existingProject.Priority = !string.IsNullOrWhiteSpace(dto.Priority) ? dto.Priority : existingProject.Priority;
+            existingProject.Priority = dto.Priority;
 
             existingProject.Status = dto.Status;
             existingProject.Progress = dto.Progress;

@@ -392,9 +392,23 @@ namespace NJS.Domain.Database
                 .WithMany(p => p.RolePermissions)
                 .HasForeignKey(rp => rp.PermissionId);
 
-            // Configure decimal precisions
-            modelBuilder.Entity<Project>().Property(f => f.EstimatedProjectCost).HasPrecision(18, 2);
-            modelBuilder.Entity<Project>().Property(f => f.EstimatedProjectFee).HasPrecision(18, 2);
+            // Configure Project entity properties
+            modelBuilder.Entity<Project>(entity => 
+            {
+                // Configure decimal precisions
+                entity.Property(f => f.EstimatedProjectCost).HasPrecision(18, 2);
+                entity.Property(f => f.EstimatedProjectFee).HasPrecision(18, 2);
+                entity.Property(f => f.CapitalValue).HasPrecision(18, 2);
+                entity.Property(f => f.Percentage).HasPrecision(18, 2);
+                
+                // Configure nullable foreign keys
+                entity.Property(p => p.Sector).IsRequired(false);
+                entity.Property(p => p.ProgramId).IsRequired(false);
+                entity.Property(p => p.OpportunityTrackingId).IsRequired(false);
+                
+                // Configure nullable relationships - fix shadow property issue
+                // Remove explicit relationship configuration since it's already defined in Project entity with [ForeignKey] attribute
+            });
             modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
             modelBuilder.Entity<Role>().ToTable("AspNetRoles");
             modelBuilder.Entity<Permission>().ToTable("Permissions");

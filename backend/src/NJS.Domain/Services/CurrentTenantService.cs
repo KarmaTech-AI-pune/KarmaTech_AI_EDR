@@ -59,7 +59,7 @@ namespace NJS.Domain.Services
 
             if (httpContext == null)
             {
-                _logger.LogWarning("HttpContext is null when trying to get tenant ID");
+                _logger.LogDebug("HttpContext is null when trying to get tenant ID");
                 return null;
             }
 
@@ -70,7 +70,7 @@ namespace NJS.Domain.Services
                 return resolvedTenantId;
             }
 
-            _logger.LogWarning("No tenant ID found in HttpContext.Items");
+            _logger.LogDebug("No tenant ID found in HttpContext.Items");
             return null;
         }
 
@@ -105,7 +105,7 @@ namespace NJS.Domain.Services
                 }
                 else
                 {
-                    _logger.LogWarning("HttpContext is null, could not set TenantId in Items");
+                    _logger.LogDebug("HttpContext is null, could not set TenantId in Items");
                 }
                 
                 _logger.LogInformation("Successfully set tenant ID: {TenantId} with connection string: {ConnectionStringStart}...", 

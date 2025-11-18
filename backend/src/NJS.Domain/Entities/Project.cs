@@ -12,16 +12,15 @@ namespace NJS.Domain.Entities
 
         public int TenantId { get; set; }
 
-        [Required]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        public string ClientName { get; set; }
+        public string? ClientName { get; set; }
 
-        public int ProjectNo { get; set; }
+        public int? ProjectNo { get; set; }
 
         public string? TypeOfClient { get; set; }
 
-        public string ProjectManagerId { get; set; }
+        public string? ProjectManagerId { get; set; }
         [ForeignKey("ProjectManagerId")]
         public User? ProjectManager { get; set; }
 
@@ -29,31 +28,31 @@ namespace NJS.Domain.Entities
         [ForeignKey("SeniorProjectManagerId")]
         public User? SeniorProjectManager { get; set; }
 
-        public string RegionalManagerId { get; set; }
+        public string? RegionalManagerId { get; set; }
         [ForeignKey("RegionalManagerId")]
         public User? RegionalManager { get; set; }
 
-        public string Office { get; set; } = string.Empty;
+        public string? Office { get; set; }
 
-        public string Region { get; set; } = string.Empty;
+        public string? Region { get; set; }
 
-        public string TypeOfJob { get; set; } = string.Empty;
+        public string? TypeOfJob { get; set; }
 
-        public string Sector { get; set; }
+        public string? Sector { get; set; }
 
-        public string FeeType { get; set; } = string.Empty;
+        public string? FeeType { get; set; }
 
-        public decimal EstimatedProjectCost { get; set; }
+        public decimal? EstimatedProjectCost { get; set; }
 
-        public decimal EstimatedProjectFee { get; set; }
+        public decimal? EstimatedProjectFee { get; set; }
 
         public decimal? Percentage { get; set; }
 
         public string? Details { get; set; }
 
-        public string Priority { get; set; } = string.Empty;
+        public string? Priority { get; set; }
 
-        public string Currency { get; set; }
+        public string? Currency { get; set; }
 
         public DateTime? StartDate { get; set; }
 
@@ -71,11 +70,11 @@ namespace NJS.Domain.Entities
 
         public string? ContractType { get; set; }
 
-        public bool LetterOfAcceptance { get; set; }
+        public bool? LetterOfAcceptance { get; set; }
 
-        public int OpportunityTrackingId { get; set; }
+        public int? OpportunityTrackingId { get; set; }
 
-        public int ProgramId { get; set; }
+        public int? ProgramId { get; set; }
         [ForeignKey("ProgramId")]
         public virtual Program? Program { get; set; }
 
