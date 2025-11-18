@@ -52,6 +52,8 @@ export const ProjectBudgetHistory: React.FC<ProjectBudgetHistoryProps> = ({ proj
     setError(null);
 
     try {
+      console.log(`Loading budget history for project ${projectId}, page ${currentPage}, filter: ${fieldFilter}`);
+      
       const params = {
         projectId,
         pageNumber: currentPage,
@@ -60,6 +62,8 @@ export const ProjectBudgetHistory: React.FC<ProjectBudgetHistoryProps> = ({ proj
       };
 
       const data = await projectBudgetApi.getBudgetHistory(params);
+      
+      console.log(`Received ${data.length} history records:`, data);
       setHistory(data);
 
       // Calculate total pages (this would ideally come from the API response)
@@ -72,7 +76,9 @@ export const ProjectBudgetHistory: React.FC<ProjectBudgetHistoryProps> = ({ proj
       }
     } catch (err) {
       console.error('Error loading budget history:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load budget history');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load budget history';
+      console.error('Error details:', errorMessage);
+      setError(errorMessage);
       setHistory([]);
     } finally {
       setLoading(false);

@@ -297,3 +297,7 @@ __pycache__/
 start_app.sh
 notes.txt
 wbs-typescript-models.ts
+
+# Playwright test artifacts
+frontend/playwright-report/
+frontend/test-results/

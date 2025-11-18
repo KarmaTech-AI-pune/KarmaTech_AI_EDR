@@ -117,17 +117,33 @@ export const projectBudgetApi = {
       const queryString = queryParams.toString();
       const url = `/api/projects/${projectId}/budget/history${queryString ? `?${queryString}` : ''}`;
       
-      const response = await axiosInstance.get<ProjectBudgetChangeHistoryListResponse>(url);
+      const response = await axiosInstance.get<any>(url);
       
       console.log('Budget history retrieved successfully:', response.data);
       
-      // Handle both wrapped and unwrapped responses
-      if (response.data.success !== undefined) {
-        return response.data.data || [];
+      // Handle wrapped API response format
+      if (response.data.success !== undefined && response.data.data) {
+        // Check if data has a history property (paginated response)
+        if (response.data.data.history) {
+          console.log(`Retrieved ${response.data.data.history.length} history records`);
+          return response.data.data.history;
+        }
+        // Otherwise return data directly
+        return Array.isArray(response.data.data) ? response.data.data : [];
       }
       
       // If response is directly an array
-      return Array.isArray(response.data) ? response.data : [];
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      // If response has history property at root level
+      if (response.data.history) {
+        return response.data.history;
+      }
+      
+      console.warn('Unexpected response format:', response.data);
+      return [];
     } catch (error: any) {
       console.error(`Error fetching budget history for project ${params.projectId}:`, error);
       
