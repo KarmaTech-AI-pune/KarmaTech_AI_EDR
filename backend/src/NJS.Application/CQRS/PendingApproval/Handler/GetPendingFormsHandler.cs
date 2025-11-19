@@ -87,32 +87,27 @@ namespace NJS.Application.CQRS.PendingApproval.Handler
             pendingFormsList.AddRange(projectClosures);
 
             // Get pending WBS Forms (WorkBreakdownStructure entities) with TaskType differentiation
-            var wbsForms = await _context.WorkBreakdownStructures
-                .Include(wbs => wbs.Project)
-                .Include(wbs => wbs.ActiveVersion)
-                    .ThenInclude(av => av.WorkflowHistories)
-                        .ThenInclude(hist => hist.AssignedTo)
-                .Include(wbs => wbs.LatestVersion)
-                    .ThenInclude(lv => lv.WorkflowHistories)
-                        .ThenInclude(hist => hist.AssignedTo)
-                .Where(wbs => (wbs.ActiveVersion == null || wbs.ActiveVersion.StatusId != (int)PMWorkflowStatusEnum.Approved) && (wbs.TaskType == TaskType.Manpower || wbs.TaskType == TaskType.ODC))
-                .Select(wbs => new PendingFormDto
+            // Get pending WBS Planned Hour Headers
+            var wbsPlannedHourForms = await _context.WBSTaskPlannedHourHeaders
+                .Include(wbsph => wbsph.Project)
+                .Include(wbsph => wbsph.WBSHistories)
+                    .ThenInclude(hist => hist.AssignedTo)
+                .Where(wbsph => wbsph.StatusId != (int)PMWorkflowStatusEnum.Approved)
+                .Select(wbsph => new PendingFormDto
                 {
-                    FormType = (wbs.TaskType == TaskType.Manpower) ? "Manpower" : (wbs.TaskType == TaskType.ODC) ? "ODC" : "WorkBreakdownStructure",
-                    FormId = wbs.Id,
-                    ProjectId = wbs.ProjectId,
-                    StatusId = wbs.ActiveVersion == null ? (wbs.LatestVersion == null ? 0 : wbs.LatestVersion.StatusId) : wbs.ActiveVersion.StatusId,
-                    FormName = (wbs.TaskType == TaskType.Manpower) ? "Manpower Task" : (wbs.TaskType == TaskType.ODC) ? "ODC Task" : "Work Breakdown Structure",
-                    ProjectName = wbs.Project.Name,
+                    FormType = (wbsph.TaskType == TaskType.Manpower) ? "Manpower" : (wbsph.TaskType == TaskType.ODC) ? "ODC" : "WBSPlannedHour",
+                    FormId = wbsph.Id,
+                    ProjectId = wbsph.ProjectId,
+                    StatusId = wbsph.StatusId,
+                    FormName = (wbsph.TaskType == TaskType.Manpower) ? "Manpower Task" : (wbsph.TaskType == TaskType.ODC) ? "ODC Task" : "WBS Planned Hour",
+                    ProjectName = wbsph.Project.Name,
                     HoldingUserName = 
-                        (wbs.ActiveVersion != null && wbs.ActiveVersion.WorkflowHistories != null && wbs.ActiveVersion.WorkflowHistories.Any(h => h.AssignedTo != null)) 
-                            ? wbs.ActiveVersion.WorkflowHistories.Where(h => h.AssignedTo != null).OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name 
-                            : (wbs.LatestVersion != null && wbs.LatestVersion.WorkflowHistories != null && wbs.LatestVersion.WorkflowHistories.Any(h => h.AssignedTo != null))
-                                ? wbs.LatestVersion.WorkflowHistories.Where(h => h.AssignedTo != null).OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name
-                                : "Not Assigned"
+                        (wbsph.WBSHistories != null && wbsph.WBSHistories.Any(h => h.AssignedTo != null)) 
+                            ? wbsph.WBSHistories.Where(h => h.AssignedTo != null).OrderByDescending(h => h.ActionDate).FirstOrDefault().AssignedTo.Name 
+                            : "Not Assigned"
                 })
                 .ToListAsync(cancellationToken);
-            pendingFormsList.AddRange(wbsForms);
+            pendingFormsList.AddRange(wbsPlannedHourForms);
 
             // Create the response with total count and forms list
             return new PendingFormsResponseDto
