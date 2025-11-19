@@ -114,8 +114,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     PlannedHours = ph.PlannedHours
                 }).ToList() ?? new System.Collections.Generic.List<PlannedHourDto>(),
                 TotalHours = (decimal)totalHours,
-                TotalCost = (decimal)totalCost,
-                Children = new System.Collections.Generic.List<WBSTaskVersionHistoryDto>()
+                TotalCost = (decimal)totalCost
             };
         }
     }

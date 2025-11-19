@@ -105,13 +105,5 @@ namespace NJS.Application.Dtos
         public List<PlannedHourDto> PlannedHours { get; set; } // Changed from decimal to List
         public decimal TotalHours { get; set; } // Added
         public decimal TotalCost { get; set; } // Added
-        public List<WBSTaskVersionDto> Children { get; set; } // Added
-    }
-
-    public class WBSVersionComparisonDto
-    {
-        public WBSVersionDetailsDto Version1 { get; set; }
-        public WBSVersionDetailsDto Version2 { get; set; }
-        public List<string> Differences { get; set; } // Example property for differences
     }
 }

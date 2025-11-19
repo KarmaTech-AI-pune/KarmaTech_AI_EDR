@@ -34,10 +34,9 @@ namespace NJS.Application.Dtos
         public double TotalHours { get; set; }
         public decimal TotalCost { get; set; }
 
-        // New property to support nested structure for children tasks
-        public List<WBSTaskDto> Children { get; set; } = new();
-
         public int WBSOptionId { get; set; } // Added for WBS Option relationship
         public string? WBSOptionLabel { get; set; } // Added for displaying WBS Option label
+
+        public int? ParentId { get; set; } // Added to reflect parent-child relationship
     }
 }

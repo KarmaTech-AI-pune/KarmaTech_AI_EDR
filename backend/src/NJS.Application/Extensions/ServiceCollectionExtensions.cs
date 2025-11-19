@@ -18,6 +18,7 @@ using NJS.Repositories.Interfaces;
 using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 
+
 namespace NJS.Application.Extensions
 {
     public static class ServiceCollectionExtensions
@@ -55,6 +56,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IChangeControlRepository, ChangeControlRepository>();
             services.AddScoped<IProjectClosureRepository, ProjectClosureRepository>();
             services.AddScoped<ITenantRepository, TenantRepository>();
+            services.AddScoped<IProgramRepository, ProgramRepository>();
 
             services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
             services.AddScoped<ICashflowRepository, CashflowRepository>();

@@ -43,7 +43,7 @@ namespace NJSAPI.Controllers
         /// Creates a new project
         /// </summary>
         [HttpPost]
-        [ProducesResponseType(typeof(int), 201)]
+        [ProducesResponseType(typeof(Project), 201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> Create([FromBody] ProjectDto projectData)
@@ -64,8 +64,8 @@ namespace NJSAPI.Controllers
                 projectData.TenantId = CurrentTenantId;
 
                 var command = new CreateProjectCommand(projectData);
-                var projectId = await _mediator.Send(command);
-                return CreatedAtAction(nameof(GetById), new { id = projectId }, projectId);
+                var createdProject = await _mediator.Send(command);
+                return CreatedAtAction(nameof(GetById), new { id = createdProject.Id }, createdProject);
             }
             catch (Exception ex)
             {
