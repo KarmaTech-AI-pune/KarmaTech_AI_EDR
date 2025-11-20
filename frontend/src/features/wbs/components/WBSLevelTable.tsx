@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import AddItemButton from './AddItemButton';
 import WBSItemRow from './WBSItemRow';
-import { IWBSItem, IWBSData } from '../../types/wbs';
+import { IWBSItem, IWBSData } from '../types/wbs';
 
 interface WBSLevelTableProps {
   title: string;

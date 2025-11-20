@@ -24,7 +24,7 @@ import { CheckReviewRow, Employee } from "../../../models";
 import { User } from "../../../models";
 import * as userApi from "../../../services/userApi";
 import { projectManagementAppContext } from '../../../App';
-import { WBSStructureAPI } from '../../../services/wbsApi';
+import { WBSStructureAPI } from '../../../features/wbs/services/wbsApi';
 import { ResourceAPI } from '../../../services/resourceApi';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({

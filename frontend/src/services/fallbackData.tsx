@@ -1,6 +1,6 @@
 import { resourceRoles, employees } from '../dummyapi/database/dummyResourceRoles';
-import { wbsTasks, resourceAllocations, plannedHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options } from '../dummyapi/database/dummyWBSTasks';
-import { WBSRowData } from '../types/wbs';
+import { wbsTasks, resourceAllocations, plannedHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options } from '../features/wbs/dummyapi/dummyWBSTasks';
+import { WBSRowData } from '../features/wbs/types/wbs';
 import { resourceRole, Employee } from '../models';
 
 /**

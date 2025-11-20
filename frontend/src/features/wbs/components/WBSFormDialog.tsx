@@ -13,7 +13,7 @@ import {
   Typography, // Added Typography
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
-import { IWBSFormInputs, IWBSItem, IWBSData, IWBSLevel2, IWBSLevel3 } from '../../types/wbs'; // Added IWBSLevel3
+import { IWBSFormInputs, IWBSItem, IWBSData, IWBSLevel2, IWBSLevel3 } from '../types/wbs';
 
 interface WBSFormDialogProps {
   isOpen: boolean;

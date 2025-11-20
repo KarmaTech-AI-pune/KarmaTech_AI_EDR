@@ -1,5 +1,5 @@
 import React from 'react';
-import {WBSOption} from '../../../types/wbs'
+import {WBSOption} from '../types/wbs'
 import {
   Box,
   Select,

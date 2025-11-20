@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material'; // Added CircularProgress, Alert, and Typography
-import WBSLevelTable from '../../wbs/WBSLevelTable';
-import WBSFormDialog from '../../wbs/WBSFormDialog';
-import ConfirmationDialog from '../../wbs/ConfirmationDialog';
+import WBSLevelTable from './WBSLevelTable';
+import WBSFormDialog from './WBSFormDialog';
+import ConfirmationDialog from './ConfirmationDialog';
 import {
   IWBSData,
   IWBSItem,
@@ -10,10 +10,10 @@ import {
   IWBSLevel2,
   IWBSLevel3,
   IWBSFormInputs,
-} from '../../../types/wbs';
-import { WBSOption } from '../../../types/wbs.tsx'; 
-import { transformLevel3Data } from '../../../utils/wbsUtils';
-import { WBSOptionsAPI } from '../../../services/wbsApi';
+} from '../types/wbs';
+import { WBSOption } from '../types/wbs';
+import { transformLevel3Data } from '../utils/wbsUtils';
+import { WBSOptionsAPI } from '../services/wbsApi';
 
 const WbsOptions = () => {
   const [wbsData, setWbsData] = useState<IWBSData>({ level1: [], level2: [], level3: {} });

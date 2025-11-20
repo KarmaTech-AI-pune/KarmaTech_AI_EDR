@@ -13,8 +13,8 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
-import { WBSRowData, WBSChildTotals } from '../../../types/wbs';
-import { useWBSDataContext, useWBSActionsContext } from '../../../context/wbs/WBSContext';
+import { WBSRowData, WBSChildTotals } from '../types/wbs';
+import { useWBSDataContext, useWBSActionsContext } from '../context/WBSContext';
 
 const NumberInput = styled('input')({
   width: '100%',

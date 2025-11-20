@@ -1,5 +1,5 @@
 // WBS Task Type Definition
-import { WBSTask, WBSTaskResourceAllocation, PlannedHour } from "../../models";
+import { WBSTask, WBSTaskResourceAllocation, PlannedHour } from "../../../models";
 
 // WBS Task Resource Allocation Type Definition
 

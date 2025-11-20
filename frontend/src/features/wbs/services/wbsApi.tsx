@@ -1,6 +1,6 @@
-import { axiosInstance } from './axiosConfig';
+import { axiosInstance } from '../../../services/axiosConfig';
 import { WBSRowData, WBSOption, TaskType } from '../types/wbs.ts'; // Corrected import path for WBSOption and TaskType
-import { PlannedHour } from '../models/plannedHourModel';
+import { PlannedHour } from '../../../models/plannedHourModel';
 
 export const WBSStructureAPI = {
   /**

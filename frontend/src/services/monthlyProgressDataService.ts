@@ -1,5 +1,5 @@
 import { getJobStartFormByProjectId } from './jobStartFormApi';
-import { WBSStructureAPI } from './wbsApi';
+import { WBSStructureAPI } from '../features/wbs/services/wbsApi';
 import { projectApi } from './projectApi';
 import { MonthlyProgressSchemaType } from '../schemas/monthlyProgress/MonthlyProgressSchema';
 import { addCalculation, percentageCalculation } from '../utils/calculations';
@@ -14,7 +14,7 @@ interface JobStartData {
   // Add other properties from the job start form API response as needed
 }
 
-import { WBSRowData } from '../types/wbs';
+import { WBSRowData } from '../features/wbs/types/wbs';
 
 type WBSData = WBSRowData[];
 

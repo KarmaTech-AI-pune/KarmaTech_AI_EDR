@@ -11,8 +11,8 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import WBSRow from './WBSRow';
-import { WBSRowData } from '../../../types/wbs';
-import { useWBSDataContext, useWBSActionsContext } from '../../../context/wbs/WBSContext';
+import { WBSRowData } from '../types/wbs';
+import { useWBSDataContext, useWBSActionsContext } from '../context/WBSContext';
 
 const HeaderCell = styled(TableCell)(({ theme }) => ({
   textAlign: 'center',

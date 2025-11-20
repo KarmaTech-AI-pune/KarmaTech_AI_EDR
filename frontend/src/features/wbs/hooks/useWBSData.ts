@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useProject } from '../../context/ProjectContext';
-import { WBSStructureAPI, WBSOptionsAPI } from '../../services/wbsApi';
-import { ResourceAPI } from '../../services/resourceApi';
-import { WBSOption, WBSRowData, TaskType } from '../../types/wbs';
-import { resourceRole } from '../../models/resourceRoleModel';
-import { Employee } from '../../models/employeeModel';
+import { useProject } from '../../../context/ProjectContext';
+import { WBSStructureAPI, WBSOptionsAPI } from '../services/wbsApi';
+import { ResourceAPI } from '../../../services/resourceApi';
+import { WBSOption, WBSRowData, TaskType } from '../types/wbs';
+import { resourceRole } from '../../../models/resourceRoleModel';
+import { Employee } from '../../../models/employeeModel';
 
 interface PlannedHours {
   [year: string]: {

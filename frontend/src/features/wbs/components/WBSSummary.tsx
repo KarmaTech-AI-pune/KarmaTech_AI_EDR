@@ -5,7 +5,7 @@ import {
   Typography,
   styled
 } from '@mui/material';
-import LoadingButton from '../../common/LoadingButton';
+import LoadingButton from '../../../components/common/LoadingButton';
 
 
 const SummaryText = styled(Typography)({

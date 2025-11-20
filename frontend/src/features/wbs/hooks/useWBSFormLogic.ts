@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { WBSStructureAPI, WBSOptionsAPI } from '../../services/wbsApi';
-import { ResourceAPI } from '../../services/resourceApi';
-import { WBSOption, WBSRowData, TaskType } from '../../types/wbs';
-import { resourceRole } from '../../models/resourceRoleModel';
-import { Employee } from '../../models/employeeModel';
+import { WBSStructureAPI, WBSOptionsAPI } from '../services/wbsApi';
+import { ResourceAPI } from '../../../services/resourceApi';
+import { WBSOption, WBSRowData, TaskType } from '../types/wbs';
+import { resourceRole } from '../../../models/resourceRoleModel';
+import { Employee } from '../../../models/employeeModel';
 
 interface DeleteDialog {
   open: boolean;

@@ -7,11 +7,11 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import { ProjectTrackingWorkflow } from '../../common/ProjectTrackingWorkflow';
+import { ProjectTrackingWorkflow } from '../../../components/common/ProjectTrackingWorkflow';
 import { projectManagementAppContext } from '../../../App';
-import { TaskType } from '../../../types/wbs';
-import { wbsHeaderApi } from '../../../services/wbsHeaderApi';
-import { useWBSDataContext, useWBSActionsContext } from '../../../context/wbs/WBSContext';
+import { TaskType } from '../types/wbs';
+import { wbsHeaderApi } from '../services/wbsHeaderApi';
+import { useWBSDataContext, useWBSActionsContext } from '../context/WBSContext';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
   display: 'flex',

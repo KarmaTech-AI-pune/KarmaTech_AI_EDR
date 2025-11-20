@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Paper, Alert, Container, CircularProgress, Box } from '@mui/material';
-import { useProject } from '../../context/ProjectContext';
-import NotificationSnackbar from '../widgets/NotificationSnackbar';
-import { WBSStructureAPI } from '../../services/wbsApi';
-import DeleteWBSDialog from '../dialogbox/DeleteWBSDialog';
-import WBSHeader from './WBSformcomponents/WBSHeader';
-import WBSTable from './WBSformcomponents/WBSTable';
-import WBSSummary from './WBSformcomponents/WBSSummary';
-import { TaskType } from '../../types/wbs';
-import { WBSProvider, useWBSDataContext, useWBSActionsContext, useWBSUIStateContext } from '../../context/wbs/WBSContext';
+import { useProject } from '../../../context/ProjectContext';
+import NotificationSnackbar from '../../../components/widgets/NotificationSnackbar';
+import { WBSStructureAPI } from '../services/wbsApi';
+import DeleteWBSDialog from './DeleteWBSDialog';
+import WBSHeader from './WBSHeader';
+import WBSTable from './WBSTable';
+import WBSSummary from './WBSSummary';
+import { TaskType } from '../types/wbs';
+import { WBSProvider, useWBSDataContext, useWBSActionsContext, useWBSUIStateContext } from '../context/WBSContext';
 
 interface WorkBreakdownStructureFormProps {
   formType?: 'manpower' | 'odc';

@@ -1,4 +1,4 @@
-import { axiosInstance } from './axiosConfig';
+import { axiosInstance } from '../../../services/axiosConfig';
 import { TaskType } from '../types/wbs';
 
 export interface WBSHeaderStatus {

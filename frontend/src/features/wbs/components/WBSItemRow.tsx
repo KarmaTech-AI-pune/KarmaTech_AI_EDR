@@ -1,8 +1,8 @@
 import React from 'react';
 import { TableRow, TableCell } from '@mui/material';
 import ActionButton from './ActionButton';
-import { IWBSItem, IWBSData } from '../../types/wbs';
-import { getWBSParentLabel } from '../../utils/wbsUtils';
+import { IWBSItem, IWBSData } from '../types/wbs';
+import { getWBSParentLabel } from '../utils/wbsUtils';
 
 interface WBSItemRowProps {
   item: IWBSItem;

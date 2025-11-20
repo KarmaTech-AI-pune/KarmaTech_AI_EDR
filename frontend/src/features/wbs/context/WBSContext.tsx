@@ -1,11 +1,11 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { WBSRowData, WBSOption } from '../../types/wbs';
-import { resourceRole } from '../../models/resourceRoleModel';
-import { Employee } from '../../models/employeeModel';
-import { useWBSData } from '../../hooks/wbs/useWBSData';
-import { useWBSFormLogic } from '../../hooks/wbs/useWBSFormLogic';
-import { useWBSTotals } from '../../hooks/wbs/useWBSTotals';
-import { useProject } from '../ProjectContext';
+import { WBSRowData, WBSOption } from '../types/wbs';
+import { resourceRole } from '../../../models/resourceRoleModel';
+import { Employee } from '../../../models/employeeModel';
+import { useWBSData } from '../hooks/useWBSData';
+import { useWBSFormLogic } from '../hooks/useWBSFormLogic';
+import { useWBSTotals } from '../hooks/useWBSTotals';
+import { useProject } from '../../../context/ProjectContext';
 
 // Data Context - Read-only data
 interface WBSDataContextType {

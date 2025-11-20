@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { WBSRowData } from '../../types/wbs';
+import { WBSRowData } from '../types/wbs';
 
 interface UseWBSTotalsProps {
   manpowerRows: WBSRowData[];
