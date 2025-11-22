@@ -1,5 +1,5 @@
 // Main WBS exports
-export { default as WorkBreakdownStructureForm } from './components/WorkBreakdownStructureForm';
+export { default as WorkBreakdownStructureForm } from './pages/WorkBreakdownStructureForm';
 export { default as WBSHeader } from './components/WBSHeader';
 export { default as WBSTable } from './components/WBSTable';
 export { default as WBSRow } from './components/WBSRow';

@@ -3,10 +3,10 @@ import { Paper, Alert, Container, CircularProgress, Box } from '@mui/material';
 import { useProject } from '../../../context/ProjectContext';
 import NotificationSnackbar from '../../../components/widgets/NotificationSnackbar';
 import { WBSStructureAPI } from '../services/wbsApi';
-import DeleteWBSDialog from './DeleteWBSDialog';
-import WBSHeader from './WBSHeader';
-import WBSTable from './WBSTable';
-import WBSSummary from './WBSSummary';
+import DeleteWBSDialog from '../components/DeleteWBSDialog';
+import WBSHeader from '../components/WBSHeader';
+import WBSTable from '../components/WBSTable';
+import WBSSummary from '../components/WBSSummary';
 import { TaskType } from '../types/wbs';
 import { WBSProvider, useWBSDataContext, useWBSActionsContext, useWBSUIStateContext } from '../context/WBSContext';
 
