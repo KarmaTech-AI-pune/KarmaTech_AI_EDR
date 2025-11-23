@@ -1,58 +1,26 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   TableRow,
   TableCell,
   IconButton,
   Box,
-  Select,
   MenuItem,
-  styled,
   Typography,
   Autocomplete,
-  TextField
+  TextField,
+  SelectChangeEvent
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
-import { WBSRowData, WBSChildTotals } from '../types/wbs';
-import { useWBSDataContext, useWBSActionsContext } from '../context/WBSContext';
+import { WBSRowData, WBSChildTotals, WBSOption } from '../types/wbs';
+import {
+  useWBSRowLogic,
+  NumberInput,
+  StyledSelect,
+  StickyCell,
+} from '../hooks/useWBSRowLogic';
 
-const NumberInput = styled('input')({
-  width: '100%',
-  padding: '8px 12px',
-  border: '1px solid rgba(0, 0, 0, 0.23)',
-  borderRadius: '4px',
-  height: '40px',
-  boxSizing: 'border-box',
-  '&:focus': {
-    outline: 'none',
-    borderColor: '#1976d2'
-  }
-});
-
-const StyledSelect = styled(Select)({
-  width: '100%',
-  height: '40px',
-  '& .MuiSelect-select': {
-    padding: '8px 12px'
-  }
-});
-
-const StickyCell = styled(TableCell)(({ theme }) => ({
-  position: 'sticky',
-  left: 0,
-  zIndex: 2,
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 1,
-    backgroundColor: theme.palette.divider,
-  }
-}));
-
-// Define unit options for ODC form
+// Define unit options locally for ODC form
 const unitOptions = [
   { value: 'nos', label: 'Nos' },
   { value: 'ls', label: 'LS' },
@@ -61,6 +29,18 @@ const unitOptions = [
   { value: 'month', label: 'Month' },
   { value: 'year', label: 'Year' }
 ];
+
+// Assuming 'roles' and 'employees' from context have these structures
+interface RoleType {
+  id: string;
+  name: string;
+  min_rate?: number;
+}
+
+interface EmployeeType {
+  id: string;
+  name: string;
+}
 
 interface WBSRowProps {
   row: WBSRowData;
@@ -75,23 +55,22 @@ const WBSRow: React.FC<WBSRowProps> = ({
   sequenceNumber,
   stickyColumn,
 }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
-  // Get data and actions from context
   const {
+    isDropdownOpen,
+    setIsDropdownOpen,
     months,
     roles,
     employees,
     editMode,
     formType,
-    level1Options,
-    level2Options,
-    level3OptionsMap,
-    manpowerRows,
-    odcRows,
-  } = useWBSDataContext();
-  
-  const {
+    getLevelOptions,
+    getPlannedHours,
+    getChildTotalHours,
+    WorkDescriptionCell,
+    backgroundColor,
+    selectedRole,
+    rateTooltip,
+    employeesForRole,
     handleDeleteClick,
     handleLevelChange,
     handleUnitChange,
@@ -100,42 +79,9 @@ const WBSRow: React.FC<WBSRowProps> = ({
     handleHoursChange,
     handleODCChange,
     handleResourceRoleChange,
-  } = useWBSActionsContext();
-  
-  const rows = formType === 'manpower' ? manpowerRows : odcRows;
-  const roleId = row.role ? row.role : null;
-  const selectedRole = roleId !== null ? roles.find(r => r.id === roleId) : undefined;
-  const rateTooltip = selectedRole ? `Min Rate: ${selectedRole.min_rate}` : '';
-  const employeesForRole = employees;
-
-  const getLevelOptions = () => {
-    if (row.level === 1) return level1Options;
-    if (row.level === 2) return level2Options;
-    if (row.level === 3) {
-      const parentRow = rows.find(r => r.id === row.parentId);
-      if (parentRow && parentRow.title) return level3OptionsMap[parentRow.title] || [];
-    }
-    return [];
-  };
-
-  const getPlannedHours = (month: string): string => {
-    const [monthName, yearStr] = month.split(' ');
-    const year = `20${yearStr}`;
-    return (row.plannedHours[year]?.[monthName] || '').toString();
-  };
-
-  const getChildTotalHours = (month: string): string => {
-    if (!childTotals) return '';
-    const [monthName, yearStr] = month.split(' ');
-    const year = `20${yearStr}`;
-    return (childTotals.plannedHours[year]?.[monthName] || '').toString();
-  };
-
-  const WorkDescriptionCell = stickyColumn ? StickyCell : TableCell;
-
-  const backgroundColor = row.level === 1 ? '#E3F2FD' : // Solid light blue
-                         row.level === 2 ? '#E8F5E9' : // Solid light green
-                         '#FFFFFF'; // Solid white
+    handleAutocompleteInputChange,
+    handleAutocompleteChange,
+  } = useWBSRowLogic({ row, childTotals, sequenceNumber, stickyColumn });
 
   return (
     <TableRow
@@ -197,7 +143,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
               fullWidth
               size="small"
               value={row.name || ''}
-              onChange={(e) => handleEmployeeChange(row.id, e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEmployeeChange(row.id, e.target.value)}
               disabled={editMode}
               sx={{
                 bgcolor: 'background.paper',
@@ -214,23 +160,23 @@ const WBSRow: React.FC<WBSRowProps> = ({
             {row.level === 3 && formType === 'manpower' ? (
               <StyledSelect
                 value={row.resource_role || ''}
-                onChange={(e) => handleResourceRoleChange(row.id, e.target.value as string)}
+                onChange={(e: SelectChangeEvent<unknown>) => handleResourceRoleChange(row.id, e.target.value as string)}
                 size="small"
                 sx={{ bgcolor: 'background.paper' }}
                 disabled={editMode}
                 displayEmpty
-                renderValue={(selected) => {
-                  if (!selected) return 'Select Resource Role';
-                  // First try to use the stored role name, then lookup by ID
+                renderValue={(selected: unknown) => {
+                  const selectedStr = selected as string;
+                  if (!selectedStr) return 'Select Resource Role';
                   if (row.resource_role_name) {
                     return row.resource_role_name;
                   }
-                  const role = roles.find(r => r.id === selected);
+                  const role = (roles as RoleType[]).find((r: RoleType) => r.id === selectedStr);
                   return role ? role.name : 'Select Resource Role';
                 }}
               >
                 <MenuItem value="">Select Resource Role</MenuItem>
-                {roles.map(role => (
+                {(roles as RoleType[]).map((role: RoleType) => (
                   <MenuItem key={role.id} value={role.id}>
                     {role.name}
                   </MenuItem>
@@ -243,20 +189,13 @@ const WBSRow: React.FC<WBSRowProps> = ({
           <TableCell>
             {row.level === 3 && formType === 'manpower' ? (
               <Autocomplete
-                options={employeesForRole}
-                getOptionLabel={(option) => option.name}
-                value={employeesForRole.find(emp => emp.id === row.name) || null}
+                options={employeesForRole as EmployeeType[]}
+                getOptionLabel={(option: EmployeeType) => option.name}
+                value={(employeesForRole as EmployeeType[]).find((emp: EmployeeType) => emp.id === row.name) || null}
                 open={isDropdownOpen}
                 popupIcon={null}
-                onInputChange={(_event, value, reason) => {
-                  if (reason === 'input') {
-                    setIsDropdownOpen(!!value);
-                  }
-                }}
-                onChange={(_event, newValue) => {
-                  handleEmployeeChange(row.id, newValue ? newValue.id : '');
-                  setIsDropdownOpen(false);
-                }}
+                onInputChange={handleAutocompleteInputChange}
+                onChange={handleAutocompleteChange}
                 onClose={() => setIsDropdownOpen(false)}
                 disabled={editMode}
                 size="small"
@@ -311,7 +250,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             <NumberInput
               type="text"
               value={row.costRate || ''}
-              onChange={(e) => handleCostRateChange(row.id, e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCostRateChange(row.id, e.target.value)}
               min="0"
               disabled={editMode}
               style={{
@@ -322,7 +261,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             <NumberInput
               type="text"
               value={row.costRate || ''}
-              onChange={(e) => handleCostRateChange(row.id, e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCostRateChange(row.id, e.target.value)}
               disabled={editMode || !row.role}
               title={rateTooltip}
               style={{
@@ -338,13 +277,13 @@ const WBSRow: React.FC<WBSRowProps> = ({
         {row.level === 3 ? (
           <StyledSelect
             value={formType === 'manpower' ? 'month' : (row.unit || '')}
-            onChange={(e) => handleUnitChange(row.id, e.target.value as string)}
+            onChange={(e: SelectChangeEvent<unknown>) => handleUnitChange(row.id, e.target.value as string)}
             size="small"
             sx={{ bgcolor: 'background.paper' }}
             disabled={editMode || formType === 'manpower'}
           >
             <MenuItem value="">Select Unit</MenuItem>
-            {unitOptions.map(unit => (
+            {unitOptions.map((unit: {value: string, label: string}) => (
               <MenuItem key={unit.value} value={unit.value}>
                 {unit.label}
               </MenuItem>
@@ -354,13 +293,13 @@ const WBSRow: React.FC<WBSRowProps> = ({
           <Box sx={{ height: '40px' }} />
         )}
       </TableCell>
-      {months.map(month => (
+      {months.map((month: string) => (
         <TableCell key={month}>
           {row.level === 3 ? (
             <NumberInput
               type="text"
               value={getPlannedHours(month)}
-              onChange={(e) => handleHoursChange(row.id, month, e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleHoursChange(row.id, month, e.target.value)}
               min="0"
               style={{
                 backgroundColor: editMode ? '#f5f5f5' : 'white'
@@ -438,7 +377,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
                 <NumberInput
                   type="text"
                   value={row.odc || ''}
-                  onChange={(e) => handleODCChange(row.id, e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleODCChange(row.id, e.target.value)}
                   min="0"
                   style={{
                     backgroundColor: editMode ? '#f5f5f5' : 'white'

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react'; // Keep React for JSX
 import {
   Dialog,
   DialogTitle,
@@ -6,22 +6,23 @@ import {
   DialogActions,
   Button,
   TextField,
-  MenuItem,
+  MenuItem, // Keep MenuItem for rendering options
   FormControl,
   InputLabel,
   Select,
-  Typography, // Added Typography
+  Typography,
 } from '@mui/material';
-import { useForm, Controller } from 'react-hook-form';
-import { IWBSFormInputs, IWBSItem, IWBSData, IWBSLevel2, IWBSLevel3 } from '../types/wbs';
+import { Controller } from 'react-hook-form'; // Keep Controller for rendering the input
+import { IWBSFormInputs, IWBSItem, IWBSLevel2 } from '../types/wbs'; // Use IWBSItem here
+import { useWBSFormDialogLogic } from '../hooks/useWBSFormDialogLogic'; // Import the custom hook
 
 interface WBSFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: IWBSFormInputs) => void;
-  initialData?: IWBSItem | null;
+  initialData?: IWBSItem | null; // Changed to IWBSItem to match currentEditingItem
   level: number;
-  allLevelsData: IWBSData;
+  allLevelsData: any; // Use a more generic type as specific levels are handled by hook
   dialogTitle: string;
 }
 
@@ -31,56 +32,30 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
   onSubmit,
   initialData,
   level,
-  allLevelsData,
+  allLevelsData, // No longer directly used for options here, but kept if passed through.
   dialogTitle,
 }) => {
   const {
     control,
     handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<IWBSFormInputs>({
-    defaultValues: {
-      label: '',
-      parentValue: null,
-    },
+    errors,
+    parentOptionsData, // Use data from hook
+    onFormSubmit,      // Use handler from hook
+    dialogButtonText,  // Use text from hook
+  } = useWBSFormDialogLogic({
+    isOpen,
+    initialData,
+    level,
+    allLevelsData,
+    onSubmit,
+    onClose,
   });
-
-  useEffect(() => {
-    if (isOpen && initialData) {
-      reset({
-        label: initialData.label,
-        parentValue: initialData.level === 3 ? (initialData as IWBSLevel3).parentValue : null,
-      });
-    } else if (isOpen && !initialData) {
-      reset({
-        label: '',
-        parentValue: null,
-      });
-    }
-  }, [isOpen, initialData, reset]);
-
-  const handleFormSubmit = (data: IWBSFormInputs) => {
-    onSubmit(data);
-    onClose();
-  };
-
-  const getParentOptions = () => {
-    if (level === 3) {
-      return allLevelsData.level2.map((lvl2: IWBSLevel2) => (
-        <MenuItem key={lvl2.value} value={lvl2.value}>
-          {lvl2.label}
-        </MenuItem>
-      ));
-    }
-    return [];
-  };
 
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{dialogTitle}</DialogTitle>
       <DialogContent>
-        <form id="wbs-form" onSubmit={handleSubmit(handleFormSubmit)}>
+        <form id="wbs-form" onSubmit={handleSubmit(onFormSubmit)}> {/* Use onFormSubmit */}
           <Controller
             name="label"
             control={control}
@@ -109,9 +84,13 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
                     {...field}
                     labelId="parent-level-label"
                     label="Parent Level"
-                    value={field.value || ''} // Ensure controlled component
+                    value={field.value || ''}
                   >
-                    {getParentOptions()}
+                    {parentOptionsData.map((lvl2: IWBSLevel2) => ( // Map data to MenuItem
+                      <MenuItem key={lvl2.value} value={lvl2.value}>
+                        {lvl2.label}
+                      </MenuItem>
+                    ))}
                   </Select>
                 )}
               />
@@ -129,7 +108,7 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
           Cancel
         </Button>
         <Button type="submit" form="wbs-form" variant="contained" color="primary">
-          {initialData ? 'Update' : 'Add'}
+          {dialogButtonText} {/* Use dialogButtonText */}
         </Button>
       </DialogActions>
     </Dialog>
