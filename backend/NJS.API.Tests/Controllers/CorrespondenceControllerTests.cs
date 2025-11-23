@@ -6,11 +6,8 @@ using NJS.Application.CQRS.Correspondence.Commands;
 using NJS.Application.CQRS.Correspondence.Queries;
 using NJS.Application.DTOs;
 using NJSAPI.Controllers;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
+using NJS.Application.Services.IContract;
+using NJS.Repositories.Interfaces;
 
 namespace NJS.API.Tests.Controllers
 {
@@ -24,7 +21,10 @@ namespace NJS.API.Tests.Controllers
         {
             _mockMediator = new Mock<IMediator>();
             _mockLogger = new Mock<ILogger<CorrespondenceController>>();
-            _controller = new CorrespondenceController(_mockMediator.Object, _mockLogger.Object);
+            var tenantService = new Mock<ITenantService>();
+            var currentUserService = new Mock<ICurrentUserService>();
+           
+            _controller = new CorrespondenceController(_mockMediator.Object, _mockLogger.Object,tenantService.Object, currentUserService.Object);
         }
 
         #region Inward Correspondence Tests
