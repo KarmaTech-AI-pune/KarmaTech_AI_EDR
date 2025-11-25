@@ -193,7 +193,7 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
             const isOdcTask = task.taskType === TaskType.ODC;
 
             return {
-              id: task.id,
+              id: task.id ? task.id.toString() : '',
               level: task.level,
               title: task.title,
               role: isOdcTask ? null : (task.assignedUserId || null),
@@ -204,12 +204,13 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
               odcHours: isOdcTask ? task.totalHours : 0,
               totalHours: task.totalHours || 0,
               totalCost: task.totalCost || 0,
-              parentId: task.parentId,
+              parentId: task.parentId ? task.parentId.toString() : null,
               taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
               unit: isOdcTask ? (task.resourceUnit ?? '') : 'month',
               resource_role: (task as any).resourceRoleId ?? null,
               resource_role_name: (task as any).resourceRoleName ?? null,
-              wbsOptionId: (task as any).wbsOptionId ?? null // Capture wbsOptionId from backend
+              wbsOptionId: (task as any).wbsOptionId ?? null, // Capture wbsOptionId from backend
+              workBreakdownStructureId: (task as any).workBreakdownStructureId || 0 // Capture workBreakdownStructureId
             };
           });
 

@@ -31,6 +31,7 @@ export interface WBSRowData {
   resource_role: string | null; // Store role ID
   resource_role_name?: string | null; // Display role name
   wbsOptionId?: string | null; // Store the ID of the selected WBS option
+  workBreakdownStructureId?: number; // Store the work breakdown structure ID
 }
 
 export interface WBSChildTotals {
