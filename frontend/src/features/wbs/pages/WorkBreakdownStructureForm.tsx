@@ -27,6 +27,7 @@ const WBSFormContent: React.FC = () => {
     totalCost,
     loading,
     getProjectStartDate,
+    wbsHeaderId,
   } = useWBSDataContext();
   
   const {
@@ -88,7 +89,7 @@ const WBSFormContent: React.FC = () => {
         return;
       }
 
-      await WBSStructureAPI.setProjectWBS(projectId, combinedWbsData);
+      await WBSStructureAPI.setProjectWBS(projectId, combinedWbsData, wbsHeaderId);
       reloadWBSData();
 
       // Toggle edit mode after successful save

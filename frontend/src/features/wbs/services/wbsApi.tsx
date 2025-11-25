@@ -6,20 +6,28 @@ export const WBSStructureAPI = {
   /**
    * Get WBS structure for a project
    * @param projectId Project ID
-   * @returns Promise with array of WBS row data
+   * @returns Promise with WBS data including header ID and tasks
    */
-  getProjectWBS: async (projectId: string): Promise<WBSRowData[]> => {
+  getProjectWBS: async (projectId: string): Promise<{ wbsHeaderId: number; tasks: WBSRowData[]; workBreakdownStructures: any[] }> => {
     try {
       const response = await axiosInstance.get(`/api/projects/${projectId}/wbs`);
       const flattenedTasks: WBSRowData[] = [];
-      if (response.data.workBreakdownStructures && Array.isArray(response.data.workBreakdownStructures)) {
-        response.data.workBreakdownStructures.forEach((wbsItem: any) => {
+      const wbsHeaderId = response.data.wbsHeaderId || 0;
+      const workBreakdownStructures = response.data.workBreakdownStructures || [];
+      
+      if (workBreakdownStructures && Array.isArray(workBreakdownStructures)) {
+        workBreakdownStructures.forEach((wbsItem: any) => {
           if (wbsItem.tasks && Array.isArray(wbsItem.tasks)) {
-            flattenedTasks.push(...wbsItem.tasks);
+            // Attach workBreakdownStructureId to each task for later reference
+            const tasksWithWbsId = wbsItem.tasks.map((task: any) => ({
+              ...task,
+              workBreakdownStructureId: wbsItem.workBreakdownStructureId || 0
+            }));
+            flattenedTasks.push(...tasksWithWbsId);
           }
         });
       }
-      return flattenedTasks;
+      return { wbsHeaderId, tasks: flattenedTasks, workBreakdownStructures };
     } catch (error) {
       console.error(`Error fetching WBS for project ${projectId}:`, error);
       throw new Error(`Failed to load WBS data for project ${projectId}. Please check if the backend service is running.`);
@@ -30,9 +38,10 @@ export const WBSStructureAPI = {
    * Save WBS structure for a project
    * @param projectId Project ID
    * @param wbsData WBS data to save
+   * @param wbsHeaderId Current WBS header ID (0 for new, or existing ID)
    * @returns Promise
    */
-  setProjectWBS: async (projectId: string, wbsData: WBSRowData[]): Promise<void> => {
+  setProjectWBS: async (projectId: string, wbsData: WBSRowData[], wbsHeaderId: number = 0): Promise<void> => {
     try {
       // Create a map of temporary IDs for quick lookup
       const tempIdMap = new Map(wbsData.map(row => [row.id, row]));
@@ -56,10 +65,24 @@ export const WBSStructureAPI = {
 
         const isOdcTask = row.taskType === TaskType.ODC;
 
+        // Handle parentId - convert to proper format for backend
+        let parentIdValue: number | null = null;
+        if (row.parentId) {
+          // Check if parentId is a real numeric ID
+          const parsedParentId = parseInt(row.parentId);
+          if (!isNaN(parsedParentId) && row.parentId.length <= 10) {
+            // Real ID - use it
+            parentIdValue = parsedParentId;
+          } else {
+            // Temporary ID - set to null for new tasks
+            parentIdValue = null;
+          }
+        }
+
         // Transform the row data to match the new backend contract
         return {
           id: isTemporaryId ? 0 : parseInt(row.id), // Use 0 for new tasks, otherwise parse existing ID
-          workBreakdownStructureId: 0, // Placeholder, will be set at a higher level if needed
+          workBreakdownStructureId: (row as any).workBreakdownStructureId || 0, // Preserve existing ID or use 0 for new
           level: row.level,
           title: row.title, // Use row.title directly
           description: "", // Default empty description
@@ -84,7 +107,8 @@ export const WBSStructureAPI = {
           totalCost: row.totalCost,
           children: [], // Initialize as empty array as per new contract example
           wbsOptionId: row.wbsOptionId, // Add WBSOptionId to the payload
-          wbsOptionLabel: row.title // Use row.title as wbsOptionLabel
+          wbsOptionLabel: row.title, // Use row.title as wbsOptionLabel
+          parentId: parentIdValue // Use properly formatted parentId
         };
       };
 
@@ -106,8 +130,7 @@ export const WBSStructureAPI = {
 
         if (!wbsStructuresMap.has(topLevelParentId)) {
           wbsStructuresMap.set(topLevelParentId, {
-            wbsHeaderId: 0, // Placeholder
-            workBreakdownStructureId: 0, // Placeholder
+            workBreakdownStructureId: 0, // Will be determined after grouping all tasks
             name: currentTask.title, // Use the title of the top-level parent as the name
             description: "", // Placeholder
             displayOrder: 0, // Placeholder
@@ -117,10 +140,23 @@ export const WBSStructureAPI = {
         wbsStructuresMap.get(topLevelParentId).tasks.push(transformRowToBackendFormat(task));
       });
 
+      // After grouping, determine workBreakdownStructureId for each group
+      wbsStructuresMap.forEach((wbsGroup, topLevelParentId) => {
+        // Check if any task in this group has a real workBreakdownStructureId
+        let existingWbsId = 0;
+        for (const task of wbsGroup.tasks) {
+          if (task.workBreakdownStructureId && task.workBreakdownStructureId > 0) {
+            existingWbsId = task.workBreakdownStructureId;
+            break;
+          }
+        }
+        wbsGroup.workBreakdownStructureId = existingWbsId;
+      });
+
       const workBreakdownStructures = Array.from(wbsStructuresMap.values());
 
       const finalPayload = {
-        wbsHeaderId: 0, // Placeholder, assuming 0 for new or existing header
+        wbsHeaderId: wbsHeaderId, // Use provided wbsHeaderId
         workBreakdownStructures: workBreakdownStructures.map((wbs, index) => ({
           ...wbs,
           displayOrder: index + 1 // Assign display order based on array index

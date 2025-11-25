@@ -31,6 +31,7 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
   const [level2Options, setLevel2Options] = useState<WBSOption[]>([]);
   const [level3OptionsMap, setLevel3OptionsMap] = useState<{ [key: string]: WBSOption[] }>({});
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
+  const [wbsHeaderId, setWbsHeaderId] = useState<number>(0);
 
   // Helper function to find a WBS option by its ID
   const findWBSOptionById = (optionId: string, l1: WBSOption[], l2: WBSOption[], l3Map: { [key: string]: WBSOption[] }): WBSOption | undefined => {
@@ -165,8 +166,12 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
       let initialOdcRows: WBSRowData[] = [];
       if (projectId) {
         try {
-          let wbsData: WBSRowData[] = await WBSStructureAPI.getProjectWBS(projectId);
-         
+          const wbsResponse = await WBSStructureAPI.getProjectWBS(projectId);
+          const wbsData = wbsResponse.tasks;
+          const fetchedWbsHeaderId = wbsResponse.wbsHeaderId;
+          
+          // Store the wbsHeaderId for later use when saving
+          setWbsHeaderId(fetchedWbsHeaderId);
 
           const allTransformedRows = wbsData.map((task) => {
             const transformedPlannedHours: PlannedHours = {};
@@ -318,5 +323,6 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
     setLevel3OptionsMap,
     reloadWBSData,
     getProjectStartDate,
+    wbsHeaderId,
   };
 };

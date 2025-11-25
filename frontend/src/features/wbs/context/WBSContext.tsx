@@ -31,6 +31,7 @@ interface WBSDataContextType {
   
   // State
   loading: boolean;
+  wbsHeaderId: number;
   
   // Utility
   getProjectStartDate: () => string;
@@ -156,6 +157,7 @@ export const WBSProvider: React.FC<WBSProviderProps> = ({
     totalHours: totalsHook.calculatedTotalHours,
     totalCost: totalsHook.calculatedTotalCost,
     loading: dataHook.loading,
+    wbsHeaderId: dataHook.wbsHeaderId,
     getProjectStartDate: dataHook.getProjectStartDate,
   };
 
