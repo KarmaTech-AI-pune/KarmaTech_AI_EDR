@@ -21,7 +21,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ projectId }) => {
       try {
         setLoading(true);
         const wbsData = await WBSStructureAPI.getProjectWBS(projectId);
-        const { tasks, links } = transformWbsToGantt(wbsData);
+        const { tasks, links } = transformWbsToGantt(wbsData.tasks);
         setTasks(tasks);
         setLinks(links);
       } catch (err) {
