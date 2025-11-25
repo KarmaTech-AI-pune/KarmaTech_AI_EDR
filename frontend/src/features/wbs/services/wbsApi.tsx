@@ -11,7 +11,15 @@ export const WBSStructureAPI = {
   getProjectWBS: async (projectId: string): Promise<WBSRowData[]> => {
     try {
       const response = await axiosInstance.get(`/api/projects/${projectId}/wbs`);
-      return response.data.tasks || [];
+      const flattenedTasks: WBSRowData[] = [];
+      if (response.data.workBreakdownStructures && Array.isArray(response.data.workBreakdownStructures)) {
+        response.data.workBreakdownStructures.forEach((wbsItem: any) => {
+          if (wbsItem.tasks && Array.isArray(wbsItem.tasks)) {
+            flattenedTasks.push(...wbsItem.tasks);
+          }
+        });
+      }
+      return flattenedTasks;
     } catch (error) {
       console.error(`Error fetching WBS for project ${projectId}:`, error);
       throw new Error(`Failed to load WBS data for project ${projectId}. Please check if the backend service is running.`);
