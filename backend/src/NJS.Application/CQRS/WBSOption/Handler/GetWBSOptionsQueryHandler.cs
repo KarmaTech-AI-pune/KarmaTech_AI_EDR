@@ -22,7 +22,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         public async Task<WBSLevelOptionsDto> Handle(GetWBSOptionsQuery request, CancellationToken cancellationToken)
         {
             // Fetch WBS options based on form type if specified
-            IEnumerable<WBSOption> allOptions;
+            IEnumerable<NJS.Domain.Entities.WBSOption> allOptions;
             if (request.FormType.HasValue)
             {
                 allOptions = await _wbsOptionRepository.GetByFormTypeAsync(request.FormType.Value);

@@ -7,7 +7,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Queries
 {
     public record GetWBSLevel3OptionsQuery : IRequest<List<WBSOptionDto>>
     {
-        public string Level2Value { get; init; }
-        public FormType? FormType { get; init; }
+        public int Level2Id { get; set; }
+        public FormType? FormType { get; set; }
     }
 }

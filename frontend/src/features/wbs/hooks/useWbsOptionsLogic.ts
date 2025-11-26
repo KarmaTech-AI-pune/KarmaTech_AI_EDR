@@ -27,10 +27,16 @@ export const useWbsOptionsLogic = () => {
       setError(null);
 
       const level1Options = await WBSOptionsAPI.getLevel1Options();
-      const level2Options = await WBSOptionsAPI.getLevel2Options();
+      // Fetch level 2 options for each level 1 option
+      const level2Promises = level1Options.map(async (level1Option) => {
+        const level2Options = await WBSOptionsAPI.getLevel2Options(level1Option.id);
+        return level2Options;
+      });
+      const level2OptionsArrays = await Promise.all(level2Promises);
+      const level2Options = level2OptionsArrays.flat();
 
       const level3Promises = level2Options.map(async (lvl2Option) => {
-        const lvl3Options = await WBSOptionsAPI.getLevel3Options(lvl2Option.value);
+        const lvl3Options = await WBSOptionsAPI.getLevel3Options(lvl2Option.id);
         return { level2Value: lvl2Option.value, options: lvl3Options };
       });
       const allLevel3Data = await Promise.all(level3Promises);

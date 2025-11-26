@@ -125,13 +125,16 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
 
       // Load WBS options (level 1 and 2)
       try {
-        const [fetchedL1Options, fetchedL2Options] = await Promise.all([
-          WBSOptionsAPI.getLevel1Options(formTypeValue),
-          WBSOptionsAPI.getLevel2Options(formTypeValue)
-        ]);
-
+        const fetchedL1Options = await WBSOptionsAPI.getLevel1Options(formTypeValue);
         l1Options = fetchedL1Options;
-        l2Options = fetchedL2Options;
+        
+        // Fetch level 2 options for each level 1 option
+        const level2Promises = l1Options.map(async (level1Option) => {
+          const level2Options = await WBSOptionsAPI.getLevel2Options(level1Option.id, formTypeValue);
+          return level2Options;
+        });
+        const level2OptionsArrays = await Promise.all(level2Promises);
+        l2Options = level2OptionsArrays.flat();
 
         setLevel1Options(l1Options);
         setLevel2Options(l2Options);
@@ -237,8 +240,12 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
           await Promise.all(
             Array.from(uniqueLevel2Titles).map(async (level2Title) => {
               try {
-                const options = await WBSOptionsAPI.getLevel3Options(level2Title, formTypeValue);
-                newLevel3OptionsMap[level2Title.toLowerCase()] = options;
+                // Find the level 2 option by value to get its ID
+                const level2Option = l2Options.find(opt => opt.value === level2Title);
+                if (level2Option) {
+                  const options = await WBSOptionsAPI.getLevel3Options(level2Option.id, formTypeValue);
+                  newLevel3OptionsMap[level2Title.toLowerCase()] = options;
+                }
               } catch (error) {
                 console.error(`Error loading level 3 options for ${level2Title}:`, error);
               }

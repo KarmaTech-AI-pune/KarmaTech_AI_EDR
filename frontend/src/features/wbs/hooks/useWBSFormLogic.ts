@@ -433,13 +433,17 @@ export const useWBSFormLogic = ({
     if (changedRow && changedRow.level === 2 && value) {
       try {
         const formTypeValue = formType === 'odc' ? 1 : 0;
+        
+        // Find the level 2 option by value to get its ID
+        const level2Option = level2Options.find(opt => opt.value === value);
+        if (level2Option) {
+          const level3Options = await WBSOptionsAPI.getLevel3Options(level2Option.id, formTypeValue);
 
-        const level3Options = await WBSOptionsAPI.getLevel3Options(value, formTypeValue);
-
-        setLevel3OptionsMap(prevMap => ({
-          ...prevMap,
-          [value.toLowerCase()]: level3Options
-        }));
+          setLevel3OptionsMap(prevMap => ({
+            ...prevMap,
+            [value.toLowerCase()]: level3Options
+          }));
+        }
       } catch (error) {
         console.error(`Error loading level 3 options for ${value}:`, error);
       }

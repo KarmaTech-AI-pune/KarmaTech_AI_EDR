@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
+namespace NJS.Application.CQRS.WBSOption.Handler
 {
     public class GetWBSLevel3OptionsQueryHandler : IRequestHandler<GetWBSLevel3OptionsQuery, List<WBSOptionDto>>
     {
@@ -22,29 +22,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
         public async Task<List<WBSOptionDto>> Handle(GetWBSLevel3OptionsQuery request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(request.Level2Value))
-            {
-                return new List<WBSOptionDto>();
-            }
-
-            // First, get the Level2 option by its value to get its ID
-            var level2Options = await _wbsOptionRepository.GetByLevelAndFormTypeAsync(2, request.FormType ?? FormType.Manpower);
-            var level2Option = level2Options.FirstOrDefault(o => o.Value == request.Level2Value);
-            
-            if (level2Option == null)
-            {
-                return new List<WBSOptionDto>();
-            }
-
-            IEnumerable<NJS.Domain.Entities.WBSOption> options;
+            var allOptions = await _wbsOptionRepository.GetAllAsync();
+            var options = allOptions.Where(o => o.Level == 3 && o.ParentId == request.Level2Id);
 
             if (request.FormType.HasValue)
             {
-                options = await _wbsOptionRepository.GetByLevelParentAndFormTypeAsync(3, level2Option.Id, request.FormType.Value);
-            }
-            else
-            {
-                options = await _wbsOptionRepository.GetByLevelAndParentAsync(3, level2Option.Id);
+                options = options.Where(o => o.FormType == request.FormType.Value);
             }
 
             return options

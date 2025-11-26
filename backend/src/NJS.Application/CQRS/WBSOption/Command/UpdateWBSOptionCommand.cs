@@ -1,15 +1,11 @@
 using MediatR;
 using NJS.Application.Dtos;
+using System.Collections.Generic;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Commands
 {
-    public class UpdateWBSOptionCommand : IRequest<WBSOptionDto>
+    public class UpdateWBSOptionCommand : IRequest<List<WBSOptionDto>>
     {
-        public int Id { get; set; }
-        public string Value { get; set; }
-        public string Label { get; set; }
-        public int Level { get; set; }
-        public int? ParentId { get; set; }
-        public int FormType { get; set; }
+        public List<WBSOptionDto> Options { get; set; } = new List<WBSOptionDto>();
     }
 }
