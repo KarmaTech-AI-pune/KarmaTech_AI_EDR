@@ -1,6 +1,6 @@
 namespace NJS.Application.DTOs.Dashboard
 {
-    public class TotalRevenueExpectedDto
+    public class TotalRevenueActualDto
     {
         public decimal TotalRevenue { get; set; }
         public string ChangeDescription { get; set; }

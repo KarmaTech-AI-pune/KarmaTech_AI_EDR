@@ -1,10 +1,10 @@
 using MediatR;
-using NJS.Application.DTOs;
+using NJS.Application.DTOs.Dashboard; // Corrected DTO namespace
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using NJS.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using NJS.Application.CQRS.PendingApproval.Query;
+using NJS.Application.CQRS.Dashboard.PendingApproval.Query;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NJS.Domain.Database;
 
-namespace NJS.Application.CQRS.PendingApproval.Handler
+namespace NJS.Application.CQRS.Dashboard.PendingApproval.Handler
 {
     public class GetPendingFormsHandler : IRequestHandler<GetPendingFormsQuery, PendingFormsResponseDto>
     {

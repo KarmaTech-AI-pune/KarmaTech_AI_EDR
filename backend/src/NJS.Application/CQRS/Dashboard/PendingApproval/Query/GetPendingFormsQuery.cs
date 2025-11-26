@@ -1,7 +1,7 @@
 using MediatR;
-using NJS.Application.DTOs;
+using NJS.Application.DTOs.Dashboard;
 
-namespace NJS.Application.CQRS.PendingApproval.Query
+namespace NJS.Application.CQRS.Dashboard.PendingApproval.Query
 {
     public class GetPendingFormsQuery : IRequest<PendingFormsResponseDto>
     {
