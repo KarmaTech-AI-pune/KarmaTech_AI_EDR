@@ -777,10 +777,12 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             };
 
             _context.Set<WBSTaskPlannedHourHeader>().Add(header);
-            await _unitOfWork.SaveChangesAsync();
 
-            var histories = BuildInitialHistoryEntries(project, header.Id);
+            // Build histories and associate them with the header using navigation property
+            var histories = await BuildInitialHistoryEntriesAsync(project, header);
             _context.WBSHistories.AddRange(histories);
+
+            // Save both header and histories in a single transaction
             await _unitOfWork.SaveChangesAsync();
 
             return header;
@@ -807,7 +809,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _context.WBSHistories.UpdateRange(existingHistories);
 
 
-                var histories = BuildInitialHistoryEntries(project, header.Id, false);
+                var histories = await BuildInitialHistoryEntriesAsync(project, header.Id, false);
                 _context.WBSHistories.AddRange(histories);
 
                 header.StatusId = (int)PMWorkflowStatusEnum.Initial;
@@ -819,33 +821,112 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         }
 
 
-        private List<WBSHistory> BuildInitialHistoryEntries(Project project, int headerId, bool isSoftDelete = false)
+        private async Task<List<WBSHistory>> BuildInitialHistoryEntriesAsync(Project project, WBSTaskPlannedHourHeader header, bool isSoftDelete = false)
         {
             var userId = _userContext.GetCurrentUserId();
             var actionDate = DateTime.UtcNow;
             var histories = new List<WBSHistory>();
 
-            void AddHistory(string assignedToId)
+            // Validate that the ActionBy user exists if provided
+            string validActionBy = null;
+            if (!string.IsNullOrEmpty(userId))
             {
-                if (assignedToId is not null)
+                var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+                if (userExists)
                 {
-                    histories.Add(new WBSHistory
-                    {
-                        StatusId = (int)PMWorkflowStatusEnum.Initial,
-                        Action = "Initial",
-                        Comments = "WBS ODC data has been updated",
-                        ActionDate = actionDate,
-                        ActionBy = userId,
-                        AssignedToId = assignedToId,
-                        WBSTaskPlannedHourHeaderId = headerId,
-                        IsDeleted = isSoftDelete
-                    });
+                    validActionBy = userId;
+                }
+                else
+                {
+                    _logger.LogWarning("User with ID {UserId} not found in AspNetUsers table. Setting ActionBy to null.", userId);
                 }
             }
 
-            AddHistory(project.ProjectManagerId);
-            AddHistory(project.SeniorProjectManagerId);
-            AddHistory(project.RegionalManagerId);
+            async Task AddHistoryAsync(string assignedToId)
+            {
+                if (!string.IsNullOrEmpty(assignedToId))
+                {
+                    // Validate that the assigned user exists
+                    var assignedUserExists = await _context.Users.AnyAsync(u => u.Id == assignedToId);
+                    if (assignedUserExists)
+                    {
+                        histories.Add(new WBSHistory
+                        {
+                            StatusId = (int)PMWorkflowStatusEnum.Initial,
+                            Action = "Initial",
+                            Comments = "WBS ODC data has been updated",
+                            ActionDate = actionDate,
+                            ActionBy = validActionBy,
+                            AssignedToId = assignedToId,
+                            WBSTaskPlannedHourHeader = header,
+                            IsDeleted = isSoftDelete
+                        });
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Assigned user with ID {AssignedToId} not found in AspNetUsers table. Skipping history entry.", assignedToId);
+                    }
+                }
+            }
+
+            await AddHistoryAsync(project.ProjectManagerId);
+            await AddHistoryAsync(project.SeniorProjectManagerId);
+            await AddHistoryAsync(project.RegionalManagerId);
+
+            return histories;
+        }
+
+        private async Task<List<WBSHistory>> BuildInitialHistoryEntriesAsync(Project project, int headerId, bool isSoftDelete = false)
+        {
+            var userId = _userContext.GetCurrentUserId();
+            var actionDate = DateTime.UtcNow;
+            var histories = new List<WBSHistory>();
+
+            // Validate that the ActionBy user exists if provided
+            string validActionBy = null;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+                if (userExists)
+                {
+                    validActionBy = userId;
+                }
+                else
+                {
+                    _logger.LogWarning("User with ID {UserId} not found in AspNetUsers table. Setting ActionBy to null.", userId);
+                }
+            }
+
+            async Task AddHistoryAsync(string assignedToId)
+            {
+                if (!string.IsNullOrEmpty(assignedToId))
+                {
+                    // Validate that the assigned user exists
+                    var assignedUserExists = await _context.Users.AnyAsync(u => u.Id == assignedToId);
+                    if (assignedUserExists)
+                    {
+                        histories.Add(new WBSHistory
+                        {
+                            StatusId = (int)PMWorkflowStatusEnum.Initial,
+                            Action = "Initial",
+                            Comments = "WBS ODC data has been updated",
+                            ActionDate = actionDate,
+                            ActionBy = validActionBy,
+                            AssignedToId = assignedToId,
+                            WBSTaskPlannedHourHeaderId = headerId,
+                            IsDeleted = isSoftDelete
+                        });
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Assigned user with ID {AssignedToId} not found in AspNetUsers table. Skipping history entry.", assignedToId);
+                    }
+                }
+            }
+
+            await AddHistoryAsync(project.ProjectManagerId);
+            await AddHistoryAsync(project.SeniorProjectManagerId);
+            await AddHistoryAsync(project.RegionalManagerId);
 
             return histories;
         }

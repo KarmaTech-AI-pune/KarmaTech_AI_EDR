@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Paper, Alert, Container, CircularProgress, Box } from '@mui/material';
 import { useProject } from '../../../context/ProjectContext';
 import NotificationSnackbar from '../../../components/widgets/NotificationSnackbar';
@@ -47,6 +47,19 @@ const WBSFormContent: React.FC = () => {
     snackbarSeverity,
   } = useWBSUIStateContext();
 
+  // Use refs to track the latest state to avoid stale data in async operations
+  const latestManpowerRows = useRef(manpowerRows);
+  const latestOdcRows = useRef(odcRows);
+
+  // Update refs whenever state changes
+  useEffect(() => {
+    latestManpowerRows.current = manpowerRows;
+  }, [manpowerRows]);
+
+  useEffect(() => {
+    latestOdcRows.current = odcRows;
+  }, [odcRows]);
+
   const projectStartDate = getProjectStartDate();
   const isProject = !!projectId;
 
@@ -60,12 +73,13 @@ const WBSFormContent: React.FC = () => {
         return;
       }
 
-      const updatedManpowerRows = manpowerRows.map(row => ({
+      // Use refs to get the latest state to avoid stale data in async operations
+      const updatedManpowerRows = latestManpowerRows.current.map(row => ({
         ...row,
         taskType: TaskType.Manpower
       }));
 
-      const updatedOdcRows = odcRows.map(row => ({
+      const updatedOdcRows = latestOdcRows.current.map(row => ({
         ...row,
         taskType: TaskType.ODC
       }));
