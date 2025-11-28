@@ -5,6 +5,7 @@ import { useState, useContext, useEffect } from 'react';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { projectManagementAppContext } from '../../App';
 import { OpportunityTracking } from '../../models';
+import { getUserById } from '../../services/userApi'; // Import getUserById
 
 interface WorkflowStatus {
   id: number;
@@ -44,6 +45,8 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
       ? opportunity.currentHistory[0]?.statusId || 0
       : opportunity.currentHistory?.statusId || 0
   );
+  const [reviewerName, setReviewerName] = useState<string | null>(null); // State to store reviewer's name
+  const [approverName, setApproverName] = useState<string | null>(null); // State to store approver's name
   const context = useContext(projectManagementAppContext);
 
   useEffect(() => {
@@ -53,11 +56,54 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
       : opportunity.currentHistory;
     
     setLocalStatusId(history?.statusId || 0);
+
+    // Fetch reviewer's name if reviewManagerId is available
+    const fetchReviewerName = async () => {
+      if (opportunity.reviewManagerId) {
+        try {
+          const user = await getUserById(opportunity.reviewManagerId);
+          if (user) {
+            setReviewerName(user.name);
+          } else {
+            setReviewerName(null);
+          }
+        } catch (error) {
+          console.error("Error fetching reviewer name:", error);
+          setReviewerName(null);
+        }
+      } else {
+        setReviewerName(null);
+      }
+    };
+
+    // Fetch approver's name if approvalManagerId is available
+    const fetchApproverName = async () => {
+      if (opportunity.approvalManagerId) {
+        try {
+          const user = await getUserById(opportunity.approvalManagerId);
+          if (user) {
+            setApproverName(user.name);
+          } else {
+            setApproverName(null);
+          }
+        } catch (error) {
+          console.error("Error fetching approver name:", error);
+          setApproverName(null);
+        }
+      } else {
+        setApproverName(null);
+      }
+    };
+
+    fetchReviewerName();
+    fetchApproverName();
   }, [
     // Use optional chaining in dependency array and handle array case
     Array.isArray(opportunity.currentHistory)
       ? opportunity.currentHistory[0]?.statusId
-      : opportunity.currentHistory?.statusId
+      : opportunity.currentHistory?.statusId,
+    opportunity.reviewManagerId, // Add reviewManagerId to dependencies
+    opportunity.approvalManagerId // Add approvalManagerId to dependencies
   ]);
 
   const handleWorkflowClick = (e: React.MouseEvent) => {
@@ -89,7 +135,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
     switch (status) {
       case "Initial":
       case "Review Changes":
-        return 'Send for Review';
+        return reviewerName ? `Send for Review to ${reviewerName}` : 'Send for Review';
       case "Sent for Review":
         return 'Decide Review';
       case "Approval Changes":
@@ -97,7 +143,7 @@ export const OpportunityTrackingWorkflow : React.FC<OTWProps> = ({
         if (context?.canApproveBD) {
           return 'Decide Approval';
         } else if (context?.canSubmitForApproval) {
-          return 'Send for Approval';
+          return approverName ? `Send for Approval to ${approverName}` : 'Send for Approval';
         }
         return '';
       default:
