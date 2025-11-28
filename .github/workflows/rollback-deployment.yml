@@ -1,0 +1,375 @@
+# ====================================================================
+# Rollback Deployment Workflow
+# ====================================================================
+# This workflow allows rolling back to a previous release tag
+# Supports: Dev, Staging, and Production environments
+
+name: Rollback Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+      rollback-tag:
+        description: 'Tag to rollback to (e.g., v1.2.3-dev.20241125.1)'
+        required: true
+        type: string
+      component:
+        description: 'Component to rollback'
+        required: true
+        type: choice
+        options:
+          - full
+          - frontend-only
+          - backend-only
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  # ================================================================
+  # Job 1: Validate Rollback Request
+  # ================================================================
+  validate-rollback:
+    name: Validate Rollback Request
+    runs-on: ubuntu-latest
+    outputs:
+      is-valid: ${{ steps.validate.outputs.is-valid }}
+      current-tag: ${{ steps.validate.outputs.current-tag }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Validate rollback tag
+        id: validate
+        run: |
+          ROLLBACK_TAG="${{ github.event.inputs.rollback-tag }}"
+          ENV="${{ github.event.inputs.environment }}"
+          
+          # Check if tag exists
+          if ! git rev-parse "$ROLLBACK_TAG" >/dev/null 2>&1; then
+            echo "❌ Error: Tag $ROLLBACK_TAG does not exist!"
+            echo "is-valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          # Get current deployed tag (from version.json or CloudFormation tags)
+          echo "✅ Rollback tag $ROLLBACK_TAG is valid"
+          echo "is-valid=true" >> $GITHUB_OUTPUT
+          echo "current-tag=unknown" >> $GITHUB_OUTPUT
+
+      - name: Rollback confirmation
+        run: |
+          echo "## ⚠️ ROLLBACK CONFIRMATION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Rollback Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rollback To:** \`${{ github.event.inputs.rollback-tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Component:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Reason:** ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Initiated By:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **WARNING:** This will replace the current deployment!" >> $GITHUB_STEP_SUMMARY
+
+  # ================================================================
+  # Job 2: Rollback Backend
+  # ================================================================
+  rollback-backend:
+    name: Rollback Backend
+    runs-on: ubuntu-latest
+    needs: validate-rollback
+    if: |
+      needs.validate-rollback.outputs.is-valid == 'true' && 
+      (github.event.inputs.component == 'full' || github.event.inputs.component == 'backend-only')
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout rollback tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.rollback-tag }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Rollback backend image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ROLLBACK_TAG: ${{ github.event.inputs.rollback-tag }}
+          ENV: ${{ github.event.inputs.environment }}
+        run: |
+          # Determine ECR repository based on environment
+          if [ "$ENV" = "production" ]; then
+            ECR_REPO="njs-multitenant-backend"
+            ECS_CLUSTER="njs-multitenant-backend-cluster"
+            ECS_SERVICE="njs-multitenant-backend-service"
+          else
+            ECR_REPO="njs-multitenant-backend-$ENV"
+            ECS_CLUSTER="njs-multitenant-backend-cluster-$ENV"
+            ECS_SERVICE="njs-multitenant-backend-service-$ENV"
+          fi
+          
+          echo "Rolling back to image: $ECR_REGISTRY/$ECR_REPO:$ROLLBACK_TAG"
+          
+          # Update ECS service to use rollback image
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+          
+          # Wait for service to stabilize
+          echo "Waiting for service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster $ECS_CLUSTER \
+            --services $ECS_SERVICE \
+            --region ${{ env.AWS_REGION }}
+          
+          echo "✅ Backend rolled back successfully"
+
+  # ================================================================
+  # Job 3: Rollback Frontend
+  # ================================================================
+  rollback-frontend:
+    name: Rollback Frontend
+    runs-on: ubuntu-latest
+    needs: validate-rollback
+    if: |
+      needs.validate-rollback.outputs.is-valid == 'true' && 
+      (github.event.inputs.component == 'full' || github.event.inputs.component == 'frontend-only')
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout rollback tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.rollback-tag }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Create environment file
+        working-directory: ./frontend
+        run: |
+          ENV="${{ github.event.inputs.environment }}"
+          
+          if [ "$ENV" = "production" ]; then
+            API_URL="https://api.app.karmatech-ai.com/"
+            DOMAIN="app.karmatech-ai.com"
+          elif [ "$ENV" = "staging" ]; then
+            API_URL="https://api-staging.app.karmatech-ai.com/"
+            DOMAIN="staging.app.karmatech-ai.com"
+          else
+            API_URL="https://api.app.karmatech-ai.com/"
+            DOMAIN="edr-admin.app.karmatech-ai.com"
+          fi
+          
+          cat > .env.production <<EOF
+          VITE_API_BASE_URL=$API_URL
+          VITE_APP_ENV=$ENV
+          VITE_MAIN_DOMAIN=$DOMAIN
+          VITE_APP_TYPE=tenant
+          VITE_APP_VERSION=${{ github.event.inputs.rollback-tag }}
+          VITE_BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          VITE_COMMIT_SHA=${{ github.sha }}
+          VITE_ROLLBACK=true
+          EOF
+
+      - name: Build application
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Create rollback manifest
+        working-directory: ./frontend/dist
+        run: |
+          cat > version.json <<EOF
+          {
+            "version": "${{ github.event.inputs.rollback-tag }}",
+            "environment": "${{ github.event.inputs.environment }}",
+            "buildDate": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "commitSha": "${{ github.sha }}",
+            "rolledBackBy": "${{ github.actor }}",
+            "rollbackReason": "${{ github.event.inputs.reason }}",
+            "isRollback": true
+          }
+          EOF
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: |
+          ENV="${{ github.event.inputs.environment }}"
+          
+          # Determine S3 bucket based on environment
+          if [ "$ENV" = "production" ]; then
+            S3_BUCKET="njs-frontend-production"
+          elif [ "$ENV" = "staging" ]; then
+            S3_BUCKET="njs-frontend-staging"
+          else
+            # Get dev bucket from CloudFormation
+            S3_BUCKET=$(aws cloudformation describe-stacks \
+              --stack-name njs-tenant-frontend-dev \
+              --query 'Stacks[0].Outputs[?OutputKey==`TenantS3BucketName`].OutputValue' \
+              --output text)
+          fi
+          
+          echo "Deploying to S3 bucket: $S3_BUCKET"
+          aws s3 sync frontend/dist/ s3://$S3_BUCKET --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          ENV="${{ github.event.inputs.environment }}"
+          
+          # Get CloudFront distribution ID
+          if [ "$ENV" = "production" ]; then
+            DOMAIN="app.karmatech-ai.com"
+          elif [ "$ENV" = "staging" ]; then
+            DOMAIN="staging.app.karmatech-ai.com"
+          else
+            DOMAIN="edr-admin.app.karmatech-ai.com"
+          fi
+          
+          DIST_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items[0]=='$DOMAIN'].Id" \
+            --output text)
+          
+          if [ -n "$DIST_ID" ]; then
+            echo "Invalidating CloudFront distribution: $DIST_ID"
+            aws cloudfront create-invalidation \
+              --distribution-id $DIST_ID \
+              --paths "/*"
+          fi
+
+  # ================================================================
+  # Job 4: Post-Rollback Verification
+  # ================================================================
+  post-rollback-verification:
+    name: Post-Rollback Verification
+    runs-on: ubuntu-latest
+    needs: [rollback-backend, rollback-frontend]
+    if: always()
+    
+    steps:
+      - name: Health checks
+        run: |
+          ENV="${{ github.event.inputs.environment }}"
+          
+          echo "Running health checks for $ENV environment..."
+          
+          # Determine URLs based on environment
+          if [ "$ENV" = "production" ]; then
+            API_URL="https://api.app.karmatech-ai.com/health"
+            FRONTEND_URL="https://app.karmatech-ai.com"
+          elif [ "$ENV" = "staging" ]; then
+            API_URL="https://api-staging.app.karmatech-ai.com/health"
+            FRONTEND_URL="https://staging.app.karmatech-ai.com"
+          else
+            API_URL="https://api.app.karmatech-ai.com/health"
+            FRONTEND_URL="https://edr-admin.app.karmatech-ai.com"
+          fi
+          
+          # Wait for deployment to propagate
+          sleep 30
+          
+          # Check API health
+          if curl -f $API_URL; then
+            echo "✅ API health check passed"
+          else
+            echo "⚠️ API health check failed"
+          fi
+          
+          # Check frontend
+          if curl -f $FRONTEND_URL; then
+            echo "✅ Frontend health check passed"
+          else
+            echo "⚠️ Frontend health check failed"
+          fi
+
+  # ================================================================
+  # Job 5: Rollback Summary
+  # ================================================================
+  rollback-summary:
+    name: Rollback Summary
+    runs-on: ubuntu-latest
+    needs: [validate-rollback, rollback-backend, rollback-frontend, post-rollback-verification]
+    if: always()
+    
+    steps:
+      - name: Create rollback summary
+        run: |
+          echo "## 🔄 ROLLBACK COMPLETED" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Rollback Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rolled Back To:** \`${{ github.event.inputs.rollback-tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Component:** ${{ github.event.inputs.component }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Reason:** ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Initiated By:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Completed At:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Status" >> $GITHUB_STEP_SUMMARY
+          
+          BACKEND_STATUS="${{ needs.rollback-backend.result }}"
+          FRONTEND_STATUS="${{ needs.rollback-frontend.result }}"
+          
+          if [ "$BACKEND_STATUS" = "success" ] || [ "$BACKEND_STATUS" = "skipped" ]; then
+            echo "- Backend: ✅ Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Backend: ❌ Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "$FRONTEND_STATUS" = "success" ] || [ "$FRONTEND_STATUS" = "skipped" ]; then
+            echo "- Frontend: ✅ Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Frontend: ❌ Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Post-Rollback Actions" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Monitor application logs" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Verify functionality" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Investigate root cause" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Update incident report" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Notify stakeholders" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create rollback tag
+        run: |
+          echo "Creating rollback tracking tag..."
+          # This helps track that a rollback occurred

@@ -5,7 +5,7 @@
  * Tests: Timeline visualization, visual indicators, variance display, chronological order
  */
 
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BudgetChangeTimeline } from './BudgetChangeTimeline';
 import { ProjectBudgetChangeHistory } from '../../types/projectBudget';

@@ -10,7 +10,6 @@ import {
   ProjectBudgetChangeHistory,
   UpdateProjectBudgetRequest,
   ProjectBudgetUpdateResult,
-  ProjectBudgetChangeHistoryListResponse,
   GetBudgetHistoryParams,
   BudgetVarianceSummary,
 } from '../types/projectBudget';

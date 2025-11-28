@@ -173,7 +173,7 @@ describe('ProjectBudgetHistory Component', () => {
     });
 
     it('should show all changes when filter is set to All', async () => {
-      const user = userEvent.setup();
+      // const user = userEvent.setup();
       const mockHistory = createMockHistory(10);
       vi.mocked(projectBudgetApi.getBudgetHistory).mockResolvedValue(mockHistory);
 

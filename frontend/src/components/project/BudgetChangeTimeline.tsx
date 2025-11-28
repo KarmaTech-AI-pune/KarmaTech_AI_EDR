@@ -96,9 +96,6 @@ export const BudgetChangeTimeline: React.FC<BudgetChangeTimelineProps> = ({ chan
           {/* Left side - Date and User info */}
           <TimelineOppositeContent
             sx={{ m: 'auto 0' }}
-            align={index % 2 === 0 ? 'right' : 'left'}
-            variant="body2"
-            color="text.secondary"
           >
             <Typography variant="body2" fontWeight="bold">
               {formatDate(change.changedDate)}
