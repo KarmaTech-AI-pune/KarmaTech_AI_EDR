@@ -173,28 +173,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     setEditDialogOpen(false);
   };
 
-  // Enhanced handler for opportunity updates
-  const handleOpportunityUpdate = async (updatedOpp?: OpportunityTracking) => {
-    if (updatedOpp) {
-      // Use the provided updated opportunity
-      setCurrentOpportunity(updatedOpp);
-      if (onOpportunityUpdated) {
-        onOpportunityUpdated();
-      }
-    } else {
-      // Fallback to fetching from API
-      try {
-        const fetchedOpportunity = await opportunityApi.getById(opportunity.id);
-        console.log("fetched opportunity", fetchedOpportunity);
-        setCurrentOpportunity(fetchedOpportunity);
-        if (onOpportunityUpdated) {
-          onOpportunityUpdated();
-        }
-      } catch (error) {
-        console.error('Error updating opportunity:', error);
-      }
-    }
-  };
 
   const handleEditSubmit = async (formData: Partial<OpportunityTracking>) => {
     if (!canEditOpportunity) return;
