@@ -9,26 +9,29 @@ using NJS.Application.Dtos.Dashboard;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace NJS.Application.CQRS.Dashboard.ProjectsAtRisk.Handler
 {
     public class GetProjectsAtRiskQueryHandler : IRequestHandler<Query.GetProjectsAtRiskQuery, ProjectsAtRiskResponseDto>
     {
         private readonly ProjectManagementContext _context;
+        private readonly Microsoft.Extensions.Logging.ILogger<GetProjectsAtRiskQueryHandler> _logger;
 
-        public GetProjectsAtRiskQueryHandler(ProjectManagementContext context)
+        public GetProjectsAtRiskQueryHandler(ProjectManagementContext context, Microsoft.Extensions.Logging.ILogger<GetProjectsAtRiskQueryHandler> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<ProjectsAtRiskResponseDto> Handle(Query.GetProjectsAtRiskQuery request, CancellationToken cancellationToken)
         {
             var projects = await _context.Projects
-                .Include(p => p.Region)
                 .Include(p => p.ProjectManager)
                 // Removed .Include(p => p.JobStartForm) and .Include(p => p.WBSTasks) as they are not directly used in the output DTO or are causing errors
                 .Where(p => p.Status == ProjectStatus.OnHold || // Using OnHold as proxy for at-risk statuses, as Delayed/AtRisk/Critical are not in enum
-                           p.Status == ProjectStatus.Active)
+                           p.Status == ProjectStatus.Active ||
+                           p.Status == ProjectStatus.Opportunity)
                 .Select(p => new
                 {
                     Project = p,
@@ -39,6 +42,8 @@ namespace NJS.Application.CQRS.Dashboard.ProjectsAtRisk.Handler
                         .FirstOrDefault()
                 })
                 .ToListAsync(cancellationToken);
+
+            _logger.LogInformation($"ProjectsAtRisk: Found {projects.Count} projects with Active/OnHold status.");
 
             var projectsList = new List<ProjectAtRiskDto>();
 
@@ -53,6 +58,11 @@ namespace NJS.Application.CQRS.Dashboard.ProjectsAtRisk.Handler
                 {
                     var compareDate = schedule.ExpectedCompletionDate ?? DateTime.Now;
                     delayDays = (int)(compareDate - schedule.CompletionDateAsPerContract.Value).TotalDays;
+                    _logger.LogInformation($"Project {p.Id} ({p.Name}): Schedule found. Contract: {schedule.CompletionDateAsPerContract}, Expected: {schedule.ExpectedCompletionDate}, Delay: {delayDays}");
+                }
+                else
+                {
+                    _logger.LogInformation($"Project {p.Id} ({p.Name}): No schedule or contract date found.");
                 }
 
                 // Calculate budget
