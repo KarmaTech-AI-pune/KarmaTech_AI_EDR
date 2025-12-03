@@ -117,7 +117,7 @@ namespace NJS.Application.CQRS.Dashboard.ProjectsAtRisk.Handler
                         Status = status,
                         DelayDays = delayDays,
                         BudgetSpent = budgetSpent,
-                        BudgetTotal = budgetTotal,
+                        BudgetTotal = budgetTotal ?? 0,
                         BudgetPercentage = budgetPercentage,
                         Issues = issues,
                         Manager = p.ProjectManager?.Name ?? "Unknown"

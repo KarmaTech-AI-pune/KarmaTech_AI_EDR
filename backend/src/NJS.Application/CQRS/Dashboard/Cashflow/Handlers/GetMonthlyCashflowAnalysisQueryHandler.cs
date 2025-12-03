@@ -34,8 +34,9 @@ namespace NJS.Application.CQRS.Dashboard.Cashflow.Handlers
             var plannedHoursQuery = from ph in _context.WBSTaskPlannedHours
                                     join t in _context.WBSTasks on ph.WBSTaskId equals t.Id
                                     join wbs in _context.WorkBreakdownStructures on t.WorkBreakdownStructureId equals wbs.Id
+                                    join header in _context.WBSHeaders on wbs.WBSHeaderId equals header.Id
                                     where !t.IsDeleted
-                                    select new { wbs.ProjectId, ph.Month, ph.Year, ph.PlannedHours };
+                                    select new { header.ProjectId, ph.Month, ph.Year, ph.PlannedHours };
 
             var plannedHoursList = await plannedHoursQuery.ToListAsync(cancellationToken);
 

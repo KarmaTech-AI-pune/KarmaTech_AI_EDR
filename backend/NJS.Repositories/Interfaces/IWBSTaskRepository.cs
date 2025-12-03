@@ -10,7 +10,6 @@ namespace NJS.Repositories.Interfaces
         Task<WBSTask> GetByIdWithDetailsAsync(int id);
         Task<IEnumerable<WBSTask>> GetByWBSIdAsync(int wbsId);
         Task<IEnumerable<WBSTask>> GetByWBSIdWithDetailsAsync(int wbsId);
-        Task<IEnumerable<WBSTask>> GetByParentIdAsync(int parentId);
         Task<int> AddAsync(WBSTask task);
         Task UpdateAsync(WBSTask task);
         Task DeleteAsync(int id);

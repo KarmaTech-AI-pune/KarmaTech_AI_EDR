@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -17,15 +17,10 @@ namespace NJS.Domain.Entities
         [Key]
         public int Id { get; set; }
 
-        [NotMapped]
-        public string? FrontendTempId { get; set; } // For temporary frontend identification
-
         public int TenantId { get; set; }
 
         [Required]
         public int WorkBreakdownStructureId { get; set; }
-
-        public int? ParentId { get; set; }
 
         [Required]
         public WBSTaskLevel Level { get; set; }
@@ -62,16 +57,17 @@ namespace NJS.Domain.Entities
         [ForeignKey(nameof(WorkBreakdownStructureId))]
         public WorkBreakdownStructure WorkBreakdownStructure { get; set; }
 
-        [ForeignKey(nameof(ParentId))]
-        public WBSTask Parent { get; set; }
-
-        public ICollection<WBSTask> Children { get; set; } = new List<WBSTask>();
         public ICollection<WBSTaskPlannedHour> PlannedHours { get; set; } = new List<WBSTaskPlannedHour>();
         public ICollection<UserWBSTask> UserWBSTasks { get; set; } = new List<UserWBSTask>();
 
-        public int? WBSOptionId { get; set; } // Foreign key for WBSOption
+        public int WBSOptionId { get; set; } // Foreign key for WBSOption
 
         [ForeignKey("WBSOptionId")]
         public virtual WBSOption WBSOption { get; set; } // Navigation property for WBSOption
+
+        public int? ParentId { get; set; } // Foreign key for Parent WBSTask
+
+        [ForeignKey("ParentId")]
+        public virtual WBSTask? Parent { get; set; } // Navigation property for Parent WBSTask
     }
 }

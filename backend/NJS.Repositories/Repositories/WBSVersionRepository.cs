@@ -46,7 +46,8 @@ namespace NJS.Repositories.Repositories
                     .ThenInclude(h => h.ActionUser)
                 .Include(w => w.WorkflowHistories)
                     .ThenInclude(h => h.AssignedTo)
-                .FirstOrDefaultAsync(w => w.WorkBreakdownStructure.ProjectId == projectId && w.Version == version);
+                .Include(w => w.WBSHeader) // Include WBSHeader to access ProjectId
+                .FirstOrDefaultAsync(w => w.WBSHeader.ProjectId == projectId && w.Version == version);
         }
 
         public async Task<List<WBSVersionHistory>> GetByProjectIdAsync(int projectId)
@@ -57,7 +58,8 @@ namespace NJS.Repositories.Repositories
                 .Include(w => w.ApprovedByUser)
                 .Include(w => w.WorkflowHistories.OrderByDescending(h => h.ActionDate))
                     .ThenInclude(h => h.Status)
-                .Where(w => w.WorkBreakdownStructure.ProjectId == projectId)
+                .Include(w => w.WBSHeader) // Include WBSHeader to access ProjectId
+                .Where(w => w.WBSHeader.ProjectId == projectId)
                 .OrderByDescending(w => w.CreatedAt)
                 .ToListAsync();
         }
@@ -70,7 +72,8 @@ namespace NJS.Repositories.Repositories
                 .Include(w => w.ApprovedByUser)
                 .Include(w => w.WorkflowHistories.OrderByDescending(h => h.ActionDate))
                     .ThenInclude(h => h.Status)
-                .Where(w => w.WorkBreakdownStructure.ProjectId == projectId && w.IsLatest)
+                .Include(w => w.WBSHeader) // Include WBSHeader to access ProjectId
+                .Where(w => w.WBSHeader.ProjectId == projectId && w.IsLatest)
                 .FirstOrDefaultAsync();
         }
 
@@ -82,7 +85,8 @@ namespace NJS.Repositories.Repositories
                 .Include(w => w.ApprovedByUser)
                 .Include(w => w.WorkflowHistories.OrderByDescending(h => h.ActionDate))
                     .ThenInclude(h => h.Status)
-                .Where(w => w.WorkBreakdownStructure.ProjectId == projectId && w.IsActive)
+                .Include(w => w.WBSHeader) // Include WBSHeader to access ProjectId
+                .Where(w => w.WBSHeader.ProjectId == projectId && w.IsActive)
                 .FirstOrDefaultAsync();
         }
 
@@ -131,12 +135,13 @@ namespace NJS.Repositories.Repositories
 
                 // Update the WorkBreakdownStructure to point to this version
                 var wbs = await _context.WorkBreakdownStructures
-                    .FirstOrDefaultAsync(w => w.ProjectId == projectId);
-                if (wbs != null)
+                    .Include(w => w.WBSHeader) // Include WBSHeader to access ProjectId
+                    .FirstOrDefaultAsync(w => w.WBSHeader != null && w.WBSHeader.ProjectId == projectId);
+                if (wbs != null && wbs.WBSHeader != null)
                 {
-                    wbs.ActiveVersionHistoryId = versionHistory.Id;
-                    wbs.CurrentVersion = versionHistory.Version;
-                    _context.Entry(wbs).State = EntityState.Modified;
+                    wbs.WBSHeader.ActiveVersionHistoryId = versionHistory.Id;
+                    wbs.WBSHeader.Version = versionHistory.Version;
+                    _context.Entry(wbs.WBSHeader).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
                 }
 
@@ -153,7 +158,8 @@ namespace NJS.Repositories.Repositories
         public async Task<bool> DeactivateAllVersionsAsync(int projectId)
         {
             var versions = await _context.WBSVersionHistories
-                .Where(w => w.WorkBreakdownStructure.ProjectId == projectId && w.IsActive)
+                .Include(w => w.WBSHeader) // Include WBSHeader to access ProjectId
+                .Where(w => w.WBSHeader.ProjectId == projectId && w.IsActive)
                 .ToListAsync();
 
             foreach (var version in versions)
@@ -311,7 +317,8 @@ namespace NJS.Repositories.Repositories
         public async Task<string> GetNextVersionNumberAsync(int projectId)
         {
             var latestVersion = await _context.WBSVersionHistories
-                .Where(w => w.WorkBreakdownStructure.ProjectId == projectId)
+                .Include(w => w.WBSHeader) // Include WBSHeader to access ProjectId
+                .Where(w => w.WBSHeader.ProjectId == projectId)
                 .OrderByDescending(w => w.Version)
                 .FirstOrDefaultAsync();
 
@@ -327,7 +334,8 @@ namespace NJS.Repositories.Repositories
         public async Task<bool> VersionExistsAsync(int projectId, string version)
         {
             return await _context.WBSVersionHistories
-                .AnyAsync(w => w.WorkBreakdownStructure.ProjectId == projectId && w.Version == version);
+                .Include(w => w.WBSHeader) // Include WBSHeader to access ProjectId
+                .AnyAsync(w => w.WBSHeader.ProjectId == projectId && w.Version == version);
         }
 
         public async Task<int> GetTaskCountAsync(int wbsVersionHistoryId)
@@ -338,4 +346,4 @@ namespace NJS.Repositories.Repositories
 
         #endregion
     }
-} 
+}
