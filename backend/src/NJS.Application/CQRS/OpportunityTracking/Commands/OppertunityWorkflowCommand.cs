@@ -11,30 +11,30 @@ namespace NJS.Application.CQRS.OpportunityTracking.Commands
     public class OpportunityWorkflowCommand : IRequest<OpportunityTrackingDto>
     {
         public int OpportunityId { get; set; }
-        public string AssignedToId { get; set; }
-        public string Action { get; set; }// For BD manager only Send for Review
-        public string Comments { get; set; }
+        public string? AssignedToId { get; set; }
+        public string? Action { get; set; }// For BD manager only Send for Review
+        public string? Comments { get; set; }
     }
     public class SendToApprovalCommand : IRequest<OpportunityTrackingDto>
     {
         public int OpportunityId { get; set; }
-        public string AssignedToId { get; set; }
-        public string Action { get; set; }// For BD manager only Send for Review
-        public string Comments { get; set; }
+        public string? AssignedToId { get; set; }
+        public string? Action { get; set; }// For BD manager only Send for Review
+        public string? Comments { get; set; }
     }
-    
+
     public class SendToApproveCommand : IRequest<OpportunityTrackingDto>
     {
         public int OpportunityId { get; set; }
-        public string AssignedToId { get; set; }
-        public string Action { get; set; }// For BD manager only Send for Review
-        public string Comments { get; set; }
+        public string? AssignedToId { get; set; }
+        public string? Action { get; set; }// For BD manager only Send for Review
+        public string? Comments { get; set; }
     }
     public class SendToReviewCommand : IRequest<OpportunityTrackingDto>
     {
         public int OpportunityId { get; set; }
-        public string AssignedToId { get; set; }
-        public string Action { get; set; }// For BD manager only Send for Review
-        public string Comments { get; set; }
+        public string? AssignedToId { get; set; }
+        public string? Action { get; set; }// For BD manager only Send for Review
+        public string? Comments { get; set; }
     }
 }

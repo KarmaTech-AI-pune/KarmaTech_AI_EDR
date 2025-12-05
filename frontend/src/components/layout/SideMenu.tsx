@@ -31,6 +31,7 @@ import EngineeringIcon from '@mui/icons-material/Engineering';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 import DnsIcon from '@mui/icons-material/Dns'; // New icon for migrations
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance'; // Icon for budget history
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
@@ -138,6 +139,12 @@ const formSections = [
       title: 'Timeline',
       icon: <TimelineIcon />,
       path: 'timeline'
+    },
+    {
+      id: 'budgetHistory',
+      title: 'Budget History',
+      icon: <AccountBalanceIcon />,
+      path: 'budget-history'
     },
     {
       id: 'migrationManagement',

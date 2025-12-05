@@ -66,19 +66,27 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _logger.LogInformation("New Work Breakdown Structure created with ID {WBSId} for Project ID {ProjectId}.", wbs.Id, request.ProjectId);
             }
 
-            foreach (var taskDto in request.TasksDto)
+            foreach (var taskDto in request.TasksDto.OrderBy(t => t.Level).ThenBy(t => t.DisplayOrder)) // Process in order of level and display order
             {
-                // Handle ParentId based on task level
+                // ParentId will be resolved in a second pass if ParentFrontendTempId is present
+                // For Level 1 tasks, ParentId is always null
                 if (taskDto.Level == WBSTaskLevel.Level1)
                 {
-                    taskDto.ParentId = null; // Level 1 tasks do not have a parent
+                    taskDto.ParentId = null;
                 }
-
-                // Optional: Validate ParentId if provided (only for existing parents)
-                if (taskDto.ParentId.HasValue && !wbs.Tasks.Any(t => t.Id == taskDto.ParentId.Value && !t.IsDeleted))
+                else if (taskDto.ParentFrontendTempId == null && taskDto.ParentId.HasValue)
                 {
-                    _logger.LogError("Parent Task with ID {ParentId} not found in WBS {WBSId}.", taskDto.ParentId.Value, wbs.Id);
-                    throw new Exception($"Parent Task with ID {taskDto.ParentId.Value} not found in the WBS.");
+                    // If ParentFrontendTempId is not provided, but ParentId is, validate against existing WBS tasks
+                    if (!wbs.Tasks.Any(t => t.Id == taskDto.ParentId.Value && !t.IsDeleted))
+                    {
+                        _logger.LogError("Parent Task with ID {ParentId} not found in existing WBS {WBSId}.", taskDto.ParentId.Value, wbs.Id);
+                        throw new Exception($"Parent Task with ID {taskDto.ParentId.Value} not found in the existing WBS.");
+                    }
+                }
+                else
+                {
+                    // For tasks with ParentFrontendTempId, ParentId will be resolved in the second pass
+                    taskDto.ParentId = null; // Temporarily set to null
                 }
 
                 // --- 2. Create the new WBSTask entity ---
@@ -87,7 +95,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     WorkBreakdownStructureId = wbs.Id, // Associate with the found or newly created WBS
                     Description = taskDto.Description,
                     Level = taskDto.Level,
-                    // ParentId will be resolved in a second pass if ParentFrontendTempId is present
+                    ParentId = taskDto.ParentId, // Use the resolved/null ParentId from above
                     DisplayOrder = taskDto.DisplayOrder,
                     EstimatedBudget = taskDto.EstimatedBudget,
                     StartDate = taskDto.StartDate,
@@ -115,7 +123,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 _logger.LogInformation("Mapped WBSTask entity: {@TaskEntity}", taskEntity);
 
                 // --- 3. Add User Assignment and Planned Hours ---
-                await UpdateUserAssignment(taskEntity, taskDto, cancellationToken);
+                await UpdateUserAssignment(taskEntity, taskDto, cancellationToken); // Corrected call
                 UpdatePlannedHours(taskEntity, taskDto, wbs.ProjectId);
 
                 _context.WBSTasks.Add(taskEntity);
@@ -126,12 +134,9 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 
                 if (!string.IsNullOrEmpty(taskDto.ParentFrontendTempId))
                 {
-                    taskEntity.ParentId = null; // Temporarily set to null, will be resolved later
+                    // ParentId is already set to null or validated against existing.
+                    // This is for the second pass resolution.
                     pendingParentUpdates[taskEntity] = taskDto.ParentFrontendTempId;
-                }
-                else if (taskDto.ParentId.HasValue)
-                {
-                    taskEntity.ParentId = taskDto.ParentId;
                 }
             }
 
@@ -329,7 +334,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             var userTask = taskEntity.UserWBSTasks.FirstOrDefault();
             if (userTask != null)
             {
-                userTask.TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours);
+                userTask.TotalHours = taskEntity.PlannedHours.Sum(ph => ph.PlannedHours); // Corrected to use taskEntity.PlannedHours
                 userTask.TotalCost = (decimal)userTask.TotalHours * userTask.CostRate;
             }
         }

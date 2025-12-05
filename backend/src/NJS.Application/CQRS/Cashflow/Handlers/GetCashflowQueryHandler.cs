@@ -1,15 +1,10 @@
 using MediatR;
 using NJS.Application.DTOs;
-using MediatR;
-using NJS.Application.DTOs;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
 using NJS.Application.CQRS.Cashflow.Queries;
-using MediatR;
-using NJS.Application.DTOs;
-using NJS.Domain.Entities;
 
 namespace NJS.Application.CQRS.Cashflow.Handlers
 {

@@ -1,0 +1,249 @@
+# ====================================================================
+# Automatic Release Tag Creation for Deployment Lifecycle
+# ====================================================================
+# This workflow creates environment-specific release tags during deployment
+# Format: v{major}.{minor}.{patch}-{env}.{date}.{build}
+# Examples:
+#   - Development: v1.2.3-dev.20241125.1
+#   - Staging:     v1.2.3-staging.20241125.1
+#   - Production:  v1.2.3
+
+name: Create Release Tag
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment (dev, staging, production)'
+        required: true
+        type: string
+      component:
+        description: 'Component being deployed (frontend, backend, full)'
+        required: false
+        type: string
+        default: 'full'
+      version-bump:
+        description: 'Version bump type (major, minor, patch)'
+        required: false
+        type: string
+        default: 'patch'
+    outputs:
+      release-tag:
+        description: 'The created release tag'
+        value: ${{ jobs.create-tag.outputs.tag }}
+      release-version:
+        description: 'The semantic version without environment suffix'
+        value: ${{ jobs.create-tag.outputs.version }}
+
+jobs:
+  create-tag:
+    name: Create Release Tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.create-tag.outputs.tag }}
+      version: ${{ steps.create-tag.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine Version and Tag
+        id: create-tag
+        run: |
+          # Fetch all tags
+          git fetch --tags
+          
+          # Get environment
+          ENV="${{ inputs.environment }}"
+          COMPONENT="${{ inputs.component }}"
+          BUMP="${{ inputs.version-bump }}"
+          DATE=$(date +%Y%m%d)
+          
+          echo "Environment: $ENV"
+          echo "Component: $COMPONENT"
+          echo "Version Bump: $BUMP"
+          echo "Date: $DATE"
+          
+          # Get latest production tag (semantic version only)
+          LATEST_PROD_TAG=$(git tag --list "v[0-9]*.[0-9]*.[0-9]" --sort=-v:refname | grep -v "-" | head -n1)
+          
+          if [[ -z "$LATEST_PROD_TAG" ]]; then
+            # No production tags exist, start with v1.0.0
+            MAJOR=1
+            MINOR=0
+            PATCH=0
+          else
+            # Parse existing version
+            VERSION=${LATEST_PROD_TAG#v}
+            MAJOR=$(echo $VERSION | cut -d. -f1)
+            MINOR=$(echo $VERSION | cut -d. -f2)
+            PATCH=$(echo $VERSION | cut -d. -f3)
+            
+            # Bump version based on input
+            case $BUMP in
+              major)
+                MAJOR=$((MAJOR+1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR+1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH+1))
+                ;;
+            esac
+          fi
+          
+          # Create base version
+          BASE_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "Base Version: v$BASE_VERSION"
+          
+          # Create environment-specific tag
+          if [[ "$ENV" == "production" ]]; then
+            # Production uses clean semantic version
+            NEW_TAG="v$BASE_VERSION"
+          else
+            # Dev/Staging includes environment, date, and build number
+            # Find existing tags for this version and environment today
+            EXISTING_TAGS=$(git tag --list "v$BASE_VERSION-$ENV.$DATE.*" --sort=-v:refname)
+            
+            if [[ -z "$EXISTING_TAGS" ]]; then
+              BUILD_NUM=1
+            else
+              # Get the highest build number for today
+              LATEST_BUILD=$(echo "$EXISTING_TAGS" | head -n1 | rev | cut -d. -f1 | rev)
+              BUILD_NUM=$((LATEST_BUILD+1))
+            fi
+            
+            NEW_TAG="v$BASE_VERSION-$ENV.$DATE.$BUILD_NUM"
+          fi
+          
+          echo "New Tag: $NEW_TAG"
+          
+          # Check if tag already exists
+          if git rev-parse "$NEW_TAG" >/dev/null 2>&1; then
+            echo "⚠️ Tag $NEW_TAG already exists!"
+            # For dev/staging, auto-increment build number
+            if [[ "$ENV" != "production" ]]; then
+              BUILD_NUM=$((BUILD_NUM+1))
+              NEW_TAG="v$BASE_VERSION-$ENV.$DATE.$BUILD_NUM"
+              echo "Using incremented tag: $NEW_TAG"
+            else
+              echo "❌ Production tag already exists. Manual intervention required."
+              exit 1
+            fi
+          fi
+          
+          # Set outputs
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+          echo "component=$COMPONENT" >> $GITHUB_OUTPUT
+
+      - name: Create Git Tag
+        run: |
+          TAG="${{ steps.create-tag.outputs.tag }}"
+          ENV="${{ steps.create-tag.outputs.environment }}"
+          COMPONENT="${{ steps.create-tag.outputs.component }}"
+          
+          # Create annotated tag with deployment info
+          git tag -a "$TAG" -m "Release $TAG" \
+            -m "Environment: $ENV" \
+            -m "Component: $COMPONENT" \
+            -m "Commit: ${{ github.sha }}" \
+            -m "Deployed by: ${{ github.actor }}" \
+            -m "Deployed at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          
+          echo "✅ Created tag: $TAG"
+
+      - name: Push Tag to Repository
+        run: |
+          TAG="${{ steps.create-tag.outputs.tag }}"
+          git push origin "$TAG"
+          echo "✅ Pushed tag: $TAG"
+
+      - name: Generate Release Notes
+        id: release-notes
+        run: |
+          TAG="${{ steps.create-tag.outputs.tag }}"
+          ENV="${{ steps.create-tag.outputs.environment }}"
+          
+          # Get previous tag for this environment
+          if [[ "$ENV" == "production" ]]; then
+            PREV_TAG=$(git tag --list "v[0-9]*.[0-9]*.[0-9]" --sort=-v:refname | grep -v "-" | sed -n '2p')
+          else
+            PREV_TAG=$(git tag --list "v*-$ENV.*" --sort=-v:refname | sed -n '2p')
+          fi
+          
+          if [[ -z "$PREV_TAG" ]]; then
+            echo "No previous tag found for comparison"
+            PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+          
+          echo "Comparing $PREV_TAG...$TAG"
+          
+          # Generate commit log
+          COMMITS=$(git log $PREV_TAG..HEAD --pretty=format:"- %s (%an)" --no-merges | head -20)
+          
+          # Save to file
+          cat > release-notes.md <<EOF
+          # Release $TAG
+          
+          **Environment:** $ENV
+          **Component:** ${{ steps.create-tag.outputs.component }}
+          **Deployed:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Deployed by:** ${{ github.actor }}
+          
+          ## Changes Since $PREV_TAG
+          
+          $COMMITS
+          
+          ## Deployment Information
+          
+          - **Branch:** ${{ github.ref_name }}
+          - **Commit:** ${{ github.sha }}
+          - **Workflow:** ${{ github.workflow }}
+          - **Run:** ${{ github.run_number }}
+          
+          EOF
+          
+          cat release-notes.md
+
+      - name: Create GitHub Release (Production Only)
+        if: inputs.environment == 'production'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.create-tag.outputs.tag }}
+          release_name: Release ${{ steps.create-tag.outputs.tag }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+
+      - name: Tag Summary
+        run: |
+          echo "## 🏷️ Release Tag Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tag Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** \`${{ steps.create-tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** \`${{ steps.create-tag.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** \`${{ steps.create-tag.outputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Component:** \`${{ steps.create-tag.outputs.component }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Tag](https://github.com/${{ github.repository }}/releases/tag/${{ steps.create-tag.outputs.tag }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
