@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using NJS.Domain.Services;
+using NJS.Domain.Entities;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -35,67 +37,73 @@ namespace NJS.Domain.Database
     }
 
     // Factory for ProjectManagementContext
-    //public class ProjectManagementContextFactory : IDesignTimeDbContextFactory<ProjectManagementContext>
-    //{
-    //    public ProjectManagementContext CreateDbContext(string[] args)
-    //    {
-    //        // For design-time operations (migrations, etc.), use configuration from appsettings.json
-    //        var currentDir = Directory.GetCurrentDirectory();
-    //        var solutionDir = Path.GetFullPath(Path.Combine(currentDir, ".."));
-    //        var startupProjectPath = Path.Combine(solutionDir, "NJSAPI");
+    public class ProjectManagementContextFactory : IDesignTimeDbContextFactory<ProjectManagementContext>
+    {
+        public ProjectManagementContext CreateDbContext(string[] args)
+        {
+            // For design-time operations (migrations, etc.), use configuration from appsettings.json
+            var currentDir = Directory.GetCurrentDirectory();
+            var solutionDir = Path.GetFullPath(Path.Combine(currentDir, ".."));
+            var startupProjectPath = Path.Combine(solutionDir, "NJSAPI");
 
-    //        var configuration = new ConfigurationBuilder()
-    //            .SetBasePath(startupProjectPath)
-    //            .AddJsonFile(Path.Combine(startupProjectPath, "appsettings.json"))
-    //            .AddJsonFile(Path.Combine(startupProjectPath, "appsettings.Development.json"), optional: true)
-    //            .Build();
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(startupProjectPath)
+                .AddJsonFile(Path.Combine(startupProjectPath, "appsettings.json"))
+                .AddJsonFile(Path.Combine(startupProjectPath, "appsettings.Development.json"), optional: true)
+                .Build();
 
-    //        var connectionString = configuration.GetConnectionString("AppDbConnection");
-    //        if (string.IsNullOrEmpty(connectionString))
-    //        {
-    //            throw new InvalidOperationException("Connection string 'AppDbConnection' not found in appsettings.json");
-    //        }
+            var connectionString = configuration.GetConnectionString("AppDbConnection");
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException("Connection string 'AppDbConnection' not found in appsettings.json");
+            }
 
-    //        var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
-    //        optionsBuilder.UseSqlServer(connectionString);
+            var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
+            optionsBuilder.UseSqlServer(connectionString);
 
-    //        // Create a mock tenant service for design-time operations
-    //        var mockTenantService = new DesignTimeTenantService(connectionString);
+            // Create a mock tenant service for design-time operations
+            var mockTenantService = new DesignTimeTenantService(connectionString);
 
-    //        return new ProjectManagementContext(optionsBuilder.Options, mockTenantService);
-    //    }
-    //}
+            return new ProjectManagementContext(optionsBuilder.Options, mockTenantService);
+        }
+    }
 
-    //// Mock tenant service for design-time operations
-    //#nullable enable
-    //internal class DesignTimeTenantService : ICurrentTenantService
-    //{
-    //    private string? _connectionString;
-    //    private int? _tenantId;
+    // Mock tenant service for design-time operations
+#nullable enable
+    internal class DesignTimeTenantService : ICurrentTenantService
+    {
+        private string? _connectionString;
+        private int? _tenantId;
 
-    //    public DesignTimeTenantService(string connectionString)
-    //    {
-    //        _connectionString = connectionString;
-    //        _tenantId = 1; // Default tenant for migrations
-    //    }
+        public DesignTimeTenantService(string connectionString)
+        {
+            _connectionString = connectionString;
+            _tenantId = 1; // Default tenant for migrations
+        }
 
-    //    public string? ConnectionString 
-    //    { 
-    //        get => _connectionString;
-    //        set => _connectionString = value;
-    //    }
+        public string? ConnectionString
+        {
+            get => _connectionString;
+            set => _connectionString = value;
+        }
 
-    //    public int? TenantId 
-    //    { 
-    //        get => _tenantId;
-    //        set => _tenantId = value;
-    //    }
+        public int? TenantId
+        {
+            get => _tenantId;
+            set => _tenantId = value;
+        }
 
-    //    public Task<bool> SetTenant(int tenant)
-    //    {
-    //        _tenantId = tenant;
-    //        return Task.FromResult(true);
-    //    }
-    //}
+        public Task<bool> SetTenant(int tenant)
+        {
+            _tenantId = tenant;
+            return Task.FromResult(true);
+        }
+
+        public Task<List<MigrationResult>> ApplyMigrationsToAllTenantsAsync()
+        {
+            // For design-time operations, return empty list
+            return Task.FromResult(new List<MigrationResult>());
+        }
+    }
 #nullable restore
 }

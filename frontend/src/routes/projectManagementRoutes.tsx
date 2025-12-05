@@ -10,6 +10,7 @@ const ProjectOverview = lazy(() => import('../pages/projectManagement/ProjectOve
 const ProjectForms = lazy(() => import('../pages/projectManagement/ProjectForms'));
 const ProjectDocuments = lazy(() => import('../pages/projectManagement/ProjectDocuments'));
 const ProjectTimeline = lazy(() => import('../pages/projectManagement/ProjectTimeline'));
+const ProjectBudgetHistory = lazy(() => import('../pages/projectManagement/ProjectBudgetHistory'));
 
 export const projectManagementRoutes: RouteObject[] = [
   {
@@ -51,6 +52,10 @@ export const projectManagementRoutes: RouteObject[] = [
           {
             path: 'timeline',
             element: <ProjectTimeline />,
+          },
+          {
+            path: 'budget-history',
+            element: <ProjectBudgetHistory />,
           },
           {
         path: '*',

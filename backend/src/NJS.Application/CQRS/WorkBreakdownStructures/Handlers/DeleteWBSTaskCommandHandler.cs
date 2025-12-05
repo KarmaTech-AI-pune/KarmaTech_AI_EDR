@@ -15,9 +15,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
         private readonly ProjectManagementContext _context;
         private readonly IUnitOfWork _unitOfWork;
 
-        // TODO: Inject ICurrentUserService or similar
-        private readonly string _currentUser = "System"; // Placeholder
-
         public DeleteWBSTaskCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork)
         {
             _context = context;

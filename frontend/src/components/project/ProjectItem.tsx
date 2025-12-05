@@ -131,9 +131,14 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
     setEditDialogOpen(false);
   };
 
-  const handleEditSubmit = async (formData: ProjectFormData) => {
+  const handleEditSubmit = async (formData: ProjectFormData & { budgetReason?: string }) => {
     if (!canEditProject) return;
     try {
+      // Check if budget has changed
+      const budgetChanged = 
+        Number(formData.estimatedProjectCost) !== Number(project.estimatedProjectCost) ||
+        Number(formData.estimatedProjectFee) !== Number(project.estimatedProjectFee);
+
       // Create a clean object with just the fields we need
       const updatedProject = {
         ...project, // Start with existing project data
@@ -163,7 +168,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
       };
 
       console.log('Sending update with data:', updatedProject);
-      await projectApi.update(project.id, updatedProject);
+      await projectApi.update(project.id, updatedProject, budgetChanged ? formData.budgetReason : undefined);
       setEditDialogOpen(false);
       if (onProjectUpdated) {
         onProjectUpdated();

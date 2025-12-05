@@ -16,5 +16,6 @@ namespace NJS.Repositories.Interfaces
         Task<WBSOption> UpdateAsync(WBSOption wbsOption);
         Task<bool> DeleteAsync(int id);
         Task<WBSOption> GetByIdAsync(int id);
+        Task<IEnumerable<WBSOption>> GetByIdsAsync(List<int> ids);
     }
 }
