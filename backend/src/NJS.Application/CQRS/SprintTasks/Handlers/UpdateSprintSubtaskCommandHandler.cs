@@ -58,9 +58,9 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             existingSubtask.SubtaskisExpanded = sprintSubtaskDto.SubtaskisExpanded;
             existingSubtask.SubtaskupdatedDate = DateTime.UtcNow;
             existingSubtask.SubtaskType = sprintSubtaskDto.SubtaskType;
-            existingSubtask.DisplayOrder = sprintSubtaskDto.DisplayOrder;
-            existingSubtask.EstimatedHours = sprintSubtaskDto.EstimatedHours;
-            existingSubtask.ActualHours = sprintSubtaskDto.ActualHours;
+            existingSubtask.DisplayOrder = sprintSubtaskDto.DisplayOrder ?? 0;
+            existingSubtask.EstimatedHours = sprintSubtaskDto.EstimatedHours ?? 0;
+            existingSubtask.ActualHours = sprintSubtaskDto.ActualHours ?? 0;
             existingSubtask.StartedAt = sprintSubtaskDto.StartedAt;
             existingSubtask.CompletedAt = sprintSubtaskDto.CompletedAt;
             // Taskid is part of the composite key and should not be changed here.
