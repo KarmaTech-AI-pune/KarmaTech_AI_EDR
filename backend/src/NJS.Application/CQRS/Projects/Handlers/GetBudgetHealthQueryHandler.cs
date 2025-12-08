@@ -1,35 +1,32 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using NJS.Application.DTOs;
-using NJS.Application.Queries;
-using NJS.Infrastructure.Data;
+using NJS.Application.CQRS.Projects.Queries;
+using NJS.Application.Dtos;
+using NJS.Repositories.Interfaces;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NJS.Application.Handlers
+namespace NJS.Application.CQRS.Projects.Handlers
 {
-    public class GetBudgetHealthHandler : IRequestHandler<GetBudgetHealthQuery, BudgetHealthDto>
+    public class GetBudgetHealthQueryHandler : IRequestHandler<GetBudgetHealthQuery, BudgetHealthDto>
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProjectRepository _repository;
 
-        public GetBudgetHealthHandler(ApplicationDbContext context)
+        public GetBudgetHealthQueryHandler(IProjectRepository repository)
         {
-            _context = context;
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
-        public async Task<BudgetHealthDto> Handle(GetBudgetHealthQuery request, CancellationToken cancellationToken)
+        public Task<BudgetHealthDto> Handle(GetBudgetHealthQuery request, CancellationToken cancellationToken)
         {
-            var project = await _context.Projects
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == request.ProjectId, cancellationToken);
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
 
+            var project = _repository.GetById(request.ProjectId);
             if (project == null)
-            {
-                throw new Exception($"Project with ID {request.ProjectId} not found");
-            }
+                throw new ArgumentException($"Project with ID {request.ProjectId} not found");
 
-            // Calculate utilization using EstimatedProjectFee as "actual cost"
+            // Calculate utilization: (ActualCost / EstimatedBudget) * 100
             decimal utilizationPercentage = 0;
             if (project.EstimatedProjectCost > 0)
             {
@@ -51,7 +48,7 @@ namespace NJS.Application.Handlers
                 status = "Critical";
             }
 
-            return new BudgetHealthDto
+            var result = new BudgetHealthDto
             {
                 ProjectId = project.Id,
                 Status = status,
@@ -59,6 +56,8 @@ namespace NJS.Application.Handlers
                 EstimatedBudget = project.EstimatedProjectCost,
                 ActualCost = project.EstimatedProjectFee // Using fee as "actual cost" for demo
             };
+
+            return Task.FromResult(result);
         }
     }
 }

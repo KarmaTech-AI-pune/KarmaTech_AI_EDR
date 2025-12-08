@@ -2,14 +2,24 @@
 
 ## Task List (6 Tasks - ~20 minutes)
 
-- [ ] 1. Create BudgetHealthDto and Query
+- [x] 1. Create BudgetHealthDto and Query
+
+
+
+
+
   - Create BudgetHealthDto.cs with status, utilization, budget, cost
   - Create GetBudgetHealthQuery.cs and handler
   - Calculate utilization: (ActualCost / EstimatedBudget) * 100
   - Determine status based on thresholds
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 2. Add API endpoint to ProjectController
+- [x] 2. Add API endpoint to ProjectController
+
+
+
+
+
   - Add GET /api/projects/{id}/budget/health endpoint
   - Use MediatR to call GetBudgetHealthQuery
   - Return BudgetHealthDto
