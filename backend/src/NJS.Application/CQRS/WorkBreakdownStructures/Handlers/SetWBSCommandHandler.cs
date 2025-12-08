@@ -615,6 +615,20 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 if (shouldHaveUserWBSTask)
                 {
                     string? actualUserId = (string.IsNullOrEmpty(dto.AssignedUserId) || dto.AssignedUserId == "string") ? null : dto.AssignedUserId;
+                    
+                    // Fallback: Check if AssignedUserName contains a GUID (User ID) if actualUserId is null
+                    if (string.IsNullOrEmpty(actualUserId) && !string.IsNullOrEmpty(dto.AssignedUserName) && dto.AssignedUserName != "string")
+                    {
+                        // Simple check if it looks like a GUID (or just treat it as ID since frontend sends ID in name)
+                        // In this specific case, the user says the ID is in the name field.
+                        // We'll assume if it's not "string", it might be the ID.
+                        // Ideally we should validate if it's a GUID, but for now we'll trust the payload pattern described.
+                        if (Guid.TryParse(dto.AssignedUserName, out _))
+                        {
+                             actualUserId = dto.AssignedUserName;
+                        }
+                    }
+
                     string? actualResourceRoleId = (string.IsNullOrEmpty(dto.ResourceRoleId) || dto.ResourceRoleId == "string") ? null : dto.ResourceRoleId;
 
                     if (!string.IsNullOrEmpty(actualUserId))
