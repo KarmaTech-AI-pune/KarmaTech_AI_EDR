@@ -8,6 +8,21 @@
 
   <ItemGroup>
     <None Remove="Properties\PublishProfiles\FolderProfile.pubxml" />
+    <None Update="MigrationSQL\IsolatedSQL\01_Permissions.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\02_Add_Roles_Mapp_Role_Permissions.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\03_Migrate_User_From_Soure_Target_DBs.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\04_PMWorkFlow.Sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\05_OpportunityStatuses.Sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Templates\Email\onboarding.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -39,6 +54,10 @@
   <ItemGroup>
     <ProjectReference Include="..\NJS.Application\NJS.Application.csproj" />
     <ProjectReference Include="..\NJS.Domain\NJS.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="MigrationSQL\NonIsolatedSQL\" />
   </ItemGroup>
 
 </Project>

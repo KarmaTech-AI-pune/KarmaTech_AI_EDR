@@ -12,30 +12,41 @@ import {
   Typography,
   Divider,
   Box,
+  Chip, // Added Chip for displaying workflow status
 } from '@mui/material';
 
 import { projectManagementAppContext } from '../../App';
 import {projectManagementAppContextType } from '../../types';
 
 import { AuthUser } from "../../models/userModel";
-import { getUsersByRole } from '../../services/userApi';
+import { getUsersByRole, getUserById } from '../../services/userApi'; // Added getUserById
 import { OpportunityTracking } from '../../models';
+import { getEnhancedWorkflowStatus } from '../../utils/workflowStatusFormatter'; // Added formatter
+import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow'; // Added workflow statuses
 
 interface OpportunityFormProps {
   onSubmit: (data: OpportunityTracking) => void | Promise<void>;
   project?: Partial<OpportunityTracking>;
   error?: string;
+  actionButtons?: React.ReactNode;
 }
 
 export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   onSubmit,
   project,
-  error
+  error,
+  actionButtons
 }) => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [bdManagers, setBdManagers] = useState<{id: string, name: string}[]>([]);
   const [reviewManagers, setReviewManagers] = useState<{id: string, name: string}[]>([]);
   const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
+  
+  const [reviewerName, setReviewerName] = useState<string | null>(null);
+  const [reviewerDesignation, setReviewerDesignation] = useState<string | null>(null);
+  const [approverName, setApproverName] = useState<string | null>(null);
+  const [approverDesignation, setApproverDesignation] = useState<string | null>(null);
+
   const [formData, setFormData] = useState<Partial<OpportunityTracking>>({
     bidNumber: project?.bidNumber,
     stage: project?.stage || undefined,
@@ -70,39 +81,51 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     // Default to Initial (ID: 1)
   });
 
+  // Helper to determine workflow color
+  const getWorkflowColor = (workflowId: number) => {
+    const status = getWorkflowStatusById(workflowId)?.status;
+    switch (status) {
+      case "Initial":
+        return 'default';
+      case "Sent for Review":
+        return 'info';
+      case "Review Changes":
+        return 'warning';
+      case "Sent for Approval":
+        return 'primary';
+      case "Approval Changes":
+        return 'warning';
+      case "Approved":
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+
   useEffect(() => {
-    // Fetch managers when component mounts or formData changes
+    // Fetch managers when component mounts or project changes
     const fetchManagers = async () => {
       // Helper function to convert users to unique manager objects and sort by name
       const getUniqueManagers = (users: AuthUser[]) => {
-        // Create a Map with user ID as key to ensure uniqueness
         const uniqueManagersMap = new Set<{ id: string; name: string }>();
-
-        // Add each user to the map, overwriting any duplicates
         users.forEach(user => {
-          // Ensure we have valid data
           if(user && user.name) {
             uniqueManagersMap.add({id: user.id, name: user.name})
           }
         });
-
-        // Convert to array and sort by name
-        return Array.from(uniqueManagersMap.values())
+        return Array.from(uniqueManagersMap.values());
       };
 
       try {
-        // Fetch and set BD Managers
         const bdManagerUsers = await getUsersByRole('Business Development Manager');
         const uniqueBdManagers = getUniqueManagers(bdManagerUsers);
         setBdManagers(uniqueBdManagers);
 
-        // Fetch and set Review Managers
         const regionalManagerUsers = await getUsersByRole('Regional Manager');
         const regionalDirectorUsers = await getUsersByRole('Regional Director');
         const uniqueReviewers = getUniqueManagers(regionalManagerUsers);
         setReviewManagers(uniqueReviewers);
 
-        // Combine both arrays and get unique managers
         const allApproverUsers = [...regionalManagerUsers, ...regionalDirectorUsers];
         const uniqueApprovers = getUniqueManagers(allApproverUsers);
         setApprovalManagers(uniqueApprovers);
@@ -111,10 +134,52 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       }
     };
 
-    // Add a check for context and context.user
+    const fetchReviewerAndApproverDetails = async () => {
+      if (project?.reviewManagerId) {
+        try {
+          const user = await getUserById(project.reviewManagerId);
+          if (user) {
+            setReviewerName(user.name);
+            setReviewerDesignation(user.roles[0]?.name || null);
+          } else {
+            setReviewerName(null);
+            setReviewerDesignation(null);
+          }
+        } catch (error) {
+          console.error("Error fetching reviewer details in form:", error);
+          setReviewerName(null);
+          setReviewerDesignation(null);
+        }
+      } else {
+        setReviewerName(null);
+        setReviewerDesignation(null);
+      }
+
+      if (project?.approvalManagerId) {
+        try {
+          const user = await getUserById(project.approvalManagerId);
+          if (user) {
+            setApproverName(user.name);
+            setApproverDesignation(user.roles[0]?.name || null);
+          } else {
+            setApproverName(null);
+            setApproverDesignation(null);
+          }
+        } catch (error) {
+          console.error("Error fetching approver details in form:", error);
+          setApproverName(null);
+          setApproverDesignation(null);
+        }
+      } else {
+        setApproverName(null);
+        setApproverDesignation(null);
+      }
+    };
+
     if (context && context.user) {
       fetchManagers();
     }
+    fetchReviewerAndApproverDetails();
   }, [context, project]);
 
   // Helper function to format date values to YYYY-MM-DD string format
@@ -194,6 +259,28 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
             </Alert>
           )}
           <Grid container spacing={3}>
+            {/* Workflow Status Chip */}
+            {project?.id && ( // Only show if editing an existing opportunity
+              <Grid item xs={12}>
+                <Chip
+                  label={`Workflow: ${getEnhancedWorkflowStatus(
+                    Array.isArray(project.currentHistory)
+                      ? project.currentHistory[0]?.statusId || 0
+                      : project.currentHistory?.statusId || 0,
+                    reviewerName,
+                    reviewerDesignation,
+                    approverName,
+                    approverDesignation
+                  )}`}
+                  color={
+                    Array.isArray(project.currentHistory)
+                      ? getWorkflowColor(project.currentHistory[0]?.statusId || 0)
+                      : getWorkflowColor(project.currentHistory?.statusId || 0)
+                  }
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+            )}
             {/* Key Project Information */}
             <Grid item xs={12}>
               <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
@@ -657,7 +744,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
             </Grid>
           </Grid>
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+          {actionButtons}
           <Button type="submit" variant="contained" color="primary">
             {project?.id ? 'Update Opportunity' : 'Create Opportunity'}
           </Button>

@@ -4,14 +4,15 @@ using Moq;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.GenericRepository;
+using NJS.Domain.Services;
 using NJS.Domain.UnitWork;
 
 namespace NJS.Domain.Tests
 {
     public class UnitOfWorkTests
     {
-        private DbContextOptions<ProjectManagementContext> _options;
-
+        private DbContextOptions<ProjectManagementContext> _options; 
+       
         public UnitOfWorkTests()
         {
             _options = new DbContextOptionsBuilder<ProjectManagementContext>()
@@ -24,7 +25,8 @@ namespace NJS.Domain.Tests
         public async Task SaveChangesAsync_ShouldSaveChanges()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            await using var context = new ProjectManagementContext(_options,currentTenantService.Object);
             var unitOfWork = new UnitOfWork(context);
 
             var project = new Project
@@ -56,7 +58,8 @@ namespace NJS.Domain.Tests
         public void GetRepository_ShouldReturnRepository()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
             var unitOfWork = new UnitOfWork(context);
 
             // Act
@@ -71,7 +74,8 @@ namespace NJS.Domain.Tests
         public void Dispose_ShouldDisposeContext()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
             var unitOfWork = new UnitOfWork(context);
 
             // Act

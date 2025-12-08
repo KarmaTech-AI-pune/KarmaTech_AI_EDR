@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using NJS.Application.Services.IContract;
 using NJS.Domain; // For MigrationResult
 using NJS.Domain.Database;
@@ -24,6 +22,8 @@ namespace NJSAPI.Controllers
         private readonly ILogger<TenantsController> _logger;
         private readonly IDatabaseManagementService _databaseManagementService;
         private readonly ICurrentTenantService _currentTenantService;
+        private readonly ITenantMigrationService _tenantMigrationService;
+        private readonly IConfiguration _configuration;
 
         public TenantsController(
             ProjectManagementContext context,
@@ -32,6 +32,8 @@ namespace NJSAPI.Controllers
             ISubscriptionService subscriptionService,
             IDatabaseManagementService databaseManagementService,
             ICurrentTenantService currentTenantService,
+            ITenantMigrationService tenantMigrationService,
+            IConfiguration configuration,
             ILogger<TenantsController> logger)
         {
             _context = context;
@@ -40,6 +42,8 @@ namespace NJSAPI.Controllers
             _databaseManagementService = databaseManagementService;
             _tenantDbContext = tenantDbContext;
             _currentTenantService = currentTenantService;
+            _tenantMigrationService = tenantMigrationService;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -115,7 +119,34 @@ namespace NJSAPI.Controllers
                 _tenantDbContext.TenantDatabases.Add(tenantDb);
                 await _tenantDbContext.SaveChangesAsync();
 
+                // Execute SQL migration scripts for isolated tenants
+                if (tenant.IsIsolated && !string.IsNullOrEmpty(result.connectionString))
+                {
+                    _logger.LogInformation("Executing migration scripts for tenant {TenantId} database {DatabaseName}", tenant.Id, result.dbName);
+                    
+                    // Get source database name from configuration for user migration script
+                    var sourceDatabaseName = _configuration.GetConnectionString("AppDbConnection");
+                    if (!string.IsNullOrEmpty(sourceDatabaseName))
+                    {
+                        var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(sourceDatabaseName);
+                        sourceDatabaseName = builder.InitialCatalog;
+                    }
 
+                    var migrationSuccess = await _tenantMigrationService.ExecuteTenantMigrationsAsync(
+                        result.connectionString, 
+                        tenant.Id, 
+                        sourceDatabaseName);
+
+                    if (!migrationSuccess)
+                    {
+                        _logger.LogWarning("Some migration scripts failed for tenant {TenantId}, but continuing...", tenant.Id);
+                        // Note: We continue even if migrations fail, as some scripts might be optional
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Successfully executed all migration scripts for tenant {TenantId}", tenant.Id);
+                    }
+                }
 
                 // Create subscription if plan is specified
                 if (tenant.SubscriptionPlanId.HasValue)
@@ -364,44 +395,54 @@ namespace NJSAPI.Controllers
 
             if (tenant.IsIsolated)
             {
-                //TODO: Meanwhile commented: Will need to migrate Roles and Permissions also
-                //var tenantDatabase = await _tenantDbContext.TenantDatabases
-                //    .FirstOrDefaultAsync(td => td.TenantId == tenant.Id);
+                // Get tenant database connection string
+                var tenantDatabase = await _tenantDbContext.TenantDatabases
+                    .FirstOrDefaultAsync(td => td.TenantId == tenant.Id);
 
-                //if (tenantDatabase == null || string.IsNullOrEmpty(tenantDatabase.ConnectionString))
-                //    return BadRequest("Tenant database not configured.");
+                if (tenantDatabase == null || string.IsNullOrEmpty(tenantDatabase.ConnectionString))
+                {
+                    _logger.LogWarning("Tenant database not configured for tenant {TenantId}, skipping user migration", tenant.Id);
+                }
+                else if (string.IsNullOrEmpty(user.Email))
+                {
+                    _logger.LogWarning("User {UserId} does not have an email address, skipping user migration", user.Id);
+                }
+                else
+                {
+                    // Map TenantUserRole enum to SQL role name
+                    var roleName = MapTenantUserRoleToRoleName(request.Role);
+                    var permissionName = MapTenantUserRoleToPermissionName(request.Role);
 
-                //var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
-                //optionsBuilder.UseSqlServer(tenantDatabase.ConnectionString);
+                    // Get source database name from configuration
+                    var sourceDatabaseName = _configuration.GetConnectionString("AppDbConnection");
+                    if (!string.IsNullOrEmpty(sourceDatabaseName))
+                    {
+                        var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(sourceDatabaseName);
+                        sourceDatabaseName = builder.InitialCatalog;
+                    }
 
-                //await using var tenantContext = new ProjectManagementContext(optionsBuilder.Options, _currentTenantService);
+                    _logger.LogInformation("Executing user migration scripts for tenant {TenantId}, user {UserEmail}, role {RoleName}", 
+                        tenant.Id, user.Email, roleName);
 
-                //var existingUser = await tenantContext.Users.FindAsync(user.Id);
-                //if (existingUser == null)
-                //{
-                //    var clonedUser = new User
-                //    {
-                //        Id = user.Id,
-                //        UserName = user.UserName,
-                //        NormalizedUserName = user.NormalizedUserName,
-                //        Email = user.Email,
-                //        NormalizedEmail = user.NormalizedEmail,
-                //        PasswordHash = user.PasswordHash,
-                //        SecurityStamp = user.SecurityStamp,
-                //        ConcurrencyStamp = user.ConcurrencyStamp,
-                //        PhoneNumber = user.PhoneNumber,
-                //        PhoneNumberConfirmed = user.PhoneNumberConfirmed,
-                //        TwoFactorEnabled = user.TwoFactorEnabled,
-                //        LockoutEnabled = user.LockoutEnabled,
-                //        AccessFailedCount = user.AccessFailedCount,
-                //        IsActive = user.IsActive,
-                //        Name = user.Name,
-                //        TenantId = id
-                //    };
+                    var migrationSuccess = await _tenantMigrationService.ExecuteTenantUserMigrationsAsync(
+                        tenantDatabase.ConnectionString,
+                        tenant.Id,
+                        user.Email,
+                        roleName,
+                        permissionName,
+                        sourceDatabaseName);
 
-                //    tenantContext.Users.Add(clonedUser);
-                //    await tenantContext.SaveChangesAsync();
-                //}
+                    if (!migrationSuccess)
+                    {
+                        _logger.LogWarning("User migration scripts failed for tenant {TenantId} and user {UserEmail}, but continuing...", 
+                            tenant.Id, user.Email);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Successfully executed user migration scripts for tenant {TenantId} and user {UserEmail}", 
+                            tenant.Id, user.Email);
+                    }
+                }
             }
             else
             {
@@ -482,6 +523,36 @@ namespace NJSAPI.Controllers
         private bool TenantExists(int id)
         {
             return _tenantDbContext.Tenants.Any(e => e.Id == id);
+        }
+
+        /// <summary>
+        /// Maps TenantUserRole enum to SQL role name
+        /// </summary>
+        private string MapTenantUserRoleToRoleName(TenantUserRole role)
+        {
+            return role switch
+            {
+                TenantUserRole.Owner => "TenantAdmin",
+                TenantUserRole.Admin => "TenantAdmin",
+                TenantUserRole.Manager => "TenantAdmin",
+                TenantUserRole.User => "TenantAdmin",
+                _ => "TenantAdmin"
+            };
+        }
+
+        /// <summary>
+        /// Maps TenantUserRole enum to permission name
+        /// </summary>
+        private string MapTenantUserRoleToPermissionName(TenantUserRole role)
+        {
+            return role switch
+            {
+                TenantUserRole.Owner => "Tenant_ADMIN",
+                TenantUserRole.Admin => "Tenant_ADMIN",
+                TenantUserRole.Manager => "Tenant_ADMIN",
+                TenantUserRole.User => "Tenant_ADMIN", 
+                _ => "Tenant_ADMIN"
+            };
         }
     }
 

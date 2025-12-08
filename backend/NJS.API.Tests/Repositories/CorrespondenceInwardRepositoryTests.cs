@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NJS.Domain.Services;
 using Xunit;
 
 namespace NJS.API.Tests.Repositories
@@ -17,11 +18,12 @@ namespace NJS.API.Tests.Repositories
     {
         private ProjectManagementContext CreateContext()
         {
+            var currentTenantService = new Mock<ICurrentTenantService>();
             var options = new DbContextOptionsBuilder<ProjectManagementContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
-            var context = new ProjectManagementContext(options);
+            var context = new ProjectManagementContext(options,currentTenantService.Object);
             context.Database.EnsureCreated();
             return context;
         }
