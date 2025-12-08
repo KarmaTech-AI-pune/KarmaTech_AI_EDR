@@ -28,20 +28,24 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const [level1Options, setLevel1Options] = useState<WBSOption[]>([]);
-  const [level2Options, setLevel2Options] = useState<WBSOption[]>([]);
+  const [level2OptionsMap, setLevel2OptionsMap] = useState<{ [key: string]: WBSOption[] }>({});
   const [level3OptionsMap, setLevel3OptionsMap] = useState<{ [key: string]: WBSOption[] }>({});
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
   const [wbsHeaderId, setWbsHeaderId] = useState<number>(0);
 
   // Helper function to find a WBS option by its ID
-  const findWBSOptionById = (optionId: string, l1: WBSOption[], l2: WBSOption[], l3Map: { [key: string]: WBSOption[] }): WBSOption | undefined => {
+  const findWBSOptionById = (optionId: string, l1: WBSOption[], l2Map: { [key: string]: WBSOption[] }, l3Map: { [key: string]: WBSOption[] }): WBSOption | undefined => {
     // Search in level 1 options
     let found = l1.find(opt => opt.id === optionId);
     if (found) return found;
 
-    // Search in level 2 options
-    found = l2.find(opt => opt.id === optionId);
-    if (found) return found;
+    // Search in level 2 options map
+    for (const key in l2Map) {
+      if (l2Map.hasOwnProperty(key)) {
+        found = l2Map[key].find(opt => opt.id === optionId);
+        if (found) return found;
+      }
+    }
 
     // Search in level 3 options map
     for (const key in l3Map) {
@@ -120,7 +124,7 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
       const formTypeValue = formType === 'odc' ? 1 : 0; // 0 = Manpower, 1 = ODC
 
       let l1Options: WBSOption[] = [];
-      let l2Options: WBSOption[] = [];
+      let newLevel2OptionsMap: { [key: string]: WBSOption[] } = {};
       let newLevel3OptionsMap: { [key: string]: WBSOption[] } = {};
 
       // Load WBS options (level 1 and 2)
@@ -128,23 +132,27 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
         const fetchedL1Options = await WBSOptionsAPI.getLevel1Options(formTypeValue);
         l1Options = fetchedL1Options;
         
-        // Fetch level 2 options for each level 1 option
+        // Fetch level 2 options for each level 1 option and store as keyed map
         const level2Promises = l1Options.map(async (level1Option) => {
           const level2Options = await WBSOptionsAPI.getLevel2Options(level1Option.id, formTypeValue);
-          return level2Options;
+          return { parentValue: level1Option.value.toLowerCase(), options: level2Options };
         });
-        const level2OptionsArrays = await Promise.all(level2Promises);
-        l2Options = level2OptionsArrays.flat();
+        const level2Results = await Promise.all(level2Promises);
+        
+        // Build level 2 options map
+        level2Results.forEach(result => {
+          newLevel2OptionsMap[result.parentValue] = result.options;
+        });
 
         setLevel1Options(l1Options);
-        setLevel2Options(l2Options);
+        setLevel2OptionsMap(newLevel2OptionsMap);
       } catch (error) {
         console.error('Error loading WBS options (level 1 & 2):', error);
         setSnackbarMessage('Failed to load work description options. Please ensure the backend service is running and database is properly configured with WBS options.');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
         setLevel1Options([]);
-        setLevel2Options([]);
+        setLevel2OptionsMap({});
       }
 
       // Load roles and employees
@@ -230,7 +238,7 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
           const rowsToProcess = formType === 'manpower' ? initialManpowerRows : initialOdcRows;
           rowsToProcess.filter(row => row.level === 2 && row.wbsOptionId).forEach(row => {
             if (row.wbsOptionId) {
-              const option = findWBSOptionById(row.wbsOptionId, l1Options, l2Options, {});
+              const option = findWBSOptionById(row.wbsOptionId, l1Options, newLevel2OptionsMap, {});
               if (option) {
                 uniqueLevel2Titles.add(option.value);
               }
@@ -240,8 +248,13 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
           await Promise.all(
             Array.from(uniqueLevel2Titles).map(async (level2Title) => {
               try {
-                // Find the level 2 option by value to get its ID
-                const level2Option = l2Options.find(opt => opt.value === level2Title);
+                // Find the level 2 option by value to get its ID from the map
+                let level2Option: WBSOption | undefined;
+                for (const key in newLevel2OptionsMap) {
+                  level2Option = newLevel2OptionsMap[key].find(opt => opt.value === level2Title);
+                  if (level2Option) break;
+                }
+                
                 if (level2Option) {
                   const options = await WBSOptionsAPI.getLevel3Options(level2Option.id, formTypeValue);
                   newLevel3OptionsMap[level2Title.toLowerCase()] = options;
@@ -256,7 +269,7 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
           // After all options are loaded, re-process allTransformedRows to set titles based on wbsOptionId
           const finalTransformedRows = allTransformedRows.map(row => {
             if (row.wbsOptionId) {
-              const option = findWBSOptionById(row.wbsOptionId, l1Options, l2Options, newLevel3OptionsMap);
+              const option = findWBSOptionById(row.wbsOptionId, l1Options, newLevel2OptionsMap, newLevel3OptionsMap);
               if (option) {
                 return { ...row, title: option.value.toLowerCase() };
               }
@@ -325,8 +338,8 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
     setSnackbarSeverity,
     level1Options,
     setLevel1Options,
-    level2Options,
-    setLevel2Options,
+    level2OptionsMap,
+    setLevel2OptionsMap,
     level3OptionsMap,
     setLevel3OptionsMap,
     reloadWBSData,

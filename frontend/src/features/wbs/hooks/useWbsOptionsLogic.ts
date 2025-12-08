@@ -27,13 +27,20 @@ export const useWbsOptionsLogic = () => {
       setError(null);
 
       const level1Options = await WBSOptionsAPI.getLevel1Options();
-      // Fetch level 2 options for each level 1 option
+      
+      // Fetch level 2 options for each level 1 option and deduplicate
       const level2Promises = level1Options.map(async (level1Option) => {
         const level2Options = await WBSOptionsAPI.getLevel2Options(level1Option.id);
         return level2Options;
       });
       const level2OptionsArrays = await Promise.all(level2Promises);
-      const level2Options = level2OptionsArrays.flat();
+      
+      // Deduplicate level 2 options using a Map keyed by option ID
+      const level2OptionsMap = new Map<string, WBSOption>();
+      level2OptionsArrays.flat().forEach(option => {
+        level2OptionsMap.set(option.id, option);
+      });
+      const level2Options = Array.from(level2OptionsMap.values());
 
       const level3Promises = level2Options.map(async (lvl2Option) => {
         const lvl3Options = await WBSOptionsAPI.getLevel3Options(lvl2Option.id);
