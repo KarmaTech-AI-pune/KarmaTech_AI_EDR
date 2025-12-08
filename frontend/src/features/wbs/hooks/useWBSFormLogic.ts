@@ -23,7 +23,7 @@ interface UseWBSFormLogicProps {
   roles: resourceRole[];
   allEmployees: Employee[];
   level1Options: WBSOption[];
-  level2Options: WBSOption[];
+  level2OptionsMap: { [key: string]: WBSOption[] };
   level3OptionsMap: { [key: string]: WBSOption[] };
   setLevel3OptionsMap: React.Dispatch<React.SetStateAction<{ [key: string]: WBSOption[] }>>;
   setSnackbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -44,7 +44,7 @@ export const useWBSFormLogic = ({
   setMonths,
   roles,
   level1Options,
-  level2Options,
+  level2OptionsMap,
   level3OptionsMap,
   setLevel3OptionsMap,
   setSnackbarOpen,
@@ -411,8 +411,11 @@ export const useWBSFormLogic = ({
       let optionsToSearch: WBSOption[] = [];
       if (changedRow.level === 1) {
         optionsToSearch = level1Options;
-      } else if (changedRow.level === 2) {
-        optionsToSearch = level2Options;
+      } else if (changedRow.level === 2 && changedRow.parentId) {
+        const parentRow = currentRows.find(r => r.id === changedRow.parentId);
+        if (parentRow && parentRow.title && level2OptionsMap[parentRow.title]) {
+          optionsToSearch = level2OptionsMap[parentRow.title];
+        }
       } else if (changedRow.level === 3 && changedRow.parentId) {
         const parentRow = currentRows.find(r => r.id === changedRow.parentId);
         if (parentRow && parentRow.title && level3OptionsMap[parentRow.title]) {
@@ -434,8 +437,13 @@ export const useWBSFormLogic = ({
       try {
         const formTypeValue = formType === 'odc' ? 1 : 0;
         
-        // Find the level 2 option by value to get its ID
-        const level2Option = level2Options.find(opt => opt.value === value);
+        // Find the level 2 option by value to get its ID from the map
+        let level2Option: WBSOption | undefined;
+        for (const key in level2OptionsMap) {
+          level2Option = level2OptionsMap[key].find(opt => opt.value === value);
+          if (level2Option) break;
+        }
+        
         if (level2Option) {
           const level3Options = await WBSOptionsAPI.getLevel3Options(level2Option.id, formTypeValue);
 

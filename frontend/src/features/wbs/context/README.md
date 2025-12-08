@@ -20,7 +20,7 @@ We implemented a three-context architecture to separate concerns:
 Provides access to:
 - Row data (manpowerRows, odcRows)
 - Configuration (months, roles, employees, formType, editMode)
-- WBS options (level1Options, level2Options, level3OptionsMap)
+- WBS options (level1Options, level2OptionsMap, level3OptionsMap)
 - Calculated values (totalHours, totalCost)
 - Loading state
 

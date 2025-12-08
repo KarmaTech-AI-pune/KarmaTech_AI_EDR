@@ -18,7 +18,7 @@ interface WBSDataContextType {
   
   // Options
   level1Options: WBSOption[];
-  level2Options: WBSOption[];
+  level2OptionsMap: { [key: string]: WBSOption[] };
   level3OptionsMap: { [key: string]: WBSOption[] };
   
   // Config
@@ -132,7 +132,7 @@ export const WBSProvider: React.FC<WBSProviderProps> = ({
     roles: dataHook.roles,
     allEmployees: dataHook.allEmployees,
     level1Options: dataHook.level1Options,
-    level2Options: dataHook.level2Options,
+    level2OptionsMap: dataHook.level2OptionsMap,
     level3OptionsMap: dataHook.level3OptionsMap,
     setLevel3OptionsMap: dataHook.setLevel3OptionsMap,
     setSnackbarOpen: dataHook.setSnackbarOpen,
@@ -150,7 +150,7 @@ export const WBSProvider: React.FC<WBSProviderProps> = ({
     roles: dataHook.roles,
     employees: dataHook.allEmployees,
     level1Options: dataHook.level1Options,
-    level2Options: dataHook.level2Options,
+    level2OptionsMap: dataHook.level2OptionsMap,
     level3OptionsMap: dataHook.level3OptionsMap,
     formType,
     editMode,

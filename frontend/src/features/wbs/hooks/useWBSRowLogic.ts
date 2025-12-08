@@ -84,7 +84,7 @@ export const useWBSRowLogic = ({
     editMode,
     formType,
     level1Options,
-    level2Options,
+    level2OptionsMap,
     level3OptionsMap,
     manpowerRows,
     odcRows,
@@ -109,13 +109,17 @@ export const useWBSRowLogic = ({
 
   const getLevelOptions = useCallback(() => {
     if (row.level === 1) return level1Options;
-    if (row.level === 2) return level2Options;
+    if (row.level === 2) {
+      const parentRow = rows.find(r => r.id === row.parentId);
+      if (parentRow && parentRow.title) return level2OptionsMap[parentRow.title] || [];
+      return [];
+    }
     if (row.level === 3) {
       const parentRow = rows.find(r => r.id === row.parentId);
       if (parentRow && parentRow.title) return level3OptionsMap[parentRow.title] || [];
     }
     return [];
-  }, [row.level, row.parentId, rows, level1Options, level2Options, level3OptionsMap]);
+  }, [row.level, row.parentId, rows, level1Options, level2OptionsMap, level3OptionsMap]);
 
   const getPlannedHours = useCallback((month: string): string => {
     const [monthName, yearStr] = month.split(' ');
