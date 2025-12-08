@@ -1,0 +1,18 @@
+{
+  "featureName": "project-budget-alert",
+  "branchName": "feature/project-budget-alert",
+  "baseBranch": "Kiro/dev",
+  "state": "ready-for-implementation",
+  "totalTasks": 6,
+  "completedTasks": 0,
+  "steps": {
+    "specCreated": { "completed": true, "timestamp": "2024-12-08T10:00:00Z" },
+    "branchCreated": { "completed": false },
+    "developmentComplete": { "completed": false },
+    "testsRun": { "completed": false },
+    "prCreated": { "completed": false },
+    "prApproved": { "completed": false },
+    "prMerged": { "completed": false },
+    "deployed": { "completed": false }
+  }
+}

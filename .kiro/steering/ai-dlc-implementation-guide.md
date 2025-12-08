@@ -515,7 +515,7 @@ Human Approval → Merge → Deployment
 
 #### 1. **Automatic Branch Creation**
 When Kiro creates a new spec, it automatically:
-- Creates feature branch from `Saas/dev`
+- Creates feature branch from `Kiro/dev`
 - Names branch: `feature/[spec-name]`
 - Pushes branch to GitHub
 - Switches local workspace to new branch
@@ -545,9 +545,9 @@ Kiro creates comprehensive PRs using GitHub CLI:
 - Title: `feat: [Feature Name]`
 - Body includes: Spec summary, test results, coverage, links
 - Labels: `kiro-automated`
-- Base branch: `Saas/dev`
+- Base branch: `Kiro/dev`
 
-**Command:** `gh pr create --base Saas/dev --head feature/[name] --body-file pr-body.md`
+**Command:** `gh pr create --base Kiro/dev --head feature/[name] --body-file pr-body.md`
 
 #### 5. **Human Quality Gate** ⚠️
 **ONLY MANUAL STEP:** Human reviews and approves PR on GitHub.com
@@ -561,7 +561,7 @@ Kiro creates comprehensive PRs using GitHub CLI:
 #### 6. **Automated Merge & Cleanup**
 After approval, Kiro (or human) triggers merge:
 - Verifies PR is approved
-- Merges to `Saas/dev`
+- Merges to `Kiro/dev`
 - Deletes feature branch
 - Triggers existing deployment workflow
 
@@ -592,7 +592,7 @@ git checkout -b feature/[name]
 git push -u origin feature/[name]
 
 # PR operations
-gh pr create --base Saas/dev --head feature/[name]
+gh pr create --base Kiro/dev --head feature/[name]
 gh pr view [PR-number] --json state,reviewDecision
 gh pr merge [PR-number] --merge --delete-branch
 
@@ -751,7 +751,7 @@ The GitHub automation workflow **enhances** the existing 7-step AI-DLC process:
 
 #### Branch Creation Fails
 - Check if branch already exists
-- Verify you're on `Saas/dev` branch
+- Verify you're on `Kiro/dev` branch
 - Ensure you have push permissions
 
 #### PR Creation Fails
