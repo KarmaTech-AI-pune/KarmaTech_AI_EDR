@@ -1,7 +1,7 @@
 import { axiosInstance } from '../services/axiosConfig';
 import { BudgetHealth } from '../types/budgetHealth';
 
-const API_URL = '/api/projects';
+const API_URL = '/api/Project';
 
 /**
  * Get budget health status for a project
