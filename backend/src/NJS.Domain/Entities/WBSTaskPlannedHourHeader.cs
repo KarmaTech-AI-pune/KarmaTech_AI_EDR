@@ -11,7 +11,6 @@ namespace NJS.Domain.Entities
         public int ProjectId { get; set; }
         
         [ForeignKey("ProjectId")]
-        [DeleteBehavior(DeleteBehavior.NoAction)]
         public virtual Project Project { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

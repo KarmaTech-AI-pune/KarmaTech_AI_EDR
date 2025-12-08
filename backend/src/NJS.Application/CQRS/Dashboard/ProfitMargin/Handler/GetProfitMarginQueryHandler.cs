@@ -41,7 +41,7 @@ namespace NJS.Application.CQRS.Dashboard.ProfitMargin.Handler
                 .SumAsync(mp => mp.ContractAndCost.TotalCumulativeCost ?? 0m, cancellationToken);
 
             var profitMargin = totalRevenue > 0
-                ? ((totalRevenue - totalCost) / totalRevenue) * 100
+                ? Math.Round(((totalRevenue - totalCost) / totalRevenue) * 100, 2)
                 : 0;
 
             // For comparison, calculate previous quarter's margin

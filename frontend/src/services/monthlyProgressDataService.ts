@@ -16,7 +16,11 @@ interface JobStartData {
 
 import { WBSRowData } from '../features/wbs/types/wbs';
 
-type WBSData = WBSRowData[];
+interface WBSResponse {
+  wbsHeaderId: number;
+  tasks: WBSRowData[];
+  workBreakdownStructures: any[];
+}
 
 interface ProjectData {
   feeType: 'lumpsum' | 'timeAndExpense' | 'percentage';
@@ -27,7 +31,7 @@ interface ProjectData {
 
 const transformDataForMonthlyProgress = (
   jobStartResult: PromiseSettledResult<JobStartData[]>,
-  wbsResult: PromiseSettledResult<WBSData>,
+  wbsResult: PromiseSettledResult<WBSResponse>,
   projectResult: PromiseSettledResult<ProjectData>,
   manpowerResult: PromiseSettledResult<ManpowerResourcesResponse>
 ): Partial<MonthlyProgressSchemaType> => {
@@ -65,20 +69,20 @@ const transformDataForMonthlyProgress = (
       grossProfitPercentage: null,
     },
     budgetTable: {
-        originalBudget: {
-            cost: null,
-            revenueFee: null,
-            profitPercentage: null,
-        },
-        currentBudgetInMIS: {
-            revenueFee: null,
-            cost: null,
-            profitPercentage: null,
-        },
-        percentCompleteOnCosts: {
-            revenueFee: null,
-            cost: null,
-        }
+      originalBudget: {
+        cost: null,
+        revenueFee: null,
+        profitPercentage: null,
+      },
+      currentBudgetInMIS: {
+        revenueFee: null,
+        cost: null,
+        profitPercentage: null,
+      },
+      percentCompleteOnCosts: {
+        revenueFee: null,
+        cost: null,
+      }
     },
     schedule: {
       dateOfIssueWOLOI: null,
@@ -118,21 +122,21 @@ const transformDataForMonthlyProgress = (
       transformedData.financialAndContractDetails.feeTotal = addCalculation(net, taxAmount);
     }
     if (transformedData.budgetTable) {
-        if(transformedData.budgetTable.originalBudget){
-            transformedData.budgetTable.originalBudget.revenueFee = jobStart.projectFees || 0;
-            transformedData.budgetTable.originalBudget.cost = jobStart.grandTotal || 0;
-            transformedData.budgetTable.originalBudget.profitPercentage = jobStart.profitPercentage || 0;
-            
-        }
-        if(transformedData.budgetTable.currentBudgetInMIS){
-            transformedData.budgetTable.currentBudgetInMIS.revenueFee = jobStart.projectFees || 0;
-        }
+      if (transformedData.budgetTable.originalBudget) {
+        transformedData.budgetTable.originalBudget.revenueFee = jobStart.projectFees || 0;
+        transformedData.budgetTable.originalBudget.cost = jobStart.grandTotal || 0;
+        transformedData.budgetTable.originalBudget.profitPercentage = jobStart.profitPercentage || 0;
+
+      }
+      if (transformedData.budgetTable.currentBudgetInMIS) {
+        transformedData.budgetTable.currentBudgetInMIS.revenueFee = jobStart.projectFees || 0;
+      }
     }
   }
 
   // Process WBS data if the promise was fulfilled
   if (wbsResult.status === 'fulfilled' && wbsResult.value) {
-    const wbsData = wbsResult.value;
+    const wbsData = wbsResult.value.tasks || [];
     const budgetOdcs = wbsData
       .filter(row => row.taskType === 1)
       .reduce((sum, row) => sum + (row.totalCost || 0), 0);
@@ -151,15 +155,15 @@ const transformDataForMonthlyProgress = (
   if (projectResult.status === 'fulfilled' && projectResult.value) {
     const project = projectResult.value;
     if (transformedData.financialAndContractDetails) {
-        if (project.feeType) {
-            let normalizedFeeType = project.feeType.toLowerCase().replace('&', 'And');
-            if (normalizedFeeType === 'timeandexpense' || normalizedFeeType === 'timeAndexpense') {
-            normalizedFeeType = 'timeAndExpense';
+      if (project.feeType) {
+        let normalizedFeeType = project.feeType.toLowerCase().replace('&', 'And');
+        if (normalizedFeeType === 'timeandexpense' || normalizedFeeType === 'timeAndexpense') {
+          normalizedFeeType = 'timeAndExpense';
         }
-            transformedData.financialAndContractDetails.contractType = normalizedFeeType as 'lumpsum' | 'timeAndExpense' | 'percentage';
-        } else {
-            transformedData.financialAndContractDetails.contractType = 'lumpsum';
-        }
+        transformedData.financialAndContractDetails.contractType = normalizedFeeType as 'lumpsum' | 'timeAndExpense' | 'percentage';
+      } else {
+        transformedData.financialAndContractDetails.contractType = 'lumpsum';
+      }
     }
     if (transformedData.schedule) {
       transformedData.schedule.dateOfIssueWOLOI = project.startDate;
@@ -168,26 +172,26 @@ const transformDataForMonthlyProgress = (
       transformedData.schedule.expectedCompletionDate = project.endDate;
     }
   }
-  
+
   if (manpowerResult.status === 'fulfilled' && manpowerResult.value) {
     const getMonthlyHours = (monthlyHours: MonthlyHourDto[]) => {
       const currentDate = new Date();
       const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
       const currentYear = currentDate.getFullYear();
-      
+
       const nextDate = new Date(currentDate);
       nextDate.setMonth(nextDate.getMonth() + 1);
       const nextMonth = nextDate.toLocaleString('default', { month: 'long' });
       const nextYear = nextDate.getFullYear();
-      
-      const currentMonthData = monthlyHours?.find(item => 
+
+      const currentMonthData = monthlyHours?.find(item =>
         item.month === currentMonth && item.year === currentYear
       );
-      
-      const nextMonthData = monthlyHours?.find(item => 
+
+      const nextMonthData = monthlyHours?.find(item =>
         item.month === nextMonth && item.year === nextYear
       );
-      
+
       return {
         currentMonthHours: currentMonthData?.plannedHours || 0,
         nextMonthHours: nextMonthData?.plannedHours || 0
@@ -244,7 +248,7 @@ export const getAggregatedMonthlyProgressData = async (
 
   return transformDataForMonthlyProgress(
     jobStartResult as PromiseSettledResult<JobStartData[]>,
-    wbsResult as PromiseSettledResult<WBSData>,
+    wbsResult as PromiseSettledResult<WBSResponse>,
     projectResult as PromiseSettledResult<ProjectData>,
     manpowerResult as PromiseSettledResult<ManpowerResourcesResponse>
   );

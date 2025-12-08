@@ -141,6 +141,8 @@ namespace NJS.Domain.Database
         {
             base.OnModelCreating(modelBuilder);
 
+            ConfigureProjectCascadingDeletes(modelBuilder);
+
             modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CheckReview>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -450,7 +452,7 @@ namespace NJS.Domain.Database
                 .HasOne(ph => ph.WBSTaskPlannedHourHeader)
                 .WithMany(p => p.WBSHistories)
                 .HasForeignKey(ph => ph.WBSTaskPlannedHourHeaderId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<WBSHistory>()
                 .HasOne(ph => ph.ActionUser)
@@ -625,7 +627,7 @@ namespace NJS.Domain.Database
                 entity.HasMany(h => h.VersionHistories)
                       .WithOne(vh => vh.WBSHeader)
                       .HasForeignKey(vh => vh.WBSHeaderId)
-                      .OnDelete(DeleteBehavior.Restrict); // Restrict deletion of WBSHeader if it has version histories
+                      .OnDelete(DeleteBehavior.Cascade); // Allow deletion of WBSHeader even if it has version histories
 
                 // Configure the relationship for ActiveVersion
                 entity.HasOne(h => h.ActiveVersion)
@@ -976,6 +978,13 @@ namespace NJS.Domain.Database
                       .HasForeignKey(cc => cc.WorkflowStatusId)
                       .OnDelete(DeleteBehavior.NoAction)
                       .IsRequired();
+
+                // Configure relationship with Project - Enforce Cascade Delete
+                entity.HasOne(cc => cc.Project)
+                      .WithMany()
+                      .HasForeignKey(cc => cc.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade)
+                      .IsRequired();
             });
 
             // Configure ProjectClosure entity
@@ -1176,7 +1185,7 @@ namespace NJS.Domain.Database
                 entity.HasOne(h => h.Project)
                       .WithMany()
                       .HasForeignKey(h => h.ProjectId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.NoAction);
 
                 // Configure relationship with PMWorkflowStatus
                 entity.HasOne(h => h.Status)
@@ -1260,6 +1269,44 @@ namespace NJS.Domain.Database
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
 
+        }
+
+        private void ConfigureProjectCascadingDeletes(ModelBuilder modelBuilder)
+        {
+            // Configure GoNoGoDecision Cascade Delete
+            modelBuilder.Entity<GoNoGoDecision>()
+                .HasOne(g => g.Project)
+                .WithMany()
+                .HasForeignKey(g => g.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Cashflow Cascade Delete
+            modelBuilder.Entity<Cashflow>()
+                .HasOne<Project>()
+                .WithMany()
+                .HasForeignKey(c => c.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure ProjectResource Cascade Delete
+            modelBuilder.Entity<ProjectResource>()
+                .HasOne(pr => pr.Project)
+                .WithMany()
+                .HasForeignKey(pr => pr.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure WBSTaskPlannedHourHeader Cascade Delete
+            modelBuilder.Entity<WBSTaskPlannedHourHeader>()
+                .HasOne(w => w.Project)
+                .WithMany()
+                .HasForeignKey(w => w.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            // Configure MonthlyProgress Cascade Delete (if not already explicit)
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.Project)
+                .WithMany()
+                .HasForeignKey(mp => mp.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
        
     }
