@@ -8,6 +8,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NJS.Domain.Enums;
 
 namespace NJS.Application.CQRS.Dashboard.NpvProfitability.Handlers
 {
