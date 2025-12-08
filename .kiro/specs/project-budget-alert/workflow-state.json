@@ -1,0 +1,34 @@
+{
+  "featureName": "project-budget-alert",
+  "branchName": "feature/project-budget-alert",
+  "state": "spec-created",
+  "steps": {
+    "specCreated": {
+      "completed": true,
+      "timestamp": "2024-12-05T10:00:00Z"
+    },
+    "branchCreated": {
+      "completed": true,
+      "timestamp": "2024-12-05T10:02:00Z",
+      "branchUrl": "https://github.com/makshintre/KarmaTech_AI_EDR/tree/feature/project-budget-alert"
+    },
+    "developmentComplete": {
+      "completed": false
+    },
+    "testsRun": {
+      "completed": false
+    },
+    "prCreated": {
+      "completed": false
+    },
+    "prApproved": {
+      "completed": false
+    },
+    "prMerged": {
+      "completed": false
+    }
+  },
+  "estimatedTasks": 12,
+  "completedTasks": 0,
+  "testResults": null
+}

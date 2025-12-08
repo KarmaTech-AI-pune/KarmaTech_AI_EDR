@@ -154,10 +154,10 @@ I will create: `.kiro/specs/project-status-history/`
 # Kiro executes these commands automatically:
 
 # Step 1: Switch to base branch
-git checkout Saas/dev
+git checkout Kiro/dev
 
 # Step 2: Pull latest changes
-git pull origin Saas/dev
+git pull origin Kiro/dev
 
 # Step 3: Create feature branch
 git checkout -b feature/project-status-history
@@ -168,8 +168,8 @@ git push -u origin feature/project-status-history
 
 **Console Output:**
 ```
-Switched to branch 'Saas/dev'
-Your branch is up to date with 'origin/Saas/dev'.
+Switched to branch 'Kiro/dev'
+Your branch is up to date with 'origin/Kiro/dev'.
 Already up to date.
 Switched to a new branch 'feature/project-status-history'
 Branch 'feature/project-status-history' set up to track remote branch 'feature/project-status-history' from 'origin'.
@@ -1003,7 +1003,7 @@ EOF
 
 # Create PR using GitHub CLI
 gh pr create \
-  --base Saas/dev \
+  --base Kiro/dev \
   --head feature/project-status-history \
   --title "feat: Project Status History Tracking" \
   --body-file .kiro/specs/project-status-history/pr-body.md \
@@ -1151,7 +1151,7 @@ gh pr view 123 --json reviewDecision
 
 # Merge PR and delete branch
 gh pr merge 123 --merge --delete-branch
-# Output: ✅ PR merged to Saas/dev
+# Output: ✅ PR merged to Kiro/dev
 # Output: ✅ Branch 'feature/project-status-history' deleted
 ```
 
@@ -1242,7 +1242,7 @@ gh run list --workflow=deploy-dev-with-tags.yml --limit 1
 | Step | Action | Automation |
 |------|--------|------------|
 | **1. Spec Creation** | Create requirements, design, tasks | 🤖 Automatic |
-| **1. Branch Creation** | Create feature branch from Saas/dev | 🤖 Automatic |
+| **1. Branch Creation** | Create feature branch from Kiro/dev | 🤖 Automatic |
 | **2. Impact Analysis** | Scan codebase, identify changes | 🤖 Automatic |
 | **3. Design** | Create technical design | 🤖 Automatic |
 | **4. Implementation** | Write code, commit, push | 🤖 Automatic |
@@ -1362,8 +1362,8 @@ gh run list --workflow=deploy-dev-with-tags.yml --limit 1
 
 ```powershell
 # 1. Create Feature Branch (Step 1)
-git checkout Saas/dev
-git pull origin Saas/dev
+git checkout Kiro/dev
+git pull origin Kiro/dev
 git checkout -b feature/[feature-name]
 git push -u origin feature/[feature-name]
 
@@ -1378,7 +1378,7 @@ cd frontend && npm run test -- --coverage
 
 # 4. Create PR (Step 6)
 gh pr create \
-  --base Saas/dev \
+  --base Kiro/dev \
   --head feature/[feature-name] \
   --title "feat: [Feature Name]" \
   --body-file .kiro/specs/[feature]/pr-body.md \
@@ -1420,7 +1420,7 @@ gh run list --workflow=deploy-dev-with-tags.yml --limit 1
 ❌ Don't approve PRs without reviewing code  
 ❌ Don't ignore test failures  
 ❌ Don't create branches manually (let automation handle it)  
-❌ Don't forget to pull latest Saas/dev before starting  
+❌ Don't forget to pull latest Kiro/dev before starting  
 
 ---
 
@@ -1446,11 +1446,11 @@ Track these KPIs to measure automation effectiveness:
 # Check current branch
 git branch --show-current
 
-# Ensure you're on Saas/dev
-git checkout Saas/dev
+# Ensure you're on Kiro/dev
+git checkout Kiro/dev
 
 # Pull latest changes
-git pull origin Saas/dev
+git pull origin Kiro/dev
 
 # Try again
 git checkout -b feature/[name]
@@ -1484,7 +1484,7 @@ gh pr view [PR-number] --json mergeable
 
 # Update branch if needed
 git checkout feature/[name]
-git pull origin Saas/dev
+git pull origin Kiro/dev
 git push origin feature/[name]
 ```
 
