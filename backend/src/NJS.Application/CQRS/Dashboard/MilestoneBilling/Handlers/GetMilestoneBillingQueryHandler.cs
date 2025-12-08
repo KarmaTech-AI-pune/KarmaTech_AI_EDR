@@ -68,20 +68,28 @@ namespace NJS.Application.CQRS.Dashboard.MilestoneBilling.Handlers
 
         private string CalculateStatus(NJS.Domain.Entities.ProgressDeliverable deliverable)
         {
-            if (deliverable.AchievedDate.HasValue)
+            // Only mark as Completed if PaymentReceivedDate is present AND it is not in the future
+            if (deliverable.PaymentReceivedDate.HasValue && deliverable.PaymentReceivedDate.Value.Date <= DateTime.UtcNow.Date)
             {
-                return "Completed"; // Or "On Track" if we want to stick to the specific statuses
+                return "Completed";
             }
 
-            if (deliverable.DueDateContract.HasValue && deliverable.DueDateContract.Value < DateTime.UtcNow.Date)
+            if (deliverable.DueDateContract.HasValue)
             {
-                return "Overdue";
-            }
-            
-            // Logic for "At Risk" could be added here (e.g., within 7 days of due date)
-            if (deliverable.DueDateContract.HasValue && deliverable.DueDateContract.Value <= DateTime.UtcNow.Date.AddDays(7))
-            {
-                return "At Risk";
+                var dueDate = deliverable.DueDateContract.Value.Date;
+                var today = DateTime.UtcNow.Date;
+
+                // If currently overdue (payment not received, and past due date)
+                if (dueDate < today)
+                {
+                    return "Overdue";
+                }
+                
+                // At Risk: Due within 7 days
+                if (dueDate <= today.AddDays(7))
+                {
+                    return "At Risk";
+                }
             }
 
             return "On Track";
@@ -89,14 +97,24 @@ namespace NJS.Application.CQRS.Dashboard.MilestoneBilling.Handlers
 
         private int CalculateDaysDelayed(NJS.Domain.Entities.ProgressDeliverable deliverable)
         {
-            if (deliverable.AchievedDate.HasValue)
+            var dueDate = deliverable.DueDateContract?.Date;
+            if (!dueDate.HasValue) return 0;
+
+            // If we have a Payment Received Date (even if future/projected), calculate delay against it
+            if (deliverable.PaymentReceivedDate.HasValue)
             {
-                return 0;
+                var paymentDate = deliverable.PaymentReceivedDate.Value.Date;
+                if (paymentDate > dueDate.Value)
+                {
+                    return (paymentDate - dueDate.Value).Days;
+                }
+                return 0; // Paid on time or early
             }
 
-            if (deliverable.DueDateContract.HasValue && deliverable.DueDateContract.Value < DateTime.UtcNow.Date)
+            // If pending and overdue
+            if (dueDate.Value < DateTime.UtcNow.Date)
             {
-                return (DateTime.UtcNow.Date - deliverable.DueDateContract.Value).Days;
+                return (DateTime.UtcNow.Date - dueDate.Value).Days;
             }
 
             return 0;
@@ -104,15 +122,15 @@ namespace NJS.Application.CQRS.Dashboard.MilestoneBilling.Handlers
 
         private decimal CalculatePenalty(NJS.Domain.Entities.ProgressDeliverable deliverable)
         {
-            // Placeholder logic: 
-            // If overdue, maybe 1% of PaymentDue per 10 days? 
-            // For now returning 0 as per plan unless specific logic is provided.
-            // Or we can mock some penalty for demo purposes if overdue.
+            // Logic: If there is a delay (DaysDelayed > 0), calculate penalty.
+            // Penalty is dynamically calculated based on the number of days delayed.
             
-            if (CalculateStatus(deliverable) == "Overdue")
+            var daysDelayed = CalculateDaysDelayed(deliverable);
+            
+            if (daysDelayed > 0)
             {
-                 // Example: $100 per day delayed
-                 return CalculateDaysDelayed(deliverable) * 100;
+                 // Rate: $100 per day delayed
+                 return daysDelayed * 100;
             }
 
             return 0;
