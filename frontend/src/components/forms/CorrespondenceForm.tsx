@@ -393,7 +393,7 @@ const CorrespondenceForm: React.FC = () => {
 
         // Validate required fields
         const requiredFields = tabValue === 0
-          ? ['projectId', 'incomingLetterNo', 'letterDate', 'inwardNo', 'receiptDate', 'from', 'subject', 'createdBy']
+          ? ['projectId', 'incomingLetterNo', 'letterDate', 'njsInwardNo', 'receiptDate', 'from', 'subject', 'createdBy']
           : ['projectId', 'letterNo', 'letterDate', 'to', 'subject', 'createdBy'];
 
         const missingFields = requiredFields.filter(field => {
