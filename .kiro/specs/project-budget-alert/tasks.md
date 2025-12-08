@@ -25,12 +25,22 @@
   - Return BudgetHealthDto
   - _Requirements: 1.1_
 
-- [ ] 3. Write backend unit test
+- [x] 3. Write backend unit test
+
+
+
+
+
   - Test status calculation logic
   - Test: <90% = Healthy, 90-100% = Warning, >100% = Critical
   - _Requirements: 1.2, 1.3, 1.4_
 
-- [ ] 4. Create frontend TypeScript types and API service
+- [x] 4. Create frontend TypeScript types and API service
+
+
+
+
+
   - Create BudgetHealth interface
   - Create getBudgetHealth() API method
   - _Requirements: 1.1, 1.5_
