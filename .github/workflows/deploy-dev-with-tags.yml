@@ -1,14 +1,16 @@
 # ====================================================================
-# Development Deployment with Automatic Release Tagging
+# Deployment with Automatic Environment-Specific Version Tagging
 # ====================================================================
-# This workflow deploys to DEV environment and creates release tags
+# This workflow deploys to any environment and creates version tags
+# Tag format: v{MAJOR}.{MINOR}.{PATCH}-{ENV}.{DATE}.{BUILD}
+# Production also creates clean tag: v{MAJOR}.{MINOR}.{PATCH}
 # Trigger: Push to Saas/dev branch with frontend/backend changes
 
-name: Deploy to DEV with Release Tags
+name: Deploy with Version Tags
 
 on:
   push:
-    branches: [ Saas/dev ]
+    branches: [ Kiro/dev ]
     paths:
       - 'frontend/**'
       - 'backend/**'
@@ -33,17 +35,92 @@ env:
 
 jobs:
   # ================================================================
-  # Job 1: Create Release Tag
+  # Job 1: Determine Environment and Create Version Tag
   # ================================================================
-  create-release-tag:
-    name: Create DEV Release Tag
-    uses: ./.github/workflows/create-release-tags.yml
-    with:
-      environment: dev
-      component: full
-      version-bump: ${{ github.event.inputs.version-bump || 'patch' }}
+  create-version-tag:
+    name: Create Version Tag
+    runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      version-tag: ${{ steps.version-tag.outputs.version_tag }}
+      version: ${{ steps.version-tag.outputs.version }}
+      environment: ${{ steps.version-tag.outputs.environment }}
+      build-number: ${{ steps.version-tag.outputs.build_number }}
+      commit-sha: ${{ steps.version-tag.outputs.commit_sha }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine Environment from Branch
+        id: determine-env
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          echo "Branch name: $BRANCH_NAME"
+          
+          # Determine environment based on branch name
+          case "$BRANCH_NAME" in
+            "Kiro/dev"|"kiro/dev"|"dev")
+              ENVIRONMENT="dev"
+              ;;
+            "staging")
+              ENVIRONMENT="staging"
+              ;;
+            "qa")
+              ENVIRONMENT="qa"
+              ;;
+            "main"|"master"|"production")
+              ENVIRONMENT="prod"
+              ;;
+            *)
+              echo "⚠️ Unknown branch: $BRANCH_NAME. Defaulting to dev environment."
+              ENVIRONMENT="dev"
+              ;;
+          esac
+          
+          echo "Determined environment: $ENVIRONMENT"
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+
+      - name: Make version tagging script executable
+        run: chmod +x .github/scripts/create-version-tag.sh
+
+      - name: Create Version Tag
+        id: version-tag
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+          VERSION_INCREMENT: ${{ github.event.inputs.version-bump || 'patch' }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          echo "Running version tagging script..."
+          .github/scripts/create-version-tag.sh
+          
+          echo ""
+          echo "✅ Version tag created successfully"
+
+      - name: Log Version Information
+        run: |
+          echo "## 🏷️ Version Tag Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tag Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Tag:** \`${{ steps.version-tag.outputs.version_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Semantic Version:** \`${{ steps.version-tag.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** \`${{ steps.version-tag.outputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number:** \`${{ steps.version-tag.outputs.build_number }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit SHA:** \`${{ steps.version-tag.outputs.commit_sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Tag](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version-tag.outputs.version_tag }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
 
   # ================================================================
   # Job 2: Deploy Infrastructure
@@ -51,7 +128,7 @@ jobs:
   deploy-infrastructure:
     name: Deploy Frontend Infrastructure
     runs-on: ubuntu-latest
-    needs: create-release-tag
+    needs: create-version-tag
     outputs:
       admin-bucket: ${{ steps.stacks.outputs.admin-bucket }}
       tenant-bucket: ${{ steps.stacks.outputs.tenant-bucket }}
@@ -68,32 +145,42 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Deploy Admin CloudFormation Stack
+        env:
+          VERSION_TAG: ${{ needs.create-version-tag.outputs.version-tag }}
+          VERSION: ${{ needs.create-version-tag.outputs.version }}
+          ENVIRONMENT: ${{ needs.create-version-tag.outputs.environment }}
         run: |
+          echo "Deploying with version tag: $VERSION_TAG"
           aws cloudformation deploy \
             --template-file aws-frontend-admin-simple.yml \
-            --stack-name njs-admin-frontend-dev \
+            --stack-name njs-admin-frontend-${{ needs.create-version-tag.outputs.environment }} \
             --parameter-overrides CertificateArn=${{ env.CERTIFICATE_ARN }} \
             --region ${{ env.AWS_REGION }} \
             --no-fail-on-empty-changeset \
             --tags \
-              Environment=dev \
-              Version=${{ needs.create-release-tag.outputs.release-version }} \
-              ReleaseTag=${{ needs.create-release-tag.outputs.release-tag }} \
+              Environment=${{ needs.create-version-tag.outputs.environment }} \
+              Version=${{ needs.create-version-tag.outputs.version }} \
+              VersionTag=${{ needs.create-version-tag.outputs.version-tag }} \
               DeployedBy=${{ github.actor }} \
               DeployedAt=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
       - name: Deploy Tenant CloudFormation Stack
+        env:
+          VERSION_TAG: ${{ needs.create-version-tag.outputs.version-tag }}
+          VERSION: ${{ needs.create-version-tag.outputs.version }}
+          ENVIRONMENT: ${{ needs.create-version-tag.outputs.environment }}
         run: |
+          echo "Deploying with version tag: $VERSION_TAG"
           aws cloudformation deploy \
             --template-file aws-frontend-tenant-simple.yml \
-            --stack-name njs-tenant-frontend-dev \
+            --stack-name njs-tenant-frontend-${{ needs.create-version-tag.outputs.environment }} \
             --parameter-overrides CertificateArn=${{ env.CERTIFICATE_ARN }} \
             --region ${{ env.AWS_REGION }} \
             --no-fail-on-empty-changeset \
             --tags \
-              Environment=dev \
-              Version=${{ needs.create-release-tag.outputs.release-version }} \
-              ReleaseTag=${{ needs.create-release-tag.outputs.release-tag }} \
+              Environment=${{ needs.create-version-tag.outputs.environment }} \
+              Version=${{ needs.create-version-tag.outputs.version }} \
+              VersionTag=${{ needs.create-version-tag.outputs.version-tag }} \
               DeployedBy=${{ github.actor }} \
               DeployedAt=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -101,12 +188,12 @@ jobs:
         id: stacks
         run: |
           ADMIN_BUCKET=$(aws cloudformation describe-stacks \
-            --stack-name njs-admin-frontend-dev \
+            --stack-name njs-admin-frontend-${{ needs.create-version-tag.outputs.environment }} \
             --query 'Stacks[0].Outputs[?OutputKey==`AdminS3BucketName`].OutputValue' \
             --output text)
           
           TENANT_BUCKET=$(aws cloudformation describe-stacks \
-            --stack-name njs-tenant-frontend-dev \
+            --stack-name njs-tenant-frontend-${{ needs.create-version-tag.outputs.environment }} \
             --query 'Stacks[0].Outputs[?OutputKey==`TenantS3BucketName`].OutputValue' \
             --output text)
           
@@ -119,7 +206,7 @@ jobs:
   deploy-admin-app:
     name: Deploy Admin Application
     runs-on: ubuntu-latest
-    needs: [create-release-tag, deploy-infrastructure]
+    needs: [create-version-tag, deploy-infrastructure]
     
     steps:
       - name: Checkout code
@@ -138,15 +225,21 @@ jobs:
 
       - name: Create admin environment file with version
         working-directory: ./frontend
+        env:
+          VERSION_TAG: ${{ needs.create-version-tag.outputs.version-tag }}
+          VERSION: ${{ needs.create-version-tag.outputs.version }}
+          ENVIRONMENT: ${{ needs.create-version-tag.outputs.environment }}
+          COMMIT_SHA: ${{ needs.create-version-tag.outputs.commit-sha }}
         run: |
+          echo "Creating environment file with version: $VERSION_TAG"
           cat > .env.production <<EOF
           VITE_API_BASE_URL=https://api.app.karmatech-ai.com/
-          VITE_APP_ENV=dev
+          VITE_APP_ENV=${{ needs.create-version-tag.outputs.environment }}
           VITE_MAIN_DOMAIN=edr-admin.app.karmatech-ai.com
           VITE_APP_TYPE=admin
-          VITE_APP_VERSION=${{ needs.create-release-tag.outputs.release-tag }}
+          VITE_APP_VERSION=${{ needs.create-version-tag.outputs.version-tag }}
           VITE_BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          VITE_COMMIT_SHA=${{ github.sha }}
+          VITE_COMMIT_SHA=${{ needs.create-version-tag.outputs.commit-sha }}
           EOF
 
       - name: Build admin application
@@ -155,15 +248,21 @@ jobs:
 
       - name: Create version manifest
         working-directory: ./frontend/dist
+        env:
+          VERSION_TAG: ${{ needs.create-version-tag.outputs.version-tag }}
+          VERSION: ${{ needs.create-version-tag.outputs.version }}
+          ENVIRONMENT: ${{ needs.create-version-tag.outputs.environment }}
+          COMMIT_SHA: ${{ needs.create-version-tag.outputs.commit-sha }}
         run: |
           cat > version.json <<EOF
           {
-            "version": "${{ needs.create-release-tag.outputs.release-tag }}",
-            "semanticVersion": "${{ needs.create-release-tag.outputs.release-version }}",
-            "environment": "dev",
+            "version": "${{ needs.create-version-tag.outputs.version-tag }}",
+            "semanticVersion": "${{ needs.create-version-tag.outputs.version }}",
+            "environment": "${{ needs.create-version-tag.outputs.environment }}",
             "component": "admin",
+            "buildNumber": "${{ needs.create-version-tag.outputs.build-number }}",
             "buildDate": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-            "commitSha": "${{ github.sha }}",
+            "commitSha": "${{ needs.create-version-tag.outputs.commit-sha }}",
             "branch": "${{ github.ref_name }}",
             "deployedBy": "${{ github.actor }}"
           }
@@ -198,7 +297,7 @@ jobs:
   deploy-tenant-app:
     name: Deploy Tenant Application
     runs-on: ubuntu-latest
-    needs: [create-release-tag, deploy-infrastructure]
+    needs: [create-version-tag, deploy-infrastructure]
     
     steps:
       - name: Checkout code
@@ -217,15 +316,21 @@ jobs:
 
       - name: Create tenant environment file with version
         working-directory: ./frontend
+        env:
+          VERSION_TAG: ${{ needs.create-version-tag.outputs.version-tag }}
+          VERSION: ${{ needs.create-version-tag.outputs.version }}
+          ENVIRONMENT: ${{ needs.create-version-tag.outputs.environment }}
+          COMMIT_SHA: ${{ needs.create-version-tag.outputs.commit-sha }}
         run: |
+          echo "Creating environment file with version: $VERSION_TAG"
           cat > .env.production <<EOF
           VITE_API_BASE_URL=https://api.app.karmatech-ai.com/
-          VITE_APP_ENV=dev
+          VITE_APP_ENV=${{ needs.create-version-tag.outputs.environment }}
           VITE_MAIN_DOMAIN=app.karmatech-ai.com
           VITE_APP_TYPE=tenant
-          VITE_APP_VERSION=${{ needs.create-release-tag.outputs.release-tag }}
+          VITE_APP_VERSION=${{ needs.create-version-tag.outputs.version-tag }}
           VITE_BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          VITE_COMMIT_SHA=${{ github.sha }}
+          VITE_COMMIT_SHA=${{ needs.create-version-tag.outputs.commit-sha }}
           EOF
 
       - name: Build tenant application
@@ -234,15 +339,21 @@ jobs:
 
       - name: Create version manifest
         working-directory: ./frontend/dist
+        env:
+          VERSION_TAG: ${{ needs.create-version-tag.outputs.version-tag }}
+          VERSION: ${{ needs.create-version-tag.outputs.version }}
+          ENVIRONMENT: ${{ needs.create-version-tag.outputs.environment }}
+          COMMIT_SHA: ${{ needs.create-version-tag.outputs.commit-sha }}
         run: |
           cat > version.json <<EOF
           {
-            "version": "${{ needs.create-release-tag.outputs.release-tag }}",
-            "semanticVersion": "${{ needs.create-release-tag.outputs.release-version }}",
-            "environment": "dev",
+            "version": "${{ needs.create-version-tag.outputs.version-tag }}",
+            "semanticVersion": "${{ needs.create-version-tag.outputs.version }}",
+            "environment": "${{ needs.create-version-tag.outputs.environment }}",
             "component": "tenant",
+            "buildNumber": "${{ needs.create-version-tag.outputs.build-number }}",
             "buildDate": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-            "commitSha": "${{ github.sha }}",
+            "commitSha": "${{ needs.create-version-tag.outputs.commit-sha }}",
             "branch": "${{ github.ref_name }}",
             "deployedBy": "${{ github.actor }}"
           }
@@ -277,19 +388,26 @@ jobs:
   deployment-summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [create-release-tag, deploy-admin-app, deploy-tenant-app]
+    needs: [create-version-tag, deploy-admin-app, deploy-tenant-app]
     if: always()
     
     steps:
       - name: Deployment Summary
+        env:
+          VERSION_TAG: ${{ needs.create-version-tag.outputs.version-tag }}
+          VERSION: ${{ needs.create-version-tag.outputs.version }}
+          ENVIRONMENT: ${{ needs.create-version-tag.outputs.environment }}
+          BUILD_NUMBER: ${{ needs.create-version-tag.outputs.build-number }}
         run: |
-          echo "## 🚀 DEV Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Deployment Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🏷️ Release Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **Release Tag:** \`${{ needs.create-release-tag.outputs.release-tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version:** \`${{ needs.create-release-tag.outputs.release-version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Environment:** DEV" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Tag:** \`${{ needs.create-version-tag.outputs.version-tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Semantic Version:** \`${{ needs.create-version-tag.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** \`${{ needs.create-version-tag.outputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number:** \`${{ needs.create-version-tag.outputs.build-number }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ needs.create-version-tag.outputs.commit-sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🌐 Deployed URLs" >> $GITHUB_STEP_SUMMARY
@@ -307,3 +425,7 @@ jobs:
           echo "Access version information at:" >> $GITHUB_STEP_SUMMARY
           echo "- https://edr-admin.app.karmatech-ai.com/version.json" >> $GITHUB_STEP_SUMMARY
           echo "- https://app.karmatech-ai.com/version.json" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Tag](https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-version-tag.outputs.version-tag }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Commit](https://github.com/${{ github.repository }}/commit/${{ needs.create-version-tag.outputs.commit-sha }})" >> $GITHUB_STEP_SUMMARY
