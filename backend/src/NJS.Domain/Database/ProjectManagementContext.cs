@@ -6,13 +6,13 @@ using NJS.Domain.Services;
 
 namespace NJS.Domain.Database
 {
-    public class ProjectManagementContext : IdentityDbContext<User,Role,string>
-{
+    public class ProjectManagementContext : IdentityDbContext<User, Role, string>
+    {
         public int? TenantId { get; private set; }
         private readonly ICurrentTenantService _currentTenantService;
         public string CurrentTenantConnectionString { get; set; }
 
-      
+
         public ProjectManagementContext(
             DbContextOptions<ProjectManagementContext> options,
             ICurrentTenantService currentTenantService
@@ -32,7 +32,7 @@ namespace NJS.Domain.Database
             base.OnConfiguring(optionsBuilder);
         }
 
-        
+
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -47,8 +47,8 @@ namespace NJS.Domain.Database
                 }
             }
             return base.SaveChangesAsync(cancellationToken);
-        }   
-       
+        }
+
         // Tenant-specific tables only
         public DbSet<BidPreparation> BidPreparations { get; set; }
         public DbSet<BidVersionHistory> BidVersionHistories { get; set; }
@@ -128,13 +128,20 @@ namespace NJS.Domain.Database
         public DbSet<CurrentBudgetInMIS> CurrentBudgetInMIS { get; set; }
         public DbSet<PercentCompleteOnCosts> PercentCompleteOnCosts { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
+        public DbSet<SprintTask> SprintTasks { get; set; }
+        public DbSet<SprintSubtask> SprintSubtasks { get; set; }
+        public DbSet<SprintPlan> SprintPlans { get; set; }
+        public DbSet<SprintTaskComment> SprintTaskComments { get; set; }
+        public DbSet<SprintSubtaskComment> SprintSubtaskComments { get; set; }
+        public DbSet<SprintDailyProgress> SprintDailyProgresses { get; set; }
+
 
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
         public DbSet<CreateAccount> CreateAccounts { get; set; }
         public DbSet<Feature> Features { get; set; }
 
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
-        public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
         public DbSet<MigrationResult> MigrationResults { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -187,6 +194,12 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<WBSVersionWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<UserWBSTaskVersionHistory>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<MeasurementUnit>().HasQueryFilter(p => TenantId == null || p.TenantId == TenantId);
+            modelBuilder.Entity<SprintTask>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintSubtask>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintPlan>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintTaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintSubtaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintDailyProgress>().HasQueryFilter(p => p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
@@ -395,19 +408,19 @@ namespace NJS.Domain.Database
                 .HasForeignKey(rp => rp.PermissionId);
 
             // Configure Project entity properties
-            modelBuilder.Entity<Project>(entity => 
+            modelBuilder.Entity<Project>(entity =>
             {
                 // Configure decimal precisions
                 entity.Property(f => f.EstimatedProjectCost).HasPrecision(18, 2);
                 entity.Property(f => f.EstimatedProjectFee).HasPrecision(18, 2);
                 entity.Property(f => f.CapitalValue).HasPrecision(18, 2);
                 entity.Property(f => f.Percentage).HasPrecision(18, 2);
-                
+
                 // Configure nullable foreign keys
                 entity.Property(p => p.Sector).IsRequired(false);
                 entity.Property(p => p.ProgramId).IsRequired(false);
                 entity.Property(p => p.OpportunityTrackingId).IsRequired(false);
-                
+
                 // Configure nullable relationships - fix shadow property issue
                 // Remove explicit relationship configuration since it's already defined in Project entity with [ForeignKey] attribute
             });
@@ -1300,7 +1313,7 @@ namespace NJS.Domain.Database
                 .WithMany()
                 .HasForeignKey(w => w.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             // Configure MonthlyProgress Cascade Delete (if not already explicit)
             modelBuilder.Entity<MonthlyProgress>()
                 .HasOne(mp => mp.Project)
@@ -1308,7 +1321,7 @@ namespace NJS.Domain.Database
                 .HasForeignKey(mp => mp.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
-       
+
     }
-   
+
 }

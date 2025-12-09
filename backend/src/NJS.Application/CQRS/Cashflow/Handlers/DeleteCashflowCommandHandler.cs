@@ -4,7 +4,6 @@ using NJS.Repositories.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
 using NJS.Application.CQRS.Cashflow.Commands;
-using MediatR;
 
 namespace NJS.Application.CQRS.Cashflow.Handlers
 {
