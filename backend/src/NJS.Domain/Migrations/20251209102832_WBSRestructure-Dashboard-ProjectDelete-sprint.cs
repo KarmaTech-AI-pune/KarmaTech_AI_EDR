@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace NJS.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class initkarmaTechAIEDRSAAS : Migration
+    public partial class WBSRestructureDashboardProjectDeletesprint : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -85,28 +85,6 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Cashflows",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ProjectId = table.Column<int>(type: "int", nullable: true),
-                    Month = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TotalHours = table.Column<int>(type: "int", nullable: true),
-                    PersonnelCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    OdcCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    TotalProjectCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    CumulativeCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Revenue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    CumulativeRevenue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    CashFlow = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Cashflows", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "CreateAccounts",
                 columns: table => new
                 {
@@ -175,11 +153,33 @@ namespace NJS.Domain.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MeasurementUnits", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MigrationResults",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    Success = table.Column<bool>(type: "bit", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MigrationResultId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MigrationResults", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MigrationResults_MigrationResults_MigrationResultId",
+                        column: x => x.MigrationResultId,
+                        principalTable: "MigrationResults",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -223,6 +223,26 @@ namespace NJS.Domain.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PMWorkflowStatuses", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Programs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Programs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -336,7 +356,7 @@ namespace NJS.Domain.Migrations
                     Value = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Label = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Level = table.Column<int>(type: "int", nullable: false),
-                    ParentValue = table.Column<string>(type: "nvarchar(max)", maxLength: 100, nullable: true),
+                    ParentId = table.Column<int>(type: "int", nullable: true),
                     FormType = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -513,66 +533,6 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Projects",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ClientName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ProjectNo = table.Column<int>(type: "int", nullable: false),
-                    TypeOfClient = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ProjectManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    SeniorProjectManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    RegionalManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    Office = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Region = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TypeOfJob = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Sector = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    FeeType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    EstimatedProjectCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    EstimatedProjectFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Percentage = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Details = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Priority = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Currency = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CapitalValue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    Progress = table.Column<int>(type: "int", nullable: false),
-                    DurationInMonths = table.Column<int>(type: "int", nullable: true),
-                    FundingStream = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ContractType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LetterOfAcceptance = table.Column<bool>(type: "bit", nullable: false),
-                    OpportunityTrackingId = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Projects", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Projects_AspNetUsers_ProjectManagerId",
-                        column: x => x.ProjectManagerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Projects_AspNetUsers_RegionalManagerId",
-                        column: x => x.RegionalManagerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Projects_AspNetUsers_SeniorProjectManagerId",
-                        column: x => x.SeniorProjectManagerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "TwoFactorCodes",
                 columns: table => new
                 {
@@ -623,6 +583,72 @@ namespace NJS.Domain.Migrations
                         principalTable: "Permissions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Projects",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClientName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProjectNo = table.Column<int>(type: "int", nullable: true),
+                    TypeOfClient = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProjectManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    SeniorProjectManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    RegionalManagerId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Office = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Region = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TypeOfJob = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Sector = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FeeType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EstimatedProjectCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    EstimatedProjectFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    Percentage = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    Details = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Priority = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Currency = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CapitalValue = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Progress = table.Column<int>(type: "int", nullable: false),
+                    DurationInMonths = table.Column<int>(type: "int", nullable: true),
+                    FundingStream = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContractType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LetterOfAcceptance = table.Column<bool>(type: "bit", nullable: true),
+                    OpportunityTrackingId = table.Column<int>(type: "int", nullable: true),
+                    ProgramId = table.Column<int>(type: "int", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Projects", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Projects_AspNetUsers_ProjectManagerId",
+                        column: x => x.ProjectManagerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Projects_AspNetUsers_RegionalManagerId",
+                        column: x => x.RegionalManagerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Projects_AspNetUsers_SeniorProjectManagerId",
+                        column: x => x.SeniorProjectManagerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Projects_Programs_ProgramId",
+                        column: x => x.ProgramId,
+                        principalTable: "Programs",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -865,6 +891,34 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Cashflows",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<int>(type: "int", nullable: true),
+                    Month = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TotalHours = table.Column<int>(type: "int", nullable: true),
+                    PersonnelCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    OdcCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    TotalProjectCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CumulativeCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Revenue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CumulativeRevenue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CashFlow = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Cashflows", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Cashflows_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ChangeControls",
                 columns: table => new
                 {
@@ -907,7 +961,8 @@ namespace NJS.Domain.Migrations
                         name: "FK_ChangeControls_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1290,6 +1345,39 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SprintPlans",
+                columns: table => new
+                {
+                    SprintId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    SprintNumber = table.Column<int>(type: "int", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    SprintGoal = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ProjectId = table.Column<int>(type: "int", nullable: true),
+                    RequiredSprintEmployees = table.Column<int>(type: "int", nullable: false),
+                    SprintName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    PlannedStoryPoints = table.Column<int>(type: "int", nullable: false),
+                    ActualStoryPoints = table.Column<int>(type: "int", nullable: false),
+                    Velocity = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SprintPlans", x => x.SprintId);
+                    table.ForeignKey(
+                        name: "FK_SprintPlans_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WBSTaskPlannedHourHeaders",
                 columns: table => new
                 {
@@ -1315,7 +1403,8 @@ namespace NJS.Domain.Migrations
                         name: "FK_WBSTaskPlannedHourHeaders_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1854,6 +1943,36 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SprintDailyProgresses",
+                columns: table => new
+                {
+                    DailyProgressId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    SprintPlanId = table.Column<int>(type: "int", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PlannedStoryPoints = table.Column<int>(type: "int", nullable: false),
+                    CompletedStoryPoints = table.Column<int>(type: "int", nullable: false),
+                    RemainingStoryPoints = table.Column<int>(type: "int", nullable: false),
+                    AddedStoryPoints = table.Column<int>(type: "int", nullable: false),
+                    IdealRemainingPoints = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SprintDailyProgresses", x => x.DailyProgressId);
+                    table.ForeignKey(
+                        name: "FK_SprintDailyProgresses_SprintPlans_SprintPlanId",
+                        column: x => x.SprintPlanId,
+                        principalTable: "SprintPlans",
+                        principalColumn: "SprintId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WBSHistories",
                 columns: table => new
                 {
@@ -1892,7 +2011,7 @@ namespace NJS.Domain.Migrations
                         column: x => x.WBSTaskPlannedHourHeaderId,
                         principalTable: "WBSTaskPlannedHourHeaders",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1989,8 +2108,7 @@ namespace NJS.Domain.Migrations
                         name: "FK_JobStartFormHeaders_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -2125,6 +2243,124 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SprintSubtaskComments",
+                columns: table => new
+                {
+                    SubtaskCommentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    CommentText = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Taskid = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    SubtaskId = table.Column<int>(type: "int", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SprintSubtaskComments", x => x.SubtaskCommentId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SprintSubtasks",
+                columns: table => new
+                {
+                    SubtaskId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Subtaskkey = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    Subtasktitle = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Subtaskdescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Subtaskpriority = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Subtaskstatus = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubtaskAssineid = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubtaskAssigneeName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubtaskAssigneeAvatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubtaskReporterId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubtaskReporterName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubtaskReporterAvatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Attachments = table.Column<int>(type: "int", nullable: true),
+                    SubtaskisExpanded = table.Column<bool>(type: "bit", nullable: true),
+                    SubtaskcreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    SubtaskupdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    SubtaskType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Taskid = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    EstimatedHours = table.Column<int>(type: "int", nullable: false),
+                    ActualHours = table.Column<int>(type: "int", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SprintSubtasks", x => x.SubtaskId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SprintTaskComments",
+                columns: table => new
+                {
+                    CommentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    CommentText = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Taskid = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SprintTaskComments", x => x.CommentId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SprintTasks",
+                columns: table => new
+                {
+                    Taskid = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    Taskkey = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TaskTitle = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Taskdescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TaskType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Taskpriority = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TaskAssineid = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TaskAssigneeName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TaskAssigneeAvatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TaskReporterId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TaskReporterName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TaskReporterAvatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Taskstatus = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    StoryPoints = table.Column<int>(type: "int", nullable: true),
+                    Attachments = table.Column<int>(type: "int", nullable: true),
+                    IsExpanded = table.Column<bool>(type: "bit", nullable: true),
+                    TaskcreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TaskupdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    SprintPlanId = table.Column<int>(type: "int", nullable: true),
+                    WbsPlanId = table.Column<int>(type: "int", nullable: true),
+                    UserTaskId = table.Column<int>(type: "int", nullable: true),
+                    AcceptanceCriteria = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    EstimatedHours = table.Column<int>(type: "int", nullable: false),
+                    ActualHours = table.Column<int>(type: "int", nullable: false),
+                    RemainingHours = table.Column<int>(type: "int", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SprintTasks", x => x.Taskid);
+                    table.ForeignKey(
+                        name: "FK_SprintTasks_SprintPlans_SprintPlanId",
+                        column: x => x.SprintPlanId,
+                        principalTable: "SprintPlans",
+                        principalColumn: "SprintId");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserWBSTasks",
                 columns: table => new
                 {
@@ -2197,121 +2433,30 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "WBSTaskPlannedHours",
+                name: "WBSHeaders",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TenantId = table.Column<int>(type: "int", nullable: false),
-                    WBSTaskPlannedHourHeaderId = table.Column<int>(type: "int", nullable: false),
-                    WBSTaskId = table.Column<int>(type: "int", nullable: false),
-                    Year = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
-                    Month = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    PlannedHours = table.Column<double>(type: "float", nullable: false),
-                    ActualHours = table.Column<double>(type: "float", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    Version = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    VersionDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    ApprovalStatus = table.Column<int>(type: "int", nullable: false),
+                    LatestVersionHistoryId = table.Column<int>(type: "int", nullable: true),
+                    ActiveVersionHistoryId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WBSTaskPlannedHours", x => x.Id);
+                    table.PrimaryKey("PK_WBSHeaders", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_WBSTaskPlannedHours_WBSTaskPlannedHourHeaders_WBSTaskPlannedHourHeaderId",
-                        column: x => x.WBSTaskPlannedHourHeaderId,
-                        principalTable: "WBSTaskPlannedHourHeaders",
+                        name: "FK_WBSHeaders_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WBSTaskPlannedHourVersionHistories",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantId = table.Column<int>(type: "int", nullable: false),
-                    WBSTaskVersionHistoryId = table.Column<int>(type: "int", nullable: false),
-                    Year = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
-                    Month = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    PlannedHours = table.Column<double>(type: "float", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WBSTaskPlannedHourVersionHistories", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WBSTasks",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantId = table.Column<int>(type: "int", nullable: false),
-                    WorkBreakdownStructureId = table.Column<int>(type: "int", nullable: false),
-                    ParentId = table.Column<int>(type: "int", nullable: true),
-                    Level = table.Column<int>(type: "int", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    EstimatedBudget = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TaskType = table.Column<int>(type: "int", nullable: false),
-                    WBSOptionId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WBSTasks", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_WBSTasks_WBSOptions_WBSOptionId",
-                        column: x => x.WBSOptionId,
-                        principalTable: "WBSOptions",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_WBSTasks_WBSTasks_ParentId",
-                        column: x => x.ParentId,
-                        principalTable: "WBSTasks",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WBSTaskVersionHistories",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TenantId = table.Column<int>(type: "int", nullable: false),
-                    WBSVersionHistoryId = table.Column<int>(type: "int", nullable: false),
-                    OriginalTaskId = table.Column<int>(type: "int", nullable: false),
-                    ParentId = table.Column<int>(type: "int", nullable: true),
-                    Level = table.Column<int>(type: "int", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
-                    EstimatedBudget = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TaskType = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WBSTaskVersionHistories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_WBSTaskVersionHistories_WBSTaskVersionHistories_ParentId",
-                        column: x => x.ParentId,
-                        principalTable: "WBSTaskVersionHistories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -2321,7 +2466,7 @@ namespace NJS.Domain.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TenantId = table.Column<int>(type: "int", nullable: false),
-                    WorkBreakdownStructureId = table.Column<int>(type: "int", nullable: false),
+                    WBSHeaderId = table.Column<int>(type: "int", nullable: false),
                     Version = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Comments = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -2353,6 +2498,67 @@ namespace NJS.Domain.Migrations
                         principalTable: "PMWorkflowStatuses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WBSVersionHistories_WBSHeaders_WBSHeaderId",
+                        column: x => x.WBSHeaderId,
+                        principalTable: "WBSHeaders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WorkBreakdownStructures",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    WBSHeaderId = table.Column<int>(type: "int", nullable: false),
+                    Structure = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WorkBreakdownStructures", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WorkBreakdownStructures_WBSHeaders_WBSHeaderId",
+                        column: x => x.WBSHeaderId,
+                        principalTable: "WBSHeaders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WBSTaskVersionHistories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    WBSVersionHistoryId = table.Column<int>(type: "int", nullable: false),
+                    OriginalTaskId = table.Column<int>(type: "int", nullable: false),
+                    Level = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    EstimatedBudget = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TaskType = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WBSTaskVersionHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WBSTaskVersionHistories_WBSVersionHistories_WBSVersionHistoryId",
+                        column: x => x.WBSVersionHistoryId,
+                        principalTable: "WBSVersionHistories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -2400,41 +2606,109 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "WorkBreakdownStructures",
+                name: "WBSTasks",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TenantId = table.Column<int>(type: "int", nullable: false),
-                    ProjectId = table.Column<int>(type: "int", nullable: false),
-                    Structure = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CurrentVersion = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    WorkBreakdownStructureId = table.Column<int>(type: "int", nullable: false),
+                    Level = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    EstimatedBudget = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     TaskType = table.Column<int>(type: "int", nullable: false),
-                    LatestVersionHistoryId = table.Column<int>(type: "int", nullable: true),
-                    ActiveVersionHistoryId = table.Column<int>(type: "int", nullable: true)
+                    WBSOptionId = table.Column<int>(type: "int", nullable: false),
+                    ParentId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WorkBreakdownStructures", x => x.Id);
+                    table.PrimaryKey("PK_WBSTasks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_WorkBreakdownStructures_Projects_ProjectId",
-                        column: x => x.ProjectId,
-                        principalTable: "Projects",
+                        name: "FK_WBSTasks_WBSOptions_WBSOptionId",
+                        column: x => x.WBSOptionId,
+                        principalTable: "WBSOptions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_WorkBreakdownStructures_WBSVersionHistories_ActiveVersionHistoryId",
-                        column: x => x.ActiveVersionHistoryId,
-                        principalTable: "WBSVersionHistories",
+                        name: "FK_WBSTasks_WBSTasks_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "WBSTasks",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_WorkBreakdownStructures_WBSVersionHistories_LatestVersionHistoryId",
-                        column: x => x.LatestVersionHistoryId,
-                        principalTable: "WBSVersionHistories",
-                        principalColumn: "Id");
+                        name: "FK_WBSTasks_WorkBreakdownStructures_WorkBreakdownStructureId",
+                        column: x => x.WorkBreakdownStructureId,
+                        principalTable: "WorkBreakdownStructures",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WBSTaskPlannedHourVersionHistories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    WBSTaskVersionHistoryId = table.Column<int>(type: "int", nullable: false),
+                    Year = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    Month = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    PlannedHours = table.Column<double>(type: "float", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WBSTaskPlannedHourVersionHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WBSTaskPlannedHourVersionHistories_WBSTaskVersionHistories_WBSTaskVersionHistoryId",
+                        column: x => x.WBSTaskVersionHistoryId,
+                        principalTable: "WBSTaskVersionHistories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WBSTaskPlannedHours",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    WBSTaskPlannedHourHeaderId = table.Column<int>(type: "int", nullable: false),
+                    WBSTaskId = table.Column<int>(type: "int", nullable: false),
+                    Year = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    Month = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    PlannedHours = table.Column<double>(type: "float", nullable: false),
+                    ActualHours = table.Column<double>(type: "float", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WBSTaskPlannedHours", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WBSTaskPlannedHours_WBSTaskPlannedHourHeaders_WBSTaskPlannedHourHeaderId",
+                        column: x => x.WBSTaskPlannedHourHeaderId,
+                        principalTable: "WBSTaskPlannedHourHeaders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WBSTaskPlannedHours_WBSTasks_WBSTaskId",
+                        column: x => x.WBSTaskId,
+                        principalTable: "WBSTasks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -2531,6 +2805,11 @@ namespace NJS.Domain.Migrations
                 table: "BudgetTables",
                 column: "MonthlyProgressId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Cashflows_ProjectId",
+                table: "Cashflows",
+                column: "ProjectId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ChangeControls_PMWorkflowStatusId",
@@ -2733,6 +3012,11 @@ namespace NJS.Domain.Migrations
                 column: "MonthlyProgressId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_MigrationResults_MigrationResultId",
+                table: "MigrationResults",
+                column: "MigrationResultId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_MonthlyProgresses_ProjectId",
                 table: "MonthlyProgresses",
                 column: "ProjectId");
@@ -2845,6 +3129,11 @@ namespace NJS.Domain.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Projects_ProgramId",
+                table: "Projects",
+                column: "ProgramId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Projects_ProjectManagerId",
                 table: "Projects",
                 column: "ProjectManagerId");
@@ -2879,6 +3168,51 @@ namespace NJS.Domain.Migrations
                 name: "IX_ScoringDescriptionSummarry_ScoringDescriptionID",
                 table: "ScoringDescriptionSummarry",
                 column: "ScoringDescriptionID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SprintDailyProgresses_SprintPlanId",
+                table: "SprintDailyProgresses",
+                column: "SprintPlanId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SprintPlans_ProjectId",
+                table: "SprintPlans",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SprintSubtaskComments_SubtaskId",
+                table: "SprintSubtaskComments",
+                column: "SubtaskId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SprintSubtaskComments_Taskid",
+                table: "SprintSubtaskComments",
+                column: "Taskid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SprintSubtasks_Taskid",
+                table: "SprintSubtasks",
+                column: "Taskid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SprintTaskComments_Taskid",
+                table: "SprintTaskComments",
+                column: "Taskid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SprintTasks_SprintPlanId",
+                table: "SprintTasks",
+                column: "SprintPlanId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SprintTasks_UserTaskId",
+                table: "SprintTasks",
+                column: "UserTaskId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SprintTasks_WbsPlanId",
+                table: "SprintTasks",
+                column: "WbsPlanId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SubscriptionPlanFeatures_FeatureId",
@@ -2946,6 +3280,21 @@ namespace NJS.Domain.Migrations
                 column: "WBSTaskVersionHistoryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_WBSHeaders_ActiveVersionHistoryId",
+                table: "WBSHeaders",
+                column: "ActiveVersionHistoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WBSHeaders_LatestVersionHistoryId",
+                table: "WBSHeaders",
+                column: "LatestVersionHistoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WBSHeaders_ProjectId",
+                table: "WBSHeaders",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WBSHistories_ActionBy",
                 table: "WBSHistories",
                 column: "ActionBy");
@@ -2974,6 +3323,11 @@ namespace NJS.Domain.Migrations
                 name: "IX_WBSOptions_Level",
                 table: "WBSOptions",
                 column: "Level");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WBSOptions_ParentId",
+                table: "WBSOptions",
+                column: "ParentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WBSTaskPlannedHourHeaders_ProjectId",
@@ -3026,11 +3380,6 @@ namespace NJS.Domain.Migrations
                 column: "OriginalTaskId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WBSTaskVersionHistories_ParentId",
-                table: "WBSTaskVersionHistories",
-                column: "ParentId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_WBSTaskVersionHistories_WBSVersionHistoryId",
                 table: "WBSTaskVersionHistories",
                 column: "WBSVersionHistoryId");
@@ -3071,9 +3420,9 @@ namespace NJS.Domain.Migrations
                 column: "Version");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WBSVersionHistories_WorkBreakdownStructureId",
+                name: "IX_WBSVersionHistories_WBSHeaderId",
                 table: "WBSVersionHistories",
-                column: "WorkBreakdownStructureId");
+                column: "WBSHeaderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WBSVersionWorkflowHistories_ActionBy",
@@ -3101,19 +3450,14 @@ namespace NJS.Domain.Migrations
                 column: "WBSVersionHistoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WorkBreakdownStructures_ActiveVersionHistoryId",
+                name: "IX_WorkBreakdownStructures_Name",
                 table: "WorkBreakdownStructures",
-                column: "ActiveVersionHistoryId");
+                column: "Name");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WorkBreakdownStructures_LatestVersionHistoryId",
+                name: "IX_WorkBreakdownStructures_WBSHeaderId",
                 table: "WorkBreakdownStructures",
-                column: "LatestVersionHistoryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WorkBreakdownStructures_ProjectId",
-                table: "WorkBreakdownStructures",
-                column: "ProjectId");
+                column: "WBSHeaderId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_JobStartFormHeaders_JobStartForms_FormId",
@@ -3139,6 +3483,48 @@ namespace NJS.Domain.Migrations
                 principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
+                name: "FK_SprintSubtaskComments_SprintSubtasks_SubtaskId",
+                table: "SprintSubtaskComments",
+                column: "SubtaskId",
+                principalTable: "SprintSubtasks",
+                principalColumn: "SubtaskId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_SprintSubtaskComments_SprintTasks_Taskid",
+                table: "SprintSubtaskComments",
+                column: "Taskid",
+                principalTable: "SprintTasks",
+                principalColumn: "Taskid");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_SprintSubtasks_SprintTasks_Taskid",
+                table: "SprintSubtasks",
+                column: "Taskid",
+                principalTable: "SprintTasks",
+                principalColumn: "Taskid");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_SprintTaskComments_SprintTasks_Taskid",
+                table: "SprintTaskComments",
+                column: "Taskid",
+                principalTable: "SprintTasks",
+                principalColumn: "Taskid");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_SprintTasks_UserWBSTasks_UserTaskId",
+                table: "SprintTasks",
+                column: "UserTaskId",
+                principalTable: "UserWBSTasks",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_SprintTasks_WBSTaskPlannedHours_WbsPlanId",
+                table: "SprintTasks",
+                column: "WbsPlanId",
+                principalTable: "WBSTaskPlannedHours",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_UserWBSTasks_WBSTasks_WBSTaskId",
                 table: "UserWBSTasks",
                 column: "WBSTaskId",
@@ -3155,44 +3541,18 @@ namespace NJS.Domain.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_WBSTaskPlannedHours_WBSTasks_WBSTaskId",
-                table: "WBSTaskPlannedHours",
-                column: "WBSTaskId",
-                principalTable: "WBSTasks",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_WBSTaskPlannedHourVersionHistories_WBSTaskVersionHistories_WBSTaskVersionHistoryId",
-                table: "WBSTaskPlannedHourVersionHistories",
-                column: "WBSTaskVersionHistoryId",
-                principalTable: "WBSTaskVersionHistories",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_WBSTasks_WorkBreakdownStructures_WorkBreakdownStructureId",
-                table: "WBSTasks",
-                column: "WorkBreakdownStructureId",
-                principalTable: "WorkBreakdownStructures",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_WBSTaskVersionHistories_WBSVersionHistories_WBSVersionHistoryId",
-                table: "WBSTaskVersionHistories",
-                column: "WBSVersionHistoryId",
+                name: "FK_WBSHeaders_WBSVersionHistories_ActiveVersionHistoryId",
+                table: "WBSHeaders",
+                column: "ActiveVersionHistoryId",
                 principalTable: "WBSVersionHistories",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_WBSVersionHistories_WorkBreakdownStructures_WorkBreakdownStructureId",
-                table: "WBSVersionHistories",
-                column: "WorkBreakdownStructureId",
-                principalTable: "WorkBreakdownStructures",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                name: "FK_WBSHeaders_WBSVersionHistories_LatestVersionHistoryId",
+                table: "WBSHeaders",
+                column: "LatestVersionHistoryId",
+                principalTable: "WBSVersionHistories",
+                principalColumn: "Id");
         }
 
         /// <inheritdoc />
@@ -3219,16 +3579,20 @@ namespace NJS.Domain.Migrations
                 table: "WBSVersionHistories");
 
             migrationBuilder.DropForeignKey(
+                name: "FK_WBSHeaders_Projects_ProjectId",
+                table: "WBSHeaders");
+
+            migrationBuilder.DropForeignKey(
                 name: "FK_WBSVersionHistories_PMWorkflowStatuses_StatusId",
                 table: "WBSVersionHistories");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_WorkBreakdownStructures_Projects_ProjectId",
-                table: "WorkBreakdownStructures");
+                name: "FK_WBSHeaders_WBSVersionHistories_ActiveVersionHistoryId",
+                table: "WBSHeaders");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_WBSVersionHistories_WorkBreakdownStructures_WorkBreakdownStructureId",
-                table: "WBSVersionHistories");
+                name: "FK_WBSHeaders_WBSVersionHistories_LatestVersionHistoryId",
+                table: "WBSHeaders");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -3327,6 +3691,9 @@ namespace NJS.Domain.Migrations
                 name: "MeasurementUnits");
 
             migrationBuilder.DropTable(
+                name: "MigrationResults");
+
+            migrationBuilder.DropTable(
                 name: "OpportunityHistories");
 
             migrationBuilder.DropTable(
@@ -3363,6 +3730,15 @@ namespace NJS.Domain.Migrations
                 name: "Settings");
 
             migrationBuilder.DropTable(
+                name: "SprintDailyProgresses");
+
+            migrationBuilder.DropTable(
+                name: "SprintSubtaskComments");
+
+            migrationBuilder.DropTable(
+                name: "SprintTaskComments");
+
+            migrationBuilder.DropTable(
                 name: "SubscriptionPlanFeatures");
 
             migrationBuilder.DropTable(
@@ -3375,16 +3751,10 @@ namespace NJS.Domain.Migrations
                 name: "TwoFactorCodes");
 
             migrationBuilder.DropTable(
-                name: "UserWBSTasks");
-
-            migrationBuilder.DropTable(
                 name: "UserWBSTaskVersionHistories");
 
             migrationBuilder.DropTable(
                 name: "WBSHistories");
-
-            migrationBuilder.DropTable(
-                name: "WBSTaskPlannedHours");
 
             migrationBuilder.DropTable(
                 name: "WBSTaskPlannedHourVersionHistories");
@@ -3426,19 +3796,13 @@ namespace NJS.Domain.Migrations
                 name: "ScoringDescription");
 
             migrationBuilder.DropTable(
+                name: "SprintSubtasks");
+
+            migrationBuilder.DropTable(
                 name: "Features");
 
             migrationBuilder.DropTable(
                 name: "Tenant");
-
-            migrationBuilder.DropTable(
-                name: "AspNetRoles");
-
-            migrationBuilder.DropTable(
-                name: "WBSTaskPlannedHourHeaders");
-
-            migrationBuilder.DropTable(
-                name: "WBSTasks");
 
             migrationBuilder.DropTable(
                 name: "WBSTaskVersionHistories");
@@ -3453,25 +3817,52 @@ namespace NJS.Domain.Migrations
                 name: "MonthlyProgresses");
 
             migrationBuilder.DropTable(
+                name: "SprintTasks");
+
+            migrationBuilder.DropTable(
                 name: "SubscriptionPlans");
+
+            migrationBuilder.DropTable(
+                name: "SprintPlans");
+
+            migrationBuilder.DropTable(
+                name: "UserWBSTasks");
+
+            migrationBuilder.DropTable(
+                name: "WBSTaskPlannedHours");
+
+            migrationBuilder.DropTable(
+                name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "WBSTaskPlannedHourHeaders");
+
+            migrationBuilder.DropTable(
+                name: "WBSTasks");
 
             migrationBuilder.DropTable(
                 name: "WBSOptions");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "WorkBreakdownStructures");
 
             migrationBuilder.DropTable(
-                name: "PMWorkflowStatuses");
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Projects");
 
             migrationBuilder.DropTable(
-                name: "WorkBreakdownStructures");
+                name: "Programs");
+
+            migrationBuilder.DropTable(
+                name: "PMWorkflowStatuses");
 
             migrationBuilder.DropTable(
                 name: "WBSVersionHistories");
+
+            migrationBuilder.DropTable(
+                name: "WBSHeaders");
         }
     }
 }
