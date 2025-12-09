@@ -11,7 +11,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'; // Import AddIcon for AddButtonRow
 import { useWBSTableLogic, HeaderCell, StickyHeaderCell, SummaryHeaderCell, AddButtonRow } from '../hooks/useWBSTableLogic'; // Import AddButtonRow
 import WBSRow from './WBSRow'; // Import WBSRow to render data rows
-import { TaskType, WBSRowData, WBSChildTotals } from '../types/wbs'; // Import types needed for rendering
+
 
 
 const WBSTable: React.FC = () => {

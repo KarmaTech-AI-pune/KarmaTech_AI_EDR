@@ -1,11 +1,5 @@
 import { axiosInstance } from './axiosConfig';
-import {
-    Project,
-    RegionalData,
-    CashflowData,
-    MilestoneData,
-    PendingApproval
-} from '../data/types/dashboard';
+// Removed unused imports from ../data/types/dashboard
 
 // DTO Interfaces matching Backend
 export interface PendingFormDto {

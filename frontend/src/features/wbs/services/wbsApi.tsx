@@ -14,7 +14,7 @@ export const WBSStructureAPI = {
       const flattenedTasks: WBSRowData[] = [];
       const wbsHeaderId = response.data.wbsHeaderId || 0;
       const workBreakdownStructures = response.data.workBreakdownStructures || [];
-      
+
       if (workBreakdownStructures && Array.isArray(workBreakdownStructures)) {
         workBreakdownStructures.forEach((wbsItem: any) => {
           if (wbsItem.tasks && Array.isArray(wbsItem.tasks)) {
@@ -49,7 +49,7 @@ export const WBSStructureAPI = {
       // Helper function to convert WBSRowData to backend format
       const transformRowToBackendFormat = (row: WBSRowData) => {
         // Convert monthly hours from object to array format
-        const monthlyHours: Array<{Year: number, Month: string, PlannedHours: number}> = [];
+        const monthlyHours: Array<{ Year: number, Month: string, PlannedHours: number }> = [];
         Object.entries(row.plannedHours || {}).forEach(([year, months]) => {
           Object.entries(months).forEach(([month, hours]) => {
             monthlyHours.push({
@@ -141,7 +141,7 @@ export const WBSStructureAPI = {
       });
 
       // After grouping, determine workBreakdownStructureId for each group
-      wbsStructuresMap.forEach((wbsGroup, topLevelParentId) => {
+      wbsStructuresMap.forEach((wbsGroup) => {
         // Check if any task in this group has a real workBreakdownStructureId
         let existingWbsId = 0;
         for (const task of wbsGroup.tasks) {
@@ -228,7 +228,7 @@ export const WBSOptionsAPI = {
       if (isNaN(numericId)) {
         throw new Error(`Invalid ID format: ${id}`);
       }
-      
+
       // Format payload to match backend WBSOptionDto exactly
       const payload = {
         Id: numericId,
@@ -238,9 +238,9 @@ export const WBSOptionsAPI = {
         ParentValue: updatedOption.parentValue || String,
         FormType: updatedOption.formType || 0
       };
-      
+
       console.log('Update payload:', payload);
-      
+
       const response = await axiosInstance.put(`/api/WBSOptions/${numericId}`, payload);
       return response.data;
     } catch (error) {
@@ -248,7 +248,7 @@ export const WBSOptionsAPI = {
       throw error;
     }
   },
-  
+
   deleteOption: async (id: string): Promise<void> => {
     try {
       await axiosInstance.delete(`/api/WBSOptions/${id}`);
@@ -258,8 +258,8 @@ export const WBSOptionsAPI = {
     }
   },
 
-  
-  
+
+
   /**
    * Get level 1 WBS options
    * @param formType Optional form type (0 = Manpower, 1 = ODC)

@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { styled, TableCell, Select } from '@mui/material';
-import { WBSRowData, WBSChildTotals, WBSOption } from '../types/wbs'; // Keep WBSOption for selectedRole finding
+import { WBSRowData, WBSChildTotals } from '../types/wbs';
 import { useWBSDataContext, useWBSActionsContext } from '../context/WBSContext';
 
 // Export styled components
@@ -72,11 +72,10 @@ interface UseWBSRowLogicProps {
 export const useWBSRowLogic = ({
   row,
   childTotals,
-  sequenceNumber,
   stickyColumn,
 }: UseWBSRowLogicProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
+
   const {
     months,
     roles, // roles is likely RoleType[]
@@ -89,7 +88,7 @@ export const useWBSRowLogic = ({
     manpowerRows,
     odcRows,
   } = useWBSDataContext();
-  
+
   const {
     handleDeleteClick,
     handleLevelChange,
@@ -100,7 +99,7 @@ export const useWBSRowLogic = ({
     handleODCChange,
     handleResourceRoleChange,
   } = useWBSActionsContext();
-  
+
   const rows = useMemo(() => (formType === 'manpower' ? manpowerRows : odcRows), [formType, manpowerRows, odcRows]);
   const roleId = row.resource_role; // Use resource_role for role ID
   const selectedRole = useMemo(() => (roleId !== null ? (roles as RoleType[]).find(r => r.id === roleId) : undefined), [roleId, roles]);
@@ -138,8 +137,8 @@ export const useWBSRowLogic = ({
 
   const backgroundColor = useMemo(() => (
     row.level === 1 ? '#E3F2FD' : // Solid light blue
-    row.level === 2 ? '#E8F5E9' : // Solid light green
-    '#FFFFFF' // Solid white
+      row.level === 2 ? '#E8F5E9' : // Solid light green
+        '#FFFFFF' // Solid white
   ), [row.level]);
 
 

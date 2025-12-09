@@ -22,7 +22,7 @@ import {
   RegionalData,
   PendingApproval,
   MilestoneData,
-  AISuggestion
+  
 } from "../../data/types/dashboard";
 import {
   aiSuggestions,

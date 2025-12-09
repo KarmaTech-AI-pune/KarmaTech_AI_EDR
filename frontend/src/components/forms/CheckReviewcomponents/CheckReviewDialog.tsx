@@ -114,24 +114,24 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
 
       // Extract level3 titles from WBS data and remove duplicates using a Set
       const uniqueLevel3TitlesSet = new Set(
-        wbsData
-          .filter(task => task.level === 3)
-          .map(task => task.title)
-          .filter(title => title && title.trim() !== '')
+        wbsData.tasks
+          .filter((task: any) => task.level === 3)
+          .map((task: any) => task.title)
+          .filter((title: any) => title && title.trim() !== '')
       );
 
       // Convert Set back to array
-      const uniqueLevel3Titles = Array.from(uniqueLevel3TitlesSet);
+      const uniqueLevel3Titles = Array.from(uniqueLevel3TitlesSet) as string[];
 
       setActivityOptions(uniqueLevel3Titles);
 
       // Find level3 tasks with assigned users
-      const level3TasksWithUsers = wbsData
-        .filter(task => task.level === 3 && task.assignedUserId);
+      const level3TasksWithUsers = wbsData.tasks
+        .filter((task: any) => task.level === 3 && task.assignedUserId);
 
       // Create a map of activity names to assigned users
       const newActivityToUserMap = new Map<string, string>();
-      level3TasksWithUsers.forEach(task => {
+      level3TasksWithUsers.forEach((task: any) => {
         if (task.title && task.assignedUserId) {
           newActivityToUserMap.set(task.title, task.assignedUserId);
         }
@@ -143,8 +143,8 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
       // Get all assigned user IDs from WBS data and remove duplicates
       const uniqueAssignedUserIdsSet = new Set(
         level3TasksWithUsers
-          .map(task => task.assignedUserId)
-          .filter(id => id !== null && id !== undefined) as string[]
+          .map((task: any) => task.assignedUserId)
+          .filter((id: any) => id !== null && id !== undefined) as string[]
       );
 
       // Convert Set back to array
@@ -240,7 +240,7 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
         objective: editData.objective,
         references: editData.references || '',
 
-         documentNumber: editData.documentNumber || '', // Ensure documentNumber is always a string
+        documentNumber: editData.documentNumber || '', // Ensure documentNumber is always a string
         documentName: editData.documentName || '',     // Ensure documentName is always a string
 
         fileName: editData.fileName || '',
@@ -252,14 +252,14 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
         maker: editData.maker || '',
         checker: editData.checker || ''
       });
-    } else { 
+    } else {
       // Reset form when not editing
       setFormData({
         activityName: '',
         objective: '',
         references: '',
 
-         documentNumber: '', // Initialize for new forms
+        documentNumber: '', // Initialize for new forms
         documentName: '',   // Initialize for new forms
 
         fileName: '',
@@ -422,23 +422,23 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
           <Typography sx={sectionTitleStyle}>
             Document Details
           </Typography>
-          <Grid container spacing = {2}>
+          <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <TextField 
-              label="Document Number"
-              value={formData.documentNumber}
-              name='documentNumber'
-              onChange={handleTextFieldChange}
-              fullWidth
-              type="text"
-                inputProps={{ 
-                  inputMode: 'numeric', 
+              <TextField
+                label="Document Number"
+                value={formData.documentNumber}
+                name='documentNumber'
+                onChange={handleTextFieldChange}
+                fullWidth
+                type="text"
+                inputProps={{
+                  inputMode: 'numeric',
                   pattern: '[0-9]*',
                   onInput: (e: React.FormEvent<HTMLInputElement>) => {
                     e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
                   }
                 }}
-              sx={textFieldStyle}
+                sx={textFieldStyle}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -452,7 +452,7 @@ export const CheckReviewDialog = ({ open, onClose, onSave, nextActivityNo, editD
               />
             </Grid>
           </Grid>
-          </Box>
+        </Box>
 
         <Box sx={{ mb: 4 }}>
           <Typography sx={sectionTitleStyle}>

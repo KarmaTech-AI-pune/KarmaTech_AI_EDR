@@ -12,12 +12,11 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
-import { WBSRowData, WBSChildTotals, WBSOption } from '../types/wbs';
+import { WBSRowData, WBSChildTotals } from '../types/wbs';
 import {
   useWBSRowLogic,
   NumberInput,
   StyledSelect,
-  StickyCell,
 } from '../hooks/useWBSRowLogic';
 
 // Define unit options locally for ODC form
@@ -60,7 +59,6 @@ const WBSRow: React.FC<WBSRowProps> = ({
     setIsDropdownOpen,
     months,
     roles,
-    employees,
     editMode,
     formType,
     getLevelOptions,
@@ -68,7 +66,6 @@ const WBSRow: React.FC<WBSRowProps> = ({
     getChildTotalHours,
     WorkDescriptionCell,
     backgroundColor,
-    selectedRole,
     rateTooltip,
     employeesForRole,
     handleDeleteClick,
@@ -283,7 +280,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             disabled={editMode || formType === 'manpower'}
           >
             <MenuItem value="">Select Unit</MenuItem>
-            {unitOptions.map((unit: {value: string, label: string}) => (
+            {unitOptions.map((unit: { value: string, label: string }) => (
               <MenuItem key={unit.value} value={unit.value}>
                 {unit.label}
               </MenuItem>

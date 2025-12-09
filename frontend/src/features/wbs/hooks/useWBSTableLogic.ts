@@ -1,7 +1,7 @@
-import React, { useCallback, useMemo } from 'react';
-import { Button, TableCell, TableRow, styled } from '@mui/material';
+import { useCallback, useMemo } from 'react';
+import { TableCell, TableRow, styled } from '@mui/material';
 import { useWBSDataContext, useWBSActionsContext } from '../context/WBSContext';
-import { WBSRowData, TaskType, WBSChildTotals } from '../types/wbs';
+import { WBSRowData, WBSChildTotals } from '../types/wbs';
 // WBSRow is not directly imported here anymore as the hook will return data, not JSX elements that use WBSRow
 // import WBSRow from '../components/WBSRow'; // Removed direct import
 
@@ -71,9 +71,9 @@ export const useWBSTableLogic = () => {
     formType,
     editMode,
   } = useWBSDataContext();
-  
+
   const { addNewRow } = useWBSActionsContext();
-  
+
   const rows: WBSRowData[] = useMemo(() => (formType === 'manpower' ? manpowerRows : odcRows), [formType, manpowerRows, odcRows]);
   const manpowerCount = useMemo(() => manpowerRows.filter((rowItem: WBSRowData) => rowItem.level === 1).length, [manpowerRows]);
 
