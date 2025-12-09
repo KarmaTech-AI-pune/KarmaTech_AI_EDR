@@ -4,20 +4,17 @@ using NJS.Application.Dtos;
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Commands
 {
     /// <summary>
-    /// Command to update a specific task within a Work Breakdown Structure.
+    /// Command to update Work Breakdown Structure using WBSMasterDto.
     /// </summary>
-    public class UpdateWBSTaskCommand : IRequest<Unit>
+    public class UpdateWBSTaskCommand : IRequest<WBSMasterDto>
     {
         public int ProjectId { get; }
-        public int TaskId { get; }
-        public WBSTaskDto TaskDto { get; }
+        public WBSMasterDto WBSMaster { get; }
 
-        public UpdateWBSTaskCommand(int projectId, int taskId, WBSTaskDto taskDto)
+        public UpdateWBSTaskCommand(int projectId, WBSMasterDto wbsMaster)
         {
             ProjectId = projectId;
-            TaskId = taskId;
-            TaskDto = taskDto;
-            TaskDto.Id = taskId;
+            WBSMaster = wbsMaster;
         }
     }
 }

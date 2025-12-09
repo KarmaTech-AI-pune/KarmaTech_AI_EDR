@@ -28,8 +28,6 @@ namespace NJS.Domain.Entities
         [Required]
         public int OriginalTaskId { get; set; } // Reference to original WBSTask
 
-        public int? ParentId { get; set; } // Reference to parent task in this version
-
         [Required]
         public WBSTaskLevel Level { get; set; }
 
@@ -54,10 +52,6 @@ namespace NJS.Domain.Entities
         [ForeignKey("WBSVersionHistoryId")]
         public WBSVersionHistory WBSVersionHistory { get; set; }
 
-        [ForeignKey("ParentId")]
-        public WBSTaskVersionHistory Parent { get; set; }
-
-        public ICollection<WBSTaskVersionHistory> Children { get; set; } = new List<WBSTaskVersionHistory>();
         public ICollection<WBSTaskPlannedHourVersionHistory> PlannedHours { get; set; }
         public ICollection<UserWBSTaskVersionHistory> UserAssignments { get; set; }
     }

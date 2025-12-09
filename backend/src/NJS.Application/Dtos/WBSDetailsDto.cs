@@ -9,6 +9,5 @@ namespace NJS.Application.Dtos
 
     public class WBSTaskHierarchyDto : WBSTaskDto
     {
-        public List<WBSTaskHierarchyDto> Children { get; set; } = new();
     }
 }

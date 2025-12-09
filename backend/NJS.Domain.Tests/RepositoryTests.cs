@@ -1,9 +1,11 @@
 // File: backend/NJS.Domain.Tests/RepositoryTests.cs
 
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.GenericRepository;
+using NJS.Domain.Services;
 
 namespace NJS.Domain.Tests
 {
@@ -22,7 +24,8 @@ namespace NJS.Domain.Tests
         public async Task Add_Should_AddEntity()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
             var repository = new Repository<Project>(context);
 
             var project = new Project
@@ -55,7 +58,8 @@ namespace NJS.Domain.Tests
         public async void GetAll_ShouldReturn_AllEntities()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
             context.Projects.Add(new Project
             {
                 Name = "City Water Supply Upgrade",
@@ -102,7 +106,8 @@ namespace NJS.Domain.Tests
         public async void GetById_ShouldReturn_Entity()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
 
             var project = new Project
             {
@@ -137,7 +142,8 @@ namespace NJS.Domain.Tests
         public async void Remove_Should_DeleteEntity()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
             var project = new Project
             {
                 Id = 11,
@@ -172,7 +178,8 @@ namespace NJS.Domain.Tests
         public void Query_Should_AllEntities()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
             context.Projects.Add(new Project
             {
                 Name = "City Water Supply Upgrade",
@@ -220,7 +227,8 @@ namespace NJS.Domain.Tests
         public void Query_Should_FilteredEntities()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
             context.Projects.Add(new Project
             {
                 Name = "City Water Supply Upgrade",

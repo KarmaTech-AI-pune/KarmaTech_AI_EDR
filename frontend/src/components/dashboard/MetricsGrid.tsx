@@ -24,23 +24,23 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
       <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Total Revenue-Actual"
-          value={formatCurrency(metrics.totalRevenue)}
+          value={formatCurrency(metrics.totalRevenueActual || metrics.totalRevenue)}
           change={`${metrics.totalRevenueChange}% vs last quater`}
           changeType={metrics.totalRevenueChangeType}
           icon="revenue"
         />
       </Grid>
-      
+
       <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Profit Margin"
-          value={`${metrics.profitMargin}%`}
+          value={`${metrics.profitMargin.toFixed(2)}%`}
           change={`${metrics.profitMarginChange}% improvement`}
           changeType={metrics.profitMarginChangeType}
           icon="profit"
         />
       </Grid>
-      
+
       <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Revenue at Risk"
@@ -50,7 +50,7 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
           icon="risk"
         />
       </Grid>
-      
+
       <Grid item xs={12} sm={6} lg={2.4}>
         <MetricCard
           title="Pending Approvals"
@@ -60,8 +60,8 @@ const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
           icon="approvals"
         />
       </Grid>
-      
-      
+
+
     </Grid>
   );
 };

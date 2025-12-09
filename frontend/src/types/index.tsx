@@ -91,7 +91,6 @@ export type LoginResponse = {
 export type OpportunityItemProps = {
   opportunity: OpportunityTracking;
   onOpportunityDeleted?: (opportunityId: number) => void;
-  onOpportunityUpdated?: () => void;
 };
 
 export type OpportunityFormData = Omit<OpportunityTracking, 'id'>;

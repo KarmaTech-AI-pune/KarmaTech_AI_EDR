@@ -35,10 +35,10 @@ const MilestoneBillingTracker: React.FC<MilestoneBillingTrackerProps> = ({
   return (
     <Card>
       <CardContent sx={{ p: isMobile ? 2 : 3 }}>
-        <Typography 
-          variant="h6" 
-          fontWeight="semibold" 
-          sx={{ 
+        <Typography
+          variant="h6"
+          fontWeight="semibold"
+          sx={{
             mb: isMobile ? 2 : 3,
             fontSize: isMobile ? '1.1rem' : '1.25rem',
             lineHeight: isMobile ? 1.3 : 1.2
@@ -46,7 +46,7 @@ const MilestoneBillingTracker: React.FC<MilestoneBillingTrackerProps> = ({
         >
           Milestone & Billing Tracker
         </Typography>
-        
+
         <TableContainer sx={{ overflowX: 'auto' }}>
           <Table size={isMobile ? "small" : "medium"}>
             <TableHead>
@@ -62,7 +62,10 @@ const MilestoneBillingTracker: React.FC<MilestoneBillingTrackerProps> = ({
             </TableHead>
             <TableBody>
               {milestones.map((milestone) => {
-                const statusStyle = MILESTONE_STATUS_COLORS[milestone.status];
+                const statusStyle = MILESTONE_STATUS_COLORS[milestone.status] || {
+                  backgroundColor: '#f5f5f5',
+                  color: '#616161'
+                };
                 return (
                   <TableRow key={milestone.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                     <TableCell sx={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}>{milestone.project}</TableCell>
@@ -88,9 +91,9 @@ const MilestoneBillingTracker: React.FC<MilestoneBillingTrackerProps> = ({
                     </TableCell>
                     <TableCell>
                       {milestone.status === 'Overdue' && (
-                        <ActionButton 
-                          variant="outline" 
-                          size="small" 
+                        <ActionButton
+                          variant="outline"
+                          size="small"
                           onClick={() => onSendNotice(milestone.id)}
                           sx={{ fontSize: isMobile ? '0.7rem' : '0.8125rem', py: isMobile ? 0.25 : 0.5 }}
                         >
@@ -98,9 +101,9 @@ const MilestoneBillingTracker: React.FC<MilestoneBillingTrackerProps> = ({
                         </ActionButton>
                       )}
                       {milestone.status === 'At Risk' && (
-                        <ActionButton 
-                          variant="outline" 
-                          size="small" 
+                        <ActionButton
+                          variant="outline"
+                          size="small"
                           onClick={() => onFollowUp(milestone.id)}
                           sx={{ fontSize: isMobile ? '0.7rem' : '0.8125rem', py: isMobile ? 0.25 : 0.5 }}
                         >
@@ -108,8 +111,8 @@ const MilestoneBillingTracker: React.FC<MilestoneBillingTrackerProps> = ({
                         </ActionButton>
                       )}
                       {milestone.status === 'On Track' && (
-                        <Typography 
-                          variant="caption" 
+                        <Typography
+                          variant="caption"
                           color="text.disabled"
                           sx={{ fontSize: isMobile ? '0.7rem' : '0.8125rem' }}
                         >

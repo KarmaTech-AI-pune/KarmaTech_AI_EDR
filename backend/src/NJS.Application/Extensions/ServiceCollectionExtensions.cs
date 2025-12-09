@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +21,7 @@ using NJS.Application.CQRS.SprintTasks.Commands; // Added for SprintTask command
 using NJS.Application.CQRS.SprintTasks.Queries; // Added for SprintTask queries
 using NJS.Application.CQRS.SprintSubtasks.Commands; // Added for SprintSubtask commands
 using NJS.Application.CQRS.SprintSubtasks.Queries; // Added for SprintSubtask queries
+
 
 namespace NJS.Application.Extensions
 {
@@ -60,6 +61,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IChangeControlRepository, ChangeControlRepository>();
             services.AddScoped<IProjectClosureRepository, ProjectClosureRepository>();
             services.AddScoped<ITenantRepository, TenantRepository>();
+            services.AddScoped<IProgramRepository, ProgramRepository>();
 
             services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
             services.AddScoped<ICashflowRepository, CashflowRepository>();
@@ -77,6 +79,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
+            services.AddScoped<ITenantMigrationService, TenantMigrationService>();
 
 
 

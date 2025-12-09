@@ -6,7 +6,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { ProjectTrackingWorkflow } from '../../common/ProjectTrackingWorkflow';
-import { TaskType } from '../../../types/wbs';
+import { TaskType } from '../../../features/wbs/types/wbs';
 import { jobStartFormHeaderApi } from '../../../services/jobStartFormHeaderApi';
 
 const StyledHeaderBox = styled(Box)(({ theme }) => ({
