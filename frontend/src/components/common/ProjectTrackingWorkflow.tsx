@@ -5,7 +5,7 @@ import ReviewBox from "../dialogbox/ProjectReviewWorkflow/ReviewBox";
 import SendApprovalBox from "../dialogbox/ProjectReviewWorkflow/SendApprovalBox";
 import { wbsWorkflowApi } from "../../services/wbsWorkflowApi";
 import { projectManagementAppContext } from "../../App";
-import { TaskType } from "../../types/wbs";
+import { TaskType } from "../../features/wbs/types/wbs";
 import { PermissionType } from "../../models/permissionTypeModel";
 import { PMWorkflowHistory } from "../../models/pmWorkflowModel";
 

@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material"
-import WbsOptions from "../components/forms/WBSformcomponents/WbsOptions"
+import WbsOptions from "../features/wbs/components/WbsOptions"
 
 const GeneralSettings = () => {
   return (

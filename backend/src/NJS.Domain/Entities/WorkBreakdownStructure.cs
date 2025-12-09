@@ -13,33 +13,20 @@ namespace NJS.Domain.Entities
         {
             Tasks = new List<WBSTask>();
             JobStartForms = new List<JobStartForm>();
-            VersionHistory = new List<WBSVersionHistory>();
         }
 
         public int Id { get; set; }
         public int TenantId { get; set; }
-        public int ProjectId { get; set; }
+        public int WBSHeaderId { get; set; } // Foreign key to WBSHeader
         public string Structure { get; set; }
-        public string CurrentVersion { get; set; } 
-        public bool IsActive { get; set; } = true; 
+        public string Name { get; set; } // e.g., "Foundation", "Exterior"
+        public string Description { get; set; }
+        public int DisplayOrder { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string CreatedBy { get; set; }
 
-        public TaskType TaskType { get; set; } = TaskType.Manpower;
-
-        // Version management
-        public int? LatestVersionHistoryId { get; set; }
-        public int? ActiveVersionHistoryId { get; set; }
-
-        public Project Project { get; set; }
+        public WBSHeader WBSHeader { get; set; } // Navigation property
         public ICollection<WBSTask> Tasks { get; set; }
         public ICollection<JobStartForm> JobStartForms { get; set; }
-        public ICollection<WBSVersionHistory> VersionHistory { get; set; }
-       
-        [ForeignKey("LatestVersionHistoryId")]
-        public WBSVersionHistory LatestVersion { get; set; }
-
-        [ForeignKey("ActiveVersionHistoryId")]
-        public WBSVersionHistory ActiveVersion { get; set; }
     }
 }

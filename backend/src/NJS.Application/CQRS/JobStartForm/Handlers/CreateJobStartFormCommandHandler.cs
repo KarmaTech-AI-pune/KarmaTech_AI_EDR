@@ -10,15 +10,19 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
     {
         private readonly IJobStartFormRepository _jobStartFormRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IProjectRepository _projectRepository;
 
         public CreateJobStartFormCommandHandler(
             IJobStartFormRepository jobStartFormRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IProjectRepository projectRepository)
         {
             _jobStartFormRepository = jobStartFormRepository ??
                 throw new ArgumentNullException(nameof(jobStartFormRepository));
             _unitOfWork = unitOfWork ??
                 throw new ArgumentNullException(nameof(unitOfWork));
+            _projectRepository = projectRepository ??
+                throw new ArgumentNullException(nameof(projectRepository));
         }
 
         public async Task<int> Handle(CreateJobStartFormCommand request, CancellationToken cancellationToken)
@@ -31,6 +35,14 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
 
             if (request.JobStartForm.FormId != 0)
                 throw new ArgumentException("FormID must not be provided for new entries. Use update instead.");
+
+            // Update Project Status if it is currently Opportunity
+            var project = _projectRepository.GetById(request.JobStartForm.ProjectId);
+            if (project != null && project.Status == ProjectStatus.Opportunity)
+            {
+                project.Status = ProjectStatus.Active;
+                _projectRepository.Update(project);
+            }
 
             var jobStartForm = new NJS.Domain.Entities.JobStartForm
             {

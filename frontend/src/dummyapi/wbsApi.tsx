@@ -1,6 +1,6 @@
 import { wbsTasks as initialWbsTasks, resourceAllocations as initialResourceAllocations, plannedHours as initialPlannedHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options} from './database/dummyWBSTasks';
 import { resourceRoles as initialResourceRoles, employees as initialEmployees, projectResources as initialProjectResources } from './database/dummyResourceRoles';
-import { WBSRowData } from '../types/wbs';
+import { WBSRowData } from '../features/wbs/types/wbs';
 import { WBSTask, WBSTaskResourceAllocation, PlannedHour, resourceRole as ResourceRole, Employee } from "../models";
 // Project Resource type definition
 interface ProjectResource {
