@@ -12,3 +12,7 @@ export {
   CompactVarianceIndicator,
   LargeVarianceIndicator,
 } from '../VarianceIndicator';
+export {
+  BudgetHealthIndicator,
+  CompactBudgetHealthIndicator,
+} from './BudgetHealthIndicator';

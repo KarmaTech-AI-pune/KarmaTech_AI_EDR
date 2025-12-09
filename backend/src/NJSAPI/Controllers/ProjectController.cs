@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Application.CQRS.Projects.Queries;
 using NJS.Application.Dtos;
+using NJS.Application.DTOs;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
@@ -265,6 +266,34 @@ namespace NJSAPI.Controllers
             {
                 _logger.LogError(ex, "Error getting tenant context");
                 return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets budget health status for a project
+        /// </summary>
+        [HttpGet("{id}/budget/health")]
+        [ProducesResponseType(typeof(BudgetHealthDto), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetBudgetHealth(int id)
+        {
+            try
+            {
+                var query = new GetBudgetHealthQuery { ProjectId = id };
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting budget health for project {ProjectId}", id);
+                
+                if (ex.Message.Contains("not found"))
+                {
+                    return NotFound(new { message = ex.Message });
+                }
+                
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 

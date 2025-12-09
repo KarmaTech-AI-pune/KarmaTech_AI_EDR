@@ -10,6 +10,7 @@ import { getUsersByRole } from '../../services/userApi';
 import { PermissionType } from '../../models';
 import { AuthUser } from '../../models/userModel';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
+import { BudgetHealthDisplay } from './budget/BudgetHealthIndicatorExample';
 
 export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDeleted, onProjectUpdated }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -227,6 +228,11 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onProjectDele
               <Typography variant="body2" color="text.secondary">
                 <strong>Cost:</strong> {project.currency} {project.estimatedProjectCost ? project.estimatedProjectCost.toLocaleString() : 'N/A'} {project.feeType ? `(${project.feeType})` : ''}
               </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ mt: 1 }}>
+                <BudgetHealthDisplay projectId={project.id} compact />
+              </Box>
             </Grid>
           </Grid>
         </Box>
