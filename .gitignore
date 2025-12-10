@@ -297,3 +297,11 @@ __pycache__/
 start_app.sh
 notes.txt
 wbs-typescript-models.ts
+
+# Playwright test artifacts
+frontend/playwright-report/
+frontend/test-results/
+EdrAdminAPI_17-10-2025.zip
+backend/src/NJSAPI/publish.zip
+IIS manual.docx
+new workflow.jpg

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NJS.Domain.Services;
 using Xunit;
 
 namespace NJS.API.Tests.Repositories
@@ -28,7 +29,8 @@ namespace NJS.API.Tests.Repositories
         public async Task GetAllAsync_ReturnsAllInputRegisters()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -46,7 +48,8 @@ namespace NJS.API.Tests.Repositories
         public async Task GetByIdAsync_ExistingId_ReturnsInputRegister()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -65,7 +68,8 @@ namespace NJS.API.Tests.Repositories
         public async Task GetByIdAsync_NonExistingId_ReturnsNull()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -80,7 +84,8 @@ namespace NJS.API.Tests.Repositories
         public async Task GetByProjectIdAsync_ExistingProjectId_ReturnsInputRegisters()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -98,7 +103,8 @@ namespace NJS.API.Tests.Repositories
         public async Task GetByProjectIdAsync_NonExistingProjectId_ReturnsEmptyList()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -113,11 +119,13 @@ namespace NJS.API.Tests.Repositories
         public async Task AddAsync_ValidInputRegister_AddsAndReturnsId()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             // Create a mock repository to avoid calling ResetIdentitySeedAsync which uses SQL commands
             var mockRepository = new Mock<IInputRegisterRepository>();
             mockRepository.Setup(r => r.AddAsync(It.IsAny<InputRegister>()))
-                .ReturnsAsync((InputRegister ir) => {
+                .ReturnsAsync((InputRegister ir) =>
+                {
                     context.InputRegisters.Add(ir);
                     context.SaveChanges();
                     return ir.Id;
@@ -151,7 +159,8 @@ namespace NJS.API.Tests.Repositories
         public async Task AddAsync_NullInputRegister_ThrowsArgumentNullException()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             var repository = new InputRegisterRepository(context);
 
             // Act & Assert
@@ -162,7 +171,8 @@ namespace NJS.API.Tests.Repositories
         public async Task UpdateAsync_ExistingInputRegister_UpdatesSuccessfully()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -194,7 +204,8 @@ namespace NJS.API.Tests.Repositories
         public async Task UpdateAsync_NullInputRegister_ThrowsArgumentNullException()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             var repository = new InputRegisterRepository(context);
 
             // Act & Assert
@@ -205,7 +216,8 @@ namespace NJS.API.Tests.Repositories
         public async Task DeleteAsync_ExistingId_DeletesSuccessfully()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -225,7 +237,8 @@ namespace NJS.API.Tests.Repositories
         public async Task DeleteAsync_NonExistingId_DoesNothing()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -244,7 +257,8 @@ namespace NJS.API.Tests.Repositories
         public async Task ExistsAsync_ExistingId_ReturnsTrue()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -259,7 +273,8 @@ namespace NJS.API.Tests.Repositories
         public async Task ExistsAsync_NonExistingId_ReturnsFalse()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -274,7 +289,8 @@ namespace NJS.API.Tests.Repositories
         public async Task GetNextIdAsync_EmptyTable_ReturnsOne()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             var repository = new InputRegisterRepository(context);
 
             // Act
@@ -288,7 +304,8 @@ namespace NJS.API.Tests.Repositories
         public async Task GetNextIdAsync_WithExistingRecords_ReturnsMaxIdPlusOne()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            var currentTenantService = new Mock<ICurrentTenantService>();
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 

@@ -11,6 +11,7 @@ import BidPreparationForm from '../../components/forms/BidPreparationForm';
 import GoNoGoForm from '../../components/forms/GoNoGoForm';
 import { opportunityApi } from '../../dummyapi/opportunityApi';
 import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
+import { OpportunityTrackingWorkflow } from '../../components/common/OpportunityTrackingWorkflow';
 
 type ContextType = {
   opportunity: OpportunityTracking;
@@ -45,6 +46,12 @@ export const BFormRenderer: React.FC = () => {
             <OpportunityForm
               onSubmit={handleFormSubmit}
               project={opportunity}
+              actionButtons={
+                <OpportunityTrackingWorkflow
+                  opportunity={opportunity}
+                  onOpportunityUpdated={handleOpportunityUpdate}
+                />
+              }
             />
           </Paper>
         </Box>

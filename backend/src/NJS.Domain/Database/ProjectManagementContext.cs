@@ -127,6 +127,7 @@ namespace NJS.Domain.Database
         public DbSet<CurrentBudgetInMIS> CurrentBudgetInMIS { get; set; }
         public DbSet<PercentCompleteOnCosts> PercentCompleteOnCosts { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<ProjectBudgetChangeHistory> ProjectBudgetChangeHistories { get; set; }
         public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
         public DbSet<SprintTask> SprintTasks { get; set; }
         public DbSet<SprintSubtask> SprintSubtasks { get; set; }
@@ -140,7 +141,6 @@ namespace NJS.Domain.Database
         public DbSet<Feature> Features { get; set; }
 
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
-        public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
         public DbSet<MigrationResult> MigrationResults { get; set; }
 
         // Main Projects (tenant-based) - Note: This was already defined above
@@ -198,6 +198,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<SprintPlan>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintTaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintSubtaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ProjectBudgetChangeHistory>().HasQueryFilter(p => p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
@@ -752,6 +753,88 @@ namespace NJS.Domain.Database
                 .HasOne(spf => spf.Feature)
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
+
+            // Configure ProjectBudgetChangeHistory entity
+            modelBuilder.Entity<ProjectBudgetChangeHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                
+                // Configure properties with appropriate constraints
+                entity.Property(e => e.FieldName)
+                    .IsRequired()
+                    .HasMaxLength(50);
+                    
+                entity.Property(e => e.OldValue)
+                    .IsRequired()
+                    .HasPrecision(18, 2);
+                    
+                entity.Property(e => e.NewValue)
+                    .IsRequired()
+                    .HasPrecision(18, 2);
+                    
+                entity.Property(e => e.Variance)
+                    .IsRequired()
+                    .HasPrecision(18, 2);
+                    
+                entity.Property(e => e.PercentageVariance)
+                    .IsRequired()
+                    .HasPrecision(10, 4);
+                    
+                entity.Property(e => e.Currency)
+                    .IsRequired()
+                    .HasMaxLength(10);
+                    
+                entity.Property(e => e.ChangedBy)
+                    .IsRequired()
+                    .HasMaxLength(450);
+                    
+                entity.Property(e => e.ChangedDate)
+                    .IsRequired();
+                    
+                entity.Property(e => e.Reason)
+                    .HasMaxLength(500)
+                    .IsRequired(false);
+                    
+                entity.Property(e => e.CreatedBy)
+                    .HasMaxLength(450)
+                    .IsRequired(false);
+                    
+                entity.Property(e => e.UpdatedBy)
+                    .HasMaxLength(450)
+                    .IsRequired(false);
+
+                // Create indexes for performance
+                entity.HasIndex(e => e.ProjectId)
+                    .HasDatabaseName("IX_ProjectBudgetChangeHistory_ProjectId");
+                    
+                entity.HasIndex(e => e.ChangedDate)
+                    .HasDatabaseName("IX_ProjectBudgetChangeHistory_ChangedDate");
+                    
+                entity.HasIndex(e => e.FieldName)
+                    .HasDatabaseName("IX_ProjectBudgetChangeHistory_FieldName");
+
+                // Configure relationships
+                entity.HasOne(e => e.Project)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                    
+                entity.HasOne(e => e.ChangedByUser)
+                    .WithMany()
+                    .HasForeignKey(e => e.ChangedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Add check constraints
+                entity.HasCheckConstraint(
+                    "CK_ProjectBudgetChangeHistory_FieldName",
+                    "[FieldName] IN ('EstimatedProjectCost', 'EstimatedProjectFee')"
+                );
+                
+                entity.HasCheckConstraint(
+                    "CK_ProjectBudgetChangeHistory_ValueChange",
+                    "[OldValue] != [NewValue]"
+                );
+            });
 
         }
 

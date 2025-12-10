@@ -11,10 +11,12 @@ namespace NJS.Application.CQRS.Projects.Handlers
     public class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectCommand, Unit>
     {
         private readonly IProjectRepository _repository;
+        private readonly IMediator _mediator;
 
-        public UpdateProjectCommandHandler(IProjectRepository repository)
+        public UpdateProjectCommandHandler(IProjectRepository repository, IMediator mediator)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
         public async Task<Unit> Handle(UpdateProjectCommand request, CancellationToken cancellationToken)
@@ -78,6 +80,32 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 int months = ((dto.EndDate.Value.Year - dto.StartDate.Value.Year) * 12) +
                            dto.EndDate.Value.Month - dto.StartDate.Value.Month;
                 existingProject.DurationInMonths = months;
+            }
+
+            // Track budget changes if budget values have changed
+            var budgetChanged = existingProject.EstimatedProjectCost != dto.EstimatedProjectCost ||
+                               existingProject.EstimatedProjectFee != dto.EstimatedProjectFee;
+
+            if (budgetChanged)
+            {
+                try
+                {
+                    var budgetCommand = new UpdateProjectBudgetCommand
+                    {
+                        ProjectId = request.Id,
+                        EstimatedProjectCost = dto.EstimatedProjectCost,
+                        EstimatedProjectFee = dto.EstimatedProjectFee,
+                        Reason = dto.BudgetReason,
+                        ChangedBy = dto.ProjectManagerId ?? dto.LastModifiedBy
+                    };
+
+                    await _mediator.Send(budgetCommand, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error tracking budget change: {ex.Message}");
+                    // Continue with project update even if budget tracking fails
+                }
             }
 
             try
