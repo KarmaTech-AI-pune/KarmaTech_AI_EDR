@@ -23,6 +23,12 @@ namespace NJS.Application.CQRS.WBSOption.Handler
             var resultOptions = new List<WBSOptionDto>();
             var latestOptionByLevel = new Dictionary<int, Domain.Entities.WBSOption>();
 
+            // If a Level 1 ID is provided in the command, seed the dictionary so Level 2 items know their parent.
+            if (request.Level1Id.HasValue)
+            {
+                latestOptionByLevel[1] = new Domain.Entities.WBSOption { Id = request.Level1Id.Value };
+            }
+
             foreach (var optionDto in request.Options)
             {
                 int? parentId = null;
@@ -30,6 +36,8 @@ namespace NJS.Application.CQRS.WBSOption.Handler
                 {
                     parentId = latestOptionByLevel[optionDto.Level - 1].Id;
                 }
+
+                int? finalParentId = parentId ?? optionDto.ParentId;
 
                 Domain.Entities.WBSOption wbsOption;
                 if (optionDto.Id > 0)
@@ -41,7 +49,7 @@ namespace NJS.Application.CQRS.WBSOption.Handler
                         wbsOption.Value = optionDto.Value;
                         wbsOption.Label = optionDto.Label;
                         wbsOption.Level = optionDto.Level;
-                        wbsOption.ParentId = parentId ?? optionDto.ParentId;
+                        wbsOption.ParentId = finalParentId;
                         wbsOption.FormType = (NJS.Domain.Entities.FormType)optionDto.FormType;
                         await _wbsOptionRepository.UpdateAsync(wbsOption);
                     }
@@ -53,7 +61,7 @@ namespace NJS.Application.CQRS.WBSOption.Handler
                     {
                         Label = optionDto.Label,
                         Level = optionDto.Level,
-                        ParentId = parentId,
+                        ParentId = finalParentId,
                         FormType = (NJS.Domain.Entities.FormType)optionDto.FormType,
                         Value = optionDto.Value
                     };
