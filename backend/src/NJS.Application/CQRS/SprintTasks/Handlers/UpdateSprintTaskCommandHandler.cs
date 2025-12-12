@@ -63,6 +63,13 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             existingSprintTask.SprintPlanId = sprintTaskInputDto.SprintPlanId;
             existingSprintTask.WbsPlanId = sprintTaskInputDto.WbsPlanId;
             existingSprintTask.UserTaskId = sprintTaskInputDto.UserTaskId;
+            existingSprintTask.AcceptanceCriteria = sprintTaskInputDto.AcceptanceCriteria;
+            existingSprintTask.DisplayOrder = sprintTaskInputDto.DisplayOrder;
+            existingSprintTask.EstimatedHours = sprintTaskInputDto.EstimatedHours;
+            existingSprintTask.ActualHours = sprintTaskInputDto.ActualHours;
+            existingSprintTask.RemainingHours = sprintTaskInputDto.RemainingHours;
+            existingSprintTask.StartedAt = sprintTaskInputDto.StartedAt;
+            existingSprintTask.CompletedAt = sprintTaskInputDto.CompletedAt;
 
             // Note: Subtasks are intentionally not handled here as per the simplified input DTO.
             // If subtask updates are needed, a separate endpoint/command should be used.

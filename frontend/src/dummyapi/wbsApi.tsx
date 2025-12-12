@@ -1,6 +1,6 @@
-import { wbsTasks as initialWbsTasks, resourceAllocations as initialResourceAllocations, plannedHours as initialPlannedHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options} from './database/dummyWBSTasks';
+import { wbsTasks as initialWbsTasks, resourceAllocations as initialResourceAllocations, plannedHours as initialPlannedHours, getWBSOptions, getLevel1Options, getLevel2Options, getLevel3Options } from '../features/wbs/dummyapi/dummyWBSTasks';
 import { resourceRoles as initialResourceRoles, employees as initialEmployees, projectResources as initialProjectResources } from './database/dummyResourceRoles';
-import { WBSRowData } from '../types/wbs';
+import { WBSRowData } from '../features/wbs/types/wbs';
 import { WBSTask, WBSTaskResourceAllocation, PlannedHour, resourceRole as ResourceRole, Employee } from "../models";
 // Project Resource type definition
 interface ProjectResource {
@@ -44,7 +44,7 @@ export const WBSTaskAPI = {
             if (!taskData.project_id || taskData.level === undefined) {
                 throw new Error('Missing required fields');
             }
-            
+
             const newTask: WBSTask = {
                 id: taskData.id!,
                 project_id: taskData.project_id,
@@ -114,9 +114,9 @@ export const WBSStructureAPI = {
     getProjectWBS: async (projectId: string): Promise<WBSRowData[]> => {
         try {
             const tasks = wbsTasks.filter(task => task.project_id === projectId);
-            
+
             return tasks.map(task => {
-                const allocation = resourceAllocations.find(alloc => 
+                const allocation = resourceAllocations.find(alloc =>
                     alloc.wbs_task_id === task.id
                 );
 
@@ -323,7 +323,7 @@ export const ResourceAPI = {
             if (month !== undefined && year !== undefined) {
                 const monthStr = new Date(2000, month - 1, 1).toLocaleString('en-US', { month: 'long' });
                 const yearStr = year.toString();
-                
+
                 filteredHours = filteredHours.filter(
                     hour => hour.month === monthStr && hour.year === yearStr
                 );
@@ -366,7 +366,7 @@ export const ResourceAPI = {
                 created_at: new Date(),
                 updated_at: new Date()
             };
-            
+
             resourceAllocations.push(newAllocation);
             return newAllocation;
         } catch (error) {

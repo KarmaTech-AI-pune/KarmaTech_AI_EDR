@@ -52,10 +52,10 @@ namespace NJSAPI.Controllers
 
                 var response = new ProjectScheduleResponseDto
                 {
-                    Data = todoScheduleDto?.SprintPlans?.FirstOrDefault(),
+                    Data = todoScheduleDto, // ProjectScheduleDto now directly contains tasks
                     AccessLink = accessLink,
                     ProjectId = createdProjectId,
-                    Message = "Project schedule(s) created successfully!"
+                    Message = "Project schedule created successfully!"
                 };
 
                 _logger.LogInformation("Project schedule(s) created successfully for Project ID: {ProjectId}", createdProjectId);

@@ -53,14 +53,16 @@ namespace NJS.Domain.Database
         public DbSet<BidPreparation> BidPreparations { get; set; }
         public DbSet<BidVersionHistory> BidVersionHistories { get; set; }
         public DbSet<Project> Projects { get; set; }
+        public DbSet<Program> Programs { get; set; }
         public new DbSet<User> Users { get; set; }
         public new DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<GoNoGoDecision> GoNoGoDecisions { get; set; }
-        public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; }
+        public DbSet<WBSHeader> WBSHeaders { get; set; } // Added for WBS Master
+        public DbSet<WorkBreakdownStructure> WorkBreakdownStructures { get; set; } // Now represents WBS Groups
         public DbSet<WBSTask> WBSTasks { get; set; }
-        public DbSet<WBSTaskPlannedHourHeader> WBSTaskPlannedHourHeaders { get; set; } // Added
-        public DbSet<WBSTaskPlannedHour> WBSTaskPlannedHours { get; set; } // Added
+        public DbSet<WBSTaskPlannedHourHeader> WBSTaskPlannedHourHeaders { get; set; }
+        public DbSet<WBSTaskPlannedHour> WBSTaskPlannedHours { get; set; }
         public DbSet<UserWBSTask> UserWBSTasks { get; set; }
         public DbSet<WBSOption> WBSOptions { get; set; }
         public DbSet<OpportunityTracking> OpportunityTrackings { get; set; }
@@ -70,9 +72,8 @@ namespace NJS.Domain.Database
         public DbSet<OpportunityHistory> OpportunityHistories { get; set; }
         public DbSet<WBSHistory> WBSHistories { get; set; }
 
-        // WBS Versioning entities
+        // WBS Versioning entities (all retained as per feedback)
         public DbSet<WBSVersionHistory> WBSVersionHistories { get; set; }
-
         public DbSet<MeasurementUnit> MeasurementUnits { get; set; }
         public DbSet<WBSTaskVersionHistory> WBSTaskVersionHistories { get; set; }
         public DbSet<WBSVersionWorkflowHistory> WBSVersionWorkflowHistories { get; set; }
@@ -134,6 +135,7 @@ namespace NJS.Domain.Database
         public DbSet<SprintPlan> SprintPlans { get; set; }
         public DbSet<SprintTaskComment> SprintTaskComments { get; set; }
         public DbSet<SprintSubtaskComment> SprintSubtaskComments { get; set; }
+        public DbSet<SprintDailyProgress> SprintDailyProgresses { get; set; }
 
 
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
@@ -143,11 +145,11 @@ namespace NJS.Domain.Database
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
         public DbSet<MigrationResult> MigrationResults { get; set; }
 
-        // Main Projects (tenant-based) - Note: This was already defined above
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            ConfigureProjectCascadingDeletes(modelBuilder);
 
             modelBuilder.Entity<Project>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControl>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -162,8 +164,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<ProjectClosure>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ProjectResource>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<WBSTaskPlannedHourHeader>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<WBSHeader>().HasQueryFilter(p => p.TenantId == TenantId); // Added
             modelBuilder.Entity<WorkBreakdownStructure>().HasQueryFilter(p => p.TenantId == TenantId);
-            // Add other entities that need to be filtered by TenantId here
             modelBuilder.Entity<BudgetTable>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<CTCEAC>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<ChangeControlWorkflowHistory>().HasQueryFilter(p => p.TenantId == TenantId);
@@ -198,15 +200,13 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<SprintPlan>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintTaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintSubtaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
-            modelBuilder.Entity<ProjectBudgetChangeHistory>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<SprintDailyProgress>().HasQueryFilter(p => p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
                 .HasOne(mp => mp.Project)
                 .WithMany()
                 .HasForeignKey(mp => mp.ProjectId);
-
-
 
             // Configure one-to-one relationships with MonthlyProgress
             modelBuilder.Entity<MonthlyProgress>()
@@ -283,6 +283,528 @@ namespace NJS.Domain.Database
                 .HasOne(pcc => pcc.PercentCompleteOnCosts)
                 .WithOne(pcc => pcc.BudgetTable)
                 .HasForeignKey<PercentCompleteOnCosts>(pcc => pcc.BudgetTableId);
+
+            // Configure decimal precisions for Monthly Progress related entities
+            modelBuilder.Entity<ContractAndCost>().Property(cc => cc.PriorCumulativeOdc).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(cc => cc.PriorCumulativeStaff).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(cc => cc.PriorCumulativeTotal).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(cc => cc.ActualOdc).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(cc => cc.ActualStaff).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(cc => cc.ActualSubtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(cc => cc.TotalCumulativeOdc).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(cc => cc.TotalCumulativeStaff).HasPrecision(18, 2);
+            modelBuilder.Entity<ContractAndCost>().Property(cc => cc.TotalCumulativeCost).HasPrecision(18, 2);
+
+            modelBuilder.Entity<CurrentBudgetInMIS>().Property(cb => cb.Cost).HasPrecision(18, 2);
+            modelBuilder.Entity<CurrentBudgetInMIS>().Property(cb => cb.ProfitPercentage).HasPrecision(18, 2);
+            modelBuilder.Entity<CurrentBudgetInMIS>().Property(cb => cb.RevenueFee).HasPrecision(18, 2);
+
+            modelBuilder.Entity<FinancialDetails>().Property(fd => fd.BudgetOdcs).HasPrecision(18, 2);
+            modelBuilder.Entity<FinancialDetails>().Property(fd => fd.BudgetStaff).HasPrecision(18, 2);
+            modelBuilder.Entity<FinancialDetails>().Property(fd => fd.BudgetSubTotal).HasPrecision(18, 2);
+            modelBuilder.Entity<FinancialDetails>().Property(fd => fd.FeeTotal).HasPrecision(18, 2);
+            modelBuilder.Entity<FinancialDetails>().Property(fd => fd.Net).HasPrecision(18, 2);
+            modelBuilder.Entity<FinancialDetails>().Property(fd => fd.ServiceTax).HasPrecision(18, 2);
+
+            modelBuilder.Entity<ManpowerPlanning>().Property(mp => mp.Balance).HasPrecision(18, 2);
+            modelBuilder.Entity<ManpowerPlanning>().Property(mp => mp.Consumed).HasPrecision(18, 2);
+            modelBuilder.Entity<ManpowerPlanning>().Property(mp => mp.NextMonthPlanning).HasPrecision(18, 2);
+            modelBuilder.Entity<ManpowerPlanning>().Property(mp => mp.Planned).HasPrecision(18, 2);
+
+            modelBuilder.Entity<MonthlyProgress>().Property(mp => mp.ManpowerTotal).HasPrecision(18, 2);
+
+            modelBuilder.Entity<OriginalBudget>().Property(ob => ob.Cost).HasPrecision(18, 2);
+            modelBuilder.Entity<OriginalBudget>().Property(ob => ob.ProfitPercentage).HasPrecision(18, 2);
+            modelBuilder.Entity<OriginalBudget>().Property(ob => ob.RevenueFee).HasPrecision(18, 2);
+
+            modelBuilder.Entity<PercentCompleteOnCosts>().Property(pcc => pcc.Cost).HasPrecision(18, 2);
+            modelBuilder.Entity<PercentCompleteOnCosts>().Property(pcc => pcc.RevenueFee).HasPrecision(18, 2);
+
+            modelBuilder.Entity<ProgressDeliverable>().Property(pd => pd.PaymentDue).HasPrecision(18, 2);
+
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.CtcODC).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.CtcStaff).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.CtcSubtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.ActualctcODC).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.ActualCtcStaff).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.ActualCtcSubtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.EacOdc).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.EacStaff).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.GrossProfitPercentage).HasPrecision(18, 2);
+            modelBuilder.Entity<CTCEAC>().Property(cte => cte.TotalEAC).HasPrecision(18, 2);
+
+            modelBuilder.Entity<ChangeOrder>().Property(co => co.ContractTotal).HasPrecision(18, 2);
+            modelBuilder.Entity<ChangeOrder>().Property(co => co.Cost).HasPrecision(18, 2);
+            modelBuilder.Entity<ChangeOrder>().Property(co => co.Fee).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Feature>().Property(f => f.PriceINR).HasPrecision(18, 2);
+            modelBuilder.Entity<Feature>().Property(f => f.PriceUSD).HasPrecision(18, 2);
+
+            // Configure Identity tables
+            modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
+            {
+                entity.HasKey(e => new { e.LoginProvider, e.ProviderKey });
+            });
+
+            modelBuilder.Entity<IdentityUserRole<string>>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.RoleId });
+            });
+
+            modelBuilder.Entity<IdentityUserToken<string>>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name });
+            });
+
+            // Configure BidPreparation entity
+            modelBuilder.Entity<BidPreparation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserId).IsRequired();
+                entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.CreatedBy).IsRequired(false);
+                entity.Property(e => e.UpdatedBy).IsRequired(false);
+                entity.Property(e => e.Comments).IsRequired(false);
+
+                // Create index on UserId for faster lookups
+                entity.HasIndex(e => e.UserId);
+
+                // Configure relationship with OpportunityTracking
+                entity.HasOne(b => b.OpportunityTracking)
+                    .WithMany()
+                    .HasForeignKey(b => b.OpportunityId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure relationship with BidVersionHistory
+                entity.HasMany(b => b.VersionHistory)
+                    .WithOne(v => v.BidPreparation)
+                    .HasForeignKey(v => v.BidPreparationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure BidVersionHistory entity
+            modelBuilder.Entity<BidVersionHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Comments).IsRequired(false);
+                entity.Property(e => e.ModifiedBy).IsRequired();
+
+                // Create index on BidPreparationId for faster lookups
+                entity.HasIndex(e => e.BidPreparationId);
+            });
+
+            // Configure Role-Permission relationship
+            modelBuilder.Entity<RolePermission>()
+                .HasKey(rp => rp.Id);
+
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rp => rp.Role)
+                .WithMany(r => r.RolePermissions)
+                .HasForeignKey(rp => rp.RoleId);
+
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rp => rp.Permission)
+                .WithMany(p => p.RolePermissions)
+                .HasForeignKey(rp => rp.PermissionId);
+
+            // Configure Project entity properties
+            modelBuilder.Entity<Project>(entity =>
+            {
+                // Configure decimal precisions
+                entity.Property(f => f.EstimatedProjectCost).HasPrecision(18, 2);
+                entity.Property(f => f.EstimatedProjectFee).HasPrecision(18, 2);
+                entity.Property(f => f.CapitalValue).HasPrecision(18, 2);
+                entity.Property(f => f.Percentage).HasPrecision(18, 2);
+
+                // Configure nullable foreign keys
+                entity.Property(p => p.Sector).IsRequired(false);
+                entity.Property(p => p.ProgramId).IsRequired(false);
+                entity.Property(p => p.OpportunityTrackingId).IsRequired(false);
+
+                // Configure nullable relationships - fix shadow property issue
+                // Remove explicit relationship configuration since it's already defined in Project entity with [ForeignKey] attribute
+            });
+            modelBuilder.Entity<User>().Property(f => f.Avatar).IsRequired(false);
+            modelBuilder.Entity<Role>().ToTable("AspNetRoles");
+            modelBuilder.Entity<Permission>().ToTable("Permissions");
+
+            // Configure OpportunityTracking decimal precisions
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.BidFees)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.Emd)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.PercentageChanceOfProjectHappening)
+                .HasPrecision(5, 2);
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.PercentageChanceOfNJSSuccess)
+                .HasPrecision(5, 2);
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.GrossRevenue)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OpportunityTracking>()
+                .Property(o => o.NetNJSRevenue)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.CreatedBy).IsRequired(false);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.UpdatedBy).IsRequired(false);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.ApprovalManagerId).IsRequired(false);
+            modelBuilder.Entity<OpportunityTracking>().Property(o => o.ReviewManagerId).IsRequired(false);
+            modelBuilder.Entity<OpportunityHistory>().Property(o => o.Comments).IsRequired(false);
+
+            modelBuilder.Entity<OpportunityHistory>()
+                .HasOne(oh => oh.Opportunity)
+                .WithMany(o => o.OpportunityHistories)
+                .HasForeignKey(oh => oh.OpportunityId);
+            //modelBuilder.Entity<OpportunityHistory>()
+            //.HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
+            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
+
+            modelBuilder.Entity<WBSHistory>()
+                .HasOne(ph => ph.WBSTaskPlannedHourHeader)
+                .WithMany(p => p.WBSHistories)
+                .HasForeignKey(ph => ph.WBSTaskPlannedHourHeaderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WBSHistory>()
+                .HasOne(ph => ph.ActionUser)
+                .WithMany().HasForeignKey(ph => ph.ActionBy);
+
+            modelBuilder.Entity<WBSHistory>()
+                .Property(ph => ph.Comments).IsRequired(false);
+
+            modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoringCriterias).WithMany(s => s.GoNoGoDecisionOpportunities).HasForeignKey(oh => oh.ScoringCriteriaId);
+            modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoreRanges).WithMany(s => s.GoNoGoDecisionOpportunitiesScoring).HasForeignKey(oh => oh.ScoreRangeId);
+            modelBuilder.Entity<ScoringDescriptionSummarry>().HasOne(oh => oh.ScoringDescriptions).WithMany(s => s.ScoringDescriptionSummarry).HasForeignKey(oh => oh.ScoringDescriptionID);
+
+            // Configure GoNoGoDecisionTransaction relationships
+            modelBuilder.Entity<GoNoGoDecisionTransaction>()
+                .HasOne(t => t.GoNoGoDecisionHeader)
+                .WithMany()
+                .HasForeignKey(t => t.GoNoGoDecisionHeaderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GoNoGoDecisionTransaction>()
+                .HasOne(t => t.ScoringCriterias)
+                .WithMany()
+                .HasForeignKey(t => t.ScoringCriteriaId);
+
+            // Configure GoNoGoDecisionHeader relationships
+            modelBuilder.Entity<GoNoGoDecisionHeader>()
+                .HasOne(h => h.OpportunityTracking)
+                .WithMany()
+                .HasForeignKey(h => h.OpportunityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.TypeOfClient).IsRequired(false);
+            modelBuilder.Entity<GoNoGoDecisionHeader>().Property(o => o.RegionalBDHead).IsRequired(false);
+
+            // Configure WBSOption entity
+            modelBuilder.Entity<WBSOption>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Value).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Label).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Level).IsRequired();
+                entity.Property(e => e.ParentId).IsRequired(false);
+                entity.Property(e => e.FormType).IsRequired();
+
+                // Create index on Level for faster lookups
+                entity.HasIndex(e => e.Level);
+
+                // Create index on ParentId for faster hierarchical queries
+                entity.HasIndex(e => e.ParentId);
+
+                // Create index on FormType for faster filtering
+                entity.HasIndex(e => e.FormType);
+            });
+
+            // Configure WBSTask entity
+            modelBuilder.Entity<WBSTask>(entity =>
+            {
+                entity.Property(t => t.EstimatedBudget).HasPrecision(18, 2);
+
+                // Configure relationship with WorkBreakdownStructure
+                entity.HasOne(t => t.WorkBreakdownStructure)
+                      .WithMany(w => w.Tasks)
+                  .HasForeignKey(t => t.WorkBreakdownStructureId)
+                  .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+            });
+
+            // Configure JobStartForm entity
+            modelBuilder.Entity<JobStartForm>(entity =>
+            {
+                entity.HasKey(e => e.FormId);
+
+                entity.Property(e => e.GrandTotal).HasPrecision(18, 2);
+                entity.Property(e => e.Profit).HasPrecision(18, 2);
+                entity.Property(e => e.ProfitPercentage).HasPrecision(18, 2);
+                entity.Property(e => e.ProjectFees).HasPrecision(18, 2);
+                entity.Property(e => e.ServiceTaxAmount).HasPrecision(18, 2);
+                entity.Property(e => e.ServiceTaxPercentage).HasPrecision(5, 2);
+                entity.Property(e => e.TotalExpenses).HasPrecision(18, 2);
+                entity.Property(e => e.TotalProjectFees).HasPrecision(18, 2);
+                entity.Property(e => e.TotalTimeCost).HasPrecision(18, 2);
+
+                entity.HasOne(jsf => jsf.Project)
+                      .WithMany()
+                      .HasForeignKey(jsf => jsf.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(jsf => jsf.WorkBreakdownStructure)
+                      .WithMany(wbs => wbs.JobStartForms)
+                      .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(jsf => jsf.Selections)
+                      .WithOne(s => s.JobStartForm)
+                      .HasForeignKey(s => s.FormId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(jsf => jsf.Resources)
+                      .WithOne(r => r.JobStartForm)
+                      .HasForeignKey(r => r.FormId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(jsf => jsf.ProjectId);
+            });
+
+            // Configure JobStartFormSelection entity
+            modelBuilder.Entity<JobStartFormSelection>(entity =>
+            {
+                entity.HasKey(e => e.SelectionId);
+                // No complex relationships needed here as it's primarily linked via JobStartForm
+                entity.HasIndex(s => s.FormId); // Index for faster lookup by form
+            });
+
+            // Configure JobStartFormResource entity
+            modelBuilder.Entity<JobStartFormResource>(entity =>
+            {
+                entity.HasKey(e => e.ResourceId);
+                entity.Property(e => e.Rate).HasPrecision(18, 2);
+                entity.Property(e => e.Units).HasPrecision(18, 2);
+                entity.Property(e => e.BudgetedCost).HasPrecision(18, 2);
+
+                entity.HasOne(r => r.JobStartForm)
+                      .WithMany(j => j.Resources)
+                      .HasForeignKey(r => r.FormId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(r => r.FormId); // Index for faster lookup by form
+            });
+
+            // Configure UserWBSTask entity decimal properties
+            modelBuilder.Entity<UserWBSTask>(entity =>
+            {
+                entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
+                entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
+                entity.Property(ut => ut.ResourceRoleId).IsRequired(false); // Explicitly configure ResourceRoleId
+
+                // Configure relationships
+                entity.HasOne(ut => ut.WBSTask)
+                      .WithMany(t => t.UserWBSTasks)
+                      .HasForeignKey(ut => ut.WBSTaskId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ut => ut.User)
+                      .WithMany(u => u.UserWBSTasks)
+                      .HasForeignKey(ut => ut.UserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(ut => ut.ResourceRole)
+                      .WithMany()
+                      .HasForeignKey(ut => ut.ResourceRoleId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+            });
+
+
+
+            // Configure WBSHeader entity
+            modelBuilder.Entity<WBSHeader>(entity =>
+            {
+                entity.HasQueryFilter(h => h.TenantId == TenantId);
+
+                entity.HasOne(h => h.Project)
+                      .WithMany()
+                      .HasForeignKey(h => h.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(h => h.WorkBreakdownStructures)
+                      .WithOne(wbs => wbs.WBSHeader)
+                      .HasForeignKey(wbs => wbs.WBSHeaderId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(h => h.VersionHistories)
+                      .WithOne(vh => vh.WBSHeader)
+                      .HasForeignKey(vh => vh.WBSHeaderId)
+                      .OnDelete(DeleteBehavior.Cascade); // Allow deletion of WBSHeader even if it has version histories
+
+                // Configure the relationship for ActiveVersion
+                entity.HasOne(h => h.ActiveVersion)
+                      .WithMany()
+                      .HasForeignKey(h => h.ActiveVersionHistoryId)
+                      .OnDelete(DeleteBehavior.NoAction)
+                      .IsRequired(false);
+
+                // Configure the relationship for LatestVersion
+                entity.HasOne(h => h.LatestVersion)
+                      .WithMany()
+                      .HasForeignKey(h => h.LatestVersionHistoryId)
+                      .OnDelete(DeleteBehavior.NoAction)
+                      .IsRequired(false);
+            });
+
+            // Configure WorkBreakdownStructure entity (now WBS Groups)
+            modelBuilder.Entity<WorkBreakdownStructure>(entity =>
+            {
+                entity.HasQueryFilter(w => w.TenantId == TenantId);
+                entity.HasIndex(w => w.WBSHeaderId); // Index for faster lookups by WBSHeader
+                entity.HasIndex(w => w.Name); // Index for faster lookups by Name
+
+                // Remove old versioning relationships from WorkBreakdownStructure
+                // entity.HasMany(w => w.VersionHistory)
+                //       .WithOne(v => v.WorkBreakdownStructure)
+                //       .HasForeignKey(v => v.WorkBreakdownStructureId)
+                //       .OnDelete(DeleteBehavior.Cascade);
+
+                // entity.HasOne(w => w.LatestVersion)
+                //       .WithMany()
+                //       .HasForeignKey(w => w.LatestVersionHistoryId)
+                //       .OnDelete(DeleteBehavior.NoAction)
+                //       .IsRequired(false);
+
+                // entity.HasOne(w => w.ActiveVersion)
+                //       .WithMany()
+                //       .HasForeignKey(w => w.ActiveVersionHistoryId)
+                //       .OnDelete(DeleteBehavior.NoAction)
+                //       .IsRequired(false);
+            });
+
+            // Configure WBS Version History entity
+            modelBuilder.Entity<WBSVersionHistory>(entity =>
+            {
+                entity.HasQueryFilter(v => v.TenantId == TenantId);
+                entity.Property(v => v.Version).HasMaxLength(20).IsRequired();
+                entity.Property(v => v.Comments).HasMaxLength(1000);
+
+                entity.HasOne(v => v.Status)
+                      .WithMany()
+                      .HasForeignKey(v => v.StatusId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(v => v.CreatedByUser)
+                      .WithMany()
+                      .HasForeignKey(v => v.CreatedBy)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(v => v.ApprovedByUser)
+                      .WithMany()
+                      .HasForeignKey(v => v.ApprovedBy)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(v => v.WBSHeaderId); // Updated to WBSHeaderId
+                entity.HasIndex(v => v.Version);
+                entity.HasIndex(v => v.IsActive);
+                entity.HasIndex(v => v.IsLatest);
+                entity.HasIndex(v => v.CreatedAt);
+
+                // Remove duplicate relationship configuration
+                // The relationships are already defined in the WBSHeader configuration
+            });
+
+            // Configure WBSTaskVersionHistory entity
+            modelBuilder.Entity<WBSTaskVersionHistory>(entity =>
+            {
+                entity.HasQueryFilter(t => t.TenantId == TenantId);
+                entity.Property(t => t.EstimatedBudget).HasPrecision(18, 2);
+                entity.Property(t => t.Title).HasMaxLength(255).IsRequired();
+                entity.Property(t => t.Description).HasMaxLength(1000);
+
+                entity.HasOne(t => t.WBSVersionHistory)
+                      .WithMany(v => v.TaskVersions)
+                      .HasForeignKey(t => t.WBSVersionHistoryId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(t => t.WBSVersionHistoryId);
+                entity.HasIndex(t => t.OriginalTaskId);
+                entity.HasIndex(t => t.DisplayOrder);
+            });
+
+            // Configure WBSVersionWorkflowHistory entity
+            modelBuilder.Entity<WBSVersionWorkflowHistory>(entity =>
+            {
+                entity.HasQueryFilter(h => h.TenantId == TenantId);
+                entity.Property(h => h.Action).HasMaxLength(100);
+                entity.Property(h => h.Comments).HasMaxLength(1000);
+
+                entity.HasOne(h => h.Status)
+                      .WithMany()
+                      .HasForeignKey(h => h.StatusId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(h => h.ActionUser)
+                      .WithMany()
+                      .HasForeignKey(h => h.ActionBy)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(h => h.AssignedTo)
+                      .WithMany()
+                      .HasForeignKey(h => h.AssignedToId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(h => h.WBSVersionHistoryId);
+                entity.HasIndex(h => h.ActionDate);
+            });
+
+            // Configure WBSTaskPlannedHourVersionHistory entity
+            modelBuilder.Entity<WBSTaskPlannedHourVersionHistory>(entity =>
+            {
+                entity.HasQueryFilter(ph => ph.TenantId == TenantId);
+                entity.Property(ph => ph.Year).HasMaxLength(4).IsRequired();
+                entity.Property(ph => ph.Month).HasMaxLength(20).IsRequired();
+                entity.Property(ph => ph.CreatedBy).HasMaxLength(100);
+
+                entity.HasOne(ph => ph.WBSTaskVersionHistory)
+                      .WithMany(t => t.PlannedHours)
+                      .HasForeignKey(ph => ph.WBSTaskVersionHistoryId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(ph => ph.WBSTaskVersionHistoryId);
+            });
+
+            // Configure UserWBSTaskVersionHistory entity
+            modelBuilder.Entity<UserWBSTaskVersionHistory>(entity =>
+            {
+                entity.HasQueryFilter(ut => ut.TenantId == TenantId);
+                entity.Property(ut => ut.CostRate).HasPrecision(18, 2);
+                entity.Property(ut => ut.TotalCost).HasPrecision(18, 2);
+                entity.Property(ut => ut.Name).HasMaxLength(255);
+                entity.Property(ut => ut.Unit).HasMaxLength(50);
+                entity.Property(ut => ut.CreatedBy).HasMaxLength(100);
+                entity.Property(ut => ut.ResourceRoleId).IsRequired(false);
+
+                entity.HasOne(ut => ut.WBSTaskVersionHistory)
+                      .WithMany(t => t.UserAssignments)
+                      .HasForeignKey(ut => ut.WBSTaskVersionHistoryId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ut => ut.User)
+                      .WithMany()
+                      .HasForeignKey(ut => ut.UserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(ut => ut.ResourceRole)
+                      .WithMany()
+                      .HasForeignKey(ut => ut.ResourceRoleId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(ut => ut.WBSTaskVersionHistoryId);
+                entity.HasIndex(ut => ut.UserId);
+            });
 
             // Configure decimal precisions for Monthly Progress related entities
             modelBuilder.Entity<ContractAndCost>().Property(cc => cc.PriorCumulativeOdc).HasPrecision(18, 2);
@@ -469,6 +991,13 @@ namespace NJS.Domain.Database
                       .WithMany()
                       .HasForeignKey(cc => cc.WorkflowStatusId)
                       .OnDelete(DeleteBehavior.NoAction)
+                      .IsRequired();
+
+                // Configure relationship with Project - Enforce Cascade Delete
+                entity.HasOne(cc => cc.Project)
+                      .WithMany()
+                      .HasForeignKey(cc => cc.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade)
                       .IsRequired();
             });
 
@@ -670,7 +1199,7 @@ namespace NJS.Domain.Database
                 entity.HasOne(h => h.Project)
                       .WithMany()
                       .HasForeignKey(h => h.ProjectId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.NoAction);
 
                 // Configure relationship with PMWorkflowStatus
                 entity.HasOne(h => h.Status)
@@ -754,88 +1283,44 @@ namespace NJS.Domain.Database
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
 
-            // Configure ProjectBudgetChangeHistory entity
-            modelBuilder.Entity<ProjectBudgetChangeHistory>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                
-                // Configure properties with appropriate constraints
-                entity.Property(e => e.FieldName)
-                    .IsRequired()
-                    .HasMaxLength(50);
-                    
-                entity.Property(e => e.OldValue)
-                    .IsRequired()
-                    .HasPrecision(18, 2);
-                    
-                entity.Property(e => e.NewValue)
-                    .IsRequired()
-                    .HasPrecision(18, 2);
-                    
-                entity.Property(e => e.Variance)
-                    .IsRequired()
-                    .HasPrecision(18, 2);
-                    
-                entity.Property(e => e.PercentageVariance)
-                    .IsRequired()
-                    .HasPrecision(10, 4);
-                    
-                entity.Property(e => e.Currency)
-                    .IsRequired()
-                    .HasMaxLength(10);
-                    
-                entity.Property(e => e.ChangedBy)
-                    .IsRequired()
-                    .HasMaxLength(450);
-                    
-                entity.Property(e => e.ChangedDate)
-                    .IsRequired();
-                    
-                entity.Property(e => e.Reason)
-                    .HasMaxLength(500)
-                    .IsRequired(false);
-                    
-                entity.Property(e => e.CreatedBy)
-                    .HasMaxLength(450)
-                    .IsRequired(false);
-                    
-                entity.Property(e => e.UpdatedBy)
-                    .HasMaxLength(450)
-                    .IsRequired(false);
+        }
 
-                // Create indexes for performance
-                entity.HasIndex(e => e.ProjectId)
-                    .HasDatabaseName("IX_ProjectBudgetChangeHistory_ProjectId");
-                    
-                entity.HasIndex(e => e.ChangedDate)
-                    .HasDatabaseName("IX_ProjectBudgetChangeHistory_ChangedDate");
-                    
-                entity.HasIndex(e => e.FieldName)
-                    .HasDatabaseName("IX_ProjectBudgetChangeHistory_FieldName");
+        private void ConfigureProjectCascadingDeletes(ModelBuilder modelBuilder)
+        {
+            // Configure GoNoGoDecision Cascade Delete
+            modelBuilder.Entity<GoNoGoDecision>()
+                .HasOne(g => g.Project)
+                .WithMany()
+                .HasForeignKey(g => g.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-                // Configure relationships
-                entity.HasOne(e => e.Project)
-                    .WithMany()
-                    .HasForeignKey(e => e.ProjectId)
-                    .OnDelete(DeleteBehavior.Cascade);
-                    
-                entity.HasOne(e => e.ChangedByUser)
-                    .WithMany()
-                    .HasForeignKey(e => e.ChangedBy)
-                    .OnDelete(DeleteBehavior.Restrict);
+            // Configure Cashflow Cascade Delete
+            modelBuilder.Entity<Cashflow>()
+                .HasOne<Project>()
+                .WithMany()
+                .HasForeignKey(c => c.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-                // Add check constraints
-                entity.HasCheckConstraint(
-                    "CK_ProjectBudgetChangeHistory_FieldName",
-                    "[FieldName] IN ('EstimatedProjectCost', 'EstimatedProjectFee')"
-                );
-                
-                entity.HasCheckConstraint(
-                    "CK_ProjectBudgetChangeHistory_ValueChange",
-                    "[OldValue] != [NewValue]"
-                );
-            });
+            // Configure ProjectResource Cascade Delete
+            modelBuilder.Entity<ProjectResource>()
+                .HasOne(pr => pr.Project)
+                .WithMany()
+                .HasForeignKey(pr => pr.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
+            // Configure WBSTaskPlannedHourHeader Cascade Delete
+            modelBuilder.Entity<WBSTaskPlannedHourHeader>()
+                .HasOne(w => w.Project)
+                .WithMany()
+                .HasForeignKey(w => w.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure MonthlyProgress Cascade Delete (if not already explicit)
+            modelBuilder.Entity<MonthlyProgress>()
+                .HasOne(mp => mp.Project)
+                .WithMany()
+                .HasForeignKey(mp => mp.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
     }

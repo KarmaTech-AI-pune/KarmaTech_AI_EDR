@@ -25,7 +25,7 @@ namespace NJS.Domain.Entities
         public int TenantId { get; set; }
 
         [Required]
-        public int WorkBreakdownStructureId { get; set; }
+        public int WBSHeaderId { get; set; } // Foreign key to WBSHeader
 
         [Required]
         [StringLength(20)]
@@ -55,10 +55,10 @@ namespace NJS.Domain.Entities
         public string ApprovedBy { get; set; }
 
         // Navigation properties
-        [ForeignKey("WorkBreakdownStructureId")]
-        [InverseProperty("VersionHistory")]
+        [ForeignKey("WBSHeaderId")]
+        [InverseProperty("VersionHistories")]
         [DeleteBehavior(DeleteBehavior.NoAction)]
-        public virtual WorkBreakdownStructure WorkBreakdownStructure { get; set; }
+        public virtual WBSHeader WBSHeader { get; set; }
 
         [ForeignKey("CreatedBy")]
         [DeleteBehavior(DeleteBehavior.NoAction)]

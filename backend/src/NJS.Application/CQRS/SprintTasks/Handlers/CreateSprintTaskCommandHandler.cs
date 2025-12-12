@@ -84,7 +84,14 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 TaskupdatedDate = DateTime.UtcNow,
                 SprintPlanId = sprintTaskDto.SprintPlanId,
                 WbsPlanId = sprintTaskDto.WbsPlanId,
-                UserTaskId = sprintTaskDto.UserTaskId
+                UserTaskId = sprintTaskDto.UserTaskId,
+                AcceptanceCriteria = sprintTaskDto.AcceptanceCriteria,
+                DisplayOrder = sprintTaskDto.DisplayOrder,
+                EstimatedHours = sprintTaskDto.EstimatedHours,
+                ActualHours = sprintTaskDto.ActualHours,
+                RemainingHours = sprintTaskDto.RemainingHours,
+                StartedAt = sprintTaskDto.StartedAt,
+                CompletedAt = sprintTaskDto.CompletedAt
             };
 
             await _context.SprintTasks.AddAsync(sprintTask, cancellationToken);
