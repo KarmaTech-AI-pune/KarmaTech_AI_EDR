@@ -12,7 +12,7 @@ import {
 import { projectManagementAppContext } from "../../../App";
 import { Project } from "../../../models";
 import { getUserById } from "../../../services/userApi";
-import { TaskType } from "../../../types/wbs";
+import { TaskType } from "../../../features/wbs/types/wbs";
 
 interface ReviewBoxProps {
   open: boolean;

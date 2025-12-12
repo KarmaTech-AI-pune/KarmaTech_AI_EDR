@@ -49,6 +49,15 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
             existingSprintPlan.SprintGoal = sprintPlanDto.SprintGoal;
             existingSprintPlan.ProjectId = sprintPlanDto.ProjectId.Value; // Cast to non-nullable int
             existingSprintPlan.RequiredSprintEmployees = sprintPlanDto.RequiredSprintEmployees;
+            existingSprintPlan.SprintName = sprintPlanDto.SprintName;
+            existingSprintPlan.PlannedStoryPoints = sprintPlanDto.PlannedStoryPoints;
+            existingSprintPlan.ActualStoryPoints = sprintPlanDto.ActualStoryPoints;
+            existingSprintPlan.Velocity = sprintPlanDto.Velocity;
+            existingSprintPlan.Status = sprintPlanDto.Status;
+            existingSprintPlan.StartedAt = sprintPlanDto.StartedAt;
+            existingSprintPlan.CompletedAt = sprintPlanDto.CompletedAt;
+            existingSprintPlan.CreatedAt = sprintPlanDto.CreatedAt;
+            existingSprintPlan.UpdatedAt = sprintPlanDto.UpdatedAt;
 
             // SprintTasks and SprintSubtasks are NOT handled by this API, as per requirement.
 

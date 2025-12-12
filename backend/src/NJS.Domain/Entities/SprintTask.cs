@@ -60,5 +60,14 @@ namespace NJS.Domain.Entities
         public int? UserTaskId { get; set; }
         [ForeignKey("UserTaskId")]
         public UserWBSTask? UserTask { get; set; }
+
+        [StringLength(1000)]
+        public string? AcceptanceCriteria { get; set; }
+        public int DisplayOrder { get; set; } = 0;
+        public int EstimatedHours { get; set; } = 0;
+        public int ActualHours { get; set; } = 0;
+        public int RemainingHours { get; set; } = 0;
+        public DateTime? StartedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
     }
 }

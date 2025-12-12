@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Gantt } from 'wx-react-gantt';
 import 'wx-react-gantt/dist/gantt.css';
 import { Willow } from 'wx-react-gantt';
-import { WBSStructureAPI } from './../../services/wbsApi';
-import { transformWbsToGantt } from '../../utils/wbsToGantt';
+import { WBSStructureAPI } from '../../features/wbs/services/wbsApi';
+import { transformWbsToGantt } from '../../features/wbs/utils/wbsToGantt';
 import { GanttTask, GanttLink } from './../../types/gantt';
 
 interface GanttChartProps {
@@ -21,7 +21,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ projectId }) => {
       try {
         setLoading(true);
         const wbsData = await WBSStructureAPI.getProjectWBS(projectId);
-        const { tasks, links } = transformWbsToGantt(wbsData);
+        const { tasks, links } = transformWbsToGantt(wbsData.tasks);
         setTasks(tasks);
         setLinks(links);
       } catch (err) {

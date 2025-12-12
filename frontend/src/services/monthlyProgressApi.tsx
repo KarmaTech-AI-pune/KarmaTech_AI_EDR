@@ -82,14 +82,21 @@ export const MonthlyProgressAPI = {
       return response.data;
     } catch (error: any) {
       if (error.response && error.response.status === 404) {
-        const response = await axiosInstance.post(`/api/projects/${projectId}/monthlyprogress`, { ...data, year, month });
-        return response.data;
+        // 404 is expected for the first save of a month, proceed to create
+        console.log(`Monthly progress for ${month}/${year} not found (404), creating new record...`);
+        try {
+          const response = await axiosInstance.post(`/api/projects/${projectId}/monthlyprogress`, { ...data, year, month });
+          return response.data;
+        } catch (createError) {
+          console.error(`Error creating monthly progress for project ${projectId}:`, createError);
+          throw new Error(`Failed to create monthly progress for project ${projectId}.`);
+        }
       }
-    // Re-throw other errors
-    console.error(`Error submitting monthly progress for project ${projectId}:`, error);
-    throw new Error(`Failed to submit monthly progress for project ${projectId}.`);
-  }
-},
+      // Re-throw other errors
+      console.error(`Error submitting monthly progress for project ${projectId}:`, error);
+      throw new Error(`Failed to submit monthly progress for project ${projectId}.`);
+    }
+  },
 
 
 

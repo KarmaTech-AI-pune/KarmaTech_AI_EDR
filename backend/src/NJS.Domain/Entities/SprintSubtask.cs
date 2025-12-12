@@ -47,5 +47,11 @@ namespace NJS.Domain.Entities
         public string? Taskid { get; set; }
         [ForeignKey("Taskid")]
         public SprintTask? ParentTask { get; set; } // Keep this relation
+
+        public int DisplayOrder { get; set; } = 0;
+        public int EstimatedHours { get; set; } = 0;
+        public int ActualHours { get; set; } = 0;
+        public DateTime? StartedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
     }
 }

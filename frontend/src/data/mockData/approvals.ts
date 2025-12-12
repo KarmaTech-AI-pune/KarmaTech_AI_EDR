@@ -1,9 +1,9 @@
 import { PendingApproval, MilestoneData, TaskItem, AISuggestion } from '../types/dashboard';
 
 export const pendingApprovals: PendingApproval[] = [
-  { id: 1, project: 'E-commerce Platform', manager: 'Sarah Johnson', days: 12, impact: 'High' },
-  { id: 2, project: 'Mobile Banking App', manager: 'Mike Chen', days: 8, impact: 'Medium' },
-  { id: 3, project: 'AI Analytics Tool', manager: 'David Wilson', days: 15, impact: 'Critical' }
+  { id: 1, project: 'E-commerce Platform', formName: 'WBS Review', manager: 'Sarah Johnson', days: 12, impact: 'High' },
+  { id: 2, project: 'Mobile Banking App', formName: 'Budget Approval', manager: 'Mike Chen', days: 8, impact: 'Medium' },
+  { id: 3, project: 'AI Analytics Tool', formName: 'Resource Request', manager: 'David Wilson', days: 15, impact: 'Critical' }
 ];
 
 export const milestoneData: MilestoneData[] = [

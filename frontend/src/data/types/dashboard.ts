@@ -23,6 +23,7 @@ export interface RegionalData {
 
 export interface FinancialMetrics {
   totalRevenue: number;
+  totalRevenueActual?: number;
   totalRevenueChange: number;
   totalRevenueChangeType: 'positive' | 'negative' | 'neutral';
   profitMargin: number;
@@ -46,6 +47,7 @@ export interface CashflowData {
 export interface PendingApproval {
   id: number;
   project: string;
+  formName: string;
   manager: string;
   days: number;
   impact: 'Critical' | 'High' | 'Medium' | 'Low';

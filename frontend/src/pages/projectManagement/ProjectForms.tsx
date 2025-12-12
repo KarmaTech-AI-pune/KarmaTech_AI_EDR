@@ -16,7 +16,7 @@ import { FormWrapper } from '../../components/forms/FormWrapper';
 import NotFound from '../NotFound';
 import FeatureGate from '../../components/subscription/FeatureGate';
 
-const TodoList = lazy(() => import('../../pages/projectManagement/WBS/TodoList'));
+const TodoList = lazy(() => import('../../features/wbs/pages/TodoList'));
 
 const validFormIds = [
     'wbs',

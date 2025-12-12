@@ -69,11 +69,11 @@ const PendingApprovals: React.FC<PendingApprovalsProps> = ({
             gap: isMobile ? 1.5 : 2,
           }}
         >
-          {approvals.map((approval) => {
+          {approvals.map((approval, index) => {
             const impactStyle = IMPACT_COLORS[approval.impact];
             return (
               <Card
-                key={approval.id}
+                key={`${approval.id}-${index}`}
                 variant="outlined"
                 sx={{
                   p: isMobile ? 1.5 : 2,
@@ -98,7 +98,7 @@ const PendingApprovals: React.FC<PendingApprovalsProps> = ({
                       fontWeight="medium"
                       sx={{ fontSize: isMobile ? "0.9rem" : "1rem", mb: 0.5 }}
                     >
-                      {approval.project}
+                      {approval.formName} - {approval.project}
                     </Typography>
                     <Typography
                       variant="body2"

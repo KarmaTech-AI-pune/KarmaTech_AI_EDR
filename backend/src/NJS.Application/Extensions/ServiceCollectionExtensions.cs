@@ -25,6 +25,7 @@ using NJS.Application.CQRS.SprintSubtasks.Queries; // Added for SprintSubtask qu
 using FluentValidation;
 using NJS.Application.Behaviors;
 
+
 namespace NJS.Application.Extensions
 {
     public static class ServiceCollectionExtensions
@@ -71,6 +72,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IChangeControlRepository, ChangeControlRepository>();
             services.AddScoped<IProjectClosureRepository, ProjectClosureRepository>();
             services.AddScoped<ITenantRepository, TenantRepository>();
+            services.AddScoped<IProgramRepository, ProgramRepository>();
 
             services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
             services.AddScoped<ICashflowRepository, CashflowRepository>();

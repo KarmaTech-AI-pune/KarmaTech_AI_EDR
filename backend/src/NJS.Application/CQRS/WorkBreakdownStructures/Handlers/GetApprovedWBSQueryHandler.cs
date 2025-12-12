@@ -38,7 +38,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 var wbsDto = new WBSDetailsDto
                 {
                     Id = wbs.Id,
-                    ProjectId = wbs.ProjectId,
+                    ProjectId = wbs.WBSHeader.ProjectId, // Access ProjectId through WBSHeader
                     Tasks = new List<WBSTaskDto>()
                 };
 
@@ -48,7 +48,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     {
                         Id = task.Id,
                         WorkBreakdownStructureId = task.WorkBreakdownStructureId,
-                        ParentId = task.ParentId,
                         Level = task.Level,
                         Title = task.Title,
                         Description = task.Description,
@@ -66,8 +65,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                         PlannedHours = new List<PlannedHourDto>(),
                         TotalHours = task.PlannedHours.Sum(ph => ph.PlannedHours), // Calculate total hours
                         TotalCost = (decimal)task.PlannedHours.Sum(ph => ph.PlannedHours) * (task.UserWBSTasks.FirstOrDefault()?.User?.StandardRate ?? 0), // Calculate total cost using StandardRate from User entity
-                        FrontendTempId = null, // FrontendTempId is not part of the entity, keep null
-                        ParentFrontendTempId = null // ParentFrontendTempId is not part of the entity, keep null
                     };
 
                     foreach (var plannedHour in task.PlannedHours)
