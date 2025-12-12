@@ -241,7 +241,8 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Version")
                         .HasColumnType("int");
@@ -253,6 +254,8 @@ namespace NJS.Domain.Migrations
                     b.HasIndex("RegionalDirectorId");
 
                     b.HasIndex("RegionalMangerId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("BidPreparations");
                 });
@@ -275,6 +278,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ModifiedBy")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ModifiedDate")
@@ -1085,9 +1089,11 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("PriceINR")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("PriceUSD")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -1645,6 +1651,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("GrandTotal")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsDeleted")
@@ -1654,22 +1661,27 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Profit")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("ProfitPercentage")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("ProjectFees")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("ServiceTaxAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("ServiceTaxPercentage")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -1678,12 +1690,15 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalExpenses")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("TotalProjectFees")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("TotalTimeCost")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedDate")
@@ -1796,6 +1811,7 @@ namespace NJS.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResourceId"));
 
                     b.Property<decimal>("BudgetedCost")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedDate")
@@ -1817,6 +1833,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Rate")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Remarks")
@@ -1829,6 +1846,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Units")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedDate")
@@ -2129,6 +2147,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<decimal?>("BidFees")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("BidManagerId")
@@ -2172,6 +2191,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal?>("Emd")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("FollowUpComments")
@@ -2185,6 +2205,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("GrossRevenue")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("LikelyCompetition")
@@ -2194,6 +2215,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal?>("NetNJSRevenue")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Notes")
@@ -2204,9 +2226,11 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("PercentageChanceOfNJSSuccess")
+                        .HasPrecision(5, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("PercentageChanceOfProjectHappening")
+                        .HasPrecision(5, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ProbableQualifyingCriteria")
@@ -2615,8 +2639,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -2629,15 +2652,12 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("NewValue")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("OldValue")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("PercentageVariance")
-                        .HasPrecision(10, 4)
                         .HasColumnType("decimal(10,4)");
 
                     b.Property<int>("ProjectId")
@@ -2654,32 +2674,18 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatedBy")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Variance")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ChangedBy");
 
-                    b.HasIndex("ChangedDate")
-                        .HasDatabaseName("IX_ProjectBudgetChangeHistory_ChangedDate");
+                    b.HasIndex("ProjectId");
 
-                    b.HasIndex("FieldName")
-                        .HasDatabaseName("IX_ProjectBudgetChangeHistory_FieldName");
-
-                    b.HasIndex("ProjectId")
-                        .HasDatabaseName("IX_ProjectBudgetChangeHistory_ProjectId");
-
-                    b.ToTable("ProjectBudgetChangeHistories", t =>
-                        {
-                            t.HasCheckConstraint("CK_ProjectBudgetChangeHistory_FieldName", "[FieldName] IN ('EstimatedProjectCost', 'EstimatedProjectFee')");
-
-                            t.HasCheckConstraint("CK_ProjectBudgetChangeHistory_ValueChange", "[OldValue] != [NewValue]");
-                        });
+                    b.ToTable("ProjectBudgetChangeHistories");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ProjectClosure", b =>
@@ -4120,6 +4126,7 @@ namespace NJS.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("CostRate")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -4139,6 +4146,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalCost")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<double>("TotalHours")
@@ -4181,6 +4189,7 @@ namespace NJS.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("CostRate")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -4191,7 +4200,8 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("ResourceRoleId")
                         .HasColumnType("nvarchar(450)");
@@ -4200,13 +4210,15 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalCost")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<double>("TotalHours")
                         .HasColumnType("float");
 
                     b.Property<string>("Unit")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("UserId")
                         .HasMaxLength(450)
@@ -4389,6 +4401,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("EstimatedBudget")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsDeleted")
@@ -4591,6 +4604,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("EstimatedBudget")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Level")
@@ -4677,7 +4691,13 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("ApprovedBy");
 
+                    b.HasIndex("CreatedAt");
+
                     b.HasIndex("CreatedBy");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsLatest");
 
                     b.HasIndex("StatusId");
 
@@ -4697,7 +4717,8 @@ namespace NJS.Domain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Action")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("ActionBy")
                         .HasMaxLength(450)
@@ -4711,7 +4732,8 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Comments")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("StatusId")
                         .HasColumnType("int");
@@ -4725,6 +4747,8 @@ namespace NJS.Domain.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ActionBy");
+
+                    b.HasIndex("ActionDate");
 
                     b.HasIndex("AssignedToId");
 
@@ -5092,7 +5116,8 @@ namespace NJS.Domain.Migrations
                 {
                     b.HasOne("NJS.Domain.Entities.GoNoGoDecisionHeader", "GoNoGoDecisionHeader")
                         .WithMany()
-                        .HasForeignKey("GoNoGoDecisionHeaderId");
+                        .HasForeignKey("GoNoGoDecisionHeaderId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("NJS.Domain.Entities.ScoringCriteria", "ScoringCriterias")
                         .WithMany()
@@ -5135,7 +5160,8 @@ namespace NJS.Domain.Migrations
 
                     b.HasOne("NJS.Domain.Entities.WorkBreakdownStructure", "WorkBreakdownStructure")
                         .WithMany("JobStartForms")
-                        .HasForeignKey("WorkBreakdownStructureId");
+                        .HasForeignKey("WorkBreakdownStructureId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Project");
 
@@ -5392,7 +5418,7 @@ namespace NJS.Domain.Migrations
                     b.HasOne("NJS.Domain.Entities.User", "ChangedByUser")
                         .WithMany()
                         .HasForeignKey("ChangedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("NJS.Domain.Entities.Project", "Project")
@@ -5674,11 +5700,13 @@ namespace NJS.Domain.Migrations
                 {
                     b.HasOne("NJS.Domain.Entities.Role", "ResourceRole")
                         .WithMany()
-                        .HasForeignKey("ResourceRoleId");
+                        .HasForeignKey("ResourceRoleId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("NJS.Domain.Entities.User", "User")
                         .WithMany("UserWBSTasks")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("NJS.Domain.Entities.WBSTask", "WBSTask")
                         .WithMany("UserWBSTasks")
@@ -5697,11 +5725,13 @@ namespace NJS.Domain.Migrations
                 {
                     b.HasOne("NJS.Domain.Entities.Role", "ResourceRole")
                         .WithMany()
-                        .HasForeignKey("ResourceRoleId");
+                        .HasForeignKey("ResourceRoleId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("NJS.Domain.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("NJS.Domain.Entities.WBSTaskVersionHistory", "WBSTaskVersionHistory")
                         .WithMany("UserAssignments")
@@ -5864,18 +5894,18 @@ namespace NJS.Domain.Migrations
                     b.HasOne("NJS.Domain.Entities.User", "ApprovedByUser")
                         .WithMany()
                         .HasForeignKey("ApprovedBy")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("NJS.Domain.Entities.User", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "Status")
                         .WithMany()
                         .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("NJS.Domain.Entities.WBSHeader", "WBSHeader")
@@ -5898,17 +5928,17 @@ namespace NJS.Domain.Migrations
                     b.HasOne("NJS.Domain.Entities.User", "ActionUser")
                         .WithMany()
                         .HasForeignKey("ActionBy")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("NJS.Domain.Entities.User", "AssignedTo")
                         .WithMany()
                         .HasForeignKey("AssignedToId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", "Status")
                         .WithMany()
                         .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("NJS.Domain.Entities.WBSVersionHistory", "WBSVersionHistory")
