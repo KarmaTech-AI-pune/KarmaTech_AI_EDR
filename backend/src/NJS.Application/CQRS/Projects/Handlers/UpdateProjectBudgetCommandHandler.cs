@@ -58,7 +58,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 var costHistory = await CreateBudgetChangeHistory(
                     request.ProjectId,
                     "EstimatedProjectCost",
-                    existingProject.EstimatedProjectCost,
+                    existingProject.EstimatedProjectCost ?? 0,
                     request.EstimatedProjectCost.Value,
                     existingProject.Currency,
                     request.ChangedBy,
@@ -78,7 +78,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 var feeHistory = await CreateBudgetChangeHistory(
                     request.ProjectId,
                     "EstimatedProjectFee",
-                    existingProject.EstimatedProjectFee,
+                    existingProject.EstimatedProjectFee ?? 0,
                     request.EstimatedProjectFee.Value,
                     existingProject.Currency,
                     request.ChangedBy,
