@@ -25,6 +25,7 @@ interface WBSFormDialogProps {
   allLevelsData: any; // Use a more generic type as specific levels are handled by hook
   dialogTitle: string;
   disabled?: boolean;
+  preSelectedParentId?: string | null;
 }
 
 const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
@@ -36,6 +37,7 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
   allLevelsData, // No longer directly used for options here, but kept if passed through.
   dialogTitle,
   disabled = false,
+  preSelectedParentId,
 }) => {
   const {
     control,
@@ -51,6 +53,7 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
     allLevelsData,
     onSubmit,
     onClose,
+    preSelectedParentId,
   });
 
   return (
@@ -75,31 +78,34 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
             )}
           />
 
-          {level === 3 && (
-            <FormControl fullWidth margin="normal" error={!!errors.parentValue}>
-              <InputLabel id="parent-level-label">Parent Level</InputLabel>
+          {(level === 2 || level === 3) && !preSelectedParentId && (
+            <FormControl fullWidth margin="normal" error={!!errors.parentId}>
+              <InputLabel id="parent-level-label">
+                {level === 2 ? 'Parent Level 1' : 'Parent Level 2'}
+              </InputLabel>
               <Controller
-                name="parentValue"
+                name="parentId"
                 control={control}
                 rules={{ required: 'Parent Level is required' }}
                 render={({ field }) => (
                   <Select
                     {...field}
                     labelId="parent-level-label"
-                    label="Parent Level"
+                    label={level === 2 ? 'Parent Level 1' : 'Parent Level 2'}
                     value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value as string) : null)}
                   >
-                    {parentOptionsData.map((lvl2: IWBSLevel2) => ( // Map data to MenuItem
-                      <MenuItem key={lvl2.value} value={lvl2.value}>
-                        {lvl2.label}
+                    {parentOptionsData.map((option) => (
+                      <MenuItem key={option.id} value={option.id}>
+                        {option.label}
                       </MenuItem>
                     ))}
                   </Select>
                 )}
               />
-              {errors.parentValue && (
+              {errors.parentId && (
                 <Typography color="error" variant="caption">
-                  {errors.parentValue.message as string}
+                  {errors.parentId.message as string}
                 </Typography>
               )}
             </FormControl>

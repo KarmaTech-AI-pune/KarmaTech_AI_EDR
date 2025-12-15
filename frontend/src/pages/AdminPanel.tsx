@@ -29,7 +29,7 @@ import TenantUsersManagement from '../components/adminpanel/TenantUsersManagemen
 import SubscriptionManagement from '../components/adminpanel/SubscriptionManagement';
 import BillingManagement from '../components/adminpanel/BillingManagement';
 import SystemSettings from '../components/adminpanel/SystemSettings';
-import GeneralSettings from './GeneralSettings';
+import GeneralSettings from '../features/generalSettings/pages/GeneralSettings';
 import MigrationManagement from '../pages/MigrationManagement'; // Import the new component
 
 const DRAWER_WIDTH = 280;

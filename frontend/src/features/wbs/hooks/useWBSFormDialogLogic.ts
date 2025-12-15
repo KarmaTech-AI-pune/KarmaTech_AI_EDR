@@ -1,7 +1,6 @@
 import { useEffect, useCallback, useMemo } from 'react';
 import { useForm, Control, UseFormHandleSubmit, FieldErrors } from 'react-hook-form';
-import { IWBSFormInputs, IWBSItem, IWBSData, IWBSLevel2, IWBSLevel3 } from '../types/wbs';
-// Removed MenuItem import as it will no longer generate JSX directly in the hook
+import { IWBSFormInputs, IWBSItem, IWBSData, IWBSLevel1, IWBSLevel2, IWBSLevel3 } from '../types/wbs';
 
 interface UseWBSFormDialogLogicProps {
   isOpen: boolean;
@@ -10,13 +9,14 @@ interface UseWBSFormDialogLogicProps {
   allLevelsData: IWBSData;
   onSubmit: (data: IWBSFormInputs) => void;
   onClose: () => void;
+  preSelectedParentId?: string | null;
 }
 
 interface UseWBSFormDialogLogicReturn {
   control: Control<IWBSFormInputs>;
   handleSubmit: UseFormHandleSubmit<IWBSFormInputs>;
   errors: FieldErrors<IWBSFormInputs>;
-  parentOptionsData: IWBSLevel2[]; // Changed to return data, not JSX
+  parentOptionsData: Array<IWBSLevel1 | IWBSLevel2>; // Can be Level 1 or Level 2 depending on context
   onFormSubmit: (data: IWBSFormInputs) => void;
   dialogButtonText: string;
 }
@@ -28,6 +28,7 @@ export const useWBSFormDialogLogic = ({
   allLevelsData,
   onSubmit,
   onClose,
+  preSelectedParentId,
 }: UseWBSFormDialogLogicProps): UseWBSFormDialogLogicReturn => {
   const {
     control,
@@ -37,30 +38,48 @@ export const useWBSFormDialogLogic = ({
   } = useForm<IWBSFormInputs>({
     defaultValues: {
       label: '',
-      parentValue: null,
+      parentId: null,
     },
   });
 
   useEffect(() => {
     if (isOpen) {
+      let parentIdValue = null;
+      
+      if (initialData) {
+        // Editing mode: use existing parent ID
+        if (initialData.level === 2) {
+          parentIdValue = (initialData as IWBSLevel2).parentId;
+        } else if (initialData.level === 3) {
+          parentIdValue = (initialData as IWBSLevel3).parentId;
+        }
+      } else if (preSelectedParentId) {
+        // Adding mode with preselected parent: use preSelectedParentId
+        parentIdValue = parseInt(preSelectedParentId);
+      }
+      
       reset({
         label: initialData ? initialData.label : '',
-        parentValue: initialData && initialData.level === 3 ? (initialData as IWBSLevel3).parentValue : null,
+        parentId: parentIdValue,
       });
     }
-  }, [isOpen, initialData, reset]);
+  }, [isOpen, initialData, preSelectedParentId, reset]);
 
   const onFormSubmit = useCallback((data: IWBSFormInputs) => {
     onSubmit(data);
     onClose();
   }, [onSubmit, onClose]);
 
-  const parentOptionsData = useMemo((): IWBSLevel2[] => { // Now returns array of IWBSLevel2
-    if (level === 3) {
-      return allLevelsData.level2; // Return the raw data
+  const parentOptionsData = useMemo((): Array<IWBSLevel1 | IWBSLevel2> => {
+    if (level === 2) {
+      // For Level 2, show Level 1 options as parents
+      return allLevelsData.level1;
+    } else if (level === 3) {
+      // For Level 3, show Level 2 options as parents
+      return allLevelsData.level2;
     }
     return [];
-  }, [level, allLevelsData.level2]);
+  }, [level, allLevelsData.level1, allLevelsData.level2]);
 
   const dialogButtonText = initialData ? 'Update' : 'Add';
 
@@ -68,7 +87,7 @@ export const useWBSFormDialogLogic = ({
     control,
     handleSubmit,
     errors,
-    parentOptionsData, // Return the raw data
+    parentOptionsData,
     onFormSubmit,
     dialogButtonText,
   };

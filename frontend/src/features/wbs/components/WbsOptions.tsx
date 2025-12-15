@@ -1,10 +1,15 @@
 
 import { Box, CircularProgress, Alert } from '@mui/material';
-import WBSLevelTable from './WBSLevelTable';
+import { WBSHierarchyTable } from '../../generalSettings/components/WBSHierarchyTable';
 import WBSFormDialog from './WBSFormDialog';
 import ConfirmationDialog from './ConfirmationDialog';
-import { useWbsOptionsLogic } from '../hooks/useWbsOptionsLogic'; // Import the custom hook
+import { useWbsOptionsLogic } from '../hooks/useWbsOptionsLogic';
+import { useExpansionState } from '../hooks/useExpansionState';
 
+/**
+ * Smart container component that manages WBS options data and state
+ * Delegates rendering to presentational components
+ */
 const WbsOptions = () => {
   const {
     wbsData,
@@ -14,17 +19,26 @@ const WbsOptions = () => {
     isConfirmationDialogOpen,
     currentEditingItem,
     currentLevelForForm,
+    preSelectedParentId,
     handleOpenAddDialog,
+    handleAddLevel2,
+    handleAddLevel3,
     handleOpenEditDialog,
     handleOpenDeleteDialog,
     handleCloseFormDialog,
     handleCloseConfirmationDialog,
     handleFormSubmit,
     handleConfirmDelete,
-    flattenedLevel3Data,
     formDialogTitle,
     confirmationDialogMessage,
   } = useWbsOptionsLogic();
+
+  const {
+    expandedLevel1,
+    expandedLevel2,
+    toggleLevel1,
+    toggleLevel2,
+  } = useExpansionState();
 
   if (isLoading) {
     return (
@@ -44,32 +58,17 @@ const WbsOptions = () => {
 
   return (
     <Box>
-      <WBSLevelTable
-        title="Level-1 Description"
-        items={wbsData.level1}
-        level={1}
+      <WBSHierarchyTable
+        level1Items={wbsData.level1}
+        expandedLevel1Ids={expandedLevel1}
+        expandedLevel2Ids={expandedLevel2}
+        onToggleLevel1={toggleLevel1}
+        onToggleLevel2={toggleLevel2}
         onAddItem={handleOpenAddDialog}
         onEditItem={handleOpenEditDialog}
         onDeleteItem={handleOpenDeleteDialog}
-        allLevelsData={wbsData}
-      />
-      <WBSLevelTable
-        title="Level-2 Description"
-        items={wbsData.level2}
-        level={2}
-        onAddItem={handleOpenAddDialog}
-        onEditItem={handleOpenEditDialog}
-        onDeleteItem={handleOpenDeleteDialog}
-        allLevelsData={wbsData}
-      />
-      <WBSLevelTable
-        title="Level-3 Description"
-        items={flattenedLevel3Data}
-        level={3}
-        onAddItem={handleOpenAddDialog}
-        onEditItem={handleOpenEditDialog}
-        onDeleteItem={handleOpenDeleteDialog}
-        allLevelsData={wbsData}
+        onAddLevel2={handleAddLevel2}
+        onAddLevel3={handleAddLevel3}
       />
 
       <WBSFormDialog
@@ -80,6 +79,7 @@ const WbsOptions = () => {
         level={currentLevelForForm!}
         allLevelsData={wbsData}
         dialogTitle={formDialogTitle}
+        preSelectedParentId={preSelectedParentId}
       />
 
       <ConfirmationDialog
