@@ -2,6 +2,11 @@
 inclusion: always
 ---
 
+---
+inclusion: fileMatch
+fileMatchPattern: '**/src/**|**/backend/**|**/frontend/**|**/Components/**'
+---
+
 # EDR Architecture Patterns for AI-DLC Implementation
 
 ## System Architecture Overview

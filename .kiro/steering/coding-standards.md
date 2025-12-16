@@ -2,6 +2,11 @@
 inclusion: always
 ---
 
+---
+inclusion: fileMatch
+fileMatchPattern: '**/*.cs|**/*.ts|**/*.tsx|**/*.js|**/*.jsx'
+---
+
 # EDR Coding Standards for AI-DLC Implementation
 
 ## General Principles

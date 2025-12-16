@@ -1,3 +1,7 @@
+---
+inclusion: manual
+---
+
 # 🎯 AI-DLC 7-Step Workflow with GitHub Automation
 
 **Updated:** December 2024  

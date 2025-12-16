@@ -2,6 +2,11 @@
 inclusion: always
 ---
 
+---
+inclusion: fileMatch
+fileMatchPattern: '**/*.sql|**/Entities/**|**/Models/**|**/Migrations/**|**/DbContext/**'
+---
+
 # EDR Database Schema Patterns for AI-DLC Implementation
 
 ## Database Overview

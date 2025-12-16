@@ -2,6 +2,10 @@
 inclusion: always
 ---
 
+---
+inclusion: manual
+---
+
 # Complete AI-DLC Implementation Guide for EDR
 
 ## Overview

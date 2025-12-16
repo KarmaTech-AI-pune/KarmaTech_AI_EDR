@@ -2,6 +2,11 @@
 inclusion: always
 ---
 
+---
+inclusion: fileMatch
+fileMatchPattern: '**/*test*|**/*spec*|**/Tests/**|**/test/**|**/*.test.*|**/*.spec.*'
+---
+
 # Testing Resilience Rules for AI-DLC Step 5
 
 ## Core Principle
