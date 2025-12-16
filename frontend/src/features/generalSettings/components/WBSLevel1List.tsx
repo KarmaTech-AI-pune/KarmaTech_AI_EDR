@@ -1,6 +1,6 @@
 import React from 'react';
 import { TableRow, TableCell, Typography } from '@mui/material';
-import { WBSItemRow } from './WBSItemRow';
+import { WBSItemRow } from './WBSRowItem';
 import { WBSLevel2List } from './WBSLevel2List';
 import { CollapsibleTableRow } from '../common/CollapsibleTableRow';
 import { IWBSLevel1, IWBSItem } from '../../wbs/types/wbs';

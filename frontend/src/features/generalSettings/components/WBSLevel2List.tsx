@@ -1,5 +1,5 @@
 import React from 'react';
-import { WBSItemRow } from './WBSItemRow';
+import { WBSItemRow } from './WBSRowItem';
 import { WBSLevel3List } from './WBSLevel3List';
 import { CollapsibleTableRow } from '../common/CollapsibleTableRow';
 import { IWBSLevel2, IWBSItem } from '../../wbs/types/wbs';

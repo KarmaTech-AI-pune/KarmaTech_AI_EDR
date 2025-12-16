@@ -1,5 +1,5 @@
 import React from 'react';
-import { WBSItemRow } from './WBSItemRow';
+import { WBSItemRow } from './WBSRowItem';
 import { IWBSLevel3, IWBSItem } from '../../wbs/types/wbs';
 
 interface WBSLevel3ListProps {
