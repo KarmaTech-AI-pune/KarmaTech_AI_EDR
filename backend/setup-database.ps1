@@ -12,7 +12,7 @@ dotnet ef database drop --context ProjectManagementContext --project src/NJS.Dom
 
 # Add new migration
 Write-Host "Adding new migration..."
-dotnet ef migrations add kiro-deploy_dev --context ProjectManagementContext --project src/NJS.Domain --startup-project src/NJSAPI
+dotnet ef migrations add proper-migration --context ProjectManagementContext --project src/NJS.Domain --startup-project src/NJSAPI
 
 # Update database with verbose logging
 Write-Host "Updating database..."

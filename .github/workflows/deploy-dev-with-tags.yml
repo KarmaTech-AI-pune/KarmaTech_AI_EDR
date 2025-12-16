@@ -90,21 +90,76 @@ jobs:
           echo "Determined environment: $ENVIRONMENT"
           echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
 
-      - name: Make version tagging script executable
-        run: chmod +x .github/scripts/create-version-tag.sh
+      - name: Setup Node.js for version calculation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Make version scripts executable
+        run: |
+          chmod +x .github/scripts/create-version-tag.sh
+          chmod +x .github/scripts/version-calculator.js
+
+      - name: Calculate Version from Conventional Commits
+        id: calc-version
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          echo "🔍 Analyzing conventional commits for version calculation..."
+          
+          # Use our new version calculator to determine version increment
+          node .github/scripts/version-calculator.js --base origin/Kiro/dev --head HEAD --dry-run
+          
+          # If manual override is provided, use it; otherwise use calculated increment
+          if [ -n "${{ github.event.inputs.version-bump }}" ]; then
+            VERSION_INCREMENT="${{ github.event.inputs.version-bump }}"
+            echo "🔧 Using manual override: $VERSION_INCREMENT"
+          else
+            # The increment type is set in GITHUB_OUTPUT by the version calculator
+            echo "🤖 Using calculated increment from conventional commits"
+          fi
 
       - name: Create Version Tag
         id: version-tag
         env:
           BRANCH_NAME: ${{ github.ref_name }}
-          VERSION_INCREMENT: ${{ github.event.inputs.version-bump || 'patch' }}
+          VERSION_INCREMENT: ${{ steps.calc-version.outputs.increment_type || github.event.inputs.version-bump || 'patch' }}
           COMMIT_SHA: ${{ github.sha }}
         run: |
-          echo "Running version tagging script..."
+          echo "Running version tagging script with increment: $VERSION_INCREMENT"
           .github/scripts/create-version-tag.sh
           
           echo ""
           echo "✅ Version tag created successfully"
+
+      - name: Update Version Files
+        env:
+          VERSION_TAG: ${{ steps.version-tag.outputs.version_tag }}
+          VERSION: ${{ steps.version-tag.outputs.version }}
+        run: |
+          echo "📁 Updating version files with: $VERSION"
+          
+          # Update VERSION file
+          echo "$VERSION" > VERSION
+          
+          # Update frontend package.json
+          if [ -f "frontend/package.json" ]; then
+            node -e "
+              const fs = require('fs');
+              const pkg = JSON.parse(fs.readFileSync('frontend/package.json', 'utf8'));
+              pkg.version = '$VERSION';
+              fs.writeFileSync('frontend/package.json', JSON.stringify(pkg, null, 2) + '\n');
+              console.log('✅ Updated frontend/package.json to version $VERSION');
+            "
+          fi
+          
+          # Commit version file updates
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add VERSION frontend/package.json
+          git commit -m "chore: update version files to $VERSION [skip ci]" || echo "No changes to commit"
+          git push origin HEAD || echo "No changes to push"
 
       - name: Log Version Information
         run: |

@@ -17,6 +17,7 @@ import { projectManagementAppContextType, Credentials } from '../types';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { OTPVerification } from '../components/OTPVerification';
 import UserSubscriptionContext from '../context/UserSubscriptionContext'; // Import UserSubscriptionContext
+import { VersionDisplay } from '../components/VersionDisplay';
 
 export const LoginScreen: React.FC = () => {
     const [email, setUsername] = useState('');
@@ -136,15 +137,15 @@ export const LoginScreen: React.FC = () => {
                 >
                     KarmaTech-AI EDR(Enterprise Digital Runner)
                 </Typography>
-                <Typography
+                <VersionDisplay
                     variant="h6"
                     color="text.secondary"
                     sx={{
                         mb: 1,
                     }}
-                >
-                    Version 1.11.11
-                </Typography>
+                    showBuildDate={true}
+                    showDevIndicator={true}
+                />
             </Container>
 
             <Card
