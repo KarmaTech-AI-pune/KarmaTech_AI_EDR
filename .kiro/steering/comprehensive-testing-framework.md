@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: fileMatch
+fileMatchPattern: '**/*test*|**/*spec*|**/Tests/**|**/test/**|**/*.test.*|**/*.spec.*'
 ---
 
 # Comprehensive Testing Framework for AI-DLC Step 5

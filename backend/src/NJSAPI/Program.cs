@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Reflection;
 using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
 using NJSAPI.Extensions;
@@ -121,6 +122,12 @@ internal class Program
         // Configure the app
         var app = builder.Build();
 
+        // Log version information at startup
+        LogVersionInformation(app);
+        
+        // Log deployment start event
+        LogDeploymentStart(app);
+
         // Use CORS before other middleware
         app.UseCors("AllowSpecificOrigin");
 
@@ -135,6 +142,9 @@ internal class Program
         app.UseResponseCompression();
         app.UseHttpsRedirection();
 
+        // Add version context to all requests and responses
+        app.UseVersionContext();
+        
         app.UseMiddleware<TenantResolverMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
@@ -162,6 +172,156 @@ internal class Program
         app.MapFallbackToFile("index.html");
 
         app.Run();
+    }
+
+    /// <summary>
+    /// Logs version information at application startup
+    /// </summary>
+    private static void LogVersionInformation(WebApplication app)
+    {
+        try
+        {
+            var logger = app.Services.GetRequiredService<ILogger<Program>>();
+            var configuration = app.Services.GetRequiredService<IConfiguration>();
+            
+            // Get version information
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var version = assembly.GetName().Version?.ToString() ?? "unknown";
+            var informationalVersion = assembly.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? version;
+            
+            // Try to read version from VERSION file
+            var versionFromFile = ReadVersionFromFile();
+            if (!string.IsNullOrEmpty(versionFromFile))
+            {
+                version = versionFromFile;
+                informationalVersion = versionFromFile;
+            }
+
+            // Get build information
+            var buildDate = GetBuildDate(configuration);
+            var commitHash = configuration["Build:CommitHash"] ?? 
+                           Environment.GetEnvironmentVariable("BUILD_COMMIT_HASH") ?? 
+                           "unknown";
+            var environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? "unknown";
+
+            // Log startup information with version context
+            logger.LogInformation("=== KarmaTech AI EDR API Starting ===");
+            logger.LogInformation("Version: {Version}", informationalVersion);
+            logger.LogInformation("Assembly Version: {AssemblyVersion}", version);
+            logger.LogInformation("Build Date: {BuildDate}", buildDate);
+            logger.LogInformation("Commit Hash: {CommitHash}", commitHash);
+            logger.LogInformation("Environment: {Environment}", environment);
+            logger.LogInformation("Framework: {Framework}", System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription);
+            logger.LogInformation("OS: {OS}", System.Runtime.InteropServices.RuntimeInformation.OSDescription);
+            logger.LogInformation("Machine: {Machine}", Environment.MachineName);
+            logger.LogInformation("=== Startup Complete ===");
+        }
+        catch (Exception ex)
+        {
+            // Use console as fallback if logging isn't available yet
+            Console.WriteLine($"Error logging version information: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Reads version from VERSION file in repository root
+    /// </summary>
+    private static string? ReadVersionFromFile()
+    {
+        try
+        {
+            var possiblePaths = new[]
+            {
+                Path.Combine(Directory.GetCurrentDirectory(), "VERSION"),
+                Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "VERSION"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VERSION"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "VERSION")
+            };
+
+            foreach (var path in possiblePaths)
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    var content = System.IO.File.ReadAllText(path).Trim();
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        return content;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Ignore errors when reading version file
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Gets build date from configuration or file system
+    /// </summary>
+    private static DateTime GetBuildDate(IConfiguration configuration)
+    {
+        try
+        {
+            // Try to get build date from configuration
+            var buildDateString = configuration["Build:Date"] ?? 
+                                Environment.GetEnvironmentVariable("BUILD_DATE");
+            
+            if (DateTime.TryParse(buildDateString, out var configDate))
+            {
+                return configDate;
+            }
+
+            // Fallback to assembly creation time
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var location = assembly.Location;
+            if (!string.IsNullOrEmpty(location) && System.IO.File.Exists(location))
+            {
+                return System.IO.File.GetCreationTimeUtc(location);
+            }
+        }
+        catch
+        {
+            // Ignore errors
+        }
+
+        return DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Logs deployment start event
+    /// </summary>
+    private static void LogDeploymentStart(WebApplication app)
+    {
+        try
+        {
+            var logger = app.Services.GetRequiredService<ILogger<Program>>();
+            var configuration = app.Services.GetRequiredService<IConfiguration>();
+            
+            var version = ReadVersionFromFile() ?? "unknown";
+            var environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? "unknown";
+            var commitHash = configuration["Build:CommitHash"] ?? 
+                           Environment.GetEnvironmentVariable("BUILD_COMMIT_HASH") ?? 
+                           "unknown";
+
+            using var scope = logger.BeginScope(new Dictionary<string, object>
+            {
+                ["DeploymentVersion"] = version,
+                ["Environment"] = environment,
+                ["CommitHash"] = commitHash,
+                ["EventType"] = "ApplicationStart"
+            });
+
+            logger.LogInformation(
+                "🚀 APPLICATION STARTED - Version: {Version}, Environment: {Environment}, Commit: {CommitHash}",
+                version, environment, commitHash);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error logging deployment start: {ex.Message}");
+        }
     }
 }
 

@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: fileMatch
+fileMatchPattern: '**/Controllers/**|**/API/**|**/*Controller.cs|**/*Api.ts'
 ---
 
 # EDR API Documentation Patterns for AI-DLC Implementation
