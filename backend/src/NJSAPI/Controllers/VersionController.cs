@@ -113,61 +113,109 @@ namespace NJSAPI.Controllers
             try
             {
                 var versionInfo = GetVersionInfo();
+                var uptime = GetUptime();
+                var environment = _configuration["ASPNETCORE_ENVIRONMENT"] ?? "unknown";
                 
-                return Ok(new
+                // Log health check with version context
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    ["Version"] = versionInfo.Version,
+                    ["CommitHash"] = versionInfo.CommitHash,
+                    ["Environment"] = environment,
+                    ["EventType"] = "HealthCheck"
+                });
+
+                _logger.LogInformation(
+                    "🏥 HEALTH CHECK - Version: {Version}, Environment: {Environment}, Uptime: {Uptime}",
+                    versionInfo.Version, environment, uptime);
+                
+                var healthStatus = new
                 {
                     status = "healthy",
                     version = versionInfo.Version,
-                    uptime = GetUptime(),
+                    commitHash = versionInfo.CommitHash,
+                    buildDate = versionInfo.BuildDate,
+                    environment = environment,
+                    uptime = uptime,
                     timestamp = DateTime.UtcNow,
                     checks = new
                     {
-                        database = "healthy", // This could be expanded to actual DB health check
-                        memory = "healthy",
-                        disk = "healthy"
+                        api = "healthy",
+                        memory = GetMemoryStatus(),
+                        disk = GetDiskStatus(),
+                        version_file = CheckVersionFile()
                     }
-                });
+                };
+
+                return Ok(healthStatus);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Health check failed");
+                _logger.LogError(ex, 
+                    "❌ HEALTH CHECK FAILED - Error: {ErrorMessage}", 
+                    ex.Message);
+                    
                 return StatusCode(503, new
                 {
                     status = "unhealthy",
                     error = ex.Message,
+                    version = GetVersionInfo().Version,
                     timestamp = DateTime.UtcNow
                 });
             }
         }
 
         /// <summary>
-        /// Get version history from git tags (if available)
+        /// Get version history from version-history.json file
         /// </summary>
-        /// <returns>List of recent versions</returns>
+        /// <param name="limit">Maximum number of versions to return (default: 10)</param>
+        /// <returns>List of recent versions with release notes</returns>
         [HttpGet("history")]
-        public IActionResult GetVersionHistory()
+        public IActionResult GetVersionHistory([FromQuery] int limit = 10)
         {
             try
             {
-                // This would typically read from git tags or a version history file
-                // For now, return current version as single entry
-                var currentVersion = GetVersionInfo();
+                var versionHistory = GetVersionHistoryFromFile(limit);
                 
-                var history = new[]
+                if (versionHistory == null || !versionHistory.Any())
                 {
-                    new
+                    // Fallback to current version if no history file exists
+                    var currentVersion = GetVersionInfo();
+                    var fallbackHistory = new[]
                     {
-                        version = currentVersion.Version,
-                        releaseDate = currentVersion.BuildDate,
-                        isCurrent = true,
-                        releaseNotes = "Current version"
-                    }
-                };
+                        new
+                        {
+                            version = currentVersion.Version,
+                            tag = $"v{currentVersion.Version}",
+                            releaseDate = currentVersion.BuildDate,
+                            commitHash = currentVersion.CommitHash,
+                            author = "System",
+                            isCurrent = true,
+                            releaseNotes = new
+                            {
+                                features = new object[0],
+                                bugFixes = new object[0],
+                                breakingChanges = new object[0],
+                                other = new object[0],
+                                totalCommits = 0
+                            }
+                        }
+                    };
+
+                    return Ok(new
+                    {
+                        success = true,
+                        data = fallbackHistory,
+                        totalVersions = 1,
+                        timestamp = DateTime.UtcNow
+                    });
+                }
 
                 return Ok(new
                 {
                     success = true,
-                    data = history,
+                    data = versionHistory,
+                    totalVersions = versionHistory.Count(),
                     timestamp = DateTime.UtcNow
                 });
             }
@@ -178,6 +226,170 @@ namespace NJSAPI.Controllers
                 {
                     success = false,
                     message = "Error retrieving version history",
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+
+        /// <summary>
+        /// Get release notes for a specific version
+        /// </summary>
+        /// <param name="version">Version number (e.g., "1.2.0")</param>
+        /// <returns>Detailed release notes for the specified version</returns>
+        [HttpGet("release-notes/{version}")]
+        public IActionResult GetReleaseNotes(string version)
+        {
+            try
+            {
+                var versionHistory = GetVersionHistoryFromFile();
+                var versionInfo = versionHistory?.FirstOrDefault(v => 
+                    v.GetProperty("version").GetString() == version);
+
+                if (versionInfo == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = $"Version {version} not found",
+                        timestamp = DateTime.UtcNow
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    data = versionInfo,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving release notes for version {Version}", version);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error retrieving release notes",
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+
+        /// <summary>
+        /// Get latest release notes
+        /// </summary>
+        /// <returns>Release notes for the current/latest version</returns>
+        [HttpGet("release-notes/latest")]
+        public IActionResult GetLatestReleaseNotes()
+        {
+            try
+            {
+                var versionHistory = GetVersionHistoryFromFile(1);
+                var latestVersion = versionHistory?.FirstOrDefault();
+
+                if (latestVersion == null)
+                {
+                    var currentVersion = GetVersionInfo();
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new
+                        {
+                            version = currentVersion.Version,
+                            tag = $"v{currentVersion.Version}",
+                            releaseDate = currentVersion.BuildDate,
+                            commitHash = currentVersion.CommitHash,
+                            releaseNotes = new
+                            {
+                                features = new object[0],
+                                bugFixes = new object[0],
+                                breakingChanges = new object[0],
+                                other = new object[0],
+                                totalCommits = 0
+                            }
+                        },
+                        timestamp = DateTime.UtcNow
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    data = latestVersion,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving latest release notes");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error retrieving latest release notes",
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+
+        /// <summary>
+        /// Log deployment event (for use by deployment scripts)
+        /// </summary>
+        /// <param name="request">Deployment event details</param>
+        /// <returns>Success confirmation</returns>
+        [HttpPost("deployment")]
+        public IActionResult LogDeploymentEvent([FromBody] DeploymentEventRequest request)
+        {
+            try
+            {
+                var currentVersion = GetVersionInfo();
+                var environment = _configuration["ASPNETCORE_ENVIRONMENT"] ?? "unknown";
+
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    ["DeploymentVersion"] = request.Version ?? currentVersion.Version,
+                    ["Environment"] = request.Environment ?? environment,
+                    ["EventType"] = request.EventType,
+                    ["CommitHash"] = request.CommitHash ?? currentVersion.CommitHash
+                });
+
+                switch (request.EventType?.ToLowerInvariant())
+                {
+                    case "start":
+                        _logger.LogInformation(
+                            "🚀 DEPLOYMENT STARTED - Version: {Version}, Environment: {Environment}, Commit: {CommitHash}",
+                            request.Version, request.Environment, request.CommitHash);
+                        break;
+                    case "success":
+                        _logger.LogInformation(
+                            "✅ DEPLOYMENT SUCCESSFUL - Version: {Version}, Environment: {Environment}, Duration: {Duration}s",
+                            request.Version, request.Environment, request.Duration ?? 0);
+                        break;
+                    case "failure":
+                        _logger.LogError(
+                            "❌ DEPLOYMENT FAILED - Version: {Version}, Environment: {Environment}, Error: {Error}",
+                            request.Version, request.Environment, request.Error ?? "Unknown error");
+                        break;
+                    default:
+                        _logger.LogInformation(
+                            "📝 DEPLOYMENT EVENT - Type: {EventType}, Version: {Version}, Environment: {Environment}",
+                            request.EventType, request.Version, request.Environment);
+                        break;
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Deployment event logged successfully",
+                    version = currentVersion.Version,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error logging deployment event");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error logging deployment event",
                     timestamp = DateTime.UtcNow
                 });
             }
@@ -228,9 +440,9 @@ namespace NJSAPI.Controllers
 
                 foreach (var path in possiblePaths)
                 {
-                    if (File.Exists(path))
+                    if (System.IO.File.Exists(path))
                     {
-                        var content = File.ReadAllText(path).Trim();
+                        var content = System.IO.File.ReadAllText(path).Trim();
                         if (!string.IsNullOrEmpty(content))
                         {
                             _logger.LogDebug("Version read from file: {Path} -> {Version}", path, content);
@@ -262,9 +474,9 @@ namespace NJSAPI.Controllers
 
                 // Fallback to assembly creation time (approximate)
                 var location = assembly.Location;
-                if (!string.IsNullOrEmpty(location) && File.Exists(location))
+                if (!string.IsNullOrEmpty(location) && System.IO.File.Exists(location))
                 {
-                    return File.GetCreationTimeUtc(location);
+                    return System.IO.File.GetCreationTimeUtc(location);
                 }
             }
             catch (Exception ex)
@@ -293,6 +505,85 @@ namespace NJSAPI.Controllers
             var uptime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime();
             return $"{uptime.Days}d {uptime.Hours}h {uptime.Minutes}m {uptime.Seconds}s";
         }
+
+        private string GetMemoryStatus()
+        {
+            try
+            {
+                var workingSet = Environment.WorkingSet;
+                var workingSetMB = workingSet / (1024 * 1024);
+                return workingSetMB < 1000 ? "healthy" : "warning"; // Warning if over 1GB
+            }
+            catch
+            {
+                return "unknown";
+            }
+        }
+
+        private string GetDiskStatus()
+        {
+            try
+            {
+                var currentDirectory = Directory.GetCurrentDirectory();
+                var drive = new DriveInfo(Path.GetPathRoot(currentDirectory) ?? "C:");
+                var freeSpaceGB = drive.AvailableFreeSpace / (1024 * 1024 * 1024);
+                return freeSpaceGB > 1 ? "healthy" : "warning"; // Warning if less than 1GB free
+            }
+            catch
+            {
+                return "unknown";
+            }
+        }
+
+        private string CheckVersionFile()
+        {
+            try
+            {
+                var versionFromFile = ReadVersionFromFile();
+                return !string.IsNullOrEmpty(versionFromFile) ? "healthy" : "missing";
+            }
+            catch
+            {
+                return "error";
+            }
+        }
+
+        private IEnumerable<JsonElement>? GetVersionHistoryFromFile(int limit = 50)
+        {
+            try
+            {
+                // Look for version-history.json file in various locations
+                var possiblePaths = new[]
+                {
+                    Path.Combine(Directory.GetCurrentDirectory(), "version-history.json"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "version-history.json"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "version-history.json")
+                };
+
+                foreach (var path in possiblePaths)
+                {
+                    if (System.IO.File.Exists(path))
+                    {
+                        var content = System.IO.File.ReadAllText(path);
+                        var historyData = JsonSerializer.Deserialize<JsonElement>(content);
+                        
+                        if (historyData.TryGetProperty("versions", out var versionsElement) && 
+                            versionsElement.ValueKind == JsonValueKind.Array)
+                        {
+                            var versions = versionsElement.EnumerateArray().Take(limit);
+                            _logger.LogDebug("Version history read from file: {Path} -> {Count} versions", path, versions.Count());
+                            return versions;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not read version history from file");
+            }
+
+            return null;
+        }
     }
 
     /// <summary>
@@ -306,5 +597,18 @@ namespace NJSAPI.Controllers
         public string AssemblyVersion { get; set; } = string.Empty;
         public string FileVersion { get; set; } = string.Empty;
         public string ProductVersion { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Deployment event request model
+    /// </summary>
+    public class DeploymentEventRequest
+    {
+        public string? EventType { get; set; } // start, success, failure
+        public string? Version { get; set; }
+        public string? Environment { get; set; }
+        public string? CommitHash { get; set; }
+        public double? Duration { get; set; } // in seconds
+        public string? Error { get; set; }
     }
 }

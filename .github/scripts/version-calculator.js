@@ -48,18 +48,68 @@ class VersionCalculator {
      * Get commits from a PR or commit range
      * @param {string} base - Base branch (e.g., 'Kiro/dev')
      * @param {string} head - Head branch or commit
-     * @returns {Array} Array of commit messages
+     * @returns {Array} Array of commit objects with detailed information
      */
     getCommits(base = 'Kiro/dev', head = 'HEAD') {
         try {
             const gitLog = execSync(
-                `git log ${base}..${head} --pretty=format:"%s"`,
+                `git log ${base}..${head} --pretty=format:"%H|%s|%an|%ae|%ad|%B" --date=iso`,
                 { encoding: 'utf8' }
             );
             
-            return gitLog.split('\n').filter(line => line.trim());
+            const commits = gitLog.split('\n').filter(line => line.trim()).map(line => {
+                const parts = line.split('|');
+                if (parts.length >= 5) {
+                    return {
+                        hash: parts[0],
+                        subject: parts[1],
+                        author: parts[2],
+                        email: parts[3],
+                        date: parts[4],
+                        body: parts[5] || ''
+                    };
+                }
+                return null;
+            }).filter(commit => commit !== null);
+            
+            return commits;
         } catch (error) {
             console.error('Error getting commits:', error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Get commits between two versions
+     * @param {string} fromVersion - Starting version tag (e.g., 'v1.0.0')
+     * @param {string} toVersion - Ending version tag (e.g., 'v1.1.0') or 'HEAD'
+     * @returns {Array} Array of commit objects
+     */
+    getCommitsBetweenVersions(fromVersion, toVersion = 'HEAD') {
+        try {
+            const gitLog = execSync(
+                `git log ${fromVersion}..${toVersion} --pretty=format:"%H|%s|%an|%ae|%ad|%B" --date=iso`,
+                { encoding: 'utf8' }
+            );
+            
+            const commits = gitLog.split('\n').filter(line => line.trim()).map(line => {
+                const parts = line.split('|');
+                if (parts.length >= 5) {
+                    return {
+                        hash: parts[0],
+                        subject: parts[1],
+                        author: parts[2],
+                        email: parts[3],
+                        date: parts[4],
+                        body: parts[5] || ''
+                    };
+                }
+                return null;
+            }).filter(commit => commit !== null);
+            
+            return commits;
+        } catch (error) {
+            console.error('Error getting commits between versions:', error.message);
             return [];
         }
     }
@@ -118,7 +168,7 @@ class VersionCalculator {
 
     /**
      * Calculate version increment based on commit types
-     * @param {Array} commits - Array of commit messages
+     * @param {Array} commits - Array of commit objects or messages
      * @returns {string} Version increment type: 'major', 'minor', or 'patch'
      */
     calculateIncrement(commits) {
@@ -127,7 +177,8 @@ class VersionCalculator {
         let hasBreaking = false;
 
         for (const commit of commits) {
-            const parsed = this.parseCommit(commit);
+            const message = typeof commit === 'string' ? commit : commit.subject;
+            const parsed = this.parseCommit(message);
             
             if (parsed.breaking) {
                 hasBreaking = true;
@@ -323,9 +374,9 @@ class VersionCalculator {
 
     /**
      * Generate release notes from commits
-     * @param {Array} commits - Array of commit messages
+     * @param {Array} commits - Array of commit objects
      * @param {Object} version - Version object
-     * @returns {string} Release notes content
+     * @returns {Object} Release notes object with structured data
      */
     generateReleaseNotes(commits, version) {
         const features = [];
@@ -334,50 +385,109 @@ class VersionCalculator {
         const other = [];
 
         for (const commit of commits) {
-            const parsed = this.parseCommit(commit);
+            const message = typeof commit === 'string' ? commit : commit.subject;
+            const parsed = this.parseCommit(message);
+            
+            const commitInfo = {
+                ...parsed,
+                hash: typeof commit === 'object' ? commit.hash : null,
+                author: typeof commit === 'object' ? commit.author : null,
+                email: typeof commit === 'object' ? commit.email : null,
+                date: typeof commit === 'object' ? commit.date : null,
+                body: typeof commit === 'object' ? commit.body : null
+            };
             
             if (parsed.breaking) {
-                breakingChanges.push(parsed);
+                breakingChanges.push(commitInfo);
             } else if (parsed.type === 'feat') {
-                features.push(parsed);
+                features.push(commitInfo);
             } else if (parsed.type === 'fix') {
-                bugFixes.push(parsed);
+                bugFixes.push(commitInfo);
             } else {
-                other.push(parsed);
+                other.push(commitInfo);
             }
         }
 
-        let releaseNotes = `# Release ${version.tagString}\n\n`;
-        releaseNotes += `**Release Date:** ${new Date().toISOString().split('T')[0]}\n\n`;
+        const releaseDate = new Date().toISOString();
+        
+        return {
+            version: version.versionString,
+            tag: version.tagString,
+            date: releaseDate,
+            features,
+            bugFixes,
+            breakingChanges,
+            other,
+            totalCommits: commits.length
+        };
+    }
 
-        if (breakingChanges.length > 0) {
+    /**
+     * Format release notes as markdown
+     * @param {Object} releaseNotesData - Structured release notes data
+     * @returns {string} Formatted markdown content
+     */
+    formatReleaseNotesAsMarkdown(releaseNotesData) {
+        let releaseNotes = `# Release ${releaseNotesData.tag}\n\n`;
+        releaseNotes += `**Release Date:** ${releaseNotesData.date.split('T')[0]}\n`;
+        releaseNotes += `**Total Commits:** ${releaseNotesData.totalCommits}\n\n`;
+
+        if (releaseNotesData.breakingChanges.length > 0) {
             releaseNotes += `## 🚨 Breaking Changes\n\n`;
-            breakingChanges.forEach(commit => {
-                releaseNotes += `- ${commit.description}\n`;
+            releaseNotesData.breakingChanges.forEach(commit => {
+                releaseNotes += `- ${commit.description}`;
+                if (commit.author) {
+                    releaseNotes += ` (${commit.author})`;
+                }
+                if (commit.hash) {
+                    releaseNotes += ` [${commit.hash.substring(0, 7)}]`;
+                }
+                releaseNotes += '\n';
             });
             releaseNotes += '\n';
         }
 
-        if (features.length > 0) {
+        if (releaseNotesData.features.length > 0) {
             releaseNotes += `## ✨ New Features\n\n`;
-            features.forEach(commit => {
-                releaseNotes += `- ${commit.description}\n`;
+            releaseNotesData.features.forEach(commit => {
+                releaseNotes += `- ${commit.description}`;
+                if (commit.author) {
+                    releaseNotes += ` (${commit.author})`;
+                }
+                if (commit.hash) {
+                    releaseNotes += ` [${commit.hash.substring(0, 7)}]`;
+                }
+                releaseNotes += '\n';
             });
             releaseNotes += '\n';
         }
 
-        if (bugFixes.length > 0) {
+        if (releaseNotesData.bugFixes.length > 0) {
             releaseNotes += `## 🐛 Bug Fixes\n\n`;
-            bugFixes.forEach(commit => {
-                releaseNotes += `- ${commit.description}\n`;
+            releaseNotesData.bugFixes.forEach(commit => {
+                releaseNotes += `- ${commit.description}`;
+                if (commit.author) {
+                    releaseNotes += ` (${commit.author})`;
+                }
+                if (commit.hash) {
+                    releaseNotes += ` [${commit.hash.substring(0, 7)}]`;
+                }
+                releaseNotes += '\n';
             });
             releaseNotes += '\n';
         }
 
-        if (other.length > 0) {
+        if (releaseNotesData.other.length > 0) {
             releaseNotes += `## 🔧 Other Changes\n\n`;
-            other.forEach(commit => {
-                releaseNotes += `- ${commit.description}\n`;
+            releaseNotesData.other.forEach(commit => {
+                releaseNotes += `- ${commit.description}`;
+                if (commit.author) {
+                    releaseNotes += ` (${commit.author})`;
+                }
+                if (commit.hash) {
+                    releaseNotes += ` [${commit.hash.substring(0, 7)}]`;
+                }
+                releaseNotes += '\n';
             });
             releaseNotes += '\n';
         }
@@ -386,11 +496,102 @@ class VersionCalculator {
     }
 
     /**
-     * Update CHANGELOG.md file
-     * @param {string} releaseNotes - Release notes content
+     * Get all version history from git tags
+     * @param {number} limit - Maximum number of versions to return
+     * @returns {Array} Array of version history objects
+     */
+    getVersionHistory(limit = 50) {
+        try {
+            const tags = execSync('git tag -l "v*" --sort=-version:refname', { encoding: 'utf8' });
+            const tagList = tags.split('\n').filter(tag => tag.trim()).slice(0, limit);
+            
+            const versionHistory = [];
+            
+            for (let i = 0; i < tagList.length; i++) {
+                const tag = tagList[i];
+                const versionMatch = tag.match(/^v(\d+)\.(\d+)\.(\d+)(?:-.*)?$/);
+                
+                if (!versionMatch) continue;
+                
+                try {
+                    // Get tag information
+                    const tagInfo = execSync(`git show ${tag} --format="%H|%an|%ae|%ad|%s" --no-patch --date=iso`, { encoding: 'utf8' }).trim();
+                    const [commitHash, author, email, date, subject] = tagInfo.split('|');
+                    
+                    // Get commits for this version (between this tag and the previous one)
+                    let commits = [];
+                    if (i < tagList.length - 1) {
+                        const previousTag = tagList[i + 1];
+                        commits = this.getCommitsBetweenVersions(previousTag, tag);
+                    } else {
+                        // For the first version, get all commits up to this tag
+                        try {
+                            commits = this.getCommitsBetweenVersions('', tag);
+                        } catch (error) {
+                            // If no previous commits, just use empty array
+                            commits = [];
+                        }
+                    }
+                    
+                    // Generate release notes for this version
+                    const releaseNotesData = this.generateReleaseNotes(commits, {
+                        versionString: `${versionMatch[1]}.${versionMatch[2]}.${versionMatch[3]}`,
+                        tagString: tag
+                    });
+                    
+                    versionHistory.push({
+                        version: `${versionMatch[1]}.${versionMatch[2]}.${versionMatch[3]}`,
+                        tag: tag,
+                        releaseDate: date,
+                        commitHash: commitHash,
+                        author: author,
+                        email: email,
+                        subject: subject,
+                        commits: commits,
+                        releaseNotes: releaseNotesData,
+                        isCurrent: i === 0
+                    });
+                } catch (error) {
+                    console.warn(`Warning: Could not get details for tag ${tag}:`, error.message);
+                }
+            }
+            
+            return versionHistory;
+        } catch (error) {
+            console.error('Error getting version history:', error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Save version history to JSON file
+     * @param {Array} versionHistory - Array of version history objects
      * @returns {boolean} Success status
      */
-    updateChangelog(releaseNotes) {
+    saveVersionHistoryToFile(versionHistory) {
+        try {
+            const historyPath = path.join(process.cwd(), 'version-history.json');
+            const historyData = {
+                lastUpdated: new Date().toISOString(),
+                totalVersions: versionHistory.length,
+                versions: versionHistory
+            };
+            
+            fs.writeFileSync(historyPath, JSON.stringify(historyData, null, 2));
+            console.log(`✅ Saved version history to version-history.json (${versionHistory.length} versions)`);
+            return true;
+        } catch (error) {
+            console.error(`❌ Failed to save version history: ${error.message}`);
+            return false;
+        }
+    }
+
+    /**
+     * Update CHANGELOG.md file
+     * @param {Object} releaseNotesData - Structured release notes data
+     * @returns {boolean} Success status
+     */
+    updateChangelog(releaseNotesData) {
         try {
             const changelogPath = path.join(process.cwd(), 'CHANGELOG.md');
             let existingContent = '';
@@ -401,11 +602,14 @@ class VersionCalculator {
                 existingContent = '# Changelog\n\nAll notable changes to this project will be documented in this file.\n\n';
             }
 
+            // Format release notes as markdown
+            const releaseNotesMarkdown = this.formatReleaseNotesAsMarkdown(releaseNotesData);
+
             // Insert new release notes after the header
             const lines = existingContent.split('\n');
             const headerEndIndex = lines.findIndex(line => line.startsWith('# ')) + 2;
             
-            lines.splice(headerEndIndex, 0, releaseNotes);
+            lines.splice(headerEndIndex, 0, releaseNotesMarkdown);
             
             fs.writeFileSync(changelogPath, lines.join('\n'));
             console.log('✅ Updated CHANGELOG.md');
@@ -440,9 +644,11 @@ class VersionCalculator {
 
         console.log(`📝 Found ${commits.length} commits:`);
         commits.forEach(commit => {
-            const parsed = this.parseCommit(commit);
+            const message = typeof commit === 'string' ? commit : commit.subject;
+            const parsed = this.parseCommit(message);
             const icon = parsed.breaking ? '🚨' : parsed.type === 'feat' ? '✨' : parsed.type === 'fix' ? '🐛' : '🔧';
-            console.log(`   ${icon} ${commit}`);
+            const author = typeof commit === 'object' && commit.author ? ` (${commit.author})` : '';
+            console.log(`   ${icon} ${message}${author}`);
         });
         console.log();
 
@@ -505,8 +711,13 @@ class VersionCalculator {
 
         // Generate and update release notes
         console.log('📋 Generating release notes...');
-        const releaseNotes = this.generateReleaseNotes(commits, newVersion);
-        this.updateChangelog(releaseNotes);
+        const releaseNotesData = this.generateReleaseNotes(commits, newVersion);
+        this.updateChangelog(releaseNotesData);
+        
+        // Update version history
+        console.log('📚 Updating version history...');
+        const versionHistory = this.getVersionHistory();
+        this.saveVersionHistoryToFile(versionHistory);
 
         console.log(`\n🎉 Version calculation complete!`);
         console.log(`   New version: ${newVersion.tagString}`);
