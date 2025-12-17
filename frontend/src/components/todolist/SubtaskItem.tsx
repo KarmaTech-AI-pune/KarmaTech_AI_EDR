@@ -31,6 +31,8 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
   onDeleteSubtask,
   onSubtaskClick,
 }) => {
+  console.log('SubtaskItem received subtask:', subtask); // Debug log
+
   const [isEditing, _setIsEditing] = useState(false);
   const [editingSummary, setEditingSummary] = useState(subtask.summary);
   const [_editingStatus, _setEditingStatus] = useState(subtask.status);

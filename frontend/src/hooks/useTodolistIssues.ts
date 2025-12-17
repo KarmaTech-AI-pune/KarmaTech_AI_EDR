@@ -1,9 +1,32 @@
-import { useState } from 'react';
-import { initialIssues, teamMembers } from '../data/todolistData';
+import { useState, useEffect } from 'react';
+import { fetchIssuesFromAPI, teamMembers } from '../data/todolistData';
 import { Issue, NewIssueFormState, Subtask, NewSubtaskFormState, Comment } from '../types/todolist'; // Added Comment
 
-export const useTodolistIssues = () => {
-  const [issues, setIssues] = useState<Issue[]>(initialIssues);
+export const useTodolistIssues = (projectId: number = 1) => {
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load issues from API on mount
+  useEffect(() => {
+    const loadIssues = async () => {
+      try {
+        setLoading(true);
+        const fetchedIssues = await fetchIssuesFromAPI(projectId);
+        setIssues(fetchedIssues);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to load issues:', err);
+        setError('Failed to load issues from server');
+        // Fallback to empty array if API fails
+        setIssues([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadIssues();
+  }, [projectId]);
 
   const getNextIssueKey = () => {
     const maxNum = Math.max(...issues.map(issue => parseInt(issue.key.split('-')[1])));
@@ -154,6 +177,8 @@ export const useTodolistIssues = () => {
 
   return {
     issues,
+    loading,
+    error,
     createIssue,
     updateIssue,
     deleteIssue,
