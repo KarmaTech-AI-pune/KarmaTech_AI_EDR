@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { VersionDisplay } from '../VersionDisplay';
+import * as versionUtils from '../../utils/version';
 
 // Mock the version utilities
 vi.mock('../../utils/version', () => ({
@@ -15,6 +16,13 @@ vi.mock('../../utils/version', () => ({
 describe('VersionDisplay', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset to default mock values
+    vi.mocked(versionUtils.getVersionInfo).mockReturnValue({
+      version: '1.12.0',
+      buildDate: '2024-12-04T10:30:00.000Z',
+      displayVersion: 'v1.12.0'
+    });
+    vi.mocked(versionUtils.isDevelopmentBuild).mockReturnValue(false);
   });
 
   it('should render version with default prefix', () => {
@@ -30,14 +38,12 @@ describe('VersionDisplay', () => {
   });
 
   it('should show development indicator for dev builds', () => {
-    const { getVersionInfo, isDevelopmentBuild } = require('../../utils/version');
-    
-    getVersionInfo.mockReturnValue({
+    vi.mocked(versionUtils.getVersionInfo).mockReturnValue({
       version: 'dev',
       buildDate: '2024-12-04T10:30:00.000Z',
       displayVersion: 'vdev'
     });
-    isDevelopmentBuild.mockReturnValue(true);
+    vi.mocked(versionUtils.isDevelopmentBuild).mockReturnValue(true);
     
     render(<VersionDisplay showDevIndicator={true} />);
     
@@ -45,14 +51,12 @@ describe('VersionDisplay', () => {
   });
 
   it('should hide development indicator when showDevIndicator is false', () => {
-    const { getVersionInfo, isDevelopmentBuild } = require('../../utils/version');
-    
-    getVersionInfo.mockReturnValue({
+    vi.mocked(versionUtils.getVersionInfo).mockReturnValue({
       version: 'dev',
       buildDate: '2024-12-04T10:30:00.000Z',
       displayVersion: 'vdev'
     });
-    isDevelopmentBuild.mockReturnValue(true);
+    vi.mocked(versionUtils.isDevelopmentBuild).mockReturnValue(true);
     
     render(<VersionDisplay showDevIndicator={false} />);
     

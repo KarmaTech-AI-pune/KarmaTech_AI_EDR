@@ -22,11 +22,20 @@ export function getVersionInfo(): VersionInfo {
   let buildDate: string;
 
   try {
-    // Try to use build-time injected values
-    version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'unknown';
+    // Try to use build-time injected values first (highest priority)
+    if (typeof __APP_VERSION__ !== 'undefined' && __APP_VERSION__ !== 'unknown') {
+      version = __APP_VERSION__;
+    } else {
+      // Fallback to environment variables
+      version = import.meta.env.VITE_APP_VERSION || 
+                import.meta.env.REACT_APP_VERSION || 
+                'dev';
+    }
+    
+    // Get build date from injection or use current time
     buildDate = typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : new Date().toISOString();
   } catch (error) {
-    // Fallback for development or if injection fails
+    // Final fallback for development or if injection fails
     version = import.meta.env.VITE_APP_VERSION || 
               import.meta.env.REACT_APP_VERSION || 
               'dev';
