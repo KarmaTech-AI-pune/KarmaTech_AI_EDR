@@ -71,25 +71,47 @@ class VersionCalculator {
     getLatestVersion() {
         try {
             const tags = execSync('git tag -l "v*" --sort=-version:refname', { encoding: 'utf8' });
-            const latestTag = tags.split('\n')[0];
+            const tagList = tags.split('\n').filter(tag => tag.trim());
             
-            if (!latestTag) {
+            if (tagList.length === 0) {
                 return { major: 1, minor: 0, patch: 0 };
             }
 
-            const versionMatch = latestTag.match(/^v(\d+)\.(\d+)\.(\d+)$/);
-            if (!versionMatch) {
-                console.warn(`Invalid version tag format: ${latestTag}, starting from 1.0.0`);
-                return { major: 1, minor: 0, patch: 0 };
+            // Find the first valid semantic version tag
+            for (const tag of tagList) {
+                const versionMatch = tag.match(/^v(\d+)\.(\d+)\.(\d+)(?:-.*)?$/);
+                if (versionMatch) {
+                    return {
+                        major: parseInt(versionMatch[1]),
+                        minor: parseInt(versionMatch[2]),
+                        patch: parseInt(versionMatch[3])
+                    };
+                }
             }
 
-            return {
-                major: parseInt(versionMatch[1]),
-                minor: parseInt(versionMatch[2]),
-                patch: parseInt(versionMatch[3])
-            };
+            // If no valid semantic version found, check VERSION file as fallback
+            try {
+                const versionFilePath = path.join(process.cwd(), 'VERSION');
+                if (fs.existsSync(versionFilePath)) {
+                    const versionContent = fs.readFileSync(versionFilePath, 'utf8').trim();
+                    const versionMatch = versionContent.match(/^(\d+)\.(\d+)\.(\d+)$/);
+                    if (versionMatch) {
+                        console.log(`Using version from VERSION file: ${versionContent}`);
+                        return {
+                            major: parseInt(versionMatch[1]),
+                            minor: parseInt(versionMatch[2]),
+                            patch: parseInt(versionMatch[3])
+                        };
+                    }
+                }
+            } catch (fileError) {
+                console.warn('Could not read VERSION file:', fileError.message);
+            }
+
+            console.warn('No valid version tags found, starting from 1.0.0');
+            return { major: 1, minor: 0, patch: 0 };
         } catch (error) {
-            console.warn('No existing version tags found, starting from 1.0.0');
+            console.warn('Error getting version tags, starting from 1.0.0:', error.message);
             return { major: 1, minor: 0, patch: 0 };
         }
     }
@@ -217,6 +239,84 @@ class VersionCalculator {
             return true;
         } catch (error) {
             console.error(`❌ Failed to update package.json: ${error.message}`);
+            return false;
+        }
+    }
+
+    /**
+     * Update .NET project files with version information
+     * @param {Object} version - Version object
+     * @returns {boolean} Success status
+     */
+    updateDotNetProjects(version) {
+        try {
+            const projectFiles = [
+                'backend/src/NJSAPI/NJSAPI.csproj',
+                'backend/src/NJS.Application/NJS.Application.csproj',
+                'backend/src/NJS.Domain/NJS.Domain.csproj'
+            ];
+
+            let updatedCount = 0;
+
+            for (const projectFile of projectFiles) {
+                const projectPath = path.join(process.cwd(), projectFile);
+                
+                if (!fs.existsSync(projectPath)) {
+                    console.warn(`⚠️ Project file not found: ${projectFile}, skipping`);
+                    continue;
+                }
+
+                let projectContent = fs.readFileSync(projectPath, 'utf8');
+                
+                // Check if PropertyGroup with version info exists
+                const versionPropertyGroupRegex = /<PropertyGroup[^>]*>[\s\S]*?<Version>[\s\S]*?<\/PropertyGroup>/;
+                const hasVersionPropertyGroup = versionPropertyGroupRegex.test(projectContent);
+
+                if (hasVersionPropertyGroup) {
+                    // Update existing version properties
+                    projectContent = projectContent.replace(
+                        /<Version>[^<]*<\/Version>/g,
+                        `<Version>${version.versionString}</Version>`
+                    );
+                    projectContent = projectContent.replace(
+                        /<AssemblyVersion>[^<]*<\/AssemblyVersion>/g,
+                        `<AssemblyVersion>${version.versionString}</AssemblyVersion>`
+                    );
+                    projectContent = projectContent.replace(
+                        /<FileVersion>[^<]*<\/FileVersion>/g,
+                        `<FileVersion>${version.versionString}</FileVersion>`
+                    );
+                } else {
+                    // Add version PropertyGroup after the first PropertyGroup
+                    const firstPropertyGroupEnd = projectContent.indexOf('</PropertyGroup>');
+                    if (firstPropertyGroupEnd !== -1) {
+                        const insertPosition = firstPropertyGroupEnd + '</PropertyGroup>'.length;
+                        const versionPropertyGroup = `
+
+  <PropertyGroup>
+    <Version>${version.versionString}</Version>
+    <AssemblyVersion>${version.versionString}</AssemblyVersion>
+    <FileVersion>${version.versionString}</FileVersion>
+  </PropertyGroup>`;
+                        
+                        projectContent = projectContent.slice(0, insertPosition) + 
+                                       versionPropertyGroup + 
+                                       projectContent.slice(insertPosition);
+                    }
+                }
+
+                fs.writeFileSync(projectPath, projectContent);
+                updatedCount++;
+                console.log(`✅ Updated ${projectFile} version: ${version.versionString}`);
+            }
+
+            if (updatedCount === 0) {
+                console.warn('⚠️ No .NET project files were updated');
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`❌ Failed to update .NET project files: ${error.message}`);
             return false;
         }
     }
@@ -365,7 +465,8 @@ class VersionCalculator {
             console.log('📁 Updating version files...');
             const fileUpdates = [
                 this.updateVersionFile(newVersion),
-                this.updatePackageJson(newVersion)
+                this.updatePackageJson(newVersion),
+                this.updateDotNetProjects(newVersion)
             ];
 
             if (!fileUpdates.every(success => success)) {
