@@ -469,8 +469,18 @@ class VersionCalculator {
                 this.updateDotNetProjects(newVersion)
             ];
 
-            if (!fileUpdates.every(success => success)) {
-                console.error('❌ Failed to update some version files');
+            const failedUpdates = fileUpdates.filter(success => !success);
+            if (failedUpdates.length > 0) {
+                console.error(`❌ Failed to update ${failedUpdates.length} version files`);
+                console.error('🚨 This will prevent deployment from proceeding');
+                
+                // Set GitHub Actions error output
+                if (process.env.GITHUB_OUTPUT) {
+                    const fs = require('fs');
+                    fs.appendFileSync(process.env.GITHUB_OUTPUT, `version_error=true\n`);
+                    fs.appendFileSync(process.env.GITHUB_OUTPUT, `error_message=Failed to update version files\n`);
+                }
+                
                 process.exit(1);
             }
         }
@@ -480,6 +490,15 @@ class VersionCalculator {
             console.log('🏷️ Creating git tag...');
             if (!this.createGitTag(newVersion)) {
                 console.error('❌ Failed to create git tag');
+                console.error('🚨 This will prevent deployment from proceeding');
+                
+                // Set GitHub Actions error output
+                if (process.env.GITHUB_OUTPUT) {
+                    const fs = require('fs');
+                    fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag_error=true\n`);
+                    fs.appendFileSync(process.env.GITHUB_OUTPUT, `error_message=Failed to create git tag\n`);
+                }
+                
                 process.exit(1);
             }
         }
@@ -497,6 +516,17 @@ class VersionCalculator {
         if (process.env.GITHUB_OUTPUT) {
             const fs = require('fs');
             fs.appendFileSync(process.env.GITHUB_OUTPUT, `increment_type=${newVersion.increment}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `new_version=${newVersion.versionString}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `version_tag=${newVersion.tagString}\n`);
+            console.log('✅ GitHub Actions outputs written');
+        }
+        
+        // Output for shell scripts
+        if (process.env.GITHUB_ENV) {
+            const fs = require('fs');
+            fs.appendFileSync(process.env.GITHUB_ENV, `CALCULATED_VERSION=${newVersion.versionString}\n`);
+            fs.appendFileSync(process.env.GITHUB_ENV, `CALCULATED_INCREMENT=${newVersion.increment}\n`);
+            console.log('✅ GitHub Actions environment variables set');
         }
         
         return newVersion;

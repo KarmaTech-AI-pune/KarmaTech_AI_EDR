@@ -43,11 +43,11 @@ jobs:
     permissions:
       contents: write
     outputs:
-      version-tag: ${{ steps.version-tag.outputs.version_tag }}
-      version: ${{ steps.version-tag.outputs.version }}
-      environment: ${{ steps.version-tag.outputs.environment }}
-      build-number: ${{ steps.version-tag.outputs.build_number }}
-      commit-sha: ${{ steps.version-tag.outputs.commit_sha }}
+      version-tag: ${{ steps.version-integration.outputs.environment_version_tag }}
+      version: ${{ steps.version-integration.outputs.new_version }}
+      environment: ${{ steps.version-integration.outputs.environment }}
+      build-number: ${{ steps.version-integration.outputs.build_number }}
+      commit-sha: ${{ steps.version-integration.outputs.commit_sha }}
     
     steps:
       - name: Checkout code
@@ -99,82 +99,94 @@ jobs:
         run: |
           chmod +x .github/scripts/create-version-tag.sh
           chmod +x .github/scripts/version-calculator.js
+          chmod +x .github/scripts/github-actions-version-integration.js
 
-      - name: Calculate Version from Conventional Commits
-        id: calc-version
+      - name: Calculate Version and Create Tags
+        id: version-integration
         env:
           BRANCH_NAME: ${{ github.ref_name }}
           COMMIT_SHA: ${{ github.sha }}
+          VERSION_INCREMENT: ${{ github.event.inputs.version-bump }}
         run: |
-          echo "🔍 Analyzing conventional commits for version calculation..."
+          echo "🚀 Starting enhanced version calculation and integration..."
           
-          # Use our new version calculator to determine version increment
-          node .github/scripts/version-calculator.js --base origin/Kiro/dev --head HEAD --dry-run
-          
-          # If manual override is provided, use it; otherwise use calculated increment
+          # Use enhanced GitHub Actions integration script
           if [ -n "${{ github.event.inputs.version-bump }}" ]; then
-            VERSION_INCREMENT="${{ github.event.inputs.version-bump }}"
-            echo "🔧 Using manual override: $VERSION_INCREMENT"
-          else
-            # The increment type is set in GITHUB_OUTPUT by the version calculator
-            echo "🤖 Using calculated increment from conventional commits"
-          fi
-
-      - name: Create Version Tag
-        id: version-tag
-        env:
-          BRANCH_NAME: ${{ github.ref_name }}
-          VERSION_INCREMENT: ${{ steps.calc-version.outputs.increment_type || github.event.inputs.version-bump || 'patch' }}
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          echo "Running version tagging script with increment: $VERSION_INCREMENT"
-          .github/scripts/create-version-tag.sh
-          
-          echo ""
-          echo "✅ Version tag created successfully"
-
-      - name: Update Version Files
-        env:
-          VERSION_TAG: ${{ steps.version-tag.outputs.version_tag }}
-          VERSION: ${{ steps.version-tag.outputs.version }}
-        run: |
-          echo "📁 Updating version files with: $VERSION"
-          
-          # Update VERSION file
-          echo "$VERSION" > VERSION
-          
-          # Update frontend package.json
-          if [ -f "frontend/package.json" ]; then
-            node -e "
-              const fs = require('fs');
-              const pkg = JSON.parse(fs.readFileSync('frontend/package.json', 'utf8'));
-              pkg.version = '$VERSION';
-              fs.writeFileSync('frontend/package.json', JSON.stringify(pkg, null, 2) + '\n');
-              console.log('✅ Updated frontend/package.json to version $VERSION');
-            "
+            echo "🔧 Manual version increment specified: ${{ github.event.inputs.version-bump }}"
+            # For manual override, we'll still use the integration script but set the increment
+            export MANUAL_INCREMENT="${{ github.event.inputs.version-bump }}"
           fi
           
-          # Commit version file updates
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add VERSION frontend/package.json
-          git commit -m "chore: update version files to $VERSION [skip ci]" || echo "No changes to commit"
-          git push origin HEAD || echo "No changes to push"
+          # Run the enhanced integration script
+          node .github/scripts/github-actions-version-integration.js --base origin/Kiro/dev --head HEAD
+          
+          echo "✅ Version integration completed successfully"
+
+
+
+      - name: Validate Version Integration Success
+        run: |
+          echo "🔍 Validating version integration results..."
+          
+          # Check integration success status
+          if [ "${{ steps.version-integration.outputs.integration_success }}" != "true" ]; then
+            echo "❌ Version integration failed!"
+            echo "🚨 Deployment cannot proceed"
+            exit 1
+          fi
+          
+          # Check that all required outputs are available
+          if [ -z "${{ steps.version-integration.outputs.new_version }}" ]; then
+            echo "❌ Version output is missing!"
+            exit 1
+          fi
+          
+          if [ -z "${{ steps.version-integration.outputs.environment }}" ]; then
+            echo "❌ Environment output is missing!"
+            exit 1
+          fi
+          
+          # Check version synchronization
+          if [ "${{ steps.version-integration.outputs.version_sync_status }}" != "synchronized" ]; then
+            echo "❌ Version files are not synchronized!"
+            exit 1
+          fi
+          
+          echo "✅ Version integration validation passed"
+          echo "✅ Version: ${{ steps.version-integration.outputs.new_version }}"
+          echo "✅ Environment: ${{ steps.version-integration.outputs.environment }}"
+          echo "✅ Execution time: ${{ steps.version-integration.outputs.execution_time }}s"
+          echo "✅ Ready for deployment"
 
       - name: Log Version Information
         run: |
-          echo "## 🏷️ Version Tag Created" >> $GITHUB_STEP_SUMMARY
+          echo "## 🏷️ Automatic Version Integration Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Tag Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version Tag:** \`${{ steps.version-tag.outputs.version_tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Semantic Version:** \`${{ steps.version-tag.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Environment:** \`${{ steps.version-tag.outputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Number:** \`${{ steps.version-tag.outputs.build_number }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit SHA:** \`${{ steps.version-tag.outputs.commit_sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "### Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment Version Tag:** \`${{ steps.version-integration.outputs.environment_version_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Semantic Version:** \`${{ steps.version-integration.outputs.new_version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Clean Version Tag:** \`${{ steps.version-integration.outputs.version_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** \`${{ steps.version-integration.outputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number:** \`${{ steps.version-integration.outputs.build_number }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit SHA:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Increment Type:** \`${{ steps.version-integration.outputs.increment_type }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Integration Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commits Analyzed:** ${{ steps.version-integration.outputs.commits_analyzed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Execution Time:** ${{ steps.version-integration.outputs.execution_time }} seconds" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Sync Status:** ${{ steps.version-integration.outputs.version_sync_status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Integration Success:** ${{ steps.version-integration.outputs.integration_success }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Files Updated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ VERSION file" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ frontend/package.json" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ .NET project files" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Git tags created and pushed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Quick Links" >> $GITHUB_STEP_SUMMARY
-          echo "- [View Tag](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version-tag.outputs.version_tag }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Environment Tag](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version-integration.outputs.environment_version_tag }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Clean Tag](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version-integration.outputs.version_tag }})" >> $GITHUB_STEP_SUMMARY
           echo "- [View Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
 
   # ================================================================
