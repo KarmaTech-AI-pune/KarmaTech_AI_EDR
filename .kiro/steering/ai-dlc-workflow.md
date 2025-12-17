@@ -1,5 +1,5 @@
 ---
-inclusion: manual
+inclusion: always
 ---
 
 # 🎯 AI-DLC 7-Step Workflow with GitHub Automation
@@ -21,11 +21,15 @@ The AI-DLC workflow now includes **automatic GitHub operations** at key points:
 1. User provides requirement
    ↓
 2. Kiro creates spec (Step 1: Requirements Analysis)
-   ├─ requirements.md
-   ├─ design.md
-   └─ tasks.md
+   └─ requirements.md (created and approved first)
    ↓
-3. 🤖 AUTOMATIC: Feature branch created
+3. Kiro creates design (Step 2: Design Analysis)  
+   └─ design.md (created and approved second)
+   ↓
+4. Kiro creates tasks (Step 3: Task Planning)
+   └─ tasks.md (created and approved third)
+   ↓
+5. 🤖 AUTOMATIC: Feature branch created
    └─ git checkout -b feature/[name]
    └─ git push -u origin feature/[name]
    ↓

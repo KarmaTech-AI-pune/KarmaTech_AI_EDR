@@ -1,8 +1,4 @@
 ---
-inclusion: always
----
-
----
 inclusion: fileMatch
 fileMatchPattern: '**/src/**|**/backend/**|**/frontend/**|**/Components/**'
 ---

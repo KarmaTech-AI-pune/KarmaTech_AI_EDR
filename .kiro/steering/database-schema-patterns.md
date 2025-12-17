@@ -1,8 +1,4 @@
 ---
-inclusion: always
----
-
----
 inclusion: fileMatch
 fileMatchPattern: '**/*.sql|**/Entities/**|**/Models/**|**/Migrations/**|**/DbContext/**'
 ---

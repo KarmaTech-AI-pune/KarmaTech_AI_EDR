@@ -1,8 +1,4 @@
 ---
-inclusion: always
----
-
----
 inclusion: manual
 ---
 
@@ -14,7 +10,7 @@ This guide provides the complete framework for implementing AI-Driven Developmen
 
 ### **🚀 NEW: Automated GitHub Workflow Integration**
 
-As of December 2024, AI-DLC now includes **full GitHub automation** that streamlines the entire development-to-deployment workflow:
+As of December 2025, AI-DLC now includes **full GitHub automation** that streamlines the entire development-to-deployment workflow:
 
 - ✅ **Automatic branch creation** when specs are created
 - ✅ **Automated testing** before PR creation

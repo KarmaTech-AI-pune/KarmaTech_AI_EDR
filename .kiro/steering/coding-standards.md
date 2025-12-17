@@ -1,8 +1,4 @@
 ---
-inclusion: always
----
-
----
 inclusion: fileMatch
 fileMatchPattern: '**/*.cs|**/*.ts|**/*.tsx|**/*.js|**/*.jsx'
 ---

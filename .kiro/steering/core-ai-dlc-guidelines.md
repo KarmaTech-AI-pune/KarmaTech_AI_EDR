@@ -1,3 +1,7 @@
+---
+inclusion: always
+---
+
 # Core AI-DLC Guidelines (Always Active)
 
 ## 🚨 MANDATORY: 7-Step AI-DLC Process

@@ -1,8 +1,4 @@
 ---
-inclusion: always
----
-
----
 inclusion: fileMatch
 fileMatchPattern: '**/*test*|**/*spec*|**/Tests/**|**/test/**|**/*.test.*|**/*.spec.*'
 ---
