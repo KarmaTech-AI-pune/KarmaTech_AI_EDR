@@ -87,7 +87,8 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                         // Create new task
                         task = new SprintTask
                         {
-                            Taskid = taskDto.Taskid,
+                            // Taskid is Identity, let DB generate it
+                            // Taskid = taskDto.Taskid,
                             TenantId = taskDto.TenantId,
                             Taskkey = taskDto.Taskkey,
                             TaskTitle = taskDto.TaskTitle,
@@ -184,7 +185,7 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                                     SubtaskcreatedDate = subtaskDto.SubtaskcreatedDate ?? DateTime.UtcNow,
                                     SubtaskupdatedDate = subtaskDto.SubtaskupdatedDate ?? DateTime.UtcNow,
                                     SubtaskType = subtaskDto.SubtaskType,
-                                    Taskid = task.Taskid,
+                                    ParentTask = task,
                                     DisplayOrder = subtaskDto.DisplayOrder ?? 0,
                                     EstimatedHours = subtaskDto.EstimatedHours ?? 0,
                                     ActualHours = subtaskDto.ActualHours ?? 0,
@@ -213,7 +214,7 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                                 subtask.SubtaskisExpanded = subtaskDto.SubtaskisExpanded;
                                 subtask.SubtaskupdatedDate = DateTime.UtcNow; // Update timestamp
                                 subtask.SubtaskType = subtaskDto.SubtaskType;
-                                subtask.Taskid = task.Taskid;
+                                subtask.ParentTask = task;
                                 subtask.DisplayOrder = subtaskDto.DisplayOrder ?? 0;
                                 subtask.EstimatedHours = subtaskDto.EstimatedHours ?? 0;
                                 subtask.ActualHours = subtaskDto.ActualHours ?? 0;

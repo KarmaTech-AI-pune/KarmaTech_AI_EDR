@@ -44,7 +44,7 @@ namespace NJS.Domain.Entities
         public string? SubtaskType { get; set; } = "Sub-task";
 
         // Foreign key to SprintTask table
-        public string? Taskid { get; set; }
+        public int Taskid { get; set; }
         [ForeignKey("Taskid")]
         public SprintTask? ParentTask { get; set; } // Keep this relation
 

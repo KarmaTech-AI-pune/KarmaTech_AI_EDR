@@ -5,6 +5,6 @@ namespace NJS.Application.CQRS.SprintTasks.Queries
 {
     public class GetSingleSprintTaskQuery : IRequest<SprintTaskDto>
     {
-        public string TaskId { get; set; } = string.Empty;
+        public int TaskId { get; set; }
     }
 }

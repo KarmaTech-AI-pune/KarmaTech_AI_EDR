@@ -27,14 +27,14 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
         {
             var sprintTaskInputDto = request.SprintTask;
 
-            if (sprintTaskInputDto == null || string.IsNullOrWhiteSpace(sprintTaskInputDto.Taskid))
+            if (sprintTaskInputDto == null || !sprintTaskInputDto.Taskid.HasValue || sprintTaskInputDto.Taskid.Value <= 0)
             {
-                _logger.LogError("SprintTaskInputDto or TaskId is null or empty in the request.");
-                throw new ArgumentException("SprintTask or TaskId cannot be null or empty for update.");
+                _logger.LogError("SprintTaskInputDto or TaskId is invalid in the request.");
+                throw new ArgumentException("SprintTask or TaskId cannot be null or invalid for update.");
             }
 
             var existingSprintTask = await _context.SprintTasks
-                                                   .FirstOrDefaultAsync(st => st.Taskid == sprintTaskInputDto.Taskid, cancellationToken);
+                                                   .FirstOrDefaultAsync(st => st.Taskid == sprintTaskInputDto.Taskid.Value, cancellationToken);
 
             if (existingSprintTask == null)
             {
