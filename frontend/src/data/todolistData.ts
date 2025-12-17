@@ -3,7 +3,7 @@ import { axiosInstance } from '../services/axiosConfig';
 
 // API response types based on backend DTOs (camelCase)
 interface SprintTaskSummaryDto {
-  taskid: string;
+  taskid: number;
   taskTitle: string;
   storyPoints?: number;
   taskAssigneeName: string;
@@ -12,7 +12,7 @@ interface SprintTaskSummaryDto {
 }
 
 interface SprintTaskDto {
-  taskid: string;
+  taskid: number;
   tenantId: number;
   taskkey: string;
   taskTitle: string;
@@ -71,12 +71,12 @@ const apiService = {
     return response.data;
   },
 
-  async fetchSprintTaskDetails(taskId: string): Promise<SprintTaskDto> {
+  async fetchSprintTaskDetails(taskId: string | number): Promise<SprintTaskDto> {
     const response = await axiosInstance.get<SprintTaskDto>(`/api/sprint-tasks/${taskId}`);
     return response.data;
   },
 
-  async fetchSprintTaskComments(taskId: string): Promise<SprintTaskCommentDto[]> {
+  async fetchSprintTaskComments(taskId: string | number): Promise<SprintTaskCommentDto[]> {
     const response = await axiosInstance.get<SprintTaskCommentDto[]>(`/api/sprint-tasks/${taskId}/comments`);
     return response.data;
   },
@@ -100,6 +100,7 @@ const transformStatus = (apiStatus: string): "To Do" | "In Progress" | "Review" 
     'In Progress': 'In Progress',
     'Review': 'Review',
     'Done': 'Done',
+    'Pending': 'To Do', // Map Pending to To Do as fallback
   };
   return statusMap[apiStatus] || 'To Do';
 };
@@ -123,7 +124,7 @@ const createTeamMember = (name: string, id: string, avatar?: string): TeamMember
 const transformSubtask = (apiSubtask: SprintSubtaskDto): Subtask => {
   const subtask: Subtask = {
     id: apiSubtask.subtaskId.toString(),
-    parentIssueId: apiSubtask.taskid,
+    parentIssueId: apiSubtask.taskid?.toString() || '',
     key: apiSubtask.subtaskkey || `SUB-${apiSubtask.subtaskId}`,
     summary: apiSubtask.subtasktitle || 'Untitled Subtask',
     description: apiSubtask.subtaskdescription || '',
@@ -170,7 +171,7 @@ const transformSprintTaskToIssue = async (apiTask: SprintTaskDto): Promise<Issue
   const status = transformStatus(apiTask.taskstatus || 'To Do');
 
   const issue: Issue = {
-    id: apiTask.taskid || `task-${Date.now()}`,
+    id: apiTask.taskid?.toString() || `task-${Date.now()}`,
     key: apiTask.taskkey || `PROJ-${apiTask.taskid}`,
     summary: apiTask.taskTitle || 'Untitled Task',
     description: apiTask.taskdescription || '',
@@ -219,7 +220,7 @@ export const fetchIssuesFromAPI = async (projectId: number): Promise<Issue[]> =>
         console.error(`Failed to fetch details for task ${summary.taskid}:`, error);
         // Create a basic issue from summary data as fallback
         const basicIssue: Issue = {
-          id: summary.taskid,
+          id: summary.taskid.toString(),
           key: `TASK-${summary.taskid}`,
           summary: summary.taskTitle || 'Untitled Task',
           description: '',
