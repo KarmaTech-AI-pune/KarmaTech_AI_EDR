@@ -65,17 +65,22 @@
   - **Property 4: Status Calculation Consistency**
   - **Validates: Requirements 1.1, 1.5**
 
-- [-] 4. Update API controllers and responses
+- [x] 4. Update API controllers and responses
 
 
-- [ ] 4.1 Enhance GoNoGoDecisionController endpoints
+
+
+- [x] 4.1 Enhance GoNoGoDecisionController endpoints
+
 
 
   - Update GET endpoints to return capping information
   - Ensure POST/PUT endpoints apply score capping
   - _Requirements: 1.3, 2.2_
 
-- [ ] 4.2 Update API response models
+- [x] 4.2 Update API response models
+
+
   - Include capped and raw scores in API responses
   - Add capping indicators to response DTOs
   - _Requirements: 2.2_
