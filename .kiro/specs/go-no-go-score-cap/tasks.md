@@ -90,16 +90,34 @@
   - Verify endpoints handle scores >100 correctly
   - _Requirements: 1.3, 2.2_
 
-- [ ] 5. Checkpoint - Ensure all backend tests pass
+- [x] 5. Checkpoint - Ensure all backend tests pass
+
+
+
+
+
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Update frontend score calculation logic
-- [ ] 6.1 Enhance calculateTotalScore function in GoNoGoForm
+- [x] 6. Update frontend score calculation logic
+
+
+
+
+
+
+
+- [x] 6.1 Enhance calculateTotalScore function in GoNoGoForm
+
   - Implement capping logic: Math.min(rawTotal, 100)
   - Add getRawTotalScore and isScoreCapped helper functions
   - _Requirements: 1.1, 1.4, 1.5_
 
-- [ ] 6.2 Update getDecisionStatus function
+
+- [x] 6.2 Update getDecisionStatus function
+
+
+
+
   - Ensure status calculation uses capped total score
   - Maintain existing status thresholds with capped values
   - _Requirements: 1.5_
@@ -108,14 +126,23 @@
   - **Property 1: Total Score Capping (Frontend)**
   - **Validates: Requirements 1.1, 1.4**
 
-- [ ] 7. Implement frontend UI enhancements
-- [ ] 7.1 Add real-time capping indicators
+- [x] 7. Implement frontend UI enhancements
+
+
+
+
+
+- [x] 7.1 Add real-time capping indicators
+
+
   - Display warning message when score is capped
   - Show both raw total and capped value for transparency
   - Add visual indicators for capped scores
   - _Requirements: 2.1, 2.2_
 
-- [ ] 7.2 Update total score display section
+- [x] 7.2 Update total score display section
+
+
   - Indicate maximum possible total score is 100
   - Show success indicator when total reaches exactly 100
   - Implement real-time recalculation on score changes
