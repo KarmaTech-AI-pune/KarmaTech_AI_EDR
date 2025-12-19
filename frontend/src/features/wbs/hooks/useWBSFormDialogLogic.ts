@@ -44,7 +44,7 @@ export const useWBSFormDialogLogic = ({
 
   useEffect(() => {
     if (isOpen) {
-      let parentIdValue = null;
+      let parentIdValue: number | null = null;
       
       if (initialData) {
         // Editing mode: use existing parent ID
@@ -55,15 +55,19 @@ export const useWBSFormDialogLogic = ({
         }
       } else if (preSelectedParentId) {
         // Adding mode with preselected parent: use preSelectedParentId
-        parentIdValue = parseInt(preSelectedParentId);
+        const parsed = parseInt(preSelectedParentId, 10);
+        parentIdValue = isNaN(parsed) ? null : parsed;
+        console.log('Form initialization - preSelectedParentId:', preSelectedParentId, '→ parentIdValue:', parentIdValue, 'level:', level);
       }
+      
+      console.log('Resetting form with values:', { label: initialData ? initialData.label : '', parentId: parentIdValue });
       
       reset({
         label: initialData ? initialData.label : '',
         parentId: parentIdValue,
       });
     }
-  }, [isOpen, initialData, preSelectedParentId, reset]);
+  }, [isOpen, initialData, preSelectedParentId, reset, level]);
 
   const onFormSubmit = useCallback((data: IWBSFormInputs) => {
     onSubmit(data);

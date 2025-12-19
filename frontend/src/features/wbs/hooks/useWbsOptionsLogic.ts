@@ -172,6 +172,15 @@ export const useWbsOptionsLogic = () => {
   const handleFormSubmit = useCallback(async (data: IWBSFormInputs) => {
     try {
       setError(null);
+      
+      console.log('handleFormSubmit received data:', {
+        label: data.label,
+        parentId: data.parentId,
+        parentIdType: typeof data.parentId,
+        level: currentLevelForForm,
+        isEditing: !!currentEditingItem
+      });
+      
       const value = data.label.toLowerCase().replace(/\s/g, '_');
       
       if (currentEditingItem) {
@@ -184,6 +193,8 @@ export const useWbsOptionsLogic = () => {
           parentValue: data.parentId ? String(data.parentId) : null,
           formType: 0,
         };
+
+        console.log('Updating WBS option with payload:', updatedOption);
 
         // Call API to update
         await WBSOptionsAPI.updateOption(currentEditingItem.id, updatedOption);
@@ -200,6 +211,8 @@ export const useWbsOptionsLogic = () => {
           parentValue: data.parentId ? String(data.parentId) : null,
           formType: 0,
         };
+
+        console.log('Creating new WBS option with payload:', newOption);
 
         // Call API to create
         await WBSOptionsAPI.createOption(newOption);
