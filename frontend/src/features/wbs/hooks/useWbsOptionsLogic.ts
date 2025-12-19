@@ -240,8 +240,9 @@ export const useWbsOptionsLogic = () => {
       
       handleCloseConfirmationDialog();
     } catch (apiError) {
+      handleCloseConfirmationDialog();
       console.error('Error deleting item via API:', apiError);
-      setError('Failed to delete item. Please try again.');
+      alert("This option is associated with one or more WBS Tasks.")
     }
   }, [currentDeletingItem, handleCloseConfirmationDialog, fetchWBSOptions]);
 
