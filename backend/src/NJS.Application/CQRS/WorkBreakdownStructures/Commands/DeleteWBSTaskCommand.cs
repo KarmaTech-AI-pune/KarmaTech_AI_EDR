@@ -4,7 +4,7 @@ using NJS.Application.Dtos;
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Commands
 {
     /// <summary>
-    /// Command to delete tasks from Work Breakdown Structure using WBSMasterDto.
+    /// Command to delete a task from Work Breakdown Structure by its ID.
     /// </summary>
-    public record DeleteWBSTaskCommand(int ProjectId, WBSMasterDto WBSMaster) : IRequest<WBSMasterDto>;
+    public record DeleteWBSTaskCommand(int ProjectId, int WBSTaskId) : IRequest<bool>;
 }
