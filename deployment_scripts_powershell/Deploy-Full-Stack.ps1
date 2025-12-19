@@ -1,153 +1,188 @@
-# =========================================
-# FULL FRONTEND + BACKEND IIS DEPLOY SCRIPT
-# =========================================
-
 param(
-    [switch]$DryRun
+    [switch]$DryRun        # Optional flag to simulate the script
 )
 
-Import-Module WebAdministration
+# Import IIS management module
+Import-Module WebAdministration -ErrorAction Stop
 
-# -------------------------------
-# CONFIGURATION - UPDATE THESE
-# -------------------------------
 
-# Frontend
-$frontendZip      = "C:\zip file\frontend_8-12-25.zip"
-$frontendPath     = "C:\inetpub\wwwroot\EDR_AdminUI"
-$frontendBackup   = "C:\inetpub\wwwroot\Frontend_Backup"
-$frontendSite     = "EDRAdminUI"
+# ------------------------------------------------
+# CONFIGURATION SECTION - UPDATE PATHS IF NEEDED
+# ------------------------------------------------
 
-# Backend
-$backendZip       = "C:\zip file\Backend_8-12-25.zip"
-$backendPath      = "C:\inetpub\wwwroot\EDRAdmin_Api"
-$backendBackup    = "C:\inetpub\wwwroot\EDRAdmin_Api_Backup"
-$backendSite      = "EDRAdmin_Api"
-$backendAppPool   = "EDRAdmin_Api"
+# Frontend (Admin UI) Configuration
+$frontendZip      = "C:\inetpub\wwwroot\frontend_12-12-2025.zip"
+$frontendPath     = "C:\inetpub\wwwroot\Edradmin"
+$frontendBackup   = "C:\inetpub\wwwroot\EdrAdmin_UI_Backup"
+$frontendSite     = "EdrAdmin"
 
-$timeStamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+# Tenant UI Configuration (Uses same Frontend build)
+$tenantPath       = "C:\inetpub\wwwroot\multiTennatUI"
+$tenantSite       = "multiTennatUI"
+
+# Backend (API) Configuration
+$backendZip       = "C:\inetpub\wwwroot\Backend_10-12-2025.zip"
+$backendPath      = "C:\inetpub\wwwroot\Edradmin\API"
+$backendBackup    = "C:\inetpub\wwwroot\EDRAdminAPI_Backup"
+$backendSite      = "EdrAdminAPI"
+$backendAppPool   = "EdrAdminAPI"
+
+
+# Generate timestamp for folders and logs
+$timeStamp = Get-Date -Format "yyyy-MM-dd_hh-mm-ss_tt"
 
 Write-Host "==============================================="
-Write-Host " FRONTEND + BACKEND DEPLOYMENT STARTED "
-Write-Host "Timestamp: $timeStamp"
+Write-Host " DEPLOYMENT STARTED  (Frontend + Backend + Tenant)"
+Write-Host " Timestamp: $timeStamp"
 Write-Host "==============================================="
 
 if ($DryRun) {
-    Write-Host "DRY RUN MODE ENABLED - No actual changes made."
+    Write-Host "DRY RUN MODE ENABLED - No real changes will be made"
 }
 
-# -------------------------------
-# BACKUP FUNCTION
-# -------------------------------
+
+# ------------------------------------------------
+# FUNCTION: Backup-Files
+# PURPOSE : Create timestamped backup of a folder
+# ------------------------------------------------
 function Backup-Files {
     param($source, $destRoot)
 
     if ((Test-Path $source) -and ((Get-ChildItem $source -ErrorAction SilentlyContinue).Count -gt 0)) {
         $dest = Join-Path $destRoot $timeStamp
-        Write-Host "Backing up: $source -> $dest"
+
+        Write-Host "Creating backup: $source  ->  $dest"
+
         if (-not $DryRun) {
             New-Item -ItemType Directory -Path $dest -Force | Out-Null
-            Copy-Item "$source\*" -Destination $dest -Recurse -Force
+            robocopy $source $dest /E /R:2 /W:2 | Out-Null
         }
+
         return $dest
     }
     else {
-        Write-Host "No files found to back up at $source"
+        Write-Host "Backup skipped: No files found at $source"
         return $null
     }
 }
 
-# =================================================
-# FRONTEND DEPLOYMENT
-# =================================================
+
+# ==========================================================
+# FRONTEND DEPLOYMENT  (Shared for Admin UI + Tenant UI)
+# ==========================================================
 Write-Host ""
-Write-Host "===== FRONTEND DEPLOYMENT STARTED ====="
+Write-Host "===== FRONTEND BUILD DEPLOYMENT STARTED ====="
 
 $frontendSiteCheck = Get-Website -Name $frontendSite -ErrorAction SilentlyContinue
-if (-not $frontendSiteCheck) { Write-Error "Frontend site not found"; exit }
+$tenantSiteCheck   = Get-Website -Name $tenantSite -ErrorAction SilentlyContinue
 
-if (-not (Test-Path $frontendZip)) { Write-Error "Frontend ZIP file not found"; exit }
+if (-not $frontendSiteCheck) { throw "Frontend IIS site not found" }
+if (-not $tenantSiteCheck)   { throw "Tenant IIS site not found" }
 
+if (-not (Test-Path $frontendZip)) { throw "Frontend ZIP file not found" }
+
+# Backup only Frontend
 $frontendBackupPath = Backup-Files $frontendPath $frontendBackup
 
+
+# Create temporary folder and extract ZIP
 $feTemp = "C:\inetpub\wwwroot\temp_fe_$timeStamp"
-Write-Host "Extracting frontend ZIP..."
+Write-Host "Extracting Frontend ZIP to temp folder: $feTemp"
+
 if (-not $DryRun) {
     New-Item -ItemType Directory -Path $feTemp -Force | Out-Null
     Expand-Archive $frontendZip $feTemp -Force
 }
 
-$feDist = Get-ChildItem $feTemp -Recurse -Directory | Where-Object { $_.Name -eq "dist" } | Select-Object -First 1
-if (-not $feDist) { Write-Error "dist folder not found in frontend ZIP"; exit }
+# Locate 'dist' folder inside extracted content
+$feDist = Get-ChildItem $feTemp -Recurse -Directory |
+          Where-Object { $_.Name -eq "dist" } |
+          Select-Object -First 1
 
-Write-Host "Deploying Frontend files..."
+if (-not $feDist) { throw "'dist' folder not found inside Frontend ZIP" }
+
+# Copy build files to Frontend (Admin UI)
+Write-Host "Deploying Frontend files to Admin UI..."
 if (-not $DryRun) {
-    # Updated: Do not delete old files, only overwrite if newer
-    robocopy $feDist.FullName $frontendPath /E /XO /MT:8 | Out-Null
+    robocopy $feDist.FullName $frontendPath /E /XO /MT:8 /R:2 /W:2 | Out-Null
 }
 
-$fePool = $frontendSiteCheck.ApplicationPool
-Write-Host "Restarting Frontend AppPool: $fePool"
-if (-not $DryRun) { Restart-WebAppPool -Name $fePool }
+# Copy same build files to Tenant UI
+Write-Host "Deploying same Frontend files to Tenant UI..."
+if (-not $DryRun) {
+    robocopy $feDist.FullName $tenantPath /E /XO /MT:8 /R:2 /W:2 | Out-Null
+}
 
-# NOTE: Frontend temp files are retained
-Write-Host "Frontend temp files retained at: $feTemp"
+# Restart AppPools for both UI sites
+$fePool     = $frontendSiteCheck.ApplicationPool
+$tenantPool = $tenantSiteCheck.ApplicationPool
 
-# =================================================
-# BACKEND DEPLOYMENT
-# =================================================
+Write-Host "Restarting Frontend Application Pool: $fePool"
+Write-Host "Restarting Tenant Application Pool: $tenantPool"
+
+if (-not $DryRun) {
+    Restart-WebAppPool -Name $fePool
+    Restart-WebAppPool -Name $tenantPool
+}
+
+Write-Host "Frontend temp folder retained at: $feTemp"
+
+
+# ==========================================================
+# BACKEND (API) DEPLOYMENT
+# ==========================================================
 Write-Host ""
-Write-Host "===== BACKEND (API) DEPLOYMENT STARTED ====="
+Write-Host "===== BACKEND DEPLOYMENT STARTED ====="
 
 $backendSiteCheck = Get-Website -Name $backendSite -ErrorAction SilentlyContinue
-if (-not $backendSiteCheck) { Write-Error "Backend site not found"; exit }
+if (-not $backendSiteCheck) { throw "Backend IIS site not found" }
 
-if (-not (Test-Path $backendZip)) { Write-Error "Backend ZIP file not found"; exit }
+if (-not (Test-Path $backendZip)) { throw "Backend ZIP file not found" }
 
 $backendBackupPath = Backup-Files $backendPath $backendBackup
 
-# Backend temp folder = SiteName + Timestamp
 $beTemp = "C:\inetpub\wwwroot\$($backendSite)_$timeStamp"
-Write-Host "Extracting backend ZIP..."
+Write-Host "Extracting Backend ZIP to: $beTemp"
+
 if (-not $DryRun) {
     New-Item -ItemType Directory -Path $beTemp -Force | Out-Null
     Expand-Archive $backendZip $beTemp -Force
 }
 
 $bePublish = Join-Path $beTemp "publish"
-if (-not (Test-Path $bePublish)) { Write-Error "publish folder not found in backend ZIP"; exit }
+if (-not (Test-Path $bePublish)) { throw "'publish' folder not found in backend ZIP" }
 
-Write-Host "Stopping backend IIS services..."
+Write-Host "Stopping Backend Website and AppPool..."
 if (-not $DryRun) {
     Stop-WebAppPool -Name $backendAppPool -ErrorAction SilentlyContinue
     Stop-Website -Name $backendSite -ErrorAction SilentlyContinue
 }
 
-Write-Host "Deploying Backend (API) files..."
+Write-Host "Deploying Backend files..."
 if (-not $DryRun) {
-    # Updated: Do not delete old files, only overwrite if newer
-    robocopy $bePublish $backendPath /E /XO /MT:8 | Out-Null
+    robocopy $bePublish $backendPath /E /XO /MT:8 /R:2 /W:2 | Out-Null
 }
 
-Write-Host "Starting backend IIS services..."
+Write-Host "Starting Backend Website and AppPool..."
 if (-not $DryRun) {
     Start-WebAppPool -Name $backendAppPool
     Start-Website -Name $backendSite
 }
 
-# NOTE: Backend temp files are retained
-Write-Host "Backend temp files retained at: $beTemp"
+Write-Host "Backend temp folder retained at: $beTemp"
 
-# =================================================
+
+# ==========================================================
 # FINAL STATUS
-# =================================================
+# ==========================================================
 Write-Host ""
 Write-Host "==============================================="
-Write-Host " DEPLOYMENT COMPLETED SUCCESSFULLY "
+Write-Host " ? DEPLOYMENT COMPLETED SUCCESSFULLY "
 Write-Host "==============================================="
-Write-Host "Frontend Backup: $frontendBackupPath"
-Write-Host "Backend Backup : $backendBackupPath"
-Write-Host "Frontend Live  : $frontendPath"
-Write-Host "Backend Live   : $backendPath"
-Write-Host "Frontend Temp  : $feTemp"
-Write-Host "Backend Temp   : $beTemp"
+Write-Host "Frontend Backup : $frontendBackupPath"
+Write-Host "Backend Backup  : $backendBackupPath"
+Write-Host "Frontend Live   : $frontendPath"
+Write-Host "Tenant Live     : $tenantPath"
+Write-Host "Backend Live    : $backendPath"
+Write-Host "Frontend Temp   : $feTemp"
+Write-Host "Backend Temp    : $beTemp"
