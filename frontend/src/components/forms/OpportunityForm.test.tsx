@@ -85,7 +85,7 @@ vi.mock("@mui/x-date-pickers/LocalizationProvider", () => ({
 
 // Mock the AdapterDateFns
 vi.mock("@mui/x-date-pickers/AdapterDateFns", () => ({
-  AdapterDateFns: class {},
+  AdapterDateFns: class { },
 }));
 
 describe("OpportunityForm Component", () => {
@@ -117,12 +117,12 @@ describe("OpportunityForm Component", () => {
   ];
 
   const mockReviewManagers = [
-    { id: "rm1", name: "Review Manager 1" },
+    { id: "common_user", name: "Common User" },
     { id: "rm2", name: "Review Manager 2" },
   ];
 
   const mockApprovalManagers = [
-    { id: "am1", name: "Approval Manager 1" },
+    { id: "common_user", name: "Common User" },
     { id: "am2", name: "Approval Manager 2" },
   ];
 
@@ -188,7 +188,7 @@ describe("OpportunityForm Component", () => {
     canEditOpportunity: true,
     setCanEditOpportunity: vi.fn(),
     canDeleteOpportunity: true,
-    setCanDeleteOpportunity: vi.fn(),   
+    setCanDeleteOpportunity: vi.fn(),
     canReviewBD: false,
     setCanReviewBD: vi.fn(),
     canApproveBD: false,
@@ -400,6 +400,79 @@ describe("OpportunityForm Component", () => {
         })
       );
     });
+
+    it("excludes selected review manager from approval manager options", async () => {
+      renderWithContext();
+
+      // Wait for managers to be loaded
+      await waitFor(() => {
+        expect(screen.getByTestId("review-manager-select")).not.toBeDisabled();
+      });
+
+      // Select Common User as RM
+      await userEvent.click(screen.getByTestId("review-manager-select"));
+      const commonOptionRM = await screen.findByRole("option", { name: "Common User" });
+      await userEvent.click(commonOptionRM);
+
+      // Open Approval Manager dropdown
+      await userEvent.click(screen.getByTestId("approval-manager-select"));
+
+      // Wait for the menu to open (options to appear)
+      await waitFor(() => {
+        expect(screen.queryAllByRole("option").length).toBeGreaterThan(0);
+      });
+
+      const options = screen.queryAllByRole("option");
+      const optionTexts = options.map(o => o.textContent);
+      expect(optionTexts).not.toContain("Common User");
+    });
+
+    it("excludes selected approval manager from review manager options", async () => {
+      renderWithContext();
+
+      // Wait for managers to be loaded
+      await waitFor(() => {
+        expect(screen.getByTestId("approval-manager-select")).not.toBeDisabled();
+      });
+
+      // Select Common User as RD
+      await userEvent.click(screen.getByTestId("approval-manager-select"));
+      const commonOptionRD = await screen.findByRole("option", { name: "Common User" });
+      await userEvent.click(commonOptionRD);
+
+      // Open Review Manager dropdown
+      await userEvent.click(screen.getByTestId("review-manager-select"));
+
+      await waitFor(() => {
+        expect(screen.queryAllByRole("option").length).toBeGreaterThan(0);
+      });
+
+      const options = screen.queryAllByRole("option");
+      expect(options.map(o => o.textContent)).not.toContain("Common User");
+    });
+
+    it("shows validation error if RM and RD are the same on submission", async () => {
+      const mockProjectWithConflict: Partial<OpportunityTracking> = {
+        ...mockOpportunity,
+        reviewManagerId: "common_user",
+        approvalManagerId: "common_user",
+      };
+
+      const onSubmitMock = vi.fn();
+      render(
+        <projectManagementAppContext.Provider value={mockContext}>
+          <OpportunityForm onSubmit={onSubmitMock} project={mockProjectWithConflict} />
+        </projectManagementAppContext.Provider>
+      );
+
+      // Submit the form
+      const submitBtn = screen.getByRole("button", { name: /update opportunity/i });
+      fireEvent.click(submitBtn);
+
+      // Check for validation error
+      expect(await screen.findByText(/Review Manager and Approval Manager cannot be the same person/i)).toBeInTheDocument();
+      expect(onSubmitMock).not.toHaveBeenCalled();
+    });
   });
 
   // Data Fetching Tests
@@ -428,7 +501,7 @@ describe("OpportunityForm Component", () => {
       // Spy on console.error
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       renderWithContext();
 
@@ -454,15 +527,15 @@ describe("OpportunityForm Component", () => {
         ...mockContext,
         currentUser: mockContext.currentUser
           ? {
-              ...mockContext.currentUser,
-              id: "custom-user",
-              name: "Custom User",
-              userName: "custom-user",
-              email: "custom@example.com",
-              standardRate: 150, // Ensure standardRate is included
-              isConsultant: false, // Ensure isConsultant is included
-              roles: [...mockContext.currentUser.roles],
-            }
+            ...mockContext.currentUser,
+            id: "custom-user",
+            name: "Custom User",
+            userName: "custom-user",
+            email: "custom@example.com",
+            standardRate: 150, // Ensure standardRate is included
+            isConsultant: false, // Ensure isConsultant is included
+            roles: [...mockContext.currentUser.roles],
+          }
           : null,
       };
 
