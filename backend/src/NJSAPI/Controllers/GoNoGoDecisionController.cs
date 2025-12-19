@@ -8,6 +8,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using NJS.Application.Services.IContract;
 using NJS.Application.CQRS.Commands.GoNoGoDecision;
+using NJS.Application.Helpers;
 
 namespace NJSAPI.Controllers
 {
@@ -28,12 +29,13 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<GoNoGoDecision>> GetAll()
+        public ActionResult<IEnumerable<GoNoGoDecisionDto>> GetAll()
         {
             try
             {
                 var decisions = _repository.GetAll();
-                return Ok(decisions);
+                var decisionDtos = decisions.Select(decision => MapToDto(decision));
+                return Ok(decisionDtos);
             }
             catch (Exception ex)
             {
@@ -42,7 +44,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public ActionResult<GoNoGoDecision> GetById(int id)
+        public ActionResult<GoNoGoDecisionDto> GetById(int id)
         {
             try
             {
@@ -50,7 +52,8 @@ namespace NJSAPI.Controllers
                 if (decision == null)
                     return NotFound($"GoNoGoDecision with ID {id} not found");
 
-                return Ok(decision);
+                var decisionDto = MapToDto(decision);
+                return Ok(decisionDto);
             }
             catch (Exception ex)
             {
@@ -59,7 +62,7 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("project/{projectId}")]
-        public ActionResult<GoNoGoDecision> GetByProjectId(int projectId)
+        public ActionResult<GoNoGoDecisionDto> GetByProjectId(int projectId)
         {
             try
             {
@@ -67,7 +70,8 @@ namespace NJSAPI.Controllers
                 if (decision == null)
                     return NotFound($"GoNoGoDecision for project ID {projectId} not found");
 
-                return Ok(decision);
+                var decisionDto = MapToDto(decision);
+                return Ok(decisionDto);
             }
             catch (Exception ex)
             {
@@ -118,7 +122,7 @@ namespace NJSAPI.Controllers
                     },
                     Summary = new SummaryCommand
                     {
-                        TotalScore = decision.Summary.TotalScore,
+                        TotalScore = CalculateCappedTotalFromForm(decision),
                         Status = decision.Summary.Status,
                         DecisionComments = decision.Summary.DecisionComments,
                         ActionPlan = decision.Summary.ActionPlan
@@ -385,6 +389,92 @@ namespace NJSAPI.Controllers
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Maps a GoNoGoDecision entity to a DTO with capping information
+        /// </summary>
+        private GoNoGoDecisionDto MapToDto(GoNoGoDecision decision)
+        {
+            var scoreInfo = ScoreCalculationHelper.GetScoreInfo(decision);
+            
+            return new GoNoGoDecisionDto
+            {
+                ProjectId = decision.ProjectId,
+                BidType = decision.BidType,
+                Sector = decision.Sector,
+                TenderFee = decision.TenderFee,
+                EmdAmount = decision.EmdAmount,
+                
+                // Individual scores (unchanged)
+                MarketingPlanScore = decision.MarketingPlanScore,
+                MarketingPlanComments = decision.MarketingPlanComments,
+                ClientRelationshipScore = decision.ClientRelationshipScore,
+                ClientRelationshipComments = decision.ClientRelationshipComments,
+                ProjectKnowledgeScore = decision.ProjectKnowledgeScore,
+                ProjectKnowledgeComments = decision.ProjectKnowledgeComments,
+                TechnicalEligibilityScore = decision.TechnicalEligibilityScore,
+                TechnicalEligibilityComments = decision.TechnicalEligibilityComments,
+                FinancialEligibilityScore = decision.FinancialEligibilityScore,
+                FinancialEligibilityComments = decision.FinancialEligibilityComments,
+                StaffAvailabilityScore = decision.StaffAvailabilityScore,
+                StaffAvailabilityComments = decision.StaffAvailabilityComments,
+                CompetitionAssessmentScore = decision.CompetitionAssessmentScore,
+                CompetitionAssessmentComments = decision.CompetitionAssessmentComments,
+                CompetitivePositionScore = decision.CompetitivePositionScore,
+                CompetitivePositionComments = decision.CompetitivePositionComments,
+                FutureWorkPotentialScore = decision.FutureWorkPotentialScore,
+                FutureWorkPotentialComments = decision.FutureWorkPotentialComments,
+                ProfitabilityScore = decision.ProfitabilityScore,
+                ProfitabilityComments = decision.ProfitabilityComments,
+                ResourceAvailabilityScore = decision.ResourceAvailabilityScore,
+                ResourceAvailabilityComments = decision.ResourceAvailabilityComments,
+                BidScheduleScore = decision.BidScheduleScore,
+                BidScheduleComments = decision.BidScheduleComments,
+                
+                // Score information with capping
+                TotalScore = scoreInfo.CappedTotalScore,
+                RawTotalScore = scoreInfo.RawTotalScore,
+                IsScoreCapped = scoreInfo.IsScoreCapped,
+                Status = decision.Status,
+                DecisionComments = decision.DecisionComments,
+                
+                // Approval information
+                CompletedDate = decision.CompletedDate,
+                CompletedBy = decision.CompletedBy,
+                ReviewedDate = decision.ReviewedDate,
+                ReviewedBy = decision.ReviewedBy,
+                ApprovedDate = decision.ApprovedDate,
+                ApprovedBy = decision.ApprovedBy,
+                ActionPlan = decision.ActionPlan,
+                
+                // Audit fields
+                CreatedAt = decision.CreatedAt,
+                CreatedBy = decision.CreatedBy,
+                LastModifiedAt = decision.LastModifiedAt,
+                LastModifiedBy = decision.LastModifiedBy
+            };
+        }
+
+        /// <summary>
+        /// Calculates the capped total score from a GoNoGoForm
+        /// </summary>
+        private int CalculateCappedTotalFromForm(GoNoGoForm form)
+        {
+            int rawTotal = form.ScoringCriteria.MarketingPlan.Score +
+                          form.ScoringCriteria.ClientRelationship.Score +
+                          form.ScoringCriteria.ProjectKnowledge.Score +
+                          form.ScoringCriteria.TechnicalEligibility.Score +
+                          form.ScoringCriteria.FinancialEligibility.Score +
+                          form.ScoringCriteria.StaffAvailability.Score +
+                          form.ScoringCriteria.CompetitionAssessment.Score +
+                          form.ScoringCriteria.CompetitivePosition.Score +
+                          form.ScoringCriteria.FutureWorkPotential.Score +
+                          form.ScoringCriteria.Profitability.Score +
+                          form.ScoringCriteria.ResourceAvailability.Score +
+                          form.ScoringCriteria.BidSchedule.Score;
+            
+            return Math.Min(rawTotal, ScoreCalculationHelper.MAX_TOTAL_SCORE);
         }
     }
 }

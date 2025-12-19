@@ -181,6 +181,44 @@ namespace NJS.Domain.Entities
 
         [StringLength(100)]
         public string? LastModifiedBy { get; set; }
+
+        /// <summary>
+        /// Applies score capping validation to ensure TotalScore does not exceed 100
+        /// </summary>
+        public void ApplyScoreCapping()
+        {
+            int rawTotal = CalculateRawTotalScore();
+            TotalScore = Math.Min(rawTotal, 100);
+        }
+
+        /// <summary>
+        /// Calculates the raw (uncapped) total score from all individual criterion scores
+        /// </summary>
+        /// <returns>Sum of all individual criterion scores</returns>
+        public int CalculateRawTotalScore()
+        {
+            return MarketingPlanScore +
+                   ClientRelationshipScore +
+                   ProjectKnowledgeScore +
+                   TechnicalEligibilityScore +
+                   FinancialEligibilityScore +
+                   StaffAvailabilityScore +
+                   CompetitionAssessmentScore +
+                   CompetitivePositionScore +
+                   FutureWorkPotentialScore +
+                   ProfitabilityScore +
+                   ResourceAvailabilityScore +
+                   BidScheduleScore;
+        }
+
+        /// <summary>
+        /// Determines if the total score has been capped (raw total > 100)
+        /// </summary>
+        /// <returns>True if score is capped, false otherwise</returns>
+        public bool IsScoreCapped()
+        {
+            return CalculateRawTotalScore() > 100;
+        }
     }
 
    
