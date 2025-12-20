@@ -54,6 +54,17 @@ interface SprintSubtaskDto {
   subtaskupdatedDate: string;
   subtaskType: string;
   taskid: string;
+  estimatedHours?: number;
+  comments?: SprintSubtaskCommentDto[];
+}
+
+interface SprintSubtaskCommentDto {
+  subtaskCommentId: number;
+  taskid: number;
+  subtaskId: number;
+  commentText: string;
+  createdBy: string;
+  createdDate: string;
 }
 
 interface SprintTaskCommentDto {
@@ -141,8 +152,14 @@ const transformSubtask = (apiSubtask: SprintSubtaskDto): Subtask => {
       apiSubtask.subtaskReporterAvatar
     ),
     issueType: 'Sub-task',
-    storyPoints: 0,
+    storyPoints: apiSubtask.estimatedHours || 0,
     attachments: apiSubtask.attachments || 0,
+    comments: apiSubtask.comments ? apiSubtask.comments.map(c => ({
+      id: c.subtaskCommentId.toString(),
+      author: createTeamMember(c.createdBy, c.createdBy),
+      text: c.commentText,
+      createdDate: c.createdDate,
+    })) : [],
     createdDate: apiSubtask.subtaskcreatedDate || new Date().toISOString(),
     updatedDate: apiSubtask.subtaskupdatedDate || new Date().toISOString(),
   };

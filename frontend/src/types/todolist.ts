@@ -16,8 +16,8 @@ export interface Subtask {
   reporter: TeamMember;
   issueType: "Sub-task";
   storyPoints?: number;
-  attachments?: number; 
-  comments?: number;
+  attachments?: number;
+  comments: Comment[];
   createdDate: string;
   updatedDate: string;
 }

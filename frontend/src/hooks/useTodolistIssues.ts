@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchIssuesFromAPI, teamMembers } from '../data/todolistData';
-import { Issue, NewIssueFormState, Subtask, NewSubtaskFormState, Comment } from '../types/todolist'; // Added Comment
+import { Issue, NewIssueFormState, Subtask, NewSubtaskFormState, Comment } from '../types/todolist';
+import { commentService } from '../services/commentService';
 
 export const useTodolistIssues = (projectId: number = 1) => {
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -34,7 +35,7 @@ export const useTodolistIssues = (projectId: number = 1) => {
   };
 
   const getNextSubtaskKey = (parentIssue: Issue) => {
-    const maxSubtaskNum = parentIssue.subtasks.length > 0 
+    const maxSubtaskNum = parentIssue.subtasks.length > 0
       ? Math.max(...parentIssue.subtasks.map(subtask => parseInt(subtask.key.split('-')[2])))
       : 0;
     return `${parentIssue.key}-${maxSubtaskNum + 1}`;
@@ -72,7 +73,7 @@ export const useTodolistIssues = (projectId: number = 1) => {
   const createSubtask = (parentIssueId: string, subtaskData: NewSubtaskFormState) => {
     if (!subtaskData.summary.trim()) return;
 
-    setIssues(prevIssues => 
+    setIssues(prevIssues =>
       prevIssues.map(issue => {
         if (issue.id === parentIssueId) {
           const assignedMember = teamMembers.find(member => member.id === subtaskData.assignee);
@@ -88,6 +89,7 @@ export const useTodolistIssues = (projectId: number = 1) => {
             priority: subtaskData.priority,
             issueType: 'Sub-task',
             storyPoints: subtaskData.storyPoints ? parseInt(subtaskData.storyPoints) : undefined,
+            comments: [],
             createdDate: new Date().toISOString().split('T')[0],
             updatedDate: new Date().toISOString().split('T')[0]
           };
@@ -112,8 +114,8 @@ export const useTodolistIssues = (projectId: number = 1) => {
             ? { ...subtask, ...updates, updatedDate: new Date().toISOString().split('T')[0] }
             : subtask
         ),
-        updatedDate: issue.subtasks.some(s => s.id === subtaskId) 
-          ? new Date().toISOString().split('T')[0] 
+        updatedDate: issue.subtasks.some(s => s.id === subtaskId)
+          ? new Date().toISOString().split('T')[0]
           : issue.updatedDate
       }))
     );
@@ -132,8 +134,8 @@ export const useTodolistIssues = (projectId: number = 1) => {
   };
 
   const updateIssue = (issueId: string, updates: Partial<Issue>) => {
-    setIssues(issues.map(issue => 
-      issue.id === issueId 
+    setIssues(issues.map(issue =>
+      issue.id === issueId
         ? { ...issue, ...updates, updatedDate: new Date().toISOString().split('T')[0] }
         : issue
     ));
@@ -147,6 +149,59 @@ export const useTodolistIssues = (projectId: number = 1) => {
     updateIssue(issueId, { status: newStatus });
   };
 
+  const fetchTaskComments = async (issueId: string) => {
+    try {
+      const { commentService } = await import('../services/commentService');
+      const numericId = parseInt(issueId);
+      if (isNaN(numericId)) return;
+
+      const response = await commentService.getTaskComments(numericId);
+      const transformedComments: Comment[] = response.map(c => ({
+        id: c.commentId.toString(),
+        author: teamMembers.find(m => m.name === c.createdBy) || teamMembers[0],
+        text: c.commentText,
+        createdDate: c.createdDate.split('T')[0]
+      }));
+
+      setIssues(prevIssues => prevIssues.map(issue =>
+        issue.id === issueId ? { ...issue, comments: transformedComments } : issue
+      ));
+    } catch (error) {
+      console.error('Failed to fetch task comments:', error);
+    }
+  };
+
+  const fetchSubtaskComments = async (subtaskId: string) => {
+    try {
+      const { commentService } = await import('../services/commentService');
+      const numericId = parseInt(subtaskId);
+      if (isNaN(numericId)) return;
+
+      const response = await commentService.getCommentsBySubtaskId(numericId);
+      const transformedComments: Comment[] = response.map(c => ({
+        id: c.subtaskCommentId.toString(),
+        author: teamMembers.find(m => m.name === c.createdBy) || teamMembers[0],
+        text: c.commentText,
+        createdDate: c.createdDate.split('T')[0]
+      }));
+
+      setIssues(prevIssues => prevIssues.map(issue => {
+        const subtask = issue.subtasks.find(s => s.id === subtaskId);
+        if (subtask) {
+          return {
+            ...issue,
+            subtasks: issue.subtasks.map(s =>
+              s.id === subtaskId ? { ...s, comments: transformedComments } : s
+            )
+          };
+        }
+        return issue;
+      }));
+    } catch (error) {
+      console.error('Failed to fetch subtask comments:', error);
+    }
+  };
+
   const toggleFlag = (issueId: string) => {
     const issue = issues.find(i => i.id === issueId);
     if (issue) {
@@ -154,16 +209,18 @@ export const useTodolistIssues = (projectId: number = 1) => {
     }
   };
 
-  const addComment = (issueId: string, commentText: string) => {
+  const addComment = async (issueId: string, commentText: string) => {
+    // Optimistic Update
+    const newComment: Comment = {
+      id: `comment-${Date.now()}`,
+      author: teamMembers[0],
+      text: commentText,
+      createdDate: new Date().toISOString().split('T')[0],
+    };
+
     setIssues(prevIssues =>
       prevIssues.map(issue => {
         if (issue.id === issueId) {
-          const newComment: Comment = {
-            id: `comment-${Date.now()}`,
-            author: teamMembers[0], // Assuming current user is the first team member
-            text: commentText,
-            createdDate: new Date().toISOString().split('T')[0],
-          };
           return {
             ...issue,
             comments: [...issue.comments, newComment],
@@ -173,6 +230,208 @@ export const useTodolistIssues = (projectId: number = 1) => {
         return issue;
       })
     );
+
+    try {
+      await commentService.addTaskComment(
+        parseInt(issueId),
+        {
+          commentText,
+          createdBy: teamMembers[0].name,
+        }
+      );
+    } catch (error) {
+      console.error('Failed to add task comment:', error);
+      // Revert if failed (optional: refresh issues)
+    }
+  };
+
+  const addSubtaskComment = async (subtaskId: string, commentText: string) => {
+    // Find the parent task ID for this subtask
+    let parentTaskId: string | null = null;
+    for (const issue of issues) {
+      const subtask = issue.subtasks.find(s => s.id === subtaskId);
+      if (subtask) {
+        parentTaskId = issue.id;
+        break;
+      }
+    }
+
+    if (!parentTaskId) {
+      console.error('Parent task not found for subtask:', subtaskId);
+      return;
+    }
+
+    // Optimistic Update
+    const newComment: Comment = {
+      id: `subcomment-${Date.now()}`,
+      author: teamMembers[0],
+      text: commentText,
+      createdDate: new Date().toISOString().split('T')[0],
+    };
+
+    setIssues(prevIssues =>
+      prevIssues.map(issue => {
+        const subtaskIndex = issue.subtasks.findIndex(s => s.id === subtaskId);
+        if (subtaskIndex !== -1) {
+          const updatedSubtasks = issue.subtasks.map(s =>
+            s.id === subtaskId
+              ? { ...s, comments: [...s.comments, newComment], updatedDate: new Date().toISOString().split('T')[0] }
+              : s
+          );
+
+          return {
+            ...issue,
+            subtasks: updatedSubtasks,
+            updatedDate: new Date().toISOString().split('T')[0],
+          };
+        }
+        return issue;
+      })
+    );
+
+    try {
+      await commentService.addSubtaskComment(
+        parseInt(parentTaskId),
+        parseInt(subtaskId),
+        {
+          commentText,
+          createdBy: teamMembers[0].name,
+        }
+      );
+    } catch (error) {
+      console.error('Failed to add subtask comment:', error);
+    }
+  };
+
+  const updateComment = async (issueId: string, commentId: string, text: string) => {
+    // Optimistic Update
+    setIssues(prevIssues =>
+      prevIssues.map(issue => {
+        if (issue.id === issueId) {
+          return {
+            ...issue,
+            comments: issue.comments.map(c => c.id === commentId ? { ...c, text } : c),
+            updatedDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return issue;
+      })
+    );
+
+    try {
+      const taskNumericId = parseInt(issueId);
+      const commentNumericId = parseInt(commentId.replace('comment-', '').replace('subcomment-', ''));
+
+      if (!isNaN(taskNumericId) && !isNaN(commentNumericId)) {
+        await commentService.updateTaskComment(taskNumericId, commentNumericId, {
+          commentText: text,
+          updatedBy: teamMembers[0].name
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update task comment:', error);
+    }
+  };
+
+  const deleteComment = async (issueId: string, commentId: string) => {
+    // Optimistic Update
+    setIssues(prevIssues =>
+      prevIssues.map(issue => {
+        if (issue.id === issueId) {
+          return {
+            ...issue,
+            comments: issue.comments.filter(c => c.id !== commentId),
+            updatedDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return issue;
+      })
+    );
+
+    try {
+      const commentNumericId = parseInt(commentId.replace('comment-', '').replace('subcomment-', ''));
+
+      if (!isNaN(commentNumericId)) {
+        await commentService.deleteTaskComment(commentNumericId);
+      }
+    } catch (error) {
+      console.error('Failed to delete task comment:', error);
+    }
+  };
+
+  const updateSubtaskComment = async (subtaskId: string, commentId: string, text: string) => {
+    let parentTaskId: string | null = null;
+    for (const issue of issues) {
+      if (issue.subtasks.find(s => s.id === subtaskId)) {
+        parentTaskId = issue.id;
+        break;
+      }
+    }
+
+    if (!parentTaskId) return;
+
+    // Optimistic Update
+    setIssues(prevIssues =>
+      prevIssues.map(issue => {
+        if (issue.id === parentTaskId) {
+          return {
+            ...issue,
+            subtasks: issue.subtasks.map(s =>
+              s.id === subtaskId
+                ? { ...s, comments: s.comments.map(c => c.id === commentId ? { ...c, text } : c) }
+                : s
+            ),
+            updatedDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return issue;
+      })
+    );
+
+    try {
+      const taskNumericId = parseInt(parentTaskId);
+      const subtaskNumericId = parseInt(subtaskId);
+      const commentNumericId = parseInt(commentId.replace('comment-', '').replace('subcomment-', ''));
+
+      if (!isNaN(taskNumericId) && !isNaN(subtaskNumericId) && !isNaN(commentNumericId)) {
+        await commentService.updateSubtaskComment(taskNumericId, subtaskNumericId, commentNumericId, {
+          commentText: text,
+          updatedBy: teamMembers[0].name
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update subtask comment:', error);
+    }
+  };
+
+  const deleteSubtaskComment = async (subtaskId: string, commentId: string) => {
+    // Optimistic Update
+    setIssues(prevIssues =>
+      prevIssues.map(issue => {
+        if (issue.subtasks.find(s => s.id === subtaskId)) {
+          return {
+            ...issue,
+            subtasks: issue.subtasks.map(s =>
+              s.id === subtaskId
+                ? { ...s, comments: s.comments.filter(c => c.id !== commentId) }
+                : s
+            ),
+            updatedDate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return issue;
+      })
+    );
+
+    try {
+      const commentNumericId = parseInt(commentId.replace('comment-', '').replace('subcomment-', ''));
+
+      if (!isNaN(commentNumericId)) {
+        await commentService.deleteSubtaskComment(commentNumericId);
+      }
+    } catch (error) {
+      console.error('Failed to delete subtask comment:', error);
+    }
   };
 
   return {
@@ -187,7 +446,14 @@ export const useTodolistIssues = (projectId: number = 1) => {
     createSubtask,
     updateSubtask,
     deleteSubtask,
-    addComment, // Expose addComment
-    teamMembers // Expose teamMembers for assignee selection
+    addComment,
+    updateComment,
+    deleteComment,
+    fetchTaskComments,
+    addSubtaskComment,
+    updateSubtaskComment,
+    deleteSubtaskComment,
+    fetchSubtaskComments,
+    teamMembers
   };
 };

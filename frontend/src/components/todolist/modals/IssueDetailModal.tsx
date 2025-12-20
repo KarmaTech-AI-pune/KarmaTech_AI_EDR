@@ -23,6 +23,7 @@ import { IssueTypeIcon } from "../common/IssueTypeIcon";
 import { PriorityIcon } from "../common/PriorityIcon";
 import { IssueDetailRow } from "../common/IssueDetailRow";
 import { SubtaskList } from "../SubtaskList";
+import { SubtaskDetailModal } from "./SubtaskDetailModal";
 
 interface IssueDetailModalProps {
   showIssueDetail: Issue | null;
@@ -33,8 +34,15 @@ interface IssueDetailModalProps {
   onUpdateIssue: (issueId: string, updates: Partial<Issue>) => void; // Original onUpdateIssue from parent
   onCreateSubtask: (parentIssueId: string, subtaskData: NewSubtaskFormState) => void;
   onUpdateSubtask: (subtaskId: string, updates: Partial<Subtask>) => void;
-  onDeleteSubtask: (subtaskId: string) => void; // This is the parent's onDeleteSubtask for persistence
-  onAddComment: (issueId: string, commentText: string) => void; // New prop for adding comments
+  onDeleteSubtask: (subtaskId: string) => void;
+  onAddComment: (issueId: string, commentText: string) => void;
+  onUpdateComment: (issueId: string, commentId: string, text: string) => void;
+  onDeleteComment: (issueId: string, commentId: string) => void;
+  onAddSubtaskComment: (subtaskId: string, commentText: string) => void;
+  onUpdateSubtaskComment: (subtaskId: string, commentId: string, text: string) => void;
+  onDeleteSubtaskComment: (subtaskId: string, commentId: string) => void;
+  onFetchTaskComments: (issueId: string) => void;
+  onFetchSubtaskComments: (subtaskId: string) => void;
   teamMembers: TeamMember[];
 }
 
@@ -47,12 +55,28 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   onCreateSubtask,
   onUpdateSubtask,
   onDeleteSubtask,
-  onAddComment, // Destructure new prop
+  onAddComment,
+  onUpdateComment,
+  onDeleteComment,
+  onAddSubtaskComment,
+  onUpdateSubtaskComment,
+  onDeleteSubtaskComment,
+  onFetchTaskComments,
+  onFetchSubtaskComments,
   teamMembers,
 }) => {
   if (!showIssueDetail) return null;
 
-  const [newCommentText, setNewCommentText] = useState(""); // State for new comment input
+  const [newCommentText, setNewCommentText] = useState("");
+  const [viewingSubtask, setViewingSubtask] = useState<Subtask | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
+
+  React.useEffect(() => {
+    if (showIssueDetail) {
+      onFetchTaskComments(showIssueDetail.id);
+    }
+  }, [showIssueDetail?.id]);
 
   const handleClose = () => setShowIssueDetail(null);
   const handleDelete = () => {
@@ -117,6 +141,108 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       setShowIssueDetail({ ...showIssueDetail, comments: updatedComments });
       onAddComment(showIssueDetail.id, newCommentText); // Call parent's onAddComment for persistence
       setNewCommentText(""); // Clear input
+    }
+  };
+
+  const handleSubtaskAddComment = (subtaskId: string, text: string) => {
+    if (showIssueDetail) {
+      // Optimistic update for subtask comment addition
+      const newComment: Comment = {
+        id: `subcomment-${Date.now()}`,
+        author: teamMembers[0], // Current user
+        text: text,
+        createdDate: new Date().toISOString().split("T")[0],
+      };
+
+      const updatedSubtasks = showIssueDetail.subtasks.map(s =>
+        s.id === subtaskId
+          ? { ...s, comments: [...s.comments, newComment] }
+          : s
+      );
+      setShowIssueDetail({ ...showIssueDetail, subtasks: updatedSubtasks });
+
+      // Update viewingSubtask if it's the one we're looking at
+      if (viewingSubtask && viewingSubtask.id === subtaskId) {
+        setViewingSubtask({
+          ...viewingSubtask,
+          comments: [...viewingSubtask.comments, newComment]
+        });
+      }
+
+      onAddSubtaskComment(subtaskId, text);
+    }
+  };
+
+  const handleSubtaskUpdateComment = (subtaskId: string, commentId: string, text: string) => {
+    if (showIssueDetail) {
+      // Update subtask comment in showIssueDetail
+      const updatedSubtasks = showIssueDetail.subtasks.map(s =>
+        s.id === subtaskId
+          ? { ...s, comments: s.comments.map(c => c.id === commentId ? { ...c, text } : c) }
+          : s
+      );
+      setShowIssueDetail({ ...showIssueDetail, subtasks: updatedSubtasks });
+
+      // Update subtask comment in viewingSubtask
+      if (viewingSubtask && viewingSubtask.id === subtaskId) {
+        setViewingSubtask({
+          ...viewingSubtask,
+          comments: viewingSubtask.comments.map(c => c.id === commentId ? { ...c, text } : c)
+        });
+      }
+
+      onUpdateSubtaskComment(subtaskId, commentId, text);
+    }
+  };
+
+  const handleSubtaskDeleteComment = (subtaskId: string, commentId: string) => {
+    if (showIssueDetail) {
+      // Update subtask comment in showIssueDetail
+      const updatedSubtasks = showIssueDetail.subtasks.map(s =>
+        s.id === subtaskId
+          ? { ...s, comments: s.comments.filter(c => c.id !== commentId) }
+          : s
+      );
+      setShowIssueDetail({ ...showIssueDetail, subtasks: updatedSubtasks });
+
+      // Update subtask comment in viewingSubtask
+      if (viewingSubtask && viewingSubtask.id === subtaskId) {
+        setViewingSubtask({
+          ...viewingSubtask,
+          comments: viewingSubtask.comments.filter(c => c.id !== commentId)
+        });
+      }
+
+      onDeleteSubtaskComment(subtaskId, commentId);
+    }
+  };
+
+  const handleStartEditComment = (commentId: string, text: string) => {
+    setEditingCommentId(commentId);
+    setEditingCommentText(text);
+  };
+
+  const handleSaveCommentEdit = (commentId: string) => {
+    if (editingCommentText.trim() && showIssueDetail) {
+      // Optimistic update
+      const updatedComments = showIssueDetail.comments.map(c =>
+        c.id === commentId ? { ...c, text: editingCommentText } : c
+      );
+      setShowIssueDetail({ ...showIssueDetail, comments: updatedComments });
+
+      onUpdateComment(showIssueDetail.id, commentId, editingCommentText);
+      setEditingCommentId(null);
+      setEditingCommentText("");
+    }
+  };
+
+  const handleDeleteCommentLocal = (commentId: string) => {
+    if (showIssueDetail) {
+      // Optimistic update
+      const updatedComments = showIssueDetail.comments.filter(c => c.id !== commentId);
+      setShowIssueDetail({ ...showIssueDetail, comments: updatedComments });
+
+      onDeleteComment(showIssueDetail.id, commentId);
     }
   };
 
@@ -186,6 +312,19 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             onCreateSubtask={onCreateSubtask}
             onUpdateSubtask={handleUpdateSubtask}
             onDeleteSubtask={handleDeleteSubtask}
+            onSubtaskClick={(s) => setViewingSubtask(s)}
+          />
+
+          <SubtaskDetailModal
+            subtask={viewingSubtask}
+            parentIssue={showIssueDetail}
+            onClose={() => setViewingSubtask(null)}
+            onUpdateSubtask={handleUpdateSubtask}
+            onDeleteSubtask={handleDeleteSubtask}
+            onAddComment={handleSubtaskAddComment}
+            onUpdateComment={handleSubtaskUpdateComment}
+            onDeleteComment={handleSubtaskDeleteComment}
+            onFetchComments={onFetchSubtaskComments}
           />
 
           <Box sx={{ borderTop: "1px solid", borderColor: "grey.100", pt: 3 }}>
@@ -213,23 +352,68 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     sx={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 1,
-                      fontSize: "0.875rem",
-                      color: "text.secondary",
+                      justifyContent: "space-between",
                       mb: 0.5,
                     }}
                   >
-                    <Typography variant="body2" fontWeight="medium">
-                      {comment.author.name}
-                    </Typography>
-                    <Typography variant="body2">commented</Typography>
-                    <Typography variant="body2">
-                      {comment.createdDate}
-                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography variant="body2" fontWeight="medium">
+                        {comment.author.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {comment.createdDate}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Button
+                        size="small"
+                        onClick={() => handleStartEditComment(comment.id, comment.text)}
+                        sx={{ minWidth: "auto", mr: 1, textTransform: "none", p: 0 }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteCommentLocal(comment.id)}
+                        sx={{ minWidth: "auto", textTransform: "none", p: 0 }}
+                      >
+                        Delete
+                      </Button>
+                    </Box>
                   </Box>
-                  <Typography variant="body2" color="text.primary">
-                    {comment.text}
-                  </Typography>
+
+                  {editingCommentId === comment.id ? (
+                    <Box>
+                      <TextField
+                        fullWidth
+                        multiline
+                        size="small"
+                        value={editingCommentText}
+                        onChange={(e) => setEditingCommentText(e.target.value)}
+                        sx={{ mb: 1, bgcolor: "white" }}
+                      />
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => handleSaveCommentEdit(comment.id)}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="small"
+                          onClick={() => setEditingCommentId(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.primary">
+                      {comment.text}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             ))}
@@ -304,7 +488,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   <MenuItem
                     key={option.value}
                     value={option.value}
-                    // sx={{ backgroundColor: option.color }}
+                  // sx={{ backgroundColor: option.color }}
                   >
                     {option.label}
                   </MenuItem>
@@ -315,98 +499,98 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
           <Box sx={{ overflowY: "auto", flex: 1 }}>
             <IssueDetailRow label="Assignee">
-            {showIssueDetail.assignee ? (
-              <>
-                <Avatar
-                  sx={{
-                    bgcolor: "primary.main",
-                    width: 24,
-                    height: 24,
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  {showIssueDetail.assignee.avatar}
-                </Avatar>
-                <Typography variant="body2">
-                  {showIssueDetail.assignee.name}
+              {showIssueDetail.assignee ? (
+                <>
+                  <Avatar
+                    sx={{
+                      bgcolor: "primary.main",
+                      width: 24,
+                      height: 24,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    {showIssueDetail.assignee.avatar}
+                  </Avatar>
+                  <Typography variant="body2">
+                    {showIssueDetail.assignee.name}
+                  </Typography>
+                </>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Unassigned
                 </Typography>
-              </>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                Unassigned
-              </Typography>
-            )}
-          </IssueDetailRow>
+              )}
+            </IssueDetailRow>
 
-          <IssueDetailRow label="Reporter">
-            <Avatar
-              sx={{
-                bgcolor: "primary.main",
-                width: 24,
-                height: 24,
-                fontSize: "0.75rem",
-              }}
-            >
-              {showIssueDetail.reporter.avatar}
-            </Avatar>
-            <Typography variant="body2">
-              {showIssueDetail.reporter.name}
-            </Typography>
-          </IssueDetailRow>
-
-          <IssueDetailRow label="Priority">
-            <PriorityIcon priority={showIssueDetail.priority} />
-            <Typography variant="body2">
-              {showIssueDetail.priority}
-            </Typography>
-          </IssueDetailRow>
-
-          {showIssueDetail.storyPoints > 0 && (
-            <IssueDetailRow label="Story Points">
+            <IssueDetailRow label="Reporter">
               <Avatar
                 sx={{
-                  width: 20,
-                  height: 20,
-                  bgcolor: "grey.100",
-                  color: "grey.600",
+                  bgcolor: "primary.main",
+                  width: 24,
+                  height: 24,
                   fontSize: "0.75rem",
-                  fontWeight: "medium",
                 }}
               >
-                {showIssueDetail.storyPoints}
+                {showIssueDetail.reporter.avatar}
               </Avatar>
               <Typography variant="body2">
-                {showIssueDetail.storyPoints} points
+                {showIssueDetail.reporter.name}
               </Typography>
             </IssueDetailRow>
-          )}
 
-          <IssueDetailRow label="Components">
-            <Typography variant="body2" color="text.primary">
-              {showIssueDetail.components?.join(", ") || "None"}
-            </Typography>
-          </IssueDetailRow>
+            <IssueDetailRow label="Priority">
+              <PriorityIcon priority={showIssueDetail.priority} />
+              <Typography variant="body2">
+                {showIssueDetail.priority}
+              </Typography>
+            </IssueDetailRow>
 
-          <IssueDetailRow label="Fix Version">
-            <Typography variant="body2" color="text.primary">
-              {showIssueDetail.fixVersion || "None"}
-            </Typography>
-          </IssueDetailRow>
+            {showIssueDetail.storyPoints > 0 && (
+              <IssueDetailRow label="Story Points">
+                <Avatar
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    bgcolor: "grey.100",
+                    color: "grey.600",
+                    fontSize: "0.75rem",
+                    fontWeight: "medium",
+                  }}
+                >
+                  {showIssueDetail.storyPoints}
+                </Avatar>
+                <Typography variant="body2">
+                  {showIssueDetail.storyPoints} points
+                </Typography>
+              </IssueDetailRow>
+            )}
 
-          <IssueDetailRow label="Created">
-            <Typography variant="body2" color="text.primary">
-              {showIssueDetail.createdDate}
-            </Typography>
-          </IssueDetailRow>
+            <IssueDetailRow label="Components">
+              <Typography variant="body2" color="text.primary">
+                {showIssueDetail.components?.join(", ") || "None"}
+              </Typography>
+            </IssueDetailRow>
 
-          <IssueDetailRow label="Updated">
-            <Typography variant="body2" color="text.primary">
-              {showIssueDetail.updatedDate}
-            </Typography>
-          </IssueDetailRow>
+            <IssueDetailRow label="Fix Version">
+              <Typography variant="body2" color="text.primary">
+                {showIssueDetail.fixVersion || "None"}
+              </Typography>
+            </IssueDetailRow>
+
+            <IssueDetailRow label="Created">
+              <Typography variant="body2" color="text.primary">
+                {showIssueDetail.createdDate}
+              </Typography>
+            </IssueDetailRow>
+
+            <IssueDetailRow label="Updated">
+              <Typography variant="body2" color="text.primary">
+                {showIssueDetail.updatedDate}
+              </Typography>
+            </IssueDetailRow>
 
           </Box>
-          
+
         </Box>
       </DialogContent>
     </Dialog>
