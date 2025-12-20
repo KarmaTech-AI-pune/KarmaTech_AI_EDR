@@ -760,6 +760,15 @@ git push origin feature/project-status-history
 
 **🤖 GitHub Automation:** Automatically runs tests and generates reports
 
+**📋 MANDATORY TEST REPORT RULE:**
+When executing testing tasks from `tasks.md`, a comprehensive test report MUST be created and saved to `.kiro/specs/[feature-name]/test-report.md` for reviewer evaluation. This report must include:
+- Test execution summary (passed/failed counts)
+- Code coverage metrics (backend and frontend)
+- Performance benchmarks
+- Security test results
+- Any test failures with detailed explanations
+- Recommendations for reviewers
+
 #### **5.1 Generate Unit Tests**
 
 **File: `backend/tests/NJS.Application.Tests/Handlers/ChangeProjectStatusHandlerTests.cs`**
@@ -913,28 +922,72 @@ cd frontend
 npm run test -- --coverage
 # Output: 32 passed, 0 failed, 83% coverage
 
-# Generate test report
-# Saves to: .kiro/specs/project-status-history/test-report.md
+# Generate comprehensive test report
+# MANDATORY: Saves to: .kiro/specs/project-status-history/test-report.md
 ```
 
-**Test Report Generated:**
+**📋 MANDATORY Test Report Template:**
 ```markdown
-# Test Results - Project Status History
+# Test Results - [Feature Name]
+
+## Executive Summary
+- ✅ Overall Status: PASSED/FAILED
+- 📊 Total Coverage: XX%
+- ⏱️ Execution Time: XX minutes
+- 🎯 Quality Gate: PASSED/FAILED
 
 ## Backend Tests
-- ✅ Passed: 45
-- ❌ Failed: 0
-- 📊 Coverage: 87%
+- ✅ Passed: XX
+- ❌ Failed: XX
+- 📊 Coverage: XX%
+- 🔍 Unit Tests: XX/XX passed
+- 🔗 Integration Tests: XX/XX passed
+- 🛡️ Security Tests: XX/XX passed
 
 ## Frontend Tests
-- ✅ Passed: 32
-- ❌ Failed: 0
-- 📊 Coverage: 83%
+- ✅ Passed: XX
+- ❌ Failed: XX
+- 📊 Coverage: XX%
+- 🧪 Component Tests: XX/XX passed
+- 🎭 E2E Tests: XX/XX passed
 
-## Overall
-- ✅ All tests passing
-- 📊 Total coverage: 85%
-- ✅ Meets 80% requirement
+## Performance Benchmarks
+- 🚀 API Response Time: XXXms (target: <500ms)
+- 💾 Memory Usage: XXXmb
+- 🔄 Load Test Results: XX concurrent users
+
+## Test Failures (if any)
+### Backend Failures
+- Test Name: [Description of failure and recommended fix]
+
+### Frontend Failures
+- Test Name: [Description of failure and recommended fix]
+
+## Code Quality Metrics
+- 📏 Code Complexity: XX/10
+- 🔍 Static Analysis: XX issues found
+- 📝 Documentation Coverage: XX%
+
+## Reviewer Recommendations
+- ✅ Ready for review: YES/NO
+- 🚨 Critical Issues: [List any blocking issues]
+- 💡 Suggestions: [Optional improvements]
+- 📋 Checklist for Reviewer:
+  - [ ] All tests passing
+  - [ ] Coverage meets 80% threshold
+  - [ ] Performance benchmarks met
+  - [ ] No critical security issues
+  - [ ] Code quality acceptable
+
+## Test Evidence
+- 📁 Coverage Reports: [Links to detailed coverage reports]
+- 📊 Performance Reports: [Links to performance test results]
+- 🛡️ Security Scan Results: [Links to security test outputs]
+
+---
+**Generated:** [Timestamp]
+**Feature:** [Feature Name]
+**Spec Location:** .kiro/specs/[feature-name]/
 ```
 
 **Why this automation?**
@@ -942,6 +995,44 @@ npm run test -- --coverage
 - Provides coverage metrics automatically
 - Test failures documented (don't block PR)
 - Consistent testing every time
+
+---
+
+## 📋 **TASK EXECUTION RULES**
+
+### **MANDATORY: Test Report Generation**
+
+**When executing ANY testing task from `tasks.md`, the following rules MUST be followed:**
+
+1. **📄 Test Report Creation**: A comprehensive test report MUST be generated and saved to `.kiro/specs/[feature-name]/test-report.md`
+
+2. **📊 Required Content**: The test report MUST include:
+   - Executive summary with pass/fail status
+   - Detailed test results (backend and frontend)
+   - Code coverage metrics
+   - Performance benchmarks
+   - Security test results
+   - Any failures with explanations and fixes
+   - Reviewer recommendations and checklist
+
+3. **🎯 Quality Gates**: The report MUST clearly indicate:
+   - Whether all quality gates passed
+   - If the feature is ready for review
+   - Any blocking issues that need attention
+
+4. **📁 Evidence Links**: Include links to:
+   - Detailed coverage reports
+   - Performance test outputs
+   - Security scan results
+
+5. **👥 Reviewer Focus**: The report MUST provide:
+   - Clear pass/fail indicators
+   - Specific items for reviewers to check
+   - Recommendations for approval/rejection
+
+**🚫 NON-COMPLIANCE**: Features without proper test reports will be rejected during PR review.
+
+**✅ COMPLIANCE CHECK**: Before creating PR, verify test report exists and contains all required sections.
 
 ---
 

@@ -192,7 +192,8 @@ namespace NJSAPI.Controllers
                 if (existingDecision == null)
                     return NotFound($"GoNoGoDecision with ID {id} not found");
 
-                _repository.Update(decision);
+                // Use service to ensure score capping is applied during update
+                _decisionService.Update(decision);
                 return NoContent();
             }
             catch (Exception ex)
