@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Controller } from 'react-hook-form'; // Keep Controller for rendering the input
-import { IWBSFormInputs, IWBSItem, IWBSLevel2 } from '../types/wbs'; // Use IWBSItem here
+import { IWBSFormInputs, IWBSItem } from '../types/wbs'; // Use IWBSItem here
 import { useWBSFormDialogLogic } from '../hooks/useWBSFormDialogLogic'; // Import the custom hook
 
 interface WBSFormDialogProps {
