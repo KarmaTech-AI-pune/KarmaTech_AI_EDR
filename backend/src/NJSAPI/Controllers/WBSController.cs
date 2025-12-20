@@ -160,18 +160,24 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
-        /// Deletes tasks from the Work Breakdown Structure using WBSMasterDto.
+        /// Deletes a task from the Work Breakdown Structure by its ID.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <param name="wbsMaster">The WBS master data (tasks not included will be deleted).</param>
-        /// <returns>The updated WBS master data.</returns>
+        /// <param name="wbsTaskId">The ID of the WBS task to delete.</param>
+        /// <returns>Result of deletion.</returns>
         [HttpDelete("tasks")]
-        [ProducesResponseType(typeof(WBSMasterDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<WBSMasterDto>> DeleteTask(int projectId, [FromBody] WBSMasterDto wbsMaster)
+        public async Task<ActionResult<bool>> DeleteTask(int projectId, [FromQuery] int wbsTaskId)
         {
-            var command = new DeleteWBSTaskCommand(projectId, wbsMaster);
+            var command = new DeleteWBSTaskCommand(projectId, wbsTaskId);
             var result = await _mediator.Send(command);
+
+            if (!result)
+            {
+                 return NotFound($"WBSTask with Id {wbsTaskId} not found in Project {projectId}");
+            }
+
             return Ok(result);
         }
 
