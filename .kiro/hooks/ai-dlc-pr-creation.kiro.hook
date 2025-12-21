@@ -1,6 +1,6 @@
 {
-  "enabled": true,
-  "name": "AI-DLC PR Creation",
+  "enabled": false,
+  "name": "AI-DLC PR Creation [DISABLED - Use 03-pr-creator instead]",
   "description": "Automatically creates PR when all implementation and testing tasks are complete",
   "version": "1",
   "when": {

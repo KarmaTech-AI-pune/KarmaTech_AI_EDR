@@ -1,6 +1,6 @@
 {
-  "enabled": true,
-  "name": "AI-DLC Branch Creation",
+  "enabled": false,
+  "name": "AI-DLC Branch Creation [DISABLED - Use 01-task-executor instead]",
   "description": "Automatically creates feature branch when requirements phase is approved in any spec",
   "version": "1",
   "when": {

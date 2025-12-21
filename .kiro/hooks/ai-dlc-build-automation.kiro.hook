@@ -1,6 +1,6 @@
 {
-  "enabled": true,
-  "name": "AI-DLC Build Automation",
+  "enabled": false,
+  "name": "AI-DLC Build Automation [DISABLED - Use 02-build-publish instead]",
   "description": "Automatically runs PublishProject.ps1 to build frontend and backend when testing phase is complete",
   "version": "1",
   "when": {

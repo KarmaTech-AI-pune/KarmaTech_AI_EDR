@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "01 - Task Executor",
+  "description": "Executes tasks from tasks.md one by one, commits after each completed task",
+  "version": "1.0",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      ".kiro/specs/**/tasks.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "🔧 TASK EXECUTOR HOOK ACTIVATED\n\nFile: $EDITED_FILE\n\n## YOUR MISSION:\nExecute tasks from tasks.md ONE BY ONE. After completing each task, COMMIT and PUSH.\n\n---\n\n## STEP 1: SETUP\n\n1. Extract feature name from the spec folder path\n2. Check if feature branch exists, if not create it:\n   ```bash\n   git checkout Kiro/dev\n   git pull origin Kiro/dev\n   git checkout -b feature/[feature-name] 2>/dev/null || git checkout feature/[feature-name]\n   git push -u origin feature/[feature-name]\n   ```\n\n---\n\n## STEP 2: READ CONTEXT\n\n1. Read requirements.md from the same spec folder\n2. Read design.md from the same spec folder\n3. Understand what needs to be built\n\n---\n\n## STEP 3: EXECUTE TASKS SEQUENTIALLY\n\nFor EACH uncompleted task (marked with `- [ ]`):\n\n### 3.1 Read the task\n- Get task number and description\n- Understand what code changes are needed\n\n### 3.2 Implement the task\n- Write the actual code\n- Make the necessary file changes\n- Follow the design.md specifications\n\n### 3.3 Mark task complete\n- Update tasks.md: change `- [ ]` to `- [x]` for this task\n\n### 3.4 Commit and Push\n```bash\ngit add .\ngit commit -m \"feat: complete task [task-number] - [brief-description]\"\ngit push origin feature/[feature-name]\n```\n\n### 3.5 Report progress\n- Say: \"✅ Task [number] completed and pushed\"\n\n### 3.6 STOP and wait\n- After committing ONE task, STOP execution\n- The hook will re-trigger when tasks.md is saved again\n- This ensures each task gets its own commit\n\n---\n\n## STEP 4: CHECK COMPLETION\n\nAfter executing a task, check if ALL tasks are now complete:\n- If there are still `- [ ]` tasks remaining → STOP (hook will re-trigger)\n- If ALL tasks are `- [x]` → Create a marker file:\n  ```bash\n  echo \"completed\" > .kiro/specs/[feature-name]/.tasks-complete\n  git add .kiro/specs/[feature-name]/.tasks-complete\n  git commit -m \"chore: all tasks completed for [feature-name]\"\n  git push origin feature/[feature-name]\n  ```\n\n---\n\n## RULES:\n\n1. ✅ Execute ONLY ONE task per hook trigger\n2. ✅ ALWAYS commit and push after completing a task\n3. ✅ ALWAYS update tasks.md to mark task as complete\n4. ✅ STOP after one task - let the hook re-trigger for next task\n5. ✅ Skip tasks marked with `*` (optional tasks)\n6. ✅ Create .tasks-complete marker when ALL tasks are done\n7. ❌ Do NOT execute multiple tasks in one run\n8. ❌ Do NOT skip the commit step\n\n---\n\n## OUTPUT FORMAT:\n\n```\n📋 Feature: [feature-name]\n🔧 Executing Task: [task-number] - [description]\n... [implementation details] ...\n✅ Task [number] completed\n📤 Committed and pushed\n⏳ [X] tasks remaining\n```\n\nIf all tasks complete:\n```\n🎉 ALL TASKS COMPLETED!\n📄 Created .tasks-complete marker\n🔔 Hook 2 (Build) will trigger next\n```"
+  }
+}

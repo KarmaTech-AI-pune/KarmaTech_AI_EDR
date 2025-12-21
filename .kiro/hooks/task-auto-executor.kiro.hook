@@ -1,0 +1,16 @@
+{
+  "enabled": false,
+  "name": "Task Auto Executor [DISABLED - Use 01-task-executor instead]",
+  "description": "Automatically executes the next uncompleted task when a task is marked complete",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      ".kiro/specs/**/tasks.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "TASK AUTO-EXECUTOR\n\nThe tasks.md file has been updated. Automatically execute the next pending task:\n\n## TASK ANALYSIS:\n1. Parse the tasks.md file\n2. Find the next uncompleted task (marked with [ ])\n3. If a task was just completed (changed from [ ] to [x]), execute the NEXT task\n\n## AUTO-EXECUTION LOGIC:\n\n### Backend Tasks (1-5):\n- **Task 1**: Update ScoreCalculationHelper → Execute immediately\n- **Task 2**: Update DTOs → Execute immediately  \n- **Task 3**: Update handlers → Execute immediately\n- **Task 4**: Update controllers → Execute immediately\n- **Task 5**: Run backend tests → Execute: `cd backend && dotnet test`\n\n### Frontend Tasks (6-7):\n- **Task 6**: Update frontend logic → Execute immediately\n- **Task 7**: Update UI components → Execute immediately\n\n### Integration Tasks (8-11):\n- **Task 8**: Backward compatibility → Execute immediately\n- **Task 9**: Reports → Execute immediately\n- **Task 10**: Update tests → Execute immediately\n- **Task 11**: Final tests → Execute: `cd backend && dotnet test && cd ../frontend && npm test`\n\n## EXECUTION STRATEGY:\n```bash\n# 1. Identify next task\nNEXT_TASK=$(grep -n \"\\[ \\]\" tasks.md | head -1)\n\n# 2. Execute based on task type\nif [[ $NEXT_TASK == *\"ScoreCalculationHelper\"* ]]; then\n  echo \"🔧 Executing: Update ScoreCalculationHelper\"\n  # Implement the actual code changes\n  # Mark task as complete: sed -i 's/\\[ \\]/\\[x\\]/' tasks.md\nfi\n\n# 3. Continue to next task\necho \"✅ Task completed, moving to next...\"\n```\n\n## IMPORTANT:\n- DO NOT just suggest actions - EXECUTE them\n- Make actual code changes\n- Update the tasks.md file to mark tasks complete\n- Continue to the next task automatically\n- Provide progress updates\n\nThis should create a fully automated implementation pipeline."
+  }
+}

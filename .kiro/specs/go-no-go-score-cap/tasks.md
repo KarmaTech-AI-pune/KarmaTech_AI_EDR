@@ -1,207 +1,150 @@
 # Implementation Plan
 
-- [x] 1. Create score calculation helper utility
+- [ ] 1. Update score calculation helper utility
+  - Modify `ScoreCalculationHelper` class to use percentage calculation instead of capping
+  - Change MAX_TOTAL_SCORE constant to MAX_POSSIBLE_SCORE = 120
+  - Add `CalculateScorePercentage()` method: (rawTotal / 120) × 100
+  - Add `IsPerfectScore()` method to check if rawTotal equals 120
+  - Update `GetScoreInfo()` to return percentage instead of capped values 
+  - _Requirements: 1.1, 1.4, 1.5_
 
+- [ ] 1.1 Write property test for score calculation helper
+  - **Property 1: Percentage Calculation Accuracy**
+  - **Validates: Requirements 1.1, 1.4, 1.5**
 
+- [ ] 2. Update backend entities and DTOs
 
+- [ ] 2.1 Update GoNoGoDecision entity
+  - Remove capping validation, store raw total score
+  - Ensure TotalScore property stores raw value (0-120)
+  - _Requirements: 1.2_
 
-
-
-  - Implement `ScoreCalculationHelper` class with capping logic
-  - Add methods for calculating capped total, raw total, and capping detection
-  - Include constants for maximum score (100)
-  - _Requirements: 1.1, 1.4_
-
-- [ ]* 1.1 Write property test for score calculation helper
-  - **Property 1: Total Score Capping**
-  - **Validates: Requirements 1.1, 1.4**
-
-- [x] 2. Update backend entities and DTOs
-
-
-
-
-- [x] 2.1 Enhance GoNoGoDecision entity with capping validation
-
-
-  - Add validation method to apply score cap before storage
-  - Ensure TotalScore property uses capped value
-  - _Requirements: 1.3_
-
-- [x] 2.2 Update DTOs to include capping information
-
-
-
-
-  - Add RawTotalScore, IsScoreCapped properties to GoNoGoDecisionDto
-  - Update GoNoGoSummaryDto with transparency fields
+- [ ] 2.2 Update DTOs to include percentage information
+  - Replace IsScoreCapped with IsPerfectScore in GoNoGoDecisionDto
+  - Add ScorePercentage property to DTOs
+  - Update MaxPossibleScore to 120
   - _Requirements: 2.2_
 
-- [ ]* 2.3 Write property test for entity validation
+- [ ] 2.3 Write property test for entity validation
   - **Property 2: Individual Score Preservation**
-  - **Validates: Requirements 1.2**
+  - **Validates: Requirements 3.5**
 
 - [ ] 3. Update backend business logic and handlers
 
+- [ ] 3.1 Modify CreateGoNoGoDecisionHeaderHandler
+  - Remove capping logic, use raw total score
+  - Calculate and store percentage for display purposes
+  - _Requirements: 1.1, 1.2_
 
-
-
-
-- [x] 3.1 Modify CreateGoNoGoDecisionHeaderHandler
-
-
-  - Integrate ScoreCalculationHelper for total score capping
-  - Ensure capped scores are stored in database
-  - _Requirements: 1.1, 1.3_
-
-- [x] 3.2 Update GoNoGoDecisionService
-
-
-  - Apply capping logic in service methods
-  - Include capping information in service responses
+- [ ] 3.2 Update GoNoGoDecisionService
+  - Replace capping logic with percentage calculation
+  - Include percentage information in service responses
   - _Requirements: 1.1, 2.2_
 
-- [ ]* 3.3 Write property test for service layer capping
+- [ ] 3.3 Write property test for service layer percentage calculation
   - **Property 4: Status Calculation Consistency**
-  - **Validates: Requirements 1.1, 1.5**
+  - **Validates: Requirements 1.1, 3.2**
 
-- [x] 4. Update API controllers and responses
+- [ ] 4. Update API controllers and responses
 
+- [ ] 4.1 Enhance GoNoGoDecisionController endpoints
+  - Update GET endpoints to return percentage information
+  - Ensure POST/PUT endpoints store raw scores and calculate percentage
+  - _Requirements: 1.2, 2.2_
 
-
-
-- [x] 4.1 Enhance GoNoGoDecisionController endpoints
-
-
-
-  - Update GET endpoints to return capping information
-  - Ensure POST/PUT endpoints apply score capping
-  - _Requirements: 1.3, 2.2_
-
-- [x] 4.2 Update API response models
-
-
-  - Include capped and raw scores in API responses
-  - Add capping indicators to response DTOs
+- [ ] 4.2 Update API response models
+  - Include raw score, percentage, and max possible score in responses
+  - Replace capping indicators with percentage indicators
   - _Requirements: 2.2_
 
-- [ ]* 4.3 Write integration tests for API endpoints
-  - Test API responses include capping information
-  - Verify endpoints handle scores >100 correctly
-  - _Requirements: 1.3, 2.2_
+- [ ] 4.3 Write integration tests for API endpoints
+  - Test API responses include percentage information
+  - Verify endpoints handle full score range (0-120) correctly
+  - _Requirements: 1.2, 2.2_
 
-- [x] 5. Checkpoint - Ensure all backend tests pass
-
-
-
-
-
+- [ ] 5. Checkpoint - Ensure all backend tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [x] 6. Update frontend score calculation logic
+- [ ] 6. Update frontend score calculation logic
 
-
-
-
-
-
-
-- [x] 6.1 Enhance calculateTotalScore function in GoNoGoForm
-
-  - Implement capping logic: Math.min(rawTotal, 100)
-  - Add getRawTotalScore and isScoreCapped helper functions
+- [ ] 6.1 Enhance calculateTotalScore function in GoNoGoForm
+  - Remove capping logic: return raw total (0-120)
+  - Add calculateScorePercentage function: Math.round((rawTotal / 120) * 100)
+  - Add isPerfectScore helper function
+  - Add MAX_POSSIBLE_SCORE constant = 120
   - _Requirements: 1.1, 1.4, 1.5_
 
+- [ ] 6.2 Update getDecisionStatus function
+  - Ensure status calculation uses percentage thresholds
+  - Adjust thresholds for percentage-based calculation (e.g., >= 70% = GO Green, 42% - 70% = GO Amber,<42% = NO GO Red )
+  - _Requirements: 3.2_
 
-- [x] 6.2 Update getDecisionStatus function
+- [ ] 6.3 Write property test for frontend calculation
+  - **Property 1: Percentage Calculation Accuracy (Frontend)**
+  - **Validates: Requirements 1.1, 1.4, 1.5**
 
+- [ ] 7. Implement frontend UI enhancements
 
+- [ ] 7.1 Update total score display section
+  - Display percentage with "%" suffix (e.g., "75%")
+  - Show raw score for transparency (e.g., "75% (90/120)")
+  - Indicate maximum possible score is 120
+  - _Requirements: 2.1, 2.2, 2.3_
 
+- [ ] 7.2 Update real-time score indicators
+  - Remove capping warning messages
+  - Add perfect score success indicator when 100% is achieved
+  - Implement real-time percentage recalculation on score changes
+  - _Requirements: 2.4, 2.5_
 
-  - Ensure status calculation uses capped total score
-  - Maintain existing status thresholds with capped values
-  - _Requirements: 1.5_
-
-- [ ]* 6.3 Write property test for frontend calculation
-  - **Property 1: Total Score Capping (Frontend)**
-  - **Validates: Requirements 1.1, 1.4**
-
-- [x] 7. Implement frontend UI enhancements
-
-
-
-
-
-- [x] 7.1 Add real-time capping indicators
-
-
-  - Display warning message when score is capped
-  - Show both raw total and capped value for transparency
-  - Add visual indicators for capped scores
-  - _Requirements: 2.1, 2.2_
-
-- [x] 7.2 Update total score display section
-
-
-  - Indicate maximum possible total score is 100
-  - Show success indicator when total reaches exactly 100
-  - Implement real-time recalculation on score changes
-  - _Requirements: 2.3, 2.4, 2.5_
-
-- [ ]* 7.3 Write property test for UI capping behavior
-  - **Property 3: Capping Transparency**
+- [ ] 7.3 Write property test for UI percentage display
+  - **Property 3: Score Transparency**
   - **Validates: Requirements 2.2**
 
-- [x] 8. Implement backward compatibility features
+- [ ] 8. Implement backward compatibility features
 
-
-
-
-
-- [x] 8.1 Update data retrieval to apply capping
-
-
-  - Ensure existing records display capped totals
+- [ ] 8.1 Update data retrieval to calculate percentage
+  - Ensure existing records display calculated percentage
   - Preserve individual criterion scores unchanged
-  - _Requirements: 3.1_
+  - _Requirements: 3.1, 3.5_
 
-- [x] 8.2 Update record editing to apply new capping rules
-
-
-  - Apply score cap when editing existing records
+- [ ] 8.2 Update record editing to use percentage calculation
+  - Calculate percentage when editing existing records
   - Maintain individual score integrity during edits
   - _Requirements: 3.3_
 
-- [ ]* 8.3 Write property test for backward compatibility
+- [ ] 8.3 Write property test for backward compatibility
   - **Property 5: Backward Compatibility**
-  - **Validates: Requirements 3.1, 3.2, 3.5**
+  - **Validates: Requirements 3.1, 3.3, 3.5**
 
 - [ ] 9. Update report generation and data analysis
-- [ ] 9.1 Ensure reports use capped total scores
-  - Update report queries to use capped totals
+
+- [ ] 9.1 Ensure reports use score percentages
+  - Update report queries to calculate percentages
   - Maintain consistency across historical data analysis
   - _Requirements: 3.4_
 
 - [ ] 9.2 Update status calculation for existing records
-  - Apply capped totals to status determination for all records
+  - Apply percentage-based status determination for all records
   - Ensure consistent Green/Amber/Red classification
   - _Requirements: 3.2_
 
-- [ ]* 9.3 Write property test for report consistency
+- [ ] 9.3 Write property test for report consistency
   - **Property 4: Status Calculation Consistency (Reports)**
   - **Validates: Requirements 3.2, 3.4**
 
-- [ ] 10. Create data migration strategy
-- [ ] 10.1 Develop migration script for existing records
-  - Update existing records to apply 100-point cap
-  - Preserve individual criterion scores
-  - Add capping indicators where applicable
-  - _Requirements: 3.5_
+- [ ] 10. Update existing tests and remove capping logic
 
-- [ ]* 10.2 Write unit tests for migration script
-  - Test migration preserves individual scores
-  - Verify capping is applied to existing totals >100
-  - _Requirements: 3.5_
+- [ ] 10.1 Update ScoreCalculationHelperTests
+  - Replace capping tests with percentage calculation tests
+  - Test edge cases: 0%, 50%, 100%
+  - Verify percentage formula accuracy
+  - _Requirements: 1.1, 1.4, 1.5_
+
+- [ ] 10.2 Write unit tests for percentage calculation
+  - Test various score combinations
+  - Verify rounding behavior
+  - _Requirements: 1.1, 1.4, 1.5_
 
 - [ ] 11. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.

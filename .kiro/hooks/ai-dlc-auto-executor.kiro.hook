@@ -1,0 +1,18 @@
+{
+  "enabled": false,
+  "name": "AI-DLC Auto Executor [DISABLED - Use 01-task-executor instead]",
+  "description": "Automatically executes next workflow step when current phase is complete",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      ".kiro/specs/**/tasks.md",
+      ".kiro/specs/**/requirements.md",
+      ".kiro/specs/**/design.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "ENHANCED AI-DLC AUTO-EXECUTOR\n\nA spec file has been updated. Analyze the current state and automatically execute the next workflow step:\n\n## PHASE DETECTION:\n1. **Requirements Phase**: Check if requirements.md is complete and approved\n2. **Design Phase**: Check if design.md is complete and approved  \n3. **Tasks Phase**: Check if tasks.md is complete and approved\n4. **Implementation Phase**: Check task completion status in tasks.md\n5. **Testing Phase**: Check if all tests are passing\n6. **PR Phase**: Check if ready for PR creation\n7. **Merge Phase**: Check if PR is approved\n\n## AUTO-EXECUTION RULES:\n\n### If Requirements Complete → Create Feature Branch\n```bash\n# Extract feature name from folder path\nFEATURE_NAME=$(basename $(dirname $EDITED_FILE))\ngit checkout Kiro/dev\ngit pull origin Kiro/dev\ngit checkout -b feature/$FEATURE_NAME\ngit push -u origin feature/$FEATURE_NAME\necho \"✅ Branch created: feature/$FEATURE_NAME\"\n```\n\n### If All Tasks Complete → Auto-Execute Implementation\n```bash\n# Start executing tasks automatically\necho \"🚀 Starting auto-implementation...\"\n# Execute each task in sequence\n# Report progress\n```\n\n### If Implementation Complete → Run Tests & Build\n```bash\n# Backend tests\ncd backend && dotnet test --collect:\"XPlat Code Coverage\"\n# Frontend tests  \ncd frontend && npm run test -- --coverage\n# Build\n./PublishProject.ps1\necho \"✅ Tests passed, build complete\"\n```\n\n### If Tests Pass → Create PR\n```bash\ngh pr create \\\n  --base Kiro/dev \\\n  --head feature/$FEATURE_NAME \\\n  --title \"feat: $FEATURE_NAME\" \\\n  --body \"Auto-generated PR from AI-DLC workflow\" \\\n  --label \"kiro-automated\"\necho \"✅ PR created automatically\"\n```\n\n### If PR Approved → Auto-Merge\n```bash\nPR_NUMBER=$(gh pr list --head feature/$FEATURE_NAME --json number --jq '.[0].number')\ngh pr merge $PR_NUMBER --merge --delete-branch\necho \"✅ PR merged, deployment triggered\"\n```\n\n## EXECUTION:\nDetect current phase, execute appropriate action, report results.\nDO NOT just queue - EXECUTE the actions directly.\nProvide detailed progress updates.\n\nIMPORTANT: This hook should EXECUTE actions, not just suggest them."
+  }
+}

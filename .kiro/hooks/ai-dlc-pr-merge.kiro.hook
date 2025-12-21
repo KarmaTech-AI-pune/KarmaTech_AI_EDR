@@ -1,6 +1,6 @@
 {
-  "enabled": true,
-  "name": "AI-DLC PR Merge",
+  "enabled": false,
+  "name": "AI-DLC PR Merge [DISABLED - Manual merge for now]",
   "description": "Automatically merges PR and triggers deployment when approved",
   "version": "1",
   "when": {
