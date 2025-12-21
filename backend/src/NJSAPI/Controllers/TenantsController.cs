@@ -7,6 +7,9 @@ using NJS.Domain; // For MigrationResult
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Services;
+using MediatR;
+using NJS.Application.CQRS.Tenants.Queries;
+using NJS.Application.Dtos;
 
 namespace NJSAPI.Controllers
 {
@@ -24,6 +27,7 @@ namespace NJSAPI.Controllers
         private readonly ICurrentTenantService _currentTenantService;
         private readonly ITenantMigrationService _tenantMigrationService;
         private readonly IConfiguration _configuration;
+        private readonly IMediator _mediator;
 
         public TenantsController(
             ProjectManagementContext context,
@@ -34,6 +38,7 @@ namespace NJSAPI.Controllers
             ICurrentTenantService currentTenantService,
             ITenantMigrationService tenantMigrationService,
             IConfiguration configuration,
+            IMediator mediator,
             ILogger<TenantsController> logger)
         {
             _context = context;
@@ -44,6 +49,7 @@ namespace NJSAPI.Controllers
             _currentTenantService = currentTenantService;
             _tenantMigrationService = tenantMigrationService;
             _configuration = configuration;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -58,6 +64,18 @@ namespace NJSAPI.Controllers
                 .ToListAsync();
 
             return Ok(result);
+        }
+
+        // GET: api/tenants/{id}/features
+        [HttpGet("{id}/features")]
+        public async Task<ActionResult<TenantPlanDetailsDto>> GetTenantFeatures(int id)
+        {
+            var features = await _mediator.Send(new GetTenantFeaturesQuery(id));
+            if (features == null)
+            {
+                 return NotFound();
+            }
+            return Ok(features);
         }
 
         // GET: api/tenants/5

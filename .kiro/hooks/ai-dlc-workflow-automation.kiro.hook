@@ -1,0 +1,16 @@
+{
+  "enabled": false,
+  "name": "AI-DLC Branch Creation [DISABLED - Use 01-task-executor instead]",
+  "description": "Automatically creates feature branch when requirements phase is approved in any spec",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      ".kiro/specs/**/requirements.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A spec requirements.md file has been updated. Check if the requirements phase has been approved (look for approval markers or completion indicators).\n\nIf requirements are approved, execute ONLY these Git commands:\n\n1. Extract the feature name from the spec folder path (e.g., .kiro/specs/project-status-history/ → feature name is 'project-status-history')\n2. Execute: git checkout -b feature/[feature-name]\n3. Execute: git push -u origin feature/[feature-name]\n\nProvide confirmation of branch creation with the exact branch name created.\n\nIMPORTANT: Only handle branch creation. Do NOT proceed with implementation, design, or other workflow steps. Keep workflows independent."
+  }
+}

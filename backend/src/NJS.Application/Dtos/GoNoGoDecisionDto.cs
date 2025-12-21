@@ -39,6 +39,8 @@ namespace NJS.Application.Dtos
 
         // Total Score and Decision
         public int TotalScore { get; set; }
+        public int RawTotalScore { get; set; }
+        public bool IsScoreCapped { get; set; }
         public GoNoGoStatus Status { get; set; }
         public string DecisionComments { get; set; }
 

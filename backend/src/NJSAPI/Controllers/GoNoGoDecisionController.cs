@@ -8,6 +8,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using NJS.Application.Services.IContract;
 using NJS.Application.CQRS.Commands.GoNoGoDecision;
+using NJS.Application.Helpers;
 
 namespace NJSAPI.Controllers
 {
@@ -28,12 +29,12 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<GoNoGoDecision>> GetAll()
+        public ActionResult<IEnumerable<GoNoGoSummaryDto>> GetAll()
         {
             try
             {
-                var decisions = _repository.GetAll();
-                return Ok(decisions);
+                var decisionDtos = _decisionService.GetAllWithCappingInfo();
+                return Ok(decisionDtos);
             }
             catch (Exception ex)
             {
@@ -42,15 +43,15 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public ActionResult<GoNoGoDecision> GetById(int id)
+        public ActionResult<GoNoGoDecisionDto> GetById(int id)
         {
             try
             {
-                var decision = _repository.GetById(id);
-                if (decision == null)
+                var decisionDto = _decisionService.GetByIdWithCappingInfo(id);
+                if (decisionDto == null)
                     return NotFound($"GoNoGoDecision with ID {id} not found");
 
-                return Ok(decision);
+                return Ok(decisionDto);
             }
             catch (Exception ex)
             {
@@ -59,15 +60,15 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet("project/{projectId}")]
-        public ActionResult<GoNoGoDecision> GetByProjectId(int projectId)
+        public ActionResult<GoNoGoDecisionDto> GetByProjectId(int projectId)
         {
             try
             {
-                var decision = _repository.GetByProjectId(projectId);
-                if (decision == null)
+                var decisionDto = _decisionService.GetByProjectIdWithCappingInfo(projectId);
+                if (decisionDto == null)
                     return NotFound($"GoNoGoDecision for project ID {projectId} not found");
 
-                return Ok(decision);
+                return Ok(decisionDto);
             }
             catch (Exception ex)
             {
@@ -118,7 +119,7 @@ namespace NJSAPI.Controllers
                     },
                     Summary = new SummaryCommand
                     {
-                        TotalScore = decision.Summary.TotalScore,
+                        TotalScore = CalculateCappedTotalFromForm(decision),
                         Status = decision.Summary.Status,
                         DecisionComments = decision.Summary.DecisionComments,
                         ActionPlan = decision.Summary.ActionPlan
@@ -191,7 +192,8 @@ namespace NJSAPI.Controllers
                 if (existingDecision == null)
                     return NotFound($"GoNoGoDecision with ID {id} not found");
 
-                _repository.Update(decision);
+                // Use service to ensure score capping is applied during update
+                _decisionService.Update(decision);
                 return NoContent();
             }
             catch (Exception ex)
@@ -385,6 +387,32 @@ namespace NJSAPI.Controllers
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Calculates the capped total score from a GoNoGoForm
+        /// </summary>
+        /// <param name="form">The GoNoGoForm containing scoring criteria</param>
+        /// <returns>Total score capped at 100</returns>
+        private int CalculateCappedTotalFromForm(GoNoGoForm form)
+        {
+            if (form?.ScoringCriteria == null)
+                return 0;
+
+            int rawTotal = form.ScoringCriteria.MarketingPlan.Score +
+                          form.ScoringCriteria.ClientRelationship.Score +
+                          form.ScoringCriteria.ProjectKnowledge.Score +
+                          form.ScoringCriteria.TechnicalEligibility.Score +
+                          form.ScoringCriteria.FinancialEligibility.Score +
+                          form.ScoringCriteria.StaffAvailability.Score +
+                          form.ScoringCriteria.CompetitionAssessment.Score +
+                          form.ScoringCriteria.CompetitivePosition.Score +
+                          form.ScoringCriteria.FutureWorkPotential.Score +
+                          form.ScoringCriteria.Profitability.Score +
+                          form.ScoringCriteria.ResourceAvailability.Score +
+                          form.ScoringCriteria.BidSchedule.Score;
+
+            return Math.Min(rawTotal, ScoreCalculationHelper.MAX_TOTAL_SCORE);
         }
     }
 }

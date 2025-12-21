@@ -5,6 +5,7 @@ using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using NJS.Repositories.Interfaces;
 using System.Text.Json;
+using NJS.Application.Helpers;
 
 public class GoNoGoDecisionService : IGoNoGoDecisionService
 {
@@ -23,6 +24,8 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public void Add(GoNoGoDecision decision)
     {
+        // Apply score capping before adding to database
+        ScoreCalculationHelper.ApplyScoreCap(decision);
         _goNoGoDecision.Add(decision);
     }
 
@@ -105,6 +108,8 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public void Update(GoNoGoDecision decision)
     {
+        // Apply score capping before updating in database
+        ScoreCalculationHelper.ApplyScoreCap(decision);
         _goNoGoDecision.Update(decision);
     }
 
@@ -164,7 +169,10 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
         header.CurrentVersion = version.VersionNumber;
         header.VersionStatus = version.Status;
-        header.TotalScore = summary!.Summary.TotalScore;
+        
+        // Apply score capping to the total score from summary
+        int rawTotalScore = summary!.Summary.TotalScore;
+        header.TotalScore = Math.Min(rawTotalScore, ScoreCalculationHelper.MAX_TOTAL_SCORE);
 
 
         return await _goNoGoDecision.UpdateVersion(version);
@@ -180,4 +188,173 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
         GoNoGoVersionStatus.RD_APPROVED => GoNoGoVersionStatus.COMPLETED,
         _ => throw new Exception("Invalid version status")
     };
+
+    /// <summary>
+    /// Gets a GoNoGoDecision by ID and returns it as a DTO with capping information
+    /// </summary>
+    /// <param name="id">The decision ID</param>
+    /// <returns>GoNoGoDecisionDto with capping information included</returns>
+    public GoNoGoDecisionDto GetByIdWithCappingInfo(int id)
+    {
+        var decision = _goNoGoDecision.GetById(id);
+        if (decision == null) return null;
+
+        var scoreInfo = ScoreCalculationHelper.GetScoreInfo(decision);
+        
+        return new GoNoGoDecisionDto
+        {
+            ProjectId = decision.ProjectId,
+            BidType = decision.BidType,
+            Sector = decision.Sector,
+            TenderFee = decision.TenderFee,
+            EmdAmount = decision.EMDAmount,
+            
+            // Individual scores
+            MarketingPlanScore = decision.MarketingPlanScore,
+            MarketingPlanComments = decision.MarketingPlanComments,
+            ClientRelationshipScore = decision.ClientRelationshipScore,
+            ClientRelationshipComments = decision.ClientRelationshipComments,
+            ProjectKnowledgeScore = decision.ProjectKnowledgeScore,
+            ProjectKnowledgeComments = decision.ProjectKnowledgeComments,
+            TechnicalEligibilityScore = decision.TechnicalEligibilityScore,
+            TechnicalEligibilityComments = decision.TechnicalEligibilityComments,
+            FinancialEligibilityScore = decision.FinancialEligibilityScore,
+            FinancialEligibilityComments = decision.FinancialEligibilityComments,
+            StaffAvailabilityScore = decision.StaffAvailabilityScore,
+            StaffAvailabilityComments = decision.StaffAvailabilityComments,
+            CompetitionAssessmentScore = decision.CompetitionAssessmentScore,
+            CompetitionAssessmentComments = decision.CompetitionAssessmentComments,
+            CompetitivePositionScore = decision.CompetitivePositionScore,
+            CompetitivePositionComments = decision.CompetitivePositionComments,
+            FutureWorkPotentialScore = decision.FutureWorkPotentialScore,
+            FutureWorkPotentialComments = decision.FutureWorkPotentialComments,
+            ProfitabilityScore = decision.ProfitabilityScore,
+            ProfitabilityComments = decision.ProfitabilityComments,
+            ResourceAvailabilityScore = decision.ResourceAvailabilityScore,
+            ResourceAvailabilityComments = decision.ResourceAvailabilityComments,
+            BidScheduleScore = decision.BidScheduleScore,
+            BidScheduleComments = decision.BidScheduleComments,
+            
+            // Capping information
+            TotalScore = scoreInfo.CappedTotalScore,
+            RawTotalScore = scoreInfo.RawTotalScore,
+            IsScoreCapped = scoreInfo.IsScoreCapped,
+            Status = decision.Status,
+            DecisionComments = decision.DecisionComments,
+            
+            // Approval information
+            CompletedDate = decision.CompletedDate,
+            CompletedBy = decision.CompletedBy,
+            ReviewedDate = decision.ReviewedDate,
+            ReviewedBy = decision.ReviewedBy,
+            ApprovedDate = decision.ApprovedDate,
+            ApprovedBy = decision.ApprovedBy,
+            ActionPlan = decision.ActionPlan,
+            
+            // Audit fields
+            CreatedAt = decision.CreatedAt,
+            CreatedBy = decision.CreatedBy,
+            LastModifiedAt = decision.LastModifiedAt,
+            LastModifiedBy = decision.LastModifiedBy
+        };
+    }
+
+    /// <summary>
+    /// Gets a GoNoGoDecision by Project ID and returns it as a DTO with capping information
+    /// </summary>
+    /// <param name="projectId">The project ID</param>
+    /// <returns>GoNoGoDecisionDto with capping information included</returns>
+    public GoNoGoDecisionDto GetByProjectIdWithCappingInfo(int projectId)
+    {
+        var decision = _goNoGoDecision.GetByProjectId(projectId);
+        if (decision == null) return null;
+
+        var scoreInfo = ScoreCalculationHelper.GetScoreInfo(decision);
+        
+        return new GoNoGoDecisionDto
+        {
+            ProjectId = decision.ProjectId,
+            BidType = decision.BidType,
+            Sector = decision.Sector,
+            TenderFee = decision.TenderFee,
+            EmdAmount = decision.EMDAmount,
+            
+            // Individual scores
+            MarketingPlanScore = decision.MarketingPlanScore,
+            MarketingPlanComments = decision.MarketingPlanComments,
+            ClientRelationshipScore = decision.ClientRelationshipScore,
+            ClientRelationshipComments = decision.ClientRelationshipComments,
+            ProjectKnowledgeScore = decision.ProjectKnowledgeScore,
+            ProjectKnowledgeComments = decision.ProjectKnowledgeComments,
+            TechnicalEligibilityScore = decision.TechnicalEligibilityScore,
+            TechnicalEligibilityComments = decision.TechnicalEligibilityComments,
+            FinancialEligibilityScore = decision.FinancialEligibilityScore,
+            FinancialEligibilityComments = decision.FinancialEligibilityComments,
+            StaffAvailabilityScore = decision.StaffAvailabilityScore,
+            StaffAvailabilityComments = decision.StaffAvailabilityComments,
+            CompetitionAssessmentScore = decision.CompetitionAssessmentScore,
+            CompetitionAssessmentComments = decision.CompetitionAssessmentComments,
+            CompetitivePositionScore = decision.CompetitivePositionScore,
+            CompetitivePositionComments = decision.CompetitivePositionComments,
+            FutureWorkPotentialScore = decision.FutureWorkPotentialScore,
+            FutureWorkPotentialComments = decision.FutureWorkPotentialComments,
+            ProfitabilityScore = decision.ProfitabilityScore,
+            ProfitabilityComments = decision.ProfitabilityComments,
+            ResourceAvailabilityScore = decision.ResourceAvailabilityScore,
+            ResourceAvailabilityComments = decision.ResourceAvailabilityComments,
+            BidScheduleScore = decision.BidScheduleScore,
+            BidScheduleComments = decision.BidScheduleComments,
+            
+            // Capping information
+            TotalScore = scoreInfo.CappedTotalScore,
+            RawTotalScore = scoreInfo.RawTotalScore,
+            IsScoreCapped = scoreInfo.IsScoreCapped,
+            Status = decision.Status,
+            DecisionComments = decision.DecisionComments,
+            
+            // Approval information
+            CompletedDate = decision.CompletedDate,
+            CompletedBy = decision.CompletedBy,
+            ReviewedDate = decision.ReviewedDate,
+            ReviewedBy = decision.ReviewedBy,
+            ApprovedDate = decision.ApprovedDate,
+            ApprovedBy = decision.ApprovedBy,
+            ActionPlan = decision.ActionPlan,
+            
+            // Audit fields
+            CreatedAt = decision.CreatedAt,
+            CreatedBy = decision.CreatedBy,
+            LastModifiedAt = decision.LastModifiedAt,
+            LastModifiedBy = decision.LastModifiedBy
+        };
+    }
+
+    /// <summary>
+    /// Gets all GoNoGoDecisions and returns them as DTOs with capping information
+    /// </summary>
+    /// <returns>Collection of GoNoGoSummaryDto with capping information included</returns>
+    public IEnumerable<GoNoGoSummaryDto> GetAllWithCappingInfo()
+    {
+        var decisions = _goNoGoDecision.GetAll();
+        
+        return decisions.Select(decision =>
+        {
+            var scoreInfo = ScoreCalculationHelper.GetScoreInfo(decision);
+            
+            return new GoNoGoSummaryDto
+            {
+                Id = decision.Id,
+                ProjectId = decision.ProjectId,
+                TotalScore = scoreInfo.CappedTotalScore,
+                RawTotalScore = scoreInfo.RawTotalScore,
+                IsScoreCapped = scoreInfo.IsScoreCapped,
+                Status = decision.Status,
+                DecisionComments = decision.DecisionComments,
+                CompletedDate = decision.CompletedDate,
+                CompletedBy = decision.CompletedBy,
+                ApprovedDate = decision.ApprovedDate,
+                ApprovedBy = decision.ApprovedBy
+            };
+        });
+    }
 }

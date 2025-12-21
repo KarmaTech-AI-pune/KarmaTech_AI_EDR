@@ -1,0 +1,16 @@
+{
+  "enabled": false,
+  "name": "AI-DLC PR Merge [DISABLED - Manual merge for now]",
+  "description": "Automatically merges PR and triggers deployment when approved",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      ".github/pull_requests/**"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A PR file has been updated. Check if any kiro-automated PRs have been approved:\n\n1. Use: gh pr list --label \"kiro-automated\" --json number,reviewDecision,headRefName\n2. Look for PRs with reviewDecision: \"APPROVED\"\n3. If found, merge the approved PR:\n   - Execute: gh pr merge [PR-number] --merge --delete-branch\n   - Confirm merge and branch deletion\n4. Check deployment status:\n   - Execute: gh run list --workflow=deploy-dev-with-tags.yml --limit 1\n   - Report deployment status\n\nProvide confirmation of merge completion and deployment trigger.\n\nIMPORTANT: Only merge PRs that are explicitly approved by humans."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "enabled": false,
+  "name": "AI-DLC PR Monitor [DISABLED - Manual merge for now]",
+  "description": "Monitors for approved PRs and triggers auto-merge",
+  "version": "1.0",
+  "when": {
+    "type": "interval",
+    "minutes": 5,
+    "description": "Checks every 5 minutes for approved PRs"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "🔍 AI-DLC PR MONITOR\n\nCheck for approved kiro-automated PRs and trigger merge if found:\n\n```bash\n# Check for approved PRs\nAPPROVED_PRS=$(gh pr list --label \"kiro-automated\" --json number,reviewDecision --jq '.[] | select(.reviewDecision == \"APPROVED\") | .number')\n\nif [ -n \"$APPROVED_PRS\" ]; then\n  echo \"✅ Found approved PR(s): $APPROVED_PRS\"\n  echo \"🔀 Triggering auto-merge...\"\n  \n  # Trigger the merge hook\n  # This will execute the ai-dlc-auto-merge-deploy hook\n  \n  for PR in $APPROVED_PRS; do\n    echo \"Processing PR #$PR\"\n    gh pr merge $PR --merge --delete-branch\n    echo \"✅ PR #$PR merged\"\n  done\nelse\n  echo \"⏳ No approved PRs found. Will check again in 5 minutes.\"\nfi\n```\n\nIf PRs were merged, provide summary of actions taken."
+  }
+}

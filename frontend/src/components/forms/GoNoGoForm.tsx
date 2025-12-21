@@ -19,10 +19,16 @@ import {
   CardContent,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+  Alert,
+  Chip,
+  Tooltip
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { projectManagementAppContextType } from '../../types';
 import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
 import { GoNoGoStatus, TypeOfBid } from "../../models/types";
@@ -189,11 +195,20 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
   });
 
   const calculateTotalScore = () => {
+    const rawTotal = Object.values(criteria).reduce((sum, item) => sum + item.score, 0);
+    return Math.min(rawTotal, 100); // Cap at 100
+  };
+
+  const getRawTotalScore = () => {
     return Object.values(criteria).reduce((sum, item) => sum + item.score, 0);
   };
 
+  const isScoreCapped = () => {
+    return getRawTotalScore() > 100;
+  };
+
   const getDecisionStatus = () => {
-    const totalScore = calculateTotalScore();
+    const totalScore = calculateTotalScore(); // Uses capped score
     if (totalScore >= 84) return { text: 'GO', color: '#4caf50' };
     if (totalScore >= 50) return { text: 'GO', color: '#ff9800' };
     return { text: 'NO GO', color: '#f44336' };
@@ -795,10 +810,57 @@ const isHeaderReadOnly = useCallback((): boolean => {
         <Typography variant="h6" gutterBottom>
           Decision Summary
         </Typography>
+        
+        {/* Score Capping Warning - Requirements 2.1, 2.2 */}
+        {isScoreCapped() && (
+          <Alert 
+            severity="warning" 
+            icon={<WarningAmberIcon />}
+            sx={{ mb: 2 }}
+          >
+            <Typography variant="body2" fontWeight="medium">
+              Total score capped at 100
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Calculated sum: {getRawTotalScore()} → Capped value: 100. Individual criterion scores remain unchanged.
+            </Typography>
+          </Alert>
+        )}
+
+        {/* Optimal Score Success Indicator - Requirement 2.5 */}
+        {calculateTotalScore() === 100 && !isScoreCapped() && (
+          <Alert 
+            severity="success" 
+            icon={<CheckCircleIcon />}
+            sx={{ mb: 2 }}
+          >
+            <Typography variant="body2" fontWeight="medium">
+              Excellent! You've achieved the maximum total score of 100.
+            </Typography>
+          </Alert>
+        )}
+
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <Typography variant="body1">
-              Total Score: {calculateTotalScore()}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body1">
+                Total Score:
+              </Typography>
+              <Chip 
+                label={calculateTotalScore()}
+                color={isScoreCapped() ? "warning" : calculateTotalScore() === 100 ? "success" : "default"}
+                size="medium"
+                sx={{ fontWeight: 'bold', fontSize: '1rem' }}
+              />
+              {isScoreCapped() && (
+                <Tooltip title={`Raw total: ${getRawTotalScore()} (capped at 100)`}>
+                  <InfoOutlinedIcon color="action" fontSize="small" sx={{ cursor: 'help' }} />
+                </Tooltip>
+              )}
+            </Box>
+            {/* Maximum Score Indicator - Requirement 2.3 */}
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              Maximum possible total score: 100
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>
