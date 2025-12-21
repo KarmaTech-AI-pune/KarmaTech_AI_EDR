@@ -5,7 +5,7 @@
   - Add basic content: "Hook chain test - Task 1 completed"
   - _Requirements: 1.1_
 
-- [ ] 2. Add more content to test file
+- [x] 2. Add more content to test file
   - Append additional content to the existing `hook-test.txt` file
   - Add content: "Hook chain test - Task 2 completed"
   - _Requirements: 1.2_
