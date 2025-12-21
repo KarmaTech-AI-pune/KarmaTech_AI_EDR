@@ -29,26 +29,30 @@ Done!
 ## What Happens Automatically
 
 ```
-Save tasks.md
+Save tasks.md (ONCE)
     ↓
 🤖 Create branch
     ↓
-🤖 Execute all tasks
+🤖 Execute Task 1 → commit → push → save tasks.md
+    ↓ (auto-triggers)
+🤖 Execute Task 2 → commit → push → save tasks.md
+    ↓ (auto-triggers)
+🤖 Execute Task 3 → commit → push → save tasks.md
+    ↓ (continues for all tasks automatically)
+🤖 All tasks complete!
     ↓
-🤖 Run tests
+🤖 Build React frontend
     ↓
-🤖 Build app
+🤖 Publish .NET backend
     ↓
-🤖 Create PR
+🤖 Create GitHub PR
     ↓
 👤 YOU APPROVE (10 min)
     ↓
-🤖 Merge PR
-    ↓
-🤖 Deploy
-    ↓
-✅ LIVE!
+✅ DONE!
 ```
+
+**Key:** Save tasks.md ONCE, Kiro chains through ALL tasks automatically!
 
 ## Time Comparison
 

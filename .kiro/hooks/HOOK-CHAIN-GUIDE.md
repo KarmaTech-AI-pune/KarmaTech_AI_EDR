@@ -6,51 +6,66 @@ This is a **3-hook chain** that automates the entire development workflow:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        HOOK CHAIN FLOW                          │
+│                   AUTOMATIC HOOK CHAIN FLOW                     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│   tasks.md saved                                                │
+│   tasks.md saved (ONCE by user)                                │
 │        │                                                        │
 │        ▼                                                        │
 │   ┌─────────────────────────────────────┐                      │
-│   │  HOOK 1: Task Executor              │                      │
-│   │  • Execute ONE task                 │                      │
-│   │  • Mark task [x] in tasks.md        │                      │
-│   │  • Commit & Push                    │                      │
-│   │  • STOP (re-triggers for next task) │                      │
+│   │  HOOK 1: Execute Task 1             │                      │
+│   │  • Implement task                   │                      │
+│   │  • Mark [x] in tasks.md             │                      │
+│   │  • SAVE tasks.md (auto-trigger!)    │                      │
+│   │  • git commit & push                │                      │
 │   └─────────────────────────────────────┘                      │
 │        │                                                        │
-│        │ (repeats until all tasks done)                        │
+│        │ (tasks.md save auto-triggers hook)                    │
+│        ▼                                                        │
+│   ┌─────────────────────────────────────┐                      │
+│   │  HOOK 1: Execute Task 2             │                      │
+│   │  • Implement task                   │                      │
+│   │  • Mark [x] in tasks.md             │                      │
+│   │  • SAVE tasks.md (auto-trigger!)    │                      │
+│   │  • git commit & push                │                      │
+│   └─────────────────────────────────────┘                      │
+│        │                                                        │
+│        │ (repeats automatically for all tasks)                 │
 │        │                                                        │
 │        ▼                                                        │
-│   Creates: .tasks-complete marker                               │
+│   ┌─────────────────────────────────────┐                      │
+│   │  HOOK 1: Execute Last Task          │                      │
+│   │  • Implement task                   │                      │
+│   │  • Mark [x] in tasks.md             │                      │
+│   │  • ALL tasks complete!              │                      │
+│   │  • Create .tasks-complete marker    │                      │
+│   │  • git commit & push                │                      │
+│   └─────────────────────────────────────┘                      │
 │        │                                                        │
 │        ▼                                                        │
 │   ┌─────────────────────────────────────┐                      │
 │   │  HOOK 2: Build & Publish            │                      │
 │   │  • Run PublishProject.ps1           │                      │
-│   │  • Build frontend (React)           │                      │
-│   │  • Publish backend (.NET)           │                      │
-│   │  • Commit & Push                    │                      │
+│   │  • Build React frontend             │                      │
+│   │  • Publish .NET backend             │                      │
+│   │  • Create .build-complete marker    │                      │
+│   │  • git commit & push                │                      │
 │   └─────────────────────────────────────┘                      │
-│        │                                                        │
-│        ▼                                                        │
-│   Creates: .build-complete marker                               │
 │        │                                                        │
 │        ▼                                                        │
 │   ┌─────────────────────────────────────┐                      │
 │   │  HOOK 3: PR Creator                 │                      │
 │   │  • Generate PR body                 │                      │
-│   │  • Create PR via GitHub CLI         │                      │
+│   │  • gh pr create                     │                      │
 │   │  • Add labels                       │                      │
+│   │  • Create .pr-created marker        │                      │
 │   │  • Report PR URL                    │                      │
 │   └─────────────────────────────────────┘                      │
 │        │                                                        │
 │        ▼                                                        │
-│   Creates: .pr-created marker                                   │
-│        │                                                        │
-│        ▼                                                        │
-│   👤 HUMAN: Review & Approve PR                                 │
+│   👤 HUMAN: Review & Approve PR on GitHub                       │
+│                                                                 │
+│   🎉 FULLY AUTOMATIC - Save tasks.md once, get PR!             │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -102,14 +117,12 @@ This is a **3-hook chain** that automates the entire development workflow:
 3. Reads requirements.md and design.md for context
 4. Implements the task (writes code)
 5. Marks task as complete (`- [x]`)
-6. Commits with message: `feat: complete task X - description`
-7. Pushes to feature branch
-8. **STOPS** (waits for next trigger)
+6. **Saves tasks.md file (this auto-triggers the hook again!)**
+7. Commits with message: `feat: complete task X - description`
+8. Pushes to feature branch
+9. **AUTO-CHAINS:** The save in step 6 automatically triggers this hook again for the next task
 
-**Key Point:** Executes ONE task per trigger. This ensures:
-- Each task gets its own commit
-- Easy to track progress
-- Easy to rollback if needed
+**Key Point:** Executes ONE task per trigger, but AUTOMATICALLY triggers itself for the next task by saving tasks.md. This creates a chain reaction until all tasks are complete.
 
 **Completion:** When ALL tasks are `[x]`, creates `.tasks-complete` marker
 
@@ -158,19 +171,21 @@ This is a **3-hook chain** that automates the entire development workflow:
 └── tasks.md
 ```
 
-### Step 2: Save tasks.md
-Just save the file. Hook 1 will activate.
+### Step 2: Save tasks.md ONCE
+Just save the file ONE TIME. Hook 1 will activate and auto-chain through all tasks.
 
-### Step 3: Watch the Magic
+### Step 3: Watch the Magic (FULLY AUTOMATIC)
 ```
-Hook 1: Task 1 → commit → push → STOP
-Hook 1: Task 2 → commit → push → STOP
-Hook 1: Task 3 → commit → push → STOP
+Hook 1: Task 1 → commit → push → save tasks.md (auto-triggers)
+Hook 1: Task 2 → commit → push → save tasks.md (auto-triggers)
+Hook 1: Task 3 → commit → push → save tasks.md (auto-triggers)
 ...
-Hook 1: Last task → commit → push → creates .tasks-complete
-Hook 2: Build frontend → Build backend → creates .build-complete
+Hook 1: Last task → commit → push → creates .tasks-complete (triggers Hook 2)
+Hook 2: Build frontend → Build backend → creates .build-complete (triggers Hook 3)
 Hook 3: Generate PR → Create PR → creates .pr-created
 ```
+
+**NO MANUAL INTERVENTION NEEDED** - Just save tasks.md once and watch it go!
 
 ### Step 4: Approve PR
 Go to GitHub, review the PR, approve it.
