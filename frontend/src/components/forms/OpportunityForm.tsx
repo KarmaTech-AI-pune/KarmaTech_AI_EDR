@@ -12,7 +12,8 @@ import {
   Typography,
   Divider,
   Box,
-  Chip, // Added Chip for displaying workflow status
+  Chip,
+  FormHelperText, // Added for helper text
 } from '@mui/material';
 
 import { projectManagementAppContext } from '../../App';
@@ -717,13 +718,13 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="contract-type-select">Contract Type</InputLabel>
+                  <InputLabel htmlFor="contract-type-select">Contractor Contract Type</InputLabel>
                   <Select
                     id="contract-type-select"
                     name="contractType"
                     value={formData.contractType || ''}
                     onChange={handleChange}
-                    label="Contract Type"
+                    label="Contractor Contract Type"
                     required
                     data-testid="contract-type-select"
                   >
@@ -731,6 +732,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                     <MenuItem value="Item Rate">Item Rate</MenuItem>
                     <MenuItem value="Lump Sum">Lump Sum</MenuItem>
                   </Select>
+                  <FormHelperText >Select contract type applicable to the contractor</FormHelperText>
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6}>
