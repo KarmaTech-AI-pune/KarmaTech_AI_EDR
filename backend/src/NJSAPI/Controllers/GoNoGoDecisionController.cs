@@ -28,6 +28,10 @@ namespace NJSAPI.Controllers
             _decisionService = decisionService;
         }
 
+        /// <summary>
+        /// Gets all Go/No-Go decisions with percentage information
+        /// </summary>
+        /// <returns>Collection of GoNoGoSummaryDto with raw scores, percentages, and max possible score</returns>
         [HttpGet]
         public ActionResult<IEnumerable<GoNoGoSummaryDto>> GetAll()
         {
@@ -42,6 +46,11 @@ namespace NJSAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Gets a specific Go/No-Go decision by ID with percentage information
+        /// </summary>
+        /// <param name="id">The decision ID</param>
+        /// <returns>GoNoGoDecisionDto with raw score, percentage, and max possible score</returns>
         [HttpGet("{id}")]
         public ActionResult<GoNoGoDecisionDto> GetById(int id)
         {
@@ -59,6 +68,11 @@ namespace NJSAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Gets a Go/No-Go decision by project ID with percentage information
+        /// </summary>
+        /// <param name="projectId">The project ID</param>
+        /// <returns>GoNoGoDecisionDto with raw score, percentage, and max possible score</returns>
         [HttpGet("project/{projectId}")]
         public ActionResult<GoNoGoDecisionDto> GetByProjectId(int projectId)
         {
@@ -95,6 +109,11 @@ namespace NJSAPI.Controllers
 
 
 
+        /// <summary>
+        /// Creates a new Go/No-Go decision form with raw score calculation and percentage
+        /// </summary>
+        /// <param name="decision">The Go/No-Go decision form data</param>
+        /// <returns>Created decision with header ID, version ID, and version number</returns>
         [HttpPost("createForm")]
         public async Task<ActionResult<object>> CreateForm([FromBody] GoNoGoForm decision)
         {
@@ -119,7 +138,7 @@ namespace NJSAPI.Controllers
                     },
                     Summary = new SummaryCommand
                     {
-                        TotalScore = CalculateRawTotalFromForm(decision),
+                        TotalScore = CalculateRawTotalFromForm(decision), // Store raw total (0-120)
                         Status = decision.Summary.Status,
                         DecisionComments = decision.Summary.DecisionComments,
                         ActionPlan = decision.Summary.ActionPlan
@@ -180,6 +199,12 @@ namespace NJSAPI.Controllers
             };
         }
 
+        /// <summary>
+        /// Updates an existing Go/No-Go decision with raw score calculation and percentage
+        /// </summary>
+        /// <param name="id">The decision ID</param>
+        /// <param name="decision">The updated decision data</param>
+        /// <returns>NoContent on success</returns>
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] GoNoGoDecision decision)
         {
@@ -192,7 +217,10 @@ namespace NJSAPI.Controllers
                 if (existingDecision == null)
                     return NotFound($"GoNoGoDecision with ID {id} not found");
 
-                // Use service to ensure score capping is applied during update
+                // Apply raw score calculation (no capping) before update
+                ScoreCalculationHelper.ApplyRawScore(decision);
+                
+                // Use service to update with percentage calculation
                 _decisionService.Update(decision);
                 return NoContent();
             }
