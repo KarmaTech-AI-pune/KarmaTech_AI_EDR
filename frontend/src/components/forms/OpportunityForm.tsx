@@ -235,11 +235,67 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     }));
   };
 
+  const formatIndianNumber = (num: number | string | undefined): string => {
+    if (num === undefined || num === null || num === '') return '';
+
+    // Convert to string and strip existing commas
+    const strNum = num.toString().replace(/,/g, '');
+
+    // Handle special cases for intermediate typing states
+    if (strNum === '-') return '-';
+    if (strNum === '.') return '.';
+
+    // Split into integer and decimal parts to preserve formatting of the decimal part
+    const parts = strNum.split('.');
+    const integerPartStr = parts[0];
+    const decimalPartStr = parts.length > 1 ? parts[1] : null;
+
+    // Format the integer part using Indian numbering system
+    let formattedInteger = '';
+    if (integerPartStr === '' || integerPartStr === '-') {
+      formattedInteger = integerPartStr;
+    } else {
+      const integerPart = parseFloat(integerPartStr);
+      if (isNaN(integerPart)) return '';
+      formattedInteger = new Intl.NumberFormat('en-IN', {
+        maximumFractionDigits: 0,
+      }).format(integerPart);
+    }
+
+    // Join with decimal part if it exists (even if empty, e.g., "10.")
+    if (decimalPartStr !== null) {
+      return `${formattedInteger}.${decimalPartStr}`;
+    }
+
+    return formattedInteger;
+  };
+
+
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    // Strip commas for internal processing
+    const rawValue = value.replace(/,/g, '');
+
+    // Allow digits, one dot, and minus sign at start
+    if (rawValue === '' || /^-?\d*\.?\d*$/.test(rawValue)) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: rawValue,
+      }));
+    }
+  };
+
+
+
+
+  const handleIntegerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const rawValue = value.replace(/,/g, '').replace(/[^0-9]/g, '');
+    const numericValue = rawValue === '' ? 0 : parseInt(rawValue, 10);
+
     setFormData((prev) => ({
       ...prev,
-      [name]: (value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0').toString(),
+      [name]: isNaN(numericValue) ? 0 : numericValue,
     }));
   };
 
@@ -256,8 +312,24 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     }
 
     setValidationError(null);
-    onSubmit(formData as OpportunityTracking);
+
+    // Ensure numeric fields are correctly parsed before submission
+    const submissionData = {
+      ...formData,
+      bidFees: typeof formData.bidFees === 'string' ? parseFloat((formData.bidFees as any).replace(/,/g, '')) || 0 : formData.bidFees,
+      emd: typeof formData.emd === 'string' ? parseFloat((formData.emd as any).replace(/,/g, '')) || 0 : formData.emd,
+      capitalValue: typeof formData.capitalValue === 'string' ? parseFloat((formData.capitalValue as any).replace(/,/g, '')) || 0 : formData.capitalValue,
+      percentageChanceOfProjectHappening: typeof formData.percentageChanceOfProjectHappening === 'string'
+        ? parseFloat(formData.percentageChanceOfProjectHappening as any) || 0
+        : formData.percentageChanceOfProjectHappening,
+      percentageChanceOfNJSSuccess: typeof formData.percentageChanceOfNJSSuccess === 'string'
+        ? parseFloat(formData.percentageChanceOfNJSSuccess as any) || 0
+        : formData.percentageChanceOfNJSSuccess,
+    };
+
+    onSubmit(submissionData as OpportunityTracking);
   };
+
 
   return (
     <Box>
@@ -444,7 +516,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                   label="Bid Fees"
                   name="bidFees"
                   type="text"
-                  value={formData.bidFees || 0}
+                  value={formatIndianNumber(formData.bidFees)}
                   onChange={handleNumberChange}
                 />
               </Grid>
@@ -454,7 +526,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                   label="EMD"
                   name="emd"
                   type="text"
-                  value={formData.emd || 0}
+                  value={formatIndianNumber(formData.emd)}
                   onChange={handleNumberChange}
                 />
               </Grid>
@@ -491,7 +563,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                   label="Capital Value"
                   name="capitalValue"
                   type="text"
-                  value={formData.capitalValue || 0}
+                  value={formatIndianNumber(formData.capitalValue)}
                   onChange={handleNumberChange}
                   required
                 />
@@ -617,7 +689,7 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
                   name="durationOfProject"
                   type="text"
                   value={formData.durationOfProject || 0}
-                  onChange={handleNumberChange}
+                  onChange={handleIntegerChange}
                   required
                 />
               </Grid>
