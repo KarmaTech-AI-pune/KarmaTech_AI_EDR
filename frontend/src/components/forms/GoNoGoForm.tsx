@@ -34,6 +34,7 @@ import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
 import { getScoringDescriptions } from '../../services/scoringDescriptionApi';
 import { GoNoGoDecisionPayload } from '../../models/goNoGoDecisionModel';
+import { getUserById } from '../../services/userApi';
 
 interface ScoringCriteria {
   comments: string;
@@ -57,9 +58,30 @@ interface HeaderInfo {
 }
 
 const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNumber: number) => void }> = ({ onDecisionStatusChange }) => {
-  const { opportunityId } = useBusinessDevelopment();
+  const { opportunityId, opportunity } = useBusinessDevelopment();
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [descriptions, setDescriptions] = useState<ScoringDescriptionsResponse>({ descriptions: {} });
+
+  // Fetch BD Manager name from opportunity data and auto-populate BD Head field
+  useEffect(() => {
+    const fetchBdManagerName = async () => {
+      if (opportunity && opportunity.bidManagerId) {
+        try {
+          const user = await getUserById(opportunity.bidManagerId);
+          if (user && user.name) {
+            setHeaderInfo(prev => ({
+              ...prev,
+              bdHead: user.name
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching BD Manager details:', error);
+        }
+      }
+    };
+
+    fetchBdManagerName();
+  }, [opportunity]);
 
   // Load initial Go/No Go decision data
   useEffect(() => {
@@ -682,9 +704,9 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                   onChange={(e) => handleHeaderChange('typeOfBid', Number(e.target.value) as TypeOfBid)}
                   label="Type of Bid"
                 >
-                  <MenuItem value={TypeOfBid.TimeAndExpense.toString()}>TIME & EXPENSE.</MenuItem>
+                  <MenuItem value={TypeOfBid.TimeAndExpense.toString()}>Time&Expense</MenuItem>
                   <MenuItem value={TypeOfBid.Lumpsum.toString()}>Lumpsum</MenuItem>
-                  <MenuItem value={TypeOfBid.Percentage.toString()}>% (Percentage)</MenuItem>
+                  <MenuItem value={TypeOfBid.Percentage.toString()}>Percentage(%)</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -702,8 +724,10 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
                 fullWidth
                 label="BD Head"
                 value={headerInfo.bdHead}
-                onChange={(e) => handleHeaderChange('bdHead', e.target.value)}
-                disabled={isHeaderReadOnly()}
+                InputProps={{
+                  readOnly: true,
+                }}
+                helperText="Auto-populated from Opportunity"
               />
             </Grid>
             <Grid item xs={12} md={6}>
