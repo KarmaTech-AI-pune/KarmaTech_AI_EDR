@@ -1,6 +1,10 @@
 # Implementation Plan
 
-- [ ] 1. Update score calculation helper utility
+- [x] 1. Update score calculation helper utility
+
+
+
+
   - Modify `ScoreCalculationHelper` class to use percentage calculation instead of capping
   - Change MAX_TOTAL_SCORE constant to MAX_POSSIBLE_SCORE = 120
   - Add `CalculateScorePercentage()` method: (rawTotal / 120) × 100
