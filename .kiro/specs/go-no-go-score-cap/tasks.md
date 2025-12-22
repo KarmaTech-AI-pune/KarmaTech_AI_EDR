@@ -84,24 +84,44 @@
     - Replace capping indicators with percentage indicators
     - _Requirements: 2.2_
 
-  - [ ]* 4.3 Write integration tests for API endpoints
+  - [ ] 4.3 Write integration tests for API endpoints
+
+
+
+
+
     - Test API responses include percentage information
     - Verify endpoints handle full score range (0-120) correctly
     - _Requirements: 1.2, 2.2_
 
-- [ ] 5. Checkpoint - Ensure all backend tests pass
+- [x] 5. Checkpoint - Ensure all backend tests pass
+
+
+
+
+
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Update frontend score calculation logic
+- [x] 6. Update frontend score calculation logic
 
-  - [ ] 6.1 Enhance calculateTotalScore function in GoNoGoForm
+
+
+
+
+
+
+  - [x] 6.1 Enhance calculateTotalScore function in GoNoGoForm
+
+
     - Remove capping logic: return raw total (0-120)
     - Add calculateScorePercentage function: Math.round((rawTotal / 120) * 100)
     - Add isPerfectScore helper function
     - Add MAX_POSSIBLE_SCORE constant = 120
     - _Requirements: 1.1, 1.4, 1.5_
 
-  - [ ] 6.2 Update getDecisionStatus function
+  - [x] 6.2 Update getDecisionStatus function
+
+
     - Ensure status calculation uses percentage thresholds
     - Adjust thresholds for percentage-based calculation (e.g., >= 70% = GO Green, 42% - 70% = GO Amber,<42% = NO GO Red )
     - _Requirements: 3.2_
@@ -110,15 +130,24 @@
     - **Property 1: Percentage Calculation Accuracy (Frontend)**
     - **Validates: Requirements 1.1, 1.4, 1.5**
 
-- [ ] 7. Implement frontend UI enhancements
+- [x] 7. Implement frontend UI enhancements
 
-  - [ ] 7.1 Update total score display section
+
+
+
+
+
+  - [x] 7.1 Update total score display section
+
+
     - Display percentage with "%" suffix (e.g., "75%")
     - Show raw score for transparency (e.g., "75% (90/120)")
     - Indicate maximum possible score is 120
     - _Requirements: 2.1, 2.2, 2.3_
 
-  - [ ] 7.2 Update real-time score indicators
+  - [x] 7.2 Update real-time score indicators
+
+
     - Remove capping warning messages
     - Add perfect score success indicator when 100% is achieved
     - Implement real-time percentage recalculation on score changes
