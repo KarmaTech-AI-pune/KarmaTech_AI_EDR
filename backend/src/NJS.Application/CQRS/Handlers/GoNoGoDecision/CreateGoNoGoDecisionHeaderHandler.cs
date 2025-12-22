@@ -28,9 +28,8 @@ namespace NJS.Application.CQRS.Handlers.GoNoGoDecision
             var dateTime = DateTime.UtcNow;
             var currentUserId = _userContext.GetCurrentUserId();
 
-            // Calculate capped total score from individual criteria scores
+            // Calculate raw total score from individual criteria scores (no capping)
             int rawTotalScore = CalculateRawTotalFromCriteria(request.ScoringCriteria);
-            int cappedTotalScore = Math.Min(rawTotalScore, ScoreCalculationHelper.MAX_TOTAL_SCORE);
 
             var header = new GoNoGoDecisionHeader
             {
@@ -40,7 +39,7 @@ namespace NJS.Application.CQRS.Handlers.GoNoGoDecision
                 BdHead = request.HeaderInfo.BdHead,              
                 TenderFee = request.HeaderInfo.TenderFee,
                 Emd = request.HeaderInfo.EmdAmount,
-                TotalScore = cappedTotalScore, // Use capped score instead of request.Summary.TotalScore
+                TotalScore = rawTotalScore, // Store raw total score (0-120)
                 Status = request.Summary.Status,
                 OpportunityId = request.MetaData.OpprotunityId,
                 CreatedAt = dateTime,

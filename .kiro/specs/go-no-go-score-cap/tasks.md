@@ -40,12 +40,21 @@
 
 - [ ] 3. Update backend business logic and handlers
 
-  - [ ] 3.1 Modify CreateGoNoGoDecisionHeaderHandler
+
+
+
+
+
+  - [x] 3.1 Modify CreateGoNoGoDecisionHeaderHandler
+
+
     - Remove capping logic, use raw total score
     - Calculate and store percentage for display purposes
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 3.2 Update GoNoGoDecisionService
+  - [x] 3.2 Update GoNoGoDecisionService
+
+
     - Replace capping logic with percentage calculation
     - Include percentage information in service responses
     - _Requirements: 1.1, 2.2_

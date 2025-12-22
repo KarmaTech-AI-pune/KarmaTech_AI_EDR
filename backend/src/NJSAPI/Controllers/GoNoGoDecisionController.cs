@@ -119,7 +119,7 @@ namespace NJSAPI.Controllers
                     },
                     Summary = new SummaryCommand
                     {
-                        TotalScore = CalculateCappedTotalFromForm(decision),
+                        TotalScore = CalculateRawTotalFromForm(decision),
                         Status = decision.Summary.Status,
                         DecisionComments = decision.Summary.DecisionComments,
                         ActionPlan = decision.Summary.ActionPlan
@@ -390,11 +390,11 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
-        /// Calculates the capped total score from a GoNoGoForm
+        /// Calculates the raw total score from a GoNoGoForm
         /// </summary>
         /// <param name="form">The GoNoGoForm containing scoring criteria</param>
-        /// <returns>Total score capped at 100</returns>
-        private int CalculateCappedTotalFromForm(GoNoGoForm form)
+        /// <returns>Raw total score (0-120)</returns>
+        private int CalculateRawTotalFromForm(GoNoGoForm form)
         {
             if (form?.ScoringCriteria == null)
                 return 0;
@@ -412,7 +412,7 @@ namespace NJSAPI.Controllers
                           form.ScoringCriteria.ResourceAvailability.Score +
                           form.ScoringCriteria.BidSchedule.Score;
 
-            return Math.Min(rawTotal, ScoreCalculationHelper.MAX_TOTAL_SCORE);
+            return rawTotal; // Return raw total (no capping)
         }
     }
 }

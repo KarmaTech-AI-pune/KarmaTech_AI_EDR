@@ -171,7 +171,7 @@ namespace NJS.API.Tests.Helpers
             ScoreCalculationHelper.ApplyScoreCap(decision);
 
             // Assert
-            Assert.Equal(100, decision.TotalScore);
+            Assert.Equal(120, decision.TotalScore); // Raw total score (12 × 10 = 120)
         }
 
         [Fact]
