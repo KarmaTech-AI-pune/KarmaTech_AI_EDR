@@ -19,7 +19,7 @@ namespace NJS.API.Tests.Controllers
         private readonly Mock<IMediator> _mediator;
         private readonly Mock<ITenantService> _tenantService;
         private readonly Mock<ICurrentUserService> _currentUserService;
-         private readonly ILogger _logger;
+        private readonly Mock<ILogger<ProjectController>> _loggerMock;
 
         public ProjectsControllerTests()
         {
@@ -27,7 +27,8 @@ namespace NJS.API.Tests.Controllers
             _mediator = new Mock<IMediator>();
             _currentUserService = new Mock<ICurrentUserService>();
             _tenantService = new Mock<ITenantService>();
-            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object,_tenantService.Object,_currentUserService.Object, (ILogger<ProjectController>)_logger);
+            _loggerMock = new Mock<ILogger<ProjectController>>();
+            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object, _tenantService.Object, _currentUserService.Object, _loggerMock.Object);
         }
 
         [Fact]
@@ -76,8 +77,9 @@ namespace NJS.API.Tests.Controllers
         {
             // Arrange
             var projectId = 1;
+            Project nullProject = null;
             _mediator.Setup(m => m.Send(It.Is<GetProjectByIdQuery>(q => q.Id == projectId), It.IsAny<CancellationToken>()))
-                    .ReturnsAsync((Project)null);
+                    .ReturnsAsync(nullProject);
 
             // Act
             var result = await _controller.GetById(projectId);
@@ -91,10 +93,10 @@ namespace NJS.API.Tests.Controllers
         {
             // Arrange
             var projectDto = new ProjectDto { Name = "New Project" };
-            var createdId = 1;
+            var createdProject = new Project { Id = 1, Name = "New Project" };
 
             _mediator.Setup(m => m.Send(It.Is<CreateProjectCommand>(c => c.ProjectDto == projectDto), It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(createdId);
+                    .ReturnsAsync(createdProject);
 
             // Act
             var result = await _controller.Create(projectDto);
@@ -102,8 +104,7 @@ namespace NJS.API.Tests.Controllers
             // Assert
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
             Assert.Equal("GetById", createdAtActionResult.ActionName);
-            Assert.Equal(createdId, createdAtActionResult.RouteValues["id"]);
-            Assert.Equal(createdId, createdAtActionResult.Value);
+            Assert.Equal(createdProject.Id, createdAtActionResult.RouteValues["id"]);
         }
 
         [Fact]
