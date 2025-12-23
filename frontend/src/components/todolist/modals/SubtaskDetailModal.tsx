@@ -8,22 +8,20 @@ import {
     Box,
     Avatar,
     IconButton,
-    FormControl,
-    Select,
-    MenuItem,
     TextField,
     Breadcrumbs,
     Link,
-    SelectChangeEvent,
 } from "@mui/material";
 import {
     Close,
     Delete,
 } from "@mui/icons-material";
-import { Issue, Subtask } from "../../../types/todolist";
+import { Issue, Subtask, TeamMember } from "../../../types/todolist";
 import { IssueTypeIcon } from "../common/IssueTypeIcon";
 import { PriorityIcon } from "../common/PriorityIcon";
 import { IssueDetailRow } from "../common/IssueDetailRow";
+import { InlineEdit } from "../common/InlineEdit";
+import { ConfirmationDialog } from "../../../components/common/ConfirmationDialog";
 
 interface SubtaskDetailModalProps {
     subtask: Subtask | null;
@@ -35,6 +33,7 @@ interface SubtaskDetailModalProps {
     onUpdateComment: (subtaskId: string, commentId: string, text: string) => void;
     onDeleteComment: (subtaskId: string, commentId: string) => void;
     onFetchComments: (subtaskId: string) => void;
+    teamMembers: TeamMember[];
 }
 
 export const SubtaskDetailModal: React.FC<SubtaskDetailModalProps> = ({
@@ -47,12 +46,14 @@ export const SubtaskDetailModal: React.FC<SubtaskDetailModalProps> = ({
     onUpdateComment,
     onDeleteComment,
     onFetchComments,
+    teamMembers,
 }) => {
     if (!subtask || !parentIssue) return null;
 
     const [newCommentText, setNewCommentText] = useState("");
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
     const [editingCommentText, setEditingCommentText] = useState("");
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     useEffect(() => {
         if (subtask) {
@@ -61,8 +62,15 @@ export const SubtaskDetailModal: React.FC<SubtaskDetailModalProps> = ({
     }, [subtask?.id]);
 
     const handleDelete = () => {
-        onDeleteSubtask(subtask.id);
-        onClose();
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (subtask) {
+            onDeleteSubtask(subtask.id);
+            setIsDeleteDialogOpen(false);
+            onClose();
+        }
     };
 
     const statusOptions = [
@@ -72,8 +80,8 @@ export const SubtaskDetailModal: React.FC<SubtaskDetailModalProps> = ({
         { value: "Done", label: "Done", color: "#49f54eff" }, // Green
     ];
 
-    const handleStatusChange = (event: SelectChangeEvent) => {
-        onUpdateSubtask(subtask.id, { status: event.target.value as Subtask["status"] });
+    const handleStatusChange = (newStatus: Subtask["status"]) => {
+        onUpdateSubtask(subtask.id, { status: newStatus });
     };
 
     const handleAddComment = () => {
@@ -108,7 +116,7 @@ export const SubtaskDetailModal: React.FC<SubtaskDetailModalProps> = ({
             onClose={onClose}
             maxWidth="lg"
             fullWidth
-            sx={{ zIndex: 1400 }} // Ensure it's above the IssueDetailModal
+            sx={{ '& .MuiDialog-paper': { zIndex: 1400 } }} // Ensure paper is on top but allow natural portal stacking
         >
             <DialogTitle
                 sx={{
@@ -147,13 +155,35 @@ export const SubtaskDetailModal: React.FC<SubtaskDetailModalProps> = ({
                 sx={{ p: 0, display: "flex", height: "calc(90vh - 80px)" }}
             >
                 <Box sx={{ flex: 1, p: 3, overflowY: "auto" }}>
-                    <Typography variant="h5" fontWeight="semibold" sx={{ mb: 2 }}>
-                        {subtask.summary}
-                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                        <InlineEdit
+                            value={subtask.summary}
+                            onSave={(val) => onUpdateSubtask(subtask.id, { summary: val })}
+                            label="summary"
+                            renderValue={(val) => (
+                                <Typography variant="h5" fontWeight="semibold">
+                                    {val}
+                                </Typography>
+                            )}
+                        />
+                    </Box>
 
-                    <Typography variant="body1" color="text.primary" sx={{ mb: 4 }}>
-                        {subtask.description || "No description provided."}
-                    </Typography>
+                    <Box sx={{ mb: 4 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 'medium' }}>
+                            Description
+                        </Typography>
+                        <InlineEdit
+                            value={subtask.description}
+                            onSave={(val) => onUpdateSubtask(subtask.id, { description: val })}
+                            type="textarea"
+                            label="description"
+                            renderValue={(val) => (
+                                <Typography variant="body1" color="text.primary">
+                                    {val || "No description provided."}
+                                </Typography>
+                            )}
+                        />
+                    </Box>
 
                     <Box sx={{ borderTop: "1px solid", borderColor: "grey.100", pt: 3 }}>
                         <Typography variant="h6" fontWeight="medium" sx={{ mb: 2 }}>
@@ -285,103 +315,123 @@ export const SubtaskDetailModal: React.FC<SubtaskDetailModalProps> = ({
                     }}
                 >
                     <Box sx={{ mb: 3 }}>
-                        <FormControl
-                            fullWidth
-                            margin="dense"
-                            sx={{ border: "none" }}
-                        >
-                            <Select
-                                value={subtask.status}
-                                onChange={handleStatusChange}
-                                sx={{
-                                    backgroundColor: statusOptions.find(
-                                        (opt) => opt.value === subtask.status
-                                    )?.color || "#DFE1E6",
-                                    "& .MuiSelect-select": {
-                                        padding: "4px 8px",
-                                        minHeight: "unset",
-                                    },
-                                    "& .MuiOutlinedInput-notchedOutline": {
-                                        border: "none",
-                                    },
-                                }}
-                            >
-                                {statusOptions.map((option) => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 'medium' }}>
+                            Status
+                        </Typography>
+                        <InlineEdit
+                            value={subtask.status}
+                            onSave={handleStatusChange}
+                            type="select"
+                            options={statusOptions}
+                            renderValue={(val) => (
+                                <Box
+                                    sx={{
+                                        backgroundColor: statusOptions.find(opt => opt.value === val)?.color,
+                                        padding: "4px 12px",
+                                        borderRadius: "4px",
+                                        display: "inline-block",
+                                        fontWeight: "medium",
+                                        fontSize: "0.875rem",
+                                    }}
+                                >
+                                    {val}
+                                </Box>
+                            )}
+                        />
                     </Box>
 
                     <Box sx={{ overflowY: "auto", flex: 1 }}>
                         <IssueDetailRow label="Assignee">
-                            {subtask.assignee ? (
-                                <>
-                                    <Avatar
-                                        sx={{
-                                            bgcolor: "primary.main",
-                                            width: 24,
-                                            height: 24,
-                                            fontSize: "0.75rem",
-                                        }}
-                                    >
-                                        {subtask.assignee.avatar}
-                                    </Avatar>
-                                    <Typography variant="body2">
-                                        {subtask.assignee.name}
-                                    </Typography>
-                                </>
-                            ) : (
-                                <Typography variant="body2" color="text.secondary">
-                                    Unassigned
-                                </Typography>
-                            )}
+                            <InlineEdit
+                                value={subtask.assignee?.id || ""}
+                                onSave={(val) => {
+                                    const member = teamMembers.find(m => m.id === val);
+                                    onUpdateSubtask(subtask.id, { assignee: member || null });
+                                }}
+                                type="select"
+                                options={teamMembers.map(m => ({
+                                    value: m.id,
+                                    label: m.name,
+                                    icon: <Avatar sx={{ width: 16, height: 16, fontSize: '0.5rem' }}>{m.avatar}</Avatar>
+                                }))}
+                                renderValue={(val) => {
+                                    const assignee = teamMembers.find(m => m.id === val);
+                                    return assignee ? (
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            <Avatar sx={{ bgcolor: "primary.main", width: 24, height: 24, fontSize: "0.75rem" }}>
+                                                {assignee.avatar}
+                                            </Avatar>
+                                            <Typography variant="body2">{assignee.name}</Typography>
+                                        </Box>
+                                    ) : (
+                                        <Typography variant="body2" color="text.secondary">Unassigned</Typography>
+                                    );
+                                }}
+                            />
                         </IssueDetailRow>
 
                         <IssueDetailRow label="Reporter">
-                            <Avatar
-                                sx={{
-                                    bgcolor: "primary.main",
-                                    width: 24,
-                                    height: 24,
-                                    fontSize: "0.75rem",
+                            <InlineEdit
+                                value={subtask.reporter.id}
+                                onSave={(val) => {
+                                    const member = teamMembers.find(m => m.id === val);
+                                    if (member) onUpdateSubtask(subtask.id, { reporter: member });
                                 }}
-                            >
-                                {subtask.reporter.avatar}
-                            </Avatar>
-                            <Typography variant="body2">
-                                {subtask.reporter.name}
-                            </Typography>
+                                type="select"
+                                options={teamMembers.map(m => ({
+                                    value: m.id,
+                                    label: m.name,
+                                    icon: <Avatar sx={{ width: 16, height: 16, fontSize: '0.5rem' }}>{m.avatar}</Avatar>
+                                }))}
+                                renderValue={(val) => {
+                                    const reporter = teamMembers.find(m => m.id === val) || subtask.reporter;
+                                    return (
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            <Avatar sx={{ bgcolor: "primary.main", width: 24, height: 24, fontSize: "0.75rem" }}>
+                                                {reporter.avatar}
+                                            </Avatar>
+                                            <Typography variant="body2">{reporter.name}</Typography>
+                                        </Box>
+                                    );
+                                }}
+                            />
                         </IssueDetailRow>
 
                         <IssueDetailRow label="Priority">
-                            <PriorityIcon priority={subtask.priority} />
-                            <Typography variant="body2">
-                                {subtask.priority}
-                            </Typography>
+                            <InlineEdit
+                                value={subtask.priority}
+                                onSave={(val) => onUpdateSubtask(subtask.id, { priority: val })}
+                                type="select"
+                                options={["Lowest", "Low", "Medium", "High", "Highest"].map(p => ({
+                                    value: p,
+                                    label: p,
+                                    icon: <PriorityIcon priority={p as any} />
+                                }))}
+                                renderValue={(val) => (
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                        <PriorityIcon priority={val as any} />
+                                        <Typography variant="body2">{val}</Typography>
+                                    </Box>
+                                )}
+                            />
                         </IssueDetailRow>
 
-                        {subtask.storyPoints !== undefined && subtask.storyPoints > 0 && (
-                            <IssueDetailRow label="Story Points">
-                                <Avatar
-                                    sx={{
-                                        width: 20,
-                                        height: 20,
-                                        bgcolor: "grey.100",
-                                        color: "grey.600",
-                                        fontSize: "0.75rem",
-                                        fontWeight: "medium",
-                                    }}
-                                >
-                                    {subtask.storyPoints}
-                                </Avatar>
-                                <Typography variant="body2">
-                                    {subtask.storyPoints} points
-                                </Typography>
-                            </IssueDetailRow>
-                        )}
+                        <IssueDetailRow label="Story Points">
+                            <InlineEdit
+                                value={subtask.storyPoints || 0}
+                                onSave={(val) => onUpdateSubtask(subtask.id, { storyPoints: parseInt(val) || 0 })}
+                                type="number"
+                                label="story points"
+                                renderValue={(val) => (
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                        <Avatar sx={{ width: 20, height: 20, bgcolor: "grey.100", color: "grey.600", fontSize: "0.75rem", fontWeight: "medium" }}>
+                                            {val}
+                                        </Avatar>
+                                        <Typography variant="body2">{val} points</Typography>
+                                    </Box>
+                                )}
+                            />
+                        </IssueDetailRow>
 
                         <IssueDetailRow label="Created">
                             <Typography variant="body2" color="text.primary">
@@ -398,6 +448,15 @@ export const SubtaskDetailModal: React.FC<SubtaskDetailModalProps> = ({
                     </Box>
                 </Box>
             </DialogContent>
+            {subtask && (
+                <ConfirmationDialog
+                    open={isDeleteDialogOpen}
+                    onClose={() => setIsDeleteDialogOpen(false)}
+                    onConfirm={handleConfirmDelete}
+                    title="Delete Subtask"
+                    description={`Are you sure you want to delete the subtask "${subtask.summary}"? This action cannot be undone.`}
+                />
+            )}
         </Dialog>
     );
 };

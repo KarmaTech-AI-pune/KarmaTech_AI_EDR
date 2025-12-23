@@ -4,17 +4,13 @@ import {
   Typography,
   Avatar,
   IconButton,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  Tooltip,
 } from "@mui/material";
 import { Delete } from "@mui/icons-material";
 import { Subtask, TeamMember } from "../../types/todolist";
 import { IssueTypeIcon } from "./common/IssueTypeIcon";
 import { PriorityIcon } from "./common/PriorityIcon";
-import { ConfirmationDialog } from "../common/ConfirmationDialog"; // Import the new component
+import { InlineEdit } from "./common/InlineEdit";
+import { ConfirmationDialog } from "../common/ConfirmationDialog";
 
 interface SubtaskItemProps {
   subtask: Subtask;
@@ -33,22 +29,16 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
 }) => {
   console.log('SubtaskItem received subtask:', subtask); // Debug log
 
-  const [isEditing, _setIsEditing] = useState(false);
-  const [editingSummary, setEditingSummary] = useState(subtask.summary);
-  const [_editingStatus, _setEditingStatus] = useState(subtask.status);
-  const [editingAssignee, setEditingAssignee] = useState(
-    subtask.assignee?.id || ""
-  );
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // New state for dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const statusOptions = [
-    { value: "To Do", label: "To Do", color: "#DFE1E6" },
-    { value: "In Progress", label: "In Progress", color: "#0065FF" },
-    { value: "Review", label: "Review", color: "#FF991F" },
-    { value: "Done", label: "Done", color: "#36B37E" },
+    { value: "To Do", label: "To Do", color: "#f5fb3aff" },
+    { value: "In Progress", label: "In Progress", color: "#34a1faff" },
+    { value: "Review", label: "Review", color: "#fba524ff" },
+    { value: "Done", label: "Done", color: "#49f54eff" },
   ];
 
- 
+
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,7 +74,7 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
         },
         transition: "background-color 0.2s ease",
       }}
-      onClick={() => !isEditing && onSubtaskClick?.(subtask)}
+      onClick={() => onSubtaskClick?.(subtask)}
     >
       {/* Work Column */}
       <Box sx={{ display: "flex", alignItems: "center", }}>
@@ -99,155 +89,129 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
         >
           {subtask.key}
         </Typography>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          {isEditing ? (
-            <TextField
-              value={editingSummary}
-              onChange={(e) => setEditingSummary(e.target.value)}
-              size="small"
-              fullWidth
-              variant="outlined"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  fontSize: "0.875rem",
-                },
-              }}
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <Typography
-              variant="body2"
-              sx={{
-                
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {subtask.summary}
-            </Typography>
-          )}
+        <Box sx={{ flex: 1, minWidth: 0, ml: 1 }}>
+          <InlineEdit
+            value={subtask.summary}
+            onSave={(val) => onUpdateSubtask(subtask.id, { summary: val })}
+            label="summary"
+            renderValue={(val) => (
+              <Typography
+                variant="body2"
+                sx={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {val}
+              </Typography>
+            )}
+          />
         </Box>
       </Box>
 
       {/* Priority Column */}
-      <Box sx={{ display: "flex", alignItems: "center", }}>
-        <PriorityIcon priority={subtask.priority} size="small" />
-        <Typography variant="body2">{subtask.priority}</Typography>
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <InlineEdit
+          value={subtask.priority}
+          onSave={(val) => onUpdateSubtask(subtask.id, { priority: val })}
+          type="select"
+          options={["Lowest", "Low", "Medium", "High", "Highest"].map(p => ({
+            value: p,
+            label: p,
+            icon: <PriorityIcon priority={p as any} size="small" />
+          }))}
+          renderValue={(val) => (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <PriorityIcon priority={val as any} size="small" />
+              <Typography variant="body2">{val}</Typography>
+            </Box>
+          )}
+        />
       </Box>
 
       {/* Assignee Column */}
-      <Box sx={{ display: "flex", alignItems: "center",  }}>
-        {isEditing ? (
-          <FormControl size="small" sx={{ minWidth: 100 }}>
-            <Select
-              value={editingAssignee}
-              onChange={(e) => setEditingAssignee(e.target.value)}
-              displayEmpty
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MenuItem value="">
-                <em>Unassigned</em>
-              </MenuItem>
-              {teamMembers.map((member) => (
-                <MenuItem key={member.id} value={member.id}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Avatar
-                      sx={{
-                        width: 20,
-                        height: 20,
-                        fontSize: "0.75rem",
-                        bgcolor: "primary.main",
-                      }}
-                    >
-                      {member.avatar}
-                    </Avatar>
-                    {member.name}
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        ) : subtask.assignee ? (
-          <Tooltip title={subtask.assignee.name}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Avatar
-                sx={{
-                  width: 24,
-                  height: 24,
-                  fontSize: "0.75rem",
-                  bgcolor: "primary.main",
-                  color: "white",
-                }}
-              >
-                {subtask.assignee.avatar}
-              </Avatar>
-              <Typography variant="body2">{subtask.assignee.name}</Typography>
-            </Box>
-          </Tooltip>
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            Unassigned
-          </Typography>
-        )}
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <InlineEdit
+          value={subtask.assignee?.id || ""}
+          onSave={(val) => {
+            const member = teamMembers.find(m => m.id === val);
+            onUpdateSubtask(subtask.id, { assignee: member || null });
+          }}
+          type="select"
+          options={teamMembers.map(m => ({
+            value: m.id,
+            label: m.name,
+            icon: <Avatar sx={{ width: 16, height: 16, fontSize: '0.5rem' }}>{m.avatar}</Avatar>
+          }))}
+          renderValue={(val) => {
+            const assignee = teamMembers.find(m => m.id === val);
+            return assignee ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Avatar
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    fontSize: "0.75rem",
+                    bgcolor: "primary.main",
+                  }}
+                >
+                  {assignee.avatar}
+                </Avatar>
+                <Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>{assignee.name}</Typography>
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8125rem' }}>Unassigned</Typography>
+            );
+          }}
+        />
       </Box>
 
       {/* Status Column */}
       <Box sx={{ display: "flex", alignItems: "center" }}>
-        <FormControl size="small" sx={{ minWidth: 50 }}>
-          <Select
-            value={subtask.status} // Use subtask.status directly
-            onChange={(e) => {
-              const newStatus = e.target.value as Subtask["status"];
-              onUpdateSubtask(subtask.id, { status: newStatus });
-            }}
-            onClick={(e) => e.stopPropagation()}
-            sx={{
-              backgroundColor: statusOptions.find(
-                (opt) => opt.value === subtask.status
-              )?.color,
-              color: subtask.status === "Done" ? "white" : "text.primary",
-              "& .MuiSelect-select": {
-                padding: "2px 4px",
-                minHeight: "unset",
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                border: "none",
-              },
-              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                border: "none",
-              },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                border: "none",
-              },
-            }}
-          >
-            {statusOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
-
-      <Box sx={{ display: "flex", alignItems: "center"}}>
-        <Box
+        <InlineEdit
+          value={subtask.status}
+          onSave={(val) => onUpdateSubtask(subtask.id, { status: val })}
+          type="select"
+          options={statusOptions}
+          renderValue={(val) => (
+            <Box
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                justifyItems: "flex-end",
+                backgroundColor: statusOptions.find(opt => opt.value === val)?.color,
+                padding: "2px 8px",
+                borderRadius: "3px",
+                display: "inline-block",
+                fontWeight: "medium",
+                fontSize: "0.75rem",
+                color: val === "Done" ? "white" : "text.primary",
               }}
             >
-              <IconButton
-                size="small"
-                onClick={handleDelete}
-                sx={{ color: "error.main" }}
-              >
-                <Delete fontSize="small" />
-              </IconButton>
+              {val}
             </Box>
+          )}
+        />
+      </Box>
+
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box
+          className="subtask-actions"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            justifyItems: "flex-end",
+            opacity: 0,
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          <IconButton
+            size="small"
+            onClick={handleDelete}
+            sx={{ color: "error.main" }}
+          >
+            <Delete fontSize="small" />
+          </IconButton>
+        </Box>
       </Box>
 
       <ConfirmationDialog

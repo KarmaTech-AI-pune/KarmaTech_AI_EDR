@@ -8,9 +8,6 @@ import {
   Box,
   Avatar,
   IconButton,
-  FormControl,
-  Select,
-  MenuItem,
   TextField,
 } from "@mui/material";
 import {
@@ -24,10 +21,11 @@ import { PriorityIcon } from "../common/PriorityIcon";
 import { IssueDetailRow } from "../common/IssueDetailRow";
 import { SubtaskList } from "../SubtaskList";
 import { SubtaskDetailModal } from "./SubtaskDetailModal";
+import { InlineEdit } from "../common/InlineEdit";
 
 interface IssueDetailModalProps {
   showIssueDetail: Issue | null;
-  setShowIssueDetail: (issue: Issue | null) => void;
+  setShowIssueDetail: React.Dispatch<React.SetStateAction<Issue | null>>;
   setEditingIssue: (issue: Issue | null) => void;
   onDeleteIssue: (issueId: string) => void;
   onToggleFlag: (issueId: string) => void;
@@ -68,9 +66,12 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   if (!showIssueDetail) return null;
 
   const [newCommentText, setNewCommentText] = useState("");
-  const [viewingSubtask, setViewingSubtask] = useState<Subtask | null>(null);
+  const [viewingSubtaskId, setViewingSubtaskId] = useState<string | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState("");
+
+  // Derive viewingSubtask from showIssueDetail.subtasks using viewingSubtaskId
+  const viewingSubtask = showIssueDetail?.subtasks.find(s => s.id === viewingSubtaskId) || null;
 
   React.useEffect(() => {
     if (showIssueDetail) {
@@ -83,15 +84,20 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     onDeleteIssue(showIssueDetail.id);
     handleClose();
   };
-  const handleToggleFlag = () => onToggleFlag(showIssueDetail.id);
+  const handleToggleFlag = () => {
+    if (showIssueDetail) {
+      setShowIssueDetail((prev: Issue | null) => prev ? { ...prev, flagged: !prev.flagged } : null);
+      onToggleFlag(showIssueDetail.id);
+    }
+  };
 
   const handleDeleteSubtask = (subtaskId: string) => {
     if (showIssueDetail) {
-      const updatedSubtasks = showIssueDetail.subtasks.filter(
-        (subtask) => subtask.id !== subtaskId
-      );
-      setShowIssueDetail({ ...showIssueDetail, subtasks: updatedSubtasks });
-      onDeleteSubtask(subtaskId); // Call parent's onDeleteSubtask for persistence
+      setShowIssueDetail((prev: Issue | null) => prev ? {
+        ...prev,
+        subtasks: prev.subtasks.filter(s => s.id !== subtaskId)
+      } : null);
+      onDeleteSubtask(subtaskId);
     }
   };
 
@@ -100,18 +106,19 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     updates: Partial<Subtask>
   ) => {
     if (showIssueDetail) {
-      const updatedSubtasks = showIssueDetail.subtasks.map((subtask) =>
-        subtask.id === subtaskId ? { ...subtask, ...updates } : subtask
-      );
-      setShowIssueDetail({ ...showIssueDetail, subtasks: updatedSubtasks });
-      onUpdateSubtask(subtaskId, updates); // Call parent's onUpdateSubtask for persistence
+      setShowIssueDetail((prev: Issue | null) => prev ? {
+        ...prev,
+        subtasks: prev.subtasks.map((s: Subtask) => s.id === subtaskId ? { ...s, ...updates } : s)
+      } : null);
+
+      onUpdateSubtask(subtaskId, updates);
     }
   };
 
   const handleUpdateIssueAndState = (issueId: string, updates: Partial<Issue>) => {
     onUpdateIssue(issueId, updates);
     if (showIssueDetail && issueId === showIssueDetail.id) {
-      setShowIssueDetail({ ...showIssueDetail, ...updates });
+      setShowIssueDetail((prev: Issue | null) => prev ? { ...prev, ...updates } : null);
     }
   };
 
@@ -122,10 +129,9 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     { value: "Done", label: "Done", color: "#49f54eff" },
   ];
 
-  const handleStatusChange = (event: any) => {
-    const newStatus = event.target.value as Issue["status"];
+  const handleStatusChange = (newStatus: Issue["status"]) => {
     onUpdateIssue(showIssueDetail.id, { status: newStatus });
-    setShowIssueDetail({ ...showIssueDetail, status: newStatus });
+    setShowIssueDetail((prev: Issue | null) => prev ? { ...prev, status: newStatus } : null);
   };
 
   const handleAddComment = () => {
@@ -137,10 +143,12 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
         createdDate: new Date().toISOString().split("T")[0],
       };
 
-      const updatedComments = [...showIssueDetail.comments, newComment];
-      setShowIssueDetail({ ...showIssueDetail, comments: updatedComments });
-      onAddComment(showIssueDetail.id, newCommentText); // Call parent's onAddComment for persistence
-      setNewCommentText(""); // Clear input
+      setShowIssueDetail((prev: Issue | null) => prev ? {
+        ...prev,
+        comments: [...prev.comments, newComment]
+      } : null);
+      onAddComment(showIssueDetail.id, newCommentText);
+      setNewCommentText("");
     }
   };
 
@@ -154,20 +162,17 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
         createdDate: new Date().toISOString().split("T")[0],
       };
 
-      const updatedSubtasks = showIssueDetail.subtasks.map(s =>
-        s.id === subtaskId
-          ? { ...s, comments: [...s.comments, newComment] }
-          : s
-      );
-      setShowIssueDetail({ ...showIssueDetail, subtasks: updatedSubtasks });
-
-      // Update viewingSubtask if it's the one we're looking at
-      if (viewingSubtask && viewingSubtask.id === subtaskId) {
-        setViewingSubtask({
-          ...viewingSubtask,
-          comments: [...viewingSubtask.comments, newComment]
-        });
-      }
+      setShowIssueDetail((prev: Issue | null) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          subtasks: prev.subtasks.map((s: Subtask) =>
+            s.id === subtaskId
+              ? { ...s, comments: [...s.comments, newComment] }
+              : s
+          )
+        };
+      });
 
       onAddSubtaskComment(subtaskId, text);
     }
@@ -176,20 +181,17 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   const handleSubtaskUpdateComment = (subtaskId: string, commentId: string, text: string) => {
     if (showIssueDetail) {
       // Update subtask comment in showIssueDetail
-      const updatedSubtasks = showIssueDetail.subtasks.map(s =>
-        s.id === subtaskId
-          ? { ...s, comments: s.comments.map(c => c.id === commentId ? { ...c, text } : c) }
-          : s
-      );
-      setShowIssueDetail({ ...showIssueDetail, subtasks: updatedSubtasks });
-
-      // Update subtask comment in viewingSubtask
-      if (viewingSubtask && viewingSubtask.id === subtaskId) {
-        setViewingSubtask({
-          ...viewingSubtask,
-          comments: viewingSubtask.comments.map(c => c.id === commentId ? { ...c, text } : c)
-        });
-      }
+      setShowIssueDetail((prev: Issue | null) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          subtasks: prev.subtasks.map((s: Subtask) =>
+            s.id === subtaskId
+              ? { ...s, comments: s.comments.map((c: Comment) => c.id === commentId ? { ...c, text } : c) }
+              : s
+          )
+        };
+      });
 
       onUpdateSubtaskComment(subtaskId, commentId, text);
     }
@@ -197,21 +199,17 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
   const handleSubtaskDeleteComment = (subtaskId: string, commentId: string) => {
     if (showIssueDetail) {
-      // Update subtask comment in showIssueDetail
-      const updatedSubtasks = showIssueDetail.subtasks.map(s =>
-        s.id === subtaskId
-          ? { ...s, comments: s.comments.filter(c => c.id !== commentId) }
-          : s
-      );
-      setShowIssueDetail({ ...showIssueDetail, subtasks: updatedSubtasks });
-
-      // Update subtask comment in viewingSubtask
-      if (viewingSubtask && viewingSubtask.id === subtaskId) {
-        setViewingSubtask({
-          ...viewingSubtask,
-          comments: viewingSubtask.comments.filter(c => c.id !== commentId)
-        });
-      }
+      setShowIssueDetail((prev: Issue | null) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          subtasks: prev.subtasks.map((s: Subtask) =>
+            s.id === subtaskId
+              ? { ...s, comments: s.comments.filter((c: Comment) => c.id !== commentId) }
+              : s
+          )
+        };
+      });
 
       onDeleteSubtaskComment(subtaskId, commentId);
     }
@@ -224,11 +222,10 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
   const handleSaveCommentEdit = (commentId: string) => {
     if (editingCommentText.trim() && showIssueDetail) {
-      // Optimistic update
-      const updatedComments = showIssueDetail.comments.map(c =>
-        c.id === commentId ? { ...c, text: editingCommentText } : c
-      );
-      setShowIssueDetail({ ...showIssueDetail, comments: updatedComments });
+      setShowIssueDetail((prev: Issue | null) => prev ? {
+        ...prev,
+        comments: prev.comments.map((c: Comment) => c.id === commentId ? { ...c, text: editingCommentText } : c)
+      } : null);
 
       onUpdateComment(showIssueDetail.id, commentId, editingCommentText);
       setEditingCommentId(null);
@@ -238,9 +235,10 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
   const handleDeleteCommentLocal = (commentId: string) => {
     if (showIssueDetail) {
-      // Optimistic update
-      const updatedComments = showIssueDetail.comments.filter(c => c.id !== commentId);
-      setShowIssueDetail({ ...showIssueDetail, comments: updatedComments });
+      setShowIssueDetail((prev: Issue | null) => prev ? {
+        ...prev,
+        comments: prev.comments.filter((c: Comment) => c.id !== commentId)
+      } : null);
 
       onDeleteComment(showIssueDetail.id, commentId);
     }
@@ -296,13 +294,35 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
         sx={{ p: 0, display: "flex", height: "calc(90vh - 80px)" }}
       >
         <Box sx={{ flex: 1, p: 3, overflowY: "auto" }}>
-          <Typography variant="h5" fontWeight="semibold" sx={{ mb: 2 }}>
-            {showIssueDetail.summary}
-          </Typography>
+          <Box sx={{ mb: 2 }}>
+            <InlineEdit
+              value={showIssueDetail.summary}
+              onSave={(val) => handleUpdateIssueAndState(showIssueDetail.id, { summary: val })}
+              label="summary"
+              renderValue={(val) => (
+                <Typography variant="h5" fontWeight="semibold">
+                  {val}
+                </Typography>
+              )}
+            />
+          </Box>
 
-          <Typography variant="body1" color="text.primary" sx={{ mb: 4 }}>
-            {showIssueDetail.description || "No description provided."}
-          </Typography>
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 'medium' }}>
+              Description
+            </Typography>
+            <InlineEdit
+              value={showIssueDetail.description}
+              onSave={(val) => handleUpdateIssueAndState(showIssueDetail.id, { description: val })}
+              type="textarea"
+              label="description"
+              renderValue={(val) => (
+                <Typography variant="body1" color="text.primary">
+                  {val || "No description provided."}
+                </Typography>
+              )}
+            />
+          </Box>
 
           {/* Subtask Management */}
           <SubtaskList
@@ -312,19 +332,20 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             onCreateSubtask={onCreateSubtask}
             onUpdateSubtask={handleUpdateSubtask}
             onDeleteSubtask={handleDeleteSubtask}
-            onSubtaskClick={(s) => setViewingSubtask(s)}
+            onSubtaskClick={(s) => setViewingSubtaskId(s.id)}
           />
 
           <SubtaskDetailModal
             subtask={viewingSubtask}
             parentIssue={showIssueDetail}
-            onClose={() => setViewingSubtask(null)}
+            onClose={() => setViewingSubtaskId(null)}
             onUpdateSubtask={handleUpdateSubtask}
             onDeleteSubtask={handleDeleteSubtask}
             onAddComment={handleSubtaskAddComment}
             onUpdateComment={handleSubtaskUpdateComment}
             onDeleteComment={handleSubtaskDeleteComment}
             onFetchComments={onFetchSubtaskComments}
+            teamMembers={teamMembers}
           />
 
           <Box sx={{ borderTop: "1px solid", borderColor: "grey.100", pt: 3 }}>
@@ -456,114 +477,123 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           }}
         >
           <Box sx={{ mb: 3 }}>
-            <FormControl
-              fullWidth
-              margin="dense"
-              sx={{ width: "45%", border: "none" }}
-            >
-              <Select
-                labelId="status-label"
-                value={showIssueDetail.status}
-                onChange={handleStatusChange}
-                sx={{
-                  backgroundColor: statusOptions.find(
-                    (opt) => opt.value === showIssueDetail.status
-                  )?.color,
-                  "& .MuiSelect-select": {
-                    padding: "4px 8px", // Reduce padding (default is usually 16px 14px)
-                    minHeight: "unset",
-                  },
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    border: "none", // Remove default border
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    border: "none", // Remove focus border
-                  },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    border: "none",
-                  },
-                }}
-              >
-                {statusOptions.map((option) => (
-                  <MenuItem
-                    key={option.value}
-                    value={option.value}
-                  // sx={{ backgroundColor: option.color }}
-                  >
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 'medium' }}>
+              Status
+            </Typography>
+            <InlineEdit
+              value={showIssueDetail.status}
+              onSave={handleStatusChange}
+              type="select"
+              options={statusOptions}
+              renderValue={(val) => (
+                <Box
+                  sx={{
+                    backgroundColor: statusOptions.find(opt => opt.value === val)?.color,
+                    padding: "4px 12px",
+                    borderRadius: "4px",
+                    display: "inline-block",
+                    fontWeight: "medium",
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  {val}
+                </Box>
+              )}
+            />
           </Box>
 
           <Box sx={{ overflowY: "auto", flex: 1 }}>
             <IssueDetailRow label="Assignee">
-              {showIssueDetail.assignee ? (
-                <>
-                  <Avatar
-                    sx={{
-                      bgcolor: "primary.main",
-                      width: 24,
-                      height: 24,
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    {showIssueDetail.assignee.avatar}
-                  </Avatar>
-                  <Typography variant="body2">
-                    {showIssueDetail.assignee.name}
-                  </Typography>
-                </>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Unassigned
-                </Typography>
-              )}
+              <InlineEdit
+                value={showIssueDetail.assignee?.id || ""}
+                onSave={(val) => {
+                  const member = teamMembers.find(m => m.id === val);
+                  handleUpdateIssueAndState(showIssueDetail.id, { assignee: member || null });
+                }}
+                type="select"
+                options={teamMembers.map(m => ({
+                  value: m.id,
+                  label: m.name,
+                  icon: <Avatar sx={{ width: 16, height: 16, fontSize: '0.5rem' }}>{m.avatar}</Avatar>
+                }))}
+                renderValue={(val) => {
+                  const assignee = teamMembers.find(m => m.id === val);
+                  return assignee ? (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Avatar sx={{ bgcolor: "primary.main", width: 24, height: 24, fontSize: "0.75rem" }}>
+                        {assignee.avatar}
+                      </Avatar>
+                      <Typography variant="body2">{assignee.name}</Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">Unassigned</Typography>
+                  );
+                }}
+              />
             </IssueDetailRow>
 
             <IssueDetailRow label="Reporter">
-              <Avatar
-                sx={{
-                  bgcolor: "primary.main",
-                  width: 24,
-                  height: 24,
-                  fontSize: "0.75rem",
+              <InlineEdit
+                value={showIssueDetail.reporter.id}
+                onSave={(val) => {
+                  const member = teamMembers.find(m => m.id === val);
+                  if (member) handleUpdateIssueAndState(showIssueDetail.id, { reporter: member });
                 }}
-              >
-                {showIssueDetail.reporter.avatar}
-              </Avatar>
-              <Typography variant="body2">
-                {showIssueDetail.reporter.name}
-              </Typography>
+                type="select"
+                options={teamMembers.map(m => ({
+                  value: m.id,
+                  label: m.name,
+                  icon: <Avatar sx={{ width: 16, height: 16, fontSize: '0.5rem' }}>{m.avatar}</Avatar>
+                }))}
+                renderValue={(val) => {
+                  const reporter = teamMembers.find(m => m.id === val) || showIssueDetail.reporter;
+                  return (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Avatar sx={{ bgcolor: "primary.main", width: 24, height: 24, fontSize: "0.75rem" }}>
+                        {reporter.avatar}
+                      </Avatar>
+                      <Typography variant="body2">{reporter.name}</Typography>
+                    </Box>
+                  );
+                }}
+              />
             </IssueDetailRow>
 
             <IssueDetailRow label="Priority">
-              <PriorityIcon priority={showIssueDetail.priority} />
-              <Typography variant="body2">
-                {showIssueDetail.priority}
-              </Typography>
+              <InlineEdit
+                value={showIssueDetail.priority}
+                onSave={(val) => handleUpdateIssueAndState(showIssueDetail.id, { priority: val })}
+                type="select"
+                options={["Lowest", "Low", "Medium", "High", "Highest"].map(p => ({
+                  value: p,
+                  label: p,
+                  icon: <PriorityIcon priority={p as any} />
+                }))}
+                renderValue={(val) => (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <PriorityIcon priority={val as any} />
+                    <Typography variant="body2">{val}</Typography>
+                  </Box>
+                )}
+              />
             </IssueDetailRow>
 
-            {showIssueDetail.storyPoints > 0 && (
-              <IssueDetailRow label="Story Points">
-                <Avatar
-                  sx={{
-                    width: 20,
-                    height: 20,
-                    bgcolor: "grey.100",
-                    color: "grey.600",
-                    fontSize: "0.75rem",
-                    fontWeight: "medium",
-                  }}
-                >
-                  {showIssueDetail.storyPoints}
-                </Avatar>
-                <Typography variant="body2">
-                  {showIssueDetail.storyPoints} points
-                </Typography>
-              </IssueDetailRow>
-            )}
+            <IssueDetailRow label="Story Points">
+              <InlineEdit
+                value={showIssueDetail.storyPoints}
+                onSave={(val) => handleUpdateIssueAndState(showIssueDetail.id, { storyPoints: parseInt(val) || 0 })}
+                type="number"
+                label="story points"
+                renderValue={(val) => (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Avatar sx={{ width: 20, height: 20, bgcolor: "grey.100", color: "grey.600", fontSize: "0.75rem", fontWeight: "medium" }}>
+                      {val}
+                    </Avatar>
+                    <Typography variant="body2">{val} points</Typography>
+                  </Box>
+                )}
+              />
+            </IssueDetailRow>
 
             <IssueDetailRow label="Components">
               <Typography variant="body2" color="text.primary">
@@ -572,9 +602,16 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             </IssueDetailRow>
 
             <IssueDetailRow label="Fix Version">
-              <Typography variant="body2" color="text.primary">
-                {showIssueDetail.fixVersion || "None"}
-              </Typography>
+              <InlineEdit
+                value={showIssueDetail.fixVersion}
+                onSave={(val) => handleUpdateIssueAndState(showIssueDetail.id, { fixVersion: val })}
+                label="fix version"
+                renderValue={(val) => (
+                  <Typography variant="body2" color="text.primary">
+                    {val || "None"}
+                  </Typography>
+                )}
+              />
             </IssueDetailRow>
 
             <IssueDetailRow label="Created">

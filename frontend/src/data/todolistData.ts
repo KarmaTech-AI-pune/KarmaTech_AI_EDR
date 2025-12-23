@@ -32,12 +32,22 @@ interface SprintTaskDto {
   taskcreatedDate: string;
   taskupdatedDate: string;
   acceptanceCriteria: string;
+  displayOrder?: number;
+  estimatedHours?: number;
+  actualHours?: number;
+  remainingHours?: number;
+  startedAt?: string;
+  completedAt?: string;
+  sprintPlanId?: number;
+  wbsPlanId?: number;
+  userTaskId?: number;
   subtasks?: SprintSubtaskDto[];
 }
 
 interface SprintSubtaskDto {
   subtaskId: number;
-  subtaskkey: string;
+  subtaskkey?: string;
+  tenantId?: number;
   subtasktitle: string;
   subtaskdescription: string;
   subtaskpriority: string;
@@ -50,11 +60,15 @@ interface SprintSubtaskDto {
   subtaskReporterAvatar: string;
   attachments?: number;
   subtaskisExpanded?: boolean;
-  subtaskcreatedDate: string;
-  subtaskupdatedDate: string;
+  subtaskcreatedDate?: string;
+  subtaskupdatedDate?: string;
   subtaskType: string;
-  taskid: string;
+  taskid: string | number;
+  displayOrder?: number;
   estimatedHours?: number;
+  actualHours?: number;
+  startedAt?: string;
+  completedAt?: string;
   comments?: SprintSubtaskCommentDto[];
 }
 
@@ -90,6 +104,39 @@ const apiService = {
   async fetchSprintTaskComments(taskId: string | number): Promise<SprintTaskCommentDto[]> {
     const response = await axiosInstance.get<SprintTaskCommentDto[]>(`/api/sprint-tasks/${taskId}/comments`);
     return response.data;
+  },
+
+  async updateSprintTask(task: SprintTaskDto): Promise<any> {
+    const response = await axiosInstance.put('/api/sprint-tasks/single-sprint-task', task);
+    return response.data;
+  },
+
+  async fetchSprintSubtaskDetails(subtaskId: string | number): Promise<SprintSubtaskDto> {
+    const response = await axiosInstance.get<SprintSubtaskDto>(`/api/sprint-tasks/subtasks/${subtaskId}`);
+    return response.data;
+  },
+
+  async updateSprintSubtask(subtaskId: number, subtask: SprintSubtaskDto): Promise<any> {
+    const response = await axiosInstance.put(`/api/sprint-tasks/subtasks/${subtaskId}`, subtask);
+    return response.data;
+  },
+
+  async createSprintTask(task: SprintTaskDto): Promise<number> {
+    const response = await axiosInstance.post('/api/sprint-tasks/single-sprint-task', task);
+    return response.data.taskId;
+  },
+
+  async deleteSprintTask(taskId: number): Promise<void> {
+    await axiosInstance.delete(`/api/sprint-tasks/${taskId}`);
+  },
+
+  async createSprintSubtask(taskId: number, subtask: SprintSubtaskDto): Promise<number> {
+    const response = await axiosInstance.post(`/api/sprint-tasks/${taskId}/subtasks`, subtask);
+    return response.data.subtaskId;
+  },
+
+  async deleteSprintSubtask(subtaskId: number): Promise<void> {
+    await axiosInstance.delete(`/api/sprint-tasks/subtasks/${subtaskId}`);
   },
 };
 
@@ -264,6 +311,146 @@ export const fetchIssuesFromAPI = async (projectId: number): Promise<Issue[]> =>
     return issues;
   } catch (error) {
     console.error('Failed to fetch issues from API:', error);
+    throw error;
+  }
+};
+
+export const updateIssueAPI = async (issue: Issue): Promise<void> => {
+  try {
+    // Current task details to get the full DTO
+    const detailedTask = await apiService.fetchSprintTaskDetails(issue.id);
+
+    // Map updates from frontend Issue to SprintTaskDto
+    const updatedDto: SprintTaskDto = {
+      ...detailedTask,
+      taskkey: issue.key || detailedTask.taskkey,
+      taskTitle: issue.summary,
+      taskdescription: issue.description,
+      taskType: issue.issueType,
+      taskpriority: issue.priority,
+      taskstatus: issue.status,
+      storyPoints: issue.storyPoints,
+      taskAssineid: issue.assignee?.id || '',
+      taskAssigneeName: issue.assignee?.name || '',
+      taskAssigneeAvatar: issue.assignee?.avatar || '',
+      taskReporterId: issue.reporter.id,
+      taskReporterName: issue.reporter.name,
+      taskReporterAvatar: issue.reporter.avatar,
+      isExpanded: issue.isExpanded,
+    };
+
+    await apiService.updateSprintTask(updatedDto);
+  } catch (error) {
+    console.error(`Failed to update task ${issue.id}:`, error);
+    throw error;
+  }
+};
+
+export const updateSubtaskAPI = async (subtask: Subtask): Promise<void> => {
+  try {
+    const subtaskIdNum = parseInt(subtask.id);
+    if (isNaN(subtaskIdNum)) throw new Error('Invalid subtask ID');
+
+    // Fetch current state to avoid overwriting fields not in the frontend model
+    const detailedSubtask = await apiService.fetchSprintSubtaskDetails(subtaskIdNum);
+
+    const subtaskDto: SprintSubtaskDto = {
+      ...detailedSubtask,
+      subtaskkey: subtask.key || detailedSubtask.subtaskkey,
+      taskid: parseInt(subtask.parentIssueId) || (detailedSubtask.taskid as number),
+      subtasktitle: subtask.summary,
+      subtaskdescription: subtask.description || '',
+      subtaskpriority: subtask.priority,
+      subtaskstatus: subtask.status,
+      subtaskAssineid: subtask.assignee?.id || '',
+      subtaskAssigneeName: subtask.assignee?.name || '',
+      subtaskAssigneeAvatar: subtask.assignee?.avatar || '',
+      subtaskReporterId: subtask.reporter.id,
+      subtaskReporterName: subtask.reporter.name,
+      subtaskReporterAvatar: subtask.reporter.avatar,
+      subtaskType: subtask.issueType,
+      attachments: subtask.attachments || detailedSubtask.attachments,
+    };
+
+    await apiService.updateSprintSubtask(subtaskIdNum, subtaskDto);
+  } catch (error) {
+    console.error(`Failed to update subtask ${subtask.id}:`, error);
+    throw error;
+  }
+};
+
+export const createIssueAPI = async (issue: Omit<Issue, 'id' | 'key' | 'subtasks' | 'comments'>): Promise<number> => {
+  try {
+    const taskDto: any = {
+      taskTitle: issue.summary,
+      taskdescription: issue.description,
+      taskType: issue.issueType,
+      taskpriority: issue.priority,
+      taskstatus: issue.status,
+      storyPoints: issue.storyPoints,
+      taskAssineid: issue.assignee?.id || '',
+      taskAssigneeName: issue.assignee?.name || '',
+      taskAssigneeAvatar: issue.assignee?.avatar || '',
+      taskReporterId: issue.reporter.id,
+      taskReporterName: issue.reporter.name,
+      taskReporterAvatar: issue.reporter.avatar,
+      tenantId: 1, // Default tenantId
+    };
+
+    return await apiService.createSprintTask(taskDto as SprintTaskDto);
+  } catch (error) {
+    console.error('Failed to create task:', error);
+    throw error;
+  }
+};
+
+export const deleteIssueAPI = async (issueId: string): Promise<void> => {
+  try {
+    const taskIdNum = parseInt(issueId);
+    if (isNaN(taskIdNum)) throw new Error('Invalid task ID');
+    await apiService.deleteSprintTask(taskIdNum);
+  } catch (error) {
+    console.error(`Failed to delete task ${issueId}:`, error);
+    throw error;
+  }
+};
+
+export const createSubtaskAPI = async (parentIssueId: string, subtask: Omit<Subtask, 'id' | 'key' | 'comments'>): Promise<number> => {
+  try {
+    const taskIdNum = parseInt(parentIssueId);
+    if (isNaN(taskIdNum)) throw new Error('Invalid parent task ID');
+
+    const subtaskDto: SprintSubtaskDto = {
+      subtaskId: 0, // Backend should handle this
+      taskid: taskIdNum,
+      subtasktitle: subtask.summary,
+      subtaskdescription: subtask.description || '',
+      subtaskpriority: subtask.priority,
+      subtaskstatus: subtask.status,
+      subtaskAssineid: subtask.assignee?.id || '',
+      subtaskAssigneeName: subtask.assignee?.name || '',
+      subtaskAssigneeAvatar: subtask.assignee?.avatar || '',
+      subtaskReporterId: subtask.reporter.id,
+      subtaskReporterName: subtask.reporter.name,
+      subtaskReporterAvatar: subtask.reporter.avatar,
+      subtaskType: subtask.issueType,
+      tenantId: 1, // Default tenantId
+    };
+
+    return await apiService.createSprintSubtask(taskIdNum, subtaskDto);
+  } catch (error) {
+    console.error('Failed to create subtask:', error);
+    throw error;
+  }
+};
+
+export const deleteSubtaskAPI = async (subtaskId: string): Promise<void> => {
+  try {
+    const subtaskIdNum = parseInt(subtaskId);
+    if (isNaN(subtaskIdNum)) throw new Error('Invalid subtask ID');
+    await apiService.deleteSprintSubtask(subtaskIdNum);
+  } catch (error) {
+    console.error(`Failed to delete subtask ${subtaskId}:`, error);
     throw error;
   }
 };
