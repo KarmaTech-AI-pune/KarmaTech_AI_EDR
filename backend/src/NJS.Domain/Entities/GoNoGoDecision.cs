@@ -183,16 +183,8 @@ namespace NJS.Domain.Entities
         public string? LastModifiedBy { get; set; }
 
         /// <summary>
-        /// Applies score capping validation to ensure TotalScore does not exceed 100
-        /// </summary>
-        public void ApplyScoreCapping()
-        {
-            int rawTotal = CalculateRawTotalScore();
-            TotalScore = Math.Min(rawTotal, 100);
-        }
-
-        /// <summary>
-        /// Calculates the raw (uncapped) total score from all individual criterion scores
+        /// Calculates the total score from all individual criterion scores
+        /// TotalScore now stores the raw value (0-120) without capping
         /// </summary>
         /// <returns>Sum of all individual criterion scores</returns>
         public int CalculateRawTotalScore()
@@ -212,12 +204,40 @@ namespace NJS.Domain.Entities
         }
 
         /// <summary>
-        /// Determines if the total score has been capped (raw total > 100)
+        /// Updates the TotalScore property with the raw total (no capping applied)
         /// </summary>
-        /// <returns>True if score is capped, false otherwise</returns>
+        public void UpdateTotalScore()
+        {
+            TotalScore = CalculateRawTotalScore();
+        }
+
+        /// <summary>
+        /// Calculates the score percentage based on maximum possible score of 120
+        /// </summary>
+        /// <returns>Score percentage (0-100)</returns>
+        public int CalculateScorePercentage()
+        {
+            int rawTotal = CalculateRawTotalScore();
+            return (int)Math.Round((double)rawTotal / 120 * 100);
+        }
+
+        /// <summary>
+        /// Determines if the total score is perfect (equals 120)
+        /// </summary>
+        /// <returns>True if score equals 120, false otherwise</returns>
+        public bool IsPerfectScore()
+        {
+            return CalculateRawTotalScore() == 120;
+        }
+
+        /// <summary>
+        /// Legacy method - replaced with percentage calculation
+        /// </summary>
+        /// <returns>Always false (capping logic removed)</returns>
+        [Obsolete("Use IsPerfectScore instead. Capping logic has been replaced with percentage calculation.")]
         public bool IsScoreCapped()
         {
-            return CalculateRawTotalScore() > 100;
+            return false;
         }
     }
 

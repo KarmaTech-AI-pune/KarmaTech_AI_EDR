@@ -26,7 +26,6 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { projectManagementAppContextType } from '../../types';
@@ -194,24 +193,37 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     bidtimeandcosts:      { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
 
-  const calculateTotalScore = () => {
-    const rawTotal = Object.values(criteria).reduce((sum, item) => sum + item.score, 0);
-    return Math.min(rawTotal, 100); // Cap at 100
-  };
+  const MAX_POSSIBLE_SCORE = 120; // 12 criteria × 10 points each
 
-  const getRawTotalScore = () => {
+  const calculateTotalScore = () => {
+    // Return raw total (0-120) - no capping
     return Object.values(criteria).reduce((sum, item) => sum + item.score, 0);
   };
 
+  const calculateScorePercentage = () => {
+    const rawTotal = calculateTotalScore();
+    return Math.round((rawTotal / MAX_POSSIBLE_SCORE) * 100);
+  };
+
+  const isPerfectScore = () => {
+    return calculateTotalScore() === MAX_POSSIBLE_SCORE;
+  };
+
+  // Legacy function for backward compatibility
+  const getRawTotalScore = () => {
+    return calculateTotalScore();
+  };
+
+  // Legacy function for backward compatibility
   const isScoreCapped = () => {
-    return getRawTotalScore() > 100;
+    return false; // No longer capping scores
   };
 
   const getDecisionStatus = () => {
-    const totalScore = calculateTotalScore(); // Uses capped score
-    if (totalScore >= 84) return { text: 'GO', color: '#4caf50' };
-    if (totalScore >= 50) return { text: 'GO', color: '#ff9800' };
-    return { text: 'NO GO', color: '#f44336' };
+    const scorePercentage = calculateScorePercentage(); // Use percentage calculation
+    if (scorePercentage >= 70) return { text: 'GO', color: '#4caf50' }; // Green
+    if (scorePercentage >= 42) return { text: 'GO', color: '#ff9800' }; // Amber
+    return { text: 'NO GO', color: '#f44336' }; // Red
   };
 
   const handleCriteriaChange = (
@@ -352,7 +364,8 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
             // Parse the form data to get the actual score
             const formData = JSON.parse(rdVersion.formData);
             const totalScore = formData.Summary.TotalScore;
-            const decisionStatus = totalScore >= 50 ? "GO" : "NO GO";
+            const scorePercentage = Math.round((totalScore / MAX_POSSIBLE_SCORE) * 100);
+            const decisionStatus = scorePercentage >= 42 ? "GO" : "NO GO"; // Use percentage threshold
             
             // Call the callback with the correct status and version number
             onDecisionStatusChange(decisionStatus, version.versionNumber);
@@ -521,7 +534,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
           }
         },
         Summary: {
-          TotalScore: calculateTotalScore(),
+          TotalScore: calculateTotalScore(), // Raw total score (0-120)
           Status: getDecisionStatus().text === 'GO' ? GoNoGoStatus.Green : GoNoGoStatus.Red,
           DecisionComments: '',
           ActionPlan: ''
@@ -811,31 +824,15 @@ const isHeaderReadOnly = useCallback((): boolean => {
           Decision Summary
         </Typography>
         
-        {/* Score Capping Warning - Requirements 2.1, 2.2 */}
-        {isScoreCapped() && (
-          <Alert 
-            severity="warning" 
-            icon={<WarningAmberIcon />}
-            sx={{ mb: 2 }}
-          >
-            <Typography variant="body2" fontWeight="medium">
-              Total score capped at 100
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Calculated sum: {getRawTotalScore()} → Capped value: 100. Individual criterion scores remain unchanged.
-            </Typography>
-          </Alert>
-        )}
-
-        {/* Optimal Score Success Indicator - Requirement 2.5 */}
-        {calculateTotalScore() === 100 && !isScoreCapped() && (
+        {/* Perfect Score Success Indicator - Requirement 2.5 */}
+        {isPerfectScore() && (
           <Alert 
             severity="success" 
             icon={<CheckCircleIcon />}
             sx={{ mb: 2 }}
           >
             <Typography variant="body2" fontWeight="medium">
-              Excellent! You've achieved the maximum total score of 100.
+              Excellent! You've achieved a perfect score of 100%.
             </Typography>
           </Alert>
         )}
@@ -846,21 +843,20 @@ const isHeaderReadOnly = useCallback((): boolean => {
               <Typography variant="body1">
                 Total Score:
               </Typography>
+              {/* Display percentage with "%" suffix - Requirement 2.1 */}
               <Chip 
-                label={calculateTotalScore()}
-                color={isScoreCapped() ? "warning" : calculateTotalScore() === 100 ? "success" : "default"}
+                label={`${calculateScorePercentage()}%`}
+                color={isPerfectScore() ? "success" : "default"}
                 size="medium"
                 sx={{ fontWeight: 'bold', fontSize: '1rem' }}
               />
-              {isScoreCapped() && (
-                <Tooltip title={`Raw total: ${getRawTotalScore()} (capped at 100)`}>
-                  <InfoOutlinedIcon color="action" fontSize="small" sx={{ cursor: 'help' }} />
-                </Tooltip>
-              )}
+              <Tooltip title={`Raw total: ${calculateTotalScore()}/120`}>
+                <InfoOutlinedIcon color="action" fontSize="small" sx={{ cursor: 'help' }} />
+              </Tooltip>
             </Box>
-            {/* Maximum Score Indicator - Requirement 2.3 */}
+            {/* Show raw score for transparency and indicate maximum possible score - Requirements 2.2, 2.3 */}
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-              Maximum possible total score: 100
+              {calculateScorePercentage()}% ({calculateTotalScore()}/120) - Maximum possible score: 120
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>

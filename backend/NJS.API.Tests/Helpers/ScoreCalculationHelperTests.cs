@@ -35,7 +35,7 @@ namespace NJS.API.Tests.Helpers
         }
 
         [Fact]
-        public void CalculateCappedTotalScore_WithScoresOver100_ReturnsCappedAt100()
+        public void CalculateCappedTotalScore_WithScoresOver100_ReturnsRawTotal()
         {
             // Arrange
             var decision = new GoNoGoDecision
@@ -59,7 +59,7 @@ namespace NJS.API.Tests.Helpers
             var result = ScoreCalculationHelper.CalculateCappedTotalScore(decision);
 
             // Assert
-            Assert.Equal(100, result);
+            Assert.Equal(120, result); // Now returns raw total, not capped
         }
 
         [Fact]
@@ -91,7 +91,7 @@ namespace NJS.API.Tests.Helpers
         }
 
         [Fact]
-        public void IsScoreCapped_WithScoresOver100_ReturnsTrue()
+        public void IsScoreCapped_WithScoresOver100_ReturnsFalse()
         {
             // Arrange
             var decision = new GoNoGoDecision
@@ -115,7 +115,7 @@ namespace NJS.API.Tests.Helpers
             var result = ScoreCalculationHelper.IsScoreCapped(decision);
 
             // Assert
-            Assert.True(result);
+            Assert.False(result); // Now always returns false (no capping)
         }
 
         [Fact]
@@ -171,7 +171,7 @@ namespace NJS.API.Tests.Helpers
             ScoreCalculationHelper.ApplyScoreCap(decision);
 
             // Assert
-            Assert.Equal(100, decision.TotalScore);
+            Assert.Equal(120, decision.TotalScore); // Raw total score (12 × 10 = 120)
         }
 
         [Fact]
@@ -200,9 +200,9 @@ namespace NJS.API.Tests.Helpers
 
             // Assert
             Assert.Equal(115, result.RawTotalScore);
-            Assert.Equal(100, result.CappedTotalScore);
-            Assert.True(result.IsScoreCapped);
-            Assert.Equal(100, result.MaxPossibleScore);
+            Assert.Equal(96, result.ScorePercentage); // 115/120 * 100 = 95.83, rounded to 96
+            Assert.False(result.IsPerfectScore); // Not perfect (115 != 120)
+            Assert.Equal(120, result.MaxPossibleScore);
         }
 
         [Fact]
@@ -211,6 +211,118 @@ namespace NJS.API.Tests.Helpers
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => 
                 ScoreCalculationHelper.CalculateCappedTotalScore(null));
+        }
+
+        [Fact]
+        public void CalculateScorePercentage_WithPerfectScore_Returns100Percent()
+        {
+            // Arrange
+            var decision = new GoNoGoDecision
+            {
+                MarketingPlanScore = 10,
+                ClientRelationshipScore = 10,
+                ProjectKnowledgeScore = 10,
+                TechnicalEligibilityScore = 10,
+                FinancialEligibilityScore = 10,
+                StaffAvailabilityScore = 10,
+                CompetitionAssessmentScore = 10,
+                CompetitivePositionScore = 10,
+                FutureWorkPotentialScore = 10,
+                ProfitabilityScore = 10,
+                ResourceAvailabilityScore = 10,
+                BidScheduleScore = 10
+                // Total: 120
+            };
+
+            // Act
+            var result = ScoreCalculationHelper.CalculateScorePercentage(decision);
+
+            // Assert
+            Assert.Equal(100, result);
+        }
+
+        [Fact]
+        public void CalculateScorePercentage_WithHalfScore_Returns50Percent()
+        {
+            // Arrange
+            var decision = new GoNoGoDecision
+            {
+                MarketingPlanScore = 5,
+                ClientRelationshipScore = 5,
+                ProjectKnowledgeScore = 5,
+                TechnicalEligibilityScore = 5,
+                FinancialEligibilityScore = 5,
+                StaffAvailabilityScore = 5,
+                CompetitionAssessmentScore = 5,
+                CompetitivePositionScore = 5,
+                FutureWorkPotentialScore = 5,
+                ProfitabilityScore = 5,
+                ResourceAvailabilityScore = 5,
+                BidScheduleScore = 5
+                // Total: 60
+            };
+
+            // Act
+            var result = ScoreCalculationHelper.CalculateScorePercentage(decision);
+
+            // Assert
+            Assert.Equal(50, result); // 60/120 * 100 = 50%
+        }
+
+        [Fact]
+        public void IsPerfectScore_WithPerfectScore_ReturnsTrue()
+        {
+            // Arrange
+            var decision = new GoNoGoDecision
+            {
+                MarketingPlanScore = 10,
+                ClientRelationshipScore = 10,
+                ProjectKnowledgeScore = 10,
+                TechnicalEligibilityScore = 10,
+                FinancialEligibilityScore = 10,
+                StaffAvailabilityScore = 10,
+                CompetitionAssessmentScore = 10,
+                CompetitivePositionScore = 10,
+                FutureWorkPotentialScore = 10,
+                ProfitabilityScore = 10,
+                ResourceAvailabilityScore = 10,
+                BidScheduleScore = 10
+                // Total: 120
+            };
+
+            // Act
+            var result = ScoreCalculationHelper.IsPerfectScore(decision);
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void IsPerfectScore_WithNonPerfectScore_ReturnsFalse()
+        {
+            // Arrange
+            var decision = new GoNoGoDecision
+            {
+                MarketingPlanScore = 10,
+                ClientRelationshipScore = 10,
+                ProjectKnowledgeScore = 10,
+                TechnicalEligibilityScore = 10,
+                FinancialEligibilityScore = 10,
+                StaffAvailabilityScore = 10,
+                CompetitionAssessmentScore = 10,
+                CompetitivePositionScore = 10,
+                FutureWorkPotentialScore = 10,
+                ProfitabilityScore = 10,
+                ResourceAvailabilityScore = 10,
+                BidScheduleScore = 9
+                // Total: 119
+            };
+
+            // Act
+            var result = ScoreCalculationHelper.IsPerfectScore(decision);
+
+            // Assert
+            Assert.False(result);
         }
     }
 }

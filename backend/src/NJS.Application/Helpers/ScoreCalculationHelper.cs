@@ -3,34 +3,20 @@ using NJS.Domain.Entities;
 namespace NJS.Application.Helpers
 {
     /// <summary>
-    /// Helper class for Go No-Go Decision score calculations with capping logic
+    /// Helper class for Go No-Go Decision score calculations with percentage logic
     /// </summary>
     public static class ScoreCalculationHelper
     {
         /// <summary>
-        /// Maximum allowable total score for Go No-Go Decision
+        /// Maximum possible total score for Go No-Go Decision (12 criteria × 10 points each)
         /// </summary>
-        public const int MAX_TOTAL_SCORE = 100;
+        public const int MAX_POSSIBLE_SCORE = 120;
 
         /// <summary>
-        /// Calculates the capped total score for a Go No-Go Decision
+        /// Calculates the raw total score for a Go No-Go Decision
         /// </summary>
         /// <param name="decision">The Go No-Go Decision entity</param>
-        /// <returns>Total score capped at MAX_TOTAL_SCORE (100)</returns>
-        public static int CalculateCappedTotalScore(GoNoGoDecision decision)
-        {
-            if (decision == null)
-                throw new ArgumentNullException(nameof(decision));
-
-            int rawTotal = GetRawTotalScore(decision);
-            return Math.Min(rawTotal, MAX_TOTAL_SCORE);
-        }
-
-        /// <summary>
-        /// Calculates the raw (uncapped) total score for a Go No-Go Decision
-        /// </summary>
-        /// <param name="decision">The Go No-Go Decision entity</param>
-        /// <returns>Sum of all individual criterion scores without capping</returns>
+        /// <returns>Sum of all individual criterion scores (0-120)</returns>
         public static int GetRawTotalScore(GoNoGoDecision decision)
         {
             if (decision == null)
@@ -51,32 +37,46 @@ namespace NJS.Application.Helpers
         }
 
         /// <summary>
-        /// Determines if the total score has been capped
+        /// Calculates the score percentage for a Go No-Go Decision
         /// </summary>
         /// <param name="decision">The Go No-Go Decision entity</param>
-        /// <returns>True if the raw total exceeds MAX_TOTAL_SCORE, false otherwise</returns>
-        public static bool IsScoreCapped(GoNoGoDecision decision)
+        /// <returns>Percentage of maximum possible score (0-100%)</returns>
+        public static int CalculateScorePercentage(GoNoGoDecision decision)
         {
             if (decision == null)
                 throw new ArgumentNullException(nameof(decision));
 
-            return GetRawTotalScore(decision) > MAX_TOTAL_SCORE;
+            int rawTotal = GetRawTotalScore(decision);
+            return (int)Math.Round((double)rawTotal / MAX_POSSIBLE_SCORE * 100);
         }
 
         /// <summary>
-        /// Updates the TotalScore property of a Go No-Go Decision with the capped value
+        /// Determines if the decision achieved a perfect score
+        /// </summary>
+        /// <param name="decision">The Go No-Go Decision entity</param>
+        /// <returns>True if the raw total equals MAX_POSSIBLE_SCORE (120), false otherwise</returns>
+        public static bool IsPerfectScore(GoNoGoDecision decision)
+        {
+            if (decision == null)
+                throw new ArgumentNullException(nameof(decision));
+
+            return GetRawTotalScore(decision) == MAX_POSSIBLE_SCORE;
+        }
+
+        /// <summary>
+        /// Updates the TotalScore property of a Go No-Go Decision with the raw total value
         /// </summary>
         /// <param name="decision">The Go No-Go Decision entity to update</param>
-        public static void ApplyScoreCap(GoNoGoDecision decision)
+        public static void ApplyRawScore(GoNoGoDecision decision)
         {
             if (decision == null)
                 throw new ArgumentNullException(nameof(decision));
 
-            decision.TotalScore = CalculateCappedTotalScore(decision);
+            decision.TotalScore = GetRawTotalScore(decision);
         }
 
         /// <summary>
-        /// Gets comprehensive score information including raw, capped, and capping status
+        /// Gets comprehensive score information including raw total, percentage, and perfect score status
         /// </summary>
         /// <param name="decision">The Go No-Go Decision entity</param>
         /// <returns>ScoreInfo object containing all score-related information</returns>
@@ -86,16 +86,49 @@ namespace NJS.Application.Helpers
                 throw new ArgumentNullException(nameof(decision));
 
             int rawTotal = GetRawTotalScore(decision);
-            int cappedTotal = Math.Min(rawTotal, MAX_TOTAL_SCORE);
-            bool isCapped = rawTotal > MAX_TOTAL_SCORE;
+            int percentage = (int)Math.Round((double)rawTotal / MAX_POSSIBLE_SCORE * 100);
+            bool isPerfect = rawTotal == MAX_POSSIBLE_SCORE;
 
             return new ScoreInfo
             {
                 RawTotalScore = rawTotal,
-                CappedTotalScore = cappedTotal,
-                IsScoreCapped = isCapped,
-                MaxPossibleScore = MAX_TOTAL_SCORE
+                ScorePercentage = percentage,
+                IsPerfectScore = isPerfect,
+                MaxPossibleScore = MAX_POSSIBLE_SCORE
             };
+        }
+
+        // Legacy methods for backward compatibility
+        /// <summary>
+        /// Legacy method - now returns raw total score (no capping)
+        /// </summary>
+        /// <param name="decision">The Go No-Go Decision entity</param>
+        /// <returns>Raw total score (same as GetRawTotalScore)</returns>
+        [Obsolete("Use GetRawTotalScore instead. Capping logic has been replaced with percentage calculation.")]
+        public static int CalculateCappedTotalScore(GoNoGoDecision decision)
+        {
+            return GetRawTotalScore(decision);
+        }
+
+        /// <summary>
+        /// Legacy method - now always returns false (no capping)
+        /// </summary>
+        /// <param name="decision">The Go No-Go Decision entity</param>
+        /// <returns>Always false (capping logic removed)</returns>
+        [Obsolete("Use IsPerfectScore instead. Capping logic has been replaced with percentage calculation.")]
+        public static bool IsScoreCapped(GoNoGoDecision decision)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Legacy method - now applies raw score (no capping)
+        /// </summary>
+        /// <param name="decision">The Go No-Go Decision entity to update</param>
+        [Obsolete("Use ApplyRawScore instead. Capping logic has been replaced with percentage calculation.")]
+        public static void ApplyScoreCap(GoNoGoDecision decision)
+        {
+            ApplyRawScore(decision);
         }
     }
 
@@ -105,23 +138,44 @@ namespace NJS.Application.Helpers
     public class ScoreInfo
     {
         /// <summary>
-        /// The raw (uncapped) sum of all individual criterion scores
+        /// The raw sum of all individual criterion scores (0-120)
         /// </summary>
         public int RawTotalScore { get; set; }
 
         /// <summary>
-        /// The total score after applying the cap (maximum 100)
+        /// The score expressed as a percentage of maximum possible score (0-100%)
         /// </summary>
-        public int CappedTotalScore { get; set; }
+        public int ScorePercentage { get; set; }
 
         /// <summary>
-        /// Indicates whether the score has been capped
+        /// Indicates whether the decision achieved a perfect score (120/120)
         /// </summary>
-        public bool IsScoreCapped { get; set; }
+        public bool IsPerfectScore { get; set; }
 
         /// <summary>
-        /// The maximum possible total score (100)
+        /// The maximum possible total score (120)
         /// </summary>
         public int MaxPossibleScore { get; set; }
+
+        // Legacy properties for backward compatibility
+        /// <summary>
+        /// Legacy property - now returns the same as RawTotalScore
+        /// </summary>
+        [Obsolete("Use RawTotalScore instead. Capping logic has been replaced with percentage calculation.")]
+        public int CappedTotalScore 
+        { 
+            get => RawTotalScore; 
+            set => RawTotalScore = value; 
+        }
+
+        /// <summary>
+        /// Legacy property - now always returns false
+        /// </summary>
+        [Obsolete("Use IsPerfectScore instead. Capping logic has been replaced with percentage calculation.")]
+        public bool IsScoreCapped 
+        { 
+            get => false; 
+            set { /* Ignored */ } 
+        }
     }
 }

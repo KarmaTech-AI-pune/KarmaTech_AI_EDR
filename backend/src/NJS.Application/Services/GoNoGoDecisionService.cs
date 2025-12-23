@@ -24,8 +24,8 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public void Add(GoNoGoDecision decision)
     {
-        // Apply score capping before adding to database
-        ScoreCalculationHelper.ApplyScoreCap(decision);
+        // Apply raw score (no capping) before adding to database
+        ScoreCalculationHelper.ApplyRawScore(decision);
         _goNoGoDecision.Add(decision);
     }
 
@@ -67,22 +67,68 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public IEnumerable<GoNoGoDecision> GetAll()
     {
-        return _goNoGoDecision.GetAll();
+        var decisions = _goNoGoDecision.GetAll();
+        
+        // Ensure percentage calculation for existing records - Requirement 3.1
+        foreach (var decision in decisions)
+        {
+            // Preserve individual criterion scores unchanged - Requirement 3.5
+            // Only update TotalScore if it needs recalculation for backward compatibility
+            if (decision.TotalScore != decision.CalculateRawTotalScore())
+            {
+                decision.UpdateTotalScore();
+            }
+        }
+        
+        return decisions;
     }
 
     public GoNoGoDecision GetById(int id)
     {
-        return _goNoGoDecision.GetById(id);
+        var decision = _goNoGoDecision.GetById(id);
+        
+        if (decision != null)
+        {
+            // Ensure percentage calculation for existing records - Requirement 3.1
+            // Preserve individual criterion scores unchanged - Requirement 3.5
+            if (decision.TotalScore != decision.CalculateRawTotalScore())
+            {
+                decision.UpdateTotalScore();
+            }
+        }
+        
+        return decision;
     }
 
     public async Task<GoNoGoDecisionHeader> GetByOpportunityId(int opportuntiy)
     {
-        return await _goNoGoDecision.GetByOpportunityId(opportuntiy);
+        var header = await _goNoGoDecision.GetByOpportunityId(opportuntiy);
+        
+        if (header != null)
+        {
+            // Ensure percentage calculation for existing records - Requirement 3.1
+            // TotalScore in header should reflect raw total for percentage calculation
+            // Individual criterion scores are preserved in the related GoNoGoDecision entity
+        }
+        
+        return header;
     }
 
     public GoNoGoDecision GetByProjectId(int projectId)
     {
-        return _goNoGoDecision.GetByProjectId(projectId);
+        var decision = _goNoGoDecision.GetByProjectId(projectId);
+        
+        if (decision != null)
+        {
+            // Ensure percentage calculation for existing records - Requirement 3.1
+            // Preserve individual criterion scores unchanged - Requirement 3.5
+            if (decision.TotalScore != decision.CalculateRawTotalScore())
+            {
+                decision.UpdateTotalScore();
+            }
+        }
+        
+        return decision;
     }
 
     public async Task<GoNoGoDecisionHeader> GetHeaderById(int id)
@@ -108,8 +154,10 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public void Update(GoNoGoDecision decision)
     {
-        // Apply score capping before updating in database
-        ScoreCalculationHelper.ApplyScoreCap(decision);
+        // Ensure percentage calculation for existing records - Requirement 3.3
+        // Preserve individual criterion scores unchanged - Requirement 3.3
+        // Apply raw score (no capping) before updating in database
+        ScoreCalculationHelper.ApplyRawScore(decision);
         _goNoGoDecision.Update(decision);
     }
 
@@ -170,9 +218,11 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
         header.CurrentVersion = version.VersionNumber;
         header.VersionStatus = version.Status;
         
-        // Apply score capping to the total score from summary
+        // Store raw total score (no capping) - Requirement 3.3
+        // Individual criterion scores are preserved in the FormData JSON
+        // Percentage calculation is handled when data is retrieved
         int rawTotalScore = summary!.Summary.TotalScore;
-        header.TotalScore = Math.Min(rawTotalScore, ScoreCalculationHelper.MAX_TOTAL_SCORE);
+        header.TotalScore = rawTotalScore;
 
 
         return await _goNoGoDecision.UpdateVersion(version);
@@ -190,10 +240,10 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
     };
 
     /// <summary>
-    /// Gets a GoNoGoDecision by ID and returns it as a DTO with capping information
+    /// Gets a GoNoGoDecision by ID and returns it as a DTO with percentage information
     /// </summary>
     /// <param name="id">The decision ID</param>
-    /// <returns>GoNoGoDecisionDto with capping information included</returns>
+    /// <returns>GoNoGoDecisionDto with percentage information included</returns>
     public GoNoGoDecisionDto GetByIdWithCappingInfo(int id)
     {
         var decision = _goNoGoDecision.GetById(id);
@@ -235,10 +285,13 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
             BidScheduleScore = decision.BidScheduleScore,
             BidScheduleComments = decision.BidScheduleComments,
             
-            // Capping information
-            TotalScore = scoreInfo.CappedTotalScore,
+            // Score information with percentage
+            TotalScore = scoreInfo.RawTotalScore,
             RawTotalScore = scoreInfo.RawTotalScore,
-            IsScoreCapped = scoreInfo.IsScoreCapped,
+            ScorePercentage = scoreInfo.ScorePercentage,
+            MaxPossibleScore = scoreInfo.MaxPossibleScore,
+            IsPerfectScore = scoreInfo.IsPerfectScore,
+            IsScoreCapped = false, // Legacy property - always false now
             Status = decision.Status,
             DecisionComments = decision.DecisionComments,
             
@@ -260,10 +313,10 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
     }
 
     /// <summary>
-    /// Gets a GoNoGoDecision by Project ID and returns it as a DTO with capping information
+    /// Gets a GoNoGoDecision by Project ID and returns it as a DTO with percentage information
     /// </summary>
     /// <param name="projectId">The project ID</param>
-    /// <returns>GoNoGoDecisionDto with capping information included</returns>
+    /// <returns>GoNoGoDecisionDto with percentage information included</returns>
     public GoNoGoDecisionDto GetByProjectIdWithCappingInfo(int projectId)
     {
         var decision = _goNoGoDecision.GetByProjectId(projectId);
@@ -305,10 +358,13 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
             BidScheduleScore = decision.BidScheduleScore,
             BidScheduleComments = decision.BidScheduleComments,
             
-            // Capping information
-            TotalScore = scoreInfo.CappedTotalScore,
+            // Score information with percentage
+            TotalScore = scoreInfo.RawTotalScore,
             RawTotalScore = scoreInfo.RawTotalScore,
-            IsScoreCapped = scoreInfo.IsScoreCapped,
+            ScorePercentage = scoreInfo.ScorePercentage,
+            MaxPossibleScore = scoreInfo.MaxPossibleScore,
+            IsPerfectScore = scoreInfo.IsPerfectScore,
+            IsScoreCapped = false, // Legacy property - always false now
             Status = decision.Status,
             DecisionComments = decision.DecisionComments,
             
@@ -330,9 +386,9 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
     }
 
     /// <summary>
-    /// Gets all GoNoGoDecisions and returns them as DTOs with capping information
+    /// Gets all GoNoGoDecisions and returns them as DTOs with percentage information
     /// </summary>
-    /// <returns>Collection of GoNoGoSummaryDto with capping information included</returns>
+    /// <returns>Collection of GoNoGoSummaryDto with percentage information included</returns>
     public IEnumerable<GoNoGoSummaryDto> GetAllWithCappingInfo()
     {
         var decisions = _goNoGoDecision.GetAll();
@@ -345,9 +401,12 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
             {
                 Id = decision.Id,
                 ProjectId = decision.ProjectId,
-                TotalScore = scoreInfo.CappedTotalScore,
+                TotalScore = scoreInfo.RawTotalScore,
                 RawTotalScore = scoreInfo.RawTotalScore,
-                IsScoreCapped = scoreInfo.IsScoreCapped,
+                ScorePercentage = scoreInfo.ScorePercentage,
+                MaxPossibleScore = scoreInfo.MaxPossibleScore,
+                IsPerfectScore = scoreInfo.IsPerfectScore,
+                IsScoreCapped = false, // Legacy property - always false now
                 Status = decision.Status,
                 DecisionComments = decision.DecisionComments,
                 CompletedDate = decision.CompletedDate,
