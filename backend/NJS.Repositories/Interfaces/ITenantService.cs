@@ -22,5 +22,6 @@ namespace NJS.Repositories.Interfaces
         // Tenant validation and management
         Task<Tenant> GetCurrentTenantAsync();
         Task<bool> ValidateTenantAccessAsync(string userId, int tenantId);
+        Task<List<TenantUser>> GetTenantUsersByUserIdAsync(string userId);
     }
 }

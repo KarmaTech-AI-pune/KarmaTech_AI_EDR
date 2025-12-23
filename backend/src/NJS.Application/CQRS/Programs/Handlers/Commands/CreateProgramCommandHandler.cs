@@ -21,7 +21,7 @@ namespace NJS.Application.CQRS.Programs.Handlers.Commands
 
         public async Task<int> Handle(CreateProgramCommand request, CancellationToken cancellationToken)
         {
-            var program = new Program
+            var program = new NJS.Domain.Entities.Program
             {
                 TenantId = request.TenantId,
                 Name = request.Name,
