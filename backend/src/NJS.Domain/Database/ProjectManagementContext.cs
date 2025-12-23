@@ -145,6 +145,10 @@ namespace NJS.Domain.Database
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
         public DbSet<MigrationResult> MigrationResults { get; set; }
 
+        // Release Notes entities
+        public DbSet<ReleaseNotes> ReleaseNotes { get; set; }
+        public DbSet<ChangeItem> ChangeItems { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -201,6 +205,10 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<SprintTaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintSubtaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintDailyProgress>().HasQueryFilter(p => p.TenantId == TenantId);
+            
+            // Release Notes entities
+            modelBuilder.Entity<ReleaseNotes>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<ChangeItem>().HasQueryFilter(p => p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
@@ -1282,6 +1290,46 @@ namespace NJS.Domain.Database
                 .HasOne(spf => spf.Feature)
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
+
+            // Configure ReleaseNotes entity
+            modelBuilder.Entity<ReleaseNotes>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Version).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ReleaseDate).IsRequired();
+                entity.Property(e => e.Environment).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.CommitSha).HasMaxLength(40);
+                entity.Property(e => e.Branch).HasMaxLength(100);
+                entity.Property(e => e.CreatedDate).IsRequired().HasDefaultValueSql("GETUTCDATE()");
+
+                // Create indexes for better performance
+                entity.HasIndex(e => e.Version).IsUnique();
+                entity.HasIndex(e => e.ReleaseDate);
+                entity.HasIndex(e => e.Environment);
+
+                // Configure relationship with ChangeItems
+                entity.HasMany(r => r.ChangeItems)
+                    .WithOne(c => c.ReleaseNotes)
+                    .HasForeignKey(c => c.ReleaseNotesId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure ChangeItem entity
+            modelBuilder.Entity<ChangeItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ReleaseNotesId).IsRequired();
+                entity.Property(e => e.ChangeType).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.CommitSha).HasMaxLength(40);
+                entity.Property(e => e.JiraTicket).HasMaxLength(20);
+                entity.Property(e => e.Impact).HasMaxLength(10);
+                entity.Property(e => e.Author).HasMaxLength(100);
+
+                // Create indexes for better performance
+                entity.HasIndex(e => e.ReleaseNotesId);
+                entity.HasIndex(e => e.ChangeType);
+            });
 
         }
 

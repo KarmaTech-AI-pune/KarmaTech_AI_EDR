@@ -25,6 +25,12 @@ internal class Program
         builder.Services.AddControllers();
         builder.Services.AddLogging();
 
+        // Add memory cache for performance optimization
+        builder.Services.AddMemoryCache();
+
+        // Add response caching
+        builder.Services.AddResponseCaching();
+
         // Add HttpContextAccessor as singleton
         builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
@@ -140,6 +146,7 @@ internal class Program
         });
 
         app.UseResponseCompression();
+        app.UseResponseCaching(); // Add response caching middleware
         app.UseHttpsRedirection();
 
         // Add version context to all requests and responses

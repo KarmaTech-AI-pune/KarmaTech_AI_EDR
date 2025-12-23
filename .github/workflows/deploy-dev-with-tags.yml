@@ -48,6 +48,9 @@ jobs:
       environment: ${{ steps.version-integration.outputs.environment }}
       build-number: ${{ steps.version-integration.outputs.build_number }}
       commit-sha: ${{ steps.version-integration.outputs.commit_sha }}
+      release-notes-generated: ${{ steps.generate-release-notes.outputs.release-notes-generated }}
+      api-data-available: ${{ steps.generate-release-notes.outputs.api-data-available }}
+      api-data-file: ${{ steps.generate-release-notes.outputs.api-data-file }}
     
     steps:
       - name: Checkout code
@@ -100,6 +103,7 @@ jobs:
           chmod +x .github/scripts/create-version-tag.sh
           chmod +x .github/scripts/version-calculator.js
           chmod +x .github/scripts/github-actions-version-integration.js
+          chmod +x .github/scripts/generate-release-notes.js
 
       - name: Calculate Version and Create Tags
         id: version-integration
@@ -158,6 +162,36 @@ jobs:
           echo "✅ Execution time: ${{ steps.version-integration.outputs.execution_time }}s"
           echo "✅ Ready for deployment"
 
+      - name: Generate Release Notes
+        id: generate-release-notes
+        env:
+          VERSION_TAG: ${{ steps.version-integration.outputs.environment_version_tag }}
+          ENVIRONMENT: ${{ steps.version-integration.outputs.environment }}
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          echo "📝 Generating release notes for $VERSION_TAG..."
+          
+          # Generate release notes using the new script
+          node .github/scripts/generate-release-notes.js \
+            --version "$VERSION_TAG" \
+            --environment "$ENVIRONMENT" \
+            --commit-sha "$COMMIT_SHA"
+          
+          echo "✅ Release notes generation completed"
+          
+          # Set outputs for later jobs
+          echo "release-notes-generated=true" >> $GITHUB_OUTPUT
+          
+          # Check if API data file was created
+          if [ -f ".github/release-notes/api-data.json" ]; then
+            echo "api-data-available=true" >> $GITHUB_OUTPUT
+            echo "api-data-file=.github/release-notes/api-data.json" >> $GITHUB_OUTPUT
+          else
+            echo "api-data-available=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Log Version Information
         run: |
           echo "## 🏷️ Automatic Version Integration Complete" >> $GITHUB_STEP_SUMMARY
@@ -172,6 +206,13 @@ jobs:
           echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Increment Type:** \`${{ steps.version-integration.outputs.increment_type }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Notes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Generated:** ${{ steps.generate-release-notes.outputs.release-notes-generated }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **API Data Available:** ${{ steps.generate-release-notes.outputs.api-data-available }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.generate-release-notes.outputs.api-data-available }}" = "true" ]; then
+            echo "- **API Data File:** \`${{ steps.generate-release-notes.outputs.api-data-file }}\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Integration Details" >> $GITHUB_STEP_SUMMARY
           echo "- **Commits Analyzed:** ${{ steps.version-integration.outputs.commits_analyzed }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Execution Time:** ${{ steps.version-integration.outputs.execution_time }} seconds" >> $GITHUB_STEP_SUMMARY
@@ -183,6 +224,7 @@ jobs:
           echo "- ✅ frontend/package.json" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ .NET project files" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Git tags created and pushed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Release notes generated" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Quick Links" >> $GITHUB_STEP_SUMMARY
           echo "- [View Environment Tag](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version-integration.outputs.environment_version_tag }})" >> $GITHUB_STEP_SUMMARY
@@ -190,12 +232,97 @@ jobs:
           echo "- [View Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
 
   # ================================================================
-  # Job 2: Deploy Infrastructure
+  # Job 2: Store Release Notes in Database
+  # ================================================================
+  store-release-notes:
+    name: Store Release Notes
+    runs-on: ubuntu-latest
+    needs: create-version-tag
+    if: needs.create-version-tag.outputs.api-data-available == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download Release Notes Data
+        run: |
+          echo "📥 Downloading release notes data..."
+          # The API data file should be available from the previous job
+          if [ -f "${{ needs.create-version-tag.outputs.api-data-file }}" ]; then
+            echo "✅ Release notes data file found"
+            cat "${{ needs.create-version-tag.outputs.api-data-file }}"
+          else
+            echo "❌ Release notes data file not found"
+            exit 1
+          fi
+
+      - name: Store Release Notes in Database
+        id: store-notes
+        env:
+          VERSION_TAG: ${{ needs.create-version-tag.outputs.version-tag }}
+          ENVIRONMENT: ${{ needs.create-version-tag.outputs.environment }}
+          API_DATA_FILE: ${{ needs.create-version-tag.outputs.api-data-file }}
+        run: |
+          echo "💾 Storing release notes in database..."
+          
+          # Make the storage script executable
+          chmod +x .github/scripts/store-release-notes.js
+          
+          # Store release notes using the dedicated script
+          node .github/scripts/store-release-notes.js \
+            --api-url "https://api.app.karmatech-ai.com/api/release-notes" \
+            --data-file "$API_DATA_FILE"
+          
+          echo "✅ Release notes storage completed"
+
+      - name: Create GitHub Release
+        if: needs.create-version-tag.outputs.environment == 'dev'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.create-version-tag.outputs.version-tag }}
+          release_name: Release ${{ needs.create-version-tag.outputs.version-tag }}
+          body: |
+            # Development Release ${{ needs.create-version-tag.outputs.version-tag }}
+            
+            **Environment:** Development
+            **Build Number:** ${{ needs.create-version-tag.outputs.build-number }}
+            **Commit:** ${{ needs.create-version-tag.outputs.commit-sha }}
+            **Deployed:** ${{ github.event.head_commit.timestamp }}
+            **Deployed by:** ${{ github.actor }}
+            
+            ## 📝 Release Notes
+            
+            Detailed release notes with categorized changes are available in the application UI.
+            
+            ## 🚀 Deployment URLs
+            
+            - **Admin Portal:** https://edr-admin.app.karmatech-ai.com
+            - **Tenant Portal:** https://app.karmatech-ai.com
+            
+            ## 📊 Version Information
+            
+            - **Version:** `${{ needs.create-version-tag.outputs.version-tag }}`
+            - **Environment:** `${{ needs.create-version-tag.outputs.environment }}`
+            - **Branch:** `${{ github.ref_name }}`
+            - **Workflow Run:** [${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          draft: false
+          prerelease: true
+
+  # ================================================================
+  # Job 3: Deploy Infrastructure
   # ================================================================
   deploy-infrastructure:
     name: Deploy Frontend Infrastructure
     runs-on: ubuntu-latest
-    needs: create-version-tag
+    needs: [create-version-tag, store-release-notes]
+    if: always() && needs.create-version-tag.result == 'success'
     outputs:
       admin-bucket: ${{ steps.stacks.outputs.admin-bucket }}
       tenant-bucket: ${{ steps.stacks.outputs.tenant-bucket }}
@@ -455,7 +582,7 @@ jobs:
   deployment-summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [create-version-tag, deploy-admin-app, deploy-tenant-app]
+    needs: [create-version-tag, store-release-notes, deploy-admin-app, deploy-tenant-app]
     if: always()
     
     steps:
@@ -477,6 +604,15 @@ jobs:
           echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Release Notes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Generated:** ${{ needs.create-version-tag.outputs.release-notes-generated }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.create-version-tag.outputs.api-data-available }}" = "true" ]; then
+            echo "- **Database Storage:** ${{ needs.store-release-notes.result }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Database Storage:** Skipped (no data available)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "- **GitHub Release:** Created for development environment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🌐 Deployed URLs" >> $GITHUB_STEP_SUMMARY
           echo "- **Admin:** https://edr-admin.app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
           echo "- **Tenant:** https://app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
@@ -496,3 +632,6 @@ jobs:
           echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
           echo "- [View Tag](https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-version-tag.outputs.version-tag }})" >> $GITHUB_STEP_SUMMARY
           echo "- [View Commit](https://github.com/${{ github.repository }}/commit/${{ needs.create-version-tag.outputs.commit-sha }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Release Notes](https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-version-tag.outputs.version-tag }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Admin Portal Release Notes](https://edr-admin.app.karmatech-ai.com/release-history)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Tenant Portal Release Notes](https://app.karmatech-ai.com/release-history)" >> $GITHUB_STEP_SUMMARY
