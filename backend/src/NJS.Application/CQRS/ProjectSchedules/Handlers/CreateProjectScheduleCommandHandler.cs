@@ -78,150 +78,75 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
 
                 foreach (var taskDto in projectScheduleDto.Tasks.Where(t => t != null))
                 {
-                    var existingTask = await _context.SprintTasks
-                        .FirstOrDefaultAsync(st => st.Taskid == taskDto.Taskid, cancellationToken);
+                    // Create new task
+                    var task = new SprintTask
+                    {
+                        // Taskid is Identity, let DB generate it
+                        TenantId = taskDto.TenantId,
+                        Taskkey = taskDto.Taskkey,
+                        TaskTitle = taskDto.TaskTitle,
+                        Taskdescription = taskDto.Taskdescription,
+                        TaskType = taskDto.TaskType,
+                        Taskpriority = taskDto.Taskpriority,
+                        TaskAssineid = taskDto.TaskAssineid,
+                        TaskAssigneeName = taskDto.TaskAssigneeName,
+                        TaskAssigneeAvatar = taskDto.TaskAssigneeAvatar,
+                        TaskReporterId = taskDto.TaskReporterId,
+                        TaskReporterName = taskDto.TaskReporterName,
+                        TaskReporterAvatar = taskDto.TaskReporterAvatar,
+                        Taskstatus = taskDto.Taskstatus,
+                        StoryPoints = taskDto.StoryPoints,
+                        Attachments = taskDto.Attachments,
+                        IsExpanded = taskDto.IsExpanded,
+                        TaskcreatedDate = taskDto.TaskcreatedDate ?? DateTime.UtcNow,
+                        TaskupdatedDate = taskDto.TaskupdatedDate ?? DateTime.UtcNow,
+                        SprintPlanId = sprintPlan.SprintId,
+                        WbsPlanId = taskDto.WbsPlanId,
+                        UserTaskId = taskDto.UserTaskId,
+                        AcceptanceCriteria = taskDto.AcceptanceCriteria,
+                        DisplayOrder = taskDto.DisplayOrder ?? 0,
+                        EstimatedHours = taskDto.EstimatedHours ?? 0,
+                        ActualHours = taskDto.ActualHours ?? 0,
+                        RemainingHours = taskDto.RemainingHours ?? 0,
+                        StartedAt = taskDto.StartedAt,
+                        CompletedAt = taskDto.CompletedAt,
+                    };
 
-                    SprintTask task;
-                    if (existingTask == null)
-                    {
-                        // Create new task
-                        task = new SprintTask
-                        {
-                            // Taskid is Identity, let DB generate it
-                            // Taskid = taskDto.Taskid,
-                            TenantId = taskDto.TenantId,
-                            Taskkey = taskDto.Taskkey,
-                            TaskTitle = taskDto.TaskTitle,
-                            Taskdescription = taskDto.Taskdescription,
-                            TaskType = taskDto.TaskType,
-                            Taskpriority = taskDto.Taskpriority,
-                            TaskAssineid = taskDto.TaskAssineid,
-                            TaskAssigneeName = taskDto.TaskAssigneeName,
-                            TaskAssigneeAvatar = taskDto.TaskAssigneeAvatar,
-                            TaskReporterId = taskDto.TaskReporterId,
-                            TaskReporterName = taskDto.TaskReporterName,
-                            TaskReporterAvatar = taskDto.TaskReporterAvatar,
-                            Taskstatus = taskDto.Taskstatus,
-                            StoryPoints = taskDto.StoryPoints,
-                            Attachments = taskDto.Attachments,
-                            IsExpanded = taskDto.IsExpanded,
-                            TaskcreatedDate = taskDto.TaskcreatedDate ?? DateTime.UtcNow,
-                            TaskupdatedDate = taskDto.TaskupdatedDate ?? DateTime.UtcNow,
-                            SprintPlanId = sprintPlan.SprintId,
-                            WbsPlanId = taskDto.WbsPlanId,
-                            UserTaskId = taskDto.UserTaskId,
-                            AcceptanceCriteria = taskDto.AcceptanceCriteria,
-                            DisplayOrder = taskDto.DisplayOrder ?? 0,
-                            EstimatedHours = taskDto.EstimatedHours ?? 0,
-                            ActualHours = taskDto.ActualHours ?? 0,
-                            RemainingHours = taskDto.RemainingHours ?? 0,
-                            StartedAt = taskDto.StartedAt,
-                            CompletedAt = taskDto.CompletedAt,
-                        };
-                        _context.SprintTasks.Add(task);
-                    }
-                    else
-                    {
-                        // Update existing task
-                        task = existingTask;
-                        task.TenantId = taskDto.TenantId;
-                        task.Taskkey = taskDto.Taskkey;
-                        task.TaskTitle = taskDto.TaskTitle;
-                        task.Taskdescription = taskDto.Taskdescription;
-                        task.TaskType = taskDto.TaskType;
-                        task.Taskpriority = taskDto.Taskpriority;
-                        task.TaskAssineid = taskDto.TaskAssineid;
-                        task.TaskAssigneeName = taskDto.TaskAssigneeName;
-                        task.TaskAssigneeAvatar = taskDto.TaskAssigneeAvatar;
-                        task.TaskReporterId = taskDto.TaskReporterId;
-                        task.TaskReporterName = taskDto.TaskReporterName;
-                        task.TaskReporterAvatar = taskDto.TaskReporterAvatar;
-                        task.Taskstatus = taskDto.Taskstatus;
-                        task.StoryPoints = taskDto.StoryPoints;
-                        task.Attachments = taskDto.Attachments;
-                        task.IsExpanded = taskDto.IsExpanded;
-                        task.TaskupdatedDate = DateTime.UtcNow; // Update timestamp
-                        task.SprintPlanId = sprintPlan.SprintId;
-                        task.WbsPlanId = taskDto.WbsPlanId;
-                        task.UserTaskId = taskDto.UserTaskId;
-                        task.AcceptanceCriteria = taskDto.AcceptanceCriteria;
-                        task.DisplayOrder = taskDto.DisplayOrder ?? 0;
-                        task.EstimatedHours = taskDto.EstimatedHours ?? 0;
-                        task.ActualHours = taskDto.ActualHours ?? 0;
-                        task.RemainingHours = taskDto.RemainingHours ?? 0;
-                        task.StartedAt = taskDto.StartedAt;
-                        task.CompletedAt = taskDto.CompletedAt;
-                        _context.SprintTasks.Update(task);
-                    }
+                    _context.SprintTasks.Add(task);
                     tasksToProcess.Add(task);
 
                     if (taskDto.Subtasks != null && taskDto.Subtasks.Any())
                     {
                         foreach (var subtaskDto in taskDto.Subtasks.Where(s => s != null))
                         {
-                            var existingSubtask = await _context.SprintSubtasks
-                                .FirstOrDefaultAsync(ss => ss.SubtaskId == subtaskDto.SubtaskId, cancellationToken);
-
-                            SprintSubtask subtask;
-                            if (existingSubtask == null)
+                            // Create new subtask
+                            var subtask = new SprintSubtask
                             {
-                                // Create new subtask
-                                subtask = new SprintSubtask
-                                {
-                                    Subtaskkey = subtaskDto.Subtaskkey,
-                                    TenantId = subtaskDto.TenantId,
-                                    Subtasktitle = subtaskDto.Subtasktitle,
-                                    Subtaskdescription = subtaskDto.Subtaskdescription,
-                                    Subtaskpriority = subtaskDto.Subtaskpriority,
-                                    Subtaskstatus = subtaskDto.Subtaskstatus,
-                                    SubtaskAssineid = subtaskDto.SubtaskAssineid,
-                                    SubtaskAssigneeName = subtaskDto.SubtaskAssigneeName,
-                                    SubtaskAssigneeAvatar = subtaskDto.SubtaskAssigneeAvatar,
-                                    SubtaskReporterId = subtaskDto.SubtaskReporterId,
-                                    SubtaskReporterName = subtaskDto.SubtaskReporterName,
-                                    SubtaskReporterAvatar = subtaskDto.SubtaskReporterAvatar,
-                                    Attachments = subtaskDto.Attachments,
-                                    SubtaskisExpanded = subtaskDto.SubtaskisExpanded,
-                                    SubtaskcreatedDate = subtaskDto.SubtaskcreatedDate ?? DateTime.UtcNow,
-                                    SubtaskupdatedDate = subtaskDto.SubtaskupdatedDate ?? DateTime.UtcNow,
-                                    SubtaskType = subtaskDto.SubtaskType,
-                                    ParentTask = task,
-                                    DisplayOrder = subtaskDto.DisplayOrder ?? 0,
-                                    EstimatedHours = subtaskDto.EstimatedHours ?? 0,
-                                    ActualHours = subtaskDto.ActualHours ?? 0,
-                                    StartedAt = subtaskDto.StartedAt,
-                                    CompletedAt = subtaskDto.CompletedAt,
-                                };
-                                _context.SprintSubtasks.Add(subtask);
-                            }
-                            else
-                            {
-                                // Update existing subtask
-                                subtask = existingSubtask;
-                                subtask.Subtaskkey = subtaskDto.Subtaskkey;
-                                subtask.TenantId = subtaskDto.TenantId;
-                                subtask.Subtasktitle = subtaskDto.Subtasktitle;
-                                subtask.Subtaskdescription = subtaskDto.Subtaskdescription;
-                                subtask.Subtaskpriority = subtaskDto.Subtaskpriority;
-                                subtask.Subtaskstatus = subtaskDto.Subtaskstatus;
-                                subtask.SubtaskAssineid = subtaskDto.SubtaskAssineid;
-                                subtask.SubtaskAssigneeName = subtaskDto.SubtaskAssigneeName;
-                                subtask.SubtaskAssigneeAvatar = subtaskDto.SubtaskAssigneeAvatar;
-                                subtask.SubtaskReporterId = subtaskDto.SubtaskReporterId;
-                                subtask.SubtaskReporterName = subtaskDto.SubtaskReporterName;
-                                subtask.SubtaskReporterAvatar = subtaskDto.SubtaskReporterAvatar;
-                                subtask.Attachments = subtaskDto.Attachments;
-                                subtask.SubtaskisExpanded = subtaskDto.SubtaskisExpanded;
-                                subtask.SubtaskupdatedDate = DateTime.UtcNow; // Update timestamp
-                                subtask.SubtaskType = subtaskDto.SubtaskType;
-                                subtask.ParentTask = task;
-                                subtask.DisplayOrder = subtaskDto.DisplayOrder ?? 0;
-                                subtask.EstimatedHours = subtaskDto.EstimatedHours ?? 0;
-                                subtask.ActualHours = subtaskDto.ActualHours ?? 0;
-                                subtask.StartedAt = subtaskDto.StartedAt;
-                                subtask.CompletedAt = subtaskDto.CompletedAt;
-                                _context.SprintSubtasks.Update(subtask);
-                            }
+                                Subtaskkey = subtaskDto.Subtaskkey,
+                                TenantId = subtaskDto.TenantId,
+                                Subtasktitle = subtaskDto.Subtasktitle,
+                                Subtaskdescription = subtaskDto.Subtaskdescription,
+                                Subtaskpriority = subtaskDto.Subtaskpriority,
+                                Subtaskstatus = subtaskDto.Subtaskstatus,
+                                SubtaskAssineid = subtaskDto.SubtaskAssineid,
+                                SubtaskAssigneeName = subtaskDto.SubtaskAssigneeName,
+                                SubtaskAssigneeAvatar = subtaskDto.SubtaskAssigneeAvatar,
+                                SubtaskReporterId = subtaskDto.SubtaskReporterId,
+                                SubtaskReporterName = subtaskDto.SubtaskReporterName,
+                                SubtaskReporterAvatar = subtaskDto.SubtaskReporterAvatar,
+                                Attachments = subtaskDto.Attachments,
+                                SubtaskisExpanded = subtaskDto.SubtaskisExpanded,
+                                SubtaskcreatedDate = subtaskDto.SubtaskcreatedDate ?? DateTime.UtcNow,
+                                SubtaskupdatedDate = subtaskDto.SubtaskupdatedDate ?? DateTime.UtcNow,
+                                SubtaskType = subtaskDto.SubtaskType,
+                                ParentTask = task, // Link to the new task
+                                DisplayOrder = subtaskDto.DisplayOrder ?? 0,
+                                EstimatedHours = subtaskDto.EstimatedHours ?? 0,
+                                ActualHours = subtaskDto.ActualHours ?? 0,
+                                StartedAt = subtaskDto.StartedAt,
+                                CompletedAt = subtaskDto.CompletedAt,
+                            };
+                            _context.SprintSubtasks.Add(subtask);
                             subtasksToProcess.Add(subtask);
                         }
                     }
