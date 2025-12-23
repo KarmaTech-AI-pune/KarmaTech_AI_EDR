@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "01 - Task Executor (Auto-Chain)",
   "description": "Executes tasks from tasks.md one by one with AUTOMATIC CHAINING - saves tasks.md after each task to trigger next task automatically",
   "version": "2.0",
