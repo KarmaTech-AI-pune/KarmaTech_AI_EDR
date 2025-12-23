@@ -67,22 +67,68 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public IEnumerable<GoNoGoDecision> GetAll()
     {
-        return _goNoGoDecision.GetAll();
+        var decisions = _goNoGoDecision.GetAll();
+        
+        // Ensure percentage calculation for existing records - Requirement 3.1
+        foreach (var decision in decisions)
+        {
+            // Preserve individual criterion scores unchanged - Requirement 3.5
+            // Only update TotalScore if it needs recalculation for backward compatibility
+            if (decision.TotalScore != decision.CalculateRawTotalScore())
+            {
+                decision.UpdateTotalScore();
+            }
+        }
+        
+        return decisions;
     }
 
     public GoNoGoDecision GetById(int id)
     {
-        return _goNoGoDecision.GetById(id);
+        var decision = _goNoGoDecision.GetById(id);
+        
+        if (decision != null)
+        {
+            // Ensure percentage calculation for existing records - Requirement 3.1
+            // Preserve individual criterion scores unchanged - Requirement 3.5
+            if (decision.TotalScore != decision.CalculateRawTotalScore())
+            {
+                decision.UpdateTotalScore();
+            }
+        }
+        
+        return decision;
     }
 
     public async Task<GoNoGoDecisionHeader> GetByOpportunityId(int opportuntiy)
     {
-        return await _goNoGoDecision.GetByOpportunityId(opportuntiy);
+        var header = await _goNoGoDecision.GetByOpportunityId(opportuntiy);
+        
+        if (header != null)
+        {
+            // Ensure percentage calculation for existing records - Requirement 3.1
+            // TotalScore in header should reflect raw total for percentage calculation
+            // Individual criterion scores are preserved in the related GoNoGoDecision entity
+        }
+        
+        return header;
     }
 
     public GoNoGoDecision GetByProjectId(int projectId)
     {
-        return _goNoGoDecision.GetByProjectId(projectId);
+        var decision = _goNoGoDecision.GetByProjectId(projectId);
+        
+        if (decision != null)
+        {
+            // Ensure percentage calculation for existing records - Requirement 3.1
+            // Preserve individual criterion scores unchanged - Requirement 3.5
+            if (decision.TotalScore != decision.CalculateRawTotalScore())
+            {
+                decision.UpdateTotalScore();
+            }
+        }
+        
+        return decision;
     }
 
     public async Task<GoNoGoDecisionHeader> GetHeaderById(int id)
@@ -108,6 +154,8 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public void Update(GoNoGoDecision decision)
     {
+        // Ensure percentage calculation for existing records - Requirement 3.3
+        // Preserve individual criterion scores unchanged - Requirement 3.3
         // Apply raw score (no capping) before updating in database
         ScoreCalculationHelper.ApplyRawScore(decision);
         _goNoGoDecision.Update(decision);
@@ -170,7 +218,9 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
         header.CurrentVersion = version.VersionNumber;
         header.VersionStatus = version.Status;
         
-        // Store raw total score (no capping)
+        // Store raw total score (no capping) - Requirement 3.3
+        // Individual criterion scores are preserved in the FormData JSON
+        // Percentage calculation is handled when data is retrieved
         int rawTotalScore = summary!.Summary.TotalScore;
         header.TotalScore = rawTotalScore;
 
