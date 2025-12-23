@@ -22,7 +22,7 @@ function getVersion(): string {
     // Final fallback
     return '1.0.0'
   } catch (error) {
-    console.warn('Could not determine version, using fallback:', error.message)
+    console.warn('Could not determine version, using fallback:', (error as Error).message)
     return '1.0.0'
   }
 }

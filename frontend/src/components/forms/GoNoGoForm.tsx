@@ -209,15 +209,19 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     return calculateTotalScore() === MAX_POSSIBLE_SCORE;
   };
 
-  // Legacy function for backward compatibility
-  const getRawTotalScore = () => {
+  // Legacy function for backward compatibility - prefixed with underscore to indicate intentionally unused
+  const _getRawTotalScore = () => {
     return calculateTotalScore();
   };
 
-  // Legacy function for backward compatibility
-  const isScoreCapped = () => {
+  // Legacy function for backward compatibility - prefixed with underscore to indicate intentionally unused
+  const _isScoreCapped = () => {
     return false; // No longer capping scores
   };
+
+  // Suppress unused variable warnings for legacy functions
+  void _getRawTotalScore;
+  void _isScoreCapped;
 
   const getDecisionStatus = () => {
     const scorePercentage = calculateScorePercentage(); // Use percentage calculation
