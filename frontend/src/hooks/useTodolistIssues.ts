@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchIssuesFromAPI, teamMembers } from '../data/todolistData';
+import { fetchIssuesFromAPI, teamMembers, updateIssueAPI, updateSubtaskAPI, createIssueAPI, deleteIssueAPI, createSubtaskAPI, deleteSubtaskAPI } from '../data/todolistData';
 import { Issue, NewIssueFormState, Subtask, NewSubtaskFormState, Comment } from '../types/todolist';
 import { commentService } from '../services/commentService';
 
@@ -41,12 +41,13 @@ export const useTodolistIssues = (projectId: number = 1) => {
     return `${parentIssue.key}-${maxSubtaskNum + 1}`;
   };
 
-  const createIssue = (newIssueData: NewIssueFormState) => {
+  const createIssue = async (newIssueData: NewIssueFormState) => {
     if (!newIssueData.summary.trim()) return;
 
     const assignedMember = teamMembers.find(member => member.id === newIssueData.assignee);
+    const tempId = Date.now().toString();
     const issue: Issue = {
-      id: Date.now().toString(),
+      id: tempId,
       key: getNextIssueKey(),
       summary: newIssueData.summary,
       description: newIssueData.description,
@@ -68,32 +69,49 @@ export const useTodolistIssues = (projectId: number = 1) => {
     };
 
     setIssues([...issues, issue]);
+
+    try {
+      const realId = await createIssueAPI(issue);
+      setIssues(prevIssues => prevIssues.map(i =>
+        i.id === tempId ? { ...i, id: realId.toString() } : i
+      ));
+    } catch (error) {
+      console.error('Failed to persist new issue:', error);
+      // Optional: Revert state if needed
+      setIssues(prevIssues => prevIssues.filter(i => i.id !== tempId));
+    }
   };
 
-  const createSubtask = (parentIssueId: string, subtaskData: NewSubtaskFormState) => {
+  const createSubtask = async (parentIssueId: string, subtaskData: NewSubtaskFormState) => {
     if (!subtaskData.summary.trim()) return;
+
+    const assignedMember = teamMembers.find(member => member.id === subtaskData.assignee);
+    const tempId = `sub-${Date.now()}`;
+
+    // Find parent issue to get the key
+    const parentIssue = issues.find(i => i.id === parentIssueId);
+    if (!parentIssue) return;
+
+    const newSubtask: Subtask = {
+      id: tempId,
+      parentIssueId,
+      key: getNextSubtaskKey(parentIssue),
+      summary: subtaskData.summary,
+      description: subtaskData.description,
+      status: 'To Do',
+      assignee: assignedMember || null,
+      reporter: teamMembers[0], // Current user
+      priority: subtaskData.priority,
+      issueType: 'Sub-task',
+      storyPoints: subtaskData.storyPoints ? parseInt(subtaskData.storyPoints) : undefined,
+      comments: [],
+      createdDate: new Date().toISOString().split('T')[0],
+      updatedDate: new Date().toISOString().split('T')[0]
+    };
 
     setIssues(prevIssues =>
       prevIssues.map(issue => {
         if (issue.id === parentIssueId) {
-          const assignedMember = teamMembers.find(member => member.id === subtaskData.assignee);
-          const newSubtask: Subtask = {
-            id: `sub-${Date.now()}`,
-            parentIssueId,
-            key: getNextSubtaskKey(issue),
-            summary: subtaskData.summary,
-            description: subtaskData.description,
-            status: 'To Do',
-            assignee: assignedMember || null,
-            reporter: teamMembers[0], // Current user
-            priority: subtaskData.priority,
-            issueType: 'Sub-task',
-            storyPoints: subtaskData.storyPoints ? parseInt(subtaskData.storyPoints) : undefined,
-            comments: [],
-            createdDate: new Date().toISOString().split('T')[0],
-            updatedDate: new Date().toISOString().split('T')[0]
-          };
-
           return {
             ...issue,
             subtasks: [...issue.subtasks, newSubtask],
@@ -103,25 +121,66 @@ export const useTodolistIssues = (projectId: number = 1) => {
         return issue;
       })
     );
+
+    try {
+      const realId = await createSubtaskAPI(parentIssueId, newSubtask);
+      setIssues(prevIssues =>
+        prevIssues.map(issue => {
+          if (issue.id === parentIssueId) {
+            return {
+              ...issue,
+              subtasks: issue.subtasks.map(s =>
+                s.id === tempId ? { ...s, id: realId.toString() } : s
+              )
+            };
+          }
+          return issue;
+        })
+      );
+    } catch (error) {
+      console.error('Failed to persist new subtask:', error);
+      setIssues(prevIssues =>
+        prevIssues.map(issue => {
+          if (issue.id === parentIssueId) {
+            return {
+              ...issue,
+              subtasks: issue.subtasks.filter(s => s.id !== tempId)
+            };
+          }
+          return issue;
+        })
+      );
+    }
   };
 
   const updateSubtask = (subtaskId: string, updates: Partial<Subtask>) => {
-    setIssues(prevIssues =>
-      prevIssues.map(issue => ({
-        ...issue,
-        subtasks: issue.subtasks.map(subtask =>
-          subtask.id === subtaskId
-            ? { ...subtask, ...updates, updatedDate: new Date().toISOString().split('T')[0] }
-            : subtask
-        ),
-        updatedDate: issue.subtasks.some(s => s.id === subtaskId)
-          ? new Date().toISOString().split('T')[0]
-          : issue.updatedDate
-      }))
-    );
+    setIssues(prevIssues => {
+      // Find the issue that contains this subtask
+      const issue = prevIssues.find(i => i.subtasks.some(s => s.id === subtaskId));
+      if (!issue) return prevIssues;
+
+      const subtask = issue.subtasks.find(s => s.id === subtaskId)!;
+      const updatedSubtask = { ...subtask, ...updates, updatedDate: new Date().toISOString() };
+
+      // Persist to API with the full updated object
+      updateSubtaskAPI(updatedSubtask).catch(err => {
+        console.error('Failed to persist subtask update:', err);
+      });
+
+      return prevIssues.map(i => {
+        if (i.id === issue.id) {
+          return {
+            ...i,
+            subtasks: i.subtasks.map(s => s.id === subtaskId ? updatedSubtask : s),
+            updatedDate: new Date().toISOString()
+          };
+        }
+        return i;
+      });
+    });
   };
 
-  const deleteSubtask = (subtaskId: string) => {
+  const deleteSubtask = async (subtaskId: string) => {
     setIssues(prevIssues =>
       prevIssues.map(issue => ({
         ...issue,
@@ -131,18 +190,39 @@ export const useTodolistIssues = (projectId: number = 1) => {
           : issue.updatedDate
       }))
     );
+
+    try {
+      await deleteSubtaskAPI(subtaskId);
+    } catch (error) {
+      console.error(`Failed to delete subtask ${subtaskId}:`, error);
+      // Optional: Refresh issues to sync with server
+    }
   };
 
   const updateIssue = (issueId: string, updates: Partial<Issue>) => {
-    setIssues(issues.map(issue =>
-      issue.id === issueId
-        ? { ...issue, ...updates, updatedDate: new Date().toISOString().split('T')[0] }
-        : issue
-    ));
+    setIssues(prevIssues => {
+      const issue = prevIssues.find(i => i.id === issueId);
+      if (!issue) return prevIssues;
+
+      const updatedIssue = { ...issue, ...updates, updatedDate: new Date().toISOString() };
+
+      // Persist to API
+      updateIssueAPI(updatedIssue).catch(err => {
+        console.error('Failed to persist issue update:', err);
+      });
+
+      return prevIssues.map(i => i.id === issueId ? updatedIssue : i);
+    });
   };
 
-  const deleteIssue = (issueId: string) => {
-    setIssues(issues.filter(issue => issue.id !== issueId));
+  const deleteIssue = async (issueId: string) => {
+    setIssues(prevIssues => prevIssues.filter(issue => issue.id !== issueId));
+
+    try {
+      await deleteIssueAPI(issueId);
+    } catch (error) {
+      console.error(`Failed to delete issue ${issueId}:`, error);
+    }
   };
 
   const moveIssue = (issueId: string, newStatus: Issue['status']) => {
