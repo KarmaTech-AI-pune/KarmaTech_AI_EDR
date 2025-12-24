@@ -19,7 +19,7 @@ namespace NJS.API.Tests.Controllers
         private readonly Mock<IMediator> _mediator;
         private readonly Mock<ITenantService> _tenantService;
         private readonly Mock<ICurrentUserService> _currentUserService;
-         private readonly Mock<ILogger<ProjectController>> _mockLogger;
+         private readonly ILogger _logger;
 
         public ProjectsControllerTests()
         {
@@ -27,8 +27,7 @@ namespace NJS.API.Tests.Controllers
             _mediator = new Mock<IMediator>();
             _currentUserService = new Mock<ICurrentUserService>();
             _tenantService = new Mock<ITenantService>();
-            _mockLogger = new Mock<ILogger<ProjectController>>();
-            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object,_tenantService.Object,_currentUserService.Object, _mockLogger.Object);
+            _controller = new ProjectController(_mediator.Object, _mockProjectManagementService.Object,_tenantService.Object,_currentUserService.Object, (ILogger<ProjectController>)_logger);
         }
 
         [Fact]
@@ -93,10 +92,9 @@ namespace NJS.API.Tests.Controllers
             // Arrange
             var projectDto = new ProjectDto { Name = "New Project" };
             var createdId = 1;
-            var mockProject = new Project { Id = createdId, Name = "New Project" };
 
             _mediator.Setup(m => m.Send(It.Is<CreateProjectCommand>(c => c.ProjectDto == projectDto), It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(mockProject);
+                    .ReturnsAsync(createdId);
 
             // Act
             var result = await _controller.Create(projectDto);
@@ -105,8 +103,7 @@ namespace NJS.API.Tests.Controllers
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
             Assert.Equal("GetById", createdAtActionResult.ActionName);
             Assert.Equal(createdId, createdAtActionResult.RouteValues["id"]);
-            var returnValue = Assert.IsType<Project>(createdAtActionResult.Value);
-            Assert.Equal(createdId, returnValue.Id);
+            Assert.Equal(createdId, createdAtActionResult.Value);
         }
 
         [Fact]

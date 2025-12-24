@@ -26,8 +26,7 @@ namespace NJS.API.Tests.Validation
             // Arrange
             var mockUnitOfWork = new Mock<IUnitOfWork>();
             var mockRepository = new Mock<IJobStartFormRepository>();
-            var mockProjectRepository = new Mock<IProjectRepository>();
-            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object, mockProjectRepository.Object);
+            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object);
             var command = new CreateJobStartFormCommand(null); // Null JobStartForm
 
             // Act & Assert
@@ -45,8 +44,7 @@ namespace NJS.API.Tests.Validation
             // Arrange
             var mockUnitOfWork = new Mock<IUnitOfWork>();
             var mockRepository = new Mock<IJobStartFormRepository>();
-            var mockProjectRepository = new Mock<IProjectRepository>();
-            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object, mockProjectRepository.Object);
+            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object);
 
             var jobStartFormDto = new JobStartFormDto
             {
@@ -72,7 +70,6 @@ namespace NJS.API.Tests.Validation
             // Arrange
             var mockUnitOfWork = new Mock<IUnitOfWork>();
             var mockRepository = new Mock<IJobStartFormRepository>();
-            var mockProjectRepository = new Mock<IProjectRepository>();
 
             mockRepository.Setup(repo => repo.AddAsync(It.IsAny<JobStartForm>()))
                 .Returns(Task.CompletedTask);
@@ -80,7 +77,7 @@ namespace NJS.API.Tests.Validation
             mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
                 .ReturnsAsync(1);
 
-            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object, mockProjectRepository.Object);
+            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object);
 
             var jobStartFormDto = new JobStartFormDto
             {

@@ -12,12 +12,11 @@ import {
   Typography,
   Divider,
   Box,
-  Chip,
-  FormHelperText, // Added for helper text
+  Chip, // Added Chip for displaying workflow status
 } from '@mui/material';
 
 import { projectManagementAppContext } from '../../App';
-import { projectManagementAppContextType } from '../../types';
+import {projectManagementAppContextType } from '../../types';
 
 import { AuthUser } from "../../models/userModel";
 import { getUsersByRole, getUserById } from '../../services/userApi'; // Added getUserById
@@ -39,10 +38,10 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
   actionButtons
 }) => {
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
-  const [bdManagers, setBdManagers] = useState<{ id: string, name: string }[]>([]);
-  const [reviewManagers, setReviewManagers] = useState<{ id: string, name: string }[]>([]);
-  const [approvalManagers, setApprovalManagers] = useState<{ id: string, name: string }[]>([]);
-
+  const [bdManagers, setBdManagers] = useState<{id: string, name: string}[]>([]);
+  const [reviewManagers, setReviewManagers] = useState<{id: string, name: string}[]>([]);
+  const [approvalManagers, setApprovalManagers] = useState<{id: string, name: string}[]>([]);
+  
   const [reviewerName, setReviewerName] = useState<string | null>(null);
   const [reviewerDesignation, setReviewerDesignation] = useState<string | null>(null);
   const [approverName, setApproverName] = useState<string | null>(null);
@@ -110,8 +109,8 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       const getUniqueManagers = (users: AuthUser[]) => {
         const uniqueManagersMap = new Set<{ id: string; name: string }>();
         users.forEach(user => {
-          if (user && user.name) {
-            uniqueManagersMap.add({ id: user.id, name: user.name })
+          if(user && user.name) {
+            uniqueManagersMap.add({id: user.id, name: user.name})
           }
         });
         return Array.from(uniqueManagersMap.values());
@@ -236,606 +235,515 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     }));
   };
 
-  const formatIndianNumber = (num: number | string | undefined): string => {
-    if (num === undefined || num === null || num === '') return '';
-
-    // Convert to string and strip existing commas
-    const strNum = num.toString().replace(/,/g, '');
-
-    // Handle special cases for intermediate typing states
-    if (strNum === '-') return '-';
-    if (strNum === '.') return '.';
-
-    // Split into integer and decimal parts to preserve formatting of the decimal part
-    const parts = strNum.split('.');
-    const integerPartStr = parts[0];
-    const decimalPartStr = parts.length > 1 ? parts[1] : null;
-
-    // Format the integer part using Indian numbering system
-    let formattedInteger = '';
-    if (integerPartStr === '' || integerPartStr === '-') {
-      formattedInteger = integerPartStr;
-    } else {
-      const integerPart = parseFloat(integerPartStr);
-      if (isNaN(integerPart)) return '';
-      formattedInteger = new Intl.NumberFormat('en-IN', {
-        maximumFractionDigits: 0,
-      }).format(integerPart);
-    }
-
-    // Join with decimal part if it exists (even if empty, e.g., "10.")
-    if (decimalPartStr !== null) {
-      return `${formattedInteger}.${decimalPartStr}`;
-    }
-
-    return formattedInteger;
-  };
-
-
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Strip commas for internal processing
-    const rawValue = value.replace(/,/g, '');
-
-    // Allow digits, one dot, and minus sign at start
-    if (rawValue === '' || /^-?\d*\.?\d*$/.test(rawValue)) {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: rawValue,
-      }));
-    }
-  };
-
-
-
-
-  const handleIntegerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const rawValue = value.replace(/,/g, '').replace(/[^0-9]/g, '');
-    const numericValue = rawValue === '' ? 0 : parseInt(rawValue, 10);
-
     setFormData((prev) => ({
       ...prev,
-      [name]: isNaN(numericValue) ? 0 : numericValue,
+      [name]: (value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0').toString(),
     }));
   };
 
 
 
-  const [validationError, setValidationError] = useState<string | null>(null);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (formData.reviewManagerId && formData.approvalManagerId && formData.reviewManagerId === formData.approvalManagerId) {
-      setValidationError("Review Manager and Approval Manager cannot be the same person.");
-      return;
-    }
-
-    setValidationError(null);
-
-    // Ensure numeric fields are correctly parsed before submission
-    const submissionData = {
-      ...formData,
-      bidFees: typeof formData.bidFees === 'string' ? parseFloat((formData.bidFees as any).replace(/,/g, '')) || 0 : formData.bidFees,
-      emd: typeof formData.emd === 'string' ? parseFloat((formData.emd as any).replace(/,/g, '')) || 0 : formData.emd,
-      capitalValue: typeof formData.capitalValue === 'string' ? parseFloat((formData.capitalValue as any).replace(/,/g, '')) || 0 : formData.capitalValue,
-      percentageChanceOfProjectHappening: typeof formData.percentageChanceOfProjectHappening === 'string'
-        ? parseFloat(formData.percentageChanceOfProjectHappening as any) || 0
-        : formData.percentageChanceOfProjectHappening,
-      percentageChanceOfNJSSuccess: typeof formData.percentageChanceOfNJSSuccess === 'string'
-        ? parseFloat(formData.percentageChanceOfNJSSuccess as any) || 0
-        : formData.percentageChanceOfNJSSuccess,
-    };
-
-    onSubmit(submissionData as OpportunityTracking);
+    onSubmit(formData as OpportunityTracking);
   };
-
 
   return (
     <Box>
       <form onSubmit={handleSubmit}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        {validationError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {validationError}
-          </Alert>
-        )}
-        <Grid container spacing={3}>
-          {/* Workflow Status Chip */}
-          {project?.id && ( // Only show if editing an existing opportunity
-            <Grid item xs={12}>
-              <Chip
-                label={`Workflow: ${getEnhancedWorkflowStatus(
-                  Array.isArray(project.currentHistory)
-                    ? project.currentHistory[0]?.statusId || 0
-                    : project.currentHistory?.statusId || 0,
-                  reviewerName,
-                  reviewerDesignation,
-                  approverName,
-                  approverDesignation
-                )}`}
-                color={
-                  Array.isArray(project.currentHistory)
-                    ? getWorkflowColor(project.currentHistory[0]?.statusId || 0)
-                    : getWorkflowColor(project.currentHistory?.statusId || 0)
-                }
-                sx={{ mb: 2 }}
-              />
-            </Grid>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
           )}
-          {/* Key Project Information */}
-          <Grid item xs={12}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-              Key Project Information
-            </Typography>
-            <Grid container spacing={2}>
-              {project?.bidNumber && (
+          <Grid container spacing={3}>
+            {/* Workflow Status Chip */}
+            {project?.id && ( // Only show if editing an existing opportunity
+              <Grid item xs={12}>
+                <Chip
+                  label={`Workflow: ${getEnhancedWorkflowStatus(
+                    Array.isArray(project.currentHistory)
+                      ? project.currentHistory[0]?.statusId || 0
+                      : project.currentHistory?.statusId || 0,
+                    reviewerName,
+                    reviewerDesignation,
+                    approverName,
+                    approverDesignation
+                  )}`}
+                  color={
+                    Array.isArray(project.currentHistory)
+                      ? getWorkflowColor(project.currentHistory[0]?.statusId || 0)
+                      : getWorkflowColor(project.currentHistory?.statusId || 0)
+                  }
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+            )}
+            {/* Key Project Information */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                Key Project Information
+              </Typography>
+              <Grid container spacing={2}>
+                {project?.bidNumber && (
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Bid Number"
+                      name="bidNumber"
+                      value={formData.bidNumber || ''}
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                      disabled
+                    />
+                  </Grid>
+                )}
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
-                    label="Bid Number"
-                    name="bidNumber"
-                    value={formData.bidNumber || ''}
-                    InputProps={{
-                      readOnly: true,
-                    }}
-                    disabled
+                    label="Work Name"
+                    name="workName"
+                    value={formData.workName || ''}
+                    onChange={handleChange}
+                    required
                   />
                 </Grid>
-              )}
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Work Name"
-                  name="workName"
-                  value={formData.workName || ''}
-                  onChange={handleChange}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Client"
-                  name="client"
-                  value={formData.client || ''}
-                  onChange={handleChange}
-                  required
-                  inputProps={{ "data-testid": "client-input" }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Client Sector"
-                  name="clientSector"
-                  value={formData.clientSector || ''}
-                  onChange={handleChange}
-                  required
-                />
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Client"
+                    name="client"
+                    value={formData.client || ''}
+                    onChange={handleChange}
+                    required
+                    inputProps={{ "data-testid": "client-input" }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Client Sector"
+                    name="clientSector"
+                    value={formData.clientSector || ''}
+                    onChange={handleChange}
+                    required
+                  />
+                </Grid>
               </Grid>
             </Grid>
-          </Grid>
 
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-          </Grid>
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+            </Grid>
 
-          {/* Project Details */}
-          <Grid item xs={12}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-              Project Details
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Operation"
-                  name="operation"
-                  value={formData.operation || ''}
-                  onChange={handleChange}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel htmlFor="stage-select">Stage</InputLabel>
-                  <Select
-                    id="stage-select"
-                    name="stage"
-                    value={formData.stage || ''}
+            {/* Project Details */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                Project Details
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Operation"
+                    name="operation"
+                    value={formData.operation || ''}
                     onChange={handleChange}
-                    label="Stage"
                     required
-                    data-testid="stage-select"
-                  >
-                    <MenuItem value="A">A</MenuItem>
-                    <MenuItem value="B">B</MenuItem>
-                    <MenuItem value="C">C</MenuItem>
-                    <MenuItem value="D">D</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel htmlFor="strategic-ranking-select">Strategic Ranking</InputLabel>
-                  <Select
-                    id="strategic-ranking-select"
-                    name="strategicRanking"
-                    value={formData.strategicRanking || ''}
-                    onChange={handleChange}
-                    label="Strategic Ranking"
-                    required
-                    data-testid="strategic-ranking-select"
-                  >
-                    <MenuItem value="H">High</MenuItem>
-                    <MenuItem value="M">Medium</MenuItem>
-                    <MenuItem value="L">Low</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel htmlFor="status-select">Status</InputLabel>
-                  <Select
-                    id="status-select"
-                    name="status"
-                    value={formData.status || ''}
-                    onChange={handleChange}
-                    label="Status"
-                    required
-                    data-testid="status-select"
-                  >
-                    <MenuItem value="Bid Under Preparation">Bid Under Preparation</MenuItem>
-                    <MenuItem value="Bid Submitted">Bid Submitted</MenuItem>
-                    <MenuItem value="Bid Rejected">Bid Rejected</MenuItem>
-                    <MenuItem value="Bid Accepted">Bid Accepted</MenuItem>
-                  </Select>
-                </FormControl>
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor="stage-select">Stage</InputLabel>
+                    <Select
+                      id="stage-select"
+                      name="stage"
+                      value={formData.stage || ''}
+                      onChange={handleChange}
+                      label="Stage"
+                      required
+                      data-testid="stage-select"
+                    >
+                      <MenuItem value="A">A</MenuItem>
+                      <MenuItem value="B">B</MenuItem>
+                      <MenuItem value="C">C</MenuItem>
+                      <MenuItem value="D">D</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor="strategic-ranking-select">Strategic Ranking</InputLabel>
+                    <Select
+                      id="strategic-ranking-select"
+                      name="strategicRanking"
+                      value={formData.strategicRanking || ''}
+                      onChange={handleChange}
+                      label="Strategic Ranking"
+                      required
+                      data-testid="strategic-ranking-select"
+                    >
+                      <MenuItem value="H">High</MenuItem>
+                      <MenuItem value="M">Medium</MenuItem>
+                      <MenuItem value="L">Low</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor="status-select">Status</InputLabel>
+                    <Select
+                      id="status-select"
+                      name="status"
+                      value={formData.status || ''}
+                      onChange={handleChange}
+                      label="Status"
+                      required
+                      data-testid="status-select"
+                    >
+                      <MenuItem value="Bid Under Preparation">Bid Under Preparation</MenuItem>
+                      <MenuItem value="Bid Submitted">Bid Submitted</MenuItem>
+                      <MenuItem value="Bid Rejected">Bid Rejected</MenuItem>
+                      <MenuItem value="Bid Accepted">Bid Accepted</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
               </Grid>
             </Grid>
-          </Grid>
 
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-          </Grid>
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+            </Grid>
 
-          {/* Financial Information */}
-          <Grid item xs={12}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-              Financial Information
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Bid Fees"
-                  name="bidFees"
-                  type="text"
-                  value={formatIndianNumber(formData.bidFees)}
-                  onChange={handleNumberChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="EMD"
-                  name="emd"
-                  type="text"
-                  value={formatIndianNumber(formData.emd)}
-                  onChange={handleNumberChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Form of EMD"
-                  name="formOfEMD"
-                  value={formData.formOfEMD || ''}
-                  onChange={handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel htmlFor="currency-select">Currency</InputLabel>
-                  <Select
-                    id="currency-select"
-                    name="currency"
-                    value={formData.currency || 'INR'}
+            {/* Financial Information */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                Financial Information
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Bid Fees"
+                    name="bidFees"
+                    type="text"
+                    value={formData.bidFees || 0}
+                    onChange={handleNumberChange}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="EMD"
+                    name="emd"
+                    type="text"
+                    value={formData.emd || 0}
+                    onChange={handleNumberChange}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Form of EMD"
+                    name="formOfEMD"
+                    value={formData.formOfEMD || ''}
                     onChange={handleChange}
-                    label="Currency"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor="currency-select">Currency</InputLabel>
+                    <Select
+                      id="currency-select"
+                      name="currency"
+                      value={formData.currency || 'INR'}
+                      onChange={handleChange}
+                      label="Currency"
+                      required
+                      data-testid="currency-select"
+                    >
+                      <MenuItem value="INR">INR</MenuItem>
+                      <MenuItem value="USD">USD</MenuItem>
+                      <MenuItem value="EUR">EUR</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Capital Value"
+                    name="capitalValue"
+                    type="text"
+                    value={formData.capitalValue || 0}
+                    onChange={handleNumberChange}
                     required
-                    data-testid="currency-select"
-                  >
-                    <MenuItem value="INR">INR</MenuItem>
-                    <MenuItem value="USD">USD</MenuItem>
-                    <MenuItem value="EUR">EUR</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Capital Value"
-                  name="capitalValue"
-                  type="text"
-                  value={formatIndianNumber(formData.capitalValue)}
-                  onChange={handleNumberChange}
-                  required
-                />
+                  />
+                </Grid>
               </Grid>
             </Grid>
-          </Grid>
 
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-          </Grid>
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+            </Grid>
 
-          {/* Project Management */}
-          <Grid item xs={12}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-              Project Management
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel htmlFor="bd-manager-select">BD Manager</InputLabel>
-                  <Select
-                    id="bd-manager-select"
-                    name="bidManagerId"
-                    value={formData.bidManagerId || ''}
-                    onChange={handleChange}
-                    label="BD Manager"
-                    required
-                    data-testid="bd-manager-select"
-                  >
-                    {bdManagers.map((manager) => (
-                      <MenuItem key={`bd_manager_${manager.id}`} value={manager.id}>
-                        {manager.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel htmlFor="review-manager-select">Review Manager</InputLabel>
-                  <Select
-                    id="review-manager-select"
-                    name="reviewManagerId"
-                    value={formData.reviewManagerId || ''}
-                    onChange={handleChange}
-                    label="Review Manager"
-                    data-testid="review-manager-select"
-                  >
-                    <MenuItem value="">None</MenuItem>
-                    {reviewManagers
-                      .filter(manager => manager.id !== formData.approvalManagerId)
-                      .map((manager, index) => (
+            {/* Project Management */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                Project Management
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor="bd-manager-select">BD Manager</InputLabel>
+    <Select
+      id="bd-manager-select"
+      name="bidManagerId"
+      value={formData.bidManagerId || ''}
+      onChange={handleChange}
+      label="BD Manager"
+      required
+      data-testid="bd-manager-select"
+    >
+                      {bdManagers.map((manager) => (
+                        <MenuItem key={`bd_manager_${manager.id}`} value={manager.id}>
+                          {manager.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor="review-manager-select">Review Manager</InputLabel>
+                    <Select
+                      id="review-manager-select"
+                      name="reviewManagerId"
+                      value={formData.reviewManagerId || ''}
+                      onChange={handleChange}
+                      label="Review Manager"
+                      data-testid="review-manager-select"
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {reviewManagers.map((manager, index) => (
                         <MenuItem key={`review_list_${index}_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel htmlFor="approval-manager-select">Approval Manager</InputLabel>
-                  <Select
-                    id="approval-manager-select"
-                    name="approvalManagerId"
-                    value={formData.approvalManagerId || ''}
-                    onChange={handleChange}
-                    label="Approval Manager"
-                    data-testid="approval-manager-select"
-                  >
-                    <MenuItem value="">None</MenuItem>
-                    {approvalManagers
-                      .filter(manager => manager.id !== formData.reviewManagerId)
-                      .map((manager, index) => (
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor="approval-manager-select">Approval Manager</InputLabel>
+                    <Select
+                      id="approval-manager-select"
+                      name="approvalManagerId"
+                      value={formData.approvalManagerId || ''}
+                      onChange={handleChange}
+                      label="Approval Manager"
+                      data-testid="approval-manager-select"
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {approvalManagers.map((manager, index) => (
                         <MenuItem key={`approval_list_${index}_${manager.id}`} value={manager.id}>
                           {manager.name}
                         </MenuItem>
                       ))}
-                  </Select>
-                </FormControl>
+                    </Select>
+                  </FormControl>
+                </Grid>
               </Grid>
             </Grid>
-          </Grid>
 
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-          </Grid>
-
-          {/* Project Timeline */}
-          <Grid item xs={12}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-              Project Timeline
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Date of Submission"
-                  name="dateOfSubmission"
-                  type="date"
-                  value={formData.dateOfSubmission || ''}
-                  onChange={handleChange}
-                  required
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Likely Start Date"
-                  name="likelyStartDate"
-                  type="date"
-                  value={formData.likelyStartDate || ''}
-                  onChange={handleChange}
-                  required
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Duration of Project (Months)"
-                  name="durationOfProject"
-                  type="text"
-                  value={formData.durationOfProject || 0}
-                  onChange={handleIntegerChange}
-                  required
-                />
-              </Grid>
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
             </Grid>
-          </Grid>
 
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-          </Grid>
-
-          {/* Additional Information */}
-          <Grid item xs={12}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-              Additional Information
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Contact Person at Client"
-                  name="contactPersonAtClient"
-                  value={formData.contactPersonAtClient || ''}
-                  onChange={handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel htmlFor="contract-type-select">Contractor Contract Type</InputLabel>
-                  <Select
-                    id="contract-type-select"
-                    name="contractType"
-                    value={formData.contractType || ''}
+            {/* Project Timeline */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                Project Timeline
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Date of Submission"
+                    name="dateOfSubmission"
+                    type="date"
+                    value={formData.dateOfSubmission || ''}
                     onChange={handleChange}
-                    label="Contractor Contract Type"
                     required
-                    data-testid="contract-type-select"
-                  >
-                    <MenuItem value="EPC">EPC</MenuItem>
-                    <MenuItem value="Item Rate">Item Rate</MenuItem>
-                    <MenuItem value="Lump Sum">Lump Sum</MenuItem>
-                  </Select>
-                  <FormHelperText >Select contract type applicable to the contractor</FormHelperText>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel htmlFor="funding-stream-select">Funding Stream</InputLabel>
-                  <Select
-                    id="funding-stream-select"
-                    name="fundingStream"
-                    value={formData.fundingStream || ''}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Likely Start Date"
+                    name="likelyStartDate"
+                    type="date"
+                    value={formData.likelyStartDate || ''}
                     onChange={handleChange}
-                    label="Funding Stream"
                     required
-                    data-testid="funding-stream-select"
-                  >
-                    <MenuItem value="Government Budget">Government Budget</MenuItem>
-                    <MenuItem value="Government Grant">Government Grant</MenuItem>
-                    <MenuItem value="Multilateral Funding">Multilateral Funding</MenuItem>
-                    <MenuItem value="Private Investment">Private Investment</MenuItem>
-                  </Select>
-                </FormControl>
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Duration of Project (Months)"
+                    name="durationOfProject"
+                    type="text"
+                    value={formData.durationOfProject || 0}
+                    onChange={handleNumberChange}
+                    required
+                  />
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Chance of Project Happening (%)"
-                  name="percentageChanceOfProjectHappening"
-                  type="text"
-                  inputProps={{ min: 0, max: 100, step: 0.01 }}
-                  value={formData.percentageChanceOfProjectHappening || 0}
-                  onChange={handleNumberChange}
-                />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+            </Grid>
+
+            {/* Additional Information */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                Additional Information
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Contact Person at Client"
+                    name="contactPersonAtClient"
+                    value={formData.contactPersonAtClient || ''}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor="contract-type-select">Contract Type</InputLabel>
+                    <Select
+                      id="contract-type-select"
+                      name="contractType"
+                      value={formData.contractType || ''}
+                      onChange={handleChange}
+                      label="Contract Type"
+                      required
+                      data-testid="contract-type-select"
+                    >
+                      <MenuItem value="EPC">EPC</MenuItem>
+                      <MenuItem value="Item Rate">Item Rate</MenuItem>
+                      <MenuItem value="Lump Sum">Lump Sum</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel htmlFor="funding-stream-select">Funding Stream</InputLabel>
+                    <Select
+                      id="funding-stream-select"
+                      name="fundingStream"
+                      value={formData.fundingStream || ''}
+                      onChange={handleChange}
+                      label="Funding Stream"
+                      required
+                      data-testid="funding-stream-select"
+                    >
+                      <MenuItem value="Government Budget">Government Budget</MenuItem>
+                      <MenuItem value="Government Grant">Government Grant</MenuItem>
+                      <MenuItem value="Multilateral Funding">Multilateral Funding</MenuItem>
+                      <MenuItem value="Private Investment">Private Investment</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Chance of Project Happening (%)"
+                    name="percentageChanceOfProjectHappening"
+                    type="text"
+                    inputProps={{ min: 0, max: 100, step: 0.01 }}
+                    value={formData.percentageChanceOfProjectHappening || 0}
+                    onChange={handleNumberChange}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Chance of NJS Success (%)"
+                    name="percentageChanceOfNJSSuccess"
+                    type="text"
+                    inputProps={{ min: 0, max: 100, step: 0.01 }}
+                    value={formData.percentageChanceOfNJSSuccess || 0}
+                    onChange={handleNumberChange}
+                  />
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Chance of NJS Success (%)"
-                  name="percentageChanceOfNJSSuccess"
-                  type="text"
-                  inputProps={{ min: 0, max: 100, step: 0.01 }}
-                  value={formData.percentageChanceOfNJSSuccess || 0}
-                  onChange={handleNumberChange}
-                />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+            </Grid>
+
+            {/* Notes and Comments */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                Notes and Comments
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Likely Competition"
+                    name="likelyCompetition"
+                    multiline
+                    rows={2}
+                    value={formData.likelyCompetition || ''}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Probable Qualifying Criteria"
+                    name="probableQualifyingCriteria"
+                    multiline
+                    rows={2}
+                    value={formData.probableQualifyingCriteria || ''}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Follow Up Comments"
+                    name="followUpComments"
+                    multiline
+                    rows={2}
+                    value={formData.followUpComments || ''}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Notes"
+                    name="notes"
+                    multiline
+                    rows={3}
+                    value={formData.notes || ''}
+                    onChange={handleChange}
+                  />
+                </Grid>
               </Grid>
             </Grid>
           </Grid>
-
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-          </Grid>
-
-          {/* Notes and Comments */}
-          <Grid item xs={12}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-              Notes and Comments
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Likely Competition"
-                  name="likelyCompetition"
-                  multiline
-                  rows={2}
-                  value={formData.likelyCompetition || ''}
-                  onChange={handleChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Probable Qualifying Criteria"
-                  name="probableQualifyingCriteria"
-                  multiline
-                  rows={2}
-                  value={formData.probableQualifyingCriteria || ''}
-                  onChange={handleChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Follow Up Comments"
-                  name="followUpComments"
-                  multiline
-                  rows={2}
-                  value={formData.followUpComments || ''}
-                  onChange={handleChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Notes"
-                  name="notes"
-                  multiline
-                  rows={3}
-                  value={formData.notes || ''}
-                  onChange={handleChange}
-                />
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
           {actionButtons}
           <Button type="submit" variant="contained" color="primary">
