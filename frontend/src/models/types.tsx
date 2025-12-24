@@ -5,8 +5,9 @@ export enum GoNoGoStatus {
 }
 
 export enum TypeOfBid {
-    Lumpsum = 0,
-    ItemRate = 1
+  Lumpsum = 0,
+  TimeAndExpense = 1,
+  Percentage = 2
 }
 
 export enum WorkflowStatus {

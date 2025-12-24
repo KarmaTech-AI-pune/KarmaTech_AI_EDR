@@ -40,7 +40,7 @@ const goNoGoRawData = {
   },
   "2": {
     "projectId": "4",
-    "bidType": "EPC",
+    "bidType": "TIME & EXPENSE",
     "sector": "Smart City",
     "tenderFee": 7500,
     "emdAmount": 150000,
@@ -76,7 +76,7 @@ const goNoGoRawData = {
   },
   "3": {
     "projectId": "5",
-    "bidType": "Design-Build",
+    "bidType": "% (Percentage)",
     "sector": "Coastal",
     "tenderFee": 4500,
     "emdAmount": 90000,
@@ -115,7 +115,10 @@ const goNoGoRawData = {
 // Transform into typed array
 export const goNoGoDecisions: GoNoGoDecision[] = Object.values(goNoGoRawData).map(decision => ({
   projectId: Number(decision.projectId),
-  bidType: decision.bidType === "Lumpsum" ? TypeOfBid.Lumpsum : TypeOfBid.ItemRate,
+  bidType: decision.bidType === "Lumpsum" ? TypeOfBid.Lumpsum :
+    decision.bidType === "TIME & EXPENSE" ? TypeOfBid.TimeAndExpense :
+      decision.bidType === "% (Percentage)" ? TypeOfBid.Percentage :
+        TypeOfBid.Lumpsum,
   sector: decision.sector,
   tenderFee: decision.tenderFee,
   emdAmount: decision.emdAmount,
@@ -144,9 +147,9 @@ export const goNoGoDecisions: GoNoGoDecision[] = Object.values(goNoGoRawData).ma
   bidScheduleScore: decision.bidScheduleScore,
   bidScheduleComments: decision.bidScheduleComments,
   totalScore: decision.totalScore,
-  status: decision.status === "Green" ? GoNoGoStatus.Green : 
-          decision.status === "Amber" ? GoNoGoStatus.Amber : 
-          GoNoGoStatus.Red,
+  status: decision.status === "Green" ? GoNoGoStatus.Green :
+    decision.status === "Amber" ? GoNoGoStatus.Amber :
+      GoNoGoStatus.Red,
   decisionComments: decision.decisionComments,
   completedDate: decision.completedDate,
   completedBy: decision.completedBy,
