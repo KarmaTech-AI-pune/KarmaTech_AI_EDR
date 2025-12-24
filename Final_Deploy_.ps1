@@ -1,74 +1,188 @@
-# ============================
-# API Backup + Deployment Script (Final Fixed)
-# ============================
+param(
+    [switch]$DryRun        # Optional flag to simulate the script
+)
 
-# --- Configuration ---
-$siteName = "  "       # The name of the IIS website you want to stop, back up, deploy, and restart
-$appPoolName = "  "    # The name of the IIS application pool associated with the website
-$wwwrootPath = "C:\inetpub\wwwroot"                 # Base path for deployment folders
-$mainProjectPath = Join-Path $wwwrootPath "  "      # Live running project folder
-$zipFilePath ="  "                                  # ZIP file path
-$backupBasePath = "C:\inetpub\wwwroot\  "          # Backup storage location
+# Import IIS management module
+Import-Module WebAdministration -ErrorAction Stop
 
-# --- Step 1: Create backup folder ---
-$currentDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-$backupFolderName = $currentDate
-$backupFolder = Join-Path $backupBasePath $backupFolderName
-Write-Host "Creating backup folder: $backupFolder"
-New-Item -ItemType Directory -Force -Path $backupFolder | Out-Null
 
-# --- Step 1.1: Backup current running live project ---
-if (Test-Path $mainProjectPath) {
-    Write-Host "Backing up current live project from $mainProjectPath to $backupFolder ..."
-    Copy-Item -Path "$mainProjectPath\*" -Destination $backupFolder -Recurse -Force
-    Write-Host "? Full backup completed successfully!"
-} else {
-    Write-Host "?? Live project folder not found. Skipping backup."
+# ------------------------------------------------
+# CONFIGURATION SECTION - UPDATE PATHS IF NEEDED
+# ------------------------------------------------
+
+# Frontend (Admin UI) Configuration
+$frontendZip      = "C:\inetpub\wwwroot\Local IIS dist.zip"
+$frontendPath     = "C:\inetpub\wwwroot\EDRAdminUI"
+$frontendBackup   = "C:\inetpub\wwwroot\Backup of EDRAdminUI"
+$frontendSite     = "EDRAdminUI"
+
+# Tenant UI Configuration (Uses same Frontend build)
+$tenantPath       = "C:\inetpub\wwwroot\multi-tenant"
+$tenantSite       = "multi-tenant"
+
+# Backend (API) Configuration
+$backendZip       = "C:\inetpub\wwwroot\Local IIS publish.zip"
+$backendPath      = "D:\IIS Deployment\EDRAdmin_API"
+$backendBackup    = "D:\IIS Deployment\Backup edradmin api"
+$backendSite      = "EDRAdmin_Api"
+$backendAppPool   = "EDRAdmin_Api"
+
+
+# Generate timestamp for folders and logs
+$timeStamp = Get-Date -Format "yyyy-MM-dd_hh-mm-ss_tt"
+
+Write-Host "==============================================="
+Write-Host " DEPLOYMENT STARTED  (Frontend + Backend + Tenant)"
+Write-Host " Timestamp: $timeStamp"
+Write-Host "==============================================="
+
+if ($DryRun) {
+    Write-Host "DRY RUN MODE ENABLED - No real changes will be made"
 }
 
-# --- Step 2: Check ZIP file ---
-if (-not (Test-Path $zipFilePath)) {
-    Write-Error "? ZIP file not found: $zipFilePath"
-    exit
+
+# ------------------------------------------------
+# FUNCTION: Backup-Files
+# PURPOSE : Create timestamped backup of a folder
+# ------------------------------------------------
+function Backup-Files {
+    param($source, $destRoot)
+
+    if ((Test-Path $source) -and ((Get-ChildItem $source -ErrorAction SilentlyContinue).Count -gt 0)) {
+        $dest = Join-Path $destRoot $timeStamp
+
+        Write-Host "Creating backup: $source  ->  $dest"
+
+        if (-not $DryRun) {
+            New-Item -ItemType Directory -Path $dest -Force | Out-Null
+            robocopy $source $dest /E /R:2 /W:2 | Out-Null
+        }
+
+        return $dest
+    }
+    else {
+        Write-Host "Backup skipped: No files found at $source"
+        return $null
+    }
 }
 
-# --- Step 3: Create new deployment folder (SiteName + Date) ---
-$newFolderName = "${siteName}_$currentDate"
-$newDeployPath = Join-Path $wwwrootPath $newFolderName
-Write-Host "Creating new deployment folder: $newDeployPath"
-New-Item -ItemType Directory -Force -Path $newDeployPath | Out-Null
 
-# --- Step 4: Stop IIS safely ---
-Write-Host "Stopping IIS site and app pool..."
-Import-Module WebAdministration
-Try {
-    Stop-WebAppPool -Name $appPoolName -ErrorAction SilentlyContinue
-    Stop-Website -Name $siteName -ErrorAction SilentlyContinue
-} Catch {
-    Write-Warning "?? Error stopping IIS: $($_.Exception.Message)"
+# ==========================================================
+# FRONTEND DEPLOYMENT  (Shared for Admin UI + Tenant UI)
+# ==========================================================
+Write-Host ""
+Write-Host "===== FRONTEND BUILD DEPLOYMENT STARTED ====="
+
+$frontendSiteCheck = Get-Website -Name $frontendSite -ErrorAction SilentlyContinue
+$tenantSiteCheck   = Get-Website -Name $tenantSite -ErrorAction SilentlyContinue
+
+if (-not $frontendSiteCheck) { throw "Frontend IIS site not found" }
+if (-not $tenantSiteCheck)   { throw "Tenant IIS site not found" }
+
+if (-not (Test-Path $frontendZip)) { throw "Frontend ZIP file not found" }
+
+# Backup only Frontend
+$frontendBackupPath = Backup-Files $frontendPath $frontendBackup
+
+
+# Create temporary folder and extract ZIP
+$feTemp = "C:\inetpub\wwwroot\temp_fe_$timeStamp"
+Write-Host "Extracting Frontend ZIP to temp folder: $feTemp"
+
+if (-not $DryRun) {
+    New-Item -ItemType Directory -Path $feTemp -Force | Out-Null
+    Expand-Archive $frontendZip $feTemp -Force
 }
 
-# --- Step 5: Extract ZIP into new deployment folder ---
-Write-Host "Extracting ZIP contents into $newDeployPath ..."
-Expand-Archive -Path $zipFilePath -DestinationPath $newDeployPath -Force
-Write-Host "? Files extracted successfully!"
+# Locate 'dist' folder inside extracted content
+$feDist = Get-ChildItem $feTemp -Recurse -Directory |
+          Where-Object { $_.Name -eq "dist" } |
+          Select-Object -First 1
 
-# --- Step 6: Copy 'publish' contents into main project folder ---
-$publishFolder = Join-Path $newDeployPath "publish"
+if (-not $feDist) { throw "'dist' folder not found inside Frontend ZIP" }
 
-if (Test-Path $publishFolder) {
-    Write-Host "Copying files from $publishFolder to $mainProjectPath ..."
-    Copy-Item -Path "$publishFolder\*" -Destination $mainProjectPath -Recurse -Force
-    Write-Host "? Files copied to live folder successfully!"
-} else {
-    Write-Warning "?? Publish folder not found in deployment folder: $publishFolder"
+# Copy build files to Frontend (Admin UI)
+Write-Host "Deploying Frontend files to Admin UI..."
+if (-not $DryRun) {
+    robocopy $feDist.FullName $frontendPath /E /XO /MT:8 /R:2 /W:2 | Out-Null
 }
 
-# --- Step 7: Start IIS again ---
-Write-Host "Starting IIS site and app pool..."
-Start-WebAppPool -Name $appPoolName
-Start-Website -Name $siteName
+# Copy same build files to Tenant UI
+Write-Host "Deploying same Frontend files to Tenant UI..."
+if (-not $DryRun) {
+    robocopy $feDist.FullName $tenantPath /E /XO /MT:8 /R:2 /W:2 | Out-Null
+}
 
-Write-Host "? Deployment completed successfully!"
-Write-Host "?? New Deployment Folder: $newDeployPath"
-Write-Host "?? Backup stored at: $backupFolder"
+# Restart AppPools for both UI sites
+$fePool     = $frontendSiteCheck.ApplicationPool
+$tenantPool = $tenantSiteCheck.ApplicationPool
+
+Write-Host "Restarting Frontend Application Pool: $fePool"
+Write-Host "Restarting Tenant Application Pool: $tenantPool"
+
+if (-not $DryRun) {
+    Restart-WebAppPool -Name $fePool
+    Restart-WebAppPool -Name $tenantPool
+}
+
+Write-Host "Frontend temp folder retained at: $feTemp"
+
+
+# ==========================================================
+# BACKEND (API) DEPLOYMENT
+# ==========================================================
+Write-Host ""
+Write-Host "===== BACKEND DEPLOYMENT STARTED ====="
+
+$backendSiteCheck = Get-Website -Name $backendSite -ErrorAction SilentlyContinue
+if (-not $backendSiteCheck) { throw "Backend IIS site not found" }
+
+if (-not (Test-Path $backendZip)) { throw "Backend ZIP file not found" }
+
+$backendBackupPath = Backup-Files $backendPath $backendBackup
+
+$beTemp = "C:\inetpub\wwwroot\$($backendSite)_$timeStamp"
+Write-Host "Extracting Backend ZIP to: $beTemp"
+
+if (-not $DryRun) {
+    New-Item -ItemType Directory -Path $beTemp -Force | Out-Null
+    Expand-Archive $backendZip $beTemp -Force
+}
+
+$bePublish = Join-Path $beTemp "publish"
+if (-not (Test-Path $bePublish)) { throw "'publish' folder not found in backend ZIP" }
+
+Write-Host "Stopping Backend Website and AppPool..."
+if (-not $DryRun) {
+    Stop-WebAppPool -Name $backendAppPool -ErrorAction SilentlyContinue
+    Stop-Website -Name $backendSite -ErrorAction SilentlyContinue
+}
+
+Write-Host "Deploying Backend files..."
+if (-not $DryRun) {
+    robocopy $bePublish $backendPath /E /XO /MT:8 /R:2 /W:2 | Out-Null
+}
+
+Write-Host "Starting Backend Website and AppPool..."
+if (-not $DryRun) {
+    Start-WebAppPool -Name $backendAppPool
+    Start-Website -Name $backendSite
+}
+
+Write-Host "Backend temp folder retained at: $beTemp"
+
+
+# ==========================================================
+# FINAL STATUS
+# ==========================================================
+Write-Host ""
+Write-Host "==============================================="
+Write-Host " ? DEPLOYMENT COMPLETED SUCCESSFULLY "
+Write-Host "==============================================="
+Write-Host "Frontend Backup : $frontendBackupPath"
+Write-Host "Backend Backup  : $backendBackupPath"
+Write-Host "Frontend Live   : $frontendPath"
+Write-Host "Tenant Live     : $tenantPath"
+Write-Host "Backend Live    : $backendPath"
+Write-Host "Frontend Temp   : $feTemp"
+Write-Host "Backend Temp    : $beTemp"
