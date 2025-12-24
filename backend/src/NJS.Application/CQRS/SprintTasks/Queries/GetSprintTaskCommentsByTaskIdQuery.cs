@@ -6,6 +6,6 @@ namespace NJS.Application.CQRS.SprintTasks.Queries
 {
     public class GetSprintTaskCommentsByTaskIdQuery : IRequest<List<SprintTaskCommentDto>>
     {
-        public int Taskid { get; set; }
+        public string Taskid { get; set; }
     }
 }

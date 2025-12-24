@@ -33,10 +33,10 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             }
 
             // Ensure TaskId is provided and exists before creating a subtask
-            if (sprintSubtaskDto.Taskid <= 0)
+            if (string.IsNullOrWhiteSpace(sprintSubtaskDto.Taskid))
             {
-                _logger.LogError("TaskId is invalid regarding SprintSubtask. It is required to associate a subtask with a parent task.");
-                throw new ArgumentException("TaskId cannot be invalid for SprintSubtask.");
+                _logger.LogError("TaskId is null or empty for SprintSubtask. It is required to associate a subtask with a parent task.");
+                throw new ArgumentException("TaskId cannot be null or empty for SprintSubtask.");
             }
 
             var sprintTaskExists = await _context.SprintTasks.AnyAsync(st => st.Taskid == sprintSubtaskDto.Taskid, cancellationToken);

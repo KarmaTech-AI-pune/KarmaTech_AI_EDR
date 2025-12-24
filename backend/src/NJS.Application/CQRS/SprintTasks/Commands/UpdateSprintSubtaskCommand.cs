@@ -6,7 +6,7 @@ namespace NJS.Application.CQRS.SprintTasks.Commands
     public class UpdateSprintSubtaskCommand : IRequest<Unit>
     {
         public int SubtaskId { get; set; }
-        public int TaskId { get; set; }
+        public string TaskId { get; set; } = string.Empty;
         public SprintSubtaskDto SprintSubtask { get; set; } = new SprintSubtaskDto();
     }
 }
