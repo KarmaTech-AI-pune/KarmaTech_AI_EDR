@@ -6,6 +6,6 @@ namespace NJS.Application.CQRS.SprintTasks.Queries
 {
     public class GetAllSprintSubtasksByTaskIdQuery : IRequest<IEnumerable<SprintSubtaskDto>>
     {
-        public string TaskId { get; set; } = string.Empty;
+        public int TaskId { get; set; }
     }
 }

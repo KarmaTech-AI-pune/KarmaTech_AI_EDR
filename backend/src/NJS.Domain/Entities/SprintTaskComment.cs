@@ -14,7 +14,7 @@ namespace NJS.Domain.Entities
 
         public string? CommentText { get; set; }
 
-        public string? Taskid { get; set; } // Foreign key to SprintTask
+        public int Taskid { get; set; } // Foreign key to SprintTask
         [ForeignKey("Taskid")]
         public SprintTask? SprintTask { get; set; }
 
