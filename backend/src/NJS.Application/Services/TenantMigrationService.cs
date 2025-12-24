@@ -58,7 +58,7 @@ namespace NJS.Application.Services
                 var builder = new SqlConnectionStringBuilder(connectionString);
                 var targetDatabaseName = builder.InitialCatalog;
 
-                // If source database not provided, use the default from configuration
+                // If source database/server not provided, use the default from configuration
                 if (string.IsNullOrEmpty(sourceDatabaseName))
                 {
                     var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
@@ -247,7 +247,8 @@ namespace NJS.Application.Services
         private string ReplacePlaceholders(string scriptContent, int tenantId, string targetDatabaseName, string? sourceDatabaseName, string? userEmail = null, string? roleName = null, string? permissionName = null)
         {
             // Replace @TenantId placeholder
-            scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@TenantId\s+INT\s*=\s*\d+;",
+            // Replace @TenantId placeholder (Robust: matches INT = X; or INT=X;)
+            scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@TenantId\s+INT[^=]*=[^;]*;",
                 $"DECLARE @TenantId INT = {tenantId};", RegexOptions.IgnoreCase);
 
             // Replace database name placeholders in USE statements
@@ -255,34 +256,34 @@ namespace NJS.Application.Services
                 $"USE [{targetDatabaseName}];", RegexOptions.IgnoreCase);
 
             // Replace @TargetDb placeholder
-            scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@TargetDb\s+SYSNAME\s*=\s*'.*?';",
+            scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@TargetDb\s+SYSNAME[^=]*=[^;]*;",
                 $"DECLARE @TargetDb SYSNAME = '{targetDatabaseName}';", RegexOptions.IgnoreCase);
 
             // Replace @SourceDb placeholder if source database name is provided
             if (!string.IsNullOrEmpty(sourceDatabaseName))
             {
-                scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@SourceDb\s+SYSNAME\s*=\s*'.*?';",
+                scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@SourceDb\s+SYSNAME[^=]*=[^;]*;",
                     $"DECLARE @SourceDb SYSNAME = '{sourceDatabaseName}';", RegexOptions.IgnoreCase);
             }
 
             // Replace @Email placeholder if user email is provided
             if (!string.IsNullOrEmpty(userEmail))
             {
-                scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@Email\s+NVARCHAR\(256\)\s*=\s*'.*?';",
+                scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@Email\s+NVARCHAR\(256\)[^=]*=[^;]*;",
                     $"DECLARE @Email NVARCHAR(256) = '{userEmail}';", RegexOptions.IgnoreCase);
             }
 
             // Replace @RoleName placeholder if role name is provided
             if (!string.IsNullOrEmpty(roleName))
             {
-                scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@RoleName\s+NVARCHAR\(256\)\s*=\s*'.*?';",
+                scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@RoleName\s+NVARCHAR\(256\)[^=]*=[^;]*;",
                     $"DECLARE @RoleName NVARCHAR(256) = '{roleName}';", RegexOptions.IgnoreCase);
             }
 
             // Replace @PermissionName placeholder if permission name is provided
             if (!string.IsNullOrEmpty(permissionName))
             {
-                scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@PermissionName\s+NVARCHAR\(256\)\s*=\s*'.*?';",
+                scriptContent = Regex.Replace(scriptContent, @"DECLARE\s+@PermissionName\s+NVARCHAR\(256\)[^=]*=[^;]*;",
                     $"DECLARE @PermissionName NVARCHAR(256) = '{permissionName}';", RegexOptions.IgnoreCase);
             }
 

@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using NJS.Application.Services.IContract;
-using NJS.Domain; // For MigrationResult
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Services;
+using MediatR;
+using Microsoft.Data.SqlClient;
+using NJS.Application.CQRS.Tenants.Queries;
+using NJS.Application.Dtos;
 
 namespace NJSAPI.Controllers
 {
@@ -24,6 +26,7 @@ namespace NJSAPI.Controllers
         private readonly ICurrentTenantService _currentTenantService;
         private readonly ITenantMigrationService _tenantMigrationService;
         private readonly IConfiguration _configuration;
+        private readonly IMediator _mediator;
 
         public TenantsController(
             ProjectManagementContext context,
@@ -34,6 +37,7 @@ namespace NJSAPI.Controllers
             ICurrentTenantService currentTenantService,
             ITenantMigrationService tenantMigrationService,
             IConfiguration configuration,
+            IMediator mediator,
             ILogger<TenantsController> logger)
         {
             _context = context;
@@ -44,6 +48,7 @@ namespace NJSAPI.Controllers
             _currentTenantService = currentTenantService;
             _tenantMigrationService = tenantMigrationService;
             _configuration = configuration;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -58,6 +63,19 @@ namespace NJSAPI.Controllers
                 .ToListAsync();
 
             return Ok(result);
+        }
+
+        // GET: api/tenants/{id}/features
+        [HttpGet("{id}/features")]
+        public async Task<ActionResult<TenantPlanDetailsDto>> GetTenantFeatures(int id)
+        {
+            var features = await _mediator.Send(new GetTenantFeaturesQuery(id));
+            if (features == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(features);
         }
 
         // GET: api/tenants/5
@@ -99,11 +117,13 @@ namespace NJSAPI.Controllers
 
                 // Create tenant database
 
-                (bool isDbCreated, string dbName, string connectionString) result = await _databaseManagementService.CreateTenantDatabaseAsync(tenant.Domain, tenant.IsIsolated);
+                (bool isDbCreated, string dbName, string connectionString) result =
+                    await _databaseManagementService.CreateTenantDatabaseAsync(tenant.Domain, tenant.IsIsolated);
                 if (!result.isDbCreated)
                 {
                     return BadRequest(new { message = "Failed to create tenant database" });
                 }
+
                 var tenantDb = new TenantDatabase
                 {
                     TenantId = 0, // Will be set after tenant is created
@@ -122,8 +142,9 @@ namespace NJSAPI.Controllers
                 // Execute SQL migration scripts for isolated tenants
                 if (tenant.IsIsolated && !string.IsNullOrEmpty(result.connectionString))
                 {
-                    _logger.LogInformation("Executing migration scripts for tenant {TenantId} database {DatabaseName}", tenant.Id, result.dbName);
-                    
+                    _logger.LogInformation("Executing migration scripts for tenant {TenantId} database {DatabaseName}",
+                        tenant.Id, result.dbName);
+
                     // Get source database name from configuration for user migration script
                     var sourceDatabaseName = _configuration.GetConnectionString("AppDbConnection");
                     if (!string.IsNullOrEmpty(sourceDatabaseName))
@@ -133,28 +154,32 @@ namespace NJSAPI.Controllers
                     }
 
                     var migrationSuccess = await _tenantMigrationService.ExecuteTenantMigrationsAsync(
-                        result.connectionString, 
-                        tenant.Id, 
+                        result.connectionString,
+                        tenant.Id,
                         sourceDatabaseName);
 
                     if (!migrationSuccess)
                     {
-                        _logger.LogWarning("Some migration scripts failed for tenant {TenantId}, but continuing...", tenant.Id);
+                        _logger.LogWarning("Some migration scripts failed for tenant {TenantId}, but continuing...",
+                            tenant.Id);
                         // Note: We continue even if migrations fail, as some scripts might be optional
                     }
                     else
                     {
-                        _logger.LogInformation("Successfully executed all migration scripts for tenant {TenantId}", tenant.Id);
+                        _logger.LogInformation("Successfully executed all migration scripts for tenant {TenantId}",
+                            tenant.Id);
                     }
                 }
 
                 // Create subscription if plan is specified
                 if (tenant.SubscriptionPlanId.HasValue)
                 {
-                    await _subscriptionService.CreateTenantSubscriptionAsync(tenant.Id, tenant.SubscriptionPlanId.Value);
+                    await _subscriptionService.CreateTenantSubscriptionAsync(tenant.Id,
+                        tenant.SubscriptionPlanId.Value);
                 }
 
-                _logger.LogInformation("Created tenant {TenantName} with subdomain {Subdomain}", tenant.Name, tenant.Domain);
+                _logger.LogInformation("Created tenant {TenantName} with subdomain {Subdomain}", tenant.Name,
+                    tenant.Domain);
 
                 return CreatedAtAction(nameof(GetTenant), new { id = tenant.Id }, tenant);
             }
@@ -255,7 +280,8 @@ namespace NJSAPI.Controllers
                 _tenantDbContext.Tenants.Remove(tenant);
                 await _tenantDbContext.SaveChangesAsync();
 
-                _logger.LogInformation("Deleted tenant {TenantName} with subdomain {Subdomain}", tenant.Name, tenant.Domain);
+                _logger.LogInformation("Deleted tenant {TenantName} with subdomain {Subdomain}", tenant.Name,
+                    tenant.Domain);
 
                 return NoContent();
             }
@@ -401,11 +427,13 @@ namespace NJSAPI.Controllers
 
                 if (tenantDatabase == null || string.IsNullOrEmpty(tenantDatabase.ConnectionString))
                 {
-                    _logger.LogWarning("Tenant database not configured for tenant {TenantId}, skipping user migration", tenant.Id);
+                    _logger.LogWarning("Tenant database not configured for tenant {TenantId}, skipping user migration",
+                        tenant.Id);
                 }
                 else if (string.IsNullOrEmpty(user.Email))
                 {
-                    _logger.LogWarning("User {UserId} does not have an email address, skipping user migration", user.Id);
+                    _logger.LogWarning("User {UserId} does not have an email address, skipping user migration",
+                        user.Id);
                 }
                 else
                 {
@@ -421,7 +449,8 @@ namespace NJSAPI.Controllers
                         sourceDatabaseName = builder.InitialCatalog;
                     }
 
-                    _logger.LogInformation("Executing user migration scripts for tenant {TenantId}, user {UserEmail}, role {RoleName}", 
+                    _logger.LogInformation(
+                        "Executing user migration scripts for tenant {TenantId}, user {UserEmail}, role {RoleName}",
                         tenant.Id, user.Email, roleName);
 
                     var migrationSuccess = await _tenantMigrationService.ExecuteTenantUserMigrationsAsync(
@@ -434,21 +463,25 @@ namespace NJSAPI.Controllers
 
                     if (!migrationSuccess)
                     {
-                        _logger.LogWarning("User migration scripts failed for tenant {TenantId} and user {UserEmail}, but continuing...", 
+                        _logger.LogWarning(
+                            "User migration scripts failed for tenant {TenantId} and user {UserEmail}, but continuing...",
                             tenant.Id, user.Email);
                     }
                     else
                     {
-                        _logger.LogInformation("Successfully executed user migration scripts for tenant {TenantId} and user {UserEmail}", 
+                        _logger.LogInformation(
+                            "Successfully executed user migration scripts for tenant {TenantId} and user {UserEmail}",
                             tenant.Id, user.Email);
                     }
                 }
             }
             else
             {
-                user.TenantId = id;
-                _context.Users.Update(user);
-               await _context.SaveChangesAsync();
+                await _context.Database.ExecuteSqlRawAsync(
+                    "UPDATE AspNetUsers SET TenantId = @tenantId WHERE Id = @userId",
+                    new SqlParameter("@tenantId", id),
+                    new SqlParameter("@userId", request.UserId)
+                );
             }
 
             _logger.LogInformation("Added user {UserId} to tenant {TenantId} with role {Role}",
@@ -459,7 +492,8 @@ namespace NJSAPI.Controllers
 
         // PUT: api/tenants/users/{tenantUserId}
         [HttpPut("users/{tenantUserId}")]
-        public async Task<ActionResult<object>> UpdateTenantUser(int tenantUserId, [FromBody] UpdateTenantUserRequest request)
+        public async Task<ActionResult<object>> UpdateTenantUser(int tenantUserId,
+            [FromBody] UpdateTenantUserRequest request)
         {
             var tenantUser = await _tenantDbContext.TenantUsers.FindAsync(tenantUserId);
             if (tenantUser == null)
@@ -550,7 +584,7 @@ namespace NJSAPI.Controllers
                 TenantUserRole.Owner => "Tenant_ADMIN",
                 TenantUserRole.Admin => "Tenant_ADMIN",
                 TenantUserRole.Manager => "Tenant_ADMIN",
-                TenantUserRole.User => "Tenant_ADMIN", 
+                TenantUserRole.User => "Tenant_ADMIN",
                 _ => "Tenant_ADMIN"
             };
         }

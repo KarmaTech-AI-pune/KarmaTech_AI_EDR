@@ -181,7 +181,7 @@ export const WBSStructureAPI = {
    */
   deleteWBSTask: async (projectId: string, taskId: string): Promise<void> => {
     try {
-      await axiosInstance.delete(`/api/projects/${projectId}/wbs/tasks/${taskId}`);
+      await axiosInstance.delete(`/api/projects/${projectId}/WBS/tasks?wbsTaskId=${taskId}`);
     } catch (error) {
       console.error(`Error deleting WBS task ${taskId} for project ${projectId}:`, error);
       throw error;
@@ -207,7 +207,19 @@ export const WBSOptionsAPI = {
    */
   createOption: async (newOption: WBSOption): Promise<WBSOption> => {
     try {
-      const response = await axiosInstance.post('/api/WBSOptions', [newOption]);
+      // Transform to backend DTO format
+      const payload = [{
+        Id: parseInt(newOption.id) || 0,
+        Value: newOption.value,
+        Label: newOption.label,
+        Level: newOption.level || 1,
+        ParentId: newOption.parentValue ? parseInt(newOption.parentValue) : null, // Convert parentValue to ParentId (integer)
+        FormType: newOption.formType || 0
+      }];
+
+      console.log('Create WBS Option payload:', payload);
+
+      const response = await axiosInstance.post('/api/WBSOptions', payload);
       return response.data;
     } catch (error) {
       console.error(`Error creating new WBS option:`, error);
@@ -235,11 +247,11 @@ export const WBSOptionsAPI = {
         Value: updatedOption.value,
         Label: updatedOption.label,
         Level: updatedOption.level || 1,
-        ParentValue: updatedOption.parentValue || String,
+        ParentId: updatedOption.parentValue ? parseInt(updatedOption.parentValue) : null, // Convert parentValue to ParentId (integer)
         FormType: updatedOption.formType || 0
       };
 
-      console.log('Update payload:', payload);
+      console.log('Update WBS Option payload:', payload);
 
       const response = await axiosInstance.put(`/api/WBSOptions/${numericId}`, payload);
       return response.data;

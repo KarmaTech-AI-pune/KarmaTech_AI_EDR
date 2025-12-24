@@ -25,7 +25,10 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
             var latestOptionByLevel = new Dictionary<int, NJS.Domain.Entities.WBSOption>(); // Level -> WBSOption entity
 
             // The request.Options should be ordered by the client: L1, then its L2 children, then L3 children, etc.
-            foreach (var optionDto in request.Options)
+            // Ensure parents are processed before children by sorting by Level.
+            var sortedOptions = request.Options.OrderBy(o => o.Level).ToList();
+
+            foreach (var optionDto in sortedOptions)
             {
                 int? parentId = null;
                 // If the current option's level is greater than 1, find the last created option from the previous level.
@@ -34,11 +37,15 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                     parentId = latestOptionByLevel[optionDto.Level - 1].Id;
                 }
 
+                // If not found in the current batch (parentId is null), use the ParentId provided in the DTO.
+                // This supports adding children to *existing* parents that are not part of this creation batch.
+                int? finalParentId = parentId ?? optionDto.ParentId;
+
                 var wbsOption = new NJS.Domain.Entities.WBSOption
                 {
                     Label = optionDto.Label,
                     Level = optionDto.Level,
-                    ParentId = parentId,
+                    ParentId = finalParentId,
                     FormType = (NJS.Domain.Entities.FormType)optionDto.FormType,
                     Value = optionDto.Value
                 };
