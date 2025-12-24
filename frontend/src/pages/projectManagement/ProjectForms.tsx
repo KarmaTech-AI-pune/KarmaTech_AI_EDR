@@ -28,7 +28,10 @@ const validFormIds = [
     'progress-review',
     'closure',
     'monthly-reports',
+    'cashflow',
 ];
+
+const Cashflow = lazy(() => import('../../features/cashflow/pages/cashflow'));
 
 const ProjectForms: React.FC = () => {
     const { formId, subFormId } = useParams<{ formId: string, subFormId: string }>();
@@ -78,6 +81,9 @@ const ProjectForms: React.FC = () => {
 
         case "monthly-reports":
             return <MonthlyReports />;
+
+        case "cashflow":
+            return <Cashflow />;
 
         default:
         return <FormsOverview onFormSelect={() => {}} />;

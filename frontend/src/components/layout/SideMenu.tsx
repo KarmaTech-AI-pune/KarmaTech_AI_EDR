@@ -31,6 +31,7 @@ import EngineeringIcon from '@mui/icons-material/Engineering';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 import DnsIcon from '@mui/icons-material/Dns'; // New icon for migrations
+import PaymentsIcon from '@mui/icons-material/Payments';
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
@@ -110,6 +111,12 @@ const formSections = [
       title: 'Monthly Reports',
       icon: <AssessmentIcon />,
       path: 'forms/monthly-reports'
+    },
+    {
+      id: 'cashflow',
+      title: 'Cashflow',
+      icon: <PaymentsIcon />,
+      path: 'forms/cashflow'
     },
   ];
 
