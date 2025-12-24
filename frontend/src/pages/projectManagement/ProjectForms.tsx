@@ -31,7 +31,7 @@ const validFormIds = [
     'cashflow',
 ];
 
-const Cashflow = lazy(() => import('../../features/cashflow/pages/cashflow'));
+const Cashflow = lazy(() => import('../../features/cashflow/pages/CashFlowPage'));
 
 const ProjectForms: React.FC = () => {
     const { formId, subFormId } = useParams<{ formId: string, subFormId: string }>();
