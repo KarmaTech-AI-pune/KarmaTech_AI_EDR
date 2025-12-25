@@ -8,6 +8,7 @@
  * - Content sections for Features, Bug Fixes, Improvements
  * - Loading and error states
  * - Proper accessibility and keyboard navigation
+ * - Fallback to hardcoded release notes when API unavailable
  * 
  * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 5.2, 5.4
  */
@@ -52,6 +53,43 @@ import {
 } from '@mui/icons-material';
 import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/releaseNotesApi';
 
+/**
+ * Hardcoded release notes for when API is unavailable
+ * This ensures users always see something meaningful
+ */
+const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
+  '1.0.38': {
+    version: '1.0.38',
+    releaseDate: '2025-12-25',
+    environment: 'dev',
+    features: [
+      { id: 1, changeType: 'Feature', description: 'Interactive version display with clickable release notes popup' },
+      { id: 2, changeType: 'Feature', description: 'Automatic versioning system based on conventional commits' },
+      { id: 3, changeType: 'Feature', description: 'Release notes generation from commit messages' },
+      { id: 4, changeType: 'Feature', description: 'Project Budget change tracking with audit history' },
+      { id: 5, changeType: 'Feature', description: 'Go/No-Go decision score cap functionality' },
+    ],
+    bugFixes: [
+      { id: 6, changeType: 'BugFix', description: 'Fixed version synchronization across all application components' },
+      { id: 7, changeType: 'BugFix', description: 'Fixed build-time version injection for consistent version display' },
+    ],
+    improvements: [
+      { id: 8, changeType: 'Improvement', description: 'Enhanced GitHub Actions workflow with conventional commit parsing' },
+      { id: 9, changeType: 'Improvement', description: 'Replaced hardcoded version with dynamic version injection' },
+      { id: 10, changeType: 'Improvement', description: 'Updated build process to include version information' },
+    ],
+    breakingChanges: [],
+  },
+};
+
+/**
+ * Gets fallback release notes for a version
+ */
+function getFallbackReleaseNotes(version: string): ProcessedReleaseNotes | null {
+  const cleanVersion = version.startsWith('v') ? version.substring(1) : version;
+  return FALLBACK_RELEASE_NOTES[cleanVersion] || null;
+}
+
 interface ReleaseNotesModalProps {
   /** Version to display release notes for */
   version: string;
@@ -92,9 +130,18 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
       setReleaseNotes(notes);
       setRetryCount(0);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load release notes';
-      setError(errorMessage);
-      setShowErrorSnackbar(true);
+      // Try fallback release notes first
+      const fallbackNotes = getFallbackReleaseNotes(version);
+      if (fallbackNotes) {
+        console.log(`Using fallback release notes for version ${version}`);
+        setReleaseNotes(fallbackNotes);
+        setError(null); // Clear error since we have fallback data
+        setRetryCount(0);
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load release notes';
+        setError(errorMessage);
+        setShowErrorSnackbar(true);
+      }
     } finally {
       setLoading(false);
     }

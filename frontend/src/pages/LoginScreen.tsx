@@ -18,7 +18,7 @@ import { useAppNavigation } from '../hooks/useAppNavigation';
 import { OTPVerification } from '../components/OTPVerification';
 import UserSubscriptionContext from '../context/UserSubscriptionContext'; // Import UserSubscriptionContext
 import { VersionDisplay } from '../components/VersionDisplay';
-import { ReleaseNotesModal } from '../components/ReleaseNotesModal';
+import ReleaseNotesModal from '../components/ReleaseNotesModal';
 import { releaseNotesApi } from '../services/releaseNotesApi';
 import { versionApi } from '../services/versionApi';
 

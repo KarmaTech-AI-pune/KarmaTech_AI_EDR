@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Typography, TypographyProps, Tooltip, Skeleton, Box, IconButton, Alert, Snackbar, Chip } from '@mui/material';
-import { Warning as WarningIcon, Refresh as RefreshIcon, WifiOff as OfflineIcon } from '@mui/icons-material';
+import { Typography, TypographyProps, Tooltip, Skeleton, Box, IconButton, Alert, Snackbar } from '@mui/material';
+import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { getVersionInfo, isDevelopmentBuild } from '../utils/version';
 import { versionApi, VersionInfo as ApiVersionInfo } from '../services/versionApi';
-import { globalErrorHandler, ErrorInfo, createUserFriendlyMessage, shouldShowRetry, withErrorHandling } from '../utils/errorHandling';
-import { globalOfflineManager, useOfflineState, createOfflineMessage } from '../utils/offlineSupport';
 
 interface VersionDisplayProps extends Omit<TypographyProps, 'children'> {
   /** Show build date in tooltip */
@@ -25,8 +23,6 @@ interface VersionDisplayProps extends Omit<TypographyProps, 'children'> {
  * Reusable component for displaying application version
  * Automatically gets version from build-time injection or environment variables
  * Can optionally fetch version from API for real-time updates
- * Features comprehensive error handling with fallbacks and retry mechanisms
- * Includes offline support with cached data and offline indicators
  */
 export const VersionDisplay: React.FC<VersionDisplayProps> = ({
   showBuildDate = true,
@@ -39,97 +35,44 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
 }) => {
   const [apiVersionInfo, setApiVersionInfo] = useState<ApiVersionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [showErrorSnackbar, setShowErrorSnackbar] = useState(false);
-  const [usingCachedData, setUsingCachedData] = useState(false);
 
   // Get fallback version info from build-time injection
   const fallbackVersionInfo = getVersionInfo();
   const isDev = isDevelopmentBuild();
-  
-  // Use offline state hook
-  const offlineState = useOfflineState();
 
-  // Fetch version from API with comprehensive error handling and offline support
-  const fetchVersionWithErrorHandling = useCallback(async () => {
+  // Fetch version from API with basic error handling
+  const fetchVersion = useCallback(async () => {
     if (!fetchVersionFromAPI) {
       return;
     }
 
-    // If offline, try to use cached data first
-    if (offlineState.isOffline) {
-      const cachedVersion = globalOfflineManager.getCachedVersionInfo();
-      if (cachedVersion) {
-        console.log('Using cached version info (offline mode)');
-        setApiVersionInfo(cachedVersion);
-        setUsingCachedData(true);
-        return;
-      }
-    }
-
     setIsLoading(true);
-    setErrorInfo(null);
-    setUsingCachedData(false);
+    setError(null);
 
     try {
-      const versionInfo = await withErrorHandling(
-        () => versionApi.getCurrentVersion(),
-        { 
-          component: 'VersionDisplay',
-          operation: 'fetchVersion',
-          retryCount,
-          isOffline: offlineState.isOffline
-        },
-        offlineState.isOffline ? 1 : 2 // Fewer retries when offline
-      );
-      
+      const versionInfo = await versionApi.getCurrentVersion();
       setApiVersionInfo(versionInfo);
-      setRetryCount(0); // Reset retry count on success
-      
-      // Cache the version info for offline use
-      globalOfflineManager.cacheVersionInfo(versionInfo);
-    } catch (error) {
-      const errorInfo = globalErrorHandler.handleError(
-        error instanceof Error ? error : new Error(String(error)),
-        { 
-          component: 'VersionDisplay',
-          operation: 'fetchVersion',
-          retryCount,
-          fallbackAvailable: true,
-          isOffline: offlineState.isOffline
-        }
-      );
-      
-      setErrorInfo(errorInfo);
-      
-      // Try to use cached data as fallback
-      const cachedVersion = globalOfflineManager.getCachedVersionInfo();
-      if (cachedVersion) {
-        console.log('Using cached version info as fallback');
-        setApiVersionInfo(cachedVersion);
-        setUsingCachedData(true);
-      } else {
-        setShowErrorSnackbar(true);
-      }
-      
-      // Keep using fallback version when API fails
-      console.warn('Using fallback version due to API error:', createUserFriendlyMessage(errorInfo));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch version';
+      setError(errorMessage);
+      setShowErrorSnackbar(true);
+      console.warn('Using fallback version due to API error:', errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [fetchVersionFromAPI, retryCount, offlineState.isOffline]);
+  }, [fetchVersionFromAPI]);
 
   // Fetch version from API if requested
   useEffect(() => {
-    fetchVersionWithErrorHandling();
-  }, [fetchVersionWithErrorHandling]);
+    fetchVersion();
+  }, [fetchVersion]);
 
   // Handle retry button click
   const handleRetry = useCallback(() => {
-    setRetryCount(prev => prev + 1);
-    fetchVersionWithErrorHandling();
-  }, [fetchVersionWithErrorHandling]);
+    fetchVersion();
+  }, [fetchVersion]);
 
   // Determine which version info to use
   const versionInfo = apiVersionInfo || {
@@ -141,7 +84,7 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
 
   const versionText = `${prefix} ${versionInfo.displayVersion}${isDev && showDevIndicator ? ' (dev)' : ''}`;
 
-  // Create comprehensive tooltip content
+  // Create tooltip content
   const createTooltipContent = () => {
     const parts: string[] = [];
     
@@ -149,20 +92,10 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
       parts.push(`Build Date: ${new Date(versionInfo.buildDate).toLocaleString()}`);
     }
     
-    if (offlineState.isOffline) {
-      parts.push(`📡 ${createOfflineMessage(offlineState)}`);
-    }
-    
-    if (usingCachedData) {
-      parts.push('💾 Using cached data');
-    }
-    
-    if (errorInfo) {
-      parts.push(`⚠️ ${createUserFriendlyMessage(errorInfo)}`);
-      if (shouldShowRetry(errorInfo) && !offlineState.isOffline) {
-        parts.push('Click the warning icon to retry');
-      }
-    } else if (fetchVersionFromAPI && !apiVersionInfo && !usingCachedData) {
+    if (error && !apiVersionInfo) {
+      parts.push(`⚠️ ${error}`);
+      parts.push('Click the warning icon to retry');
+    } else if (fetchVersionFromAPI && !apiVersionInfo) {
       parts.push('⚠️ Using fallback version');
     }
     
@@ -182,7 +115,7 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
   };
 
   // Show loading skeleton while fetching
-  if (isLoading && fetchVersionFromAPI && !usingCachedData) {
+  if (isLoading && fetchVersionFromAPI) {
     return (
       <Box sx={{ display: 'inline-block' }}>
         <Skeleton 
@@ -214,11 +147,8 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
             },
             transition: 'color 0.2s ease-in-out',
           }),
-          ...(errorInfo && !usingCachedData && {
+          ...(error && !apiVersionInfo && {
             color: 'warning.main',
-          }),
-          ...(offlineState.isOffline && {
-            color: 'text.disabled',
           }),
         }}
         role={clickable ? 'button' : undefined}
@@ -235,50 +165,20 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
         {versionText}
       </Typography>
       
-      {/* Offline indicator */}
-      {offlineState.isOffline && (
-        <Tooltip title={createOfflineMessage(offlineState)}>
-          <OfflineIcon 
-            fontSize="small" 
-            sx={{ 
-              color: 'text.disabled',
-              ml: 0.5
-            }}
-          />
-        </Tooltip>
-      )}
-      
-      {/* Cached data indicator */}
-      {usingCachedData && !offlineState.isOffline && (
-        <Chip
-          label="Cached"
-          size="small"
-          variant="outlined"
-          sx={{ 
-            height: 16,
-            fontSize: '0.6rem',
-            ml: 0.5,
-            color: 'text.secondary',
-            borderColor: 'text.secondary'
-          }}
-        />
-      )}
-      
       {/* Warning icon with retry functionality */}
-      {errorInfo && !usingCachedData && (
-        <Tooltip title={shouldShowRetry(errorInfo) && !offlineState.isOffline ? 'Click to retry' : 'Error occurred'}>
+      {error && !apiVersionInfo && (
+        <Tooltip title="Click to retry">
           <IconButton
             size="small"
-            onClick={shouldShowRetry(errorInfo) && !offlineState.isOffline ? handleRetry : undefined}
+            onClick={handleRetry}
             sx={{ 
               p: 0.25,
-              color: 'warning.main',
-              cursor: shouldShowRetry(errorInfo) && !offlineState.isOffline ? 'pointer' : 'default'
+              color: 'warning.main'
             }}
-            disabled={isLoading || offlineState.isOffline}
-            aria-label={shouldShowRetry(errorInfo) && !offlineState.isOffline ? 'Retry fetching version' : 'Version error'}
+            disabled={isLoading}
+            aria-label="Retry fetching version"
           >
-            {shouldShowRetry(errorInfo) && !offlineState.isOffline ? <RefreshIcon fontSize="small" /> : <WarningIcon fontSize="small" />}
+            <RefreshIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
@@ -307,7 +207,7 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
           severity="warning" 
           sx={{ width: '100%' }}
           action={
-            errorInfo && shouldShowRetry(errorInfo) && !offlineState.isOffline ? (
+            error ? (
               <IconButton
                 size="small"
                 aria-label="retry"
@@ -322,8 +222,7 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
             ) : undefined
           }
         >
-          Version API: {errorInfo ? createUserFriendlyMessage(errorInfo) : 'Unknown error'}
-          {offlineState.isOffline && ' (Offline mode)'}
+          Version API: {error || 'Unknown error'}
         </Alert>
       </Snackbar>
     </>

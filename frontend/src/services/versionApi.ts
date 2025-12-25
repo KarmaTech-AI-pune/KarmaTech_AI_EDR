@@ -1,5 +1,5 @@
 import { axiosInstance } from './axiosConfig';
-import { globalErrorHandler, withErrorHandling } from '../utils/errorHandling';
+import { withErrorHandling } from '../utils/errorHandling';
 import { versionCache } from '../utils/versionCache';
 
 /**
