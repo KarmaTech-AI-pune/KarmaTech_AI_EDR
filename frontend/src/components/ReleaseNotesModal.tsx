@@ -9,7 +9,7 @@
  * - Loading and error states
  * - Proper accessibility and keyboard navigation
  * 
- * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 5.4
+ * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 5.2, 5.4
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -49,12 +49,8 @@ import {
   CalendarToday as DateIcon,
   Refresh as RefreshIcon,
   ErrorOutline as ErrorIcon,
-  WifiOff as OfflineIcon,
-  CloudOff as CachedIcon,
 } from '@mui/icons-material';
 import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/releaseNotesApi';
-import { globalErrorHandler, ErrorInfo, createUserFriendlyMessage, shouldShowRetry, withErrorHandling } from '../utils/errorHandling';
-import { globalOfflineManager, useOfflineState, createOfflineMessage } from '../utils/offlineSupport';
 
 interface ReleaseNotesModalProps {
   /** Version to display release notes for */
@@ -67,10 +63,8 @@ interface ReleaseNotesModalProps {
 
 /**
  * ReleaseNotesModal component for displaying version-specific release notes
- * Features comprehensive error handling with retry mechanisms and fallbacks
- * Includes offline support with cached data and offline indicators
  */
-export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
+const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   version,
   isOpen,
   onClose,
@@ -80,110 +74,63 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
   
   const [releaseNotes, setReleaseNotes] = useState<ProcessedReleaseNotes | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
   const [showErrorSnackbar, setShowErrorSnackbar] = useState<boolean>(false);
-  const [usingCachedData, setUsingCachedData] = useState<boolean>(false);
 
-  // Use offline state hook
-  const offlineState = useOfflineState();
-
-  // Fetch release notes with comprehensive error handling and offline support
-  const fetchReleaseNotesWithErrorHandling = useCallback(async () => {
-    if (!version) {
+  // Fetch release notes when modal opens
+  const fetchReleaseNotes = useCallback(async () => {
+    if (!version || !isOpen) {
       return;
     }
 
-    // If offline, try to use cached data first
-    if (offlineState.isOffline) {
-      const cachedNotes = globalOfflineManager.getCachedReleaseNotes(version);
-      if (cachedNotes) {
-        console.log(`Using cached release notes for version ${version} (offline mode)`);
-        setReleaseNotes(cachedNotes);
-        setUsingCachedData(true);
-        return;
-      }
-    }
-
     setLoading(true);
-    setErrorInfo(null);
-    setUsingCachedData(false);
+    setError(null);
 
     try {
-      const notes = await withErrorHandling(
-        () => releaseNotesApi.getReleaseNotes(version),
-        {
-          component: 'ReleaseNotesModal',
-          operation: 'fetchReleaseNotes',
-          version,
-          retryCount,
-          isOffline: offlineState.isOffline
-        },
-        offlineState.isOffline ? 1 : 3 // Fewer retries when offline
-      );
-      
+      const notes = await releaseNotesApi.getReleaseNotes(version);
       setReleaseNotes(notes);
-      setRetryCount(0); // Reset retry count on success
-      
-      // Cache the release notes for offline use
-      globalOfflineManager.cacheReleaseNotes(version, notes);
-    } catch (error) {
-      const errorInfo = globalErrorHandler.handleError(
-        error instanceof Error ? error : new Error(String(error)),
-        {
-          component: 'ReleaseNotesModal',
-          operation: 'fetchReleaseNotes',
-          version,
-          retryCount,
-          fallbackAvailable: false,
-          isOffline: offlineState.isOffline
-        }
-      );
-      
-      setErrorInfo(errorInfo);
-      
-      // Try to use cached data as fallback
-      const cachedNotes = globalOfflineManager.getCachedReleaseNotes(version);
-      if (cachedNotes) {
-        console.log(`Using cached release notes for version ${version} as fallback`);
-        setReleaseNotes(cachedNotes);
-        setUsingCachedData(true);
-      } else {
-        setShowErrorSnackbar(true);
-      }
+      setRetryCount(0);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load release notes';
+      setError(errorMessage);
+      setShowErrorSnackbar(true);
     } finally {
       setLoading(false);
     }
-  }, [version, retryCount, offlineState.isOffline]);
+  }, [version, isOpen]);
 
   // Fetch release notes when modal opens or version changes
   useEffect(() => {
     if (isOpen && version) {
-      fetchReleaseNotesWithErrorHandling();
+      fetchReleaseNotes();
     }
-  }, [isOpen, version, fetchReleaseNotesWithErrorHandling]);
+  }, [isOpen, version, fetchReleaseNotes]);
 
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setReleaseNotes(null);
-      setErrorInfo(null);
-      setRetryCount(0);
-      setShowErrorSnackbar(false);
-      setUsingCachedData(false);
+      const timeoutId = setTimeout(() => {
+        setReleaseNotes(null);
+        setError(null);
+        setRetryCount(0);
+        setShowErrorSnackbar(false);
+      }, 1000);
+
+      return () => clearTimeout(timeoutId);
     }
   }, [isOpen]);
 
   /**
-   * Handles retry button click with exponential backoff
+   * Handles retry button click
    */
   const handleRetry = useCallback(() => {
     setRetryCount(prev => prev + 1);
-    fetchReleaseNotesWithErrorHandling();
-  }, [fetchReleaseNotesWithErrorHandling]);
+    fetchReleaseNotes();
+  }, [fetchReleaseNotes]);
 
   /**
-   * Handles modal close with proper cleanup
+   * Handles modal close
    */
   const handleClose = () => {
     if (!loading) {
@@ -329,7 +276,7 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
    * Renders the modal content based on current state
    */
   const renderContent = () => {
-    if (loading && !usingCachedData) {
+    if (loading) {
       return (
         <Box
           sx={{
@@ -350,86 +297,37 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
               Retry attempt: {retryCount}
             </Typography>
           )}
-          {offlineState.isOffline && (
-            <Typography variant="body2" color="text.secondary">
-              📡 Offline mode - checking cache...
-            </Typography>
-          )}
         </Box>
       );
     }
 
-    if (errorInfo && !usingCachedData) {
+    if (error) {
       return (
         <Box sx={{ py: 2 }}>
           <Alert 
             severity="error"
             icon={<ErrorIcon />}
             action={
-              shouldShowRetry(errorInfo) && !offlineState.isOffline ? (
-                <Button 
-                  color="inherit" 
-                  size="small" 
-                  onClick={handleRetry}
-                  startIcon={<RefreshIcon />}
-                  disabled={loading}
-                >
-                  Retry
-                </Button>
-              ) : undefined
+              <Button 
+                color="inherit" 
+                size="small" 
+                onClick={handleRetry}
+                startIcon={<RefreshIcon />}
+                disabled={loading}
+              >
+                Retry
+              </Button>
             }
           >
             <Typography variant="body2" component="div">
-              <strong>{createUserFriendlyMessage(errorInfo)}</strong>
+              <strong>{error}</strong>
             </Typography>
             {retryCount > 0 && (
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                 Retry attempt: {retryCount}
               </Typography>
             )}
-            {offlineState.isOffline && (
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                📡 {createOfflineMessage(offlineState)}
-              </Typography>
-            )}
-            {errorInfo.originalError && (
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                Technical details: {errorInfo.originalError.message}
-              </Typography>
-            )}
           </Alert>
-          
-          {/* Additional help for common errors */}
-          {errorInfo.type === 'NETWORK_ERROR' && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              <Typography variant="body2">
-                <strong>Troubleshooting tips:</strong>
-              </Typography>
-              <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-                <li>Check your internet connection</li>
-                <li>Try refreshing the page</li>
-                <li>Contact support if the problem persists</li>
-              </ul>
-            </Alert>
-          )}
-          
-          {errorInfo.type === 'API_ERROR' && errorInfo.message.includes('404') && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              <Typography variant="body2">
-                Release notes for version <strong>{version}</strong> may not be available yet. 
-                This could happen if the version is very new or if release notes haven't been created.
-              </Typography>
-            </Alert>
-          )}
-
-          {offlineState.isOffline && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              <Typography variant="body2">
-                <strong>Offline Mode:</strong> You're currently offline. 
-                Release notes will be loaded from cache when available, or you can try again when you're back online.
-              </Typography>
-            </Alert>
-          )}
         </Box>
       );
     }
@@ -443,11 +341,6 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
           <Typography variant="body2" color="text.secondary">
             Release notes for version {version} could not be found.
           </Typography>
-          {offlineState.isOffline && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              📡 {createOfflineMessage(offlineState)}
-            </Typography>
-          )}
         </Box>
       );
     }
@@ -467,44 +360,12 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
           <Typography variant="body2" color="text.secondary">
             This version doesn't have any documented changes.
           </Typography>
-          {usingCachedData && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              💾 Showing cached data
-            </Typography>
-          )}
         </Box>
       );
     }
 
     return (
       <Box sx={{ py: 1 }}>
-        {/* Status indicators */}
-        {(usingCachedData || offlineState.isOffline) && (
-          <Box sx={{ mb: 2 }}>
-            {usingCachedData && (
-              <Alert severity="info" sx={{ mb: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CachedIcon fontSize="small" />
-                  <Typography variant="body2">
-                    Showing cached release notes
-                    {offlineState.isOffline && ' (offline mode)'}
-                  </Typography>
-                </Box>
-              </Alert>
-            )}
-            {offlineState.isOffline && !usingCachedData && (
-              <Alert severity="warning" sx={{ mb: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <OfflineIcon fontSize="small" />
-                  <Typography variant="body2">
-                    📡 {createOfflineMessage(offlineState)}
-                  </Typography>
-                </Box>
-              </Alert>
-            )}
-          </Box>
-        )}
-
         {/* Release Info */}
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -526,26 +387,6 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
               label={`Branch: ${releaseNotes.branch}`}
               size="small"
               variant="outlined"
-              sx={{ mr: 1 }}
-            />
-          )}
-          {usingCachedData && (
-            <Chip
-              icon={<CachedIcon />}
-              label="Cached"
-              size="small"
-              variant="outlined"
-              color="info"
-              sx={{ mr: 1 }}
-            />
-          )}
-          {offlineState.isOffline && (
-            <Chip
-              icon={<OfflineIcon />}
-              label="Offline"
-              size="small"
-              variant="outlined"
-              color="warning"
               sx={{ mr: 1 }}
             />
           )}
@@ -619,33 +460,12 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
               </Typography>
             </Box>
             
-            {/* Status indicators */}
-            {errorInfo && !usingCachedData && (
+            {error && (
               <Chip
                 icon={<ErrorIcon />}
                 label="Error"
                 size="small"
                 color="error"
-                variant="outlined"
-                sx={{ ml: 1 }}
-              />
-            )}
-            {usingCachedData && (
-              <Chip
-                icon={<CachedIcon />}
-                label="Cached"
-                size="small"
-                color="info"
-                variant="outlined"
-                sx={{ ml: 1 }}
-              />
-            )}
-            {offlineState.isOffline && (
-              <Chip
-                icon={<OfflineIcon />}
-                label="Offline"
-                size="small"
-                color="warning"
                 variant="outlined"
                 sx={{ ml: 1 }}
               />
@@ -676,7 +496,7 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
         </DialogContent>
 
         <DialogActions sx={{ px: 3, py: 2 }}>
-          {errorInfo && shouldShowRetry(errorInfo) && !offlineState.isOffline && (
+          {error && (
             <Button
               onClick={handleRetry}
               disabled={loading}
@@ -711,7 +531,7 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
           severity="error" 
           sx={{ width: '100%' }}
           action={
-            errorInfo && shouldShowRetry(errorInfo) && !offlineState.isOffline ? (
+            error ? (
               <Button
                 size="small"
                 color="inherit"
@@ -726,12 +546,11 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
             ) : undefined
           }
         >
-          Release Notes: {errorInfo ? createUserFriendlyMessage(errorInfo) : 'Unknown error'}
-          {offlineState.isOffline && ' (Offline mode)'}
+          Release Notes: {error || 'Unknown error'}
         </Alert>
       </Snackbar>
     </>
   );
-};
+});
 
 export default ReleaseNotesModal;

@@ -1,5 +1,6 @@
 import { axiosInstance } from './axiosConfig';
 import { globalErrorHandler, withErrorHandling } from '../utils/errorHandling';
+import { versionCache } from '../utils/versionCache';
 
 /**
  * Interface for the current version response from the backend API
@@ -55,11 +56,21 @@ export const versionApi = {
   /**
    * Gets the current application version from the backend
    * Extracts semantic version from full GitHub tag format
-   * Features comprehensive error handling with retry logic
+   * Features comprehensive error handling with retry logic and caching
    * @param timeout - Request timeout in milliseconds (default: 5000)
+   * @param useCache - Whether to use cached version (default: true)
    * @returns Promise<VersionInfo> - Processed version information
    */
-  async getCurrentVersion(timeout: number = 5000): Promise<VersionInfo> {
+  async getCurrentVersion(timeout: number = 5000, useCache: boolean = true): Promise<VersionInfo> {
+    // Check cache first if enabled
+    if (useCache) {
+      const cachedVersion = versionCache.getCachedVersion();
+      if (cachedVersion) {
+        console.log(`Using cached version: ${cachedVersion.displayVersion}`);
+        return cachedVersion;
+      }
+    }
+
     return withErrorHandling(
       async () => {
         const controller = new AbortController();
@@ -83,7 +94,7 @@ export const versionApi = {
           // Example: "v1.0.38-dev.20251223.1" -> "1.0.38"
           const semanticVersion = extractSemanticVersion(versionData.version);
           
-          return {
+          const versionInfo: VersionInfo = {
             version: semanticVersion,
             displayVersion: `v${semanticVersion}`,
             fullVersion: versionData.version,
@@ -91,6 +102,13 @@ export const versionApi = {
             commitHash: versionData.commitHash,
             environment: detectEnvironment(versionData.version)
           };
+
+          // Cache the version info for future requests
+          if (useCache) {
+            versionCache.setCachedVersion(versionInfo);
+          }
+          
+          return versionInfo;
         } catch (error) {
           clearTimeout(timeoutId);
           
@@ -113,7 +131,8 @@ export const versionApi = {
       {
         service: 'versionApi',
         operation: 'getCurrentVersion',
-        timeout
+        timeout,
+        useCache
       },
       2 // Max 2 retries
     );
@@ -162,6 +181,65 @@ export const versionApi = {
       },
       2 // Max 2 retries
     );
+  },
+
+  /**
+   * Cache management functions
+   */
+  cache: {
+    /**
+     * Gets cached version if available
+     * @returns Cached version info or null
+     */
+    getCached(): VersionInfo | null {
+      return versionCache.getCachedVersion();
+    },
+
+    /**
+     * Invalidates cached version data
+     */
+    invalidate(): void {
+      versionCache.invalidateCache();
+    },
+
+    /**
+     * Checks if version is currently cached
+     * @returns True if valid cache exists
+     */
+    isCached(): boolean {
+      return versionCache.isCached();
+    },
+
+    /**
+     * Gets cache statistics
+     * @returns Cache statistics object
+     */
+    getStats() {
+      return versionCache.getStats();
+    },
+
+    /**
+     * Gets cache hit ratio as percentage
+     * @returns Hit ratio (0-100) or null if no requests made
+     */
+    getHitRatio(): number | null {
+      return versionCache.getHitRatio();
+    },
+
+    /**
+     * Gets remaining cache time in milliseconds
+     * @returns Remaining time or null if no cache
+     */
+    getRemainingTime(): number | null {
+      return versionCache.getRemainingCacheTime();
+    },
+
+    /**
+     * Clears all cache data
+     */
+    clear(): void {
+      versionCache.clearAll();
+    }
   }
 };
 
