@@ -174,13 +174,35 @@ jobs:
           git push origin "$TAG"
           echo "✅ Pushed tag: $TAG"
 
+      - name: Setup Node.js for release notes
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Make release notes script executable
+        run: |
+          chmod +x .github/scripts/generate-release-notes.js
+
       - name: Generate Release Notes
         id: release-notes
+        env:
+          TAG: ${{ steps.create-tag.outputs.tag }}
+          ENV: ${{ steps.create-tag.outputs.environment }}
+          VERSION: ${{ steps.create-tag.outputs.version }}
+          COMPONENT: ${{ steps.create-tag.outputs.component }}
         run: |
-          TAG="${{ steps.create-tag.outputs.tag }}"
-          ENV="${{ steps.create-tag.outputs.environment }}"
+          echo "📝 Generating structured release notes for $TAG..."
           
-          # Get previous tag for this environment
+          # Generate release notes using our enhanced script
+          node .github/scripts/generate-release-notes.js \
+            --version "$TAG" \
+            --environment "$ENV" \
+            --commit-sha "${{ github.sha }}"
+          
+          echo "✅ Release notes generation completed"
+          
+          # Also generate simple release notes for GitHub Release
+          PREV_TAG=""
           if [[ "$ENV" == "production" ]]; then
             PREV_TAG=$(git tag --list "v[0-9]*.[0-9]*.[0-9]" --sort=-v:refname | grep -v "-" | sed -n '2p')
           else
@@ -194,15 +216,15 @@ jobs:
           
           echo "Comparing $PREV_TAG...$TAG"
           
-          # Generate commit log
+          # Generate commit log for GitHub Release
           COMMITS=$(git log $PREV_TAG..HEAD --pretty=format:"- %s (%an)" --no-merges | head -20)
           
-          # Save to file
+          # Save to file for GitHub Release
           cat > release-notes.md <<EOF
           # Release $TAG
           
           **Environment:** $ENV
-          **Component:** ${{ steps.create-tag.outputs.component }}
+          **Component:** $COMPONENT
           **Deployed:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
           **Deployed by:** ${{ github.actor }}
           
@@ -216,6 +238,10 @@ jobs:
           - **Commit:** ${{ github.sha }}
           - **Workflow:** ${{ github.workflow }}
           - **Run:** ${{ github.run_number }}
+          
+          ---
+          
+          *Detailed release notes with categorized changes are available in the application.*
           
           EOF
           
