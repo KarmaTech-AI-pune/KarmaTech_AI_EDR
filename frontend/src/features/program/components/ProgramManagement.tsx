@@ -15,6 +15,7 @@ import { Program } from '../types/types';
 import { programService } from '../services/programService';
 import { ProgramList } from './ProgramList';
 import { ProgramForm, ProgramFormData } from './ProgramForm';
+import { ProgramDeleteDialog } from './ProgramDeleteDialog';
 
 export interface ProgramManagementProps {
   className?: string;
@@ -28,6 +29,9 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ className 
   const [searchTerm, setSearchTerm] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingProgram, setDeletingProgram] = useState<Program | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchPrograms = async () => {
     try {
@@ -87,16 +91,37 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ className 
     }
   };
 
-  const handleDeleteProgram = async (programId: number) => {
+  const handleDeleteClick = (programId: number) => {
+    const program = programs.find(p => p.id === programId);
+    if (program) {
+      setDeletingProgram(program);
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingProgram) return;
+
+    setDeleteLoading(true);
     try {
       setError(null);
-      await programService.deleteProgram(programId);
-      setPrograms(prev => prev.filter(p => p.id !== programId));
+      await programService.deleteProgram(deletingProgram.id);
+      setPrograms(prev => prev.filter(p => p.id !== deletingProgram.id));
       setSuccessMessage('Program deleted successfully');
+      setDeleteDialogOpen(false);
+      setDeletingProgram(null);
     } catch (err: any) {
       console.error('Error deleting program:', err);
       setError(err.message || 'Failed to delete program');
+      setDeleteDialogOpen(false);
+    } finally {
+      setDeleteLoading(false);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setDeletingProgram(null);
   };
 
   const handleEditProgram = (program: Program) => {
@@ -121,8 +146,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ className 
   };
 
   const filteredPrograms = programs.filter(program =>
-    program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    program.description.toLowerCase().includes(searchTerm.toLowerCase())
+    program.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    program.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -198,7 +223,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ className 
         ) : (
           <ProgramList
             programs={filteredPrograms}
-            onProgramDeleted={handleDeleteProgram}
+            onProgramDeleted={handleDeleteClick}
             onEditProgram={handleEditProgram}
             onViewProgram={handleViewProgram}
             canEdit={true}
@@ -226,6 +251,17 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ className 
             mode="edit"
             error={error}
             loading={loading}
+          />
+        )}
+
+        {/* Delete Dialog */}
+        {deletingProgram && (
+          <ProgramDeleteDialog
+            open={deleteDialogOpen}
+            programName={deletingProgram.name}
+            loading={deleteLoading}
+            onConfirm={handleDeleteConfirm}
+            onCancel={handleDeleteCancel}
           />
         )}
 

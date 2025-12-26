@@ -1,12 +1,12 @@
 import React from 'react';
+import { ProgramContainer } from '../components';
 
-const Program: React.FC = () => {
-  return (
-    <div>
-      <h1>Program Management</h1>
-      <p>This is the Program Management page.</p>
-    </div>
-  );
+/**
+ * Program Page - Uses the new smart/dumb architecture
+ * All logic is in ProgramContainer, this is just the page wrapper
+ */
+const ProgramPage: React.FC = () => {
+  return <ProgramContainer />;
 };
 
-export default Program;
+export default ProgramPage;
