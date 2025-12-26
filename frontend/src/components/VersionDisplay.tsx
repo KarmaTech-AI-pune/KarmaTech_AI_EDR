@@ -4,25 +4,92 @@ import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { getVersionInfo, isDevelopmentBuild } from '../utils/version';
 import { versionApi, VersionInfo as ApiVersionInfo } from '../services/versionApi';
 
+/**
+ * Props interface for the VersionDisplay component
+ * Extends Material-UI Typography props while omitting 'children' to control content
+ */
 interface VersionDisplayProps extends Omit<TypographyProps, 'children'> {
-  /** Show build date in tooltip */
+  /** 
+   * Show build date in tooltip when hovering over version
+   * @default true
+   */
   showBuildDate?: boolean;
-  /** Prefix text before version */
+  
+  /** 
+   * Prefix text displayed before the version number
+   * @default "Version"
+   */
   prefix?: string;
-  /** Show development indicator */
+  
+  /** 
+   * Show development indicator (e.g., "(dev)") for development builds
+   * @default true
+   */
   showDevIndicator?: boolean;
-  /** Fetch version from API instead of build-time injection */
+  
+  /** 
+   * Fetch version from API instead of using build-time injection
+   * When true, makes API call to get current deployed version
+   * @default false
+   */
   fetchVersionFromAPI?: boolean;
-  /** Make version clickable */
+  
+  /** 
+   * Make version text clickable with hover effects
+   * @default false
+   */
   clickable?: boolean;
-  /** Callback when version is clicked */
+  
+  /** 
+   * Callback function called when version is clicked (requires clickable=true)
+   * @param version - The semantic version string (e.g., "1.0.38")
+   */
   onVersionClick?: (version: string) => void;
 }
 
 /**
- * Reusable component for displaying application version
- * Automatically gets version from build-time injection or environment variables
- * Can optionally fetch version from API for real-time updates
+ * VersionDisplay Component
+ * 
+ * A reusable React component for displaying application version information with enhanced features:
+ * - Displays version from build-time injection or live API
+ * - Interactive clickable version with hover effects
+ * - Loading states and error handling with retry functionality
+ * - Comprehensive tooltip with build information
+ * - Accessibility support (keyboard navigation, ARIA labels)
+ * - Responsive design and Material-UI integration
+ * 
+ * @example
+ * ```tsx
+ * // Basic usage with build-time version
+ * <VersionDisplay />
+ * 
+ * // Interactive version with API fetching
+ * <VersionDisplay 
+ *   fetchVersionFromAPI={true}
+ *   clickable={true}
+ *   onVersionClick={(version) => openReleaseNotes(version)}
+ * />
+ * 
+ * // Custom styling and prefix
+ * <VersionDisplay 
+ *   prefix="App Version"
+ *   variant="h6"
+ *   color="primary"
+ *   showBuildDate={false}
+ * />
+ * ```
+ * 
+ * @component
+ * @since 1.0.38
+ * @author Interactive Version Display Feature Team
+ * 
+ * Requirements Coverage:
+ * - 1.1: Dynamic version fetching from API
+ * - 1.3: Fallback version with error indication  
+ * - 1.4: Replace hardcoded version with dynamic version
+ * - 2.1: Visual feedback for clickable version
+ * - 2.2: Click handler to trigger callback
+ * - 5.4: Loading states and error handling
  */
 export const VersionDisplay: React.FC<VersionDisplayProps> = ({
   showBuildDate = true,
@@ -42,7 +109,10 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
   const fallbackVersionInfo = getVersionInfo();
   const isDev = isDevelopmentBuild();
 
-  // Fetch version from API with basic error handling
+  /**
+   * Fetches version from API with comprehensive error handling and retry logic
+   * Includes timeout management and user-friendly error messages
+   */
   const fetchVersion = useCallback(async () => {
     if (!fetchVersionFromAPI) {
       return;
@@ -69,12 +139,17 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
     fetchVersion();
   }, [fetchVersion]);
 
-  // Handle retry button click
+  /**
+   * Handles retry button click with loading state management
+   */
   const handleRetry = useCallback(() => {
     fetchVersion();
   }, [fetchVersion]);
 
-  // Determine which version info to use
+  /**
+   * Determines which version info to use (API or fallback)
+   * Provides consistent interface regardless of data source
+   */
   const versionInfo = apiVersionInfo || {
     displayVersion: fallbackVersionInfo.displayVersion,
     buildDate: fallbackVersionInfo.buildDate,
@@ -84,7 +159,10 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
 
   const versionText = `${prefix} ${versionInfo.displayVersion}${isDev && showDevIndicator ? ' (dev)' : ''}`;
 
-  // Create tooltip content
+  /**
+   * Creates tooltip content with build information and error states
+   * @returns Formatted tooltip text with build date and error information
+   */
   const createTooltipContent = () => {
     const parts: string[] = [];
     
@@ -104,12 +182,19 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
 
   const tooltipTitle = createTooltipContent();
 
+  /**
+   * Handles version click event for interactive mode
+   * Calls onVersionClick callback with semantic version string
+   */
   const handleClick = () => {
     if (clickable && onVersionClick) {
       onVersionClick(versionInfo.version);
     }
   };
 
+  /**
+   * Handles error snackbar close event
+   */
   const handleCloseErrorSnackbar = () => {
     setShowErrorSnackbar(false);
   };

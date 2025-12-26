@@ -1,52 +1,146 @@
+/**
+ * Version API Service Module
+ * 
+ * Provides comprehensive version information management with:
+ * - Current version fetching from backend API
+ * - Version health monitoring and status checks
+ * - Intelligent caching with configurable expiration
+ * - Semantic version extraction from GitHub tags
+ * - Environment detection (dev, staging, prod)
+ * - Comprehensive error handling with retry logic
+ * - Performance optimization with timeout management
+ * 
+ * @example
+ * ```typescript
+ * // Get current version with caching
+ * const versionInfo = await versionApi.getCurrentVersion();
+ * console.log(versionInfo.displayVersion); // "v1.0.38"
+ * 
+ * // Get version without cache
+ * const freshVersion = await versionApi.getCurrentVersion(5000, false);
+ * 
+ * // Check version health
+ * const health = await versionApi.getVersionHealth();
+ * 
+ * // Cache management
+ * versionApi.cache.invalidate();
+ * const hitRatio = versionApi.cache.getHitRatio();
+ * ```
+ * 
+ * @module versionApi
+ * @since 1.0.38
+ * @author Interactive Version Display Feature Team
+ * 
+ * Requirements Coverage:
+ * - 4.1: API endpoint for current version
+ * - 4.3: Semantic version extraction from GitHub tags
+ * - 4.4: Structured JSON response handling
+ * - 4.5: Comprehensive error handling
+ * - 5.1: Performance caching for repeated requests
+ * - 5.3: Cache management and invalidation
+ */
+
 import { axiosInstance } from './axiosConfig';
 import { withErrorHandling } from '../utils/errorHandling';
 import { versionCache } from '../utils/versionCache';
 
 /**
  * Interface for the current version response from the backend API
+ * Maps to the VersionController response structure in the backend
  */
 export interface CurrentVersionResponse {
+  /** Indicates if the API request was successful */
   success: boolean;
+  
+  /** Version data payload */
   data: {
+    /** Full version string from GitHub tag (e.g., "v1.0.38-dev.20251223.1") */
     version: string;
+    
+    /** ISO date string of when the build was created */
     buildDate: string;
+    
+    /** Git commit hash for the build */
     commitHash: string;
+    
+    /** .NET assembly version */
     assemblyVersion: string;
+    
+    /** File version information */
     fileVersion: string;
+    
+    /** Product version information */
     productVersion: string;
   };
+  
+  /** Timestamp when the response was generated */
   timestamp: string;
 }
 
 /**
- * Interface for version health check response
+ * Interface for version health check response from the backend API
+ * Provides comprehensive system health and version information
  */
 export interface VersionHealthResponse {
+  /** Overall system status (e.g., "Healthy", "Degraded", "Unhealthy") */
   status: string;
+  
+  /** Current deployed version */
   version: string;
+  
+  /** Git commit hash */
   commitHash: string;
+  
+  /** Build creation date */
   buildDate: string;
+  
+  /** Deployment environment (dev, staging, prod) */
   environment: string;
+  
+  /** System uptime duration */
   uptime: string;
+  
+  /** Response generation timestamp */
   timestamp: string;
+  
+  /** Individual health check results */
   checks: {
+    /** API health status */
     api: string;
+    
+    /** Memory usage status */
     memory: string;
+    
+    /** Disk space status */
     disk: string;
+    
+    /** Version file accessibility status */
     version_file: string;
   };
 }
 
 /**
- * Processed version information for frontend use
+ * Processed version information optimized for frontend use
+ * Provides clean, consistent interface regardless of backend response format
  */
 export interface VersionInfo {
-  version: string;           // Semantic version only (e.g., "1.0.38")
-  displayVersion: string;    // Formatted for UI display (e.g., "v1.0.38")
-  fullVersion: string;       // Complete version from backend
-  buildDate: string;         // ISO date string
-  commitHash: string;        // Git commit hash
-  environment: string;       // Environment (dev, staging, prod)
+  /** Semantic version only (e.g., "1.0.38") - extracted from full GitHub tag */
+  version: string;
+  
+  /** Formatted version for UI display (e.g., "v1.0.38") */
+  displayVersion: string;
+  
+  /** Complete version string from backend (e.g., "v1.0.38-dev.20251223.1") */
+  fullVersion: string;
+  
+  /** ISO date string of build creation */
+  buildDate: string;
+  
+  /** Git commit hash for traceability */
+  commitHash: string;
+  
+  /** Detected environment (dev, staging, prod) */
+  environment: string;
 }
 
 /**

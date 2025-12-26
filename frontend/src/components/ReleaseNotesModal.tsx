@@ -83,24 +83,74 @@ const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
 };
 
 /**
- * Gets fallback release notes for a version
+ * Gets fallback release notes for a version when API is unavailable
+ * Provides meaningful content to users even when backend is down
+ * @param version - Version string to get fallback notes for
+ * @returns ProcessedReleaseNotes object or null if no fallback available
  */
 function getFallbackReleaseNotes(version: string): ProcessedReleaseNotes | null {
   const cleanVersion = version.startsWith('v') ? version.substring(1) : version;
   return FALLBACK_RELEASE_NOTES[cleanVersion] || null;
 }
 
+/**
+ * Props interface for the ReleaseNotesModal component
+ */
 interface ReleaseNotesModalProps {
-  /** Version to display release notes for */
+  /** 
+   * Version to display release notes for (e.g., "1.0.38" or "v1.0.38")
+   * The component will clean the version string automatically
+   */
   version: string;
-  /** Whether the modal is open */
+  
+  /** 
+   * Whether the modal dialog is currently open
+   */
   isOpen: boolean;
-  /** Callback when modal should be closed */
+  
+  /** 
+   * Callback function called when modal should be closed
+   * Triggered by close button, escape key, or clicking outside modal
+   */
   onClose: () => void;
 }
 
 /**
- * ReleaseNotesModal component for displaying version-specific release notes
+ * ReleaseNotesModal Component
+ * 
+ * A comprehensive modal dialog for displaying version-specific release notes with:
+ * - Material-UI Dialog layout with responsive design (mobile/desktop)
+ * - Organized content sections (Features, Bug Fixes, Improvements, Breaking Changes)
+ * - Loading states with skeleton loaders and progress indicators
+ * - Error handling with retry functionality and fallback content
+ * - Accessibility support (keyboard navigation, ARIA labels, screen readers)
+ * - Caching integration for performance optimization
+ * - Fallback release notes when API is unavailable
+ * 
+ * @example
+ * ```tsx
+ * const [isModalOpen, setIsModalOpen] = useState(false);
+ * const [currentVersion, setCurrentVersion] = useState('1.0.38');
+ * 
+ * <ReleaseNotesModal
+ *   version={currentVersion}
+ *   isOpen={isModalOpen}
+ *   onClose={() => setIsModalOpen(false)}
+ * />
+ * ```
+ * 
+ * @component
+ * @since 1.0.38
+ * @author Interactive Version Display Feature Team
+ * 
+ * Requirements Coverage:
+ * - 3.1: Modal dialog with version number in header
+ * - 3.2: Organized sections for different change types
+ * - 3.3: Brief descriptions with commit references
+ * - 3.4: Close functionality and loading states
+ * - 3.5: Responsive design for mobile and desktop
+ * - 5.2: Performance optimization with lazy loading
+ * - 5.4: Comprehensive error handling with retry
  */
 const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   version,
@@ -116,7 +166,10 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   const [retryCount, setRetryCount] = useState<number>(0);
   const [showErrorSnackbar, setShowErrorSnackbar] = useState<boolean>(false);
 
-  // Fetch release notes when modal opens
+  /**
+   * Fetches release notes from API with comprehensive error handling
+   * Includes fallback to hardcoded release notes and retry logic
+   */
   const fetchReleaseNotes = useCallback(async () => {
     if (!version || !isOpen) {
       return;
