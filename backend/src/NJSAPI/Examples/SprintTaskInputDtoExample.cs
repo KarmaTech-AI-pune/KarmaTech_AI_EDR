@@ -10,7 +10,7 @@ namespace NJSAPI.Examples
         {
             return new SprintTaskInputDto
             {
-                Taskid = "1",
+                Taskid = 1,
                 TenantId = 1,
                 Taskkey = "PROJ-FEAT-002",
                 TaskTitle = "Design User Profile Page",

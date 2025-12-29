@@ -65,7 +65,7 @@ public class Program
         });
         
         
-        builder.WebHost.UseKestrel((_, options) => { options.AllowSynchronousIO = true; });
+        //builder.WebHost.UseKestrel((_, options) => { options.AllowSynchronousIO = true; });
         builder.Services.AddHealthChecks();
         builder.Services.AddCompression();
         

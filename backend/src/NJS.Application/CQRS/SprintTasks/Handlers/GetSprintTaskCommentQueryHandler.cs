@@ -25,10 +25,10 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
 
         public async Task<List<SprintTaskCommentDto>> Handle(GetSprintTaskCommentQuery request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(request.TaskId))
+            if (request.TaskId <= 0)
             {
-                _logger.LogError("TaskId is null or empty in the request.");
-                throw new ArgumentException("TaskId cannot be null or empty.");
+                _logger.LogError("TaskId is invalid in the request.");
+                throw new ArgumentException("TaskId must be greater than zero.");
             }
 
             _logger.LogInformation("Attempting to retrieve comments for SprintTask with ID: {TaskId}", request.TaskId);
