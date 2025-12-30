@@ -44,28 +44,29 @@ namespace NJSAPI.Controllers
             }
         }
 
-        [HttpGet("{id}")]
-        [ProducesResponseType(typeof(CashflowDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<CashflowDto>> GetCashflow(int id)
+
+        [HttpGet("cumulative")]
+        public async Task<ActionResult<List<CumulativeCashflowDto>>> GetCumulativeCashflows(int projectId)
         {
-            try
-            {
-                var query = new GetCashflowQuery { Id = id };
-                var cashflow = await _mediator.Send(query);
+            var query = new GetCumulativeCashflowsQuery(projectId);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
 
-                if (cashflow == null)
-                {
-                    return NotFound($"Cashflow with ID {id} not found.");
-                }
+        [HttpGet("financial-summary")]
+        public async Task<ActionResult<FinancialSummaryDto>> GetFinancialSummary(int projectId)
+        {
+            var query = new GetFinancialSummaryQuery(projectId);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
 
-                return Ok(cashflow);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving cashflow {id}.", id);
-                return StatusCode(500, new { message = $"An error occurred while retrieving cashflow {id}.", error = ex.Message });
-            }
+        [HttpGet("payment-milestones")]
+        public async Task<ActionResult<List<PaymentMilestoneDto>>> GetPaymentMilestones(int projectId)
+        {
+            var query = new GetPaymentMilestonesQuery(projectId);
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }

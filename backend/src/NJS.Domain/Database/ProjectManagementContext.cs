@@ -103,7 +103,7 @@ namespace NJS.Domain.Database
         public DbSet<CheckReview> CheckReviews { get; set; }
         public DbSet<ChangeControl> ChangeControls { get; set; }
         public DbSet<ProjectClosure> ProjectClosures { get; set; }
-        public DbSet<Cashflow> Cashflows { get; set; }
+        
 
         // PM Workflow entities
         public DbSet<PMWorkflowStatus> PMWorkflowStatuses { get; set; }
@@ -1294,12 +1294,7 @@ namespace NJS.Domain.Database
                 .HasForeignKey(g => g.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configure Cashflow Cascade Delete
-            modelBuilder.Entity<Cashflow>()
-                .HasOne<Project>()
-                .WithMany()
-                .HasForeignKey(c => c.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
+
 
             // Configure ProjectResource Cascade Delete
             modelBuilder.Entity<ProjectResource>()
