@@ -26,20 +26,5 @@ namespace NJS.Repositories.Repositories
         {
             return await _context.Cashflows.Where(c => c.ProjectId == projectId).ToListAsync();
         }
-
-        public async Task AddAsync(Cashflow cashflow)
-        {
-            await _context.Cashflows.AddAsync(cashflow);
-        }
-
-        public async Task UpdateAsync(Cashflow cashflow)
-        {
-            _context.Cashflows.Update(cashflow);
-        }
-
-        public async Task DeleteAsync(Cashflow cashflow)
-        {
-            _context.Cashflows.Remove(cashflow);
-        }
     }
 }

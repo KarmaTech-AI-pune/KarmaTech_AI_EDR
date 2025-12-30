@@ -9,8 +9,5 @@ namespace NJS.Repositories.Interfaces
     {
         Task<Cashflow> GetByIdAsync(int id);
         Task<IEnumerable<Cashflow>> GetAllAsync(int projectId);
-        Task AddAsync(Cashflow cashflow);
-        Task UpdateAsync(Cashflow cashflow);
-        Task DeleteAsync(Cashflow cashflow);
     }
 }
