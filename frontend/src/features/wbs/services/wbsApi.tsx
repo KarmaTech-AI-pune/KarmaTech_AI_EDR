@@ -55,7 +55,7 @@ export const WBSStructureAPI = {
             monthlyHours.push({
               Year: parseInt(year),
               Month: month,
-              PlannedHours: hours
+              PlannedHours: Number(hours)
             });
           });
         });
@@ -93,7 +93,7 @@ export const WBSStructureAPI = {
           taskType: row.taskType !== undefined ? row.taskType : (row.title.toLowerCase().includes('odc') ? TaskType.ODC : TaskType.Manpower), // Use taskType if set, otherwise infer from title
           assignedUserId: isOdcTask ? null : row.assignedUserId, // Use assignedUserId from row
           assignedUserName: isOdcTask ? null : row.name, // Use row.name as assignedUserName
-          costRate: row.costRate,
+          costRate: Number(row.costRate),
           resourceName: isOdcTask ? row.name : null, // Use row.name as resourceName for ODC tasks
           resourceUnit: isOdcTask ? (row.unit || "") : (row.unit || ""),
           resourceRoleId: row.resource_role, // Add ResourceRoleId to the payload
