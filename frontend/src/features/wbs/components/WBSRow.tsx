@@ -25,7 +25,7 @@ const unitOptions = [
   { value: 'ls', label: 'LS' },
   { value: 'km', label: 'Km' },
   { value: 'day', label: 'Day' },
-  { value: 'month', label: 'Month' },
+  { value: 'hours', label: 'Hours' },
   { value: 'year', label: 'Year' }
 ];
 
@@ -273,7 +273,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
       <TableCell>
         {row.level === 3 ? (
           <StyledSelect
-            value={formType === 'manpower' ? 'month' : (row.unit || '')}
+            value={formType === 'manpower' ? 'hours' : (row.unit || '')}
             onChange={(e: SelectChangeEvent<unknown>) => handleUnitChange(row.id, e.target.value as string)}
             size="small"
             sx={{ bgcolor: 'background.paper' }}

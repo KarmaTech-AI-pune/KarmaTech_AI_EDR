@@ -95,7 +95,7 @@ export const useWBSFormLogic = ({
       totalCost: 0,
       parentId: parentId || null,
       taskType: formType === 'manpower' ? TaskType.Manpower : TaskType.ODC,
-      unit: formType === 'manpower' ? 'month' : '',
+      unit: formType === 'manpower' ? 'hours' : '',
       resource_role: null,
       resource_role_name: null,
       wbsOptionId: null
