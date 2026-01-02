@@ -6,6 +6,8 @@ import { useWBSData } from '../hooks/useWBSData';
 import { useWBSFormLogic } from '../hooks/useWBSFormLogic';
 import { useWBSTotals } from '../hooks/useWBSTotals';
 import { useProject } from '../../../context/ProjectContext';
+import { UserWithRole, projectManagementAppContextType } from '../../../types';
+import { projectManagementAppContext } from '../../../App';
 
 // Data Context - Read-only data
 interface WBSDataContextType {
@@ -15,24 +17,25 @@ interface WBSDataContextType {
   months: string[];
   roles: resourceRole[];
   employees: Employee[];
-  
+
   // Options
   level1Options: WBSOption[];
   level2OptionsMap: { [key: string]: WBSOption[] };
   level3OptionsMap: { [key: string]: WBSOption[] };
-  
+
   // Config
   formType: 'manpower' | 'odc';
   editMode: boolean;
-  
+
   // Calculated
   totalHours: number;
   totalCost: number;
-  
+
   // State
   loading: boolean;
   wbsHeaderId: number;
-  
+  currentUser: UserWithRole | null;
+
   // Utility
   getProjectStartDate: () => string;
 }
@@ -41,13 +44,13 @@ interface WBSDataContextType {
 interface WBSActionsContextType {
   // Edit mode
   onEditModeToggle: () => void;
-  
+
   // Row operations
   addNewRow: (level: 1 | 2 | 3, parentId?: string) => void;
   handleDeleteClick: (id: string) => void;
   handleDeleteCancel: () => void;
   handleDeleteConfirm: () => Promise<void>;
-  
+
   // Field updates
   handleLevelChange: (id: string, value: string) => void;
   handleRoleChange: (id: string, roleId: string) => void;
@@ -57,24 +60,24 @@ interface WBSActionsContextType {
   handleHoursChange: (id: string, month: string, value: string) => void;
   handleODCChange: (id: string, value: string) => void;
   handleResourceRoleChange: (id: string, value: string) => void;
-  
+
   // Month operations
   addNewMonth: () => void;
-  
+
   // State setters (needed by parent component)
   setManpowerRows: React.Dispatch<React.SetStateAction<WBSRowData[]>>;
   setOdcRows: React.Dispatch<React.SetStateAction<WBSRowData[]>>;
   setMonths: React.Dispatch<React.SetStateAction<string[]>>;
   setLevel3OptionsMap: React.Dispatch<React.SetStateAction<{ [key: string]: WBSOption[] }>>;
-  
+
   // Snackbar
   setSnackbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setSnackbarMessage: React.Dispatch<React.SetStateAction<string>>;
   setSnackbarSeverity: React.Dispatch<React.SetStateAction<'success' | 'error'>>;
-  
+
   // Reload
   reloadWBSData: () => void;
-  
+
   // Delete dialog state
   deleteDialog: {
     open: boolean;
@@ -111,7 +114,8 @@ export const WBSProvider: React.FC<WBSProviderProps> = ({
   onEditModeToggle,
 }) => {
   const { projectId } = useProject();
-  
+  const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
+
   // Use existing hooks
   const dataHook = useWBSData({ formType });
   const totalsHook = useWBSTotals({
@@ -119,7 +123,7 @@ export const WBSProvider: React.FC<WBSProviderProps> = ({
     odcRows: dataHook.odcRows,
     formType,
   });
-  
+
   const logicHook = useWBSFormLogic({
     projectId,
     formType,
@@ -158,6 +162,7 @@ export const WBSProvider: React.FC<WBSProviderProps> = ({
     totalCost: totalsHook.calculatedTotalCost,
     loading: dataHook.loading,
     wbsHeaderId: dataHook.wbsHeaderId,
+    currentUser: context?.currentUser || null,
     getProjectStartDate: dataHook.getProjectStartDate,
   };
 

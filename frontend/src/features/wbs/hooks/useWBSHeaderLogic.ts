@@ -85,5 +85,6 @@ export const useWBSHeaderLogic = (props: UseWBSHeaderLogicProps) => {
     addNewMonth,
     onEditModeToggle,
     handleStatusUpdate,
+    isUnderApproval: [2, 4, 6].includes(statusId) || ["Sent for Review", "Sent for Approval", "Approved"].includes(status),
   };
 };

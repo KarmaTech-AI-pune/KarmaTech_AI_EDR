@@ -139,31 +139,31 @@ export const useWBSFormLogic = ({
       const currentRows = formType === 'manpower' ? manpowerRows : odcRows;
       const setRowsFunc = formType === 'manpower' ? setManpowerRows : setOdcRows;
       const rowToDelete = currentRows.find(r => r.id === deleteDialog.rowId);
-      
+
       // Check if this is a newly added row (timestamp ID = 13 digits) or an existing row from backend
       // Timestamp IDs are created with Date.now().toString() which gives exactly 13 digits
       const isNewRow = /^\d{13}$/.test(deleteDialog.rowId || '');
-      
+
       if (isNewRow || !projectId) {
         // For newly added rows that haven't been saved yet, just remove from local state
         // Also remove child rows if any
         const rowsToKeep = currentRows.filter(r => {
           // Remove the row itself
           if (r.id === deleteDialog.rowId) return false;
-          
+
           // Remove direct children (level 2 if deleting level 1, level 3 if deleting level 2)
           if (r.parentId === deleteDialog.rowId) return false;
-          
+
           // Remove grandchildren (level 3 if deleting level 1)
           if (rowToDelete?.level === 1) {
             const level2Children = currentRows.filter(row => row.parentId === deleteDialog.rowId && row.level === 2);
             const level2ChildIds = level2Children.map(row => row.id);
             if (level2ChildIds.includes(r.parentId || '')) return false;
           }
-          
+
           return true;
         });
-        
+
         setRowsFunc(rowsToKeep);
         setSnackbarMessage('WBS task removed successfully!');
         setSnackbarSeverity('success');
@@ -291,7 +291,7 @@ export const useWBSFormLogic = ({
           return {
             ...r,
             costRate: 0,
-            totalCost: r.odc
+            totalCost: Number(r.odc || 0)
           };
         }
         return r;
@@ -320,15 +320,15 @@ export const useWBSFormLogic = ({
       return;
     }
 
-    const newRate = parseFloat(value);
-    if (isNaN(newRate)) return;
+    const newRate = value; // Keep as string to preserve trailing dots
+    const numericRate = parseFloat(value) || 0;
 
     setRowsFunc(prevRows => prevRows.map(r => {
       if (r.id === rowId) {
         return {
           ...r,
           costRate: newRate,
-          totalCost: (r.totalHours * newRate) + r.odc
+          totalCost: (r.totalHours * numericRate) + Number(r.odc)
         };
       }
       return r;
@@ -341,7 +341,7 @@ export const useWBSFormLogic = ({
       return;
     }
 
-    const hours = value === '' ? 0 : Math.min(Math.max(parseInt(value) || 0, 0));
+    const hoursValue = value; // Keep as string for input
 
     setRowsFunc(prevRows => prevRows.map(row => {
       if (row.id === rowId) {
@@ -351,12 +351,15 @@ export const useWBSFormLogic = ({
           ...row.plannedHours,
           [year]: {
             ...(row.plannedHours[year] || {}),
-            [monthName]: hours
+            [monthName]: hoursValue // Use string for input state
           }
         };
-        const totalHours = Object.values(newPlannedHours)
+        const totalHours: number = Object.values(newPlannedHours)
           .flatMap(yearHours => Object.values(yearHours))
-          .reduce((sum, h) => sum + h, 0);
+          .reduce((sum: number, h) => sum + Number(h || 0), 0);
+
+        const currentCostRate: number = Number(row.costRate || 0);
+        const currentOdc = Number(row.odc || 0);
 
         if (formType === 'odc') {
           return {
@@ -364,17 +367,17 @@ export const useWBSFormLogic = ({
             plannedHours: newPlannedHours,
             totalHours,
             odcHours: totalHours,
-            odc: totalHours * row.costRate,
-            totalCost: totalHours * row.costRate
-          };
+            odc: (totalHours * currentCostRate).toString(),
+            totalCost: totalHours * currentCostRate
+          } as WBSRowData;
         }
 
         return {
           ...row,
           plannedHours: newPlannedHours,
           totalHours,
-          totalCost: (totalHours * row.costRate) + row.odc
-        };
+          totalCost: (totalHours * currentCostRate) + currentOdc
+        } as WBSRowData;
       }
       return row;
     }));
@@ -386,14 +389,15 @@ export const useWBSFormLogic = ({
     }
 
     const setRowsFunc = setManpowerRows;
-    const odc = value === '' ? 0 : Math.max(parseFloat(value) || 0, 0);
+    const odcValue = value;
+    const numericOdc = value === '' ? 0 : Math.max(parseFloat(value) || 0, 0);
 
     setRowsFunc(prevRows => prevRows.map(row => {
       if (row.id === rowId) {
         return {
           ...row,
-          odc,
-          totalCost: (row.totalHours * row.costRate) + odc
+          odc: odcValue,
+          totalCost: (row.totalHours * Number(row.costRate || 0)) + numericOdc
         };
       }
       return row;
@@ -436,14 +440,14 @@ export const useWBSFormLogic = ({
     if (changedRow && changedRow.level === 2 && value) {
       try {
         const formTypeValue = formType === 'odc' ? 1 : 0;
-        
+
         // Find the level 2 option by value to get its ID from the map
         let level2Option: WBSOption | undefined;
         for (const key in level2OptionsMap) {
           level2Option = level2OptionsMap[key].find(opt => opt.value === value);
           if (level2Option) break;
         }
-        
+
         if (level2Option) {
           const level3Options = await WBSOptionsAPI.getLevel3Options(level2Option.id, formTypeValue);
 
