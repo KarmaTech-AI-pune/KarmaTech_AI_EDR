@@ -64,7 +64,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IProgramRepository, ProgramRepository>();
 
             services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
-            services.AddScoped<ICashflowRepository, CashflowRepository>();
+
             services.AddScoped<IMeasurementUnitRepository, MeasurementUnitRepository>();
             services.AddScoped<IProjectScheduleRepository, ProjectScheduleRepository>();
 

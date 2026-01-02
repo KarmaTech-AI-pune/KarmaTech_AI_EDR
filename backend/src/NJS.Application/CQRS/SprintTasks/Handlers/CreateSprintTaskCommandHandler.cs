@@ -13,7 +13,7 @@ using NJS.Application.Dtos; // Ensure this is included for DTOs
 
 namespace NJS.Application.CQRS.SprintTasks.Handlers
 {
-    public class CreateSprintTaskCommandHandler : IRequestHandler<CreateSprintTaskCommand, string>
+    public class CreateSprintTaskCommandHandler : IRequestHandler<CreateSprintTaskCommand, int>
     {
         private readonly ProjectManagementContext _context;
         private readonly ILogger<CreateSprintTaskCommandHandler> _logger;
@@ -24,7 +24,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<string> Handle(CreateSprintTaskCommand request, CancellationToken cancellationToken)
+        public async Task<int> Handle(CreateSprintTaskCommand request, CancellationToken cancellationToken)
         {
             var sprintTaskDto = request.SprintTask;
 
@@ -45,25 +45,11 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 }
             }
 
-            // Generate Taskid if not provided (e.g., "T-101")
-            if (string.IsNullOrWhiteSpace(sprintTaskDto.Taskid))
-            {
-                var lastTaskId = await _context.SprintTasks
-                                                .OrderByDescending(t => t.Taskid)
-                                                .Select(t => t.Taskid)
-                                                .FirstOrDefaultAsync(cancellationToken);
-
-                int nextId = 1;
-                if (lastTaskId != null && lastTaskId.StartsWith("T-") && int.TryParse(lastTaskId.Substring(2), out int numId))
-                {
-                    nextId = numId + 1;
-                }
-                sprintTaskDto.Taskid = $"T-{nextId}";
-            }
+            // Taskid is identity, no manual generation needed.
 
             var sprintTask = new SprintTask
             {
-                Taskid = sprintTaskDto.Taskid,
+                // Taskid = sprintTaskDto.Taskid, // Identity column
                 TenantId = sprintTaskDto.TenantId,
                 Taskkey = sprintTaskDto.Taskkey,
                 TaskTitle = sprintTaskDto.TaskTitle,

@@ -48,7 +48,12 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                                              SubtaskcreatedDate = st.SubtaskcreatedDate,
                                              SubtaskupdatedDate = st.SubtaskupdatedDate,
                                              SubtaskType = st.SubtaskType,
-                                             Taskid = st.Taskid
+                                             Taskid = st.Taskid,
+                                             DisplayOrder = st.DisplayOrder,
+                                             EstimatedHours = st.EstimatedHours,
+                                             ActualHours = st.ActualHours,
+                                             StartedAt = st.StartedAt,
+                                             CompletedAt = st.CompletedAt
                                          })
                                          .ToListAsync(cancellationToken);
 
