@@ -27,7 +27,6 @@ export const formatToIndianNumber = (num: number | null | undefined): string => 
 
   // Format according to Indian system
   let formatted = '';
-  let lastCommaIndex = 0;
 
   // Process from right to left
   for (let i = integerPart.length - 1; i >= 0; i--) {
