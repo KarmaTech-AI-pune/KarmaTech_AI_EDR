@@ -65,25 +65,25 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
   // Normalize the workflow status
   const normalizedStatus = useMemo(() => {
     const statusLower = status?.toLowerCase() || '';
-    
+
     if (statusLower.includes('initial')) return WorkflowStatus.INITIAL;
     if (statusLower.includes('sent for review')) return WorkflowStatus.SENT_FOR_REVIEW;
     if (statusLower.includes('review changes')) return WorkflowStatus.REVIEW_CHANGES;
     if (statusLower.includes('sent for approval')) return WorkflowStatus.SENT_FOR_APPROVAL;
     if (statusLower.includes('approval changes')) return WorkflowStatus.APPROVAL_CHANGES;
     if (statusLower.includes('approved')) return WorkflowStatus.APPROVED;
-    
+
     // Default to initial if no match
     return WorkflowStatus.INITIAL;
-  }, [status,statusId]);
+  }, [status, statusId]);
 
   // Extract permission checks using memoization to avoid recalculating
   const userPermissions = useMemo(() => {
     // Check permissions
     const permissions = context?.currentUser?.roleDetails?.permissions || [];
     const canSubmitForReview = permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_REVIEW);
-    const canSubmitForApproval = permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_APPROVAL) || 
-                                permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL);
+    const canSubmitForApproval = permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_APPROVAL) ||
+      permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL);
     const canApprove = permissions.includes(PermissionType.APPROVE_PROJECT);
 
     return {
@@ -100,18 +100,22 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
       return;
     }
 
-    // Simplified button visibility logic using the normalized status and permissions
+    // Simplified button visibility logic using the normalized status, permissions, and role
+    const userRole = context?.currentUser?.roleDetails?.name;
+
     switch (normalizedStatus) {
       case WorkflowStatus.INITIAL:
       case WorkflowStatus.REVIEW_CHANGES:
-        setCanShowButton(userPermissions.canSubmitForReview);
+        setCanShowButton(userRole === 'Project Manager' && userPermissions.canSubmitForReview);
         break;
       case WorkflowStatus.SENT_FOR_REVIEW:
+        setCanShowButton(userRole === 'Senior Project Manager' && userPermissions.canSubmitForApproval);
+        break;
       case WorkflowStatus.APPROVAL_CHANGES:
-        setCanShowButton(userPermissions.canSubmitForApproval);
+        setCanShowButton(userRole === 'Senior Project Manager' && userPermissions.canSubmitForApproval);
         break;
       case WorkflowStatus.SENT_FOR_APPROVAL:
-        setCanShowButton(userPermissions.canApprove);
+        setCanShowButton(userRole === 'Regional Manager' && userPermissions.canApprove);
         break;
       case WorkflowStatus.APPROVED:
         setCanShowButton(false);
@@ -119,7 +123,7 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
       default:
         setCanShowButton(false);
     }
-  }, [normalizedStatus, userPermissions, entityId]);
+  }, [normalizedStatus, userPermissions, entityId, context?.currentUser]);
 
   const handleWorkflowClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -171,8 +175,8 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
             action: "Reject"
           });
           if (onStatusUpdate) {
-            onStatusUpdate(normalizedStatus === WorkflowStatus.SENT_FOR_APPROVAL 
-              ? WorkflowStatus.APPROVAL_CHANGES 
+            onStatusUpdate(normalizedStatus === WorkflowStatus.SENT_FOR_APPROVAL
+              ? WorkflowStatus.APPROVAL_CHANGES
               : WorkflowStatus.REVIEW_CHANGES);
           }
           break;
@@ -199,7 +203,7 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
     }
   };
 
-  
+
   // Get button text based on current status
   const getWorkflowButtonText = () => {
 
@@ -208,8 +212,9 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
       case WorkflowStatus.REVIEW_CHANGES:
         return "Send for Review";
       case WorkflowStatus.SENT_FOR_REVIEW:
-      case WorkflowStatus.APPROVAL_CHANGES:
         return "Decide Review";
+      case WorkflowStatus.APPROVAL_CHANGES:
+        return "Send for Approval";
       case WorkflowStatus.SENT_FOR_APPROVAL:
         return "Decide Approval";
       default:
@@ -218,16 +223,16 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
   };
 
   const getWorkflowStatusById = (statusId: number): WorkflowDisplayStatus | null => {
-  const statuses: Record<number, WorkflowDisplayStatus> = {
-    1: { statusId: 1, name: 'Initial', status: 'Initial' },
-    2: { statusId: 2, name: 'Sent for Review', status: 'Sent for Review' },
-    3: { statusId: 3, name: 'Review Changes', status: 'Review Changes' },
-    4: { statusId: 4, name: 'Sent for Approval', status: 'Sent for Approval' },
-    5: { statusId: 5, name: 'Approval Changes', status: 'Approval Changes' },
-    6: { statusId: 6, name: 'Approved', status: 'Approved' }
+    const statuses: Record<number, WorkflowDisplayStatus> = {
+      1: { statusId: 1, name: 'Initial', status: 'Initial' },
+      2: { statusId: 2, name: 'Sent for Review', status: 'Sent for Review' },
+      3: { statusId: 3, name: 'Review Changes', status: 'Review Changes' },
+      4: { statusId: 4, name: 'Sent for Approval', status: 'Sent for Approval' },
+      5: { statusId: 5, name: 'Approval Changes', status: 'Approval Changes' },
+      6: { statusId: 6, name: 'Approved', status: 'Approved' }
+    };
+    return statuses[statusId] || null;
   };
-  return statuses[statusId] || null;
-};
 
 
   // Get the appropriate dialog based on current status
@@ -252,7 +257,7 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
             open={workflowDialogOpen}
             onClose={handleWorkflowClose}
             onSubmit={handleSubmit}
-            status={WorkflowStatus.SENT_FOR_REVIEW}
+            status={normalizedStatus}
             projectId={projectId}
             entityId={entityId}
             entityType={entityType}
@@ -300,8 +305,8 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
         >
           {getWorkflowButtonText()}
         </Button>
-      ):(
-        <Chip         
+      ) : (
+        <Chip
           label={getWorkflowStatusById(statusId)?.status}
           color="primary"
           size="medium"
@@ -310,5 +315,5 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
       {workflowDialogOpen && getWorkflowDialog()}
     </>
   );
-   
+
 };

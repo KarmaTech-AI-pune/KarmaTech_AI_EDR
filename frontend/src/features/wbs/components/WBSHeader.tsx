@@ -41,14 +41,13 @@ const WBSHeader: React.FC = () => {
 
   const taskType = formType === 'manpower' ? TaskType.Manpower : TaskType.ODC;
 
-  const isProjectManager = currentUser?.roleDetails?.name === 'Project Manager';
-  // Check if status is "Review Changes" (3) or "Approval Changes" (5)
-  const isRejectionStatus = [3, 5].includes(statusId);
+  const userRole = currentUser?.roleDetails?.name;
+  const isPM = userRole === 'Project Manager';
 
   // Edit is allowed if:
-  // 1. Not under approval (2, 4, 6)
-  // 2. AND (Not in rejection status OR (In rejection status AND user is PM))
-  const canEdit = !isUnderApproval && (!isRejectionStatus || isProjectManager);
+  // 1. User is Project Manager (PM)
+  // 2. AND status is Initial (1), Review Changes (3), Approved (6) OR it's a new WBS (0)
+  const canEdit = isPM && [0, 1, 3, 6].includes(statusId);
 
   // Auto-exit edit mode if permissions change while editing
   React.useEffect(() => {
