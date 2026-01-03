@@ -8,7 +8,8 @@ namespace NJS.Domain.Enums
 {
     public enum TypeOfBid
     {
-        Lumpsum,
-        ItemRate
+        Lumpsum = 0,
+        TimeAndExpense = 1,
+        Percentage = 2
     }
 }
