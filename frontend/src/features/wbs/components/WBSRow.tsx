@@ -81,6 +81,12 @@ const WBSRow: React.FC<WBSRowProps> = ({
     handleAutocompleteChange,
   } = useWBSRowLogic({ row, childTotals, sequenceNumber, stickyColumn });
 
+  const handleNumericKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+      e.preventDefault();
+    }
+  };
+
   return (
     <TableRow
       sx={{
@@ -246,10 +252,12 @@ const WBSRow: React.FC<WBSRowProps> = ({
         {row.level === 3 ? (
           formType === 'odc' ? (
             <NumberInput
-              type="text"
+              type="number"
+              step="any"
               value={row.costRate || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCostRateChange(row.id, e.target.value)}
               min="0"
+              onKeyDown={handleNumericKeyDown}
               disabled={editMode}
               style={{
                 backgroundColor: editMode ? '#f5f5f5' : 'white'
@@ -257,10 +265,13 @@ const WBSRow: React.FC<WBSRowProps> = ({
             />
           ) : (
             <NumberInput
-              type="text"
+              type="number"
+              step="any"
               value={row.costRate || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCostRateChange(row.id, e.target.value)}
               disabled={editMode || !row.role}
+              onKeyDown={handleNumericKeyDown}
+              min="0"
               title={rateTooltip}
               style={{
                 backgroundColor: editMode ? '#f5f5f5' : 'white'
@@ -295,10 +306,12 @@ const WBSRow: React.FC<WBSRowProps> = ({
         <TableCell key={month}>
           {row.level === 3 ? (
             <NumberInput
-              type="text"
+              type="number"
+              step="any"
               value={getPlannedHours(month)}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleHoursChange(row.id, month, e.target.value)}
               min="0"
+              onKeyDown={handleNumericKeyDown}
               style={{
                 backgroundColor: editMode ? '#f5f5f5' : 'white'
               }}
@@ -373,10 +386,12 @@ const WBSRow: React.FC<WBSRowProps> = ({
             <TableCell>
               {row.level === 3 ? (
                 <NumberInput
-                  type="text"
+                  type="number"
+                  step="any"
                   value={row.odc || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleODCChange(row.id, e.target.value)}
                   min="0"
+                  onKeyDown={handleNumericKeyDown}
                   style={{
                     backgroundColor: editMode ? '#f5f5f5' : 'white'
                   }}
