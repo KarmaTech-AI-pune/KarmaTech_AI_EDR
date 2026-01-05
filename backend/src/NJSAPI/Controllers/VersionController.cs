@@ -9,6 +9,7 @@ namespace NJSAPI.Controllers
     /// <summary>
     /// Version information API controller
     /// Provides application version, build information, and health status
+    /// Includes comprehensive error handling and monitoring (Requirements: 8.1, 8.2, 8.4, 8.5)
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -17,6 +18,10 @@ namespace NJSAPI.Controllers
     {
         private readonly ILogger<VersionController> _logger;
         private readonly IConfiguration _configuration;
+        private static readonly Stopwatch _apiUptime = Stopwatch.StartNew();
+        private static int _totalRequests = 0;
+        private static int _failedRequests = 0;
+        private static readonly object _metricsLock = new object();
 
         public VersionController(ILogger<VersionController> logger, IConfiguration configuration)
         {
@@ -25,32 +30,99 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
+        /// Record API request metrics for monitoring
+        /// Requirement: 8.4 - Alert on version API endpoint failures
+        /// </summary>
+        private void RecordRequest(bool success)
+        {
+            lock (_metricsLock)
+            {
+                _totalRequests++;
+                if (!success) _failedRequests++;
+            }
+        }
+
+        /// <summary>
+        /// Get API metrics for monitoring
+        /// Requirement: 8.1, 8.2 - Monitor version calculation success rate
+        /// </summary>
+        private object GetApiMetrics()
+        {
+            lock (_metricsLock)
+            {
+                var successRate = _totalRequests > 0 
+                    ? ((double)(_totalRequests - _failedRequests) / _totalRequests * 100).ToString("F1")
+                    : "100.0";
+                    
+                return new
+                {
+                    totalRequests = _totalRequests,
+                    failedRequests = _failedRequests,
+                    successRate = $"{successRate}%",
+                    uptime = _apiUptime.Elapsed.ToString(@"dd\.hh\:mm\:ss")
+                };
+            }
+        }
+
+        /// <summary>
         /// Get current application version information
+        /// Requirement: 8.5 - Provide version information in health check endpoints
         /// </summary>
         /// <returns>Version information including version number, build date, and commit hash</returns>
         [HttpGet]
         public IActionResult GetVersion()
         {
+            var requestStart = Stopwatch.StartNew();
+            
             try
             {
                 var versionInfo = GetVersionInfo();
                 
+                // Log with version context (Requirement: 8.3)
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    ["Version"] = versionInfo.Version,
+                    ["CommitHash"] = versionInfo.CommitHash,
+                    ["EventType"] = "VersionRequest"
+                });
+
                 _logger.LogInformation("Version information requested: {Version}", versionInfo.Version);
+                
+                requestStart.Stop();
+                RecordRequest(true);
+                
+                // Check response time (Requirement: 8.5 - respond within 100ms)
+                if (requestStart.ElapsedMilliseconds > 100)
+                {
+                    _logger.LogWarning(
+                        "Version endpoint response time ({ResponseTime}ms) exceeded 100ms target",
+                        requestStart.ElapsedMilliseconds);
+                }
                 
                 return Ok(new
                 {
                     success = true,
                     data = versionInfo,
+                    responseTimeMs = requestStart.ElapsedMilliseconds,
                     timestamp = DateTime.UtcNow
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving version information");
+                requestStart.Stop();
+                RecordRequest(false);
+                
+                // Log error with version context (Requirement: 8.4)
+                _logger.LogError(ex, 
+                    "❌ VERSION API ERROR - Error retrieving version information. ResponseTime: {ResponseTime}ms",
+                    requestStart.ElapsedMilliseconds);
+                    
                 return StatusCode(500, new
                 {
                     success = false,
                     message = "Error retrieving version information",
+                    errorCode = "VERSION_RETRIEVAL_ERROR",
+                    responseTimeMs = requestStart.ElapsedMilliseconds,
                     timestamp = DateTime.UtcNow
                 });
             }
@@ -105,18 +177,21 @@ namespace NJSAPI.Controllers
 
         /// <summary>
         /// Health check endpoint with version information
+        /// Requirement: 8.5 - Provide version information in health check endpoints
         /// </summary>
         /// <returns>Health status with version context</returns>
         [HttpGet("health")]
         public IActionResult GetHealth()
         {
+            var requestStart = Stopwatch.StartNew();
+            
             try
             {
                 var versionInfo = GetVersionInfo();
                 var uptime = GetUptime();
                 var environment = _configuration["ASPNETCORE_ENVIRONMENT"] ?? "unknown";
                 
-                // Log health check with version context
+                // Log health check with version context (Requirement: 8.3, 8.5)
                 using var scope = _logger.BeginScope(new Dictionary<string, object>
                 {
                     ["Version"] = versionInfo.Version,
@@ -129,39 +204,112 @@ namespace NJSAPI.Controllers
                     "🏥 HEALTH CHECK - Version: {Version}, Environment: {Environment}, Uptime: {Uptime}",
                     versionInfo.Version, environment, uptime);
                 
+                // Perform health checks
+                var versionFileStatus = CheckVersionFile();
+                var versionSyncStatus = CheckVersionSync(versionInfo.Version);
+                var memoryStatus = GetMemoryStatus();
+                var diskStatus = GetDiskStatus();
+                
+                // Determine overall health
+                var isHealthy = versionFileStatus == "healthy" && 
+                               versionSyncStatus == "synchronized" &&
+                               memoryStatus != "critical" &&
+                               diskStatus != "critical";
+                
+                requestStart.Stop();
+                RecordRequest(true);
+                
                 var healthStatus = new
                 {
-                    status = "healthy",
+                    status = isHealthy ? "healthy" : "degraded",
                     version = versionInfo.Version,
                     commitHash = versionInfo.CommitHash,
                     buildDate = versionInfo.BuildDate,
                     environment = environment,
                     uptime = uptime,
+                    responseTimeMs = requestStart.ElapsedMilliseconds,
                     timestamp = DateTime.UtcNow,
                     checks = new
                     {
                         api = "healthy",
-                        memory = GetMemoryStatus(),
-                        disk = GetDiskStatus(),
-                        version_file = CheckVersionFile()
-                    }
+                        memory = memoryStatus,
+                        disk = diskStatus,
+                        version_file = versionFileStatus,
+                        version_sync = versionSyncStatus
+                    },
+                    metrics = GetApiMetrics()
                 };
 
-                return Ok(healthStatus);
+                // Alert if degraded (Requirement: 8.4)
+                if (!isHealthy)
+                {
+                    _logger.LogWarning(
+                        "⚠️ HEALTH CHECK DEGRADED - Version: {Version}, VersionFile: {VersionFile}, VersionSync: {VersionSync}",
+                        versionInfo.Version, versionFileStatus, versionSyncStatus);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    data = healthStatus,
+                    timestamp = DateTime.UtcNow
+                });
             }
             catch (Exception ex)
             {
+                requestStart.Stop();
+                RecordRequest(false);
+                
+                // Log health check failure with version context (Requirement: 8.4)
                 _logger.LogError(ex, 
-                    "❌ HEALTH CHECK FAILED - Error: {ErrorMessage}", 
-                    ex.Message);
+                    "❌ HEALTH CHECK FAILED - Error: {ErrorMessage}, ResponseTime: {ResponseTime}ms", 
+                    ex.Message, requestStart.ElapsedMilliseconds);
                     
                 return StatusCode(503, new
                 {
+                    success = false,
                     status = "unhealthy",
                     error = ex.Message,
+                    errorCode = "HEALTH_CHECK_FAILED",
                     version = GetVersionInfo().Version,
+                    responseTimeMs = requestStart.ElapsedMilliseconds,
                     timestamp = DateTime.UtcNow
                 });
+            }
+        }
+
+        /// <summary>
+        /// Check version synchronization status
+        /// Requirement: 3.5 - Detect and alert on version mismatches
+        /// </summary>
+        private string CheckVersionSync(string expectedVersion)
+        {
+            try
+            {
+                // In a real implementation, this would check multiple version sources
+                // For now, we verify the VERSION file matches the expected version
+                var versionFromFile = ReadVersionFromFile();
+                
+                if (string.IsNullOrEmpty(versionFromFile))
+                {
+                    return "unknown";
+                }
+                
+                if (versionFromFile == expectedVersion)
+                {
+                    return "synchronized";
+                }
+                
+                _logger.LogWarning(
+                    "⚠️ VERSION MISMATCH DETECTED - Expected: {Expected}, File: {File}",
+                    expectedVersion, versionFromFile);
+                    
+                return "mismatch";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not check version synchronization");
+                return "error";
             }
         }
 
@@ -338,6 +486,8 @@ namespace NJSAPI.Controllers
         [HttpPost("deployment")]
         public IActionResult LogDeploymentEvent([FromBody] DeploymentEventRequest request)
         {
+            var requestStart = Stopwatch.StartNew();
+            
             try
             {
                 var currentVersion = GetVersionInfo();
@@ -375,21 +525,159 @@ namespace NJSAPI.Controllers
                         break;
                 }
 
+                requestStart.Stop();
+                RecordRequest(true);
+
                 return Ok(new
                 {
                     success = true,
                     message = "Deployment event logged successfully",
                     version = currentVersion.Version,
+                    responseTimeMs = requestStart.ElapsedMilliseconds,
                     timestamp = DateTime.UtcNow
                 });
             }
             catch (Exception ex)
             {
+                requestStart.Stop();
+                RecordRequest(false);
+                
                 _logger.LogError(ex, "Error logging deployment event");
                 return StatusCode(500, new
                 {
                     success = false,
                     message = "Error logging deployment event",
+                    errorCode = "DEPLOYMENT_LOG_ERROR",
+                    responseTimeMs = requestStart.ElapsedMilliseconds,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+
+        /// <summary>
+        /// Get API monitoring metrics
+        /// Requirement: 8.1, 8.2 - Monitor version calculation success rate
+        /// </summary>
+        /// <returns>API metrics including success rate and response times</returns>
+        [HttpGet("metrics")]
+        public IActionResult GetMetrics()
+        {
+            var requestStart = Stopwatch.StartNew();
+            
+            try
+            {
+                var versionInfo = GetVersionInfo();
+                var environment = _configuration["ASPNETCORE_ENVIRONMENT"] ?? "unknown";
+                
+                requestStart.Stop();
+                RecordRequest(true);
+                
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        version = versionInfo.Version,
+                        environment = environment,
+                        api = GetApiMetrics(),
+                        system = new
+                        {
+                            memory = GetMemoryStatus(),
+                            disk = GetDiskStatus(),
+                            uptime = GetUptime()
+                        },
+                        versionSync = new
+                        {
+                            status = CheckVersionSync(versionInfo.Version),
+                            versionFile = CheckVersionFile()
+                        }
+                    },
+                    responseTimeMs = requestStart.ElapsedMilliseconds,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                requestStart.Stop();
+                RecordRequest(false);
+                
+                _logger.LogError(ex, "Error retrieving metrics");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error retrieving metrics",
+                    errorCode = "METRICS_ERROR",
+                    responseTimeMs = requestStart.ElapsedMilliseconds,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+
+        /// <summary>
+        /// Verify version synchronization across all locations
+        /// Requirement: 3.5, 4.5 - Detect and alert on version mismatches
+        /// </summary>
+        /// <returns>Version synchronization status</returns>
+        [HttpGet("sync-status")]
+        public IActionResult GetSyncStatus()
+        {
+            var requestStart = Stopwatch.StartNew();
+            
+            try
+            {
+                var versionInfo = GetVersionInfo();
+                var versionFromFile = ReadVersionFromFile();
+                var environment = _configuration["ASPNETCORE_ENVIRONMENT"] ?? "unknown";
+                
+                var locations = new Dictionary<string, string>
+                {
+                    ["assembly"] = versionInfo.Version,
+                    ["versionFile"] = versionFromFile ?? "not_found"
+                };
+                
+                // Check for mismatches
+                var uniqueVersions = locations.Values.Where(v => v != "not_found").Distinct().ToList();
+                var isSynchronized = uniqueVersions.Count <= 1;
+                
+                if (!isSynchronized)
+                {
+                    _logger.LogWarning(
+                        "⚠️ VERSION SYNC CHECK - Mismatch detected: {Locations}",
+                        string.Join(", ", locations.Select(kv => $"{kv.Key}={kv.Value}")));
+                }
+                
+                requestStart.Stop();
+                RecordRequest(true);
+                
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        synchronized = isSynchronized,
+                        locations = locations,
+                        uniqueVersions = uniqueVersions,
+                        environment = environment,
+                        recommendation = isSynchronized 
+                            ? "All version locations are synchronized" 
+                            : "Version mismatch detected - please verify deployment"
+                    },
+                    responseTimeMs = requestStart.ElapsedMilliseconds,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                requestStart.Stop();
+                RecordRequest(false);
+                
+                _logger.LogError(ex, "Error checking version synchronization");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error checking version synchronization",
+                    errorCode = "SYNC_CHECK_ERROR",
+                    responseTimeMs = requestStart.ElapsedMilliseconds,
                     timestamp = DateTime.UtcNow
                 });
             }

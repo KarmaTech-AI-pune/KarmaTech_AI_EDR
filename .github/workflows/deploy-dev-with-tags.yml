@@ -132,34 +132,64 @@ jobs:
         run: |
           echo "🔍 Validating version integration results..."
           
-          # Check integration success status
+          # Check integration success status (Requirement: 4.4 - Prevent deployment on version errors)
           if [ "${{ steps.version-integration.outputs.integration_success }}" != "true" ]; then
             echo "❌ Version integration failed!"
-            echo "🚨 Deployment cannot proceed"
+            echo "🚨 DEPLOYMENT BLOCKED - Version calculation errors detected"
+            echo ""
+            echo "Error Details:"
+            echo "  Message: ${{ steps.version-integration.outputs.error_message }}"
+            echo "  Deployment Blocked: ${{ steps.version-integration.outputs.deployment_blocked }}"
+            echo ""
+            echo "Please check the version integration logs above for details."
+            exit 1
+          fi
+          
+          # Check if deployment was explicitly blocked
+          if [ "${{ steps.version-integration.outputs.deployment_blocked }}" = "true" ]; then
+            echo "❌ Deployment was explicitly blocked!"
+            echo "🚨 Reason: ${{ steps.version-integration.outputs.block_reason }}"
             exit 1
           fi
           
           # Check that all required outputs are available
           if [ -z "${{ steps.version-integration.outputs.new_version }}" ]; then
             echo "❌ Version output is missing!"
+            echo "🚨 DEPLOYMENT BLOCKED - Cannot proceed without version information"
             exit 1
           fi
           
           if [ -z "${{ steps.version-integration.outputs.environment }}" ]; then
             echo "❌ Environment output is missing!"
+            echo "🚨 DEPLOYMENT BLOCKED - Cannot proceed without environment information"
             exit 1
           fi
           
-          # Check version synchronization
+          # Check version synchronization (Requirement: 3.5, 4.5)
           if [ "${{ steps.version-integration.outputs.version_sync_status }}" != "synchronized" ]; then
             echo "❌ Version files are not synchronized!"
+            echo "🚨 DEPLOYMENT BLOCKED - Version mismatch detected"
+            echo ""
+            echo "This indicates that VERSION file and package.json have different versions."
+            echo "Please verify version files are consistent before deploying."
             exit 1
+          fi
+          
+          # Check execution time (Requirement: 7.3 - within 30 seconds)
+          EXEC_TIME="${{ steps.version-integration.outputs.execution_time }}"
+          if [ -n "$EXEC_TIME" ]; then
+            # Remove decimal for comparison
+            EXEC_TIME_INT=$(echo "$EXEC_TIME" | cut -d'.' -f1)
+            if [ "$EXEC_TIME_INT" -gt 30 ]; then
+              echo "⚠️ Warning: Version calculation took ${EXEC_TIME}s (target: 30s)"
+            fi
           fi
           
           echo "✅ Version integration validation passed"
           echo "✅ Version: ${{ steps.version-integration.outputs.new_version }}"
           echo "✅ Environment: ${{ steps.version-integration.outputs.environment }}"
           echo "✅ Execution time: ${{ steps.version-integration.outputs.execution_time }}s"
+          echo "✅ Version sync status: ${{ steps.version-integration.outputs.version_sync_status }}"
           echo "✅ Ready for deployment"
 
       - name: Generate Release Notes
