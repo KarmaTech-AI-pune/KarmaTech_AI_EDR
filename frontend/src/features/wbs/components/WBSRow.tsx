@@ -13,6 +13,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
 import { WBSRowData, WBSChildTotals } from '../types/wbs';
+import { formatIndianCurrency } from '../utils/wbsUtils';
 import {
   useWBSRowLogic,
   NumberInput,
@@ -346,7 +347,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             {row.level === 3 ? (
               <NumberInput
                 type="text"
-                value={row.odc || ''}
+                value={formatIndianCurrency(row.odc || 0)}
                 readOnly
                 style={{
                   backgroundColor: '#f5f5f5'
@@ -355,7 +356,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             ) : childTotals ? (
               <NumberInput
                 type="text"
-                value={childTotals.odc || ''}
+                value={formatIndianCurrency(childTotals.odc || 0)}
                 readOnly
                 style={{
                   backgroundColor: '#f5f5f5'
@@ -384,7 +385,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
               ) : childTotals ? (
                 <NumberInput
                   type="text"
-                  value={childTotals.odc || ''}
+                  value={formatIndianCurrency(childTotals.odc || 0)}
                   readOnly
                   style={{
                     backgroundColor: '#f5f5f5'
@@ -422,7 +423,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             {row.level === 3 ? (
               <NumberInput
                 type="text"
-                value={row.totalCost}
+                value={formatIndianCurrency(row.totalCost)}
                 readOnly
                 style={{
                   backgroundColor: '#f5f5f5'
@@ -431,7 +432,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             ) : childTotals ? (
               <NumberInput
                 type="text"
-                value={childTotals.totalCost || ''}
+                value={formatIndianCurrency(childTotals.totalCost || 0)}
                 readOnly
                 style={{
                   backgroundColor: '#f5f5f5'
