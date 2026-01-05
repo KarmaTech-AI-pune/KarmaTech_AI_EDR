@@ -43,11 +43,12 @@ const WBSHeader: React.FC = () => {
 
   const userRole = currentUser?.roleDetails?.name;
   const isPM = userRole === 'Project Manager';
+  const isAdmin = userRole === 'Admin' || userRole === 'TenantAdmin';
 
   // Edit is allowed if:
-  // 1. User is Project Manager (PM)
+  // 1. User is Project Manager (PM) OR Admin/TenantAdmin
   // 2. AND status is Initial (1), Review Changes (3), Approved (6) OR it's a new WBS (0)
-  const canEdit = isPM && [0, 1, 3, 6].includes(statusId);
+  const canEdit = (isAdmin || isPM) && [0, 1, 3, 6].includes(statusId);
 
   // Auto-exit edit mode if permissions change while editing
   React.useEffect(() => {

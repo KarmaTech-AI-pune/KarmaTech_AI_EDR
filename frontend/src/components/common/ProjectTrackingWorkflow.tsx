@@ -102,20 +102,21 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
 
     // Simplified button visibility logic using the normalized status, permissions, and role
     const userRole = context?.currentUser?.roleDetails?.name;
+    const isAdmin = userRole === 'Admin' || userRole === 'TenantAdmin';
 
     switch (normalizedStatus) {
       case WorkflowStatus.INITIAL:
       case WorkflowStatus.REVIEW_CHANGES:
-        setCanShowButton(userRole === 'Project Manager' && userPermissions.canSubmitForReview);
+        setCanShowButton((userRole === 'Project Manager' || isAdmin) && userPermissions.canSubmitForReview);
         break;
       case WorkflowStatus.SENT_FOR_REVIEW:
-        setCanShowButton(userRole === 'Senior Project Manager' && userPermissions.canSubmitForApproval);
+        setCanShowButton((userRole === 'Senior Project Manager' || isAdmin) && userPermissions.canSubmitForApproval);
         break;
       case WorkflowStatus.APPROVAL_CHANGES:
-        setCanShowButton(userRole === 'Senior Project Manager' && userPermissions.canSubmitForApproval);
+        setCanShowButton((userRole === 'Senior Project Manager' || isAdmin) && userPermissions.canSubmitForApproval);
         break;
       case WorkflowStatus.SENT_FOR_APPROVAL:
-        setCanShowButton(userRole === 'Regional Manager' && userPermissions.canApprove);
+        setCanShowButton((userRole === 'Regional Manager' || isAdmin) && userPermissions.canApprove);
         break;
       case WorkflowStatus.APPROVED:
         setCanShowButton(false);
