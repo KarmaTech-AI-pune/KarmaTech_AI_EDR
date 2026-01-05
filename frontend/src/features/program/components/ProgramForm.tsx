@@ -52,7 +52,7 @@ export const ProgramForm: React.FC<ProgramFormProps> = ({
       if (mode === 'edit' && program) {
         setFormData({
           name: program.name,
-          description: program.description,
+          description: program.description ?? '',
           startDate: program.startDate.split('T')[0], // Convert to yyyy-mm-dd format
           endDate: program.endDate.split('T')[0] // Convert to yyyy-mm-dd format
         });

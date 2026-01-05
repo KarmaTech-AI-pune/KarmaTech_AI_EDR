@@ -8,8 +8,7 @@ import {
   TextField,
   IconButton,
   Divider,
-  Fab
-} from '@mui/material';
+  } from '@mui/material';
 import { Add, Search } from '@mui/icons-material';
 import { Program } from '../types/types';
 import { programService } from '../services/programService';
