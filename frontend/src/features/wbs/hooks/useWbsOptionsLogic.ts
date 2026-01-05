@@ -11,10 +11,10 @@ import {
 import { transformLevel3Data } from '../utils/wbsUtils';
 import { WBSOptionsAPI } from '../services/wbsApi';
 
-export const useWbsOptionsLogic = () => {
+export const useWbsOptionsLogic = (formType: number = 0) => {
   const [wbsData, setWbsData] = useState<IWBSData>({ level1: [], level2: [], level3: {} });
-  const [isLoading, setIsLoading] = useState(true); 
-  const [error, setError] = useState<string | null>(null); 
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [currentEditingItem, setCurrentEditingItem] = useState<IWBSItem | null>(null);
@@ -27,25 +27,25 @@ export const useWbsOptionsLogic = () => {
       setIsLoading(true);
       setError(null);
 
-      const level1Options = await WBSOptionsAPI.getLevel1Options();
-      
+      const level1Options = await WBSOptionsAPI.getLevel1Options(formType);
+
       // Fetch level 2 options for each level 1 option and deduplicate
       const level2Promises = level1Options.map(async (level1Option) => {
-        const level2Options = await WBSOptionsAPI.getLevel2Options(level1Option.id);
+        const level2Options = await WBSOptionsAPI.getLevel2Options(level1Option.id, formType);
         return { level1Id: level1Option.id, level1Value: level1Option.value, options: level2Options };
       });
       const level2OptionsGrouped = await Promise.all(level2Promises);
-      
+
       // Deduplicate level 2 options using a Map keyed by option ID
       const level2OptionsMap = new Map<string, WBSOption>();
       const level1ToLevel2Map = new Map<string, string[]>(); // Track which level2 belong to which level1
       const level2ToLevel1IdMap = new Map<string, string>(); // Track parent ID for each level 2
-      
+
       level2OptionsGrouped.forEach(({ level1Id, level1Value, options }) => {
         options.forEach(option => {
           level2OptionsMap.set(option.id, option);
           level2ToLevel1IdMap.set(option.id, level1Id); // Store the parent Level 1 ID
-          
+
           // Track the relationship
           if (!level1ToLevel2Map.has(level1Value)) {
             level1ToLevel2Map.set(level1Value, []);
@@ -55,11 +55,11 @@ export const useWbsOptionsLogic = () => {
           }
         });
       });
-      
+
       const level2Options = Array.from(level2OptionsMap.values());
 
       const level3Promises = level2Options.map(async (lvl2Option) => {
-        const lvl3Options = await WBSOptionsAPI.getLevel3Options(lvl2Option.id);
+        const lvl3Options = await WBSOptionsAPI.getLevel3Options(lvl2Option.id, formType);
         return { level2Id: lvl2Option.id, level2Value: lvl2Option.value, options: lvl3Options };
       });
       const allLevel3Data = await Promise.all(level3Promises);
@@ -67,7 +67,7 @@ export const useWbsOptionsLogic = () => {
       // Build level 3 data structure
       const newLevel3: { [key: string]: IWBSLevel3[] } = {};
       const level2ToLevel3Map = new Map<string, string[]>(); // Track which level3 belong to which level2
-      
+
       allLevel3Data.forEach((data) => {
         newLevel3[data.level2Value] = data.options.map((option: WBSOption) => ({
           id: option.id,
@@ -77,7 +77,7 @@ export const useWbsOptionsLogic = () => {
           parentId: parseInt(data.level2Id), // Use numeric parent ID
           formType: 0,
         }));
-        
+
         level2ToLevel3Map.set(data.level2Id, data.options.map(opt => opt.id));
       });
 
@@ -96,7 +96,7 @@ export const useWbsOptionsLogic = () => {
       const newLevel1: IWBSLevel1[] = level1Options.map((option: WBSOption) => {
         const childLevel2Ids = level1ToLevel2Map.get(option.value) || [];
         const childLevel2Items = newLevel2.filter(l2 => childLevel2Ids.includes(l2.id));
-        
+
         return {
           id: option.id,
           value: option.value,
@@ -123,7 +123,7 @@ export const useWbsOptionsLogic = () => {
 
   useEffect(() => {
     fetchWBSOptions();
-  }, [fetchWBSOptions]);
+  }, [fetchWBSOptions, formType]);
 
   const handleOpenAddDialog = useCallback((level: number) => {
     setCurrentLevelForForm(level);
@@ -172,7 +172,7 @@ export const useWbsOptionsLogic = () => {
   const handleFormSubmit = useCallback(async (data: IWBSFormInputs) => {
     try {
       setError(null);
-      
+
       console.log('handleFormSubmit received data:', {
         label: data.label,
         parentId: data.parentId,
@@ -180,9 +180,9 @@ export const useWbsOptionsLogic = () => {
         level: currentLevelForForm,
         isEditing: !!currentEditingItem
       });
-      
+
       const value = data.label.toLowerCase().replace(/\s/g, '_');
-      
+
       if (currentEditingItem) {
         // Update existing item
         const updatedOption: WBSOption = {
@@ -191,14 +191,14 @@ export const useWbsOptionsLogic = () => {
           label: data.label,
           level: currentEditingItem.level,
           parentValue: data.parentId ? String(data.parentId) : null,
-          formType: 0,
+          formType: formType,
         };
 
         console.log('Updating WBS option with payload:', updatedOption);
 
         // Call API to update
         await WBSOptionsAPI.updateOption(currentEditingItem.id, updatedOption);
-        
+
         // Refresh data from backend to ensure consistency
         await fetchWBSOptions();
       } else {
@@ -209,18 +209,18 @@ export const useWbsOptionsLogic = () => {
           label: data.label,
           level: currentLevelForForm!,
           parentValue: data.parentId ? String(data.parentId) : null,
-          formType: 0,
+          formType: formType,
         };
 
         console.log('Creating new WBS option with payload:', newOption);
 
         // Call API to create
         await WBSOptionsAPI.createOption(newOption);
-        
+
         // Refresh data from backend to get the new item with proper ID
         await fetchWBSOptions();
       }
-      
+
       handleCloseFormDialog();
     } catch (apiError) {
       console.error('Error saving WBS option:', apiError);
@@ -234,10 +234,10 @@ export const useWbsOptionsLogic = () => {
     try {
       // Call API first
       await WBSOptionsAPI.deleteOption(currentDeletingItem.id);
-      
+
       // Refresh data from backend to ensure consistency
       await fetchWBSOptions();
-      
+
       handleCloseConfirmationDialog();
     } catch (apiError) {
       handleCloseConfirmationDialog();
