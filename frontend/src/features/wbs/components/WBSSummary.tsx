@@ -33,8 +33,8 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
   loading
 }) => {
   return (
-    <Box sx={{ 
-      display: 'flex', 
+    <Box sx={{
+      display: 'flex',
       alignItems: 'center',
       justifyContent: 'flex-end',
       gap: 3,
@@ -47,14 +47,16 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
       <SummaryText>
         Total Cost: {currency} {totalCost.toLocaleString()}
       </SummaryText>
-      <LoadingButton 
-      onClick={onSave}
-      loading={loading}
-      disabled={disabled}
-      text='Save'
-      loadingText='Saving...'
-      size='medium'
-      />
+      {!disabled && (
+        <LoadingButton
+          onClick={onSave}
+          loading={loading}
+          disabled={disabled}
+          text='Save'
+          loadingText='Saving...'
+          size='medium'
+        />
+      )}
     </Box>
   );
 };

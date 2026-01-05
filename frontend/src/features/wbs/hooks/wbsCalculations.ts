@@ -23,17 +23,17 @@ export const calculateChildTotals = (parentRow: WBSRowData, allRows: WBSRowData[
     months.forEach(month => {
       const [monthName, yearStr] = month.split(' ');
       const year = `20${yearStr}`;
-      const monthlyHours = child.plannedHours[year]?.[monthName] || 0;
+      const monthlyHours = Number(child.plannedHours[year]?.[monthName] || 0);
 
       if (!totals.plannedHours[year]) {
         totals.plannedHours[year] = {};
       }
-      totals.plannedHours[year][monthName] = (totals.plannedHours[year][monthName] || 0) + monthlyHours;
+      totals.plannedHours[year][monthName] = (Number(totals.plannedHours[year][monthName]) || 0) + monthlyHours;
     });
 
     totals.totalHours += child.totalHours;
-    totals.odc += child.odc;
-    totals.odcHours += child.odcHours || 0;
+    totals.odc = (Number(totals.odc) || 0) + (Number(child.odc) || 0);
+    totals.odcHours = (totals.odcHours || 0) + (child.odcHours || 0);
     totals.totalCost += child.totalCost;
   });
 

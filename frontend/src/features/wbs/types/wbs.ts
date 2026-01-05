@@ -54,9 +54,9 @@ export interface WBSRowData {
   title: string;
   role: string | null;
   name: string | null;
-  costRate: number;
-  plannedHours: { [key: string]: { [key: string]: number } };
-  odc: number;
+  costRate: number | string;
+  plannedHours: { [key: string]: { [key: string]: number | string } };
+  odc: number | string;
   odcHours?: number;
   totalHours: number;
   totalCost: number;
@@ -73,9 +73,9 @@ export interface WBSRowData {
 }
 
 export interface WBSChildTotals {
-  plannedHours: { [key: string]: { [key: string]: number } };
+  plannedHours: { [key: string]: { [key: string]: number | string } };
   totalHours: number;
-  odc: number;
+  odc: number | string;
   odcHours?: number;
   totalCost: number;
 }
