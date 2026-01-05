@@ -72,4 +72,13 @@
     <Folder Include="MigrationSQL\NonIsolatedSQL\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="LoggerFactory\EnvironmentProvider.cs">
+      <DependentUpon>IEnvironmentProvider.cs</DependentUpon>
+    </Compile>
+    <Compile Update="LoggerFactory\NLogWebLoggerProviderFactory.cs">
+      <DependentUpon>ILoggerProviderFactory.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

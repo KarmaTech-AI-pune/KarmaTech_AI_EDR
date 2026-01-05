@@ -21,7 +21,14 @@ export default function TodoList() {
     createSubtask,
     updateSubtask,
     deleteSubtask,
-    addComment, // Destructure new function
+    addComment,
+    updateComment,
+    deleteComment,
+    fetchTaskComments,
+    addSubtaskComment,
+    updateSubtaskComment,
+    deleteSubtaskComment,
+    fetchSubtaskComments,
     teamMembers,
   } = useTodolistIssues();
 
@@ -127,7 +134,14 @@ export default function TodoList() {
         onCreateSubtask={createSubtask}
         onUpdateSubtask={updateSubtask}
         onDeleteSubtask={deleteSubtask}
-        onAddComment={addComment} // Pass the new function
+        onAddComment={addComment}
+        onUpdateComment={updateComment}
+        onDeleteComment={deleteComment}
+        onFetchTaskComments={fetchTaskComments}
+        onAddSubtaskComment={addSubtaskComment}
+        onUpdateSubtaskComment={updateSubtaskComment}
+        onDeleteSubtaskComment={deleteSubtaskComment}
+        onFetchSubtaskComments={fetchSubtaskComments}
         teamMembers={teamMembers}
       />
 

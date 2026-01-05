@@ -9,6 +9,8 @@ namespace NJS.Domain.Entities
     public class SprintPlan : ITenantEntity
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+
         public int SprintId { get; set; }
 
         public int TenantId { get; set; } // Added TenantId

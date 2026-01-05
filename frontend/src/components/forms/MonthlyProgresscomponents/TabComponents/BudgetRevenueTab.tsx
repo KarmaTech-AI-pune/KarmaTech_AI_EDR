@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { Controller, useFormContext, Control, FieldPath } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
 import { getPercentage } from '../../../../utils/calculations';
+import { formatToIndianNumber } from '../../../../utils/numberFormatting';
 import textFieldStyle from '../../../../theme/textFieldStyle';
 import {
   Box,
@@ -24,6 +25,27 @@ interface BudgetTextFieldProps {
   endAdornment?: string;
 }
 
+// Component for displaying formatted numbers in read-only mode
+const FormattedNumberCell: React.FC<{ value: any; endAdornment?: string }> = ({ value, endAdornment }) => {
+  const numericValue = typeof value === 'number' ? value : 0;
+  const formattedValue = formatToIndianNumber(numericValue);
+  
+  return (
+    <Box sx={{ 
+      padding: '8px 12px', 
+      border: '1px solid #e0e0e0', 
+      borderRadius: '4px',
+      backgroundColor: '#f9f9f9',
+      minHeight: '40px',
+      display: 'flex',
+      alignItems: 'center',
+      fontSize: '0.875rem'
+    }}>
+      {formattedValue}{endAdornment && ` ${endAdornment}`}
+    </Box>
+  );
+};
+
 const BudgetTextField: React.FC<BudgetTextFieldProps> = ({
   name,
   control,
@@ -43,25 +65,37 @@ const BudgetTextField: React.FC<BudgetTextFieldProps> = ({
     <Controller
       name={name}
       control={control}
-      render={({ field }) => (
-        <TextField
-          {...field}
-          fullWidth
-          size="small"
-          type="number"
-          placeholder={placeholder}
-          value={field.value ?? 0}
-          onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
-          onWheel={(e) => (e.target as HTMLInputElement).blur()}
-          error={!!error}
-          helperText={error?.message || ''}
-          sx={readOnly ? {} : textFieldStyle}
-          InputProps={{
-            readOnly,
-            endAdornment,
-          }}
-        />
-      )}
+      render={({ field }) => {
+        // For read-only fields, show formatted display
+        if (readOnly) {
+          return <FormattedNumberCell value={field.value} endAdornment={endAdornment} />;
+        }
+
+        // For editable fields, use regular input
+        return (
+          <TextField
+            {...field}
+            fullWidth
+            size="small"
+            type="number"
+            placeholder={placeholder}
+            value={field.value ?? ''}
+            onChange={(e) => {
+              const rawValue = e.target.value === '' ? null : Number(e.target.value);
+              field.onChange(rawValue);
+            }}
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+            error={!!error}
+            helperText={error?.message || ''}
+            sx={textFieldStyle}
+            InputProps={{
+              inputProps: {
+                step: 'any'
+              }
+            }}
+          />
+        );
+      }}
     />
   );
 };

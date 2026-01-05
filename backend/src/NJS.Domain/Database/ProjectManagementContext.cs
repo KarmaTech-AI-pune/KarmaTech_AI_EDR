@@ -205,10 +205,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<SprintTaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintSubtaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintDailyProgress>().HasQueryFilter(p => p.TenantId == TenantId);
-            
-            // Release Notes entities
-            modelBuilder.Entity<ReleaseNotes>().HasQueryFilter(p => p.TenantId == TenantId);
-            modelBuilder.Entity<ChangeItem>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<User>().HasQueryFilter(p => p.TenantId == TenantId);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
