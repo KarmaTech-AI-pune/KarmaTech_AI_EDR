@@ -4,17 +4,26 @@ import AddIcon from '@mui/icons-material/Add';
 
 interface AddItemButtonProps {
   onClick: () => void;
+  label?: string;
+  variant?: 'contained' | 'outlined' | 'text';
+  size?: 'small' | 'medium' | 'large';
 }
 
-const AddItemButton: React.FC<AddItemButtonProps> = ({ onClick }) => {
+const AddItemButton: React.FC<AddItemButtonProps> = ({ 
+  onClick, 
+  label = 'Add New Item',
+  variant = 'contained',
+  size = 'medium'
+}) => {
   return (
     <Button
-      variant="contained"
+      variant={variant}
+      size={size}
       startIcon={<AddIcon />}
       onClick={onClick}
       sx={{ textTransform: 'none' }}
     >
-      Add New Item
+      {label}
     </Button>
   );
 };

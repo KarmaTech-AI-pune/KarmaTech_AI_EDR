@@ -9,7 +9,8 @@ namespace NJS.Domain.Entities
     public class SprintTask : ITenantEntity
     {
         [Key]
-        public string? Taskid { get; set; }  // e.g. "T-101"
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Taskid { get; set; }  // Auto-increment int
 
         public int TenantId { get; set; } // Added TenantId
 

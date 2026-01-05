@@ -43,7 +43,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(SprintSubtaskDto), 201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> CreateSprintSubtask(string taskId, [FromBody] SprintSubtaskDto subtaskDto)
+        public async Task<IActionResult> CreateSprintSubtask(int taskId, [FromBody] SprintSubtaskDto subtaskDto)
         {
             if (taskId != subtaskDto.Taskid)
             {
@@ -281,7 +281,7 @@ namespace NJSAPI.Controllers
         /// <param name="sprintTaskDto">The SprintTask data to create.</param>
         /// <returns>The TaskId of the newly created SprintTask.</returns>
         [HttpPost("single-sprint-task")]
-        [ProducesResponseType(typeof(string), 201)]
+        [ProducesResponseType(typeof(int), 201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [SwaggerRequestExample(typeof(SprintTaskInputDto), typeof(SprintTaskInputDtoExample))]
@@ -322,7 +322,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(SprintTaskDto), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetSingleSprintTask(string taskId)
+        public async Task<IActionResult> GetSingleSprintTask(int taskId)
         {
             _logger.LogInformation("Attempting to retrieve SprintTask with ID: {TaskId}", taskId);
 
@@ -403,7 +403,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(IEnumerable<SprintSubtaskDto>), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetAllSprintSubtasksByTaskId(string taskId)
+        public async Task<IActionResult> GetAllSprintSubtasksByTaskId(int taskId)
         {
             _logger.LogInformation("Attempting to retrieve all SprintSubtasks for Task ID: {TaskId}", taskId);
 
@@ -472,9 +472,9 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> DeleteSprintTask(string taskId)
+        public async Task<IActionResult> DeleteSprintTask(int taskId)
         {
-            if (string.IsNullOrEmpty(taskId))
+            if (taskId <= 0)
             {
                 _logger.LogWarning("TaskId is invalid for DeleteSprintTask request.");
                 return BadRequest(new { message = "TaskId cannot be invalid." });
@@ -518,7 +518,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(IEnumerable<SprintTaskCommentDto>), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetSprintTaskCommentsByTaskId(string taskId)
+        public async Task<IActionResult> GetSprintTaskCommentsByTaskId(int taskId)
         {
             _logger.LogInformation("Attempting to retrieve SprintTask comments for Task ID: {TaskId}", taskId);
 
@@ -588,7 +588,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> AddSprintTaskComment(string taskId, [FromBody] AddSprintTaskCommentCommand commentDto)
+        public async Task<IActionResult> AddSprintTaskComment(int taskId, [FromBody] AddSprintTaskCommentCommand commentDto)
         {
             if (!ModelState.IsValid)
             {
@@ -636,7 +636,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateSprintTaskComment(string taskId, int commentId, [FromBody] UpdateSprintTaskCommentCommand commentDto)
+        public async Task<IActionResult> UpdateSprintTaskComment(int taskId, int commentId, [FromBody] UpdateSprintTaskCommentCommand commentDto)
         {
             if (!ModelState.IsValid)
             {
@@ -728,7 +728,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(IEnumerable<SprintSubtaskCommentDto>), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetSprintSubtaskCommentsBySubtaskId(string taskId, int subtaskId)
+        public async Task<IActionResult> GetSprintSubtaskCommentsBySubtaskId(int taskId, int subtaskId)
         {
             _logger.LogInformation("Attempting to retrieve SprintSubtask comments for Task ID: {TaskId}, Subtask ID: {SubtaskId}", taskId, subtaskId);
 
@@ -799,7 +799,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> AddSprintSubtaskComment(string taskId, int subtaskId, [FromBody] AddSprintSubtaskCommentCommand commentDto)
+        public async Task<IActionResult> AddSprintSubtaskComment(int taskId, int subtaskId, [FromBody] AddSprintSubtaskCommentCommand commentDto)
         {
             if (!ModelState.IsValid)
             {
@@ -849,7 +849,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateSprintSubtaskComment(string taskId, int subtaskId, int subtaskCommentId, [FromBody] UpdateSprintSubtaskCommentCommand commentDto)
+        public async Task<IActionResult> UpdateSprintSubtaskComment(int taskId, int subtaskId, int subtaskCommentId, [FromBody] UpdateSprintSubtaskCommentCommand commentDto)
         {
             if (!ModelState.IsValid)
             {

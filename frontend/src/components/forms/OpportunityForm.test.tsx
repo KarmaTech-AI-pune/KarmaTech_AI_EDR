@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { OpportunityForm } from "./OpportunityForm";
@@ -85,7 +85,7 @@ vi.mock("@mui/x-date-pickers/LocalizationProvider", () => ({
 
 // Mock the AdapterDateFns
 vi.mock("@mui/x-date-pickers/AdapterDateFns", () => ({
-  AdapterDateFns: class {},
+  AdapterDateFns: class { },
 }));
 
 describe("OpportunityForm Component", () => {
@@ -98,8 +98,8 @@ describe("OpportunityForm Component", () => {
     stage: "B",
     strategicRanking: "H",
     bidManagerId: "bd1",
-    reviewManagerId: "rm1",
-    approvalManagerId: "am1",
+    reviewManagerId: "common_user",
+    approvalManagerId: "am2",
     operation: "New Construction",
     status: "Bid Under Preparation",
     currency: "USD",
@@ -117,12 +117,12 @@ describe("OpportunityForm Component", () => {
   ];
 
   const mockReviewManagers = [
-    { id: "rm1", name: "Review Manager 1" },
+    { id: "common_user", name: "Common User" },
     { id: "rm2", name: "Review Manager 2" },
   ];
 
   const mockApprovalManagers = [
-    { id: "am1", name: "Approval Manager 1" },
+    { id: "common_user", name: "Common User" },
     { id: "am2", name: "Approval Manager 2" },
   ];
 
@@ -188,7 +188,7 @@ describe("OpportunityForm Component", () => {
     canEditOpportunity: true,
     setCanEditOpportunity: vi.fn(),
     canDeleteOpportunity: true,
-    setCanDeleteOpportunity: vi.fn(),   
+    setCanDeleteOpportunity: vi.fn(),
     canReviewBD: false,
     setCanReviewBD: vi.fn(),
     canApproveBD: false,
@@ -400,6 +400,172 @@ describe("OpportunityForm Component", () => {
         })
       );
     });
+
+
+    it("excludes selected review manager from approval manager options", async () => {
+      renderWithContext();
+
+      // Wait for managers to be loaded
+      await waitFor(() => {
+        expect(screen.getByTestId("review-manager-select")).not.toBeDisabled();
+      });
+
+      // Select Common User as RM
+      const rmSelect = screen.getByTestId("review-manager-select");
+      fireEvent.mouseDown(rmSelect.childNodes[0]);
+      const listboxesRM = await screen.findAllByRole("listbox");
+      const listboxRM = listboxesRM[listboxesRM.length - 1];
+      const commonOptionRM = within(listboxRM).getByRole("option", { name: "Common User" });
+      fireEvent.click(commonOptionRM);
+
+      // Open Approval Manager dropdown
+      const amSelect = screen.getByTestId("approval-manager-select");
+      fireEvent.mouseDown(amSelect.childNodes[0]);
+
+      // Wait for the menu to open (options to appear)
+      const listboxesAM = await screen.findAllByRole("listbox");
+      const listboxAM = listboxesAM[listboxesAM.length - 1];
+
+      await waitFor(() => {
+        expect(within(listboxAM).queryAllByRole("option").length).toBeGreaterThan(0);
+      });
+
+      const options = within(listboxAM).queryAllByRole("option");
+      const optionTexts = options.map(o => o.textContent);
+      expect(optionTexts).not.toContain("Common User");
+
+      // Close menu
+      fireEvent.keyDown(listboxAM, { key: 'Escape', code: 'Escape' });
+
+      // Close menu to avoid affecting next test
+      fireEvent.keyDown(listboxAM, { key: 'Escape', code: 'Escape' });
+    });
+
+    it("excludes selected approval manager from review manager options", async () => {
+      renderWithContext();
+
+      // Wait for managers to be loaded
+      await waitFor(() => {
+        expect(screen.getByTestId("approval-manager-select")).not.toBeDisabled();
+      });
+
+      // Select Common User as RD
+      const amSelect = screen.getByTestId("approval-manager-select");
+      fireEvent.mouseDown(amSelect.childNodes[0]);
+      const listboxesAM = await screen.findAllByRole("listbox");
+      const listboxAM = listboxesAM[listboxesAM.length - 1];
+      const commonOptionRD = within(listboxAM).getByRole("option", { name: "Common User" });
+      fireEvent.click(commonOptionRD);
+
+      // Open Review Manager dropdown
+      const rmSelect = screen.getByTestId("review-manager-select");
+      fireEvent.mouseDown(rmSelect.childNodes[0]);
+
+      const listboxesRM = await screen.findAllByRole("listbox");
+      const listboxRM = listboxesRM[listboxesRM.length - 1];
+
+      await waitFor(() => {
+        expect(within(listboxRM).queryAllByRole("option").length).toBeGreaterThan(0);
+      });
+
+      const options = within(listboxRM).queryAllByRole("option");
+      expect(options.map(o => o.textContent)).not.toContain("Common User");
+
+      // Close menu
+      fireEvent.keyDown(listboxRM, { key: 'Escape', code: 'Escape' });
+
+      // Close menu
+      fireEvent.keyDown(listboxRM, { key: 'Escape', code: 'Escape' });
+    });
+
+    it("shows validation error if RM and RD are the same on submission", async () => {
+      const mockProjectWithConflict: Partial<OpportunityTracking> = {
+        ...mockOpportunity,
+        reviewManagerId: "common_user",
+        approvalManagerId: "common_user",
+      };
+
+      const onSubmitMock = vi.fn();
+      render(
+        <projectManagementAppContext.Provider value={mockContext}>
+          <OpportunityForm onSubmit={onSubmitMock} project={mockProjectWithConflict} />
+        </projectManagementAppContext.Provider>
+      );
+
+      // Submit the form
+      const submitBtn = screen.getByRole("button", { name: /update opportunity/i });
+      fireEvent.click(submitBtn);
+
+      // Check for validation error
+      expect(await screen.findByText(/Review Manager and Approval Manager cannot be the same person/i)).toBeInTheDocument();
+      expect(onSubmitMock).not.toHaveBeenCalled();
+    });
+
+    it('submits correctly with decimal numeric values', async () => {
+      const mockOnSubmit = vi.fn();
+      renderWithContext({ onSubmit: mockOnSubmit });
+
+      // Fill in required fields
+      fireEvent.change(screen.getByLabelText(/Work Name/i), { target: { value: 'Decimal Test Project' } });
+      fireEvent.change(screen.getByTestId('client-input'), { target: { value: 'Test Client' } });
+      fireEvent.change(screen.getByLabelText(/Client Sector/i), { target: { value: 'Test Sector' } });
+      fireEvent.change(screen.getByLabelText(/Operation/i), { target: { value: 'Test Operation' } });
+
+      // Set required select fields
+      fireEvent.mouseDown(screen.getByTestId('stage-select').childNodes[0]);
+      fireEvent.click(screen.getByText('A'));
+
+      fireEvent.mouseDown(screen.getByTestId('strategic-ranking-select').childNodes[0]);
+      fireEvent.click(screen.getByText('High'));
+
+      fireEvent.mouseDown(screen.getByTestId('status-select').childNodes[0]);
+      fireEvent.click(screen.getByText('Bid Under Preparation'));
+
+      // Set Dates
+      fireEvent.change(screen.getByLabelText(/Date of Submission/i), { target: { value: '2025-12-25' } });
+      fireEvent.change(screen.getByLabelText(/Likely Start Date/i), { target: { value: '2026-01-01' } });
+
+      fireEvent.change(screen.getByLabelText(/Duration of Project/i), { target: { value: '12' } });
+
+      // Set decimal values
+      const bidFeesInput = screen.getByLabelText(/Bid Fees/i);
+      fireEvent.change(bidFeesInput, { target: { value: '1,234.56' } });
+
+      const emdInput = screen.getByLabelText(/^EMD$/);
+      fireEvent.change(emdInput, { target: { value: '500.25' } });
+
+      const capitalValueInput = screen.getByLabelText(/Capital Value/i);
+      fireEvent.change(capitalValueInput, { target: { value: '2,50,000.75' } });
+
+      const chanceInput = screen.getByLabelText(/Chance of Project Happening \(%\)/);
+      fireEvent.change(chanceInput, { target: { value: '75.5' } });
+
+      // Fill in required select fields for BD Manager
+      await waitFor(() => {
+        expect(screen.getByTestId("bd-manager-select")).not.toBeDisabled();
+      });
+      fireEvent.mouseDown(screen.getByTestId("bd-manager-select").childNodes[0]);
+      fireEvent.click(await screen.findByText(/BD Manager 1/));
+
+      fireEvent.mouseDown(screen.getByTestId("contract-type-select").childNodes[0]);
+      fireEvent.click(screen.getByText("Lump Sum"));
+
+      fireEvent.mouseDown(screen.getByTestId("funding-stream-select").childNodes[0]);
+      fireEvent.click(screen.getByText("Government Budget"));
+
+      // Submit form
+      fireEvent.click(screen.getByText(/Create Opportunity/i));
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(expect.objectContaining({
+          bidFees: 1234.56,
+          emd: 500.25,
+          capitalValue: 250000.75,
+          percentageChanceOfProjectHappening: 75.5,
+          durationOfProject: 12
+        }));
+      });
+    });
   });
 
   // Data Fetching Tests
@@ -428,7 +594,7 @@ describe("OpportunityForm Component", () => {
       // Spy on console.error
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       renderWithContext();
 
@@ -454,15 +620,15 @@ describe("OpportunityForm Component", () => {
         ...mockContext,
         currentUser: mockContext.currentUser
           ? {
-              ...mockContext.currentUser,
-              id: "custom-user",
-              name: "Custom User",
-              userName: "custom-user",
-              email: "custom@example.com",
-              standardRate: 150, // Ensure standardRate is included
-              isConsultant: false, // Ensure isConsultant is included
-              roles: [...mockContext.currentUser.roles],
-            }
+            ...mockContext.currentUser,
+            id: "custom-user",
+            name: "Custom User",
+            userName: "custom-user",
+            email: "custom@example.com",
+            standardRate: 150, // Ensure standardRate is included
+            isConsultant: false, // Ensure isConsultant is included
+            roles: [...mockContext.currentUser.roles],
+          }
           : null,
       };
 

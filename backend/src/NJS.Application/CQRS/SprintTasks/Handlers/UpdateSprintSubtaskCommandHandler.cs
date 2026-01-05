@@ -42,27 +42,27 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 return Unit.Value; // Or throw NotFoundException
             }
 
-            // Update properties from DTO to entity
-            existingSubtask.Subtaskkey = sprintSubtaskDto.Subtaskkey;
-            existingSubtask.Subtasktitle = sprintSubtaskDto.Subtasktitle;
-            existingSubtask.Subtaskdescription = sprintSubtaskDto.Subtaskdescription;
-            existingSubtask.Subtaskpriority = sprintSubtaskDto.Subtaskpriority;
-            existingSubtask.Subtaskstatus = sprintSubtaskDto.Subtaskstatus;
-            existingSubtask.SubtaskAssineid = sprintSubtaskDto.SubtaskAssineid;
-            existingSubtask.SubtaskAssigneeName = sprintSubtaskDto.SubtaskAssigneeName;
-            existingSubtask.SubtaskAssigneeAvatar = sprintSubtaskDto.SubtaskAssigneeAvatar;
-            existingSubtask.SubtaskReporterId = sprintSubtaskDto.SubtaskReporterId;
-            existingSubtask.SubtaskReporterName = sprintSubtaskDto.SubtaskReporterName;
-            existingSubtask.SubtaskReporterAvatar = sprintSubtaskDto.SubtaskReporterAvatar;
-            existingSubtask.Attachments = sprintSubtaskDto.Attachments;
-            existingSubtask.SubtaskisExpanded = sprintSubtaskDto.SubtaskisExpanded;
+            // Update properties from DTO to entity - using null-coalescing to preserve existing data if DTO field is null
+            existingSubtask.Subtaskkey = sprintSubtaskDto.Subtaskkey ?? existingSubtask.Subtaskkey;
+            existingSubtask.Subtasktitle = sprintSubtaskDto.Subtasktitle ?? existingSubtask.Subtasktitle;
+            existingSubtask.Subtaskdescription = sprintSubtaskDto.Subtaskdescription ?? existingSubtask.Subtaskdescription;
+            existingSubtask.Subtaskpriority = sprintSubtaskDto.Subtaskpriority ?? existingSubtask.Subtaskpriority;
+            existingSubtask.Subtaskstatus = sprintSubtaskDto.Subtaskstatus ?? existingSubtask.Subtaskstatus;
+            existingSubtask.SubtaskAssineid = sprintSubtaskDto.SubtaskAssineid ?? existingSubtask.SubtaskAssineid;
+            existingSubtask.SubtaskAssigneeName = sprintSubtaskDto.SubtaskAssigneeName ?? existingSubtask.SubtaskAssigneeName;
+            existingSubtask.SubtaskAssigneeAvatar = sprintSubtaskDto.SubtaskAssigneeAvatar ?? existingSubtask.SubtaskAssigneeAvatar;
+            existingSubtask.SubtaskReporterId = sprintSubtaskDto.SubtaskReporterId ?? existingSubtask.SubtaskReporterId;
+            existingSubtask.SubtaskReporterName = sprintSubtaskDto.SubtaskReporterName ?? existingSubtask.SubtaskReporterName;
+            existingSubtask.SubtaskReporterAvatar = sprintSubtaskDto.SubtaskReporterAvatar ?? existingSubtask.SubtaskReporterAvatar;
+            existingSubtask.Attachments = sprintSubtaskDto.Attachments ?? existingSubtask.Attachments;
+            existingSubtask.SubtaskisExpanded = sprintSubtaskDto.SubtaskisExpanded ?? existingSubtask.SubtaskisExpanded;
             existingSubtask.SubtaskupdatedDate = DateTime.UtcNow;
-            existingSubtask.SubtaskType = sprintSubtaskDto.SubtaskType;
-            existingSubtask.DisplayOrder = sprintSubtaskDto.DisplayOrder ?? 0;
-            existingSubtask.EstimatedHours = sprintSubtaskDto.EstimatedHours ?? 0;
-            existingSubtask.ActualHours = sprintSubtaskDto.ActualHours ?? 0;
-            existingSubtask.StartedAt = sprintSubtaskDto.StartedAt;
-            existingSubtask.CompletedAt = sprintSubtaskDto.CompletedAt;
+            existingSubtask.SubtaskType = sprintSubtaskDto.SubtaskType ?? existingSubtask.SubtaskType;
+            existingSubtask.DisplayOrder = sprintSubtaskDto.DisplayOrder ?? existingSubtask.DisplayOrder;
+            existingSubtask.EstimatedHours = sprintSubtaskDto.EstimatedHours ?? existingSubtask.EstimatedHours;
+            existingSubtask.ActualHours = sprintSubtaskDto.ActualHours ?? existingSubtask.ActualHours;
+            existingSubtask.StartedAt = sprintSubtaskDto.StartedAt ?? existingSubtask.StartedAt;
+            existingSubtask.CompletedAt = sprintSubtaskDto.CompletedAt ?? existingSubtask.CompletedAt;
             // Taskid is part of the composite key and should not be changed here.
 
             var changesSaved = await _context.SaveChangesAsync(cancellationToken);

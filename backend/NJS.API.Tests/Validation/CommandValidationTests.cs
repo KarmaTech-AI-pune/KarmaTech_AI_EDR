@@ -35,10 +35,10 @@ namespace NJS.API.Tests.Validation
         public async Task CreateJobStartFormCommand_WithNullJobStartForm_ShouldThrowArgumentNullException()
         {
             // Arrange
-            var handler = new CreateJobStartFormCommandHandler(
-                _mockRepository.Object, 
-                _mockUnitOfWork.Object,
-                _mockProjectRepository.Object);
+            var mockUnitOfWork = new Mock<IUnitOfWork>();
+            var mockRepository = new Mock<IJobStartFormRepository>();
+            var mockProjectRepository = new Mock<IProjectRepository>();
+            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object, mockProjectRepository.Object);
             var command = new CreateJobStartFormCommand(null); // Null JobStartForm
 
             // Act & Assert
@@ -54,10 +54,10 @@ namespace NJS.API.Tests.Validation
         public async Task CreateJobStartFormCommand_WithInvalidProjectId_ShouldThrowArgumentException()
         {
             // Arrange
-            var handler = new CreateJobStartFormCommandHandler(
-                _mockRepository.Object, 
-                _mockUnitOfWork.Object,
-                _mockProjectRepository.Object);
+            var mockUnitOfWork = new Mock<IUnitOfWork>();
+            var mockRepository = new Mock<IJobStartFormRepository>();
+            var mockProjectRepository = new Mock<IProjectRepository>();
+            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object, mockProjectRepository.Object);
 
             var jobStartFormDto = new JobStartFormDto
             {
@@ -81,19 +81,17 @@ namespace NJS.API.Tests.Validation
         public async Task CreateJobStartFormCommand_WithValidData_ShouldNotThrowException()
         {
             // Arrange
-            _mockRepository.Setup(repo => repo.AddAsync(It.IsAny<JobStartForm>()))
+            var mockUnitOfWork = new Mock<IUnitOfWork>();
+            var mockRepository = new Mock<IJobStartFormRepository>();
+            var mockProjectRepository = new Mock<IProjectRepository>();
+
+            mockRepository.Setup(repo => repo.AddAsync(It.IsAny<JobStartForm>()))
                 .Returns(Task.CompletedTask);
 
             _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
                 .ReturnsAsync(1);
 
-            _mockProjectRepository.Setup(repo => repo.GetById(It.IsAny<int>()))
-                .Returns((Project)null);
-
-            var handler = new CreateJobStartFormCommandHandler(
-                _mockRepository.Object, 
-                _mockUnitOfWork.Object,
-                _mockProjectRepository.Object);
+            var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object, mockProjectRepository.Object);
 
             var jobStartFormDto = new JobStartFormDto
             {

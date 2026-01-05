@@ -29,7 +29,7 @@ import TenantUsersManagement from '../components/adminpanel/TenantUsersManagemen
 import SubscriptionManagement from '../components/adminpanel/SubscriptionManagement';
 import BillingManagement from '../components/adminpanel/BillingManagement';
 import SystemSettings from '../components/adminpanel/SystemSettings';
-import GeneralSettings from './GeneralSettings';
+import GeneralSettings from '../features/generalSettings/pages/GeneralSettings';
 import MigrationManagement from '../pages/MigrationManagement'; // Import the new component
 
 const DRAWER_WIDTH = 280;
@@ -41,7 +41,7 @@ const AdminPanel: React.FC = () => {
   const { isSuperAdmin } = useTenantContext();
   const [hasSystemAdminPermission, setHasSystemAdminPermission] = useState(false);
   const [hasTenantAdminPermission, setHasTenantAdminPermission] = useState(false);
-const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' |  'migrations'|'settings'>('settings');
+  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'settings'>('settings');
 
 
   useEffect(() => {
@@ -51,18 +51,18 @@ const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tena
         console.log('Current User:', user);
         console.log('Role Details:', user?.roleDetails);
         console.log('Permissions:', user?.roleDetails?.permissions);
-        
+
         if (user?.roleDetails?.permissions) {
           const isSystemAdmin = user.roleDetails.permissions.includes('SYSTEM_ADMIN');
           const isTenantAdmin = user.roleDetails.permissions.includes('Tenant_ADMIN');
-          
+
           console.log('Is System Admin?', isSystemAdmin);
           console.log('Is Tenant Admin?', isTenantAdmin);
           console.log('User Permissions:', user.roleDetails.permissions);
-          
+
           setHasSystemAdminPermission(isSystemAdmin);
           setHasTenantAdminPermission(isTenantAdmin);
-          
+
           // Set initial section based on permissions
           if (isSystemAdmin || isSuperAdmin) {
             setSelectedSection('tenants');
@@ -78,7 +78,7 @@ const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tena
   }, [isSuperAdmin]);
 
   interface MenuItem {
-    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings'| 'migrations' | 'settings'; 
+    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'settings';
     text: string;
     icon: JSX.Element;
     requiresSystemAdmin?: boolean;
@@ -95,8 +95,8 @@ const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tena
     // Tenant Admin menu items
     { id: 'users', text: 'Users Management', icon: <PeopleIcon />, requiresTenantAdmin: true },
     { id: 'roles', text: 'Roles Management', icon: <SecurityIcon />, requiresTenantAdmin: true },
-    { id: 'generalSettings', text: 'General Setting', icon: <TuneIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
-    { id: 'settings', text: 'System Settings', icon: <SettingsIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false}
+    { id: 'generalSettings', text: 'General Setting', icon: <TuneIcon />, requiresSystemAdmin: false, requiresTenantAdmin: true },
+    { id: 'settings', text: 'System Settings', icon: <SettingsIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false }
   ];
 
   // Ensure permissions are properly checked
@@ -164,8 +164,8 @@ const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tena
   };
 
   return (
-    <Box 
-      sx={{ 
+    <Box
+      sx={{
         display: 'flex',
         height: `calc(100vh - ${NAVBAR_HEIGHT})`,
         pt: `${NAVBAR_HEIGHT}`,
@@ -225,7 +225,7 @@ const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tena
                 </ListItemIcon>
               </Tooltip>
               {isDrawerExpanded && (
-                <ListItemText 
+                <ListItemText
                   primary={item.text}
                   primaryTypographyProps={{
                     variant: 'body1'

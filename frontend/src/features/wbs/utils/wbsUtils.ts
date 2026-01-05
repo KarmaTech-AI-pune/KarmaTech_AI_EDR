@@ -14,7 +14,7 @@ export const getWBSParentLabel = (item: IWBSItem, allLevelsData: IWBSData): stri
     const level3Item = item as IWBSLevel3;
     // Find the parent Level 2 item
     const parentLevel2 = allLevelsData.level2.find(
-      (lvl2: IWBSLevel2) => lvl2.value === level3Item.parentValue
+      (lvl2: IWBSLevel2) => Number(lvl2.id) === level3Item.parentId
     );
     return parentLevel2 ? parentLevel2.label : null;
   }

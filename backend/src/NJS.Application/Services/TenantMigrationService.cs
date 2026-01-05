@@ -58,7 +58,7 @@ namespace NJS.Application.Services
                 var builder = new SqlConnectionStringBuilder(connectionString);
                 var targetDatabaseName = builder.InitialCatalog;
 
-                // If source database not provided, use the default from configuration
+                // If source database/server not provided, use the default from configuration
                 if (string.IsNullOrEmpty(sourceDatabaseName))
                 {
                     var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");

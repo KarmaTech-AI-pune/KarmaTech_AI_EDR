@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, { useState } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { pmWorkflowApi } from '../../api/pmWorkflowApi';
 import * as userApi from '../../services/userApi';
+import NotificationSnackbar from '../widgets/NotificationSnackbar';
 
 interface DecideReviewDialogProps {
     open: boolean;
@@ -41,6 +42,10 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
+    // Snackbar state
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
     React.useEffect(() => {
         if (open && decision === 'approve') {
@@ -51,32 +56,51 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
     const loadRMRDUsers = async () => {
         setLoading(true);
         try {
-            // Get users with RM or RD role
-            // Fetch users with each role separately and combine them
             const rmUsers = await userApi.getUsersByRole('RegionalManager');
             const rdUsers = await userApi.getUsersByRole('RegionalDirector');
             const users = [...rmUsers, ...rdUsers];
             setRmrdUsers(users);
 
-            // If there's only one RM/RD, select them automatically
             if (users.length === 1) {
                 setAssignedToId(users[0].id);
             }
         } catch (error) {
             console.error('Error loading RM/RD users:', error);
+            showSnackbar('Failed to load users', 'error');
         } finally {
             setLoading(false);
         }
     };
 
+    const showSnackbar = (message: string, severity: 'success' | 'error') => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
+
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
+
     const handleSubmit = async () => {
+        // Payload Validation
+        if (!entityId) {
+            showSnackbar('Error: Missing Entity ID', 'error');
+            return;
+        }
+
+        if (!entityType) {
+            showSnackbar('Error: Missing Entity Type', 'error');
+            return;
+        }
+
         if (decision === 'approve' && !assignedToId) {
-            alert('Please select a Regional Manager or Regional Director');
+            showSnackbar('Please select a Regional Manager or Regional Director', 'error');
             return;
         }
 
         if (!comments) {
-            alert('Please add comments');
+            showSnackbar('Please add comments', 'error');
             return;
         }
 
@@ -101,9 +125,11 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
             }
 
             onWorkflowUpdated();
-        } catch (error) {
+            handleClose();
+        } catch (error: any) {
             console.error('Error processing review decision:', error);
-            alert('Failed to process review decision. Please try again.');
+            const errorMessage = error?.response?.data?.message || error?.message || 'Failed to process review decision';
+            showSnackbar(errorMessage, 'error');
         } finally {
             setSubmitting(false);
         }
@@ -117,79 +143,88 @@ const DecideReviewDialog: React.FC<DecideReviewDialogProps> = ({
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-            <DialogTitle>Review Decision</DialogTitle>
-            <DialogContent>
-                <Typography variant="body1" gutterBottom>
-                    Please review this form and decide whether to approve it or request changes.
-                </Typography>
+        <>
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+                <DialogTitle>Review Decision</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1" gutterBottom>
+                        Please review this form and decide whether to approve it or request changes.
+                    </Typography>
 
-                <FormControl component="fieldset" margin="normal" required>
-                    <RadioGroup
-                        value={decision}
-                        onChange={(e) => setDecision(e.target.value)}
-                    >
-                        <FormControlLabel
-                            value="approve"
-                            control={<Radio />}
-                            label="Send for Approval"
-                        />
-                        <FormControlLabel
-                            value="reject"
-                            control={<Radio />}
-                            label="Request Changes"
-                        />
-                    </RadioGroup>
-                </FormControl>
-
-                {decision === 'approve' && (
-                    <FormControl fullWidth margin="normal">
-                        <InputLabel id="rmrd-select-label">Regional Manager/Director</InputLabel>
-                        <Select
-                            labelId="rmrd-select-label"
-                            value={assignedToId}
-                            onChange={(e) => setAssignedToId(e.target.value as string)}
-                            label="Regional Manager/Director"
-                            required
+                    <FormControl component="fieldset" margin="normal" required>
+                        <RadioGroup
+                            value={decision}
+                            onChange={(e) => setDecision(e.target.value)}
                         >
-                            {rmrdUsers.map((user) => (
-                                <MenuItem key={user.id} value={user.id}>
-                                    {user.name || user.userName}
-                                </MenuItem>
-                            ))}
-                        </Select>
+                            <FormControlLabel
+                                value="approve"
+                                control={<Radio />}
+                                label="Send for Approval"
+                            />
+                            <FormControlLabel
+                                value="reject"
+                                control={<Radio />}
+                                label="Request Changes"
+                            />
+                        </RadioGroup>
                     </FormControl>
-                )}
 
-                <TextField
-                    label={decision === 'approve' ? "Comments for Approval" : "Change Request Comments"}
-                    multiline
-                    rows={4}
-                    value={comments}
-                    onChange={(e) => setComments(e.target.value)}
-                    fullWidth
-                    margin="normal"
-                    placeholder={decision === 'approve'
-                        ? "Add any comments for the approver"
-                        : "Explain what changes are needed"}
-                    required
-                />
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={handleClose} disabled={submitting}>
-                    Cancel
-                </Button>
-                <Button
-                    onClick={handleSubmit}
-                    color="primary"
-                    variant="contained"
-                    disabled={loading || submitting || !decision || !comments || (decision === 'approve' && !assignedToId)}
-                >
-                    {submitting ? <CircularProgress size={24} /> :
-                        decision === 'approve' ? 'Send for Approval' : 'Request Changes'}
-                </Button>
-            </DialogActions>
-        </Dialog>
+                    {decision === 'approve' && (
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel id="rmrd-select-label">Regional Manager/Director</InputLabel>
+                            <Select
+                                labelId="rmrd-select-label"
+                                value={assignedToId}
+                                onChange={(e) => setAssignedToId(e.target.value as string)}
+                                label="Regional Manager/Director"
+                                required
+                            >
+                                {rmrdUsers.map((user) => (
+                                    <MenuItem key={user.id} value={user.id}>
+                                        {user.name || user.userName}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    )}
+
+                    <TextField
+                        label={decision === 'approve' ? "Comments for Approval" : "Change Request Comments"}
+                        multiline
+                        rows={4}
+                        value={comments}
+                        onChange={(e) => setComments(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        placeholder={decision === 'approve'
+                            ? "Add any comments for the approver"
+                            : "Explain what changes are needed"}
+                        required
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} disabled={submitting}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        color="primary"
+                        variant="contained"
+                        disabled={loading || submitting || !decision || !comments || (decision === 'approve' && !assignedToId)}
+                    >
+                        {submitting ? <CircularProgress size={24} /> :
+                            decision === 'approve' ? 'Send for Approval' : 'Request Changes'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <NotificationSnackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                onClose={handleSnackbarClose}
+            />
+        </>
     );
 };
 

@@ -40,7 +40,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     seniorProjectManagerId: project?.seniorProjectManagerId || "",
     sector: project?.sector || '',
     region: project?.region || '',
-    status: project?.status ||  0,
+    status: project?.status || 0,
     createdAt: project?.createdAt || '',
     updatedAt: project?.updatedAt || '',
     typeOfClient: project?.typeOfClient || '',
@@ -52,7 +52,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     estimatedProjectFee: project?.estimatedProjectFee || 0,
     priority: project?.priority || '',
     regionalManagerId: project?.regionalManagerId || "",
-    letterOfAcceptance:project?.letterOfAcceptance|| false,
+    letterOfAcceptance: project?.letterOfAcceptance || false,
     opportunityTrackingId: project?.opportunityTrackingId || 0,
     feeType: project?.feeType || 'Lumpsum',
     percentage: project?.percentage || 0,
@@ -91,13 +91,17 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     }));
   };
 
-const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: (value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0').toString(),
-    }));
+    // Allow digits, minus sign at start, and one dot
+    if (value === '' || /^-?\d*\.?\d*$/.test(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,8 +116,8 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       startDate: parseDateFromInput(formData.startDate || '') || undefined,
       endDate: parseDateFromInput(formData.endDate || '') || undefined,
       office: formData.office || '',
-        typeOfJob: formData.typeOfJob || '',
-        priority: formData.priority || '',
+      typeOfJob: formData.typeOfJob || '',
+      priority: formData.priority || '',
       updatedAt: new Date().toISOString()
     };
 
@@ -323,7 +327,7 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               type="text"
               value={formData.estimatedProjectFee}
               onChange={handleNumberChange}
-              // disabled={formData.feeType === 'Percentage'}
+            // disabled={formData.feeType === 'Percentage'}
             />
           </Grid>
           {project && hasBudgetChanged() && (

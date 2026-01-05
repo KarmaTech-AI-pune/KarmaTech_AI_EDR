@@ -59,53 +59,53 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
 
   // Separate function to calculate and set months based on provided rows
   const calculateAndSetMonths = (rowsToCalculateFrom: WBSRowData[]) => {
-      const allMonths = new Set<string>();
-      rowsToCalculateFrom.forEach((row) => {
-        if (row.plannedHours) {
-          Object.keys(row.plannedHours).forEach(year => {
-            const yearStr = year.toString().slice(2); // Ensure year is string, then slice
-            Object.keys(row.plannedHours[year]).forEach(monthName => {
-              allMonths.add(`${monthName} ${yearStr}`);
-            });
+    const allMonths = new Set<string>();
+    rowsToCalculateFrom.forEach((row) => {
+      if (row.plannedHours) {
+        Object.keys(row.plannedHours).forEach(year => {
+          const yearStr = year.toString().slice(2); // Ensure year is string, then slice
+          Object.keys(row.plannedHours[year]).forEach(monthName => {
+            allMonths.add(`${monthName} ${yearStr}`);
           });
-        }
-      });
-
-      if (allMonths.size > 0) {
-        const sortedMonths = Array.from(allMonths).sort((a, b) => {
-          const [monthA, yearA] = a.split(' ');
-          const [monthB, yearB] = b.split(' ');
-          const monthNames = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-          ];
-          // Handle potential parsing errors
-          const yearIntA = parseInt(yearA);
-          const yearIntB = parseInt(yearB);
-          if (isNaN(yearIntA) || isNaN(yearIntB)) return 0; // Default sort order if year parsing fails
-
-          const yearDiff = yearIntA - yearIntB;
-          if (yearDiff !== 0) return yearDiff;
-          return monthNames.indexOf(monthA) - monthNames.indexOf(monthB);
         });
-        setMonths(sortedMonths);
-      } else {
-         // If no months found in data, potentially set default months based on start date
-         const startDate = getProjectStartDate(); // This will need to be passed or fetched
-         if (startDate) {
-           const date = new Date(startDate);
-           const initialMonths = [];
-           for (let i = 0; i < 5; i++) { // Default to 5 months if none exist
-             initialMonths.push(
-               `${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear().toString().slice(2)}`
-             );
-             date.setMonth(date.getMonth() + 1);
-           }
-           setMonths(initialMonths);
-         } else {
-           setMonths([]); // Set empty if no start date either
-         }
       }
+    });
+
+    if (allMonths.size > 0) {
+      const sortedMonths = Array.from(allMonths).sort((a, b) => {
+        const [monthA, yearA] = a.split(' ');
+        const [monthB, yearB] = b.split(' ');
+        const monthNames = [
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        // Handle potential parsing errors
+        const yearIntA = parseInt(yearA);
+        const yearIntB = parseInt(yearB);
+        if (isNaN(yearIntA) || isNaN(yearIntB)) return 0; // Default sort order if year parsing fails
+
+        const yearDiff = yearIntA - yearIntB;
+        if (yearDiff !== 0) return yearDiff;
+        return monthNames.indexOf(monthA) - monthNames.indexOf(monthB);
+      });
+      setMonths(sortedMonths);
+    } else {
+      // If no months found in data, potentially set default months based on start date
+      const startDate = getProjectStartDate(); // This will need to be passed or fetched
+      if (startDate) {
+        const date = new Date(startDate);
+        const initialMonths = [];
+        for (let i = 0; i < 5; i++) { // Default to 5 months if none exist
+          initialMonths.push(
+            `${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear().toString().slice(2)}`
+          );
+          date.setMonth(date.getMonth() + 1);
+        }
+        setMonths(initialMonths);
+      } else {
+        setMonths([]); // Set empty if no start date either
+      }
+    }
   };
 
   const getProjectStartDate = () => {
@@ -131,14 +131,14 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
       try {
         const fetchedL1Options = await WBSOptionsAPI.getLevel1Options(formTypeValue);
         l1Options = fetchedL1Options;
-        
+
         // Fetch level 2 options for each level 1 option and store as keyed map
         const level2Promises = l1Options.map(async (level1Option) => {
           const level2Options = await WBSOptionsAPI.getLevel2Options(level1Option.id, formTypeValue);
           return { parentValue: level1Option.value.toLowerCase(), options: level2Options };
         });
         const level2Results = await Promise.all(level2Promises);
-        
+
         // Build level 2 options map
         level2Results.forEach(result => {
           newLevel2OptionsMap[result.parentValue] = result.options;
@@ -180,7 +180,7 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
           const wbsResponse = await WBSStructureAPI.getProjectWBS(projectId);
           const wbsData = wbsResponse.tasks;
           const fetchedWbsHeaderId = wbsResponse.wbsHeaderId;
-          
+
           // Store the wbsHeaderId for later use when saving
           setWbsHeaderId(fetchedWbsHeaderId);
 
@@ -217,7 +217,7 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
               totalCost: task.totalCost || 0,
               parentId: task.parentId ? task.parentId.toString() : null,
               taskType: task.taskType !== undefined ? task.taskType : (formType === 'odc' ? TaskType.ODC : TaskType.Manpower),
-              unit: isOdcTask ? (task.resourceUnit ?? '') : 'month',
+              unit: isOdcTask ? (task.resourceUnit ?? '') : 'hours',
               resource_role: (task as any).resourceRoleId ?? null,
               resource_role_name: (task as any).resourceRoleName ?? null,
               wbsOptionId: (task as any).wbsOptionId ?? null, // Capture wbsOptionId from backend
@@ -254,7 +254,7 @@ export const useWBSData = ({ formType }: UseWBSDataProps) => {
                   level2Option = newLevel2OptionsMap[key].find(opt => opt.value === level2Title);
                   if (level2Option) break;
                 }
-                
+
                 if (level2Option) {
                   const options = await WBSOptionsAPI.getLevel3Options(level2Option.id, formTypeValue);
                   newLevel3OptionsMap[level2Title.toLowerCase()] = options;

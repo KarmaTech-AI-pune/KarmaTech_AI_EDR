@@ -29,6 +29,7 @@ function getVersion(): string {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/',
   plugins: [react()],
   server: {
     host: '0.0.0.0', // Allow access from all network interfaces

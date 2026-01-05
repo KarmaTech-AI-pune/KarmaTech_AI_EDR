@@ -107,15 +107,22 @@ namespace NJSAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<bool>> DeleteWBSOption(int id)
         {
-            var command = new DeleteWBSOptionCommand { Id = id };
-            var result = await _mediator.Send(command);
-
-            if (!result)
+            try
             {
-                return NotFound();
-            }
+                var command = new DeleteWBSOptionCommand { Id = id };
+                var result = await _mediator.Send(command);
 
-            return NoContent();
+                if (!result)
+                {
+                    return NotFound();
+                }
+
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

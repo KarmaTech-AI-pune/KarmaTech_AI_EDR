@@ -5,7 +5,7 @@ namespace NJS.Application.Dtos
 {
     public class SprintTaskDto
     {
-        public string? Taskid { get; set; }
+        public int Taskid { get; set; }
         public int TenantId { get; set; }
         public string? Taskkey { get; set; }
         public string? TaskTitle { get; set; }
