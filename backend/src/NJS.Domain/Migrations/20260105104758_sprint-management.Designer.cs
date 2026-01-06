@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NJS.Domain.Database;
 
@@ -11,9 +12,16 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    partial class ProjectManagementContextModelSnapshot : ModelSnapshot
+<<<<<<<< HEAD:backend/src/NJS.Domain/Migrations/20251212112342_kiro-deploy_dev.Designer.cs
+    [Migration("20251212112342_kiro-deploy_dev")]
+    partial class kirodeploy_dev
+========
+    [Migration("20260105104758_sprint-management")]
+    partial class sprintmanagement
+>>>>>>>> origin/Saas/dev:backend/src/NJS.Domain/Migrations/20260105104758_sprint-management.Designer.cs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -565,55 +573,6 @@ namespace NJS.Domain.Migrations
                     b.HasIndex("StatusId");
 
                     b.ToTable("ChangeControlWorkflowHistories");
-                });
-
-            modelBuilder.Entity("NJS.Domain.Entities.ChangeItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Author")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ChangeType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("CommitSha")
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Impact")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("JiraTicket")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("ReleaseNotesId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChangeType");
-
-                    b.HasIndex("ReleaseNotesId");
-
-                    b.ToTable("ChangeItems");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ChangeOrder", b =>
@@ -3212,55 +3171,6 @@ namespace NJS.Domain.Migrations
                     b.ToTable("Regions");
                 });
 
-            modelBuilder.Entity("NJS.Domain.Entities.ReleaseNotes", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Branch")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("CommitSha")
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<string>("Environment")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime>("ReleaseDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Version")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Environment");
-
-                    b.HasIndex("ReleaseDate");
-
-                    b.HasIndex("Version")
-                        .IsUnique();
-
-                    b.ToTable("ReleaseNotes");
-                });
-
             modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
                 {
                     b.Property<string>("Id")
@@ -5077,17 +4987,6 @@ namespace NJS.Domain.Migrations
                     b.Navigation("Status");
                 });
 
-            modelBuilder.Entity("NJS.Domain.Entities.ChangeItem", b =>
-                {
-                    b.HasOne("NJS.Domain.Entities.ReleaseNotes", "ReleaseNotes")
-                        .WithMany("ChangeItems")
-                        .HasForeignKey("ReleaseNotesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReleaseNotes");
-                });
-
             modelBuilder.Entity("NJS.Domain.Entities.ChangeOrder", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.MonthlyProgress", "MonthlyProgress")
@@ -6196,11 +6095,6 @@ namespace NJS.Domain.Migrations
             modelBuilder.Entity("NJS.Domain.Entities.ProjectClosure", b =>
                 {
                     b.Navigation("WorkflowHistories");
-                });
-
-            modelBuilder.Entity("NJS.Domain.Entities.ReleaseNotes", b =>
-                {
-                    b.Navigation("ChangeItems");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
