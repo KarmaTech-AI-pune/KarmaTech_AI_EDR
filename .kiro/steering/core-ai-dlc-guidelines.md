@@ -4,6 +4,21 @@ inclusion: manual
 
 # Core AI-DLC Guidelines (Always Active)
 
+## 🚨 MANDATORY: Git Branch Setup (FIRST STEP ALWAYS)
+
+**Before ANY spec creation or development work, execute these 4 commands:**
+
+```powershell
+git branch --show-current          # 1. Check current branch
+git checkout Kiro/dev              # 2. Switch to base branch  
+git pull origin Kiro/dev           # 3. Get latest changes
+git checkout -b feature/[name]     # 4. Create clean feature branch
+```
+
+**🚫 NEVER skip this step. ALWAYS start here.**
+
+---
+
 ## 🚨 MANDATORY: 7-Step AI-DLC Process
 
 **CRITICAL**: Every feature implementation MUST follow the exact 7-step process. No exceptions, no shortcuts, no skipping steps.

@@ -18,6 +18,12 @@ The AI-DLC workflow now includes **automatic GitHub operations** at key points:
 ### **Complete Workflow Sequence:**
 
 ```
+0. 🚨 MANDATORY: Git branch setup (FIRST STEP ALWAYS)
+   └─ git branch --show-current
+   └─ git checkout Kiro/dev  
+   └─ git pull origin Kiro/dev
+   └─ git checkout -b feature/[name]
+   ↓
 1. User provides requirement
    ↓
 2. Kiro creates spec (Step 1: Requirements Analysis)
@@ -29,25 +35,24 @@ The AI-DLC workflow now includes **automatic GitHub operations** at key points:
 4. Kiro creates tasks (Step 3: Task Planning)
    └─ tasks.md (created and approved third)
    ↓
-5. 🤖 AUTOMATIC: Feature branch created
-   └─ git checkout -b feature/[name]
+5. 🤖 AUTOMATIC: Feature branch pushed to GitHub
    └─ git push -u origin feature/[name]
    ↓
-4. Kiro analyzes impact (Step 2: Impact Analysis)
+6. Kiro analyzes impact (Step 2: Impact Analysis)
    ↓
-5. Kiro creates design (Step 3: Technical Design)
+7. Kiro creates design (Step 3: Technical Design)
    ↓
-6. Kiro implements feature (Step 4: Implementation)
+8. Kiro implements feature (Step 4: Implementation)
    └─ 🤖 AUTOMATIC: Commits & pushes during development
    ↓
-7. 🤖 AUTOMATIC: Tests run (Step 5: Testing)
+9. 🤖 AUTOMATIC: Tests run (Step 5: Testing)
    └─ dotnet test & npm test
    └─ Generate coverage reports
    ↓
-8. Kiro validates code (Step 6: Validation)
-   ↓
-9. 🤖 AUTOMATIC: PR created (Step 6)
-   └─ gh pr create with test results
+10. Kiro validates code (Step 6: Validation)
+    ↓
+11. 🤖 AUTOMATIC: PR created (Step 6)
+    └─ gh pr create with test results
    ↓
 10. 👤 MANUAL: Human reviews & approves PR
     └─ ONLY MANUAL STEP (10-15 minutes)

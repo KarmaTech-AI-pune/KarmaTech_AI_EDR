@@ -4,6 +4,37 @@ inclusion: always
 
 # AI-DLC Workflow Enforcement Rules
 
+## MANDATORY: Git Branch Setup (BEFORE ANY WORK)
+
+**🚨 CRITICAL**: Before starting ANY spec creation or development work, you MUST execute these 4 commands in exact order:
+
+```powershell
+# MANDATORY SEQUENCE - Execute EVERY TIME before any work:
+git branch --show-current          # 1. Check current branch
+git checkout Kiro/dev              # 2. Switch to base branch  
+git pull origin Kiro/dev           # 3. Get latest changes
+git checkout -b feature/[name]     # 4. Create clean feature branch
+```
+
+**🚫 ABSOLUTE RULE**: 
+- NEVER start spec creation without executing these 4 commands first
+- NEVER assume you're on the right branch
+- NEVER skip pulling latest changes from Kiro/dev
+- ALWAYS create feature branch from clean Kiro/dev
+
+**✅ Success Indicators:**
+- Current branch shows: `feature/[descriptive-name]`
+- Branch is up-to-date with origin/Kiro/dev
+- Working tree is clean
+- Feature branch pushed to origin
+
+**Example Feature Branch Names:**
+- `feature/project-status-history`
+- `feature/user-authentication`
+- `feature/budget-health-indicator`
+
+---
+
 ## Mandatory 7-Step Process
 
 **CRITICAL**: Every feature implementation MUST follow the exact 7-step process outlined in `AI-DLC-Small-Feature-Example.md`. No exceptions, no shortcuts, no skipping steps.
@@ -11,6 +42,8 @@ inclusion: always
 ## Step-by-Step Enforcement Rules
 
 ### STEP 1: REQUIREMENT ANALYSIS (MANDATORY)
+
+**🚨 PREREQUISITE**: Git branch setup MUST be completed first (see section above)
 
 **Before proceeding to Step 2, you MUST:**
 
