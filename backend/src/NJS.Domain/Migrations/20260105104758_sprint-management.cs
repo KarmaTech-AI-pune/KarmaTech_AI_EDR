@@ -6,11 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace NJS.Domain.Migrations
 {
     /// <inheritdoc />
-<<<<<<<< HEAD:backend/src/NJS.Domain/Migrations/20251212112342_kiro-deploy_dev.cs
-    public partial class kirodeploy_dev : Migration
-========
     public partial class sprintmanagement : Migration
->>>>>>>> origin/Saas/dev:backend/src/NJS.Domain/Migrations/20260105104758_sprint-management.cs
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

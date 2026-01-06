@@ -12,13 +12,8 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-<<<<<<<< HEAD:backend/src/NJS.Domain/Migrations/20251212112342_kiro-deploy_dev.Designer.cs
-    [Migration("20251212112342_kiro-deploy_dev")]
-    partial class kirodeploy_dev
-========
     [Migration("20260105104758_sprint-management")]
     partial class sprintmanagement
->>>>>>>> origin/Saas/dev:backend/src/NJS.Domain/Migrations/20260105104758_sprint-management.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
