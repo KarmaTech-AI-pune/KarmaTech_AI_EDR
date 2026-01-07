@@ -10,5 +10,6 @@ namespace NJS.Application.CQRS.Projects.Commands
     public class DeleteProjectCommand:IRequest<Unit>
     {
         public int Id { get; set; }
+        public int? ProgramId { get; set; }
     }
 }
