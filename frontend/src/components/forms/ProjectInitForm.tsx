@@ -10,6 +10,7 @@ import {
 import { ProjectFormData } from '../../types/index.tsx';
 import { percentageCalculation } from '../../utils/calculations.ts';
 import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts';
+import { formatIndianNumber } from '../../utils/numberFormatting.ts';
 
 interface ProjectFormType {
   project?: ProjectFormData;
@@ -60,7 +61,10 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
 
   useEffect(() => {
     if (formData.feeType === 'Percentage') {
-      const fee = percentageCalculation(formData.percentage || 0, Number(formData.estimatedProjectCost));
+      const cost = typeof formData.estimatedProjectCost === 'string'
+        ? parseFloat((formData.estimatedProjectCost as any).replace(/,/g, '')) || 0
+        : formData.estimatedProjectCost;
+      const fee = percentageCalculation(formData.percentage || 0, cost);
       setFormData(prev => ({ ...prev, estimatedProjectFee: fee }));
     }
   }, [formData.percentage, formData.estimatedProjectCost, formData.feeType]);
@@ -77,11 +81,14 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Allow digits, minus sign at start, and one dot
-    if (value === '' || /^-?\d*\.?\d*$/.test(value)) {
+    // Strip commas for internal processing
+    const rawValue = value.replace(/,/g, '');
+
+    // Allow digits, one dot, and minus sign at start
+    if (rawValue === '' || /^-?\d*\.?\d*$/.test(rawValue)) {
       setFormData((prev) => ({
         ...prev,
-        [name]: value,
+        [name]: rawValue,
       }));
     }
   };
@@ -92,8 +99,8 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
 
     const submissionData: ProjectFormData = {
       ...formData,
-      estimatedProjectCost: Number(formData.estimatedProjectCost),
-      estimatedProjectFee: Number(formData.estimatedProjectFee || 0),
+      estimatedProjectCost: typeof formData.estimatedProjectCost === 'string' ? parseFloat((formData.estimatedProjectCost as any).replace(/,/g, '')) || 0 : formData.estimatedProjectCost,
+      estimatedProjectFee: typeof formData.estimatedProjectFee === 'string' ? parseFloat((formData.estimatedProjectFee as any).replace(/,/g, '')) || 0 : formData.estimatedProjectFee,
       projectManagerId: formData.projectManagerId,
       seniorProjectManagerId: formData.seniorProjectManagerId,
       regionalManagerId: formData.regionalManagerId,
@@ -280,7 +287,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               label="Estimated Project Cost"
               name="estimatedProjectCost"
               type="text"
-              value={formData.estimatedProjectCost}
+              value={formatIndianNumber(formData.estimatedProjectCost)}
               onChange={handleNumberChange}
               required
             />
@@ -304,7 +311,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               label="Estimated Project Fee"
               name="estimatedProjectFee"
               type="text"
-              value={formData.estimatedProjectFee}
+              value={formatIndianNumber(formData.estimatedProjectFee)}
               onChange={handleNumberChange}
             // disabled={formData.feeType === 'Percentage'}
             />
