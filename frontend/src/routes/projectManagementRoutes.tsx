@@ -3,6 +3,7 @@ import { RouteObject, Navigate } from 'react-router-dom';
 import { PermissionType } from '../models';
 import NotFound from '../pages/NotFound';
 
+const ProgramManagement = lazy(() => import('../features/program/components/ProgramManagement'));
 const ProjectManagement = lazy(() => import('../pages/ProjectManagement'));
 const ProjectDetails = lazy(() => import('../pages/projectManagement/ProjectDetails'));
 const ResourceManagement = lazy(() => import('../components/ResourceManagement'));
@@ -18,6 +19,10 @@ export const projectManagementRoutes: RouteObject[] = [
     children: [
       {
         index: true,
+        element: <ProgramManagement />,
+      },
+      {
+        path: 'program',
         element: <ProjectManagement />,
       },
       {

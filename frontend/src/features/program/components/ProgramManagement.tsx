@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -7,8 +8,8 @@ import {
   Snackbar,
   TextField,
   IconButton,
-  Divider,
-  } from '@mui/material';
+  Divider
+} from '@mui/material';
 import { Add, Search } from '@mui/icons-material';
 import { Program } from '../types/types';
 import { programService } from '../services/programService';
@@ -21,6 +22,7 @@ export interface ProgramManagementProps {
 }
 
 export const ProgramManagement: React.FC<ProgramManagementProps> = ({ className }) => {
+  const navigate = useNavigate();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ className 
       setLoading(true);
       setError(null);
       const data = await programService.getAllPrograms();
+      console.log('Fetched programs:', data);
       setPrograms(data);
     } catch (err: any) {
       console.error('Error fetching programs:', err);
@@ -128,8 +131,10 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ className 
   };
 
   const handleViewProgram = (program: Program) => {
-    // Navigate to program details page
-    console.log('View program:', program);
+    console.log('handleViewProgram called with program:', program);
+    console.log('Navigating to: /project-management/program');
+    // Navigate to project management page
+    navigate('/project-management/program');
   };
 
   const handleCloseCreateDialog = () => {

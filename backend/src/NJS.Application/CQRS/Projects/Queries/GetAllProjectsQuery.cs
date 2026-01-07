@@ -6,5 +6,6 @@ namespace NJS.Application.CQRS.Projects.Queries
 {
     public record GetAllProjectsQuery : IRequest<IEnumerable<Project>>
     {
+        public int? ProgramId { get; init; }
     }
 }

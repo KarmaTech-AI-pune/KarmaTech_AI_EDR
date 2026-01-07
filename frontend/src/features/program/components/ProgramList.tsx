@@ -75,10 +75,12 @@ export const ProgramList: React.FC<ProgramListProps> = ({
           {programs.map((program) => (
             <Card 
               key={program.id} 
+              onClick={() => onViewProgram && onViewProgram(program)}
               sx={{ 
                 mb: 2, 
                 border: 1, 
                 borderColor: 'divider',
+                cursor: onViewProgram ? 'pointer' : 'default',
                 '&:hover': {
                   boxShadow: 3,
                   transform: 'translateY(-2px)',
@@ -126,37 +128,36 @@ export const ProgramList: React.FC<ProgramListProps> = ({
                 </Grid>
               </CardContent>
 
-              <CardActions sx={{ justifyContent: 'flex-end', p: 2, pt: 0 }}>
-                {onViewProgram && (
-                  <Button 
-                    size="small" 
-                    onClick={() => onViewProgram(program)}
-                    variant="outlined"
-                  >
-                    View Details
-                  </Button>
-                )}
-                {canEdit && onEditProgram && (
-                  <Button 
-                    size="small" 
-                    onClick={() => onEditProgram(program)}
-                    startIcon={<Edit />}
-                    color="primary"
-                  >
-                    Edit
-                  </Button>
-                )}
-                {canDelete && onProgramDeleted && (
-                  <Button 
-                    size="small" 
-                    onClick={() => onProgramDeleted(program.id)}
-                    startIcon={<Delete />}
-                    color="error"
-                  >
-                    Delete
-                  </Button>
-                )}
-              </CardActions>
+              {(canEdit && onEditProgram) || (canDelete && onProgramDeleted) ? (
+                <CardActions sx={{ justifyContent: 'flex-end', p: 2, pt: 0 }}>
+                  {canEdit && onEditProgram && (
+                    <Button 
+                      size="small" 
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent card click
+                        onEditProgram(program);
+                      }}
+                      startIcon={<Edit />}
+                      color="primary"
+                    >
+                      Edit
+                    </Button>
+                  )}
+                  {canDelete && onProgramDeleted && (
+                    <Button 
+                      size="small" 
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent card click
+                        onProgramDeleted(program.id);
+                      }}
+                      startIcon={<Delete />}
+                      color="error"
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </CardActions>
+              ) : null}
             </Card>
           ))}
         </List>

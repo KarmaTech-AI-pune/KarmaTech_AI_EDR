@@ -23,8 +23,13 @@ namespace NJS.Repositories.Repositories
             _logger = logger;
         }
 
-        public async Task<IEnumerable<Project>> GetAll()
+        public async Task<IEnumerable<Project>> GetAll(int? programId = null)
         {
+            if (programId.HasValue)
+            {
+                var query = _repository.Query();
+                return await query.Where(p => p.ProgramId == programId).ToListAsync().ConfigureAwait(false);
+            }
             return  await _repository.GetAllAsync().ConfigureAwait(false);
         }
 

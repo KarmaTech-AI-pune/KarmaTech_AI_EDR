@@ -21,6 +21,15 @@ namespace NJS.Application.CQRS.Projects.Handlers
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
+            if (request.ProgramId.HasValue)
+            {
+                var existingProject = _repository.GetById(request.Id);
+                if (existingProject != null && existingProject.ProgramId != request.ProgramId.Value)
+                {
+                    throw new ArgumentException($"Project with ID {request.Id} does not belong to Program {request.ProgramId.Value}");
+                }
+            }
+
             try
             {
                 // We don't need to check if the project exists first

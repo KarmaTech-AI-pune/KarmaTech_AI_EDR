@@ -22,7 +22,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
         {
             try
             {
-                return await _repository.GetAll();
+                return await _repository.GetAll(request.ProgramId);
             }
             catch (Exception ex)
             {
