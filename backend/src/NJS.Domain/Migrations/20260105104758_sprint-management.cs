@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace NJS.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class WBSRestructureDashboardProjectDeletesprint : Migration
+    public partial class sprintmanagement : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -2250,7 +2250,7 @@ namespace NJS.Domain.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CommentText = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Taskid = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Taskid = table.Column<int>(type: "int", nullable: false),
                     SubtaskId = table.Column<int>(type: "int", nullable: true),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -2285,7 +2285,7 @@ namespace NJS.Domain.Migrations
                     SubtaskcreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     SubtaskupdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     SubtaskType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Taskid = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Taskid = table.Column<int>(type: "int", nullable: false),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
                     EstimatedHours = table.Column<int>(type: "int", nullable: false),
                     ActualHours = table.Column<int>(type: "int", nullable: false),
@@ -2305,7 +2305,7 @@ namespace NJS.Domain.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CommentText = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Taskid = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Taskid = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -2320,7 +2320,8 @@ namespace NJS.Domain.Migrations
                 name: "SprintTasks",
                 columns: table => new
                 {
-                    Taskid = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Taskid = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     Taskkey = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TaskTitle = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -3494,21 +3495,24 @@ namespace NJS.Domain.Migrations
                 table: "SprintSubtaskComments",
                 column: "Taskid",
                 principalTable: "SprintTasks",
-                principalColumn: "Taskid");
+                principalColumn: "Taskid",
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_SprintSubtasks_SprintTasks_Taskid",
                 table: "SprintSubtasks",
                 column: "Taskid",
                 principalTable: "SprintTasks",
-                principalColumn: "Taskid");
+                principalColumn: "Taskid",
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_SprintTaskComments_SprintTasks_Taskid",
                 table: "SprintTaskComments",
                 column: "Taskid",
                 principalTable: "SprintTasks",
-                principalColumn: "Taskid");
+                principalColumn: "Taskid",
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_SprintTasks_UserWBSTasks_UserTaskId",

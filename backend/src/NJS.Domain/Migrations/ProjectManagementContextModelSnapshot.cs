@@ -3524,8 +3524,8 @@ namespace NJS.Domain.Migrations
                     b.Property<DateTime?>("SubtaskupdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Taskid")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Taskid")
+                        .HasColumnType("int");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
@@ -3557,8 +3557,8 @@ namespace NJS.Domain.Migrations
                     b.Property<int?>("SubtaskId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Taskid")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Taskid")
+                        .HasColumnType("int");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
@@ -3580,8 +3580,11 @@ namespace NJS.Domain.Migrations
 
             modelBuilder.Entity("NJS.Domain.Entities.SprintTask", b =>
                 {
-                    b.Property<string>("Taskid")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Taskid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Taskid"));
 
                     b.Property<string>("AcceptanceCriteria")
                         .HasMaxLength(1000)
@@ -3696,8 +3699,8 @@ namespace NJS.Domain.Migrations
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Taskid")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Taskid")
+                        .HasColumnType("int");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
@@ -5489,7 +5492,9 @@ namespace NJS.Domain.Migrations
                 {
                     b.HasOne("NJS.Domain.Entities.SprintTask", "ParentTask")
                         .WithMany("Subtasks")
-                        .HasForeignKey("Taskid");
+                        .HasForeignKey("Taskid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ParentTask");
                 });
@@ -5502,7 +5507,9 @@ namespace NJS.Domain.Migrations
 
                     b.HasOne("NJS.Domain.Entities.SprintTask", "SprintTask")
                         .WithMany()
-                        .HasForeignKey("Taskid");
+                        .HasForeignKey("Taskid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("SprintSubtask");
 
@@ -5534,7 +5541,9 @@ namespace NJS.Domain.Migrations
                 {
                     b.HasOne("NJS.Domain.Entities.SprintTask", "SprintTask")
                         .WithMany()
-                        .HasForeignKey("Taskid");
+                        .HasForeignKey("Taskid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("SprintTask");
                 });

@@ -13,6 +13,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
 import { WBSRowData, WBSChildTotals } from '../types/wbs';
+import { formatIndianCurrency } from '../utils/wbsUtils';
 import {
   useWBSRowLogic,
   NumberInput,
@@ -79,6 +80,12 @@ const WBSRow: React.FC<WBSRowProps> = ({
     handleAutocompleteInputChange,
     handleAutocompleteChange,
   } = useWBSRowLogic({ row, childTotals, sequenceNumber, stickyColumn });
+
+  const handleNumericKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+      e.preventDefault();
+    }
+  };
 
   return (
     <TableRow
@@ -245,10 +252,12 @@ const WBSRow: React.FC<WBSRowProps> = ({
         {row.level === 3 ? (
           formType === 'odc' ? (
             <NumberInput
-              type="text"
+              type="number"
+              step="any"
               value={row.costRate || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCostRateChange(row.id, e.target.value)}
               min="0"
+              onKeyDown={handleNumericKeyDown}
               disabled={editMode}
               style={{
                 backgroundColor: editMode ? '#f5f5f5' : 'white'
@@ -256,10 +265,13 @@ const WBSRow: React.FC<WBSRowProps> = ({
             />
           ) : (
             <NumberInput
-              type="text"
+              type="number"
+              step="any"
               value={row.costRate || ''}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCostRateChange(row.id, e.target.value)}
               disabled={editMode || !row.role}
+              onKeyDown={handleNumericKeyDown}
+              min="0"
               title={rateTooltip}
               style={{
                 backgroundColor: editMode ? '#f5f5f5' : 'white'
@@ -294,10 +306,12 @@ const WBSRow: React.FC<WBSRowProps> = ({
         <TableCell key={month}>
           {row.level === 3 ? (
             <NumberInput
-              type="text"
+              type="number"
+              step="any"
               value={getPlannedHours(month)}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleHoursChange(row.id, month, e.target.value)}
               min="0"
+              onKeyDown={handleNumericKeyDown}
               style={{
                 backgroundColor: editMode ? '#f5f5f5' : 'white'
               }}
@@ -346,7 +360,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             {row.level === 3 ? (
               <NumberInput
                 type="text"
-                value={row.odc || ''}
+                value={formatIndianCurrency(row.odc || 0)}
                 readOnly
                 style={{
                   backgroundColor: '#f5f5f5'
@@ -355,7 +369,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             ) : childTotals ? (
               <NumberInput
                 type="text"
-                value={childTotals.odc || ''}
+                value={formatIndianCurrency(childTotals.odc || 0)}
                 readOnly
                 style={{
                   backgroundColor: '#f5f5f5'
@@ -372,10 +386,12 @@ const WBSRow: React.FC<WBSRowProps> = ({
             <TableCell>
               {row.level === 3 ? (
                 <NumberInput
-                  type="text"
+                  type="number"
+                  step="any"
                   value={row.odc || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleODCChange(row.id, e.target.value)}
                   min="0"
+                  onKeyDown={handleNumericKeyDown}
                   style={{
                     backgroundColor: editMode ? '#f5f5f5' : 'white'
                   }}
@@ -384,7 +400,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
               ) : childTotals ? (
                 <NumberInput
                   type="text"
-                  value={childTotals.odc || ''}
+                  value={formatIndianCurrency(childTotals.odc || 0)}
                   readOnly
                   style={{
                     backgroundColor: '#f5f5f5'
@@ -422,7 +438,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             {row.level === 3 ? (
               <NumberInput
                 type="text"
-                value={row.totalCost}
+                value={formatIndianCurrency(row.totalCost)}
                 readOnly
                 style={{
                   backgroundColor: '#f5f5f5'
@@ -431,7 +447,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             ) : childTotals ? (
               <NumberInput
                 type="text"
-                value={childTotals.totalCost || ''}
+                value={formatIndianCurrency(childTotals.totalCost || 0)}
                 readOnly
                 style={{
                   backgroundColor: '#f5f5f5'
