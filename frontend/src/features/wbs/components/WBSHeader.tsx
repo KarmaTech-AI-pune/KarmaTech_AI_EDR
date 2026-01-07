@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -51,7 +51,7 @@ const WBSHeader: React.FC = () => {
   const canEdit = (isAdmin || isPM) && [0, 1, 3, 6].includes(statusId);
 
   // Auto-exit edit mode if permissions change while editing
-  React.useEffect(() => {
+  useEffect(() => {
     console.log('WBSHeader Auto-Exit Check:', { editMode, canEdit, isUnderApproval, status, statusId });
     // editMode = true means READ ONLY. editMode = false means EDITING.
     // If we are EDITING (!editMode) and we CANNOT edit (!canEdit), then toggle to Read Only.
