@@ -120,7 +120,13 @@ export const ProjectManagement: React.FC = () => {
 
   const handleProjectCreated = async (data: ProjectFormData) => {
     try {
-      await projectApi.createProject(data);
+      const storedProgramId = sessionStorage.getItem('selectedProgramId');
+      if (!storedProgramId) {
+        throw new Error('No program selected. Please select a program first.');
+      }
+      const programId = parseInt(storedProgramId);
+
+      await projectApi.createProject(data, programId);
       await fetchProjects();
       setSuccessMessage('Project created successfully');
     } catch (err) {
