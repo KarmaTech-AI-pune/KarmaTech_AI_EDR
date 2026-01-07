@@ -6,7 +6,7 @@ import {
   styled
 } from '@mui/material';
 import LoadingButton from '../../../components/common/LoadingButton';
-
+import { formatIndianCurrency } from '../utils/wbsUtils';
 
 const SummaryText = styled(Typography)({
   fontWeight: 500,
@@ -45,7 +45,7 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
       </SummaryText>
       <Divider orientation="vertical" flexItem />
       <SummaryText>
-        Total Cost: {currency} {totalCost.toLocaleString()}
+        Total Cost: {currency} {formatIndianCurrency(totalCost)}
       </SummaryText>
       {!disabled && (
         <LoadingButton
