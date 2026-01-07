@@ -23,15 +23,39 @@ export const ItemActionButtons: React.FC<ItemActionButtonsProps> = ({
     <Box display="flex" gap={1}>
       {showAddChild && onAddChild && (
         <Tooltip title={addChildLabel} arrow>
-          <IconButton size="small" onClick={onAddChild} color="success" disabled={disabled}>
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddChild();
+            }}
+            color="success"
+            disabled={disabled}
+          >
             <AddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
-      <IconButton size="small" onClick={onEdit} color="primary" disabled={disabled}>
+      <IconButton
+        size="small"
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit();
+        }}
+        color="primary"
+        disabled={disabled}
+      >
         <EditIcon fontSize="small" />
       </IconButton>
-      <IconButton size="small" onClick={onDelete} color="error" disabled={disabled}>
+      <IconButton
+        size="small"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        color="error"
+        disabled={disabled}
+      >
         <DeleteIcon fontSize="small" />
       </IconButton>
     </Box>

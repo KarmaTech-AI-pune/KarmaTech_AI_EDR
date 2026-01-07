@@ -1,4 +1,4 @@
-import React from 'react'; // Keep React for JSX
+import React, { useRef, useEffect } from 'react'; // Added useRef and useEffect
 import {
   Dialog,
   DialogTitle,
@@ -56,6 +56,20 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
     preSelectedParentId,
   });
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Small timeout to ensure the dialog is fully mounted and animation initialized
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{dialogTitle}</DialogTitle>
@@ -68,6 +82,7 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
+                inputRef={inputRef}
                 label="Description"
                 fullWidth
                 margin="normal"

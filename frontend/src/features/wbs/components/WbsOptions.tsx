@@ -6,11 +6,15 @@ import ConfirmationDialog from './ConfirmationDialog';
 import { useWbsOptionsLogic } from '../hooks/useWbsOptionsLogic';
 import { useExpansionState } from '../hooks/useExpansionState';
 
+interface WbsOptionsProps {
+  formType?: number;
+}
+
 /**
  * Smart container component that manages WBS options data and state
  * Delegates rendering to presentational components
  */
-const WbsOptions = () => {
+const WbsOptions: React.FC<WbsOptionsProps> = ({ formType = 0 }) => {
   const {
     wbsData,
     isLoading,
@@ -31,7 +35,7 @@ const WbsOptions = () => {
     handleConfirmDelete,
     formDialogTitle,
     confirmationDialogMessage,
-  } = useWbsOptionsLogic();
+  } = useWbsOptionsLogic(formType);
 
   const {
     expandedLevel1,
