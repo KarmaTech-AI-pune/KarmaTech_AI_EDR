@@ -46,18 +46,18 @@ export const ProjectManagement: React.FC = () => {
       // if (canViewProjects) {
       //   response = (await projectApi.getByUserId(currentUser.id));
       // } 
-     
-      
-         if (currentUser.roles.some(role => role.name === "Project Manager")) {
-              response =(await projectApi.getByUserId(currentUser.id));;
-            } 
-            else if (currentUser.roles.some(role => role.name ===  "Senior Project Manager")) {
-              response = (await projectApi.getByUserId(currentUser.id));
-            }  
-            else if (currentUser.roles.some(role => role.name ===  "Regional Director")) {
-              response =  response = (await projectApi.getByUserId(currentUser.id));;
-            } 
-      
+
+
+      if (currentUser.roles.some(role => role.name === "Project Manager")) {
+        response = (await projectApi.getByUserId(currentUser.id));;
+      }
+      else if (currentUser.roles.some(role => role.name === "Senior Project Manager")) {
+        response = (await projectApi.getByUserId(currentUser.id));
+      }
+      else if (currentUser.roles.some(role => role.name === "Regional Director")) {
+        response = response = (await projectApi.getByUserId(currentUser.id));;
+      }
+
       else {
         response = await projectApi.getAll();
       }
@@ -120,7 +120,7 @@ export const ProjectManagement: React.FC = () => {
 
   const handleProjectCreated = async (data: ProjectFormData) => {
     try {
-      const storedProgramId = sessionStorage.getItem('selectedProgramId');
+      const storedProgramId = sessionStorage.getItem('ProgramId');
       if (!storedProgramId) {
         throw new Error('No program selected. Please select a program first.');
       }
@@ -172,7 +172,7 @@ export const ProjectManagement: React.FC = () => {
 
     // If user has admin permissions, show all projects
     if (currentUser.roleDetails?.permissions.includes(PermissionType.SYSTEM_ADMIN) ||
-        currentUser.roleDetails?.permissions.includes(PermissionType.Tenant_ADMIN)) {
+      currentUser.roleDetails?.permissions.includes(PermissionType.Tenant_ADMIN)) {
       return true;
     }
 
