@@ -20,7 +20,14 @@ export const ExpandableIcon: React.FC<ExpandableIconProps> = ({
   }
 
   return (
-    <IconButton size={size} onClick={onToggle} sx={{ width: 24, height: 24 }}>
+    <IconButton
+      size={size}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      sx={{ width: 24, height: 24 }}
+    >
       {isExpanded ? <ExpandMoreIcon fontSize={size} /> : <ChevronRightIcon fontSize={size} />}
     </IconButton>
   );

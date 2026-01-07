@@ -38,7 +38,18 @@ export const WBSItemRow: React.FC<WBSItemRowProps> = ({
   addChildLabel,
 }) => {
   return (
-    <TableRow sx={{ backgroundColor }}>
+    <TableRow
+      onClick={() => hasChildren && onToggle()}
+      sx={{
+        backgroundColor: backgroundColor,
+        cursor: hasChildren ? 'pointer' : 'default',
+        '&:hover': {
+          backgroundColor: hasChildren ? backgroundColor : backgroundColor,
+          filter: hasChildren ? 'brightness(0.88) !important' : 'none',
+        },
+        transition: 'filter 0.2s ease-in-out',
+      }}
+    >
       <TableCell sx={{ paddingLeft, width: '15%' }}>
         <Box display="flex" alignItems="center" gap={1}>
           <ExpandableIcon
