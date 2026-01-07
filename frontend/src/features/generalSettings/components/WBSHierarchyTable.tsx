@@ -50,7 +50,7 @@ export const WBSHierarchyTable: React.FC<WBSHierarchyTableProps> = ({
         </Box>
       </Box>
       <TableContainer component={Paper}>
-        <Table size="small">
+        <Table size="small" sx={{ tableLayout: 'fixed' }}>
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Level</TableCell>

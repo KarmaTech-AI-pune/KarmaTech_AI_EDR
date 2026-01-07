@@ -190,7 +190,7 @@ export const useWbsOptionsLogic = (formType: number = 0) => {
           value: value,
           label: data.label,
           level: currentEditingItem.level,
-          parentValue: data.parentId ? String(data.parentId) : null,
+          parentValue: data.parentId !== null ? String(data.parentId) : null,
           formType: formType,
         };
 
@@ -208,7 +208,7 @@ export const useWbsOptionsLogic = (formType: number = 0) => {
           value: value,
           label: data.label,
           level: currentLevelForForm!,
-          parentValue: data.parentId ? String(data.parentId) : null,
+          parentValue: data.parentId !== null ? String(data.parentId) : null,
           formType: formType,
         };
 

@@ -16,7 +16,7 @@ export const CollapsibleTableRow: React.FC<CollapsibleTableRowProps> = ({
     <TableRow>
       <TableCell colSpan={colSpan} sx={{ padding: 0, border: 0 }}>
         <Collapse in={isOpen} timeout="auto" unmountOnExit>
-          <Table size="small">
+          <Table size="small" sx={{ tableLayout: 'fixed' }}>
             <TableBody>{children}</TableBody>
           </Table>
         </Collapse>
