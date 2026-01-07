@@ -132,7 +132,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ className 
 
   const handleViewProgram = (program: Program) => {
     console.log('handleViewProgram called with program:', program);
-    console.log('Navigating to: /project-management/program');
+    sessionStorage.setItem('ProgramId', program.id.toString());
     // Navigate to project management page
     navigate('/project-management/program');
   };
