@@ -153,35 +153,6 @@ const VirtualizedList = <T,>({
     }
   }, [scrollTop, height, itemHeight, totalHeight]);
 
-  // Scroll to item
-  const scrollToItem = useCallback((index: number, align: 'start' | 'center' | 'end' = 'start') => {
-    if (!containerRef.current || index < 0 || index >= items.length) {
-      return;
-    }
-
-    const itemTop = index * itemHeight;
-    const containerHeight = height;
-    
-    let scrollTop: number;
-    
-    switch (align) {
-      case 'start':
-        scrollTop = itemTop;
-        break;
-      case 'center':
-        scrollTop = itemTop - (containerHeight - itemHeight) / 2;
-        break;
-      case 'end':
-        scrollTop = itemTop - containerHeight + itemHeight;
-        break;
-    }
-
-    // Clamp scroll position
-    scrollTop = Math.max(0, Math.min(totalHeight - containerHeight, scrollTop));
-    
-    containerRef.current.scrollTop = scrollTop;
-  }, [items.length, itemHeight, height, totalHeight]);
-
   // Performance monitoring
   const renderStats = useMemo(() => {
     const visibleCount = visibleRange.endIndex - visibleRange.startIndex + 1;

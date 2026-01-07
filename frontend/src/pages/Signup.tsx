@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import NotificationSnackbar from '../components/widgets/NotificationSnackbar';
 import FormField from '../components/forms/FormField';
+import { VersionDisplay } from '../components/VersionDisplay';
 import { signupSchema } from '../schemas/signupSchema';
 import { z } from 'zod';
 import { authApi } from '../services/authApi';
