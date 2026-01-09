@@ -42,11 +42,11 @@ namespace NJSAPI.Controllers
         /// <summary>
         /// Creates a new project
         /// </summary>
-        [HttpPost("{programId}")]
+        [HttpPost]
         [ProducesResponseType(typeof(Project), 201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> Create([FromBody] ProjectDto projectData, int programId)
+        public async Task<IActionResult> Create([FromBody] ProjectDto projectData)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -62,9 +62,6 @@ namespace NJSAPI.Controllers
 
                 // Set the tenant ID in the project data
                 projectData.TenantId = CurrentTenantId;
-                
-                // Set the Program ID
-                projectData.ProgramId = programId;
 
                 var command = new CreateProjectCommand(projectData);
                 var createdProject = await _mediator.Send(command);
@@ -78,12 +75,12 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
-        /// Gets a project by ID and Program ID
+        /// Gets a project by ID
         /// </summary>
-        [HttpGet("program/{programId}/project/{id}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(Project), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> GetById(int programId, int id)
+        public async Task<IActionResult> GetById(int id)
         {
             try
             {
@@ -94,7 +91,7 @@ namespace NJSAPI.Controllers
                     if (accessCheck != null) return accessCheck;
                 }
 
-                var query = new GetProjectByIdQuery { Id = id, ProgramId = programId };
+                var query = new GetProjectByIdQuery { Id = id };
                 var result = await _mediator.Send(query);
 
                 if (result == null)
@@ -112,14 +109,26 @@ namespace NJSAPI.Controllers
         /// <summary>
         /// Gets projects by UserId
         /// </summary>
-      
+        [HttpGet("getByUserId/{userId}")]
+        [ProducesResponseType(typeof(Project), 200)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetByUserId(string userId)
+        {
+            var query = new GetProjectByUserIdQuery { UserId = userId };
+            var result = await _mediator.Send(query);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
 
         /// <summary>
-        /// Gets all projects for a program
+        /// Gets all projects
         /// </summary>
-        [HttpGet("{programId}")]
+        [HttpGet]
         [ProducesResponseType(typeof(Project[]), 200)]
-        public async Task<IActionResult> GetAll(int programId)
+        public async Task<IActionResult> GetAll()
         {
             try
             {
@@ -130,7 +139,7 @@ namespace NJSAPI.Controllers
                     if (accessCheck != null) return accessCheck;
                 }
 
-                var query = new GetAllProjectsQuery { ProgramId = programId };
+                var query = new GetAllProjectsQuery();
                 var result = await _mediator.Send(query);
                 return Ok(result);
             }
@@ -144,12 +153,12 @@ namespace NJSAPI.Controllers
         /// <summary>
         /// Updates an existing project
         /// </summary>
-        [HttpPut("{programId}/{id}")]
+        [HttpPut("{id}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> Update(int id, [FromBody] ProjectDto projectData, int programId)
+        public async Task<IActionResult> Update(int id, [FromBody] ProjectDto projectData)
         {
             // Log the update request
             projectData.Office = projectData.Office ?? string.Empty;
@@ -175,8 +184,7 @@ namespace NJSAPI.Controllers
                 var command = new UpdateProjectCommand
                 {
                     Id = id,
-                    ProjectDto = projectData,
-                    ProgramId = programId
+                    ProjectDto = projectData
                 };
                 await _mediator.Send(command);
 
@@ -202,17 +210,17 @@ namespace NJSAPI.Controllers
         /// <summary>
         /// Deletes a project
         /// </summary>
-        [HttpDelete("{programId}/{id}")]
+        [HttpDelete("{id}")]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> Delete(int id, int programId)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {
 
                 try
                 {
-                    await _mediator.Send(new DeleteProjectCommand { Id = id, ProgramId = programId });
+                    await _mediator.Send(new DeleteProjectCommand { Id = id });
                     // Log success
                     return Ok(new { success = true, message = $"Project with ID {id} deleted successfully" });
                 }
@@ -229,21 +237,7 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
-           
 
-             [HttpGet("getByUserId/{userId}")]
-        [ProducesResponseType(typeof(Project), 200)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> GetByUserId(string userId)
-        {
-            var query = new GetProjectByUserIdQuery { UserId = userId };
-            var result = await _mediator.Send(query);
-
-            if (result == null)
-                return NotFound();
-
-            return Ok(result);
-        }
         /// <summary>
         /// Debug endpoint to check current tenant context
         /// </summary>

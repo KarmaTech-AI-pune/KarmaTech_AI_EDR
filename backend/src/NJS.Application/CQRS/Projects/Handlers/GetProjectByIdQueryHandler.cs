@@ -26,11 +26,6 @@ namespace NJS.Application.CQRS.Projects.Handlers
             if (project == null)
                 throw new ArgumentException($"Project with ID {request.Id} not found");
 
-            if (request.ProgramId.HasValue && project.ProgramId != request.ProgramId.Value)
-            {
-                throw new ArgumentException($"Project with ID {request.Id} does not belong to Program {request.ProgramId.Value}"); 
-            }
-
             return Task.FromResult(project);
         }
     }
