@@ -14,14 +14,7 @@ export const NumberInput = styled('input')({
   '&:focus': {
     outline: 'none',
     borderColor: '#1976d2'
-  },
-  '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
-    '-webkit-appearance': 'none',
-    margin: 0,
-  },
-  '&[type=number]': {
-    '-moz-appearance': 'textfield',
-  },
+  }
 });
 
 export const StyledSelect = styled(Select)({

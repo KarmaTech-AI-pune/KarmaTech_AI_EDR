@@ -81,14 +81,6 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 // Update existing header
                 wbsHeader.VersionDate = DateTime.UtcNow;
                 wbsHeader.CreatedBy = _userContext.GetCurrentUserId() ?? _currentUser;
-
-                // Reset status to Initial if it was previously Approved
-                if (wbsHeader.ApprovalStatus == PMWorkflowStatusEnum.Approved)
-                {
-                    wbsHeader.ApprovalStatus = PMWorkflowStatusEnum.Initial;
-                    _logger.LogInformation("SetWBSCommandHandler: Resetting ApprovalStatus to Initial because an approved WBS was edited for header ID {WbsHeaderId}", wbsHeader.Id);
-                }
-
                 _context.WBSHeaders.Update(wbsHeader);
             }
             else
