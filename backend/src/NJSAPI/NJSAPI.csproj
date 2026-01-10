@@ -29,6 +29,15 @@
     <None Update="Templates\Email\otp-login.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="MigrationSQL\NonIsolatedSQL\01_DropIndex.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\NonIsolatedSQL\02_Setup_user.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\NonIsolatedSQL\01_Permissions.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -55,10 +64,6 @@
   <ItemGroup>
     <ProjectReference Include="..\NJS.Application\NJS.Application.csproj" />
     <ProjectReference Include="..\NJS.Domain\NJS.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="MigrationSQL\NonIsolatedSQL\" />
   </ItemGroup>
 
   <ItemGroup>
