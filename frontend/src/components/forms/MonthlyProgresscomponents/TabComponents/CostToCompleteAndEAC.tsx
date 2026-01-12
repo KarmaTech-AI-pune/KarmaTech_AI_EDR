@@ -4,6 +4,7 @@ import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/M
 import { Grid, Paper, TextField, Typography, Tooltip } from "@mui/material";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 import { calculateGrossPercentage } from "../../../../utils/calculations";
+import { formatToIndianNumber, formatIndianNumber, parseIndianNumber } from "../../../../utils/numberFormatting";
 
 interface FormFieldProps {
   name: keyof MonthlyProgressSchemaType['ctcAndEac'];
@@ -27,9 +28,9 @@ const FormField: React.FC<FormFieldProps> = ({ name, label, control, readOnly = 
         <TextField
           fullWidth
           label={label}
-          type="number"
-          value={value !== undefined ? value : field.value}
-          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+          type="text"
+          value={readOnly ? formatToIndianNumber(value !== undefined ? value : field.value) : formatIndianNumber((value !== undefined ? value : field.value) ?? undefined)}
+          onChange={(e) => field.onChange(e.target.value ? parseIndianNumber(e.target.value) : null)}
           onWheel={(e) => (e.target as HTMLInputElement).blur()}
           error={!!error}
           helperText={error?.message}
