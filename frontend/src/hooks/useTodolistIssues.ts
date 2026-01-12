@@ -1,48 +1,124 @@
 import { useState, useEffect } from 'react';
-import { fetchIssuesFromAPI, teamMembers, updateIssueAPI, updateSubtaskAPI, createIssueAPI, deleteIssueAPI, createSubtaskAPI, deleteSubtaskAPI } from '../data/todolistData';
+import { fetchIssuesForSprintAPI, teamMembers, updateIssueAPI, updateSubtaskAPI, createIssueAPI, deleteIssueAPI, createSubtaskAPI, deleteSubtaskAPI, SprintEmployee, SprintPlanDto, fetchActiveSprintIdAPI, updateSprintPlanAPI, fetchNextSprintAPI } from '../data/todolistData';
 import { Issue, NewIssueFormState, Subtask, NewSubtaskFormState, Comment } from '../types/todolist';
 import { commentService } from '../services/commentService';
+import { useProject } from '../context/ProjectContext';
 
-export const useTodolistIssues = (projectId: number = 1) => {
+export const useTodolistIssues = () => {
+  const { projectId: contextProjectId } = useProject();
+  const projectId = contextProjectId ? parseInt(contextProjectId) : null;
+
+  const [sprintId, setSprintId] = useState<number | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [sprintPlan, setSprintPlan] = useState<SprintPlanDto | null>(null);
+  const [sprintEmployees, setSprintEmployees] = useState<SprintEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load issues from API on mount
+  // 1. Watch projectId change (RESET & FETCH ACTIVE SPRINT)
   useEffect(() => {
-    const loadIssues = async () => {
+    const fetchSprintId = async () => {
+      if (!projectId) {
+        setSprintId(null);
+        setIssues([]);
+        setSprintPlan(null);
+        setSprintEmployees([]);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const fetchedIssues = await fetchIssuesFromAPI(projectId);
-        setIssues(fetchedIssues);
+        // Reset state immediately to prevent mixing
+        setIssues([]);
+        setSprintPlan(null);
+        setSprintEmployees([]);
+        setError(null);
+
+        const activeId = await fetchActiveSprintIdAPI(projectId);
+        setSprintId(activeId);
+
+        if (!activeId) {
+          setLoading(false); // If no sprint, stop loading (empty state)
+        }
+      } catch (err) {
+        console.error('Failed to fetch active sprint:', err);
+        setError('Failed to load project schedule');
+        setLoading(false);
+      }
+    };
+
+    fetchSprintId();
+  }, [projectId]);
+
+  // 2. Load Sprint Data when sprintId changes
+  useEffect(() => {
+    const loadIssues = async () => {
+      if (!sprintId) return;
+
+      try {
+        setLoading(true);
+        // Pass projectId for validation to prevent sprint mixing across projects
+        const data = await fetchIssuesForSprintAPI(sprintId, projectId || undefined);
+
+        setIssues(data.issues);
+        setSprintPlan(data.sprintPlan);
+        setSprintEmployees(data.sprintEmployees);
         setError(null);
       } catch (err) {
         console.error('Failed to load issues:', err);
         setError('Failed to load issues from server');
-        // Fallback to empty array if API fails
         setIssues([]);
+        setSprintPlan(null);
+        setSprintEmployees([]);
       } finally {
         setLoading(false);
       }
     };
 
     loadIssues();
-  }, [projectId]);
+  }, [sprintId, projectId]);  // Add projectId to dependencies for proper re-fetching
 
   const getNextIssueKey = () => {
-    const maxNum = Math.max(...issues.map(issue => parseInt(issue.key.split('-')[1])));
+    if (!issues || issues.length === 0) return 'PROJ-001';
+
+    const numericIndices = issues
+      .map(issue => {
+        const parts = issue.key.split('-');
+        const lastPart = parts[parts.length - 1];
+        return parseInt(lastPart);
+      })
+      .filter(num => !isNaN(num));
+
+    const maxNum = numericIndices.length > 0 ? Math.max(...numericIndices) : 0;
     return `PROJ-${String(maxNum + 1).padStart(3, '0')}`;
   };
 
   const getNextSubtaskKey = (parentIssue: Issue) => {
-    const maxSubtaskNum = parentIssue.subtasks.length > 0
-      ? Math.max(...parentIssue.subtasks.map(subtask => parseInt(subtask.key.split('-')[2])))
-      : 0;
+    if (!parentIssue.subtasks || parentIssue.subtasks.length === 0) {
+      return `${parentIssue.key}-1`;
+    }
+
+    const numericIndices = parentIssue.subtasks
+      .map(subtask => {
+        const parts = subtask.key.split('-');
+        const lastPart = parts[parts.length - 1];
+        return parseInt(lastPart);
+      })
+      .filter(num => !isNaN(num));
+
+    const maxSubtaskNum = numericIndices.length > 0 ? Math.max(...numericIndices) : 0;
     return `${parentIssue.key}-${maxSubtaskNum + 1}`;
   };
 
   const createIssue = async (newIssueData: NewIssueFormState) => {
     if (!newIssueData.summary.trim()) return;
+
+    if (!sprintId) {
+      console.error("No active sprint selected");
+      setError("Cannot create task: No active sprint selected");
+      return;
+    }
 
     const assignedMember = teamMembers.find(member => member.id === newIssueData.assignee);
     const tempId = Date.now().toString();
@@ -71,13 +147,21 @@ export const useTodolistIssues = (projectId: number = 1) => {
     setIssues([...issues, issue]);
 
     try {
-      const realId = await createIssueAPI(issue);
+      console.log('Creating task with payload:', { issue, sprintId });
+      const realId = await createIssueAPI(issue, sprintId);
+      console.log('Task created successfully. Real ID:', realId);
+
+      if (!realId) {
+        throw new Error("Backend did not return a valid task ID");
+      }
+
       setIssues(prevIssues => prevIssues.map(i =>
         i.id === tempId ? { ...i, id: realId.toString() } : i
       ));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to persist new issue:', error);
-      // Optional: Revert state if needed
+      setError(`Failed to create task: ${error.message || 'Server error'}`);
+      // Revert optimistic update
       setIssues(prevIssues => prevIssues.filter(i => i.id !== tempId));
     }
   };
@@ -115,6 +199,7 @@ export const useTodolistIssues = (projectId: number = 1) => {
           return {
             ...issue,
             subtasks: [...issue.subtasks, newSubtask],
+            isExpanded: true,
             updatedDate: new Date().toISOString().split('T')[0]
           };
         }
@@ -123,7 +208,14 @@ export const useTodolistIssues = (projectId: number = 1) => {
     );
 
     try {
+      console.log('Creating subtask with payload:', { parentIssueId, newSubtask });
       const realId = await createSubtaskAPI(parentIssueId, newSubtask);
+      console.log('Subtask created successfully. Real ID:', realId);
+
+      if (!realId) {
+        throw new Error("Backend did not return a valid subtask ID");
+      }
+
       setIssues(prevIssues =>
         prevIssues.map(issue => {
           if (issue.id === parentIssueId) {
@@ -137,8 +229,9 @@ export const useTodolistIssues = (projectId: number = 1) => {
           return issue;
         })
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to persist new subtask:', error);
+      setError(`Failed to create subtask: ${error.message || 'Server error'}`);
       setIssues(prevIssues =>
         prevIssues.map(issue => {
           if (issue.id === parentIssueId) {
@@ -514,7 +607,53 @@ export const useTodolistIssues = (projectId: number = 1) => {
     }
   };
 
+  const completeSprint = async () => {
+    if (!sprintPlan || !projectId) {
+      console.warn("Cannot complete sprint: No active sprint or project context");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 1. Clear Sprint UI State immediately as requested
+      setIssues([]);
+      setSprintPlan(null);
+      setSprintEmployees([]);
+      setError(null);
+
+      // 2. Mark current sprint as completed (Status 2)
+      await updateSprintPlanAPI({
+        ...sprintPlan,
+        status: 2, // 2 = Completed
+        completedAt: new Date().toISOString()
+      });
+
+      // 3. Load Next Sprint for Same Project
+      const nextSprint = await fetchNextSprintAPI(projectId, sprintPlan.sprintId);
+
+      if (!nextSprint) {
+        setLoading(false);
+        window.alert("This project has no other sprint");
+        setSprintId(null);
+        return;
+      }
+
+      // 4. Next sprint exists -> Load it
+      setSprintId(nextSprint.sprintId);
+
+    } catch (err: any) {
+      console.error('Failed to complete sprint:', err);
+      setLoading(false);
+      window.alert("Failed to complete sprint or load next sprint.");
+    }
+  };
+
   return {
+    sprintId,
+    sprintPlan,
+    sprintEmployees,
+    completeSprint,
     issues,
     loading,
     error,

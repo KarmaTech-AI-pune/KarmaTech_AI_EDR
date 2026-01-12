@@ -199,22 +199,27 @@ namespace NJSAPI.Controllers
         /// Gets a single SprintPlan by its ID.
         /// </summary>
         /// <param name="sprintId">The ID of the SprintPlan.</param>
+        /// <param name="projectId">Optional: The ID of the Project to validate sprint belongs to.</param>
         /// <returns>The SprintPlan data.</returns>
         [HttpGet("single-sprint-plan/{sprintId}")]
         [ProducesResponseType(typeof(SprintPlanDto), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> GetSingleSprintPlan(int sprintId)
+        public async Task<IActionResult> GetSingleSprintPlan(int sprintId, [FromQuery] int? projectId = null)
         {
-            _logger.LogInformation("Attempting to retrieve single SprintPlan with ID: {SprintId}", sprintId);
+            _logger.LogInformation("Attempting to retrieve single SprintPlan with ID: {SprintId}, ProjectId filter: {ProjectId}", sprintId, projectId);
 
             try
             {
-                var query = new GetSingleSprintPlanQuery { SprintId = sprintId };
+                var query = new GetSingleSprintPlanQuery 
+                { 
+                    SprintId = sprintId,
+                    ProjectId = projectId
+                };
                 var sprintPlanDto = await _mediator.Send(query);
 
                 if (sprintPlanDto == null)
                 {
-                    _logger.LogWarning("SprintPlan with ID {SprintId} not found.", sprintId);
+                    _logger.LogWarning("SprintPlan with ID {SprintId} not found or doesn't belong to project {ProjectId}.", sprintId, projectId);
                     return NotFound($"SprintPlan with ID {sprintId} not found.");
                 }
 
@@ -227,6 +232,43 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Gets the next sprint for a project relative to the current sprint ID.
+        /// </summary>
+        /// <param name="projectId">The Project ID.</param>
+        /// <param name="currentSprintId">The Current Sprint ID.</param>
+        /// <returns>The Next SprintPlan data or NotFound if none exists.</returns>
+        [HttpGet("next")]
+        [ProducesResponseType(typeof(SprintPlanDto), 200)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetNextSprint([FromQuery] int projectId, [FromQuery] int currentSprintId)
+        {
+            _logger.LogInformation("Attempting to retrieve next SprintPlan for Project {ProjectId} after Sprint {CurrentSprintId}", projectId, currentSprintId);
+
+            try
+            {
+                var query = new GetNextSprintQuery
+                {
+                    ProjectId = projectId,
+                    CurrentSprintId = currentSprintId
+                };
+                var sprintPlanDto = await _mediator.Send(query);
+
+                if (sprintPlanDto == null)
+                {
+                    return NotFound(new { message = "No next sprint found for this project." });
+                }
+
+                return Ok(sprintPlanDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving next SprintPlan.");
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
 
         /// <summary>
         /// Updates an existing SprintPlan based on its SprintId.

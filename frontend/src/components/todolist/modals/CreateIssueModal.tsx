@@ -48,7 +48,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                   labelId="issue-type-label"
                   value={newIssue.issueType}
                   label="Issue Type *"
-                  onChange={(e) => setNewIssue({...newIssue, issueType: e.target.value as Issue['issueType']})}
+                  onChange={(e) => setNewIssue({ ...newIssue, issueType: e.target.value as Issue['issueType'] })}
                 >
                   <MenuItem value="Story"><Book sx={{ mr: 1 }} /> Story</MenuItem>
                   <MenuItem value="Task"><CheckCircle sx={{ mr: 1 }} /> Task</MenuItem>
@@ -63,7 +63,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
             fullWidth
             label="Summary *"
             value={newIssue.summary}
-            onChange={(e) => setNewIssue({...newIssue, summary: e.target.value})}
+            onChange={(e) => setNewIssue({ ...newIssue, summary: e.target.value })}
             placeholder="Enter a concise summary..."
             margin="normal"
             required
@@ -75,7 +75,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
             multiline
             rows={4}
             value={newIssue.description}
-            onChange={(e) => setNewIssue({...newIssue, description: e.target.value})}
+            onChange={(e) => setNewIssue({ ...newIssue, description: e.target.value })}
             placeholder="Describe the issue in detail..."
             margin="normal"
           />
@@ -88,7 +88,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                   labelId="priority-label"
                   value={newIssue.priority}
                   label="Priority"
-                  onChange={(e) => setNewIssue({...newIssue, priority: e.target.value as Issue['priority']})}
+                  onChange={(e) => setNewIssue({ ...newIssue, priority: e.target.value as Issue['priority'] })}
                 >
                   <MenuItem value="Lowest">⏬ Lowest</MenuItem>
                   <MenuItem value="Low">🔻 Low</MenuItem>
@@ -105,7 +105,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                   labelId="assignee-label"
                   value={newIssue.assignee}
                   label="Assignee"
-                  onChange={(e) => setNewIssue({...newIssue, assignee: e.target.value})}
+                  onChange={(e) => setNewIssue({ ...newIssue, assignee: e.target.value })}
                 >
                   <MenuItem value="">Unassigned</MenuItem>
                   {teamMembers.map(member => (
@@ -124,7 +124,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                   labelId="story-points-label"
                   value={newIssue.storyPoints}
                   label="Story Points"
-                  onChange={(e) => setNewIssue({...newIssue, storyPoints: e.target.value})}
+                  onChange={(e) => setNewIssue({ ...newIssue, storyPoints: e.target.value })}
                 >
                   <MenuItem value="">None</MenuItem>
                   <MenuItem value="1">1</MenuItem>
