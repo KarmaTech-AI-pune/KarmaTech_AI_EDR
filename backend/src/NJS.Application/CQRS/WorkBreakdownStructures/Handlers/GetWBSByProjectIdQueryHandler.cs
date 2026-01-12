@@ -126,7 +126,7 @@ namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
                 TotalCost = task.TaskType == TaskType.ODC
                     ? (task.UserWBSTasks.FirstOrDefault()?.TotalCost ?? 0)
                     : (decimal)task.PlannedHours.Sum(ph => ph.PlannedHours) * (task.UserWBSTasks.FirstOrDefault()?.CostRate ?? 0),
-                ParentId = task.ParentId
+                ParentId = task.ParentId ?? (task.WBSOption != null && task.WBSOption.ParentId.HasValue && tasksByWbsOptionId.ContainsKey(task.WBSOption.ParentId.Value) ? (int?)tasksByWbsOptionId[task.WBSOption.ParentId.Value].Id : null)
             }).ToList();
 
             // Group tasks by their WorkBreakdownStructure
