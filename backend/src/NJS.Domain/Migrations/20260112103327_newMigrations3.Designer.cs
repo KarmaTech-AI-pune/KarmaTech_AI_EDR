@@ -12,8 +12,8 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20260105104758_sprint-management")]
-    partial class sprintmanagement
+    [Migration("20260112103327_newMigrations3")]
+    partial class newMigrations3
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
