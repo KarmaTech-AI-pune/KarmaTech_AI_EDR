@@ -7,6 +7,5 @@ namespace NJS.Application.CQRS.Projects.Commands
     {
         public int Id { get; init; }
         public ProjectDto? ProjectDto { get; init; }
-        public int? ProgramId { get; init; }
     }
 }

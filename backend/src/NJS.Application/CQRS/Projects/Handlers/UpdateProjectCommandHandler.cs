@@ -26,11 +26,6 @@ namespace NJS.Application.CQRS.Projects.Handlers
             if (existingProject == null)
                 throw new ArgumentException($"Project with ID {request.Id} not found");
 
-            if (request.ProgramId.HasValue && existingProject.ProgramId != request.ProgramId.Value)
-            {
-                throw new ArgumentException($"Project with ID {request.Id} does not belong to Program {request.ProgramId.Value}");
-            }
-
             var dto = request.ProjectDto;
 
             // Log the incoming data for the problematic fields

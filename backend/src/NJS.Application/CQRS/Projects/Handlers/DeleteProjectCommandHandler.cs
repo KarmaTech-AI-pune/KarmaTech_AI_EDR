@@ -1,4 +1,4 @@
-﻿﻿﻿using MediatR;
+﻿﻿using MediatR;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Repositories.Interfaces;
 using System;
@@ -20,15 +20,6 @@ namespace NJS.Application.CQRS.Projects.Handlers
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-
-            if (request.ProgramId.HasValue)
-            {
-                var existingProject = _repository.GetById(request.Id);
-                if (existingProject != null && existingProject.ProgramId != request.ProgramId.Value)
-                {
-                    throw new ArgumentException($"Project with ID {request.Id} does not belong to Program {request.ProgramId.Value}");
-                }
-            }
 
             try
             {
