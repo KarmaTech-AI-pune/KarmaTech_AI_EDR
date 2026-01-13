@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { validateCurrencyInput} from '../utils/currencyFormatter';
 
 /**
- * Return type for usePercentageInput hook
+ * Return type for useFloatInput hook
  */
 interface UseFloatInputReturn {
   /** Display value for TextField */
@@ -19,13 +19,14 @@ interface UseFloatInputReturn {
 }
 
 /**
- * Custom hook for managing percentage input fields
+ * Custom hook for managing float/decimal input fields
  * 
  * Features:
  * - Shows "0" initially but auto-clears when user starts typing
  * - Validates format (max 2 decimal places)
  * - No comma formatting (unlike currency fields)
  * - Easy integration with form state
+ * - Works for hours, percentages, or any decimal number
  * 
  * @param initialValue - Initial value (number or string)
  * @param name - Field name for debugging (optional)
@@ -33,27 +34,27 @@ interface UseFloatInputReturn {
  * 
  * @example Basic usage
  * ```typescript
- * const percentage = usePercentageInput(formData.percentage);
+ * const hours = useFloatInput(formData.hours);
  * 
  * <TextField
- *   value={percentage.value}
- *   onChange={percentage.handleChange}
+ *   value={hours.value}
+ *   onChange={hours.handleChange}
  * />
  * ```
  * 
  * @example With formData sync
  * ```typescript
- * const percentage = usePercentageInput(formData.percentage);
+ * const hours = useFloatInput(formData.hours);
  * 
  * <TextField
- *   value={percentage.value}
- *   onChange={percentage.getChangeHandler((rawValue) => {
- *     setFormData(prev => ({ ...prev, percentage: rawValue }));
+ *   value={hours.value}
+ *   onChange={hours.getChangeHandler((rawValue) => {
+ *     setFormData(prev => ({ ...prev, hours: rawValue }));
  *   })}
  * />
  * ```
  */
-export const usePercentageInput = (
+export const useFloatInput = (
   initialValue?: number | string,
   name?: string
 ): UseFloatInputReturn => {

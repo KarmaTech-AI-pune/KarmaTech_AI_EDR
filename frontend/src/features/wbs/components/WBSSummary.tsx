@@ -45,13 +45,16 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
       {formType !== 'odc' && (
         <>
           <SummaryText>
-            Total Hours: {totalHours}
+            Total Hours: {Number(totalHours).toFixed(2)}
           </SummaryText>
           <Divider orientation="vertical" flexItem />
         </>
       )}
       <SummaryText>
-        Total Cost: {currency} {totalCost.toLocaleString()}
+        Total Cost: {currency} {Number(totalCost).toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}
       </SummaryText>
       {!disabled && (
         <LoadingButton

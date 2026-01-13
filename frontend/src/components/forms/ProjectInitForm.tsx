@@ -12,7 +12,7 @@ import { percentageCalculation } from '../../utils/calculations.ts';
 import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts';
 import { formatIndianNumber, parseIndianNumber } from '../../utils/numberFormatting.ts';
 import { useCurrencyInput } from '../../hooks/useCurrencyInput';
-import { usePercentageInput } from '../../hooks/useFloatInput.ts';
+import { useFloatInput } from '../../hooks/useFloatInput.ts';
 
 interface ProjectFormType {
   project?: ProjectFormData;
@@ -66,7 +66,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   const estimatedFee = useCurrencyInput(formData.estimatedProjectFee, 'estimatedProjectFee');
   
   // Percentage input hook (shows "0" initially, auto-clears on typing)
-  const percentage = usePercentageInput(formData.percentage, 'percentage');
+  const percentage = useFloatInput(formData.percentage, 'percentage');
 
   // Helper function to sync currency input changes to formData
   const syncCurrencyToFormData = (fieldName: string) => (rawValue: number) => {
