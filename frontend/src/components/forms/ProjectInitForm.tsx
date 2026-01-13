@@ -12,7 +12,7 @@ import { percentageCalculation } from '../../utils/calculations.ts';
 import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts';
 import { formatIndianNumber, parseIndianNumber } from '../../utils/numberFormatting.ts';
 import { useCurrencyInput } from '../../hooks/useCurrencyInput';
-import { usePercentageInput } from '../../hooks/usePercentageInput';
+import { usePercentageInput } from '../../hooks/useFloatInput.ts';
 
 interface ProjectFormType {
   project?: ProjectFormData;

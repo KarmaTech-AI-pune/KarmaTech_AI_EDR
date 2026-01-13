@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
-import { validateCurrencyInput, parseCurrencyToNumber } from '../utils/currencyFormatter';
+import { validateCurrencyInput} from '../utils/currencyFormatter';
 
 /**
  * Return type for usePercentageInput hook
  */
-interface UsePercentageInputReturn {
+interface UseFloatInputReturn {
   /** Display value for TextField */
   value: string | number;
   /** Change handler for TextField */
@@ -56,7 +56,7 @@ interface UsePercentageInputReturn {
 export const usePercentageInput = (
   initialValue?: number | string,
   name?: string
-): UsePercentageInputReturn => {
+): UseFloatInputReturn => {
   
   /**
    * Initialize value from various input types
