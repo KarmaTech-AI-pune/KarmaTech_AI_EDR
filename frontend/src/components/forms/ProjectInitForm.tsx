@@ -11,6 +11,8 @@ import { ProjectFormData } from '../../types/index.tsx';
 import { percentageCalculation } from '../../utils/calculations.ts';
 import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts';
 import { formatIndianNumber, parseIndianNumber } from '../../utils/numberFormatting.ts';
+import { useCurrencyInput } from '../../hooks/useCurrencyInput';
+import { usePercentageInput } from '../../hooks/usePercentageInput';
 
 interface ProjectFormType {
   project?: ProjectFormData;
@@ -45,12 +47,12 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     createdAt: project?.createdAt || '',
     updatedAt: project?.updatedAt || '',
     typeOfClient: project?.typeOfClient || '',
-    estimatedProjectCost: project?.estimatedProjectCost ? formatIndianNumber(project.estimatedProjectCost) : '',
+    estimatedProjectCost: project?.estimatedProjectCost || 0,
     // Parse dates to ensure consistent format
     startDate: formatDateForInput(project?.startDate) || formatDateForInput(new Date()), // Default to today's date if no project data
     endDate: formatDateForInput(project?.endDate) || '',
     currency: project?.currency || 'INR',
-    estimatedProjectFee: project?.estimatedProjectFee ? formatIndianNumber(project.estimatedProjectFee) : '',
+    estimatedProjectFee: project?.estimatedProjectFee || 0,
     priority: project?.priority || '',
     regionalManagerId: project?.regionalManagerId || "",
     letterOfAcceptance: project?.letterOfAcceptance || false,
@@ -59,11 +61,24 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     percentage: project?.percentage || 0,
   })
 
+  // Currency input hooks for live formatting with cursor position preservation
+  const estimatedCost = useCurrencyInput(formData.estimatedProjectCost, 'estimatedProjectCost');
+  const estimatedFee = useCurrencyInput(formData.estimatedProjectFee, 'estimatedProjectFee');
+  
+  // Percentage input hook (shows "0" initially, auto-clears on typing)
+  const percentage = usePercentageInput(formData.percentage, 'percentage');
+
+  // Helper function to sync currency input changes to formData
+  const syncCurrencyToFormData = (fieldName: string) => (rawValue: number) => {
+    setFormData((prev: any) => ({ ...prev, [fieldName]: rawValue }));
+  };
+
   useEffect(() => {
     if (formData.feeType === 'Percentage') {
-      const cost = parseIndianNumber(String(formData.estimatedProjectCost));
+      const cost = formData.estimatedProjectCost;
       const fee = percentageCalculation(formData.percentage || 0, cost);
-      setFormData((prev: any) => ({ ...prev, estimatedProjectFee: formatIndianNumber(fee) }));
+      setFormData((prev: any) => ({ ...prev, estimatedProjectFee: fee }));
+      estimatedFee.setValue(fee);
     }
   }, [formData.percentage, formData.estimatedProjectCost, formData.feeType]);
 
@@ -88,14 +103,14 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     }));
   };
 
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const submissionData: ProjectFormData = {
       ...formData,
-      estimatedProjectCost: parseIndianNumber(String(formData.estimatedProjectCost)),
-      estimatedProjectFee: parseIndianNumber(String(formData.estimatedProjectFee)),
+      // No need to parse - formData already contains raw numbers from hook sync
+      estimatedProjectCost: formData.estimatedProjectCost,
+      estimatedProjectFee: formData.estimatedProjectFee,
       projectManagerId: formData.projectManagerId,
       seniorProjectManagerId: formData.seniorProjectManagerId,
       regionalManagerId: formData.regionalManagerId,
@@ -282,8 +297,8 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               label="Estimated Project Cost"
               name="estimatedProjectCost"
               type="text"
-              value={formatIndianNumber(formData.estimatedProjectCost)}
-              onChange={handleNumberChange}
+              value={estimatedCost.value}
+              onChange={estimatedCost.getChangeHandler(syncCurrencyToFormData('estimatedProjectCost'))}
               required
             />
           </Grid>
@@ -294,8 +309,10 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
                 label="Percentage"
                 name="percentage"
                 type="text"
-                value={formData.percentage}
-                onChange={handleNumberChange}
+                value={percentage.value}
+                onChange={percentage.getChangeHandler((rawValue) => {
+                  setFormData((prev: any) => ({ ...prev, percentage: rawValue }));
+                })}
                 required
               />
             </Grid>
@@ -306,8 +323,8 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               label="Estimated Project Fee"
               name="estimatedProjectFee"
               type="text"
-              value={formatIndianNumber(formData.estimatedProjectFee)}
-              onChange={handleNumberChange}
+              value={estimatedFee.value}
+              onChange={estimatedFee.getChangeHandler(syncCurrencyToFormData('estimatedProjectFee'))}
             // disabled={formData.feeType === 'Percentage'}
             />
           </Grid>
