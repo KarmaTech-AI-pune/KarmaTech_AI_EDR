@@ -14,6 +14,7 @@ export const formatToIndianNumber = (
   if (num === null || num === undefined || isNaN(num)) return '';
 
   return new Intl.NumberFormat(INDIAN_LOCALE, {
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(num);
 };
