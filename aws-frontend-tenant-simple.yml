@@ -1,0 +1,116 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Tenant Frontend Infrastructure (Dev) - *.app.karmatech-ai.com'
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: 'app.karmatech-ai.com'
+  
+  CertificateArn:
+    Type: String
+    Description: 'SSL Certificate ARN'
+
+Resources:
+  TenantFrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'njs-tenant-frontend-dev-${AWS::AccountId}'
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, HEAD]
+            AllowedOrigins: 
+              - !Sub 'https://${DomainName}'
+              - !Sub 'https://*.${DomainName}'
+            MaxAge: 3600
+
+  TenantFrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TenantFrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub 'arn:aws:s3:::${TenantFrontendBucket}/*'
+
+  TenantCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: 'NJS Tenant Frontend (Dev) - *.app.karmatech-ai.com'
+        Aliases:
+          - !Sub '*.${DomainName}'
+          - !Ref DomainName
+        Origins:
+          - Id: S3Origin
+            DomainName: !Sub '${TenantFrontendBucket}.s3-website-${AWS::Region}.amazonaws.com'
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: http-only
+        Enabled: true
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          ForwardedValues:
+            QueryString: true
+            Cookies:
+              Forward: none
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        PriceClass: PriceClass_100
+
+# MainDomainRecord:
+#   Type: AWS::Route53::RecordSet
+#   Properties:
+#     HostedZoneName: karmatech-ai.com.
+#     Name: !Ref DomainName
+#     Type: A
+#     AliasTarget:
+#       DNSName: !GetAtt TenantCloudFrontDistribution.DomainName
+#       HostedZoneId: Z2FDTNDATAQYW2 # CloudFront Hosted Zone ID for us-east-1
+
+# WildcardDomainRecord:
+#   Type: AWS::Route53::RecordSet
+#   Properties:
+#     HostedZoneName: karmatech-ai.com.
+#     Name: !Sub '*.${DomainName}'
+#     Type: A
+#     AliasTarget:
+#       DNSName: !GetAtt TenantCloudFrontDistribution.DomainName
+#       HostedZoneId: Z2FDTNDATAQYW2
+
+Outputs:
+  TenantS3BucketName:
+    Description: 'S3 Bucket Name for Tenant Frontend Files'
+    Value: !Ref TenantFrontendBucket
+  TenantCloudFrontDomain:
+    Description: 'Tenant CloudFront Distribution Domain Name'
+    Value: !GetAtt TenantCloudFrontDistribution.DomainName
+  TenantCloudFrontId:
+    Description: 'Tenant CloudFront Distribution ID'
+    Value: !Ref TenantCloudFrontDistribution

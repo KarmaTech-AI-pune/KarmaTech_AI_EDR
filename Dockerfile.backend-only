@@ -1,0 +1,57 @@
+# Multi-stage build for Multi-Tenant .NET Core API (Backend Only)
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+# Set working directory
+WORKDIR /src
+
+# Copy production solution file and project files
+COPY backend/NJS_backend.Production.sln ./
+COPY backend/src/NJSAPI/NJSAPI.csproj src/NJSAPI/
+COPY backend/src/NJS.Application/NJS.Application.csproj src/NJS.Application/
+COPY backend/src/NJS.Domain/NJS.Domain.csproj src/NJS.Domain/
+COPY backend/NJS.Infrastructure/NJS.Infrastructure.csproj NJS.Infrastructure/
+COPY backend/NJS.Repositories/NJS.Repositories.csproj NJS.Repositories/
+
+# Restore dependencies using production solution (no test projects)
+RUN dotnet restore NJS_backend.Production.sln
+
+# Copy the rest of the source code
+COPY backend/src/ ./src/
+COPY backend/NJS.Infrastructure/ ./NJS.Infrastructure/
+COPY backend/NJS.Repositories/ ./NJS.Repositories/
+
+# Build only the main application (skip tests)
+RUN dotnet build src/NJSAPI/NJSAPI.csproj -c Release -o /app/build
+
+# Publish the application
+RUN dotnet publish src/NJSAPI/NJSAPI.csproj -c Release -o /app/publish
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+# Set working directory
+WORKDIR /app
+
+# Install required packages for SQL Server connectivity
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy published application
+COPY --from=build /app/publish .
+
+# Expose port 8080
+EXPOSE 8080
+
+# Set environment variables
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Development
+
+# Create non-root user for security
+RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Start the application
+ENTRYPOINT ["dotnet", "NJSAPI.dll"]
