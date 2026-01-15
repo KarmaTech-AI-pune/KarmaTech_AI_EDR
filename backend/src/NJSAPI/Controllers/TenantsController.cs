@@ -9,6 +9,7 @@ using MediatR;
 using Microsoft.Data.SqlClient;
 using NJS.Application.CQRS.Tenants.Queries;
 using NJS.Application.Dtos;
+using NJSAPI.Strategies;
 
 namespace NJSAPI.Controllers
 {
@@ -25,6 +26,7 @@ namespace NJSAPI.Controllers
         private readonly IDatabaseManagementService _databaseManagementService;
         private readonly ICurrentTenantService _currentTenantService;
         private readonly ITenantMigrationService _tenantMigrationService;
+        private readonly ITenantUserMigrationStrategySelector _tenantUserMigrationStrategySelector;
         private readonly IConfiguration _configuration;
         private readonly IMediator _mediator;
 
@@ -38,7 +40,8 @@ namespace NJSAPI.Controllers
             ITenantMigrationService tenantMigrationService,
             IConfiguration configuration,
             IMediator mediator,
-            ILogger<TenantsController> logger)
+            ILogger<TenantsController> logger, 
+            ITenantUserMigrationStrategySelector tenantUserMigrationStrategySelector)
         {
             _context = context;
             _dnsService = dnsService;
@@ -50,6 +53,7 @@ namespace NJSAPI.Controllers
             _configuration = configuration;
             _mediator = mediator;
             _logger = logger;
+            _tenantUserMigrationStrategySelector = tenantUserMigrationStrategySelector;
         }
 
         // GET: api/tenants
@@ -384,8 +388,8 @@ namespace NJSAPI.Controllers
         }
 
         // POST: api/tenants/{id}/users
-        [HttpPost("{id}/users")]
-        public async Task<ActionResult<object>> AddTenantUser(int id, [FromBody] AddTenantUserRequest request)
+        [HttpPost("{id}/users/Old")]
+        public async Task<ActionResult<object>> AddTenantUserOld(int id, [FromBody] AddTenantUserRequest request)
         {
             var tenant = await _tenantDbContext.Tenants.FindAsync(id);
             if (tenant == null)
@@ -534,6 +538,53 @@ namespace NJSAPI.Controllers
                 }
             
             }
+
+            _logger.LogInformation("Added user {UserId} to tenant {TenantId} with role {Role}",
+                request.UserId, id, request.Role);
+
+            return CreatedAtAction(nameof(GetTenantUsers), new { id }, tenantUser);
+        }
+        
+        
+        [HttpPost("{id}/users")]
+        public async Task<ActionResult<object>> AddTenantUser(int id, [FromBody] AddTenantUserRequest request)
+        {
+            var tenant = await _tenantDbContext.Tenants.FindAsync(id);
+            if (tenant == null)
+            {
+                return NotFound("Tenant not found");
+            }
+
+            var user = await _context.Users.FindAsync(request.UserId);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            var existingTenantUser = await _tenantDbContext.TenantUsers
+                .FirstOrDefaultAsync(tu => tu.TenantId == id && tu.UserId == request.UserId);
+
+            if (existingTenantUser != null)
+            {
+                return BadRequest("User is already assigned to this tenant");
+            }
+
+            var tenantUser = new TenantUser
+            {
+                TenantId = id,
+                UserId = request.UserId,
+                Role = request.Role,
+                IsActive = request.IsActive,
+                JoinedAt = DateTime.UtcNow
+            };
+
+            _tenantDbContext.TenantUsers.Add(tenantUser);
+            await _tenantDbContext.SaveChangesAsync();
+
+            var strategy = _tenantUserMigrationStrategySelector.GetStrategy(tenant.IsIsolated);            
+            await strategy.MigrateUserAsync(tenant, user, request.Role);
+            
+            
 
             _logger.LogInformation("Added user {UserId} to tenant {TenantId} with role {Role}",
                 request.UserId, id, request.Role);

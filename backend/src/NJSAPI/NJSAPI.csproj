@@ -73,6 +73,15 @@
     <Compile Update="LoggerFactory\NLogWebLoggerProviderFactory.cs">
       <DependentUpon>ILoggerProviderFactory.cs</DependentUpon>
     </Compile>
+    <Compile Update="Strategies\TenantUserMigrationStrategySelector.cs">
+      <DependentUpon>ITenantUserMigrationStrategySelector.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Strategies\IsolatedTenantUserMigrationStrategy.cs">
+      <DependentUpon>ITenantUserMigrationStrategy.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Strategies\SharedTenantUserMigrationStrategy.cs">
+      <DependentUpon>ITenantUserMigrationStrategy.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>
