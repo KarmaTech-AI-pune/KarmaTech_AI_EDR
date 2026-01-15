@@ -34,8 +34,10 @@ namespace NJS.Application.CQRS.Users.Handlers
                 }
 
                 // Remove existing role permissions
-                role.MinRate= request.RoleDefination.MinRate;
+role.MinRate= request.RoleDefination.MinRate;
                 role.IsResourceRole =request.RoleDefination.IsResourceRole;
+                role.Name = request.RoleDefination.Name;
+                role.NormalizedName = request.RoleDefination.Name.ToUpperInvariant();
                 _context.Set<RolePermission>().RemoveRange(role.RolePermissions);
 
                 // Add new role permissions
