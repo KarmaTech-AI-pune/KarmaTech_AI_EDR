@@ -584,8 +584,6 @@ namespace NJSAPI.Controllers
             var strategy = _tenantUserMigrationStrategySelector.GetStrategy(tenant.IsIsolated);            
             await strategy.MigrateUserAsync(tenant, user, request.Role);
             
-            
-
             _logger.LogInformation("Added user {UserId} to tenant {TenantId} with role {Role}",
                 request.UserId, id, request.Role);
 
