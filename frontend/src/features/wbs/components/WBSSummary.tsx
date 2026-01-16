@@ -22,6 +22,7 @@ interface WBSSummaryProps {
   disabled: boolean;
   onSave: () => void;
   loading: boolean;
+  formType: 'manpower' | 'odc';
 }
 
 const WBSSummary: React.FC<WBSSummaryProps> = ({
@@ -30,7 +31,8 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
   currency,
   disabled,
   onSave,
-  loading
+  loading,
+  formType
 }) => {
   return (
     <Box sx={{
@@ -40,10 +42,14 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
       gap: 3,
       p: 1
     }}>
-      <SummaryText>
-        Total Hours: {totalHours}
-      </SummaryText>
-      <Divider orientation="vertical" flexItem />
+      {formType !== 'odc' && (
+        <>
+          <SummaryText>
+            Total Hours: {totalHours}
+          </SummaryText>
+          <Divider orientation="vertical" flexItem />
+        </>
+      )}
       <SummaryText>
         Total Cost: {currency} {totalCost.toLocaleString()}
       </SummaryText>

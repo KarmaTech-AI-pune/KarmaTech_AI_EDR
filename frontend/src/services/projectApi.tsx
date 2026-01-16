@@ -126,11 +126,4 @@ export const projectApi = {
     }
 
   }
-  // Send the change control for review
-      //  await axiosInstance.post(`/api/projects/${projectId}/changecontrols/${changeControlId}/workflow/sendtoreview`, {
-        //  entityId: changeControlId,
-         // entityType: 'ChangeControl',
-         // assignedToId: selectedReviewer,
-         // comments: `Sent for review by ${currentUser}`
-       // });
 };

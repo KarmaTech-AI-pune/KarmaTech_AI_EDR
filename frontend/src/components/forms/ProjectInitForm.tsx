@@ -10,6 +10,7 @@ import {
 import { ProjectFormData } from '../../types/index.tsx';
 import { percentageCalculation } from '../../utils/calculations.ts';
 import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts';
+import { formatIndianNumber, parseIndianNumber } from '../../utils/numberFormatting.ts';
 
 interface ProjectFormType {
   project?: ProjectFormData;
@@ -29,7 +30,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   seniorProjectManagers
 }) => {
 
-  const [formData, setFormData] = useState<ProjectFormData>({
+  const [formData, setFormData] = useState<any>({
     name: project?.name || '',
     details: project?.details || '',
     clientName: project?.clientName || '',
@@ -44,12 +45,12 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     createdAt: project?.createdAt || '',
     updatedAt: project?.updatedAt || '',
     typeOfClient: project?.typeOfClient || '',
-    estimatedProjectCost: project?.estimatedProjectCost || 0,
+    estimatedProjectCost: project?.estimatedProjectCost ? formatIndianNumber(project.estimatedProjectCost) : '',
     // Parse dates to ensure consistent format
     startDate: formatDateForInput(project?.startDate) || formatDateForInput(new Date()), // Default to today's date if no project data
     endDate: formatDateForInput(project?.endDate) || '',
     currency: project?.currency || 'INR',
-    estimatedProjectFee: project?.estimatedProjectFee || 0,
+    estimatedProjectFee: project?.estimatedProjectFee ? formatIndianNumber(project.estimatedProjectFee) : '',
     priority: project?.priority || '',
     regionalManagerId: project?.regionalManagerId || "",
     letterOfAcceptance: project?.letterOfAcceptance || false,
@@ -76,8 +77,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
 
   useEffect(() => {
     if (formData.feeType === 'Percentage') {
-      const fee = percentageCalculation(formData.percentage || 0, Number(formData.estimatedProjectCost));
-      setFormData(prev => ({ ...prev, estimatedProjectFee: fee }));
+      const cost = parseIndianNumber(String(formData.estimatedProjectCost));
+      const fee = percentageCalculation(formData.percentage || 0, cost);
+      setFormData((prev: any) => ({ ...prev, estimatedProjectFee: formatIndianNumber(fee) }));
     }
   }, [formData.percentage, formData.estimatedProjectCost, formData.feeType]);
 
@@ -85,7 +87,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       [name]: value
     }));
@@ -93,13 +95,13 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Allow digits, minus sign at start, and one dot
-    if (value === '' || /^-?\d*\.?\d*$/.test(value)) {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    // Format the input value using the Indian numbering system
+    const formattedValue = formatIndianNumber(value);
+    
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: formattedValue,
+    }));
   };
 
 
@@ -108,8 +110,8 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
 
     const submissionData: ProjectFormData & { budgetReason?: string } = {
       ...formData,
-      estimatedProjectCost: Number(formData.estimatedProjectCost),
-      estimatedProjectFee: Number(formData.estimatedProjectFee || 0),
+      estimatedProjectCost: parseIndianNumber(String(formData.estimatedProjectCost)),
+      estimatedProjectFee: parseIndianNumber(String(formData.estimatedProjectFee)),
       projectManagerId: formData.projectManagerId,
       seniorProjectManagerId: formData.seniorProjectManagerId,
       regionalManagerId: formData.regionalManagerId,
@@ -301,7 +303,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               label="Estimated Project Cost"
               name="estimatedProjectCost"
               type="text"
-              value={formData.estimatedProjectCost}
+              value={formatIndianNumber(formData.estimatedProjectCost)}
               onChange={handleNumberChange}
               required
             />
@@ -325,7 +327,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               label="Estimated Project Fee"
               name="estimatedProjectFee"
               type="text"
-              value={formData.estimatedProjectFee}
+              value={formatIndianNumber(formData.estimatedProjectFee)}
               onChange={handleNumberChange}
             // disabled={formData.feeType === 'Percentage'}
             />

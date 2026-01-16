@@ -158,7 +158,7 @@ const Signup: React.FC = () => {
             borderRadius: 2,
             width: '100%',
             maxWidth: '500px',
-            boxSizing: 'border-box',
+            boxSizing: 'border-box ',
           }}
         >
           <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', marginBottom: 1, textAlign: 'center' }}>

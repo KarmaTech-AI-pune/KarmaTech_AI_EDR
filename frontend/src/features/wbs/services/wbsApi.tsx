@@ -241,19 +241,19 @@ export const WBSOptionsAPI = {
         throw new Error(`Invalid ID format: ${id}`);
       }
 
-      // Format payload to match backend WBSOptionDto exactly
-      const payload = {
+      // Format payload to match backend WBSOptionDto exactly (expects a list)
+      const payload = [{
         Id: numericId,
         Value: updatedOption.value,
         Label: updatedOption.label,
         Level: updatedOption.level || 1,
         ParentId: updatedOption.parentValue ? parseInt(updatedOption.parentValue) : null, // Convert parentValue to ParentId (integer)
         FormType: updatedOption.formType || 0
-      };
+      }];
 
       console.log('Update WBS Option payload:', payload);
 
-      const response = await axiosInstance.put(`/api/WBSOptions/${numericId}`, payload);
+      const response = await axiosInstance.put('/api/WBSOptions', payload);
       return response.data;
     } catch (error) {
       console.error(`Error updating WBS option ${id}:`, error);

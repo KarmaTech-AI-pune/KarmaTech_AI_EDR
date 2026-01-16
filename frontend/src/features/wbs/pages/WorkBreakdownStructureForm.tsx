@@ -28,6 +28,7 @@ const WBSFormContent: React.FC = () => {
     loading,
     getProjectStartDate,
     wbsHeaderId,
+    formType,
   } = useWBSDataContext();
   
   const {
@@ -163,6 +164,7 @@ const WBSFormContent: React.FC = () => {
           disabled={editMode}
           onSave={handleSubmit}
           loading={saveLoading}
+          formType={formType}
         />
       </Paper>
 

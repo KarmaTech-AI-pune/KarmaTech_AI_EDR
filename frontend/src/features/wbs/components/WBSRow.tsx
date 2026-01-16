@@ -26,7 +26,7 @@ const unitOptions = [
   { value: 'km', label: 'Km' },
   { value: 'day', label: 'Day' },
   { value: 'hours', label: 'Hours' },
-  { value: 'year', label: 'Year' }
+  { value: 'month', label: 'Month' }
 ];
 
 // Assuming 'roles' and 'employees' from context have these structures
