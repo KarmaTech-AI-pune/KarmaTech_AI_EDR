@@ -1,12 +1,13 @@
 /*
 ==============================================================================
-DATA MERGE SCRIPT (FINAL FIX: DYNAMIC PK + NOCHECK CONSTRAINTS)
+DATA MERGE SCRIPT (FINAL FIX: DYNAMIC PK + NOCHECK CONSTRAINTS + TENANT ID)
 ==============================================================================
 */
 
 DECLARE @SourceDbName NVARCHAR(128) = 'Restore Datbase Name'; -- <== ENSURE THIS MATCHES YOUR RESTORED DB NAME
 DECLARE @TargetDbName NVARCHAR(128) = 'Target Database Name';
 DECLARE @SchemaName NVARCHAR(128) = 'dbo';
+DECLARE @TenantId INT = 1; -- <== SET YOUR TENANT ID HERE
 
 DECLARE @TableName NVARCHAR(128);
 DECLARE @FullTableName NVARCHAR(256);
@@ -15,6 +16,7 @@ DECLARE @Sql NVARCHAR(MAX);
 DECLARE @CommonColumns NVARCHAR(MAX);
 DECLARE @PkJoinCondition NVARCHAR(MAX);
 DECLARE @HasIdentity BIT;
+DECLARE @HasTenantId BIT;
 
 -- Check if Source DB exists
 IF DB_ID(@SourceDbName) IS NULL
@@ -23,7 +25,7 @@ BEGIN
     RETURN;
 END
 
-PRINT 'Starting Data Merge from ' + @SourceDbName + ' to ' + @TargetDbName + '...';
+PRINT 'Starting Data Merge from ' + @SourceDbName + ' to ' + @TargetDbName + ' with TenantId = ' + CAST(@TenantId AS NVARCHAR(20)) + '...';
 
 -- 1. DISABLE FOREIGN KEYS
 PRINT 'Disabling Foreign Keys...';
@@ -55,7 +57,7 @@ BEGIN
     BEGIN
         PRINT 'Processing table: ' + @TableName;
 
-        -- A. GET COMMON COLUMNS (Filtering out computed columns)
+        -- A. GET COMMON COLUMNS (Filtering out computed columns AND TenantId)
         SET @CommonColumns = NULL;
         DECLARE @ColSql NVARCHAR(MAX);
         SET @ColSql = N'
@@ -70,9 +72,23 @@ BEGIN
                 AND c1.TABLE_SCHEMA = c2.TABLE_SCHEMA
             WHERE c1.TABLE_SCHEMA = ''' + @SchemaName + ''' 
               AND c1.TABLE_NAME = ''' + @TableName + '''
-              AND sc.is_computed = 0';
+              AND sc.is_computed = 0
+              AND c1.COLUMN_NAME != ''TenantId'''; -- Exclude TenantId from common columns
 
         EXEC sp_executesql @ColSql, N'@Cols NVARCHAR(MAX) OUTPUT', @CommonColumns OUTPUT;
+
+        -- B. CHECK FOR TENANT ID COLUMN
+        SET @HasTenantId = 0;
+        IF EXISTS (
+            SELECT 1 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = @SchemaName 
+              AND TABLE_NAME = @TableName 
+              AND COLUMN_NAME = 'TenantId'
+        )
+        BEGIN
+            SET @HasTenantId = 1;
+        END
 
         -- B. GET PRIMARY KEY JOIN CONDITION
         SET @PkJoinCondition = NULL;
@@ -112,8 +128,18 @@ BEGIN
                     SET @Sql = @Sql + 'SET IDENTITY_INSERT ' + @FullTableName + ' ON; ';
                 END
 
-                SET @Sql = @Sql + 'INSERT INTO ' + @FullTableName + ' (' + @CommonColumns + ') ' +
-                           'SELECT ' + @CommonColumns + ' FROM ' + @SourceFullTableName + ' AS S ' +
+                -- Construct column lists
+                DECLARE @InsertCols NVARCHAR(MAX) = @CommonColumns;
+                DECLARE @SelectCols NVARCHAR(MAX) = @CommonColumns;
+
+                IF @HasTenantId = 1
+                BEGIN
+                    SET @InsertCols = @InsertCols + ', [TenantId]';
+                    SET @SelectCols = @SelectCols + ', ' + CAST(@TenantId AS NVARCHAR(20)); -- Inject TenantId value
+                END
+
+                SET @Sql = @Sql + 'INSERT INTO ' + @FullTableName + ' (' + @InsertCols + ') ' +
+                           'SELECT ' + @SelectCols + ' FROM ' + @SourceFullTableName + ' AS S ' +
                            'WHERE NOT EXISTS (SELECT 1 FROM ' + @FullTableName + ' AS T WHERE ' + @PkJoinCondition + '); ';
 
                 IF @HasIdentity = 1
