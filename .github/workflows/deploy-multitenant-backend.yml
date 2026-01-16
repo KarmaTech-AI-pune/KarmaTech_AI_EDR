@@ -139,7 +139,7 @@ jobs:
                   },
                   {
                     "name": "ConnectionStrings__AppDbConnection",
-                    "value": "Server=njs-database.cxe40c86capb.us-east-1.rds.amazonaws.com;Database=KarmaTechAI_EDR_SAAS_New;User Id=admin;Password=NJS-Backend-2025!;TrustServerCertificate=true;MultipleActiveResultSets=true;"
+                    "value": "Server=njs-database.cxe40c86capb.us-east-1.rds.amazonaws.com;Database=KarmaTechAI_EDR_SAAS;User Id=admin;Password=NJS-Backend-2025!;TrustServerCertificate=true;MultipleActiveResultSets=true;"
                   }
                 ],
                 "logConfiguration": {
@@ -196,6 +196,7 @@ jobs:
               --task-definition ${{ env.ECS_TASK_DEFINITION_NAME }} \
               --desired-count 1 \
               --launch-type FARGATE \
+              --deployment-configuration "deploymentCircuitBreaker={enable=true,rollback=true},maximumPercent=200,minimumHealthyPercent=100" \
               --network-configuration "awsvpcConfiguration={subnets=[${{ steps.get-subnets.outputs.subnet-ids }}],securityGroups=[${{ secrets.NJS_API_ECS_SG }}],assignPublicIp=ENABLED}" \
               --load-balancers "targetGroupArn=${{ steps.get-target-group.outputs.target-group-arn }},containerName=njs-multitenant-backend,containerPort=8080" \
               --health-check-grace-period-seconds 300 \
@@ -210,6 +211,7 @@ jobs:
             --cluster ${{ env.ECS_CLUSTER_NAME }} \
             --service ${{ env.ECS_SERVICE_NAME }} \
             --task-definition ${{ env.ECS_TASK_DEFINITION_NAME }} \
+            --deployment-configuration "deploymentCircuitBreaker={enable=true,rollback=true},maximumPercent=200,minimumHealthyPercent=100" \
             --region ${{ env.AWS_REGION }}
 
       - name: Wait for service to stabilize

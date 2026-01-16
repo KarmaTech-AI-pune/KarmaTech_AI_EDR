@@ -20,8 +20,7 @@ public static class WebApplicationExtensions
             pathBase = "/";
         }
         app.UsePathBase(pathBase);
-        // Commented out HTTPS redirection - ALB handles SSL termination
-        // app.UseHttpsRedirection();
+        app.UseHttpsRedirection();
 
         app.UseRouting();
 
