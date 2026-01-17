@@ -1,120 +1,151 @@
-DECLARE @TenantId INT = 4; -- Target tenant
-DECLARE @Email NVARCHAR(256) = 'tt@gmail.com';
-DECLARE @RoleName NVARCHAR(256) = 'TenantAdmin';
-DECLARE @PermissionName NVARCHAR(256) = 'Tenant_ADMIN';
+-- ----------------------------------------------------
+-- PostgreSQL: User / Role / Permission setup
+-- ----------------------------------------------------
 
-DECLARE @UserId UNIQUEIDENTIFIER;
-DECLARE @RoleId UNIQUEIDENTIFIER;
-DECLARE @PermissionId int;
+-- Required once
+-- CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-BEGIN TRANSACTION;
+BEGIN;
 
-BEGIN TRY
+DO $$
+DECLARE
+v_tenant_id        INT := 4;              -- Target tenant
+    v_email            TEXT := 'tt@gmail.com';
+    v_role_name        TEXT := 'TenantAdmin';
+    v_permission_name  TEXT := 'Tenant_ADMIN';
+
+    v_user_id          UUID;
+    v_role_id          UUID;
+    v_permission_id    INT;
+BEGIN
     -------------------------------------------------------------------
-    -- 1) Check if User exists, update TenantId or insert new
+    -- 1) Check if User exists → update or insert
     -------------------------------------------------------------------
-    SELECT @UserId = Id FROM dbo.AspNetUsers WHERE Email = @Email;
+SELECT "Id"
+INTO v_user_id
+FROM "AspNetUsers"
+WHERE "Email" = v_email;
 
-    IF @UserId IS NOT NULL
-    BEGIN
-        -- Update TenantId for existing user
-        UPDATE dbo.AspNetUsers
-        SET TenantId = @TenantId,
-            IsActive = 1,
-            LastLogin = GETUTCDATE()
-        WHERE Id = @UserId;
+IF v_user_id IS NOT NULL THEN
+UPDATE "AspNetUsers"
+SET "TenantId"  = v_tenant_id,
+    "IsActive"  = TRUE,
+    "LastLogin" = NOW() AT TIME ZONE 'UTC'
+WHERE "Id" = v_user_id;
 
-        PRINT '✅ Existing user found. TenantId updated.';
-    END
-    ELSE
-    BEGIN
-        -- Insert new user
-        INSERT INTO dbo.AspNetUsers (
-            Id, Name, Avatar, CreatedAt, LastLogin, StandardRate,
-            IsConsultant, IsActive, TenantId, UserName, NormalizedUserName,
-            Email, NormalizedEmail, EmailConfirmed, PasswordHash,
-            SecurityStamp, ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed,
-            TwoFactorEnabled, LockoutEnd, LockoutEnabled, AccessFailedCount
+RAISE NOTICE 'Existing user found. TenantId updated.';
+ELSE
+        INSERT INTO "AspNetUsers" (
+            "Id", "Name", "Avatar", "CreatedAt", "LastLogin", "StandardRate",
+            "IsConsultant", "IsActive", "TenantId", "UserName", "NormalizedUserName",
+            "Email", "NormalizedEmail", "EmailConfirmed", "PasswordHash",
+            "SecurityStamp", "ConcurrencyStamp", "PhoneNumber", "PhoneNumberConfirmed",
+            "TwoFactorEnabled", "LockoutEnd", "LockoutEnabled", "AccessFailedCount"
         )
-        SELECT 
-            NEWID(),
-            Name, Avatar, GETUTCDATE(), LastLogin, StandardRate,
-            IsConsultant, 1, @TenantId, UserName, NormalizedUserName,
-            Email, NormalizedEmail, EmailConfirmed, PasswordHash,
-            SecurityStamp, ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed,
-            TwoFactorEnabled, LockoutEnd, LockoutEnabled, AccessFailedCount
-        FROM dbo.AspNetUsers
-        WHERE Email = @Email; -- copy template user if needed
+SELECT
+    gen_random_uuid(),
+    "Name", "Avatar", NOW() AT TIME ZONE 'UTC', "LastLogin", "StandardRate",
+    "IsConsultant", TRUE, v_tenant_id, "UserName", "NormalizedUserName",
+    "Email", "NormalizedEmail", "EmailConfirmed", "PasswordHash",
+    "SecurityStamp", "ConcurrencyStamp", "PhoneNumber", "PhoneNumberConfirmed",
+    "TwoFactorEnabled", "LockoutEnd", "LockoutEnabled", "AccessFailedCount"
+FROM "AspNetUsers"
+WHERE "Email" = v_email
+    LIMIT 1;
 
-        SELECT @UserId = Id FROM dbo.AspNetUsers WHERE Email = @Email;
-        PRINT '✅ New user inserted for TenantId ' + CAST(@TenantId AS NVARCHAR);
-    END;
+SELECT "Id" INTO v_user_id
+FROM "AspNetUsers"
+WHERE "Email" = v_email;
 
-    -------------------------------------------------------------------
-    -- 2) Insert Role if not exists (tenant-scoped)
-    -------------------------------------------------------------------
-    SELECT @RoleId = Id FROM dbo.AspNetRoles WHERE Name = @RoleName AND TenantId = @TenantId;
-
-    IF @RoleId IS NULL
-    BEGIN
-        INSERT INTO dbo.AspNetRoles (Id, Name, NormalizedName, Description, MinRate,IsResourceRole, TenantId)
-        VALUES 
-        (NEWID(), @RoleName, UPPER(@RoleName), 'Tenant role', 1,0, @TenantId),
-        (NEWID(), 'Project Manager', 'PROJECT MANAGER', 'Project Manager role', 120.00, 1, @TenantId),
-        (NEWID(), 'Senior Project Manager', 'SENIOR PROJECT MANAGER', 'Senior Project Manager role', 100.00, 1, @TenantId),
-        (NEWID(), 'Regional Manager', 'REGIONAL MANAGER', 'Regional Manager is Bid form reviewer role', 0.00, 1, @TenantId),
-        (NEWID(), 'Business Development Manager', 'BUSINESS DEVELOPMENT MANAGER', 'Bid manager role', 0.00, 1, @TenantId),
-        (NEWID(), 'Subject Matter Expert', 'SUBJECT MATTER EXPERT', 'Subject Matter Expert role', 80.00, 1, @TenantId),
-        (NEWID(), 'Regional Director', 'REGIONAL DIRECTOR', 'Approval Manager for BD form', 0.00, 1, @TenantId),
-        (NEWID(), 'Reviewer', 'REVIEWER', 'Review the check-review form', 0.00, 0, @TenantId),
-        (NEWID(), 'Checker', 'CHECKER', 'Check the check-review form', 0.00, 0, @TenantId);
-        
-
-        SELECT @RoleId = Id FROM dbo.AspNetRoles WHERE Name = @RoleName AND TenantId = @TenantId;
-    END;
+RAISE NOTICE 'New user inserted for TenantId %', v_tenant_id;
+END IF;
 
     -------------------------------------------------------------------
-    -- 3) Link User to Role if not already linked
+    -- 2) Insert Roles if not exists (tenant-scoped)
+    -------------------------------------------------------------------
+SELECT "Id"
+INTO v_role_id
+FROM "AspNetRoles"
+WHERE "Name" = v_role_name
+  AND "TenantId" = v_tenant_id;
+
+IF v_role_id IS NULL THEN
+        INSERT INTO "AspNetRoles"
+        ("Id","Name","NormalizedName","Description","MinRate","IsResourceRole","TenantId")
+        VALUES
+        (gen_random_uuid(), v_role_name, UPPER(v_role_name), 'Tenant role', 1, FALSE, v_tenant_id),
+        (gen_random_uuid(), 'Project Manager', 'PROJECT MANAGER', 'Project Manager role', 120, TRUE, v_tenant_id),
+        (gen_random_uuid(), 'Senior Project Manager', 'SENIOR PROJECT MANAGER', 'Senior Project Manager role', 100, TRUE, v_tenant_id),
+        (gen_random_uuid(), 'Regional Manager', 'REGIONAL MANAGER', 'Regional Manager is Bid form reviewer role', 0, TRUE, v_tenant_id),
+        (gen_random_uuid(), 'Business Development Manager', 'BUSINESS DEVELOPMENT MANAGER', 'Bid manager role', 0, TRUE, v_tenant_id),
+        (gen_random_uuid(), 'Subject Matter Expert', 'SUBJECT MATTER EXPERT', 'Subject Matter Expert role', 80, TRUE, v_tenant_id),
+        (gen_random_uuid(), 'Regional Director', 'REGIONAL DIRECTOR', 'Approval Manager for BD form', 0, TRUE, v_tenant_id),
+        (gen_random_uuid(), 'Reviewer', 'REVIEWER', 'Review the check-review form', 0, FALSE, v_tenant_id),
+        (gen_random_uuid(), 'Checker', 'CHECKER', 'Check the check-review form', 0, FALSE, v_tenant_id);
+
+SELECT "Id"
+INTO v_role_id
+FROM "AspNetRoles"
+WHERE "Name" = v_role_name
+  AND "TenantId" = v_tenant_id;
+END IF;
+
+    -------------------------------------------------------------------
+    -- 3) Link User → Role
     -------------------------------------------------------------------
     IF NOT EXISTS (
-        SELECT 1 FROM dbo.AspNetUserRoles
-        WHERE UserId = @UserId AND RoleId = @RoleId
-    )
-    BEGIN
-        INSERT INTO dbo.AspNetUserRoles (UserId, RoleId)
-        VALUES (@UserId, @RoleId);
-    END;
+        SELECT 1
+        FROM "AspNetUserRoles"
+        WHERE "UserId" = v_user_id
+          AND "RoleId" = v_role_id
+    ) THEN
+        INSERT INTO "AspNetUserRoles" ("UserId", "RoleId")
+        VALUES (v_user_id, v_role_id);
+END IF;
 
     -------------------------------------------------------------------
     -- 4) Insert Permission if not exists
     -------------------------------------------------------------------
-    SELECT @PermissionId = Id FROM dbo.Permissions WHERE Name = @PermissionName;
+SELECT "Id"
+INTO v_permission_id
+FROM "Permissions"
+WHERE "Name" = v_permission_name;
 
-    IF @PermissionId IS NULL
-    BEGIN
-        INSERT INTO dbo.Permissions (Name, Description)
-        VALUES (@PermissionName, 'Tenant specific permission');
+IF v_permission_id IS NULL THEN
+        INSERT INTO "Permissions" ("Name", "Description")
+        VALUES (v_permission_name, 'Tenant specific permission');
 
-        SELECT @PermissionId = Id FROM dbo.Permissions WHERE Name = @PermissionName;
-    END;
+SELECT "Id"
+INTO v_permission_id
+FROM "Permissions"
+WHERE "Name" = v_permission_name;
+END IF;
 
     -------------------------------------------------------------------
-    -- 5) Link Role to Permission if not already linked
+    -- 5) Link Role → Permission
     -------------------------------------------------------------------
     IF NOT EXISTS (
-        SELECT 1 FROM dbo.RolePermissions
-        WHERE RoleId = @RoleId AND PermissionId = @PermissionId
-    )
-    BEGIN
-        INSERT INTO dbo.RolePermissions (RoleId, PermissionId, TenantId, CreatedAt, CreatedBy)
-        VALUES (@RoleId, @PermissionId, @TenantId, GETUTCDATE(), @Email);
-    END;
+        SELECT 1
+        FROM "RolePermissions"
+        WHERE "RoleId" = v_role_id
+          AND "PermissionId" = v_permission_id
+    ) THEN
+        INSERT INTO "RolePermissions"
+        ("RoleId","PermissionId","TenantId","CreatedAt","CreatedBy")
+        VALUES (
+            v_role_id,
+            v_permission_id,
+            v_tenant_id,
+            NOW() AT TIME ZONE 'UTC',
+            v_email
+        );
+END IF;
 
-    COMMIT TRANSACTION;
-    PRINT '✅ User/Role/Permission setup completed for TenantId=' + CAST(@TenantId AS NVARCHAR);
+    RAISE NOTICE 'User/Role/Permission setup completed for TenantId %', v_tenant_id;
 
-END TRY
-BEGIN CATCH
-    ROLLBACK TRANSACTION;
-    PRINT '❌ Error: ' + ERROR_MESSAGE();
-END CATCH;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE;
+END $$;
+
+COMMIT;

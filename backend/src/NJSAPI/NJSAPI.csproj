@@ -29,13 +29,28 @@
     <None Update="Templates\Email\otp-login.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="MigrationSQL\NonIsolatedSQL\01_DropIndex.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="MigrationSQL\NonIsolatedSQL\02_Setup_user.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="MigrationSQL\NonIsolatedSQL\01_Permissions.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\01_PermissionsSQL.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\02_Add_Roles_Mapp_Role_PermissionsSQL.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\03_Migrate_User_From_Soure_Target_DBsSQL.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\04_PMWorkFlowSQL.Sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\05_OpportunityStatusesSQL.Sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\NonIsolatedSQL\01_DropIndexSQL.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -82,6 +97,13 @@
     <Compile Update="Strategies\SharedTenantUserMigrationStrategy.cs">
       <DependentUpon>ITenantUserMigrationStrategy.cs</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="MigrationSQL\IsolatedSQL\03_Migrate_User_From_Soure_Target_DB.sql" />
+    <Resource Include="MigrationSQL\IsolatedSQL\03_Migrate_User_From_Soure_Target_DB.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

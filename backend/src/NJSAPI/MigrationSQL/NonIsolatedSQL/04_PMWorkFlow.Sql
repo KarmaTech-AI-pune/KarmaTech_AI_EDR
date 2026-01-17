@@ -1,25 +1,34 @@
-DECLARE @TenantId INT = 0;
+-- ----------------------------------------------------
+-- Seed PMWorkflowStatuses per Tenant
+-- ----------------------------------------------------
 
-IF NOT EXISTS (
-    SELECT 1
-    FROM PMWorkflowStatuses
-    WHERE TenantId = @TenantId
-)
+DO $$
+DECLARE
+v_tenant_id INT := 0;
 BEGIN
-INSERT INTO PMWorkflowStatuses (TenantId, Status)
-VALUES
-    (@TenantId, 'Initial'),
-    (@TenantId, 'Sent for Review'),
-    (@TenantId, 'Review Changes'),
-    (@TenantId, 'Sent for Approval'),
-    (@TenantId, 'Approval Changes'),
-    (@TenantId, 'Approved');
+    IF NOT EXISTS (
+        SELECT 1
+        FROM "PMWorkflowStatuses"
+        WHERE "TenantId" = v_tenant_id
+        LIMIT 1
+    ) THEN
 
-PRINT 'PMWorkflowStatuses data inserted successfully for TenantId = ' 
-          + CAST(@TenantId AS VARCHAR(10));
-END
+        INSERT INTO "PMWorkflowStatuses" ("TenantId", "Status")
+        VALUES
+            (v_tenant_id, 'Initial'),
+            (v_tenant_id, 'Sent for Review'),
+            (v_tenant_id, 'Review Changes'),
+            (v_tenant_id, 'Sent for Approval'),
+            (v_tenant_id, 'Approval Changes'),
+            (v_tenant_id, 'Approved');
+
+        RAISE NOTICE
+            'PMWorkflowStatuses data inserted successfully for TenantId = %',
+            v_tenant_id;
+
 ELSE
-BEGIN
-    PRINT 'PMWorkflowStatuses already exists for TenantId = ' 
-          + CAST(@TenantId AS VARCHAR(10)) + ', skipping insert';
-END
+        RAISE NOTICE
+            'PMWorkflowStatuses already exists for TenantId = %, skipping insert',
+            v_tenant_id;
+END IF;
+END $$;

@@ -40,7 +40,7 @@ namespace NJSAPI.Controllers
             ITenantMigrationService tenantMigrationService,
             IConfiguration configuration,
             IMediator mediator,
-            ILogger<TenantsController> logger, 
+            ILogger<TenantsController> logger,
             ITenantUserMigrationStrategySelector tenantUserMigrationStrategySelector)
         {
             _context = context;
@@ -101,8 +101,8 @@ namespace NJSAPI.Controllers
         }
 
         // POST: api/tenants
-        [HttpPost]
-        public async Task<ActionResult<Tenant>> CreateTenant(Tenant tenant)
+        [HttpPost("CreateTenantSQL")]
+        public async Task<ActionResult<Tenant>> CreateTenantSQL(Tenant tenant)
         {
             try
             {
@@ -174,7 +174,7 @@ namespace NJSAPI.Controllers
                             tenant.Id);
                     }
                 }
-              
+
 
                 // Create subscription if plan is specified
                 if (tenant.SubscriptionPlanId.HasValue)
@@ -194,6 +194,96 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, new { message = "An error occurred while creating the tenant" });
             }
         }
+
+        [HttpPost]
+        public async Task<ActionResult<Tenant>> CreateTenant(Tenant tenant)
+        {
+            try
+            {
+                if (!await _dnsService.ValidateSubdomainAsync(tenant.Domain))
+                {
+                    return BadRequest(new { message = "Subdomain is not available or invalid" });
+                }
+
+                if (!await _dnsService.CreateSubdomainAsync(tenant.Domain))
+                {
+                    return BadRequest(new { message = "Failed to create DNS record" });
+                }
+
+                var (isDbCreated, dbName, connectionString) =
+                    await _databaseManagementService.CreateTenantDatabaseAsync(
+                        tenant.Domain,
+                        tenant.IsIsolated);
+
+                if (!isDbCreated)
+                {
+                    return BadRequest(new { message = "Failed to create tenant database" });
+                }
+
+               
+                await using var transaction =
+                    await _tenantDbContext.Database.BeginTransactionAsync();
+
+                _tenantDbContext.Tenants.Add(tenant);
+                await _tenantDbContext.SaveChangesAsync();
+
+                var tenantDb = new TenantDatabase
+                {
+                    TenantId = tenant.Id,
+                    DatabaseName = dbName,
+                    ConnectionString = connectionString,
+                    Status = DatabaseStatus.Active
+                };
+
+                _tenantDbContext.TenantDatabases.Add(tenantDb);
+                await _tenantDbContext.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                // 5️ Execute tenant data migrations (POST-COMMIT)
+                if (tenant.IsIsolated && !string.IsNullOrEmpty(connectionString))
+                {
+                    _logger.LogInformation(
+                        "Executing tenant data migrations for TenantId={TenantId}",
+                        tenant.Id);
+
+                    var migrationSuccess =
+                        await _tenantMigrationService.ExecuteTenantMigrationsAsync(
+                            connectionString,
+                            tenant.Id);
+
+                    if (!migrationSuccess)
+                    {
+                        _logger.LogWarning(
+                            "Tenant {TenantId} created but data migrations failed",
+                            tenant.Id);
+                        // Intentionally NOT failing tenant creation
+                    }
+                }
+
+                // Create subscription
+                if (tenant.SubscriptionPlanId.HasValue)
+                {
+                    await _subscriptionService.CreateTenantSubscriptionAsync(
+                        tenant.Id,
+                        tenant.SubscriptionPlanId.Value);
+                }
+
+                _logger.LogInformation(
+                    "Tenant created successfully. Name={TenantName}, Subdomain={Subdomain}, Isolated={Isolated}",
+                    tenant.Name,
+                    tenant.Domain,
+                    tenant.IsIsolated);
+
+                return CreatedAtAction(nameof(GetTenant), new { id = tenant.Id }, tenant);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating tenant {TenantName}", tenant.Name);
+                return StatusCode(500, new { message = "An error occurred while creating the tenant" });
+            }
+        }
+
 
         // PUT: api/tenants/5
         [HttpPut("{id}")]
@@ -482,7 +572,6 @@ namespace NJSAPI.Controllers
             }
             else
             {
-                 
                 // Get tenant database connection string
                 var tenantDatabase = await _tenantDbContext.TenantDatabases
                     .FirstOrDefaultAsync(td => td.TenantId == tenant.Id);
@@ -536,7 +625,6 @@ namespace NJSAPI.Controllers
                             tenant.Id, user.Email);
                     }
                 }
-            
             }
 
             _logger.LogInformation("Added user {UserId} to tenant {TenantId} with role {Role}",
@@ -544,8 +632,8 @@ namespace NJSAPI.Controllers
 
             return CreatedAtAction(nameof(GetTenantUsers), new { id }, tenantUser);
         }
-        
-        
+
+
         [HttpPost("{id}/users")]
         public async Task<ActionResult<object>> AddTenantUser(int id, [FromBody] AddTenantUserRequest request)
         {
@@ -581,9 +669,9 @@ namespace NJSAPI.Controllers
             _tenantDbContext.TenantUsers.Add(tenantUser);
             await _tenantDbContext.SaveChangesAsync();
 
-            var strategy = _tenantUserMigrationStrategySelector.GetStrategy(tenant.IsIsolated);            
+            var strategy = _tenantUserMigrationStrategySelector.GetStrategy(tenant.IsIsolated);
             await strategy.MigrateUserAsync(tenant, user, request.Role);
-            
+
             _logger.LogInformation("Added user {UserId} to tenant {TenantId} with role {Role}",
                 request.UserId, id, request.Role);
 

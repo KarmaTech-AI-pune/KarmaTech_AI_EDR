@@ -1,20 +1,25 @@
-DECLARE @TenantId INT=0;
+-- ----------------------------------------------------
+-- Seed OpportunityStatuses (only if table is empty)
+-- ----------------------------------------------------
 
-IF NOT EXISTS (SELECT TOP 1 1 FROM OpportunityStatuses)
+DO $$
+DECLARE
+v_tenant_id INT := 0;
 BEGIN
-    SET IDENTITY_INSERT OpportunityStatuses ON;
-INSERT INTO OpportunityStatuses (Id, TenantId,Status)
-VALUES
-    (1, @TenantId,'Initial'),
-    (2, @TenantId,'Sent for Review'),
-    (3, @TenantId,'Review Changes'),
-    (4, @TenantId,'Sent for Approval'),
-    (5, @TenantId,'Approval Changes'),
-    (6, @TenantId,'Approved');
-SET IDENTITY_INSERT OpportunityStatuses OFF;
-    PRINT 'OpportunityStatuses data inserted successfully';
-END
+    IF NOT EXISTS (SELECT 1 FROM "OpportunityStatuses" LIMIT 1) THEN
+
+        INSERT INTO "OpportunityStatuses" ("Id", "TenantId", "Status")
+        VALUES
+            (1, v_tenant_id, 'Initial'),
+            (2, v_tenant_id, 'Sent for Review'),
+            (3, v_tenant_id, 'Review Changes'),
+            (4, v_tenant_id, 'Sent for Approval'),
+            (5, v_tenant_id, 'Approval Changes'),
+            (6, v_tenant_id, 'Approved');
+
+        RAISE NOTICE 'OpportunityStatuses data inserted successfully';
+
 ELSE
-BEGIN
-    PRINT 'OpportunityStatuses data already exists, skipping insert';
-END
+        RAISE NOTICE 'OpportunityStatuses data already exists, skipping insert';
+END IF;
+END $$;

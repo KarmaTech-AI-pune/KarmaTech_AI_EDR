@@ -5,6 +5,7 @@ using NJS.Application.Services.IContract;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using Npgsql;
 
 namespace NJS.Application.Services
 {
@@ -75,7 +76,7 @@ namespace NJS.Application.Services
             }
         }
 
-        public async Task<bool> ExecuteTenantMigrationsAsync(string connectionString, int tenantId,
+        public async Task<bool> ExecuteTenantMigrationsAsyncSQL(string connectionString, int tenantId,
             string? sourceDatabaseName = null)
         {
             try
@@ -174,8 +175,108 @@ namespace NJS.Application.Services
             }
         }
 
+        public async Task<bool> ExecuteTenantMigrationsAsync(
+            string connectionString,
+            int tenantId,
+            string? sourceDatabaseName = null)
+        {
+            try
+            {
+                if (!Directory.Exists(_migrationScriptsPath))
+                {
+                    _logger.LogError("Migration scripts directory not found: {Path}", _migrationScriptsPath);
+                    return false;
+                }
 
-        public async Task<bool> ExecuteTenantUserMigrationsAsync(string connectionString, int tenantId,
+                // Extract database name
+                var builder = new NpgsqlConnectionStringBuilder(connectionString);
+                var targetDatabaseName = builder.Database;
+
+                // PostgreSQL does NOT support cross-database queries
+                sourceDatabaseName ??= targetDatabaseName;
+
+                var migrationScripts = new[]
+                {
+                    "01_Permissions.sql",
+                    "04_PMWorkFlow.sql",
+                    "05_OpportunityStatuses.sql"
+                };
+
+                await using var connection = new NpgsqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                foreach (var scriptFileName in migrationScripts)
+                {
+                    var scriptPath = Path.Combine(_migrationScriptsPath, scriptFileName);
+
+                    if (!File.Exists(scriptPath))
+                    {
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        continue;
+                    }
+
+                    _logger.LogInformation("Executing migration script: {ScriptName}", scriptFileName);
+
+                    var scriptContent = await File.ReadAllTextAsync(scriptPath, Encoding.UTF8);
+
+                    // Replace placeholders
+                    scriptContent = ReplacePlaceholders(
+                        scriptContent,
+                        tenantId,
+                        targetDatabaseName,
+                        sourceDatabaseName,
+                        null,
+                        null,
+                        null);
+
+                    try
+                    {
+                        await using var command = new NpgsqlCommand(scriptContent, connection)
+                        {
+                            CommandTimeout = 300
+                        };
+
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    catch (PostgresException ex)
+                    {
+                        // Common PostgreSQL "already exists" errors
+                        if (ex.SqlState == "42P07" || // duplicate_table
+                            ex.SqlState == "42710") // duplicate_object
+                        {
+                            _logger.LogWarning(
+                                "Object already exists while executing {ScriptName}, continuing...",
+                                scriptFileName);
+                        }
+                        else
+                        {
+                            _logger.LogError(
+                                ex,
+                                "Error executing migration script {ScriptName}",
+                                scriptFileName);
+                            throw;
+                        }
+                    }
+
+                    _logger.LogInformation("Completed migration script: {ScriptName}", scriptFileName);
+                }
+
+                _logger.LogInformation(
+                    "All PostgreSQL migration scripts executed successfully for tenant {TenantId}",
+                    tenantId);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error executing PostgreSQL tenant migrations for tenant {TenantId}",
+                    tenantId);
+                return false;
+            }
+        }
+
+        public async Task<bool> ExecuteTenantUserMigrationsAsyncSQL(string connectionString, int tenantId,
             string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
         {
             try
@@ -278,6 +379,118 @@ namespace NJS.Application.Services
                 _logger.LogInformation(
                     "All user migration scripts executed successfully for tenant {TenantId} and user {UserEmail}",
                     tenantId, userEmail);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error executing tenant user migrations for tenant {TenantId} and user {UserEmail}", tenantId,
+                    userEmail);
+                return false;
+            }
+        }
+
+        public async Task<bool> ExecuteTenantUserMigrationsAsync(
+            string connectionString,
+            int tenantId,
+            string userEmail,
+            string roleName,
+            string permissionName,
+            string? sourceDatabaseName = null)
+        {
+            try
+            {
+                if (!Directory.Exists(_migrationScriptsPath))
+                {
+                    _logger.LogError("Migration scripts directory not found: {Path}", _migrationScriptsPath);
+                    return false;
+                }
+
+                // Extract database name from connection string (PostgreSQL version)
+                var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
+                var targetDatabaseName = builder.Database;
+
+                // If source database not provided, use the default from configuration
+                if (string.IsNullOrEmpty(sourceDatabaseName))
+                {
+                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                    if (!string.IsNullOrEmpty(defaultConnectionString))
+                    {
+                        var defaultBuilder = new Npgsql.NpgsqlConnectionStringBuilder(defaultConnectionString);
+                        sourceDatabaseName = defaultBuilder.Database;
+                    }
+                }
+
+                // Migration scripts for user and role setup
+                var migrationScripts = new[]
+                {
+                    "02_Add_Roles_Mapp_Role_Permissions.sql",
+                    "03_Migrate_User_From_Source_Target_DB.sql"
+                };
+
+                await using var connection = new Npgsql.NpgsqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                foreach (var scriptFileName in migrationScripts)
+                {
+                    var scriptPath = Path.Combine(_migrationScriptsPath, scriptFileName);
+
+                    if (!File.Exists(scriptPath))
+                    {
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        continue;
+                    }
+
+                    _logger.LogInformation("Executing migration script: {ScriptName}", scriptFileName);
+
+                    var scriptContent = await File.ReadAllTextAsync(scriptPath, Encoding.UTF8);
+
+                    // Replace placeholders in the script (tenantId, userEmail, roleName, permissionName)
+                    scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName,
+                        userEmail, roleName, permissionName);
+
+                    // Split script into batches using semicolons (PostgreSQL doesn't use GO)
+                   // var batches = scriptContent.Split(";", StringSplitOptions.RemoveEmptyEntries);
+
+                    //foreach (var batchRaw in batches)
+                    {
+                       // var batch = batchRaw.Trim();
+                       // if (string.IsNullOrWhiteSpace(scriptContent))
+                        //    continue;
+
+                        try
+                        {
+                            await using var command = new Npgsql.NpgsqlCommand(scriptContent, connection);
+                            command.CommandTimeout = 300; // 5 minutes timeout for migrations
+                            await command.ExecuteNonQueryAsync();
+
+                            _logger.LogDebug("Successfully executed batch from {ScriptName}", scriptFileName);
+                        }
+                        catch (PostgresException ex)
+                        {
+                            // Log warning for duplicate entries (idempotent inserts)
+                            if (ex.SqlState == "23505") // unique_violation
+                            {
+                                _logger.LogInformation(
+                                    "Skipping duplicate insert in {ScriptName} (unique_violation): {Message}",
+                                    scriptFileName, ex.Message);
+                                continue; // Skip this batch
+                            }
+
+                            // Other Postgres errors rethrow
+                            _logger.LogError(ex,
+                                "Error executing batch from {ScriptName}: {Message}", scriptFileName, ex.Message);
+                            throw;
+                        }
+                    }
+
+                    _logger.LogInformation("Completed migration script: {ScriptName}", scriptFileName);
+                }
+
+                _logger.LogInformation(
+                    "All user migration scripts executed successfully for tenant {TenantId} and user {UserEmail}",
+                    tenantId, userEmail);
+
                 return true;
             }
             catch (Exception ex)
@@ -414,7 +627,7 @@ namespace NJS.Application.Services
                         sourceDatabaseName = defaultBuilder.InitialCatalog;
                     }
                 }
-             
+
                 var migrationScripts = new[]
                 {
                     "01_DropIndex.Sql",
@@ -466,7 +679,7 @@ namespace NJS.Application.Services
                             _logger.LogWarning(ex,
                                 "Error executing batch from {ScriptName}: {ErrorMessage} (Error Number: {ErrorNumber})",
                                 scriptFileName, ex.Message, ex.Number);
-                           
+
                             throw;
                         }
                     }

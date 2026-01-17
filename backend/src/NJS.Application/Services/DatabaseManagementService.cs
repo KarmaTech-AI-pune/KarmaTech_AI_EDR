@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Database;
+using Npgsql;
 
 namespace NJS.Application.Services
 {
@@ -22,7 +23,7 @@ namespace NJS.Application.Services
             _logger = logger;
         }
 
-        public async Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsync(string subDomain, bool isIsolated)
+        public async Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsyncSQL(string subDomain, bool isIsolated)
         {
 
             string mainConnectionString = _configuration.GetConnectionString("AppDbConnection");
@@ -90,6 +91,73 @@ namespace NJS.Application.Services
                 {
                     return new(true, mainDatabaseName, mainConnectionString!);
                 }
+
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating database {DatabaseName}", tenantDbName);
+            }
+            return new(false, null!, null!);
+        }
+
+        
+         public async Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsync(string subDomain, bool isIsolated)
+        {
+
+            string mainConnectionString = _configuration.GetConnectionString("AppDbConnection");
+            var mainBuilder = new NpgsqlConnectionStringBuilder(mainConnectionString);
+            var mainDatabaseName = mainBuilder.Database;
+
+            var tenantDbName = $"{mainDatabaseName}_{subDomain}".ToLowerInvariant();
+
+
+            if (!isIsolated)
+            {
+                return new(true, mainDatabaseName, mainConnectionString!);
+            }
+            try
+            {
+
+               
+                await using var adminConn = new NpgsqlConnection(mainConnectionString);
+                await adminConn.OpenAsync();
+
+                // 2️ Check if tenant DB already exists
+                var existsCmd = new NpgsqlCommand(
+                    "SELECT 1 FROM pg_database WHERE datname = @db",
+                    adminConn);
+
+                existsCmd.Parameters.AddWithValue("db", tenantDbName);
+
+                var exists = await existsCmd.ExecuteScalarAsync();
+                if (exists == null)
+                {
+                    // 3 Create tenant database
+                    var createDbCmd = new NpgsqlCommand(
+                        $"CREATE DATABASE \"{tenantDbName}\"",
+                        adminConn);
+
+                    await createDbCmd.ExecuteNonQueryAsync();
+                }
+
+                // 4️ Build tenant connection string
+                var tenantBuilder = new NpgsqlConnectionStringBuilder(mainConnectionString)
+                {
+                    Database = tenantDbName
+                };
+
+                var tenantConnectionString = tenantBuilder.ConnectionString;
+
+                // 5️ Apply EF Core migrations
+                using var scope = _serviceProvider.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+
+                dbContext.Database.SetConnectionString(tenantConnectionString);
+                await dbContext.Database.MigrateAsync();
+
+                return (true, tenantDbName, tenantConnectionString);
+               
 
 
             }

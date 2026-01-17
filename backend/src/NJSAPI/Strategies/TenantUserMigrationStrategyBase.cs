@@ -1,7 +1,7 @@
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
+using Npgsql;
 
 namespace NJSAPI.Strategies;
 
@@ -26,7 +26,14 @@ public abstract class TenantUserMigrationStrategyBase
         }
 
         var source = _configuration.GetConnectionString("AppDbConnection");
-        var sourceDb = new SqlConnectionStringBuilder(source).InitialCatalog;
+        string? sourceDb = null;
+
+        if (!string.IsNullOrWhiteSpace(source))
+        {
+            var npgsqlBuilder = new NpgsqlConnectionStringBuilder(source);
+            sourceDb = npgsqlBuilder.Database; 
+        }
+
         return (tenantDb.ConnectionString, sourceDb);
     }
 
