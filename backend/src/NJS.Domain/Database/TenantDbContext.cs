@@ -25,7 +25,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<Tenant>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.ToTable("Tenant"); // Explicitly set table name
+                entity.ToTable("Tenants"); // Explicitly set table name
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Domain).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.CompanyName).HasMaxLength(255);

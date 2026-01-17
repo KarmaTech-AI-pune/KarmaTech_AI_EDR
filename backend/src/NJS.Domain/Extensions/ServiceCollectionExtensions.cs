@@ -101,14 +101,16 @@ namespace NJS.Domain.Extensions
                 // The actual tenant-specific connection will be resolved at runtime by TenantConnectionResolver.
                 var connectionString = tenantConnectionResolver?.GetDefaultConnectionStringAsync().Result ?? configuration.GetConnectionString("AppDbConnection");
 
-                options.UseSqlServer(connectionString,
-                    sqlServerOptionsAction: sqlOptions =>
-                    {
-                        sqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: 5,
-                            maxRetryDelay: TimeSpan.FromSeconds(30),
-                            errorNumbersToAdd: null);
-                    });
+                // options.UseSqlServer(connectionString,
+                //     sqlServerOptionsAction: sqlOptions =>
+                //     {
+                //         sqlOptions.EnableRetryOnFailure(
+                //             maxRetryCount: 5,
+                //             maxRetryDelay: TimeSpan.FromSeconds(30),
+                //             errorNumbersToAdd: null);
+                //     });
+
+                options.UseNpgsql(connectionString);
 
                 // Add audit interceptor if audit services are available
                 var auditSubject = provider.GetService<IAuditSubject>();

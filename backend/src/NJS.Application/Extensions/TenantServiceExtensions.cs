@@ -11,8 +11,11 @@ namespace NJS.Application.Extensions
     {
         public static IServiceCollection AddTenantServices(this IServiceCollection services, IConfiguration configuration)
         {
+           // services.AddDbContext<TenantDbContext>(options =>
+              //  options.UseSqlServer(configuration.GetConnectionString("AppDbConnection")));
+            
             services.AddDbContext<TenantDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("AppDbConnection")));
+                options.UseNpgsql(configuration.GetConnectionString("AppDbConnection")));
 
             services.AddScoped<ITenantService, TenantService>();
 

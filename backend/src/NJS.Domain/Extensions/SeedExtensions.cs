@@ -802,10 +802,11 @@ namespace NJS.Domain.Extensions
                             await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT dbo.WBSOptions OFF");
                             await transaction.CommitAsync();
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             await transaction.RollbackAsync();
-                            throw;
+                            Console.WriteLine($"Error: Could not insert seed WBSOptions due: {ex.Message}");
+                            //throw;
                         }
                     });
                 }

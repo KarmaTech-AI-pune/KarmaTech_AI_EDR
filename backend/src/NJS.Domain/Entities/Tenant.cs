@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NJS.Domain.Entities
 {
+    [Table("Tenants")]
     public class Tenant
     {
         [Key]

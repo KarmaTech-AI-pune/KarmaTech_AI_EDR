@@ -30,7 +30,8 @@ namespace NJS.Domain.Database
             }
 
             DbContextOptionsBuilder<TenantDbContext> optionsBuilder = new();
-            _ = optionsBuilder.UseSqlServer(connectionString);
+           // _ = optionsBuilder.UseSqlServer(connectionString);
+            _ = optionsBuilder.UseNpgsql(connectionString);
             return new TenantDbContext(optionsBuilder.Options);
         }
     }
@@ -58,7 +59,8 @@ namespace NJS.Domain.Database
             }
 
             var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
-            optionsBuilder.UseSqlServer(connectionString);
+           // optionsBuilder.UseSqlServer(connectionString);
+           optionsBuilder.UseNpgsql(connectionString);
 
             // Create a mock tenant service for design-time operations
             var mockTenantService = new DesignTimeTenantService(connectionString);
