@@ -140,7 +140,7 @@ Frontend:
 ✓ History is read-only (cannot be edited/deleted)
 ✓ Frontend displays history as timeline
 ✓ API response time < 500ms
-✓ Test coverage ≥ 80%
+✓ Test coverage = 100%
 ```
 
 #### **1.5 Generate AI-DLC Spec**
@@ -911,7 +911,7 @@ namespace NJS.Application.Tests.Handlers
 - FluentAssertions for readability
 - Tests happy path + error cases
 - Verifies all interactions
-- **Coverage: 85%** (exceeds 80% requirement)
+- **Coverage: 100%** (meets 100% requirement)
 
 **🤖 Automatic Test Execution:**
 ```powershell
@@ -920,12 +920,12 @@ namespace NJS.Application.Tests.Handlers
 # Backend tests
 cd backend
 dotnet test --collect:"XPlat Code Coverage"
-# Output: 45 passed, 0 failed, 87% coverage
+# Output: 45 passed, 0 failed, 100% coverage
 
 # Frontend tests
 cd frontend
 npm run test -- --coverage
-# Output: 32 passed, 0 failed, 83% coverage
+# Output: 32 passed, 0 failed, 100% coverage
 
 # Generate comprehensive test report
 # MANDATORY: Saves to: .kiro/specs/project-status-history/test-report.md
@@ -979,7 +979,7 @@ npm run test -- --coverage
 - 💡 Suggestions: [Optional improvements]
 - 📋 Checklist for Reviewer:
   - [ ] All tests passing
-  - [ ] Coverage meets 80% threshold
+  - [ ] Coverage meets 100% threshold
   - [ ] Performance benchmarks met
   - [ ] No critical security issues
   - [ ] Code quality acceptable
@@ -1068,7 +1068,7 @@ npm run test -- --coverage
 
 #### **6.3 Test Coverage Check**
 ```
-✓ Unit tests: 85% coverage (> 80% requirement)
+✓ Unit tests: 100% coverage (meets 100% requirement)
 ✓ Integration tests: Included
 ✓ E2E tests: Included
 ✓ All edge cases covered
@@ -1091,9 +1091,9 @@ Tracks all project status changes with audit trail (who, when, why).
 - [Tasks](.kiro/specs/project-status-history/tasks.md)
 
 ## Test Results
-- ✅ Backend: 45 passed, 0 failed (87% coverage)
-- ✅ Frontend: 32 passed, 0 failed (83% coverage)
-- ✅ Overall: 85% coverage (meets 80% requirement)
+- ✅ Backend: 45 passed, 0 failed (100% coverage)
+- ✅ Frontend: 32 passed, 0 failed (100% coverage)
+- ✅ Overall: 100% coverage (meets 100% requirement)
 
 ## Implementation Checklist
 - [x] Database schema created
@@ -1187,7 +1187,7 @@ GET /api/projects/{projectId}/status-history
 - `StatusChangeDialog` - Modal for status changes
 
 ## Testing
-- Unit test coverage: 85%
+- Unit test coverage: 100%
 - Integration tests: Included
 - E2E tests: Included
 ```
@@ -1514,7 +1514,7 @@ gh run list --workflow=deploy-dev-with-tags.yml --limit 1
 ### **Do's:**
 ✅ Always create specs before starting development  
 ✅ Review PRs thoroughly (only manual quality gate)  
-✅ Monitor test coverage (maintain ≥80%)  
+✅ Monitor test coverage (maintain 100%)  
 ✅ Keep feature branches short-lived (merge within 1-2 days)  
 ✅ Use conventional commit messages  
 ✅ Document test failures in PR if they occur  
@@ -1538,7 +1538,7 @@ Track these KPIs to measure automation effectiveness:
 | **Lead Time** | <6 hours | Spec creation to deployment |
 | **Change Failure Rate** | <5% | Failed deployments / total |
 | **Process Compliance** | 100% | All features follow workflow |
-| **Test Coverage** | ≥80% | Automated coverage reports |
+| **Test Coverage** | = 100% | Automated coverage reports |
 | **Manual Steps** | 1 per feature | PR approval only |
 
 ---
