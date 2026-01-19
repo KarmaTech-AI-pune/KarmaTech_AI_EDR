@@ -6,6 +6,7 @@ import {
   TableRow,
   TableCell
 } from '@mui/material';
+import { formatToIndianNumber } from '../../../utils/numberFormatting';
 
 // Define interface for component props
 interface JobstartGrandTotalProps {
@@ -44,7 +45,7 @@ const JobstartGrandTotal = ({ timeCost, odcExpensesCost }: JobstartGrandTotalPro
   // Function to calculate grand total as sum of timeCost and odcExpensesCost
   const calculateGrandTotal = (): string => {
     const grandTotal = timeCost + odcExpensesCost;
-    return grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return formatToIndianNumber(grandTotal);
   };
 
   return (
