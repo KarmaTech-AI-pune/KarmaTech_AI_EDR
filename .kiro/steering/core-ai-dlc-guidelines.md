@@ -58,6 +58,12 @@ git checkout -b feature/[name]     # 4. Create clean feature branch
 🚫 **STOP RULE**: If design conflicts with existing patterns, STOP and redesign
 
 ### STEP 4: IMPLEMENTATION (MANDATORY)
+
+**⚠️ Implementation Scope:**
+- **Full-stack:** Backend first, then frontend
+- **Backend-only:** Follow backend workflow, skip frontend
+- **Frontend-only:** Skip backend, follow frontend workflow
+
 **Backend Implementation Order:**
 1. Create/update database entities following BaseEntity pattern
 2. Generate EF Core migrations with proper naming
@@ -66,12 +72,34 @@ git checkout -b feature/[name]     # 4. Create clean feature branch
 5. Implement API controllers following RESTful standards
 6. Add proper error handling and logging
 
+**📌 Backend-Only:** If no UI changes needed, skip frontend workflow.
+
 **Frontend Implementation Order:**
-1. Create TypeScript interfaces for API contracts
-2. Implement API service layer using Axios
-3. Create React components following established patterns
-4. Implement proper state management
-5. Add form validation using Formik/Yup
+
+**🚨 MANDATORY: Follow React Top-Down Implementation Workflow (see `react-implementation-workflow.md`)**
+
+**📌 Applies to:** Features requiring React/UI changes only.
+
+1. **Create Folder Structure** - Create all required folders and files FIRST
+2. **Define TypeScript Types** - Create all interfaces BEFORE components
+3. **Create API Service Layer** - Implement services BEFORE components
+4. **Create Custom Hooks** (if needed) - Data-fetching hooks BEFORE pages
+5. **Configure Routing** - Add routes BEFORE creating page components
+6. **Create Page Component** - Container that orchestrates everything
+7. **Create Child Components** - Small, reusable UI components LAST
+8. **Integrate Components** - Assemble components inside pages
+9. **Add Validation & Error Handling** - Enhance with validation
+10. **Create Tests** - Write tests for components and pages
+
+**🚨 CRITICAL RULE:** For any implementation requiring a page:
+- ✅ Create folders and files FIRST
+- ✅ Create the route SECOND
+- ✅ Create the page component THIRD (which calls child components)
+- ✅ Create child components LAST (called by the page)
+
+**❌ NEVER start with individual components in isolation**
+
+**🔧 Flexibility:** Reusable components, bug fixes, and updates may skip routing/page steps.
 
 🚫 **STOP RULE**: If code doesn't compile or violates standards, STOP and fix
 

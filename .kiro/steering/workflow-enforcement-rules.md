@@ -131,6 +131,12 @@ git checkout -b feature/[name]     # 4. Create clean feature branch
 
 **You MUST implement in this exact order:**
 
+**⚠️ Implementation Scope:**
+- **Full-stack features:** Implement backend FIRST, then frontend
+- **Backend-only features:** Follow backend workflow only, skip frontend
+- **Frontend-only features:** Skip backend workflow, follow frontend only
+- **API integration:** Backend → Types → Services → Components
+
 ✅ **Backend Implementation (Required Order):**
 1. Create/update database entities following BaseEntity pattern
 2. Generate EF Core migrations with proper naming
@@ -141,15 +147,100 @@ git checkout -b feature/[name]     # 4. Create clean feature branch
 7. Implement authentication and authorization
 8. Add input validation using FluentValidation
 
+**📌 Backend-Only Features:** If no frontend changes needed, stop here and proceed to testing.
+
 ✅ **Frontend Implementation (Required Order):**
-1. Create TypeScript interfaces for API contracts
-2. Implement API service layer using Axios
-3. Create React components following established patterns
-4. Implement proper state management
-5. Add form validation using Formik/Yup
-6. Implement proper error handling
-7. Add loading states and user feedback
-8. Ensure responsive design using Material-UI
+
+**MANDATORY: Follow React Top-Down Implementation Workflow**
+
+**📌 Applies to:** Features requiring React/UI changes. Skip if backend-only.
+
+Refer to `react-implementation-workflow.md` for complete details. The implementation MUST follow this exact order:
+
+1. **Create Folder Structure** - Create all required folders and files first
+   - `types/` - TypeScript interfaces
+   - `services/` - API service layer
+   - `hooks/` - Custom hooks (if needed)
+   - `pages/` - Page components
+   - `components/[feature]/` - Feature-specific components
+
+2. **Define TypeScript Types** - Create all interfaces BEFORE components
+   - Create type definition files in `types/` folder
+   - Define all data model interfaces
+   - Define component prop interfaces
+
+3. **Create API Service Layer** - Implement services BEFORE components
+   - Create service files in `services/` folder
+   - Implement API methods using Axios
+   - Use proper TypeScript types
+
+4. **Create Custom Hooks** (if needed) - Data-fetching hooks BEFORE pages
+   - Create hook files in `hooks/` folder
+   - Implement data fetching logic
+   - Handle loading, error, and success states
+
+5. **Configure Routing** - Add routes BEFORE creating page components
+   - Open routing configuration file
+   - Add new route entry
+   - Configure route parameters
+
+6. **Create Page Component** - Container that orchestrates everything
+   - Create page file in `pages/` folder
+   - Import hooks and services
+   - Fetch data and manage state
+   - Define layout structure
+   - Handle loading and error states
+
+7. **Create Child Components** - Small, reusable UI components LAST
+   - Create component files in `components/[feature]/` folder
+   - Define prop interfaces
+   - Implement UI logic
+   - Keep components focused and single-purpose
+
+8. **Integrate Components into Page** - Assemble components
+   - Import all child components
+   - Pass required props from page state
+   - Handle component interactions
+   - Manage data flow (parent → child)
+
+9. **Add Validation & Error Handling** - Enhance with validation
+   - Add form validation using React Hook Form + Zod
+   - Implement error boundaries
+   - Add user feedback (success/error messages)
+   - Add loading states for async operations
+
+10. **Create Tests** - Write tests for components and pages
+    - Create test files alongside components
+    - Test page component behavior
+    - Test child component rendering
+    - Test user interactions
+
+**🚨 CRITICAL RULE:** For any implementation requiring a page:
+- ✅ Create folders and files FIRST
+- ✅ Create the route SECOND
+- ✅ Create the page component THIRD (which calls child components)
+- ✅ Create child components LAST (called by the page)
+
+**❌ NEVER:**
+- Start with individual components in isolation
+- Create components before defining their page context
+- Skip folder structure creation
+- Create routes after page components
+
+**🔧 Flexibility Exceptions:**
+- **Reusable component library:** May skip routing/page steps if building shared components
+- **Updating existing features:** Maintain existing structure, apply workflow to new additions
+- **Bug fixes:** Fix in place without restructuring
+- **Styling updates:** No workflow restructuring needed
+- **Backend-only work:** Skip entire frontend workflow
+- ✅ Create the page component THIRD (which calls child components)
+- ✅ Create child components LAST (called by the page)
+
+**❌ NEVER:**
+- Start with individual components in isolation
+- Create components before defining their page context
+- Skip folder structure creation
+- Create routes after page components
 
 ✅ **Quality Gates (Must Pass):**
 - [ ] Code follows ALL coding standards from `coding-standards.md`
