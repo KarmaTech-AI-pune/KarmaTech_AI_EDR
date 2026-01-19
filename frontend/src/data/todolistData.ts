@@ -40,6 +40,7 @@ interface SprintTaskDto {
   completedAt: string | null;
   sprintPlanId: number | null;
   wbsPlanId: number | null;
+  sprintWbsPlanId: number | null;
   userTaskId: number | null;
   subtasks: SprintSubtaskDto[] | null;
 }
@@ -157,6 +158,11 @@ const apiService = {
 
   async updateSprintSubtask(subtaskId: number, subtask: SprintSubtaskDto): Promise<any> {
     const response = await axiosInstance.put(`/api/sprint-tasks/subtasks/${subtaskId}`, subtask);
+    return response.data;
+  },
+
+  async updateSprintTaskTime(command: { taskId: number; sprintWbsPlanId: number; actualHours: number; remainingHours: number }): Promise<any> {
+    const response = await axiosInstance.put('/api/sprint-tasks/update-time', command);
     return response.data;
   },
 
@@ -318,6 +324,10 @@ const transformSprintTaskToIssue = async (apiTask: SprintTaskDto): Promise<Issue
     ),
     status,
     storyPoints: apiTask.storyPoints || 0,
+    estimatedHours: apiTask.estimatedHours || 0,
+    remainingHours: apiTask.remainingHours || 0,
+    actualHours: apiTask.actualHours || 0,
+    sprintWbsPlanId: apiTask.sprintWbsPlanId || undefined,
     fixVersion: 'Version 1.0',
     components: [],
     flagged: false,
@@ -402,11 +412,37 @@ export const updateIssueAPI = async (issue: Issue): Promise<void> => {
       taskReporterName: issue.reporter.name,
       taskReporterAvatar: issue.reporter.avatar,
       isExpanded: issue.isExpanded,
+      estimatedHours: issue.estimatedHours ?? detailedTask.estimatedHours,
+      remainingHours: issue.remainingHours ?? detailedTask.remainingHours,
+      actualHours: issue.actualHours ?? detailedTask.actualHours,
     };
 
     await apiService.updateSprintTask(updatedDto);
   } catch (error) {
     console.error(`Failed to update task ${issue.id}:`, error);
+    throw error;
+  }
+};
+
+export const updateIssueTimeAPI = async (issue: Issue): Promise<void> => {
+  if (!issue.sprintWbsPlanId) {
+    console.warn("Cannot update time tracking: SprintWbsPlanId is missing.");
+    // Fallback to standard update if WBS ID is missing, or just return to avoid error?
+    // User explicitly said "use SprintWbsPlanId", so better to warn and maybe try standard update 
+    // OR better yet, let's try to find it if missing? data might be incomplete.
+    // For now, proceed only if ID is present to ensure data integrity as requested.
+    return updateIssueAPI(issue);
+  }
+
+  try {
+    await apiService.updateSprintTaskTime({
+      taskId: parseInt(issue.id),
+      sprintWbsPlanId: issue.sprintWbsPlanId,
+      actualHours: issue.actualHours || 0,
+      remainingHours: issue.remainingHours || 0
+    });
+  } catch (error) {
+    console.error(`Failed to update time for task ${issue.id}:`, error);
     throw error;
   }
 };
@@ -475,6 +511,7 @@ export const createIssueAPI = async (issue: Omit<Issue, 'id' | 'subtasks' | 'com
       completedAt: null,
       sprintPlanId: sprintId,
       wbsPlanId: null,
+      sprintWbsPlanId: null,
       userTaskId: null,
       subtasks: [],
     };

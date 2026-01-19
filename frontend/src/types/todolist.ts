@@ -40,6 +40,9 @@ export interface Issue {
   reporter: TeamMember;
   status: "To Do" | "In Progress" | "Review" | "Done";
   storyPoints: number;
+  estimatedHours?: number;   // Original Estimate
+  remainingHours?: number;   // Remaining Estimate
+  actualHours?: number;      // Time Spent
   fixVersion: string;
   components: string[];
   flagged: boolean;
@@ -49,6 +52,7 @@ export interface Issue {
   isExpanded: boolean;
   createdDate: string;
   updatedDate: string;
+  sprintWbsPlanId?: number;
 }
 
 export interface NewIssueFormState {

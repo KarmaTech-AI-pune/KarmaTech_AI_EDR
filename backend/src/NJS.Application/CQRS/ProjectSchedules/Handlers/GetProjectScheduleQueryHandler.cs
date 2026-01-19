@@ -92,6 +92,7 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                     TaskupdatedDate = t.TaskupdatedDate,
                     SprintPlanId = t.SprintPlanId,
                     WbsPlanId = t.WbsPlanId,
+                    SprintWbsPlanId = t.SprintWbsPlanId,
                     UserTaskId = t.UserTaskId,
                     AcceptanceCriteria = t.AcceptanceCriteria,
                     DisplayOrder = t.DisplayOrder,

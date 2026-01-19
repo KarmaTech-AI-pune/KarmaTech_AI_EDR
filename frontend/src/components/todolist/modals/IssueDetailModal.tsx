@@ -22,6 +22,8 @@ import { IssueDetailRow } from "../common/IssueDetailRow";
 import { SubtaskList } from "../SubtaskList";
 import { SubtaskDetailModal } from "./SubtaskDetailModal";
 import { InlineEdit } from "../common/InlineEdit";
+import { TimeTrackingWidget } from "../common/TimeTrackingWidget";
+import { updateIssueTimeAPI } from "../../../data/todolistData";
 
 interface IssueDetailModalProps {
   showIssueDetail: Issue | null;
@@ -242,6 +244,35 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
       onDeleteComment(showIssueDetail.id, commentId);
     }
+  };
+
+
+
+  const handleLogWork = async (timeSpent: number, remainingEstimate: number) => {
+    if (showIssueDetail) {
+      const newActual = (showIssueDetail.actualHours || 0) + timeSpent;
+
+      // Optimistic update
+      const updatedIssue = {
+        ...showIssueDetail,
+        actualHours: newActual,
+        remainingHours: remainingEstimate
+      };
+
+      setShowIssueDetail(updatedIssue);
+      // Update the issue in the main list as well
+      handleUpdateIssueAndState(showIssueDetail.id, {
+        actualHours: newActual,
+        remainingHours: remainingEstimate
+      });
+
+      // Call the dedicated API for time tracking
+      await updateIssueTimeAPI(updatedIssue);
+    }
+  };
+
+  const handleUpdateOriginalEstimate = (newEstimate: number) => {
+    handleUpdateIssueAndState(showIssueDetail.id, { estimatedHours: newEstimate });
   };
 
   return (
@@ -476,6 +507,17 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             flexDirection: "column",
           }}
         >
+          <Box sx={{ mb: 3 }}>
+            {/* Time Tracking Widget */}
+            <TimeTrackingWidget
+              originalEstimate={showIssueDetail.estimatedHours || 0}
+              remainingEstimate={showIssueDetail.remainingHours || 0}
+              timeSpent={showIssueDetail.actualHours || 0}
+              onLogWork={handleLogWork}
+              onUpdateOriginalEstimate={handleUpdateOriginalEstimate}
+            />
+          </Box>
+
           <Box sx={{ mb: 3 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 'medium' }}>
               Status

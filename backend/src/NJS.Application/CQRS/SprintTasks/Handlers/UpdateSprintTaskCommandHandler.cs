@@ -62,6 +62,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             existingSprintTask.TaskupdatedDate = DateTime.UtcNow;
             existingSprintTask.SprintPlanId = sprintTaskInputDto.SprintPlanId ?? existingSprintTask.SprintPlanId;
             existingSprintTask.WbsPlanId = sprintTaskInputDto.WbsPlanId ?? existingSprintTask.WbsPlanId;
+            existingSprintTask.SprintWbsPlanId = sprintTaskInputDto.SprintWbsPlanId ?? existingSprintTask.SprintWbsPlanId;
             existingSprintTask.UserTaskId = sprintTaskInputDto.UserTaskId ?? existingSprintTask.UserTaskId;
             existingSprintTask.AcceptanceCriteria = sprintTaskInputDto.AcceptanceCriteria ?? existingSprintTask.AcceptanceCriteria;
             existingSprintTask.DisplayOrder = sprintTaskInputDto.DisplayOrder != 0 ? sprintTaskInputDto.DisplayOrder : existingSprintTask.DisplayOrder;

@@ -70,6 +70,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 TaskupdatedDate = DateTime.UtcNow,
                 SprintPlanId = sprintTaskDto.SprintPlanId,
                 WbsPlanId = sprintTaskDto.WbsPlanId,
+                SprintWbsPlanId = sprintTaskDto.SprintWbsPlanId,
                 UserTaskId = sprintTaskDto.UserTaskId,
                 AcceptanceCriteria = sprintTaskDto.AcceptanceCriteria,
                 DisplayOrder = sprintTaskDto.DisplayOrder,

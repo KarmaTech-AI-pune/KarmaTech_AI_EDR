@@ -58,7 +58,8 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
                     TaskTitle = t.TaskTitle,
                     Taskstatus = t.Taskstatus,
                     StoryPoints = t.StoryPoints,
-                    SprintPlanId = t.SprintPlanId
+                    SprintPlanId = t.SprintPlanId,
+                    SprintWbsPlanId = t.SprintWbsPlanId
                     // Add other fields if strictly necessary for initial load, 
                     // but typically Todolist fetches detailed issues separately.
                     // Keeping it minimal/safe for now or matching GetSingleSprintPlan behavior?

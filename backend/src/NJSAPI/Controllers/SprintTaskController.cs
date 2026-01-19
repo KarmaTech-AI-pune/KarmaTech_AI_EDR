@@ -796,6 +796,45 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
+        /// Updates the actual and remaining hours for a SprintTask and adjusts the SprintWbsPlan accordingly.
+        /// </summary>
+        /// <param name="command">The time update command.</param>
+        /// <returns>A status indicating success or failure of the update operation.</returns>
+        [HttpPut("update-time")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateSprintTaskTime([FromBody] UpdateSprintTaskTimeCommand command)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var success = await _mediator.Send(command);
+
+                if (success)
+                {
+                    _logger.LogInformation("Time updated successfully for Task ID {TaskId}.", command.TaskId);
+                    return Ok(new { message = $"Time updated successfully for Task ID {command.TaskId}." });
+                }
+                else
+                {
+                    _logger.LogWarning("Task ID {TaskId} or SprintWbsPlan ID {PlanId} not found.", command.TaskId, command.SprintWbsPlanId);
+                    return NotFound(new { message = "Task or SprintWbsPlan not found." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating time for Task ID: {TaskId}.", command.TaskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Gets a single SprintSubtask comment by its ID.
         /// </summary>
         /// <param name="subtaskCommentId">The ID of the SprintSubtask comment.</param>
