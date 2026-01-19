@@ -4,7 +4,7 @@ import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/M
 import { Grid, Paper, TextField, Typography, Tooltip } from "@mui/material";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 import { calculateGrossPercentage } from "../../../../utils/calculations";
-import { formatToIndianNumber, formatIndianNumber, parseIndianNumber } from "../../../../utils/numberFormatting";
+import { formatToIndianNumber } from "../../../../utils/numberFormatting";
 import { useCurrencyInput } from "../../../../hooks/useCurrencyInput";
 
 interface FormFieldProps {

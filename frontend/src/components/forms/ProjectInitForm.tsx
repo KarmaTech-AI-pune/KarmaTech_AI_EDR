@@ -10,7 +10,6 @@ import {
 import { ProjectFormData } from '../../types/index.tsx';
 import { percentageCalculation } from '../../utils/calculations.ts';
 import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts';
-import { formatIndianNumber, parseIndianNumber } from '../../utils/numberFormatting.ts';
 import { useCurrencyInput } from '../../hooks/useCurrencyInput';
 import { useFloatInput } from '../../hooks/useFloatInput.ts';
 
@@ -92,16 +91,6 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     }));
   };
 
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    // Format the input value using the Indian numbering system
-    const formattedValue = formatIndianNumber(value);
-    
-    setFormData((prev: any) => ({
-      ...prev,
-      [name]: formattedValue,
-    }));
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

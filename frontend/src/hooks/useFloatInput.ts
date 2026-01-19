@@ -56,7 +56,7 @@ interface UseFloatInputReturn {
  */
 export const useFloatInput = (
   initialValue?: number | string,
-  name?: string
+  _name?: string
 ): UseFloatInputReturn => {
   
   /**

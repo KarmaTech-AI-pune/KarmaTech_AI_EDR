@@ -64,7 +64,7 @@ interface UseCurrencyInputReturn {
  */
 export const useCurrencyInput = (
   initialValue?: number | string,
-  name?: string
+  _name?: string
 ): UseCurrencyInputReturn => {
   
   /**
