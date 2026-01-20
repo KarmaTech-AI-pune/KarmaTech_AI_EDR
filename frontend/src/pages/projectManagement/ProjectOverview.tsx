@@ -33,29 +33,7 @@ const InfoCard: React.FC<{ title: string; icon: React.ReactNode; children: React
   );
 
 const formatCurrency = (amount: number, currency: string) => {
-    // Validate inputs
-    if (typeof amount !== 'number' || isNaN(amount)) {
-        return 'Invalid amount';
-    }
-    
-    // Provide a default currency if none is provided or if it's invalid
-    const validCurrency = currency && typeof currency === 'string' && currency.length === 3 
-        ? currency.toUpperCase() 
-        : 'USD'; // Default to USD
-    
-    try {
-        return new Intl.NumberFormat('en-US', { 
-            style: 'currency', 
-            currency: validCurrency 
-        }).format(amount);
-    } catch (error) {
-        // Fallback if currency is still invalid
-        console.warn(`Invalid currency code: ${validCurrency}, falling back to USD`);
-        return new Intl.NumberFormat('en-US', { 
-            style: 'currency', 
-            currency: 'USD' 
-        }).format(amount);
-    }
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
 };
 
 const formatDate = (dateString?: string) => {
@@ -120,11 +98,11 @@ const ProjectOverview: React.FC = () => {
           <InfoCard title="Financial Details" icon={<AttachMoneyIcon />}>
             <InfoItem
               label="Estimated Project Cost"
-              value={project.estimatedProjectCost ? formatCurrency(project.estimatedProjectCost, project.currency) : 'Not specified'}
+              value={formatCurrency(project.estimatedProjectCost, project.currency)}
             />
             <InfoItem
               label="Estimated Project Fee"
-              value={project.estimatedProjectFee ? formatCurrency(project.estimatedProjectFee, project.currency) : 'Not specified'}
+              value={formatCurrency(project.estimatedProjectFee, project.currency)}
             />
             <InfoItem label="Fee Type" value={project.feeType} />
           </InfoCard>

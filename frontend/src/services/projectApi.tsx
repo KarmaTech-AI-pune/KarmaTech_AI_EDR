@@ -3,12 +3,8 @@ import { ProjectFormData } from '../types/index.tsx';
 import { Project } from '../models';
 
 export const projectApi = {
-  createProject: async (projectData: ProjectFormData, programId?: number) => {
+  createProject: async (projectData: ProjectFormData) => {
     try {
-      if (!programId) {
-        throw new Error('programId is required to create a project. Please select a program first.');
-      }
-      
       const formattedData = {
         ...projectData,
         projectNo: parseInt(projectData.projectNo, 10),
@@ -19,7 +15,7 @@ export const projectApi = {
         endDate: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
         opportunityTrackingId: projectData.opportunityTrackingId || 0,
       };
-      const response = await axiosInstance.post(`api/Project/${programId}`, formattedData);
+      const response = await axiosInstance.post(`api/Project`, formattedData);
       return response.data;
     } catch (error) {
       console.error('Error creating project:', error);
@@ -27,31 +23,10 @@ export const projectApi = {
     }
   },
 
-  getAll: async (programId?: number) => {
+  getAll: async () => {
     try {
-      if (programId) {
-        const response = await axiosInstance.get(`api/Project/${programId}`);
-        return response.data;
-      } else {
-        // If no programId is provided, get all projects across all programs
-        // First, get all programs
-        const programsResponse = await axiosInstance.get('/api/Program');
-        const programs = programsResponse.data;
-        
-        // Then get projects for each program
-        const allProjects = [];
-        for (const program of programs) {
-          try {
-            const projectsResponse = await axiosInstance.get(`api/Project/${program.id}`);
-            allProjects.push(...projectsResponse.data);
-          } catch (error) {
-            // If a program has no projects, continue with the next one
-            console.warn(`No projects found for program ${program.id}:`, error);
-          }
-        }
-        
-        return allProjects;
-      }
+      const response = await axiosInstance.get(`api/Project`);
+      return response.data;
     } catch (error) {
       console.error('Error getting all projects:', error);
       throw error;
@@ -69,33 +44,18 @@ export const projectApi = {
   },
  
 
-  getById: async (projectId: string, programId?: number) => {
+  getById: async (projectId: string) => {
     try {
-      if (programId) {
-        const response = await axiosInstance.get(`api/Project/program/${programId}/project/${projectId}`);
-        return response.data;
-      } else {
-        // Fallback: try to get the project without program context
-        // This might not work with the current backend, but we'll try the old endpoint
-        try {
-          const response = await axiosInstance.get(`api/Project/${projectId}`);
-          return response.data;
-        } catch (fallbackError) {
-          throw new Error('programId is required to get project details. Please provide the program context.');
-        }
-      }
+      const response = await axiosInstance.get(`api/Project/${projectId}`);
+      return response.data;
     } catch (error) {
       console.error(`Error getting project ${projectId}:`, error);
       throw error;
     }
   },
 
-  update: async (projectId: string, projectData: Project, programId?: number) => {
+  update: async (projectId: string, projectData: Project) => {
     try {
-      if (!programId) {
-        throw new Error('programId is required to update a project. Please provide the program context.');
-      }
-      
       // Make sure we're sending the correct data format to the backend
       const formattedData = {
         id: parseInt(projectId),
@@ -133,7 +93,7 @@ export const projectApi = {
       // Log the data being sent
       console.log('Sending update data:', JSON.stringify(formattedData, null, 2));
 
-      const response = await axiosInstance.put(`api/Project/${programId}/${projectId}`, formattedData);
+      const response = await axiosInstance.put(`api/Project/${projectId}`, formattedData);
       return response.data;
     } catch (error) {
       console.error(`Error updating project ${projectId}:`, error);
@@ -141,14 +101,10 @@ export const projectApi = {
     }
   },
 
-  delete: async (projectId: string, programId?: number) => {
+  delete: async (projectId: string) => {
     try {
-      if (!programId) {
-        throw new Error('programId is required to delete a project. Please provide the program context.');
-      }
-      
       console.log(`Deleting project with ID: ${projectId}`);
-      const response = await axiosInstance.delete(`api/Project/${programId}/${projectId}`);
+      const response = await axiosInstance.delete(`api/Project/${projectId}`);
       return response.data;
     } catch (error) {
       console.error(`Error deleting project ${projectId}:`, error);
@@ -168,11 +124,4 @@ export const projectApi = {
     }
 
   }
-  // Send the change control for review
-      //  await axiosInstance.post(`/api/projects/${projectId}/changecontrols/${changeControlId}/workflow/sendtoreview`, {
-        //  entityId: changeControlId,
-         // entityType: 'ChangeControl',
-         // assignedToId: selectedReviewer,
-         // comments: `Sent for review by ${currentUser}`
-       // });
 };

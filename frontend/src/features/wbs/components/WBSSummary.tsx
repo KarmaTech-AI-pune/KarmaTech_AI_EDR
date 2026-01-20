@@ -6,7 +6,7 @@ import {
   styled
 } from '@mui/material';
 import LoadingButton from '../../../components/common/LoadingButton';
-import { formatIndianCurrency } from '../utils/wbsUtils';
+
 
 const SummaryText = styled(Typography)({
   fontWeight: 500,
@@ -22,6 +22,7 @@ interface WBSSummaryProps {
   disabled: boolean;
   onSave: () => void;
   loading: boolean;
+  formType: 'manpower' | 'odc';
 }
 
 const WBSSummary: React.FC<WBSSummaryProps> = ({
@@ -30,7 +31,8 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
   currency,
   disabled,
   onSave,
-  loading
+  loading,
+  formType
 }) => {
   return (
     <Box sx={{
@@ -40,12 +42,16 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
       gap: 3,
       p: 1
     }}>
+      {formType !== 'odc' && (
+        <>
+          <SummaryText>
+            Total Hours: {totalHours}
+          </SummaryText>
+          <Divider orientation="vertical" flexItem />
+        </>
+      )}
       <SummaryText>
-        Total Hours: {totalHours}
-      </SummaryText>
-      <Divider orientation="vertical" flexItem />
-      <SummaryText>
-        Total Cost: {currency} {formatIndianCurrency(totalCost)}
+        Total Cost: {currency} {totalCost.toLocaleString()}
       </SummaryText>
       {!disabled && (
         <LoadingButton

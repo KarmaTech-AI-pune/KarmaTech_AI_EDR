@@ -99,6 +99,8 @@ const AdminPanel: React.FC = () => {
     { id: 'settings', text: 'System Settings', icon: <SettingsIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false }
   ];
 
+
+
   // Ensure permissions are properly checked
   const hasRequiredPermissions = (item: MenuItem): boolean => {
     console.log('Checking permissions for:', item.text);

@@ -202,6 +202,9 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<SprintSubtaskComment>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<SprintDailyProgress>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<User>().HasQueryFilter(p => p.TenantId == TenantId);
+            modelBuilder.Entity<Role>().HasQueryFilter(role => role.TenantId == TenantId);
+            modelBuilder.Entity<Program>().HasQueryFilter(role => role.TenantId == TenantId);
+            modelBuilder.Entity<WBSOption>().HasQueryFilter(w=>w.TenantId == TenantId);
 
             modelBuilder.Entity<SprintWbsPlan>().HasQueryFilter(p => p.TenantId == TenantId);
 

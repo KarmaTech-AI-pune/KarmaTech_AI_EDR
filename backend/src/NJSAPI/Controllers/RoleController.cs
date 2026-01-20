@@ -107,10 +107,11 @@ namespace NJSAPI.Controllers
                 {
                     return BadRequest(new { message = "Role ID is required" });
                 }
-                if (role.Permissions == null || role.Permissions.Count == 0)
-                {
-                    return BadRequest(new { message = "At least one permission must be specified" });
-                }
+// Validation removed to allow updating role details without permissions
+                // if (role.Permissions == null || role.Permissions.Count == 0)
+                // {
+                //     return BadRequest(new { message = "At least one permission must be specified" });
+                // }
                 var command = new UpdateRolePermissionsCommand(roleId, role);
                 await _mediator.Send(command);
                 return Ok(new { message = "Role permissions updated successfully" });
