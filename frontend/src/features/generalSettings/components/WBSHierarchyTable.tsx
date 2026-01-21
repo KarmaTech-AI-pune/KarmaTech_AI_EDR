@@ -24,6 +24,7 @@ interface WBSHierarchyTableProps {
   onDeleteItem: (item: IWBSItem) => void;
   onAddLevel2: (parentId: string) => void;
   onAddLevel3: (parentId: string) => void;
+  expandCollapseToggle?: React.ReactNode;
 }
 
 /**
@@ -41,10 +42,14 @@ export const WBSHierarchyTable: React.FC<WBSHierarchyTableProps> = ({
   onDeleteItem,
   onAddLevel2,
   onAddLevel3,
+  expandCollapseToggle,
 }) => {
   return (
     <Box mb={4}>
-      <Box display="flex" alignItems="center" justifyContent="flex-end" mb={2}>
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+        <Box display="flex" alignItems="center">
+          {expandCollapseToggle}
+        </Box>
         <Box display="flex" gap={1}>
           <AddItemButton onClick={() => onAddItem(1)} label="Add Level 1" />
         </Box>

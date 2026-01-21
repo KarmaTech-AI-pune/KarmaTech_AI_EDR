@@ -1,10 +1,12 @@
 
 import { Box, CircularProgress, Alert } from '@mui/material';
 import { WBSHierarchyTable } from '../../generalSettings/components/WBSHierarchyTable';
+import ExpandCollapseToggle from '../../generalSettings/components/ExpandCollapseToggle';
 import WBSFormDialog from './WBSFormDialog';
 import ConfirmationDialog from './ConfirmationDialog';
 import { useWbsOptionsLogic } from '../hooks/useWbsOptionsLogic';
 import { useExpansionState } from '../hooks/useExpansionState';
+import { useCallback } from 'react';
 
 interface WbsOptionsProps {
   formType?: number;
@@ -42,7 +44,26 @@ const WbsOptions: React.FC<WbsOptionsProps> = ({ formType = 0 }) => {
     expandedLevel2,
     toggleLevel1,
     toggleLevel2,
+    expandAll,
+    collapseAll,
+    hasExpandedItems,
   } = useExpansionState();
+
+  const handleExpandAll = useCallback(() => {
+    try {
+      expandAll(wbsData.level1);
+    } catch (error) {
+      console.error('Error expanding all items:', error);
+    }
+  }, [expandAll, wbsData.level1]);
+
+  const handleCollapseAll = useCallback(() => {
+    try {
+      collapseAll();
+    } catch (error) {
+      console.error('Error collapsing all items:', error);
+    }
+  }, [collapseAll]);
 
   if (isLoading) {
     return (
@@ -73,6 +94,15 @@ const WbsOptions: React.FC<WbsOptionsProps> = ({ formType = 0 }) => {
         onDeleteItem={handleOpenDeleteDialog}
         onAddLevel2={handleAddLevel2}
         onAddLevel3={handleAddLevel3}
+        expandCollapseToggle={
+          <ExpandCollapseToggle
+            hasExpandedItems={hasExpandedItems}
+            onExpandAll={handleExpandAll}
+            onCollapseAll={handleCollapseAll}
+            isLoading={isLoading}
+            disabled={isLoading}
+          />
+        }
       />
 
       <WBSFormDialog
