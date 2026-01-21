@@ -179,37 +179,44 @@ Refer to `react-implementation-workflow.md` for complete details. The implementa
    - Implement data fetching logic
    - Handle loading, error, and success states
 
-5. **Configure Routing** - Add routes BEFORE creating page components
+5. **Create Skeleton Pages & Components** - Basic structure with placeholders
+   - Create skeleton page files in `pages/` folder
+   - Create skeleton component files in `components/[feature]/` folder
+   - Add basic structure with TODO comments
+   - Define prop interfaces
+
+6. **Configure Routing** - Add routes using the skeleton pages
    - Open routing configuration file
    - Add new route entry
+   - Import skeleton page component (already exists)
    - Configure route parameters
 
-6. **Create Page Component** - Container that orchestrates everything
-   - Create page file in `pages/` folder
-   - Import hooks and services
-   - Fetch data and manage state
-   - Define layout structure
-   - Handle loading and error states
+7. **Implement Page Component Logic** - Add full functionality to pages
+   - Add route parameter extraction
+   - Import and use hooks/services
+   - Implement data fetching and state management
+   - Add loading and error handling
+   - Replace TODO comments with implementation
 
-7. **Create Child Components** - Small, reusable UI components LAST
-   - Create component files in `components/[feature]/` folder
-   - Define prop interfaces
-   - Implement UI logic
+8. **Implement Child Component Logic** - Build out child components
+   - Replace skeleton structure with full UI
+   - Implement all prop-driven logic
+   - Add proper styling
    - Keep components focused and single-purpose
 
-8. **Integrate Components into Page** - Assemble components
-   - Import all child components
-   - Pass required props from page state
-   - Handle component interactions
-   - Manage data flow (parent → child)
+9. **Component Integration** - Wire up all components
+   - Verify all components imported
+   - Pass props correctly from page state
+   - Implement event handlers
+   - Establish data flow (parent → child)
 
-9. **Add Validation & Error Handling** - Enhance with validation
-   - Add form validation using React Hook Form + Zod
-   - Implement error boundaries
-   - Add user feedback (success/error messages)
-   - Add loading states for async operations
+10. **Add Validation & Error Handling** - Enhance with validation
+    - Add form validation using React Hook Form + Zod
+    - Implement error boundaries
+    - Add user feedback (success/error messages)
+    - Add loading states for async operations
 
-10. **Create Tests** - Write tests for components and pages
+11. **Create Tests** - Write tests for components and pages
     - Create test files alongside components
     - Test page component behavior
     - Test child component rendering
@@ -217,9 +224,10 @@ Refer to `react-implementation-workflow.md` for complete details. The implementa
 
 **🚨 CRITICAL RULE:** For any implementation requiring a page:
 - ✅ Create folders and files FIRST
-- ✅ Create the route SECOND
-- ✅ Create the page component THIRD (which calls child components)
-- ✅ Create child components LAST (called by the page)
+- ✅ Create skeleton pages and components SECOND
+- ✅ Configure routes THIRD (using skeleton pages)
+- ✅ Implement full page logic FOURTH
+- ✅ Implement child components LAST
 
 **❌ NEVER:**
 - Start with individual components in isolation

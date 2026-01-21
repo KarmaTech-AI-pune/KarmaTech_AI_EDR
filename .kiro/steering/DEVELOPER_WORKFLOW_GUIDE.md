@@ -92,34 +92,41 @@ What are you working on?
    - Create hook in `hooks/` folder
    - Handle data fetching, loading, errors
 
-5. ✅ **Configure Routing**
-   - Open routing configuration file
-   - Add new route entry
-   - Import page component
+5. ✅ **Create Skeleton Pages & Components**
+   - Create basic page structure with placeholders
+   - Create basic component structure with TODO comments
+   - Define prop interfaces
 
-6. ✅ **Create Page Component**
-   - Create page in `pages/` folder
+6. ✅ **Configure Routing**
+   - Open routing configuration file
+   - Add new route entry using skeleton page
+   - Import page component (already exists)
+
+7. ✅ **Implement Page Component Logic**
+   - Add route parameter extraction
    - Fetch data using hooks/services
    - Manage state
    - Handle loading/error states
    - Orchestrate child components
 
-7. ✅ **Create Child Components**
-   - Create components in `components/[feature]/` folder
-   - Define prop interfaces
+8. ✅ **Implement Child Component Logic**
+   - Build out full UI for each component
+   - Implement prop-driven logic
+   - Add proper styling
    - Keep focused and reusable
 
-8. ✅ **Integrate Components**
-   - Import child components into page
+9. ✅ **Component Integration**
+   - Wire up all components in page
    - Pass props from page state
-   - Handle interactions
+   - Handle interactions and events
+   - Establish data flow
 
-9. ✅ **Add Validation & Error Handling**
-   - Form validation (React Hook Form + Zod)
-   - Error boundaries
-   - User feedback
+10. ✅ **Add Validation & Error Handling**
+    - Form validation (React Hook Form + Zod)
+    - Error boundaries
+    - User feedback
 
-10. ✅ **Create Tests**
+11. ✅ **Create Tests**
     - Test page behavior
     - Test component rendering
     - Test user interactions
