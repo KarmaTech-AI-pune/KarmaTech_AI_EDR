@@ -597,15 +597,7 @@ export const updateSprintPlanAPI = async (sprintPlan: Partial<SprintPlanDto>): P
 };
 
 // Keep static team members for now (you might want to fetch these from API too)
-export const teamMembers: TeamMember[] = [
-  { name: 'John Smith', avatar: 'JS', id: 'john' },
-  { name: 'Sarah Wilson', avatar: 'SW', id: 'sarah' },
-  { name: 'Mike Johnson', avatar: 'MJ', id: 'mike' },
-  { name: 'Lisa Chen', avatar: 'LC', id: 'lisa' },
-  { name: 'David Kim', avatar: 'DK', id: 'david' },
-  { name: 'Emma Davis', avatar: 'ED', id: 'emma' },
-  { name: 'Chris Wilson', avatar: 'CW', id: 'chris' }
-];
+export const teamMembers: TeamMember[] = [];
 
 export const fetchIssuesForSprintAPI = async (sprintId: number, projectId?: number): Promise<SprintData> => {
   try {

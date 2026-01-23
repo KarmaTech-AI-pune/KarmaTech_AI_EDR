@@ -564,29 +564,29 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           <Box sx={{ overflowY: "auto", flex: 1 }}>
             <IssueDetailRow label="Assignee">
               <InlineEdit
-                value={showIssueDetail.assignee?.id || ""}
+                value={showIssueDetail.assignee?.name || ""}
                 onSave={(val) => {
-                  const member = teamMembers.find(m => m.id === val);
-                  handleUpdateIssueAndState(showIssueDetail.id, { assignee: member || null });
+                  const newAssignee = val ? {
+                    id: val,
+                    name: val,
+                    avatar: (val.match(/\b\w/g) || []).join('').substring(0, 2).toUpperCase() || val.substring(0, 2).toUpperCase()
+                  } : null;
+                  handleUpdateIssueAndState(showIssueDetail.id, { assignee: newAssignee });
                 }}
-                type="select"
-                options={teamMembers.map(m => ({
-                  value: m.id,
-                  label: m.name,
-                  icon: <Avatar sx={{ width: 16, height: 16, fontSize: '0.5rem' }}>{m.avatar}</Avatar>
-                }))}
-                renderValue={(val) => {
-                  const assignee = teamMembers.find(m => m.id === val);
-                  return assignee ? (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Avatar sx={{ bgcolor: "primary.main", width: 24, height: 24, fontSize: "0.75rem" }}>
-                        {assignee.avatar}
-                      </Avatar>
-                      <Typography variant="body2">{assignee.name}</Typography>
-                    </Box>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">Unassigned</Typography>
-                  );
+                label="assignee"
+                renderValue={() => {
+                  const assignee = showIssueDetail.assignee;
+                  if (assignee) {
+                    return (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Avatar sx={{ bgcolor: "primary.main", width: 24, height: 24, fontSize: "0.75rem" }}>
+                          {assignee.avatar}
+                        </Avatar>
+                        <Typography variant="body2">{assignee.name}</Typography>
+                      </Box>
+                    );
+                  }
+                  return <Typography variant="body2" color="text.secondary">Unassigned</Typography>;
                 }}
               />
             </IssueDetailRow>

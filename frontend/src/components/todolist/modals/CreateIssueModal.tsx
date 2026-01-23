@@ -99,20 +99,13 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel id="assignee-label">Assignee</InputLabel>
-                <Select
-                  labelId="assignee-label"
-                  value={newIssue.assignee}
-                  label="Assignee"
-                  onChange={(e) => setNewIssue({ ...newIssue, assignee: e.target.value })}
-                >
-                  <MenuItem value="">Unassigned</MenuItem>
-                  {teamMembers.map(member => (
-                    <MenuItem key={member.id} value={member.id}>{member.name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <TextField
+                fullWidth
+                label="Assignee"
+                value={newIssue.assignee}
+                onChange={(e) => setNewIssue({ ...newIssue, assignee: e.target.value })}
+                placeholder="Type assignee name"
+              />
             </Grid>
           </Grid>
 

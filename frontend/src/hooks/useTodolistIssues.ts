@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchIssuesForSprintAPI, teamMembers, updateIssueAPI, updateSubtaskAPI, createIssueAPI, deleteIssueAPI, createSubtaskAPI, deleteSubtaskAPI, SprintEmployee, SprintPlanDto, fetchActiveSprintIdAPI, updateSprintPlanAPI, fetchNextSprintAPI } from '../data/todolistData';
-import { Issue, NewIssueFormState, Subtask, NewSubtaskFormState, Comment } from '../types/todolist';
+import { Issue, NewIssueFormState, Subtask, NewSubtaskFormState, Comment, TeamMember } from '../types/todolist';
 import { commentService } from '../services/commentService';
 import { useProject } from '../context/ProjectContext';
 
@@ -120,7 +120,18 @@ export const useTodolistIssues = () => {
       return;
     }
 
-    const assignedMember = teamMembers.find(member => member.id === newIssueData.assignee);
+    const assignedMember = newIssueData.assignee ? {
+      name: newIssueData.assignee,
+      id: newIssueData.assignee,
+      avatar: (newIssueData.assignee.match(/\b\w/g) || []).join('').substring(0, 2).toUpperCase() || newIssueData.assignee.substring(0, 2).toUpperCase()
+    } : null;
+
+    const reporterMember: TeamMember = {
+      name: 'Current User',
+      id: 'current-user',
+      avatar: 'CU'
+    };
+
     const tempId = Date.now().toString();
     const issue: Issue = {
       id: tempId,
@@ -130,7 +141,7 @@ export const useTodolistIssues = () => {
       issueType: newIssueData.issueType,
       priority: newIssueData.priority,
       assignee: assignedMember || null,
-      reporter: teamMembers[0], // Current user
+      reporter: reporterMember,
       status: 'To Do',
       storyPoints: parseInt(newIssueData.storyPoints) || 0,
       estimatedHours: parseInt(newIssueData.estimatedHours) || 0,
