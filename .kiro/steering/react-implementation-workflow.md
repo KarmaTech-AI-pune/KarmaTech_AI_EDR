@@ -27,19 +27,22 @@ This document defines the **mandatory implementation order** for React features.
 4. **Custom Hooks** → Data-fetching logic (if needed)
 5. **Skeleton Pages & Components** → Create basic structure with placeholders
 6. **Routing Configuration** → Define routes using the skeleton pages
-7. **Implement Page Logic** → Add full functionality to page containers
-8. **Implement Component Logic** → Build out child components
-9. **Component Integration** → Assemble and wire up components
+7. **Implement Page Structure** → Set up page with data fetching (NO components yet)
+8. **Implement ALL Components** → Build all components bottom-up (smallest to largest)
+9. **Integrate Components into Page** → Add components to page one by one
 10. **Validation & Error Handling** → Add validation, loading states, error handling
 11. **Testing** → Write comprehensive tests
 
 **Key Rule:** For any implementation requiring a page:
 - ✅ Create skeleton pages and components FIRST (basic structure)
 - ✅ Configure routes SECOND (using the skeleton pages)
-- ✅ Implement full page logic THIRD (data fetching, state management)
-- ✅ Implement child components LAST (detailed UI logic)
+- ✅ Implement page structure THIRD (data fetching, state management, NO components)
+- ✅ Implement ALL components FOURTH (bottom-up: smallest to largest)
+- ✅ Integrate components into page LAST (one by one)
 
-This ensures proper data flow and prevents orphaned components.
+**🚨 CRITICAL:** Build components from smallest to largest (bottom-up), THEN integrate into page (top-down).
+
+This ensures proper component hierarchy and prevents dependency issues.
 
 **⚠️ When This Workflow Applies:**
 - ✅ Creating new pages with routes
@@ -314,18 +317,25 @@ import UserProfile from '../pages/UserProfile'; // Skeleton already exists
 
 ---
 
-### Step 7: Implement Page Component Logic
+### Step 7: Implement Page Component Structure
 
-**Implement full functionality in the skeleton page component created in Step 5.**
+**Set up the page component skeleton with data fetching and state management, but WITHOUT calling child components yet.**
 
 #### Required Actions:
 1. Add route parameter extraction
 2. Import and use hooks/services
 3. Implement data fetching and state management
 4. Add loading and error handling
-5. Prepare props for child components
-6. Replace TODO comments with actual implementation
-7. **Decide on data flow pattern** (prop drilling vs Context API)
+5. **Decide on data flow pattern** (prop drilling vs Context API)
+6. Create page structure with placeholders for components (don't call them yet)
+7. Replace TODO comments related to data fetching only
+
+**🚨 CRITICAL:** At this step, focus ONLY on:
+- ✅ Route parameters
+- ✅ Data fetching
+- ✅ State management
+- ✅ Loading/error states
+- ❌ DO NOT call child components yet (they're not implemented)
 
 #### 🔑 Data Flow Decision Matrix:
 
@@ -345,27 +355,37 @@ import UserProfile from '../pages/UserProfile'; // Skeleton already exists
 
 #### Example:
 ```typescript
-// pages/UserProfile.tsx (FULL IMPLEMENTATION)
-import React from 'react';
+// pages/UserProfile.tsx (STEP 7: PAGE STRUCTURE ONLY)
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Container, Typography } from '@mui/material';
 import { useUserProfile } from '../hooks/useUserProfile';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import ProfileHeader from '../components/profile/ProfileHeader';
-import ProfileDetails from '../components/profile/ProfileDetails';
-import ProfileSettings from '../components/profile/ProfileSettings';
 
 const UserProfile: React.FC = () => {
-  // Extract route parameters
+  // ✅ Extract route parameters
   const { userId } = useParams<{ userId: string }>();
   
-  // Fetch data using custom hook
+  // ✅ Fetch data using custom hook
   const { user, isLoading, error } = useUserProfile(userId!);
   
-  // Handle loading state
+  // ✅ Local state for interactions
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // ✅ Event handlers
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+  
+  const handleSave = async (updatedUser: Partial<User>) => {
+    await userService.updateUser(userId!, updatedUser);
+    setIsEditing(false);
+  };
+  
+  // ✅ Handle loading state
   if (isLoading) return <LoadingSpinner loading={true} />;
   
-  // Handle error state
+  // ✅ Handle error state
   if (error) {
     return (
       <Container>
@@ -374,18 +394,18 @@ const UserProfile: React.FC = () => {
     );
   }
   
-  // Handle no data
+  // ✅ Handle no data
   if (!user) return null;
   
-  // Render with child components
-  // ✅ Using PROP DRILLING (shallow tree, simple data)
+  // ✅ Page structure with placeholders
+  // ❌ DO NOT call components yet - they're not implemented!
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Page orchestrates child components */}
-        <ProfileHeader user={user} onEdit={() => {/* handle edit */}} />
-        <ProfileDetails user={user} />
-        <ProfileSettings userId={user.id} />
+        {/* TODO: Add ProfileHeader component after Step 8 */}
+        {/* TODO: Add ProfileDetails component after Step 8 */}
+        {/* TODO: Add ProfileSettings component after Step 8 */}
+        <Typography variant="h4">User Profile: {user.name}</Typography>
       </Box>
     </Container>
   );
@@ -443,34 +463,68 @@ const ProjectDashboard: React.FC = () => {
 export default ProjectDashboard;
 ```
 
-#### Page Component Responsibilities:
+#### Page Component Responsibilities (Step 7):
 - ✅ Route parameter extraction
 - ✅ Data fetching via hooks/services
 - ✅ State management
 - ✅ Loading/error handling
-- ✅ Layout structure
-- ✅ Child component orchestration
-- ✅ Props preparation
+- ✅ Event handler definitions
+- ✅ Page structure/layout
+- ❌ DO NOT call child components yet (Step 8 first)
 
-#### Page Component Should NOT:
-- ❌ Contain detailed UI elements
-- ❌ Have complex styling
-- ❌ Implement business logic directly
-- ❌ Be reusable (pages are route-specific)
+#### Page Component Should NOT (at Step 7):
+- ❌ Call child components (they're not implemented yet)
+- ❌ Contain detailed UI elements (that's for components)
+- ❌ Have complex styling (keep it simple)
+- ❌ Implement business logic directly (use services/hooks)
 
 ---
 
-### Step 8: Implement Child Component Logic
+### Step 8: Implement ALL Child Components (Bottom-Up)
 
-**Implement full functionality in skeleton child components created in Step 5.**
+**Implement full functionality for ALL child components BEFORE integrating them into the page.**
+
+**🚨 CRITICAL RULE:** Complete ALL component implementations (including nested component hierarchies) BEFORE moving to Step 9.
+
+#### Component Implementation Order (Bottom-Up):
+1. **Smallest/Leaf components first** (components with no child components)
+2. **Parent components second** (components that use the leaf components)
+3. **Top-level feature components last** (components called directly by page)
+
+#### Example Component Hierarchy:
+```
+Page (UserProfile)
+├── ProfileHeader (top-level)
+│   ├── Avatar (leaf)
+│   └── EditButton (leaf)
+├── ProfileDetails (top-level)
+│   ├── InfoSection (parent)
+│   │   ├── InfoRow (leaf)
+│   │   └── InfoRow (leaf)
+│   └── ContactSection (parent)
+│       ├── InfoRow (leaf)
+│       └── InfoRow (leaf)
+└── ProfileSettings (top-level)
+    └── SettingsForm (leaf)
+
+Implementation Order:
+1. InfoRow (leaf - used by InfoSection and ContactSection)
+2. Avatar, EditButton (leaf - used by ProfileHeader)
+3. SettingsForm (leaf - used by ProfileSettings)
+4. InfoSection, ContactSection (parent - use InfoRow)
+5. ProfileHeader (top-level - uses Avatar, EditButton)
+6. ProfileDetails (top-level - uses InfoSection, ContactSection)
+7. ProfileSettings (top-level - uses SettingsForm)
+```
 
 #### Required Actions:
-1. Replace skeleton structure with full UI implementation
-2. Implement all prop-driven logic
-3. Add proper styling with Material-UI
-4. **Ensure components are reusable** (not tightly coupled to specific pages)
-5. Keep components focused and single-purpose
-6. Use appropriate data access pattern (props vs context)
+1. **Identify component hierarchy** - Map out which components use which
+2. **Start with leaf components** - Implement components with no dependencies first
+3. **Move up the hierarchy** - Implement parent components that use leaf components
+4. **Complete all components** - Finish ALL implementations before Step 9
+5. **Ensure reusability** - Make components generic and prop-driven
+6. **Use appropriate data access** - Props for simple data, Context for complex/deep trees
+7. **Keep components focused** - Single responsibility principle
 
 #### 🎯 Component Reusability Guidelines:
 
@@ -543,9 +597,92 @@ const ProfileCard: React.FC = () => {
 };
 ```
 
-#### Example:
+#### Example Implementation (Bottom-Up):
+
+**Step 8.1: Implement Leaf Components First**
 ```typescript
-// components/profile/ProfileHeader.tsx (FULL IMPLEMENTATION)
+// components/common/InfoRow.tsx (LEAF COMPONENT - No dependencies)
+import React from 'react';
+import { Box, Typography } from '@mui/material';
+
+interface InfoRowProps {
+  label: string;
+  value: string | number;
+  icon?: React.ReactNode;
+}
+
+const InfoRow: React.FC<InfoRowProps> = ({ label, value, icon }) => {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      {icon}
+      <Typography variant="body2" color="text.secondary">{label}:</Typography>
+      <Typography variant="body1" fontWeight="medium">{value}</Typography>
+    </Box>
+  );
+};
+
+export default InfoRow;
+```
+
+**Step 8.2: Implement Parent Components (Use Leaf Components)**
+```typescript
+// components/profile/InfoSection.tsx (PARENT - Uses InfoRow)
+import React from 'react';
+import { Box, Typography } from '@mui/material';
+import { User } from '../../types/user';
+import InfoRow from '../common/InfoRow';
+import { Email, Phone, LocationOn } from '@mui/icons-material';
+
+interface InfoSectionProps {
+  user: User;
+}
+
+const InfoSection: React.FC<InfoSectionProps> = ({ user }) => {
+  return (
+    <Box>
+      <Typography variant="h6" sx={{ mb: 2 }}>Contact Information</Typography>
+      <InfoRow label="Email" value={user.email} icon={<Email />} />
+      <InfoRow label="Phone" value={user.phone} icon={<Phone />} />
+      <InfoRow label="Location" value={user.location} icon={<LocationOn />} />
+    </Box>
+  );
+};
+
+export default InfoSection;
+```
+
+**Step 8.3: Implement Top-Level Components (Use Parent Components)**
+```typescript
+// components/profile/ProfileDetails.tsx (TOP-LEVEL - Uses InfoSection, ContactSection)
+import React from 'react';
+import { Box, Card, CardContent } from '@mui/material';
+import { User } from '../../types/user';
+import InfoSection from './InfoSection';
+import ContactSection from './ContactSection';
+
+interface ProfileDetailsProps {
+  user: User;
+}
+
+const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
+  return (
+    <Card>
+      <CardContent>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <InfoSection user={user} />
+          <ContactSection user={user} />
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ProfileDetails;
+```
+
+**Step 8.4: Complete ALL Other Top-Level Components**
+```typescript
+// components/profile/ProfileHeader.tsx (TOP-LEVEL - Complete implementation)
 import React from 'react';
 import { Box, Typography, Avatar, Button } from '@mui/material';
 import { Edit } from '@mui/icons-material';
@@ -556,7 +693,6 @@ interface ProfileHeaderProps {
   onEdit: () => void;
 }
 
-// ✅ REUSABLE: Accepts data via props, no internal data fetching
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, onEdit }) => {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -589,6 +725,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, onEdit }) => {
 
 export default ProfileHeader;
 ```
+
+**✅ After Step 8:** ALL components are fully implemented and tested individually. Ready for integration in Step 9.
 
 #### Example with Context API (for deeply nested components):
 ```typescript
@@ -646,22 +784,114 @@ export default ProjectBudgetChart;
 </ProjectDashboard>
 ```
 
-#### Component Implementation Order:
-1. **Layout components** (headers, containers)
-2. **Display components** (cards, lists)
-3. **Interactive components** (forms, buttons)
-4. **Utility components** (modals, dialogs)
-
-#### Component Best Practices:
+#### Component Best Practices (Step 8):
 - ✅ Single responsibility
 - ✅ Prop-driven (receive data from parent)
 - ✅ Reusable across pages
 - ✅ Minimal state (prefer props)
 - ✅ Clear prop interfaces
 - ✅ Proper TypeScript types
+- ✅ **Implement bottom-up** (smallest to largest)
+- ✅ **Complete ALL components before Step 9**
 - ✅ **Choose appropriate data flow pattern** (props vs context)
 - ✅ **Design for reusability** (generic, composable)
 - ✅ **NEVER write redundant code** (DRY principle - Don't Repeat Yourself)
+
+**🚨 STOP RULE:** Do NOT proceed to Step 9 until ALL components (including nested hierarchies) are fully implemented and tested individually.
+
+---
+
+### Step 9: Integrate Components into Page (One by One)
+
+**Now that ALL components are implemented, integrate them into the page component ONE BY ONE.**
+
+**🚨 CRITICAL:** This step happens AFTER Step 8 is complete. All components must exist and be fully functional before integration.
+
+#### Required Actions:
+1. **Import components** - Add imports for all implemented components
+2. **Replace placeholders** - Remove TODO comments from Step 7
+3. **Add components one by one** - Start with first component, test, then add next
+4. **Pass props correctly** - Ensure data flows from page state to components
+5. **Wire up event handlers** - Connect component callbacks to page handlers
+6. **Establish data flow** - Verify parent → child data flow works correctly
+7. **Test integration** - Verify each component works in the page context
+
+#### Integration Order:
+1. Add first top-level component (e.g., ProfileHeader)
+2. Test that it renders and works correctly
+3. Add second top-level component (e.g., ProfileDetails)
+4. Test that it renders and works correctly
+5. Add remaining components one by one
+6. Test complete page integration
+
+#### Example:
+```typescript
+// pages/UserProfile.tsx (STEP 9: FULL INTEGRATION)
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Box, Container, Typography } from '@mui/material';
+import { useUserProfile } from '../hooks/useUserProfile';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+// ✅ Import all implemented components
+import ProfileHeader from '../components/profile/ProfileHeader';
+import ProfileDetails from '../components/profile/ProfileDetails';
+import ProfileSettings from '../components/profile/ProfileSettings';
+
+const UserProfile: React.FC = () => {
+  const { userId } = useParams<{ userId: string }>();
+  const { user, isLoading, error } = useUserProfile(userId!);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+  
+  const handleSave = async (updatedUser: Partial<User>) => {
+    await userService.updateUser(userId!, updatedUser);
+    setIsEditing(false);
+  };
+  
+  if (isLoading) return <LoadingSpinner loading={true} />;
+  
+  if (error) {
+    return (
+      <Container>
+        <Typography color="error">{error}</Typography>
+      </Container>
+    );
+  }
+  
+  if (!user) return null;
+  
+  // ✅ All components integrated with proper props and handlers
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {/* ✅ Component 1: Integrated with props and handlers */}
+        <ProfileHeader 
+          user={user} 
+          onEdit={handleEdit} 
+        />
+        
+        {/* ✅ Component 2: Integrated with props and handlers */}
+        <ProfileDetails 
+          user={user} 
+          isEditing={isEditing}
+          onSave={handleSave}
+        />
+        
+        {/* ✅ Component 3: Integrated with props and handlers */}
+        <ProfileSettings 
+          userId={user.id}
+          onUpdate={() => {/* refresh data */}}
+        />
+      </Box>
+    </Container>
+  );
+};
+
+export default UserProfile;
+```
 
 ---
 
@@ -1304,11 +1534,20 @@ const UserProfile: React.FC = () => {
 
 #### Integration Checklist:
 - [ ] All components imported
-- [ ] Props passed correctly
-- [ ] Event handlers defined
+- [ ] All placeholders replaced
+- [ ] Props passed correctly from page state
+- [ ] Event handlers connected
 - [ ] Data flow established (parent → child)
-- [ ] Component communication handled
-- [ ] No prop drilling issues
+- [ ] Each component tested in page context
+- [ ] No prop drilling issues (or Context used appropriately)
+- [ ] Page renders correctly with all components
+
+**Why Integration Happens Last:**
+- ✅ All components are complete and tested
+- ✅ No dependency issues
+- ✅ Clear what props each component needs
+- ✅ Easy to debug (components work individually)
+- ✅ Can integrate one at a time safely
 
 ---
 
@@ -1538,7 +1777,7 @@ Use this checklist for every new feature:
 
 ## 🎯 Summary
 
-**The Golden Rule:** Always work top-down, never bottom-up.
+**The Golden Rule:** Build components bottom-up (smallest to largest), then integrate top-down (into page).
 
 **Implementation Order:**
 1. Folders & Structure
@@ -1546,18 +1785,20 @@ Use this checklist for every new feature:
 3. Services & Hooks
 4. Skeleton Pages & Components
 5. Routes (using skeletons)
-6. Implement Page Logic
-7. Implement Component Logic
-8. Integration & Wiring
+6. Implement Page Structure (data fetching only, NO components)
+7. Implement ALL Components (bottom-up: leaf → parent → top-level)
+8. Integrate Components into Page (one by one)
 9. Validation & Enhancement
 10. Testing
 
 **Key Benefits:**
 - ✅ Clear architecture from the start
-- ✅ Proper data flow (parent → child)
+- ✅ Components built independently (easier to test)
+- ✅ No dependency issues (smallest components first)
+- ✅ Proper component hierarchy (bottom-up)
+- ✅ Safe integration (components already work)
 - ✅ Reusable components
 - ✅ Maintainable codebase
-- ✅ Easier testing
 - ✅ Better collaboration
 
-**Remember:** Pages orchestrate, components execute. Start with the orchestrator (page), then build the executors (components).
+**Remember:** Build the pieces first (components), then assemble them (page integration). Never start with the whole and try to break it down.

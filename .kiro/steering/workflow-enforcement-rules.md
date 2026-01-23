@@ -191,24 +191,29 @@ Refer to `react-implementation-workflow.md` for complete details. The implementa
    - Import skeleton page component (already exists)
    - Configure route parameters
 
-7. **Implement Page Component Logic** - Add full functionality to pages
+7. **Implement Page Component Structure** - Set up page with data fetching (NO components yet)
    - Add route parameter extraction
    - Import and use hooks/services
    - Implement data fetching and state management
    - Add loading and error handling
-   - Replace TODO comments with implementation
+   - Create page structure with placeholders
+   - DO NOT call child components yet
 
-8. **Implement Child Component Logic** - Build out child components
-   - Replace skeleton structure with full UI
-   - Implement all prop-driven logic
-   - Add proper styling
-   - Keep components focused and single-purpose
+8. **Implement ALL Child Components** - Build all components bottom-up
+   - Identify component hierarchy (which components use which)
+   - Start with leaf components (no dependencies)
+   - Move up to parent components (use leaf components)
+   - Complete all top-level components
+   - Implement from smallest to largest
+   - Ensure all components are fully functional before Step 9
 
-9. **Component Integration** - Wire up all components
-   - Verify all components imported
+9. **Integrate Components into Page** - Add components one by one
+   - Import all implemented components
+   - Replace placeholders from Step 7
+   - Add components one at a time
    - Pass props correctly from page state
-   - Implement event handlers
-   - Establish data flow (parent → child)
+   - Wire up event handlers
+   - Test each integration
 
 10. **Add Validation & Error Handling** - Enhance with validation
     - Add form validation using React Hook Form + Zod
@@ -226,14 +231,17 @@ Refer to `react-implementation-workflow.md` for complete details. The implementa
 - ✅ Create folders and files FIRST
 - ✅ Create skeleton pages and components SECOND
 - ✅ Configure routes THIRD (using skeleton pages)
-- ✅ Implement full page logic FOURTH
-- ✅ Implement child components LAST
+- ✅ Implement page structure FOURTH (data fetching only, NO components)
+- ✅ Implement ALL components FIFTH (bottom-up: smallest to largest)
+- ✅ Integrate components into page LAST (one by one)
 
 **❌ NEVER:**
 - Start with individual components in isolation
 - Create components before defining their page context
 - Skip folder structure creation
 - Create routes after page components
+- Call components in page before they're implemented
+- Integrate components before they're all complete
 
 **🔧 Flexibility Exceptions:**
 - **Reusable component library:** May skip routing/page steps if building shared components

@@ -102,24 +102,29 @@ What are you working on?
    - Add new route entry using skeleton page
    - Import page component (already exists)
 
-7. ✅ **Implement Page Component Logic**
+7. ✅ **Implement Page Component Structure**
    - Add route parameter extraction
    - Fetch data using hooks/services
    - Manage state
    - Handle loading/error states
-   - Orchestrate child components
+   - Create page structure with placeholders
+   - DO NOT call components yet
 
-8. ✅ **Implement Child Component Logic**
-   - Build out full UI for each component
-   - Implement prop-driven logic
-   - Add proper styling
-   - Keep focused and reusable
+8. ✅ **Implement ALL Child Components (Bottom-Up)**
+   - Identify component hierarchy
+   - Start with leaf components (smallest, no dependencies)
+   - Move to parent components (use leaf components)
+   - Complete top-level components
+   - Build from smallest to largest
+   - Complete ALL before Step 9
 
-9. ✅ **Component Integration**
-   - Wire up all components in page
+9. ✅ **Integrate Components into Page (One by One)**
+   - Import all implemented components
+   - Replace placeholders
+   - Add components one at a time
    - Pass props from page state
-   - Handle interactions and events
-   - Establish data flow
+   - Wire up event handlers
+   - Test each integration
 
 10. ✅ **Add Validation & Error Handling**
     - Form validation (React Hook Form + Zod)

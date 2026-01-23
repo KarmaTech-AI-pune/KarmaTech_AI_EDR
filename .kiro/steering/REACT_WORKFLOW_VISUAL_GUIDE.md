@@ -70,8 +70,8 @@
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  STEP 7: IMPLEMENT PAGE COMPONENT LOGIC                     │
-│  ✅ Add full functionality to skeleton page                 │
+│  STEP 7: IMPLEMENT PAGE STRUCTURE                           │
+│  ✅ Set up page with data fetching (NO components yet)      │
 │                                                              │
 │  const UserProfile = () => {                                │
 │    const { userId } = useParams()                           │
@@ -81,16 +81,20 @@
 │                                                              │
 │    return (                                                  │
 │      <Container>                                            │
-│        <ProfileHeader user={user} />                        │
-│        <ProfileDetails user={user} />                       │
+│        {/* TODO: Add ProfileHeader after Step 8 */}         │
+│        {/* TODO: Add ProfileDetails after Step 8 */}        │
 │      </Container>                                           │
 │    )                                                         │
 │  }                                                           │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  STEP 8: IMPLEMENT CHILD COMPONENT LOGIC                    │
-│  ✅ Build out full UI for each component                    │
+│  STEP 8: IMPLEMENT ALL COMPONENTS (BOTTOM-UP)               │
+│  ✅ Build all components from smallest to largest           │
+│                                                              │
+│  1. Leaf components first (InfoRow, Avatar, Button)         │
+│  2. Parent components next (InfoSection, ContactSection)    │
+│  3. Top-level components last (ProfileHeader, ProfileDetails)│
 │                                                              │
 │  const ProfileHeader = ({ user, onEdit }) => {              │
 │    return (                                                  │
@@ -104,12 +108,22 @@
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  STEP 9: COMPONENT INTEGRATION                              │
-│  ✅ Wire up all components with proper data flow            │
+│  STEP 9: INTEGRATE COMPONENTS INTO PAGE (ONE BY ONE)        │
+│  ✅ Add components to page after all are implemented        │
 │                                                              │
-│  - Pass props from page to components                       │
-│  - Handle events and interactions                           │
-│  - Establish parent → child data flow                       │
+│  const UserProfile = () => {                                │
+│    const { userId } = useParams()                           │
+│    const { user, isLoading } = useUserProfile(userId)       │
+│                                                              │
+│    if (isLoading) return <LoadingSpinner />                 │
+│                                                              │
+│    return (                                                  │
+│      <Container>                                            │
+│        <ProfileHeader user={user} onEdit={handleEdit} />   │
+│        <ProfileDetails user={user} />                       │
+│      </Container>                                           │
+│    )                                                         │
+│  }                                                           │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -148,8 +162,9 @@
 4. Create hooks
 5. Create SKELETON pages & components ← ✅ Basic structure exists
 6. Configure routes                   ← ✅ Can import skeleton (no errors!)
-7. Implement FULL page logic          ← ✅ Replace TODOs with real code
-8. Implement FULL component logic     ← ✅ Build out UI
+7. Implement page STRUCTURE           ← ✅ Data fetching only, NO components
+8. Implement ALL components           ← ✅ Bottom-up: smallest to largest
+9. Integrate components into page     ← ✅ Add components one by one
 ```
 
 **Solution:** Skeleton pages exist BEFORE routes are configured!
@@ -164,10 +179,10 @@
 | 4 | Hooks | Hooks |
 | 5 | **Routes** ❌ | **Skeletons** ✅ |
 | 6 | **Pages** | **Routes** ✅ |
-| 7 | Components | **Implement Pages** |
-| 8 | Integration | **Implement Components** |
-| 9 | Validation | **Integration** |
-| 10 | Tests | **Validation** |
+| 7 | **Page Structure** | **Implement Pages** |
+| 8 | **Components** | **Implement Components** |
+| 9 | **Integration** | **Integration** |
+| 10 | **Validation** | **Validation** |
 | 11 | - | **Tests** |
 
 ## 🎯 What is a "Skeleton"?
@@ -277,9 +292,9 @@ Both can work simultaneously!
 4. Create hooks ✅
 5. Create SKELETON page + components ✅
 6. Configure routes (using skeleton) ✅
-7. Implement FULL page logic ✅
-8. Implement FULL component logic ✅
-9. Wire everything together ✅
+7. Implement page STRUCTURE (data only, NO components) ✅
+8. Implement ALL components (bottom-up: smallest to largest) ✅
+9. Integrate components into page (one by one) ✅
 10. Add validation ✅
 11. Write tests ✅
 ```
@@ -287,8 +302,9 @@ Both can work simultaneously!
 ### Remember:
 - 🎯 **Skeleton BEFORE routes**
 - 🎯 **Routes use skeletons (no errors)**
-- 🎯 **Implementation AFTER routes**
-- 🎯 **Top-down, never bottom-up**
+- 🎯 **Page structure BEFORE components**
+- 🎯 **ALL components BEFORE integration**
+- 🎯 **Build bottom-up, integrate top-down**
 
 ---
 
