@@ -15,17 +15,17 @@ public static class WebApplicationExtensions
         var pathBase = app.Configuration["Api:PathBase"];
  
        
-        if (!string.IsNullOrWhiteSpace(pathBase))
-        {
-            pathBase = "/";
-        }
+       // if (!string.IsNullOrWhiteSpace(pathBase))
+        //{
+           // pathBase = "/";
+        //}
         app.UsePathBase(pathBase);
+        app.UseHttpsRedirection();
+
         app.UseRouting();
 
         app.UseCors("AllowSpecificOrigin");
 
-        // Swagger must come BEFORE UseHttpsRedirection for ALB health checks to work
-        // This allows /swagger endpoint to return 200 OK directly without redirect
         app.UseSwagger();
 
         app.UseSwaggerUI(options =>
@@ -39,7 +39,6 @@ public static class WebApplicationExtensions
         });
 
         app.UseResponseCompression();
-        app.UseHttpsRedirection();
 
 
         app.UseMiddleware<TenantResolverMiddleware>();
