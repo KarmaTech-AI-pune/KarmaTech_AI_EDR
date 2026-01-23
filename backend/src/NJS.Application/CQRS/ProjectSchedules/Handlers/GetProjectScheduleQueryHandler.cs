@@ -40,9 +40,8 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
             var sprintPlanEntity = await _context.SprintPlans
                 .Include(sp => sp.SprintTasks)
                     .ThenInclude(st => st.Subtasks!)
-                .Where(sp => sp.ProjectId == projectId)
-                .OrderBy(sp => sp.Status == 1 ? 0 : (sp.Status == 0 ? 1 : 2))
-                .ThenBy(sp => sp.SprintId) 
+                .Where(sp => sp.ProjectId == projectId && sp.Status == 0) // 0 = Not Completed / Active
+                .OrderBy(sp => sp.SprintId)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (sprintPlanEntity == null)

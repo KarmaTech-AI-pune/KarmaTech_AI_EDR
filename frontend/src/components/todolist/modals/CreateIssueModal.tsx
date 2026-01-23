@@ -117,7 +117,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
           </Grid>
 
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={4}>
               <FormControl fullWidth>
                 <InputLabel id="story-points-label">Story Points</InputLabel>
                 <Select
@@ -136,6 +136,36 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                   <MenuItem value="21">21</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Estimated Hours"
+                type="number"
+                value={newIssue.estimatedHours || ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setNewIssue({
+                    ...newIssue,
+                    estimatedHours: val,
+                    // Auto-sync remaining hours to estimated hours if remaining is empty or user hasn't explicitly changed it yet?
+                    // User request: "remainingHours: '', must be same as estimatedHours"
+                    // Simplest interpretation: Set both when estimated changes.
+                    remainingHours: val
+                  });
+                }}
+                placeholder="e.g. 8"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Remaining Hours"
+                type="number"
+                value={newIssue.remainingHours || ''}
+                onChange={(e) => setNewIssue({ ...newIssue, remainingHours: e.target.value })}
+                placeholder="e.g. 8"
+              />
             </Grid>
           </Grid>
         </Box>

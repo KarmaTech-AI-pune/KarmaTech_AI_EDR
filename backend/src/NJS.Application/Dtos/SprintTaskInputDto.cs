@@ -29,10 +29,10 @@ namespace NJS.Application.Dtos
         public int? SprintWbsPlanId { get; set; }
         public int? UserTaskId { get; set; }
         public string? AcceptanceCriteria { get; set; }
-        public int DisplayOrder { get; set; }
-        public int EstimatedHours { get; set; }
-        public int ActualHours { get; set; }
-        public int RemainingHours { get; set; }
+        public int? DisplayOrder { get; set; }
+        public int? EstimatedHours { get; set; }
+        public int? ActualHours { get; set; }
+        public int? RemainingHours { get; set; }
         public DateTime? StartedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
     }

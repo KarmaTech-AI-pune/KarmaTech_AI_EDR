@@ -65,10 +65,32 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             existingSprintTask.SprintWbsPlanId = sprintTaskInputDto.SprintWbsPlanId ?? existingSprintTask.SprintWbsPlanId;
             existingSprintTask.UserTaskId = sprintTaskInputDto.UserTaskId ?? existingSprintTask.UserTaskId;
             existingSprintTask.AcceptanceCriteria = sprintTaskInputDto.AcceptanceCriteria ?? existingSprintTask.AcceptanceCriteria;
-            existingSprintTask.DisplayOrder = sprintTaskInputDto.DisplayOrder != 0 ? sprintTaskInputDto.DisplayOrder : existingSprintTask.DisplayOrder;
-            existingSprintTask.EstimatedHours = sprintTaskInputDto.EstimatedHours != 0 ? sprintTaskInputDto.EstimatedHours : existingSprintTask.EstimatedHours;
-            existingSprintTask.ActualHours = sprintTaskInputDto.ActualHours != 0 ? sprintTaskInputDto.ActualHours : existingSprintTask.ActualHours;
-            existingSprintTask.RemainingHours = sprintTaskInputDto.RemainingHours != 0 ? sprintTaskInputDto.RemainingHours : existingSprintTask.RemainingHours;
+            existingSprintTask.DisplayOrder = sprintTaskInputDto.DisplayOrder ?? existingSprintTask.DisplayOrder;
+            existingSprintTask.EstimatedHours = sprintTaskInputDto.EstimatedHours.HasValue ? sprintTaskInputDto.EstimatedHours.Value : existingSprintTask.EstimatedHours;
+            existingSprintTask.ActualHours = sprintTaskInputDto.ActualHours.HasValue ? sprintTaskInputDto.ActualHours.Value : existingSprintTask.ActualHours;
+            
+            // Allow 0 as valid value
+            int newRemaining = sprintTaskInputDto.RemainingHours.HasValue ? sprintTaskInputDto.RemainingHours.Value : existingSprintTask.RemainingHours;
+            
+            // NEW LOGIC: Update SprintWbsPlan if RemainingHours changes
+            int diffRemaining = existingSprintTask.RemainingHours - newRemaining;
+
+            if (diffRemaining != 0 && existingSprintTask.SprintWbsPlanId.HasValue)
+            {
+                var plan = await _context.SprintWbsPlans.FindAsync(existingSprintTask.SprintWbsPlanId.Value);
+                if (plan != null)
+                {
+                    plan.RemainingHours -= diffRemaining;
+                    
+                    // User Rule: If remaining hours decrease (consumed), IsConsumed = true
+                    if (diffRemaining > 0)
+                    {
+                        plan.IsConsumed = true;
+                    }
+                }
+            }
+
+            existingSprintTask.RemainingHours = newRemaining;
             existingSprintTask.StartedAt = sprintTaskInputDto.StartedAt ?? existingSprintTask.StartedAt;
             existingSprintTask.CompletedAt = sprintTaskInputDto.CompletedAt ?? existingSprintTask.CompletedAt;
 

@@ -90,7 +90,9 @@ namespace NJS.Application.CQRS.SprintWbsPlans.Queries
                     PlannedHours = p.PlannedHours,
                     RemainingHours = p.RemainingHours,
                     ProgramSequence = p.ProgramSequence,
-                    IsConsumed = p.IsConsumed
+                    IsConsumed = p.IsConsumed,
+                    AcceptanceCriteria = p.AcceptanceCriteria,
+                    TaskDescription = p.TaskDescription
                 }).ToList()
             };
         }

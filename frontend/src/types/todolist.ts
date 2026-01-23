@@ -34,6 +34,7 @@ export interface Issue {
   key: string;
   summary: string;
   description: string;
+  acceptanceCriteria?: string;
   issueType: "Story" | "Task" | "Bug" | "Epic";
   priority: "Lowest" | "Low" | "Medium" | "High" | "Highest";
   assignee: TeamMember | null;
@@ -65,6 +66,8 @@ export interface NewIssueFormState {
   storyPoints: string; // Stores story points as a string for the select input
   components: string; // Stores component as a string
   fixVersion: string; // Stores fix version as a string
+  estimatedHours: string;
+  remainingHours: string;
 }
 
 export interface NewSubtaskFormState {

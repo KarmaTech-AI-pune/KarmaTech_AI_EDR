@@ -41,6 +41,8 @@ namespace NJS.Application.CQRS.SprintWbsPlans.Commands
                     RemainingHours = item.RemainingHours,
                     ProgramSequence = item.ProgramSequence,
                     IsConsumed = item.IsConsumed,
+                    AcceptanceCriteria = item.AcceptanceCriteria,
+                    TaskDescription = item.TaskDescription,
                     CreatedOn = DateTime.UtcNow
                 };
                 entities.Add(entity);

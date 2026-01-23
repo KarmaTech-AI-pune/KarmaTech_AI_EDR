@@ -89,6 +89,8 @@ export default function TodoList() {
     storyPoints: '',
     components: 'UI',
     fixVersion: 'Version 1.0',
+    estimatedHours: '',
+    remainingHours: '',
   });
 
   const handleCreateIssue = () => {
@@ -103,6 +105,8 @@ export default function TodoList() {
       storyPoints: '',
       components: 'UI',
       fixVersion: 'Version 1.0',
+      estimatedHours: '',
+      remainingHours: '',
     });
     setShowCreateModal(false);
   };

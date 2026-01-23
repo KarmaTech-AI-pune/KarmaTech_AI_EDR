@@ -35,7 +35,12 @@ export const TimeTrackingWidget: React.FC<TimeTrackingWidgetProps> = ({
     // Calculate progress percentage
     // Jira style: Time Spent / (Time Spent + Remaining Estimate)
     const totalTime = timeSpent + remainingEstimate;
-    const progress = totalTime > 0 ? (timeSpent / totalTime) * 100 : 0;
+    let progress = 0;
+    if (totalTime > 0) {
+        progress = (timeSpent / totalTime) * 100;
+    } else if (remainingEstimate === 0 && originalEstimate > 0) {
+        progress = 100;
+    }
 
     const handleLogWork = () => {
         const timeSpentVal = parseFloat(logTimeSpent);

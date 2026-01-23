@@ -37,6 +37,9 @@ namespace NJS.Domain.Entities
 
         public bool IsConsumed { get; set; } = false;
 
+        public string? AcceptanceCriteria { get; set; }
+        public string? TaskDescription { get; set; }
+
         public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedOn { get; set; }
     }

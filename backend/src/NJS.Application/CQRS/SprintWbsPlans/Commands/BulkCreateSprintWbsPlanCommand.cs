@@ -26,5 +26,7 @@ namespace NJS.Application.CQRS.SprintWbsPlans.Commands
         public decimal RemainingHours { get; set; }
         public int ProgramSequence { get; set; }
         public bool IsConsumed { get; set; }
+        public string? AcceptanceCriteria { get; set; }
+        public string? TaskDescription { get; set; }
     }
 }

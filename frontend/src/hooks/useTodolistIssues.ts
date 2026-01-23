@@ -133,6 +133,8 @@ export const useTodolistIssues = () => {
       reporter: teamMembers[0], // Current user
       status: 'To Do',
       storyPoints: parseInt(newIssueData.storyPoints) || 0,
+      estimatedHours: parseInt(newIssueData.estimatedHours) || 0,
+      remainingHours: parseInt(newIssueData.remainingHours) || 0,
       fixVersion: newIssueData.fixVersion,
       components: [newIssueData.components], // Convert string to array
       flagged: false,
@@ -298,6 +300,11 @@ export const useTodolistIssues = () => {
       if (!issue) return prevIssues;
 
       const updatedIssue = { ...issue, ...updates, updatedDate: new Date().toISOString() };
+
+      // Auto-zero remaining hours if status is Done
+      if (updates.status === 'Done') {
+        updatedIssue.remainingHours = 0;
+      }
 
       // Persist to API
       updateIssueAPI(updatedIssue).catch(err => {
@@ -625,7 +632,7 @@ export const useTodolistIssues = () => {
       // 2. Mark current sprint as completed (Status 2)
       await updateSprintPlanAPI({
         ...sprintPlan,
-        status: 2, // 2 = Completed
+        status: 1, // 1 = Completed
         completedAt: new Date().toISOString()
       });
 

@@ -27,10 +27,13 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
             _logger.LogInformation("Attempting to find next sprint for Project {ProjectId} after Sprint {CurrentSprintId}", request.ProjectId, request.CurrentSprintId);
 
             // Logic: Find first sprint in the same project with ID > currentSprintId
+            // Logic: Iterate sprints for the project in ascending SprintId order
+            // Skip all sprints where Status == 1 (already completed)
+            // Return the first sprint where Status == 0
             var nextSprintEntity = await _context.SprintPlans
                 .Include(sp => sp.SprintTasks!)
                     .ThenInclude(st => st.Subtasks!)
-                .Where(sp => sp.ProjectId == request.ProjectId && sp.SprintId > request.CurrentSprintId)
+                .Where(sp => sp.ProjectId == request.ProjectId && sp.Status == 0) // 0 = Not Completed
                 .OrderBy(sp => sp.SprintId)
                 .FirstOrDefaultAsync(cancellationToken);
 

@@ -355,6 +355,23 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             />
           </Box>
 
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 'medium' }}>
+              Acceptance Criteria
+            </Typography>
+            <InlineEdit
+              value={showIssueDetail.acceptanceCriteria || ""}
+              onSave={(val) => handleUpdateIssueAndState(showIssueDetail.id, { acceptanceCriteria: val })}
+              type="textarea"
+              label="acceptance criteria"
+              renderValue={(val) => (
+                <Typography variant="body1" color="text.primary">
+                  {val || "Add acceptance criteria..."}
+                </Typography>
+              )}
+            />
+          </Box>
+
           {/* Subtask Management */}
           <SubtaskList
             issue={showIssueDetail}
