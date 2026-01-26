@@ -18,6 +18,12 @@ public class TenantMiddleware
     public async Task Invoke(HttpContext context, ICurrentTenantService currentTenantService,
         ITenantService tenantResolver)
     {
+        if (context.Request.Path.StartsWithSegments(("/health")))
+        {
+            _logger.LogDebug("Healthy");
+            await _next(context);
+            return;
+        }
         try
         {
             if (context.User.Identity?.IsAuthenticated==true)
