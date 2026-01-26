@@ -20,7 +20,10 @@ public static class WebApplicationExtensions
                 ForwardedHeaders.XForwardedProto
         });
 
-       
+       if (!app.Environment.IsDevelopment())
+        {
+            app.UseHttpsRedirection();
+        }
 
         app.UseRouting();
         app.MapHealthChecks("/health").AllowAnonymous();
@@ -42,7 +45,7 @@ public static class WebApplicationExtensions
 
        // DO NOT USE HTTPS REDIRECTION IN ECS
         // TLS must terminate at ALB
-        app.UseHttpsRedirection();
+        //app.UseHttpsRedirection();
         
         app.UseAuthentication();
         app.UseAuthorization();
