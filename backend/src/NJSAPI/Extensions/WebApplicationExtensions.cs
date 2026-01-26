@@ -20,7 +20,7 @@ public static class WebApplicationExtensions
            // pathBase = "/";
         //}
         app.UsePathBase(pathBase);
-        app.UseHttpsRedirection();
+        //app.UseHttpsRedirection();
 
         app.UseRouting();
 
