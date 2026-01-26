@@ -57,17 +57,17 @@ public static class WebApplicationExtensions
 
         app.MapControllers();
 
-        using (var scope = app.Services.CreateScope())
+        //using (var scope = app.Services.CreateScope())
 
-        {
+        //{
 
-            var db = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+           // var db = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
 
-            db.Database.Migrate();
+          //  db.Database.Migrate();
 
-            SeedExtensions.InitializeDatabaseAsync(app).Wait();
+           // SeedExtensions.InitializeDatabaseAsync(app).Wait();
 
-        }
+       // }
          
 
         return app;
