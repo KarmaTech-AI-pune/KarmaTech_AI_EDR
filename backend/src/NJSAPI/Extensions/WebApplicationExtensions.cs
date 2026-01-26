@@ -4,7 +4,7 @@ using NJS.Domain.Database;
 using NJS.Domain.Extensions;
 using NJSAPI.Configurations;
 using NJSAPI.Middleware;
-using NLog.Web.LayoutRenderers;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace NJSAPI.Extensions;
 
