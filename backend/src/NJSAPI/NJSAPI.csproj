@@ -53,6 +53,12 @@
     <None Update="MigrationSQL\NonIsolatedSQL\01_DropIndexSQL.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="MigrationSQL\IsolatedSQL\03_Migrate_User_From_Soure_Target_DB.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\03_Migrate_User_From_Soure_Target_ProgresDB.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -97,13 +103,6 @@
     <Compile Update="Strategies\SharedTenantUserMigrationStrategy.cs">
       <DependentUpon>ITenantUserMigrationStrategy.cs</DependentUpon>
     </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="MigrationSQL\IsolatedSQL\03_Migrate_User_From_Soure_Target_DB.sql" />
-    <Resource Include="MigrationSQL\IsolatedSQL\03_Migrate_User_From_Soure_Target_DB.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
   </ItemGroup>
 
 </Project>

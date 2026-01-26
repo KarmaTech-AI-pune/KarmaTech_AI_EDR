@@ -18,9 +18,16 @@ public class TenantMiddleware
     public async Task Invoke(HttpContext context, ICurrentTenantService currentTenantService,
         ITenantService tenantResolver)
     {
+        if (context.Request.Path.StartsWithSegments(("/health")))
+        {
+            _logger.LogDebug("Healthy");
+            await _next(context);
+            return;
+        }
+
         try
         {
-            if (context.User.Identity?.IsAuthenticated==true)
+            if (context.User.Identity?.IsAuthenticated == true)
             {
                 var tenantId = tenantResolver.GetTenantIdFromClaims();
                 if (tenantId.HasValue)
@@ -29,11 +36,12 @@ public class TenantMiddleware
                     _logger.LogInformation("Tenant context set for request. TenantId: {TenantId}", tenantId.Value);
                 }
             }
+
             await _next(context);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,"Error setting tenant context");
+            _logger.LogError(ex, "Error setting tenant context");
         }
     }
 }

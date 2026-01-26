@@ -33,6 +33,12 @@ namespace NJSAPI.Middleware
         {
             _logger.LogDebug("Processing request: {Path}", context.Request.Path);
 
+            if (context.Request.Path.StartsWithSegments(("/health")))
+            {
+                _logger.LogDebug("Healthy");
+                await _next(context);
+                return;
+            }
             //if (IsAuthenticationEndpoint(context.Request.Path))
             //{
             //    _logger.LogDebug("Skipping tenant resolution for authentication endpoint: {Path}", context.Request.Path);

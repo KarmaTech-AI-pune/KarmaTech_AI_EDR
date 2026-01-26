@@ -425,7 +425,7 @@ namespace NJS.Application.Services
                 var migrationScripts = new[]
                 {
                     "02_Add_Roles_Mapp_Role_Permissions.sql",
-                    "03_Migrate_User_From_Source_Target_DB.sql"
+                    "03_Migrate_User_From_Soure_Target_ProgresDB.sql"
                 };
 
                 await using var connection = new Npgsql.NpgsqlConnection(connectionString);
@@ -701,7 +701,7 @@ namespace NJS.Application.Services
             }
         }
 
-        private string ReplacePlaceholders(string scriptContent, int tenantId, string targetDatabaseName,
+        private string ReplacePlaceholdersSQL(string scriptContent, int tenantId, string targetDatabaseName,
             string? sourceDatabaseName, string? userEmail = null, string? roleName = null,
             string? permissionName = null)
         {
@@ -747,6 +747,40 @@ namespace NJS.Application.Services
             }
 
             return scriptContent;
+        }
+        
+        
+        private string ReplacePlaceholders(
+            string scriptContent,
+            int tenantId,
+            string targetDatabaseName,
+            string? sourceDatabaseName,
+            string? userEmail = null,
+            string? roleName = null,
+            string? permissionName = null)
+        {
+            // Read source connection details
+            var sourceConn = new NpgsqlConnectionStringBuilder(
+                _configuration.GetConnectionString("AppDbConnection")
+            );
+
+            return scriptContent
+                // ---- dblink connection ----
+                .Replace("{{SOURCE_DB}}", sourceDatabaseName ?? sourceConn.Database)
+                .Replace("{{SOURCE_HOST}}", sourceConn.Host)
+                .Replace("{{SOURCE_PORT}}", sourceConn.Port.ToString())
+                .Replace("{{SOURCE_USER}}", sourceConn.Username)
+                .Replace("{{SOURCE_PASSWORD}}", sourceConn.Password)
+
+                // ---- business values ----
+                .Replace("{{TENANT_ID}}", tenantId.ToString())
+                .Replace("{{USER_EMAIL}}", EscapeSql(userEmail))
+                .Replace("{{ROLE_NAME}}", EscapeSql(roleName))
+                .Replace("{{PERMISSION_NAME}}", EscapeSql(permissionName));
+        }
+        private static string EscapeSql(string? value)
+        {
+            return value == null ? string.Empty : value.Replace("'", "''");
         }
 
         private List<string> SplitScriptIntoBatches(string script)
