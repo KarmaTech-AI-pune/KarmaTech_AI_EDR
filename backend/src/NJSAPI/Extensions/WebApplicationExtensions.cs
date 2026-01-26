@@ -25,6 +25,7 @@ public static class WebApplicationExtensions
         // app.UseHttpsRedirection();
 
         app.UseRouting();
+        app.MapHealthChecks("/health").AllowAnonymous();
 
         app.UseCors("AllowSpecificOrigin");
 
@@ -47,10 +48,8 @@ public static class WebApplicationExtensions
 
        
         app.UseMiddleware<TenantResolverMiddleware>();
-        app.UseMiddleware<TenantMiddleware>();
-
+        app.UseMiddleware<TenantMiddleware>();      
       
-        app.MapHealthChecks("/health").AllowAnonymous();
 
         app.MapControllers();
 
