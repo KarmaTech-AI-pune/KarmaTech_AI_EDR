@@ -19,9 +19,14 @@ public static class WebApplicationExtensions
         //{
            // pathBase = "/";
         //}
-        app.UsePathBase(pathBase);
+       // app.UsePathBase(pathBase);
         //app.UseHttpsRedirection();
-
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders =
+            ForwardedHeaders.XForwardedFor |
+            ForwardedHeaders.XForwardedProto
+    });
         app.UseRouting();
 
         app.UseCors("AllowSpecificOrigin");
