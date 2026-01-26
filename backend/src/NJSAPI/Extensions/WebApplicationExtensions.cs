@@ -12,47 +12,47 @@ public static class WebApplicationExtensions
 {
     public static WebApplication ConfigureApplication(this WebApplication app)
     {
-        var pathBase = app.Configuration["Api:PathBase"];
- 
-       
-       // if (!string.IsNullOrWhiteSpace(pathBase))
-        //{
-           // pathBase = "/";
-        //}
-       // app.UsePathBase(pathBase);
-        //app.UseHttpsRedirection();
-    app.UseForwardedHeaders(new ForwardedHeadersOptions
-    {
-        ForwardedHeaders =
-            ForwardedHeaders.XForwardedFor |
-            ForwardedHeaders.XForwardedProto
-    });
+         //  REQUIRED for AWS ALB
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders =
+                ForwardedHeaders.XForwardedFor |
+                ForwardedHeaders.XForwardedProto
+        });
+
+        // DO NOT USE HTTPS REDIRECTION IN ECS
+        // TLS must terminate at ALB
+        // app.UseHttpsRedirection();
+
         app.UseRouting();
 
         app.UseCors("AllowSpecificOrigin");
 
+        app.UseResponseCompression();
+       
         app.UseSwagger();
-
         app.UseSwaggerUI(options =>
-
         {
+            var swaggerSettings = app.Services
+                .GetRequiredService<IOptions<SwaggerSettings>>().Value;
 
-            var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
-
-            options.SwaggerEndpoint($"{pathBase}/swagger/{swaggerSettings.Version}/swagger.json", $"{swaggerSettings.Title}");
-
+            options.SwaggerEndpoint(
+                $"/swagger/{swaggerSettings.Version}/swagger.json",
+                swaggerSettings.Title);
         });
 
-        app.UseResponseCompression();
-
-
-        app.UseMiddleware<TenantResolverMiddleware>();
-
+      
         app.UseAuthentication();
-
         app.UseAuthorization();
 
+       
+        app.UseMiddleware<TenantResolverMiddleware>();
         app.UseMiddleware<TenantMiddleware>();
+
+      
+        app.MapHealthChecks("/health").AllowAnonymous();
+
+        app.MapControllers();
 
         using (var scope = app.Services.CreateScope())
 
@@ -65,10 +65,7 @@ public static class WebApplicationExtensions
             SeedExtensions.InitializeDatabaseAsync(app).Wait();
 
         }
-
-        app.MapControllers();
-
-        // app.MapFallbackToFile("index.html");       
+         
 
         return app;
 
