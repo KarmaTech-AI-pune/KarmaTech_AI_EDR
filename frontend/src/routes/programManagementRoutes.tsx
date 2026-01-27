@@ -23,7 +23,7 @@ export const programManagementRoutes: RouteObject[] = [
         element: <ProgramManagement />,
       },
       {
-        path: 'project-management',
+        path: 'projects',
         children: [
           {
             index: true,

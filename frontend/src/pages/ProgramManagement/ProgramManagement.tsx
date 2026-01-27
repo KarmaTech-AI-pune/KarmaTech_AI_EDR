@@ -244,7 +244,7 @@ const ProgramManagement: React.FC = () => {
                   // Store programId and programName in sessionStorage
                   sessionStorage.setItem('selectedProgramId', program.id.toString());
                   // Navigate to project management page
-                  navigate(`/program-management/project-management`);
+                  navigate(`/program-management/projects`);
                 }}
               >
                 <Box sx={{ flexGrow: 1 }}>

@@ -29,9 +29,9 @@ export const useAppNavigation = () => {
     if (project && context?.setSelectedProject) {
       context.setSelectedProject(project);
       setProjectId(String(project.id));
-      navigate(`/program-management/project-management/project`);
+      navigate(`/program-management/projects/project`);
     } else {
-      navigate('/program-management/project-management');
+      navigate('/program-management');
     }
   };
 
@@ -57,9 +57,9 @@ export const useAppNavigation = () => {
     if (project && context?.setSelectedProject) {
       context.setSelectedProject(project);
       setProjectId(String(project.id));
-      navigate(`/program-management/project-management/project/resources`);
+      navigate(`/program-management/project/resources`);
     } else {
-      navigate('/program-management/project-management');
+      navigate('/program-management');
     }
   };
 
