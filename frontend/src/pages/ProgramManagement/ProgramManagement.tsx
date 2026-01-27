@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -27,6 +28,7 @@ import { programApi } from '../../services/api/programApi';
 import { Program } from '../../types/program';
 
 const ProgramManagement: React.FC = () => {
+  const navigate = useNavigate();
   const { programs, isLoading, error, refetch } = usePrograms();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -234,10 +236,16 @@ const ProgramManagement: React.FC = () => {
                   cursor: 'pointer',
                   '&:hover': {
                     bgcolor: 'action.hover',
-                    transform: 'translateX(4px)'
+                    transform: 'translateX(4px)',
+                    boxShadow: 2
                   }
                 }}
-                onClick={() => {/* TODO: Navigate to program details */}}
+                onClick={() => {
+                  // Store programId and programName in sessionStorage
+                  sessionStorage.setItem('selectedProgramId', program.id.toString());
+                  // Navigate to project management page
+                  navigate(`/program-management/project-management`);
+                }}
               >
                 <Box sx={{ flexGrow: 1 }}>
                   <Typography variant="h6" sx={{ color: 'primary.main', mb: 1 }}>

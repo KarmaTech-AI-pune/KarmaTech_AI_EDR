@@ -160,7 +160,6 @@ export const ProjectManagement: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // First apply role-based filtering
   const roleFilteredProjects = projects.filter((project: Project) => {
     if (!currentUser) return false;
 
