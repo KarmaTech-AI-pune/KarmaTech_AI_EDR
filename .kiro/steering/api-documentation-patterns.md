@@ -1037,4 +1037,40 @@ Content-Security-Policy: default-src 'self'
 - Performance testing for critical endpoints.
 
 
+## How to Implement New Functionality
+
+To ensure maintainability and loose coupling, all new functionality must follow the **CQRS (Command Query Responsibility Segregation)** pattern with **Mediator**. This approach minimizes direct dependencies and standardizes the code structure.
+
+### Implementation Checklist
+1.  **Analyze Existing Implementation**: **CRITICAL STEP**. Read through existing Controllers, Services, and DTOs.
+    -   **Do not duplicate functionality.**
+    -   **Reuse existing DTOs** if possible.
+    -   **Only create new files if absolutely necessary.**
+2.  **Define Domain Entity**: Ensure the entity exists in `NJS.Domain.Entities`.
+3.  **DTO Creation**: Create a Data Transfer Object in `NJS.Application.Dtos` to carry data between the client and the application.
+4.  **CQRS Pattern**:
+    -   **Command/Query**: Create a record in `NJS.Application.CQRS.{Feature}.Commands` or `Queries`. Inherit from `IRequest<TResponse>`.
+    -   **Handler**: Create a handler in `NJS.Application.CQRS.{Feature}.Handlers`. Implement `IRequestHandler<TCommand, TResponse>`.
+    -   **Validator**: (Optional but recommended) Create a validator using FluentValidation.
+5.  **Repository Interface**: Use `I{Feature}Repository` (defined in `NJS.Repositories.Interfaces`) to abstract data access. **Do not access `DbContext` directly in Handlers.**
+6.  **Controller**:
+    -   Inject `IMediator` into the controller.
+    -   Create an endpoint that simply sends the command/query to the Mediator: `await _mediator.Send(command)`.
+    -   **Do not write business logic in the Controller.**
+
+### Code Standards & Loose Coupling
+-   **Dependency Injection**: Always inject interfaces (`IInterface`), never concrete classes.
+-   **Single Responsibility**: Each Handler should do one thing (handle one command/query).
+-   **Manual Mapping**: Explicitly map DTOs to Entities in the Handler. Do not use AutoMapper unless explicitly configured for the global project.
+-   **File Management**: Group CQRS files by feature (e.g., `CQRS/Projects/Commands`, `CQRS/Projects/Handlers`) to keep the project organized without creating excessive root-level folders.
+
+### Efficiency & Simplicity
+> [!IMPORTANT]
+> **Check Existing Files First**: Before creating any new file, verify if the functionality can logically fit into an existing class or DTO.
+-   **Reuse DTOs**: If a DTO with similar properties exists, reuse it or extend it instead of creating a near-duplicate.
+-   **Avoid Over-Engineering**: Do not create complex wrappers or abstraction layers unless absolutely necessary. Keep the code simple and readable.
+-   **Verify Before Creation**: Read through the existing implementation of the specific feature to understand the current connections and flow. Only create new files if the current structure cannot support the new requirement.
+
+---
+
 This API documentation pattern ensures consistent, well-documented, and maintainable APIs for AI-DLC generated features.
