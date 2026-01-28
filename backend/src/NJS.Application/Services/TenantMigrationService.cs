@@ -13,38 +13,70 @@ namespace NJS.Application.Services
         private readonly IConfiguration _configuration;
         private readonly ILogger<TenantMigrationService> _logger;
         private readonly string _migrationScriptsPath;
+        private readonly string _nonIsolatedTenetScriptPath;
 
         public TenantMigrationService(IConfiguration configuration, ILogger<TenantMigrationService> logger)
         {
             _configuration = configuration;
             _logger = logger;
-            
+
             // Try multiple paths to find the migration scripts directory
             var possiblePaths = new[]
             {
                 // Path from current directory (when running from backend folder)
-                Path.Combine(Directory.GetCurrentDirectory(), "MigrationSQL","IsolatedSQL"),
+                Path.Combine(Directory.GetCurrentDirectory(), "MigrationSQL", "IsolatedSQL"),
                 // Path from application base directory
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "MigrationSQL","IsolatedSQL"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "MigrationSQL",
+                    "IsolatedSQL"),
                 // Path relative to solution root
                 Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "MigrationSQL", "IsolatedSQL"),
                 // Absolute path from current directory going up
-                Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "MigrationSQL", "IsolatedSQL"))
+                Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "MigrationSQL",
+                    "IsolatedSQL"))
             };
 
             _migrationScriptsPath = possiblePaths.FirstOrDefault(Directory.Exists) ?? possiblePaths[0];
-            
+
             if (!Directory.Exists(_migrationScriptsPath))
             {
-                _logger.LogWarning("Migration scripts directory not found. Tried paths: {Paths}", string.Join(", ", possiblePaths));
+                _logger.LogWarning("Migration scripts directory not found. Tried paths: {Paths}",
+                    string.Join(", ", possiblePaths));
             }
             else
             {
                 _logger.LogInformation("Using migration scripts path: {Path}", _migrationScriptsPath);
             }
+
+            var norIsolatedPossiblePaths = new[]
+            {
+                // Path from current directory (when running from backend folder)
+                Path.Combine(Directory.GetCurrentDirectory(), "MigrationSQL", "NonIsolatedSQL"),
+                // Path from application base directory
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "MigrationSQL",
+                    "NonIsolatedSQL"),
+                // Path relative to solution root
+                Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "MigrationSQL", "NonIsolatedSQL"),
+                // Absolute path from current directory going up
+                Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "MigrationSQL",
+                    "NonIsolatedSQL"))
+            };
+
+            _nonIsolatedTenetScriptPath = norIsolatedPossiblePaths.FirstOrDefault(Directory.Exists) ??
+                                          norIsolatedPossiblePaths[0];
+
+            if (!Directory.Exists(_nonIsolatedTenetScriptPath))
+            {
+                _logger.LogWarning("Migration scripts directory not found. Tried paths: {Paths}",
+                    string.Join(", ", norIsolatedPossiblePaths));
+            }
+            else
+            {
+                _logger.LogInformation("Using migration scripts path: {Path}", _nonIsolatedTenetScriptPath);
+            }
         }
 
-        public async Task<bool> ExecuteTenantMigrationsAsync(string connectionString, int tenantId, string? sourceDatabaseName = null)
+        public async Task<bool> ExecuteTenantMigrationsAsync(string connectionString, int tenantId,
+            string? sourceDatabaseName = null)
         {
             try
             {
@@ -72,7 +104,7 @@ namespace NJS.Application.Services
                 // Define the order of migration scripts
                 var migrationScripts = new[]
                 {
-                    "01_Permissions.sql",                   
+                    "01_Permissions.sql",
                     "04_PMWorkFlow.Sql",
                     "05_OpportunityStatuses.Sql"
                 };
@@ -83,7 +115,7 @@ namespace NJS.Application.Services
                 foreach (var scriptFileName in migrationScripts)
                 {
                     var scriptPath = Path.Combine(_migrationScriptsPath, scriptFileName);
-                    
+
                     if (!File.Exists(scriptPath))
                     {
                         _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
@@ -93,9 +125,10 @@ namespace NJS.Application.Services
                     _logger.LogInformation("Executing migration script: {ScriptName}", scriptFileName);
 
                     var scriptContent = await File.ReadAllTextAsync(scriptPath, Encoding.UTF8);
-                    
+
                     // Replace placeholders in the script
-                    scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName, null, null, null);
+                    scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName,
+                        null, null, null);
 
                     // Split script into batches (by GO statements)
                     var batches = SplitScriptIntoBatches(scriptContent);
@@ -110,16 +143,18 @@ namespace NJS.Application.Services
                             using var command = new SqlCommand(batch, connection);
                             command.CommandTimeout = 300; // 5 minutes timeout for migrations
                             await command.ExecuteNonQueryAsync();
-                            
+
                             _logger.LogDebug("Successfully executed batch from {ScriptName}", scriptFileName);
                         }
                         catch (SqlException ex)
                         {
                             // Log error but continue with next batch
-                            _logger.LogError(ex, "Error executing batch from {ScriptName}: {ErrorMessage}", scriptFileName, ex.Message);
-                            
+                            _logger.LogError(ex, "Error executing batch from {ScriptName}: {ErrorMessage}",
+                                scriptFileName, ex.Message);
+
                             // For certain errors, we might want to continue (e.g., object already exists)
-                            if (ex.Number != 2714 && ex.Number != 1750) // Object already exists, or cannot create constraint
+                            if (ex.Number != 2714 &&
+                                ex.Number != 1750) // Object already exists, or cannot create constraint
                             {
                                 throw;
                             }
@@ -139,7 +174,9 @@ namespace NJS.Application.Services
             }
         }
 
-        public async Task<bool> ExecuteTenantUserMigrationsAsync(string connectionString, int tenantId, string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
+
+        public async Task<bool> ExecuteTenantUserMigrationsAsync(string connectionString, int tenantId,
+            string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
         {
             try
             {
@@ -191,7 +228,8 @@ namespace NJS.Application.Services
                     var scriptContent = await File.ReadAllTextAsync(scriptPath, Encoding.UTF8);
 
                     // Replace placeholders in the script
-                    scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName, userEmail, roleName, permissionName);
+                    scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName,
+                        userEmail, roleName, permissionName);
 
                     // Split script into batches (by GO statements)
                     var batches = SplitScriptIntoBatches(scriptContent);
@@ -212,7 +250,8 @@ namespace NJS.Application.Services
                         catch (SqlException ex)
                         {
                             // Log error but continue with next batch for certain non-critical errors
-                            _logger.LogWarning(ex, "Error executing batch from {ScriptName}: {ErrorMessage} (Error Number: {ErrorNumber})", 
+                            _logger.LogWarning(ex,
+                                "Error executing batch from {ScriptName}: {ErrorMessage} (Error Number: {ErrorNumber})",
                                 scriptFileName, ex.Message, ex.Number);
 
                             // Handle non-critical errors that we can safely ignore:
@@ -222,10 +261,12 @@ namespace NJS.Application.Services
                             // 2601 = Cannot insert duplicate key row (duplicate key)
                             if (ex.Number == 2714 || ex.Number == 1750 || ex.Number == 2627 || ex.Number == 2601)
                             {
-                                _logger.LogInformation("Skipping duplicate insert in {ScriptName} - object already exists", scriptFileName);
+                                _logger.LogInformation(
+                                    "Skipping duplicate insert in {ScriptName} - object already exists",
+                                    scriptFileName);
                                 continue; // Skip this batch and continue with next
                             }
-                            
+
                             // For other errors, rethrow to fail the migration
                             throw;
                         }
@@ -234,17 +275,222 @@ namespace NJS.Application.Services
                     _logger.LogInformation("Completed migration script: {ScriptName}", scriptFileName);
                 }
 
-                _logger.LogInformation("All user migration scripts executed successfully for tenant {TenantId} and user {UserEmail}", tenantId, userEmail);
+                _logger.LogInformation(
+                    "All user migration scripts executed successfully for tenant {TenantId} and user {UserEmail}",
+                    tenantId, userEmail);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error executing tenant user migrations for tenant {TenantId} and user {UserEmail}", tenantId, userEmail);
+                _logger.LogError(ex,
+                    "Error executing tenant user migrations for tenant {TenantId} and user {UserEmail}", tenantId,
+                    userEmail);
                 return false;
             }
         }
 
-        private string ReplacePlaceholders(string scriptContent, int tenantId, string targetDatabaseName, string? sourceDatabaseName, string? userEmail = null, string? roleName = null, string? permissionName = null)
+        public async Task<bool> ExecuteNonIsolatedTenantMigrationsAsync(string connectionString, int tenantId,
+            string? sourceDatabaseName = null)
+        {
+            try
+            {
+                if (!Directory.Exists(_nonIsolatedTenetScriptPath))
+                {
+                    _logger.LogError("Migration scripts directory not found: {Path}", _nonIsolatedTenetScriptPath);
+                    return false;
+                }
+
+                // Extract database name from connection string
+                var builder = new SqlConnectionStringBuilder(connectionString);
+                var targetDatabaseName = builder.InitialCatalog;
+
+                // If source database/server not provided, use the default from configuration
+                if (string.IsNullOrEmpty(sourceDatabaseName))
+                {
+                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                    if (!string.IsNullOrEmpty(defaultConnectionString))
+                    {
+                        var defaultBuilder = new SqlConnectionStringBuilder(defaultConnectionString);
+                        sourceDatabaseName = defaultBuilder.InitialCatalog;
+                    }
+                }
+
+                // Define the order of migration scripts
+                var migrationScripts = new[]
+                {
+                    "01_DropIndex.Sql",
+                    "03_PMWorkFlow.Sql",
+                    "04_OpportunityStatuses.Sql",
+                    "05_Setup_user.Sql"
+                };
+
+                using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                foreach (var scriptFileName in migrationScripts)
+                {
+                    var scriptPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+
+                    if (!File.Exists(scriptPath))
+                    {
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        continue;
+                    }
+
+                    _logger.LogInformation("Executing migration script: {ScriptName}", scriptFileName);
+
+                    var scriptContent = await File.ReadAllTextAsync(scriptPath, Encoding.UTF8);
+
+                    // Replace placeholders in the script
+                    scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName,
+                        null, null, null);
+
+                    // Split script into batches (by GO statements)
+                    var batches = SplitScriptIntoBatches(scriptContent);
+
+                    foreach (var batch in batches)
+                    {
+                        if (string.IsNullOrWhiteSpace(batch))
+                            continue;
+
+                        try
+                        {
+                            using var command = new SqlCommand(batch, connection);
+                            command.CommandTimeout = 300; // 5 minutes timeout for migrations
+                            await command.ExecuteNonQueryAsync();
+
+                            _logger.LogDebug("Successfully executed batch from {ScriptName}", scriptFileName);
+                        }
+                        catch (SqlException ex)
+                        {
+                            // Log error but continue with next batch
+                            _logger.LogError(ex, "Error executing batch from {ScriptName}: {ErrorMessage}",
+                                scriptFileName, ex.Message);
+
+                            // For certain errors, we might want to continue (e.g., object already exists)
+                            if (ex.Number != 2714 &&
+                                ex.Number != 1750) // Object already exists, or cannot create constraint
+                            {
+                                throw;
+                            }
+                        }
+                    }
+
+                    _logger.LogInformation("Completed migration script: {ScriptName}", scriptFileName);
+                }
+
+                _logger.LogInformation("All migration scripts executed successfully for tenant {TenantId}", tenantId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error executing tenant migrations for tenant {TenantId}", tenantId);
+                return false;
+            }
+        }
+
+        public async Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsync(string connectionString, int tenantId,
+            string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
+        {
+            try
+            {
+                if (!Directory.Exists(_nonIsolatedTenetScriptPath))
+                {
+                    _logger.LogError("Migration scripts directory not found: {Path}", _nonIsolatedTenetScriptPath);
+                    return false;
+                }
+
+                // Extract database name from connection string
+                var builder = new SqlConnectionStringBuilder(connectionString);
+                var targetDatabaseName = builder.InitialCatalog;
+
+                // If source database not provided, use the default from configuration
+                if (string.IsNullOrEmpty(sourceDatabaseName))
+                {
+                    var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                    if (!string.IsNullOrEmpty(defaultConnectionString))
+                    {
+                        var defaultBuilder = new SqlConnectionStringBuilder(defaultConnectionString);
+                        sourceDatabaseName = defaultBuilder.InitialCatalog;
+                    }
+                }
+             
+                var migrationScripts = new[]
+                {
+                    "01_DropIndex.Sql",
+                    "04_PMWorkFlow.Sql",
+                    "05_OpportunityStatuses.Sql",
+                    "03_Setup_user.Sql"
+                };
+
+                using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                foreach (var scriptFileName in migrationScripts)
+                {
+                    var scriptPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+
+                    if (!File.Exists(scriptPath))
+                    {
+                        _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                        continue;
+                    }
+
+                    _logger.LogInformation("Executing migration script: {ScriptName}", scriptFileName);
+
+                    var scriptContent = await File.ReadAllTextAsync(scriptPath, Encoding.UTF8);
+
+                    // Replace placeholders in the script
+                    scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName,
+                        userEmail, roleName, permissionName);
+
+                    // Split script into batches (by GO statements)
+                    var batches = SplitScriptIntoBatches(scriptContent);
+
+                    foreach (var batch in batches)
+                    {
+                        if (string.IsNullOrWhiteSpace(batch))
+                            continue;
+
+                        try
+                        {
+                            using var command = new SqlCommand(batch, connection);
+                            command.CommandTimeout = 300; // 5 minutes timeout for migrations
+                            await command.ExecuteNonQueryAsync();
+
+                            _logger.LogDebug("Successfully executed batch from {ScriptName}", scriptFileName);
+                        }
+                        catch (SqlException ex)
+                        {
+                            // Log error but continue with next batch for certain non-critical errors
+                            _logger.LogWarning(ex,
+                                "Error executing batch from {ScriptName}: {ErrorMessage} (Error Number: {ErrorNumber})",
+                                scriptFileName, ex.Message, ex.Number);
+                           
+                            throw;
+                        }
+                    }
+
+                    _logger.LogInformation("Completed migration script: {ScriptName}", scriptFileName);
+                }
+
+                _logger.LogInformation(
+                    "All user migration scripts executed successfully for tenant {TenantId} and user {UserEmail}",
+                    tenantId, userEmail);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error executing tenant user migrations for tenant {TenantId} and user {UserEmail}", tenantId,
+                    userEmail);
+                return false;
+            }
+        }
+
+        private string ReplacePlaceholders(string scriptContent, int tenantId, string targetDatabaseName,
+            string? sourceDatabaseName, string? userEmail = null, string? roleName = null,
+            string? permissionName = null)
         {
             // Replace @TenantId placeholder
             // Replace @TenantId placeholder (Robust: matches INT = X; or INT=X;)
@@ -323,4 +569,3 @@ namespace NJS.Application.Services
         }
     }
 }
-

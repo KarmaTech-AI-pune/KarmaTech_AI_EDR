@@ -29,7 +29,7 @@ const getWorkflowStatusById = (statusId: number): WorkflowStatus | null => {
     2: { id: 2, name: 'Sent for Review', status: 'Sent for Review' },
     3: { id: 3, name: 'Review Changes', status: 'Review Changes' },
     4: { id: 4, name: 'Sent for Approval', status: 'Sent for Approval' },
-    5: { id: 5, name: 'Approval Changes', status: 'Approval Changes' },
+    5: { id: 5, name: 'Sent for Approval Changes', status: 'Sent for Approval Changes' },
     6: { id: 6, name: 'Approved', status: 'Approved' }
   };
   return statuses[statusId] || null;
@@ -53,7 +53,7 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
   useEffect(() => {
     ;
     setLocalStatusId(projectClosure.workflowHistory?.statusId || 1);
-  }, [projectClosure.workflowHistory?.statusId,localStatusId]);
+  }, [projectClosure.workflowHistory?.statusId, localStatusId]);
 
 
 
@@ -65,7 +65,7 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
   const handleWorkflowClose = async (success: boolean = false, updatedClosure?: ProjectClosureRow) => {
     setWorkflowDialogOpen(false);
     if (success) {
-      
+
       // Update status immediately for instant feedback
       const nextStatusId = (projectClosure.workflowHistory?.statusId || 1);
       setLocalStatusId(nextStatusId);
@@ -89,11 +89,13 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
         return 'Send for Review';
       case "Sent for Review":
         return 'Decide Review';
-      case "Approval Changes":
       case "Sent for Approval":
         if (context?.canProjectCanApprove) {
           return 'Decide Approval';
-        } else if (context?.canProjectSubmitForApproval) {
+        }
+        return '';
+      case "Sent for Approval Changes":
+        if (context?.canProjectSubmitForApproval) {
           return 'Send for Approval';
         }
         return '';
@@ -117,7 +119,7 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
         return context.canProjectSubmitForReview;
       case "Sent for Review":
         return context.canProjectSubmitForApproval;
-      case "Approval Changes":
+      case "Sent for Approval Changes":
         return context.canProjectSubmitForApproval;
       case "Sent for Approval":
         return context.canProjectCanApprove;
@@ -125,7 +127,7 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
         return false;
     }
   };
-  
+
 
   const getWorkflowDialog = () => {
     if (!context?.currentUser?.name) return null;
@@ -145,7 +147,6 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
             onReviewSent={onProjectClosureUpdated}
           />
         );
-      case "Approval Changes":
       case "Sent for Approval":
         if (context?.canProjectCanApprove) {
           return (
@@ -155,10 +156,13 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
               projectClosureId={projectClosure.id}
               projectId={projectClosure.projectId ? Number(projectClosure.projectId) : undefined}
               currentUser={context?.currentUser.name}
-              onSubmit={async () => await handleWorkflowClose(true)}             
+              onSubmit={async () => await handleWorkflowClose(true)}
             />
           );
-        } else if (context?.canProjectSubmitForApproval) {
+        }
+        return null;
+      case "Sent for Approval Changes":
+        if (context?.canProjectSubmitForApproval) {
           return (
             <SendForApproval
               open={workflowDialogOpen}
@@ -199,7 +203,7 @@ export const ProjectClosureWorkflow: React.FC<PCWProps> = ({
           {getWorkflowButtonText(localStatusId)}
         </Button>
       ) : (
-        <Chip         
+        <Chip
           label={getWorkflowStatusById(localStatusId)?.status}
           color="primary"
           size="medium"

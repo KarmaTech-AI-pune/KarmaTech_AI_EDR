@@ -57,6 +57,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 TaskupdatedDate = sprintTask.TaskupdatedDate,
                 SprintPlanId = sprintTask.SprintPlanId,
                 WbsPlanId = sprintTask.WbsPlanId,
+                SprintWbsPlanId = sprintTask.SprintWbsPlanId,
                 UserTaskId = sprintTask.UserTaskId,
                 AcceptanceCriteria = sprintTask.AcceptanceCriteria,
                 DisplayOrder = sprintTask.DisplayOrder,
