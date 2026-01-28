@@ -67,7 +67,8 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                     CompletedAt = projectScheduleDto.CompletedAt,
                     CreatedAt = projectScheduleDto.CreatedAt ?? DateTime.UtcNow,
                     UpdatedAt = projectScheduleDto.UpdatedAt,
-                    TenantId = _context.TenantId ?? 1
+                    TenantId = _context.TenantId ?? 1,
+                    RequiredSprintEmployees = projectScheduleDto.RequiredSprintEmployees ?? 0
                 };
                 await _context.SprintPlans.AddAsync(sprintPlan, cancellationToken);
                 var sprintPlanChanges = await _context.SaveChangesAsync(cancellationToken);
@@ -102,6 +103,7 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                         TaskupdatedDate = taskDto.TaskupdatedDate ?? DateTime.UtcNow,
                         SprintPlanId = sprintPlan.SprintId,
                         WbsPlanId = taskDto.WbsPlanId,
+                        SprintWbsPlanId = taskDto.SprintWbsPlanId,
                         UserTaskId = taskDto.UserTaskId,
                         AcceptanceCriteria = taskDto.AcceptanceCriteria,
                         DisplayOrder = taskDto.DisplayOrder ?? 0,
