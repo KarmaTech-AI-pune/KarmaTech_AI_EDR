@@ -58,6 +58,10 @@ namespace NJS.Domain.Entities
         [ForeignKey("WbsPlanId")]
         public WBSTaskPlannedHour? WbsPlan { get; set; }
 
+        public int? SprintWbsPlanId { get; set; }
+        [ForeignKey("SprintWbsPlanId")]
+        public SprintWbsPlan? SprintWbsPlan { get; set; }
+
         public int? UserTaskId { get; set; }
         [ForeignKey("UserTaskId")]
         public UserWBSTask? UserTask { get; set; }

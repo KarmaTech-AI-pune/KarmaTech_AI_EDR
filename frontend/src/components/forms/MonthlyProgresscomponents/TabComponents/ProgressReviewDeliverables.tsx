@@ -3,6 +3,8 @@ import { Controller, useFormContext, useFieldArray, useWatch, Control } from "re
 import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/MonthlyProgressSchema";
 import { formatDateForInput, parseDateFromInput } from "../../../../utils/dateUtils";
 import textFieldStyle from "../../../../theme/textFieldStyle";
+import { useCurrencyInput } from "../../../../hooks/useCurrencyInput";
+import { formatToIndianNumber } from "../../../../utils/numberFormatting";
 import {
   Box,
   Button,
@@ -20,10 +22,11 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+
 interface TableCellFieldProps {
   name: `progressDeliverable.deliverables.${number}.${keyof MonthlyProgressSchemaType['progressDeliverable']['deliverables'][number]}`;
   control: Control<MonthlyProgressSchemaType>;
-  type?: 'text' | 'number' | 'date' | 'multiline';
+  type?: 'text' | 'number' | 'date' | 'multiline' | 'currency';
   placeholder?: string;
 }
 
@@ -42,6 +45,15 @@ const TableCellField: React.FC<TableCellFieldProps> = ({ name, control, type = '
         render={({ field }) => {
           if (type === 'date') {
             return <TextField type="date" size="small" value={formatDateForInput(field.value as Date | null)} onChange={(e) => field.onChange(parseDateFromInput(e.target.value))} error={!!error} helperText={error?.message} sx={textFieldStyle} InputLabelProps={{ shrink: true }} />;
+          }
+          if (type === 'currency') {
+            // Convert null to undefined for useCurrencyInput hook
+            const fieldValue = field.value ?? undefined;
+            const currencyInput = useCurrencyInput(fieldValue, name);
+            
+            return <TextField size="small" placeholder={placeholder} value={currencyInput.value} onChange={currencyInput.getChangeHandler((rawValue) => {
+              field.onChange(rawValue);
+            })} onWheel={(e) => (e.target as HTMLInputElement).blur()} error={!!error} helperText={error?.message} sx={textFieldStyle} />;
           }
           if (type === 'number') {
             return <TextField type="number" size="small" placeholder={placeholder} value={field.value} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)} onWheel={(e) => (e.target as HTMLInputElement).blur()} error={!!error} helperText={error?.message} sx={textFieldStyle} />;
@@ -81,7 +93,7 @@ const DeliverableRow: React.FC<DeliverableRowProps> = ({ index, remove, control 
     <TableCellField name={`progressDeliverable.deliverables.${index}.dueDateContract`} control={control} type="date" />
     <TableCellField name={`progressDeliverable.deliverables.${index}.dueDatePlanned`} control={control} type="date" />
     <TableCellField name={`progressDeliverable.deliverables.${index}.achievedDate`} control={control} type="date" />
-    <TableCellField name={`progressDeliverable.deliverables.${index}.paymentDue`} control={control} type="number" placeholder="Amount" />
+    <TableCellField name={`progressDeliverable.deliverables.${index}.paymentDue`} control={control} type="currency" placeholder="Amount" />
     <TableCellField name={`progressDeliverable.deliverables.${index}.invoiceDate`} control={control} type="date" />
     <TableCellField name={`progressDeliverable.deliverables.${index}.paymentReceivedDate`} control={control} type="date" />
     <TableCellField name={`progressDeliverable.deliverables.${index}.deliverableComments`} control={control} type="multiline" placeholder="Comments" />
@@ -95,7 +107,7 @@ const DeliverableRow: React.FC<DeliverableRowProps> = ({ index, remove, control 
 
 const DeliverableTableFooter: React.FC<{ totalPaymentDue: number }> = ({ totalPaymentDue }) => (
   <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 2, borderTop: '1px solid #e0e0e0' }}>
-    <Typography variant="h6" sx={{ color: 'green', fontWeight: "bold" }}>Total: {totalPaymentDue}</Typography>
+    <Typography variant="h6" sx={{ color: 'green', fontWeight: "bold" }}>Total: {formatToIndianNumber(totalPaymentDue)}</Typography>
   </Box>
 );
 

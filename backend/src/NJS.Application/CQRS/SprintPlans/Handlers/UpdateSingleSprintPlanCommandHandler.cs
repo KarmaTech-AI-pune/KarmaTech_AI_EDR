@@ -58,6 +58,7 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
             existingSprintPlan.CompletedAt = sprintPlanDto.CompletedAt;
             existingSprintPlan.CreatedAt = sprintPlanDto.CreatedAt;
             existingSprintPlan.UpdatedAt = sprintPlanDto.UpdatedAt;
+            existingSprintPlan.TenantId = _context.TenantId ?? 0;
 
             // SprintTasks and SprintSubtasks are NOT handled by this API, as per requirement.
 

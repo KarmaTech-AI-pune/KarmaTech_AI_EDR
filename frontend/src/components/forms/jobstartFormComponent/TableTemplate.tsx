@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { WBSResource } from '../../../types/jobStartFormTypes';
+import { formatToIndianNumber } from '../../../utils/numberFormatting';
 
 export interface CustomRow {
   id: string;
@@ -250,9 +251,9 @@ const TableTemplate = ({
                     <TableCell>
                       {resource.employeeName || resource.name || resource.description || "Unknown"}
                     </TableCell>
-                    <TableCell align="center">{resource.rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                    <TableCell align="center">{resource.units.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                    <TableCell align="center">{resource.budgetedCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell align="center">{formatToIndianNumber(resource.rate)}</TableCell>
+                    <TableCell align="center">{formatToIndianNumber(resource.units)}</TableCell>
+                    <TableCell align="center">{formatToIndianNumber(resource.budgetedCost)}</TableCell>
                     <TableCell>
                       <TextField
                         fullWidth
@@ -302,7 +303,7 @@ const TableTemplate = ({
                         />
                       ) : null}
                     </TableCell>
-                    <TableCell align="center">{row.budgetedCost ? row.budgetedCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</TableCell>
+                    <TableCell align="center">{row.budgetedCost ? formatToIndianNumber(row.budgetedCost) : '0.00'}</TableCell>
                     <TableCell>
                       <TextField
                         fullWidth
@@ -320,7 +321,7 @@ const TableTemplate = ({
                 {/* Total Row */}
                 <TableRow sx={tableStyles.totalRow}>
                   <TableCell colSpan={4} sx={{ fontWeight: 'bold' }}>{totalLabel}</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>{totalBudgetedCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>{formatToIndianNumber(totalBudgetedCost)}</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}></TableCell>
                 </TableRow>
               </TableBody>

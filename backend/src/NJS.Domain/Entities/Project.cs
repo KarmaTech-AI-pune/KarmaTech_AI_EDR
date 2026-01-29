@@ -85,5 +85,7 @@ namespace NJS.Domain.Entities
         public DateTime? LastModifiedAt { get; set; }
 
         public string? LastModifiedBy { get; set; }
+
+        public virtual ICollection<SprintWbsPlan> SprintWbsPlans { get; set; }
     }
 }
