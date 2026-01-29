@@ -67,7 +67,8 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                     CompletedAt = projectScheduleDto.CompletedAt,
                     CreatedAt = projectScheduleDto.CreatedAt ?? DateTime.UtcNow,
                     UpdatedAt = projectScheduleDto.UpdatedAt,
-                    TenantId = _context.TenantId ?? 1
+                    TenantId = _context.TenantId ?? 0,
+                    RequiredSprintEmployees = projectScheduleDto.RequiredSprintEmployees ?? 0
                 };
                 await _context.SprintPlans.AddAsync(sprintPlan, cancellationToken);
                 var sprintPlanChanges = await _context.SaveChangesAsync(cancellationToken);
@@ -82,7 +83,7 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                     var task = new SprintTask
                     {
                         // Taskid is Identity, let DB generate it
-                        TenantId = taskDto.TenantId,
+                        TenantId = _context.TenantId ?? 0,
                         Taskkey = taskDto.Taskkey,
                         TaskTitle = taskDto.TaskTitle,
                         Taskdescription = taskDto.Taskdescription,
@@ -102,6 +103,7 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                         TaskupdatedDate = taskDto.TaskupdatedDate ?? DateTime.UtcNow,
                         SprintPlanId = sprintPlan.SprintId,
                         WbsPlanId = taskDto.WbsPlanId,
+                        SprintWbsPlanId = taskDto.SprintWbsPlanId,
                         UserTaskId = taskDto.UserTaskId,
                         AcceptanceCriteria = taskDto.AcceptanceCriteria,
                         DisplayOrder = taskDto.DisplayOrder ?? 0,
@@ -123,7 +125,7 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                             var subtask = new SprintSubtask
                             {
                                 Subtaskkey = subtaskDto.Subtaskkey,
-                                TenantId = subtaskDto.TenantId,
+                                TenantId = _context.TenantId ?? 0,
                                 Subtasktitle = subtaskDto.Subtasktitle,
                                 Subtaskdescription = subtaskDto.Subtaskdescription,
                                 Subtaskpriority = subtaskDto.Subtaskpriority,

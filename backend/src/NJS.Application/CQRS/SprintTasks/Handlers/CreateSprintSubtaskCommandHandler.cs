@@ -49,7 +49,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             var subtask = new SprintSubtask
             {
                 Subtaskkey = sprintSubtaskDto.Subtaskkey,
-                TenantId = _context.TenantId ?? 1,
+                TenantId = _context.TenantId ?? 0,
                 Subtasktitle = sprintSubtaskDto.Subtasktitle,
                 Subtaskdescription = sprintSubtaskDto.Subtaskdescription,
                 Subtaskpriority = sprintSubtaskDto.Subtaskpriority,

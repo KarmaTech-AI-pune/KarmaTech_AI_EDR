@@ -50,7 +50,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             var sprintTask = new SprintTask
             {
                 // Taskid = sprintTaskDto.Taskid, // Identity column
-                TenantId = sprintTaskDto.TenantId,
+                TenantId = _context.TenantId ?? 0,
                 Taskkey = sprintTaskDto.Taskkey,
                 TaskTitle = sprintTaskDto.TaskTitle,
                 Taskdescription = sprintTaskDto.Taskdescription,
@@ -70,12 +70,13 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 TaskupdatedDate = DateTime.UtcNow,
                 SprintPlanId = sprintTaskDto.SprintPlanId,
                 WbsPlanId = sprintTaskDto.WbsPlanId,
+                SprintWbsPlanId = sprintTaskDto.SprintWbsPlanId,
                 UserTaskId = sprintTaskDto.UserTaskId,
                 AcceptanceCriteria = sprintTaskDto.AcceptanceCriteria,
-                DisplayOrder = sprintTaskDto.DisplayOrder,
-                EstimatedHours = sprintTaskDto.EstimatedHours,
-                ActualHours = sprintTaskDto.ActualHours,
-                RemainingHours = sprintTaskDto.RemainingHours,
+                DisplayOrder = sprintTaskDto.DisplayOrder ?? 0,
+                EstimatedHours = sprintTaskDto.EstimatedHours ?? 0,
+                ActualHours = sprintTaskDto.ActualHours ?? 0,
+                RemainingHours = sprintTaskDto.RemainingHours ?? 0,
                 StartedAt = sprintTaskDto.StartedAt,
                 CompletedAt = sprintTaskDto.CompletedAt
             };
