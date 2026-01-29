@@ -53,9 +53,32 @@ namespace NJS.Application.Dtos
         public int ScoringDescriptionId { get; set; }
     }
 
+    /// <summary>
+    /// Summary information for Go/No-Go Decision with percentage-based scoring
+    /// </summary>
     public class Summary
     {
+        /// <summary>
+        /// Raw total score (sum of all individual criterion scores, range: 0-120)
+        /// </summary>
         public int TotalScore { get; set; }
+        
+        /// <summary>
+        /// Score expressed as percentage of maximum possible score (range: 0-100%)
+        /// Calculated as: (TotalScore / 120) × 100
+        /// </summary>
+        public int ScorePercentage { get; set; }
+        
+        /// <summary>
+        /// Maximum possible total score (always 120 = 12 criteria × 10 points each)
+        /// </summary>
+        public int MaxPossibleScore { get; set; } = 120;
+        
+        /// <summary>
+        /// Indicates whether a perfect score was achieved (true if TotalScore = 120)
+        /// </summary>
+        public bool IsPerfectScore { get; set; }
+        
         public GoNoGoStatus Status { get; set; }
         public string DecisionComments { get; set; }
         public string ActionPlan { get; set; }

@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import NotificationSnackbar from '../components/widgets/NotificationSnackbar';
 import FormField from '../components/forms/FormField';
+import { VersionDisplay } from '../components/VersionDisplay';
 import { signupSchema } from '../schemas/signupSchema';
 import { z } from 'zod';
 import { authApi } from '../services/authApi';
@@ -140,7 +141,13 @@ const Signup: React.FC = () => {
             KarmaTech-AI EDR(Enterprise Digital Runner)
           </Typography>
           <Typography variant="subtitle1" color="textSecondary">
-            Version 1.11.11
+          <VersionDisplay
+            variant="subtitle1"
+            color="textSecondary"
+            showBuildDate={false}
+            showDevIndicator={false}
+            fetchVersionFromAPI={false}
+          />
           </Typography>
         </Box>
 

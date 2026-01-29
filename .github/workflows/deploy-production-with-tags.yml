@@ -1,0 +1,365 @@
+# ====================================================================
+# Production Deployment with Release Tagging
+# ====================================================================
+# This workflow deploys to PRODUCTION environment
+# Requires: Approved staging tag and manual approval
+# Trigger: Manual workflow dispatch only
+
+name: Deploy to PRODUCTION with Release Tags
+
+on:
+  workflow_dispatch:
+    inputs:
+      staging-tag:
+        description: 'Staging tag to promote to production (e.g., v1.2.3-staging.20241125.1)'
+        required: true
+        type: string
+      version-bump:
+        description: 'Version bump type (usually patch for hotfixes)'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      skip-tests:
+        description: 'Skip pre-deployment tests (not recommended)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  AWS_REGION: us-east-1
+  CERTIFICATE_ARN: arn:aws:acm:us-east-1:008971635132:certificate/20320ffc-0572-4e4e-9945-ef681c0a5937
+  ENVIRONMENT: production
+
+jobs:
+  # ================================================================
+  # Job 1: Validate Staging Tag
+  # ================================================================
+  validate-staging-tag:
+    name: Validate Staging Tag
+    runs-on: ubuntu-latest
+    outputs:
+      is-valid: ${{ steps.validate.outputs.is-valid }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Validate staging tag exists
+        id: validate
+        run: |
+          STAGING_TAG="${{ github.event.inputs.staging-tag }}"
+          
+          # Check if tag exists
+          if ! git rev-parse "$STAGING_TAG" >/dev/null 2>&1; then
+            echo "❌ Error: Tag $STAGING_TAG does not exist!"
+            echo "is-valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          # Check if it's a staging tag
+          if [[ ! "$STAGING_TAG" =~ -staging\. ]]; then
+            echo "⚠️ Warning: Tag $STAGING_TAG doesn't appear to be a staging tag"
+            echo "Expected format: v1.2.3-staging.YYYYMMDD.N"
+          fi
+          
+          echo "✅ Tag $STAGING_TAG is valid"
+          echo "is-valid=true" >> $GITHUB_OUTPUT
+
+  # ================================================================
+  # Job 2: Pre-Deployment Tests
+  # ================================================================
+  pre-deployment-tests:
+    name: Pre-Deployment Tests
+    runs-on: ubuntu-latest
+    needs: validate-staging-tag
+    if: ${{ !inputs.skip-tests }}
+    
+    steps:
+      - name: Checkout staging tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.staging-tag }}
+
+      - name: Run production readiness tests
+        run: |
+          echo "Running production readiness tests..."
+          # Add your test commands here
+          # npm run test:production-readiness
+
+      - name: Security scan
+        run: |
+          echo "Running security scan..."
+          # Add security scanning commands
+
+      - name: Performance tests
+        run: |
+          echo "Running performance tests..."
+          # Add performance test commands
+
+  # ================================================================
+  # Job 3: Manual Approval
+  # ================================================================
+  manual-approval:
+    name: Manual Approval Required
+    runs-on: ubuntu-latest
+    needs: [validate-staging-tag, pre-deployment-tests]
+    if: always() && needs.validate-staging-tag.outputs.is-valid == 'true'
+    environment:
+      name: production
+      url: https://app.karmatech-ai.com
+    
+    steps:
+      - name: Approval checkpoint
+        run: |
+          echo "## ⚠️ Production Deployment Approval" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Deploying staging tag: \`${{ github.event.inputs.staging-tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This deployment requires manual approval." >> $GITHUB_STEP_SUMMARY
+          echo "Review all checks before approving." >> $GITHUB_STEP_SUMMARY
+
+  # ================================================================
+  # Job 4: Create Production Release Tag
+  # ================================================================
+  create-production-tag:
+    name: Create Production Release Tag
+    needs: manual-approval
+    uses: ./.github/workflows/create-release-tags.yml
+    with:
+      environment: production
+      component: full
+      version-bump: ${{ github.event.inputs.version-bump }}
+    permissions:
+      contents: write
+
+  # ================================================================
+  # Job 5: Deploy Backend to Production
+  # ================================================================
+  deploy-backend:
+    name: Deploy Backend to Production
+    runs-on: ubuntu-latest
+    needs: create-production-tag
+    
+    steps:
+      - name: Checkout staging tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.staging-tag }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Tag and push production image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: njs-multitenant-backend
+          STAGING_TAG: ${{ github.event.inputs.staging-tag }}
+          PROD_TAG: ${{ needs.create-production-tag.outputs.release-tag }}
+        run: |
+          # Pull staging image
+          docker pull $ECR_REGISTRY/njs-multitenant-backend-staging:$STAGING_TAG
+          
+          # Re-tag for production
+          docker tag $ECR_REGISTRY/njs-multitenant-backend-staging:$STAGING_TAG \
+            $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_TAG
+          
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_TAG \
+            $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+          # Push to production ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$PROD_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Update ECS Production Service
+        run: |
+          # Update production ECS service
+          aws ecs update-service \
+            --cluster njs-multitenant-backend-cluster \
+            --service njs-multitenant-backend-service \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+          
+          # Wait for service to stabilize
+          aws ecs wait services-stable \
+            --cluster njs-multitenant-backend-cluster \
+            --services njs-multitenant-backend-service \
+            --region ${{ env.AWS_REGION }}
+
+  # ================================================================
+  # Job 6: Deploy Frontend to Production
+  # ================================================================
+  deploy-frontend:
+    name: Deploy Frontend to Production
+    runs-on: ubuntu-latest
+    needs: create-production-tag
+    
+    steps:
+      - name: Checkout staging tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.staging-tag }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Create production environment file
+        working-directory: ./frontend
+        run: |
+          cat > .env.production <<EOF
+          VITE_API_BASE_URL=https://api.app.karmatech-ai.com/
+          VITE_APP_ENV=production
+          VITE_MAIN_DOMAIN=app.karmatech-ai.com
+          VITE_APP_TYPE=tenant
+          VITE_APP_VERSION=${{ needs.create-production-tag.outputs.release-tag }}
+          VITE_BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          VITE_COMMIT_SHA=${{ github.sha }}
+          EOF
+
+      - name: Build production application
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Create version manifest
+        working-directory: ./frontend/dist
+        run: |
+          cat > version.json <<EOF
+          {
+            "version": "${{ needs.create-production-tag.outputs.release-tag }}",
+            "semanticVersion": "${{ needs.create-production-tag.outputs.release-version }}",
+            "environment": "production",
+            "buildDate": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "commitSha": "${{ github.sha }}",
+            "deployedBy": "${{ github.actor }}",
+            "promotedFrom": "${{ github.event.inputs.staging-tag }}"
+          }
+          EOF
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Backup current production
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          aws s3 sync s3://njs-frontend-production \
+            s3://njs-frontend-production-backup-$TIMESTAMP/ \
+            || echo "No existing deployment to backup"
+
+      - name: Deploy to production S3
+        run: |
+          aws s3 sync frontend/dist/ s3://njs-frontend-production --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          PROD_DIST_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items[0]=='app.karmatech-ai.com'].Id" \
+            --output text)
+          
+          if [ -n "$PROD_DIST_ID" ]; then
+            aws cloudfront create-invalidation \
+              --distribution-id $PROD_DIST_ID \
+              --paths "/*"
+          fi
+
+  # ================================================================
+  # Job 7: Post-Deployment Verification
+  # ================================================================
+  post-deployment-verification:
+    name: Post-Deployment Verification
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    
+    steps:
+      - name: Health checks
+        run: |
+          echo "Running production health checks..."
+          
+          # API health check
+          curl -f https://api.app.karmatech-ai.com/health || exit 1
+          
+          # Frontend health check
+          curl -f https://app.karmatech-ai.com || exit 1
+          
+          echo "✅ All health checks passed"
+
+      - name: Smoke tests
+        run: |
+          echo "Running production smoke tests..."
+          # Add smoke test commands
+
+  # ================================================================
+  # Job 8: Deployment Summary & Notification
+  # ================================================================
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [create-production-tag, deploy-backend, deploy-frontend, post-deployment-verification]
+    if: always()
+    
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "## 🎉 PRODUCTION Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🏷️ Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production Tag:** \`${{ needs.create-production-tag.outputs.release-tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** \`${{ needs.create-production-tag.outputs.release-version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Promoted From:** \`${{ github.event.inputs.staging-tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployed at:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 Production URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend:** https://app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "- **API:** https://api.app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "- **Admin:** https://edr-admin.app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Deployment Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.deploy-backend.result }}" = "success" ] && [ "${{ needs.deploy-frontend.result }}" = "success" ]; then
+            echo "🟢 **SUCCESS** - Production deployment completed successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🔴 **FAILED** - Deployment encountered errors. Rollback may be required." >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Post-Deployment Tasks" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Monitor application logs" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Verify user functionality" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Update release notes" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Notify stakeholders" >> $GITHUB_STEP_SUMMARY
+
+      # - name: Send Slack notification
+      #   if: always()
+      #   uses: slackapi/slack-github-action@v1
+      #   with:
+      #     payload: |
+      #       {
+      #         "text": "Production Deployment: ${{ needs.create-production-tag.outputs.release-tag }}",
+      #         "status": "${{ job.status }}"
+      #       }
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

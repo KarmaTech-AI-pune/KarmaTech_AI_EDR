@@ -63,13 +63,23 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   // Currency input hooks for live formatting with cursor position preservation
   const estimatedCost = useCurrencyInput(formData.estimatedProjectCost, 'estimatedProjectCost');
   const estimatedFee = useCurrencyInput(formData.estimatedProjectFee, 'estimatedProjectFee');
-  
+
   // Percentage input hook (shows "0" initially, auto-clears on typing)
   const percentage = useFloatInput(formData.percentage, 'percentage');
 
   // Helper function to sync currency input changes to formData
   const syncCurrencyToFormData = (fieldName: string) => (rawValue: number) => {
     setFormData((prev: any) => ({ ...prev, [fieldName]: rawValue }));
+  };
+
+  const [budgetReason, setBudgetReason] = useState('');
+
+  const hasBudgetChanged = () => {
+    if (!project) return false;
+    return (
+      Number(formData.estimatedProjectCost) !== Number(project.estimatedProjectCost) ||
+      Number(formData.estimatedProjectFee) !== Number(project.estimatedProjectFee)
+    );
   };
 
   useEffect(() => {
@@ -95,7 +105,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const submissionData: ProjectFormData = {
+    const submissionData: ProjectFormData & { budgetReason?: string } = {
       ...formData,
       // No need to parse - formData already contains raw numbers from hook sync
       estimatedProjectCost: formData.estimatedProjectCost,
@@ -110,6 +120,11 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
       priority: formData.priority || '',
       updatedAt: new Date().toISOString()
     };
+
+    // Include budget reason if budget has changed
+    if (project && hasBudgetChanged() && budgetReason) {
+      submissionData.budgetReason = budgetReason;
+    }
 
     onSubmit(submissionData);
   };
@@ -317,6 +332,22 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
             // disabled={formData.feeType === 'Percentage'}
             />
           </Grid>
+          {project && hasBudgetChanged() && (
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Reason for Budget Change (Optional)"
+                name="budgetReason"
+                value={budgetReason}
+                onChange={(e) => setBudgetReason(e.target.value)}
+                multiline
+                rows={2}
+                placeholder="Explain why the budget values are being changed..."
+                helperText="Provide context for the budget change to maintain audit trail"
+                inputProps={{ maxLength: 500 }}
+              />
+            </Grid>
+          )}
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
