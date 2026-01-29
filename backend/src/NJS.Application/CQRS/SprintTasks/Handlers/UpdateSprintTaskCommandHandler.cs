@@ -43,7 +43,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             }
 
             // Update properties from DTO to entity - using null-coalescing to preserve existing data if DTO field is null
-            existingSprintTask.TenantId = sprintTaskInputDto.TenantId != 0 ? sprintTaskInputDto.TenantId : existingSprintTask.TenantId;
+            existingSprintTask.TenantId = _context.TenantId ?? 0;
             existingSprintTask.Taskkey = sprintTaskInputDto.Taskkey ?? existingSprintTask.Taskkey;
             existingSprintTask.TaskTitle = sprintTaskInputDto.TaskTitle ?? existingSprintTask.TaskTitle;
             existingSprintTask.Taskdescription = sprintTaskInputDto.Taskdescription ?? existingSprintTask.Taskdescription;
