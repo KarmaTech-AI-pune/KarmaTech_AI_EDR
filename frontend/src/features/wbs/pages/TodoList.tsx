@@ -148,7 +148,6 @@ export default function TodoList() {
         newIssue={newIssueFormState}
         setNewIssue={setNewIssueFormState}
         createIssue={handleCreateIssue}
-        teamMembers={teamMembers}
       />
 
       <IssueDetailModal
