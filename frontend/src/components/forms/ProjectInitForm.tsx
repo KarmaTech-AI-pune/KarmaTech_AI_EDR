@@ -63,13 +63,23 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   // Currency input hooks for live formatting with cursor position preservation
   const estimatedCost = useCurrencyInput(formData.estimatedProjectCost, 'estimatedProjectCost');
   const estimatedFee = useCurrencyInput(formData.estimatedProjectFee, 'estimatedProjectFee');
-  
+
   // Percentage input hook (shows "0" initially, auto-clears on typing)
   const percentage = useFloatInput(formData.percentage, 'percentage');
 
   // Helper function to sync currency input changes to formData
   const syncCurrencyToFormData = (fieldName: string) => (rawValue: number) => {
     setFormData((prev: any) => ({ ...prev, [fieldName]: rawValue }));
+  };
+
+  const [budgetReason, setBudgetReason] = useState('');
+
+  const hasBudgetChanged = () => {
+    if (!project) return false;
+    return (
+      Number(formData.estimatedProjectCost) !== Number(project.estimatedProjectCost) ||
+      Number(formData.estimatedProjectFee) !== Number(project.estimatedProjectFee)
+    );
   };
 
   useEffect(() => {
