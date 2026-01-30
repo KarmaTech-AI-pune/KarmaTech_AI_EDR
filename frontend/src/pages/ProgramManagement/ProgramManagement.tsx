@@ -26,9 +26,11 @@ import CreateProgramDialog from '../../components/ProgramManagement/CreateProgra
 import EditProgramDialog from '../../components/ProgramManagement/EditProgramDialog';
 import { programApi } from '../../services/api/programApi';
 import { Program } from '../../types/program';
+import { useProject } from '../../context/ProjectContext';
 
 const ProgramManagement: React.FC = () => {
   const navigate = useNavigate();
+  const { setProgramId } = useProject();
   const { programs, isLoading, error, refetch } = usePrograms();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -241,8 +243,9 @@ const ProgramManagement: React.FC = () => {
                   }
                 }}
                 onClick={() => {
-                  // Store programId and programName in sessionStorage
-                  sessionStorage.setItem('selectedProgramId', program.id.toString());
+                  // Store programId in context and sessionStorage
+                  setProgramId(program.id.toString());
+                  sessionStorage.setItem('programId', program.id.toString());
                   // Navigate to project management page
                   navigate(`/program-management/projects`);
                 }}

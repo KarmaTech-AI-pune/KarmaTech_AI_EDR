@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -7,33 +8,61 @@ import {
   Divider,
   IconButton,
   Alert,
-  Snackbar
+  Snackbar,
+  Breadcrumbs,
+  Link
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { ProjectManagementProjectList } from '../components/project/ProjectManagementProjectList.tsx';
 import { ProjectInitializationDialog } from '../components/project/ProjectInitializationDialog.tsx';
 import { Pagination } from '../components/Pagination';
-//import { authApi } from '../dummyapi/authApi';
 import { projectApi } from '../services/projectApi';
+import { programApi } from '../services/api/programApi';
 import { UserWithRole } from '../types';
 import { Project } from '../models';
 import { PermissionType } from '../models';
 import ProjectStatusPieChart from '../components/dashboard/ProjectStatusPieChart';
 import { authApi } from '../services/authApi';
 import { ProjectFormData } from '../types/index.tsx';
+import { useProject } from '../context/ProjectContext';
+import { Program } from '../types/program';
 
 export const ProjectManagement: React.FC = () => {
+  const navigate = useNavigate();
+  const { programId, setProgramId } = useProject();
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canViewProjects, setCanViewProjects] = useState(false);
   const [canCreateProject, setCanCreateProject] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [program, setProgram] = useState<Program | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [projectsPerPage] = useState(5);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Fetch program details if programId exists
+  useEffect(() => {
+    const fetchProgram = async () => {
+      if (!programId) {
+        setProgram(null);
+        return;
+      }
+
+      try {
+        const programData = await programApi.getById(parseInt(programId));
+        setProgram(programData);
+      } catch (err) {
+        console.error('Error fetching program:', err);
+        setProgram(null);
+      }
+    };
+
+    fetchProgram();
+  }, [programId]);
 
   const fetchProjects = async () => {
     try {
@@ -43,21 +72,20 @@ export const ProjectManagement: React.FC = () => {
 
       let response: any;
 
-      // if (canViewProjects) {
-      //   response = (await projectApi.getByUserId(currentUser.id));
-      // } 
-     
-      
-         if (currentUser.roles.some(role => role.name === "Project Manager")) {
-              response =(await projectApi.getByUserId(currentUser.id));;
-            } 
-            else if (currentUser.roles.some(role => role.name ===  "Senior Project Manager")) {
-              response = (await projectApi.getByUserId(currentUser.id));
-            }  
-            else if (currentUser.roles.some(role => role.name ===  "Regional Director")) {
-              response =  response = (await projectApi.getByUserId(currentUser.id));;
-            } 
-      
+      // If programId exists, filter by program
+      if (programId) {
+        response = await projectApi.getAll(parseInt(programId));
+      }
+      // Otherwise, fetch based on user role
+      else if (currentUser.roles.some(role => role.name === "Project Manager")) {
+        response = await projectApi.getByUserId(currentUser.id);
+      } 
+      else if (currentUser.roles.some(role => role.name === "Senior Project Manager")) {
+        response = await projectApi.getByUserId(currentUser.id);
+      }  
+      else if (currentUser.roles.some(role => role.name === "Regional Director")) {
+        response = await projectApi.getByUserId(currentUser.id);
+      } 
       else {
         response = await projectApi.getAll();
       }
@@ -110,7 +138,7 @@ export const ProjectManagement: React.FC = () => {
     if (currentUser && canViewProjects) {
       fetchProjects();
     }
-  }, [currentUser, canViewProjects]);
+  }, [currentUser, canViewProjects, programId]); // Added programId dependency
 
   const handleCreateProject = () => {
     if (canCreateProject) {
@@ -120,7 +148,12 @@ export const ProjectManagement: React.FC = () => {
 
   const handleProjectCreated = async (data: ProjectFormData) => {
     try {
-      await projectApi.createProject(data);
+      // Ensure programId is set if we're in program context
+      const projectDataWithProgram = programId 
+        ? { ...data, programId: parseInt(programId) }
+        : data;
+      
+      await projectApi.createProject(projectDataWithProgram);
       await fetchProjects();
       setSuccessMessage('Project created successfully');
     } catch (err) {
@@ -240,15 +273,22 @@ export const ProjectManagement: React.FC = () => {
           alignItems: 'center',
           mb: 3
         }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 500,
-              color: '#1a237e'
-            }}
-          >
-            Project Management
-          </Typography>
+          <Box>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 500,
+                color: '#1a237e'
+              }}
+            >
+              {programId && program ? `${program.name} - Projects` : 'Project Management'}
+            </Typography>
+            {/* {programId && program?.description && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                {program.description}
+              </Typography>
+            )} */}
+          </Box>
 
           {canCreateProject && (
             <Button
@@ -275,16 +315,18 @@ export const ProjectManagement: React.FC = () => {
 
         <Divider sx={{ mb: 3 }} />
 
-        {/* Project Status Pie Chart */}
-        <Box sx={{
-          width: '100%',
-          maxWidth: 400,
-          mx: 'auto',
-          mb: 4,
-          mt: 2
-        }}>
-          <ProjectStatusPieChart />
-        </Box>
+        {/* Project Status Pie Chart - Only show when NOT in program context */}
+        {programId && (
+          <Box sx={{
+            width: '100%',
+            maxWidth: 400,
+            mx: 'auto',
+            mb: 4,
+            mt: 2
+          }}>
+            <ProjectStatusPieChart />
+          </Box>
+        )}
 
         <Box sx={{
           display: 'flex',
@@ -317,7 +359,7 @@ export const ProjectManagement: React.FC = () => {
 
         <ProjectManagementProjectList
           projects={currentProjects}
-          emptyMessage="No projects found"
+          emptyMessage={programId && program ? `No projects found for ${program.name}` : "No projects found"}
           onProjectDeleted={handleProjectDeleted}
           onProjectUpdated={handleProjectUpdated}
         />
