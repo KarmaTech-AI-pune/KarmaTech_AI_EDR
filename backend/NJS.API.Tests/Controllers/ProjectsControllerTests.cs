@@ -77,8 +77,9 @@ namespace NJS.API.Tests.Controllers
         {
             // Arrange
             var projectId = 1;
+            Project nullProject = null;
             _mediator.Setup(m => m.Send(It.Is<GetProjectByIdQuery>(q => q.Id == projectId), It.IsAny<CancellationToken>()))
-                    .ReturnsAsync((Project)null);
+                    .ReturnsAsync(nullProject);
 
             // Act
             var result = await _controller.GetById(projectId);

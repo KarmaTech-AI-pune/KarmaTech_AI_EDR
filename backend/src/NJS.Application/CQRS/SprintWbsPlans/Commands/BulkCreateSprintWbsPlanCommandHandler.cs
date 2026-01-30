@@ -26,7 +26,7 @@ namespace NJS.Application.CQRS.SprintWbsPlans.Commands
             {
                 var entity = new SprintWbsPlan
                 {
-                    TenantId = item.TenantId,
+                    TenantId = _context.TenantId ?? 0,
                     ProjectId = item.ProjectId,
                     WBSTaskId = item.WBSTaskId,
                     WBSTaskName = item.WBSTaskName,

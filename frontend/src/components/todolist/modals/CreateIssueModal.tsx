@@ -1,7 +1,7 @@
 import React from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Select, MenuItem, InputLabel, FormControl, Grid, Box, Typography } from '@mui/material';
 import { Close, Book, CheckCircle, BugReport, Adjust } from '@mui/icons-material';
-import { Issue, TeamMember, NewIssueFormState } from '../../../types/todolist';
+import { Issue, NewIssueFormState } from '../../../types/todolist';
 
 interface CreateIssueModalProps {
   showCreateModal: boolean;
@@ -9,7 +9,6 @@ interface CreateIssueModalProps {
   newIssue: NewIssueFormState;
   setNewIssue: React.Dispatch<React.SetStateAction<NewIssueFormState>>;
   createIssue: () => void;
-  teamMembers: TeamMember[];
 }
 
 export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
@@ -18,7 +17,6 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   newIssue,
   setNewIssue,
   createIssue,
-  teamMembers,
 }) => {
   const handleClose = () => setShowCreateModal(false);
 

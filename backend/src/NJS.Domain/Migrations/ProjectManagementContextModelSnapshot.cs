@@ -567,6 +567,55 @@ namespace NJS.Domain.Migrations
                     b.ToTable("ChangeControlWorkflowHistories");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ChangeItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Author")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ChangeType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("CommitSha")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Impact")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("JiraTicket")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("ReleaseNotesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangeType");
+
+                    b.HasIndex("ReleaseNotesId");
+
+                    b.ToTable("ChangeItems");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.ChangeOrder", b =>
                 {
                     b.Property<int>("Id")
@@ -2619,6 +2668,75 @@ namespace NJS.Domain.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectBudgetChangeHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ChangedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("NewValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OldValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PercentageVariance")
+                        .HasColumnType("decimal(10,4)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Variance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedBy");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectBudgetChangeHistories");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.ProjectClosure", b =>
                 {
                     b.Property<int>("Id")
@@ -3092,6 +3210,55 @@ namespace NJS.Domain.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Regions");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ReleaseNotes", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Branch")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CommitSha")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Environment")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("ReleaseDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Environment");
+
+                    b.HasIndex("ReleaseDate");
+
+                    b.HasIndex("Version")
+                        .IsUnique();
+
+                    b.ToTable("ReleaseNotes");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Role", b =>
@@ -3614,6 +3781,9 @@ namespace NJS.Domain.Migrations
                     b.Property<int?>("SprintPlanId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("SprintWbsPlanId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("StartedAt")
                         .HasColumnType("datetime2");
 
@@ -3675,6 +3845,8 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("SprintPlanId");
 
+                    b.HasIndex("SprintWbsPlanId");
+
                     b.HasIndex("UserTaskId");
 
                     b.HasIndex("WbsPlanId");
@@ -3716,6 +3888,78 @@ namespace NJS.Domain.Migrations
                     b.HasIndex("Taskid");
 
                     b.ToTable("SprintTaskComments");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.SprintWbsPlan", b =>
+                {
+                    b.Property<int>("SprintWbsPlanId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SprintWbsPlanId"));
+
+                    b.Property<string>("AcceptanceCriteria")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("AssignedUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AssignedUserName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsConsumed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MonthYear")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ParentWBSTaskId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PlannedHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProgramSequence")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("RemainingHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RoleName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SprintNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TaskDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("WBSTaskId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WBSTaskName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("SprintWbsPlanId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("SprintWbsPlans");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.SubscriptionPlan", b =>
@@ -4910,6 +5154,17 @@ namespace NJS.Domain.Migrations
                     b.Navigation("Status");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ChangeItem", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.ReleaseNotes", "ReleaseNotes")
+                        .WithMany("ChangeItems")
+                        .HasForeignKey("ReleaseNotesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReleaseNotes");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.ChangeOrder", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.MonthlyProgress", "MonthlyProgress")
@@ -5347,6 +5602,25 @@ namespace NJS.Domain.Migrations
                     b.Navigation("SeniorProjectManager");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectBudgetChangeHistory", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.User", "ChangedByUser")
+                        .WithMany()
+                        .HasForeignKey("ChangedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChangedByUser");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.ProjectClosure", b =>
                 {
                     b.HasOne("NJS.Domain.Entities.PMWorkflowStatus", null)
@@ -5522,6 +5796,10 @@ namespace NJS.Domain.Migrations
                         .WithMany("SprintTasks")
                         .HasForeignKey("SprintPlanId");
 
+                    b.HasOne("NJS.Domain.Entities.SprintWbsPlan", "SprintWbsPlan")
+                        .WithMany()
+                        .HasForeignKey("SprintWbsPlanId");
+
                     b.HasOne("NJS.Domain.Entities.UserWBSTask", "UserTask")
                         .WithMany()
                         .HasForeignKey("UserTaskId");
@@ -5531,6 +5809,8 @@ namespace NJS.Domain.Migrations
                         .HasForeignKey("WbsPlanId");
 
                     b.Navigation("SprintPlan");
+
+                    b.Navigation("SprintWbsPlan");
 
                     b.Navigation("UserTask");
 
@@ -5546,6 +5826,17 @@ namespace NJS.Domain.Migrations
                         .IsRequired();
 
                     b.Navigation("SprintTask");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.SprintWbsPlan", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany("SprintWbsPlans")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.SubscriptionPlanFeature", b =>
@@ -5996,9 +6287,19 @@ namespace NJS.Domain.Migrations
                     b.Navigation("Projects");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
+                {
+                    b.Navigation("SprintWbsPlans");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.ProjectClosure", b =>
                 {
                     b.Navigation("WorkflowHistories");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ReleaseNotes", b =>
+                {
+                    b.Navigation("ChangeItems");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.Role", b =>

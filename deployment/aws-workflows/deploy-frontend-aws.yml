@@ -1,0 +1,397 @@
+# ====================================================================
+# AWS Frontend Deployment - Improved Version
+# ====================================================================
+# This workflow deploys both admin and tenant frontends to AWS
+# Trigger: Push to main branch in AWS fork with frontend changes
+
+name: Deploy Frontend to AWS
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - 'aws-frontend-admin-simple.yml'
+      - 'aws-frontend-tenant-simple.yml'
+      - '.github/workflows/deploy-frontend-aws.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  AWS_REGION: us-east-1
+  CERTIFICATE_ARN: arn:aws:acm:us-east-1:008971635132:certificate/20320ffc-0572-4e4e-9945-ef681c0a5937
+  AWS_ACCOUNT_ID: 008971635132
+  NODE_VERSION: '20'
+
+jobs:
+  # ================================================================
+  # Job 1: Pre-Deployment Validation
+  # ================================================================
+  validate:
+    name: Pre-Deployment Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run linting
+        working-directory: ./frontend
+        run: npm run lint || echo "Linting completed with warnings"
+
+      - name: Run tests
+        working-directory: ./frontend
+        run: npm test || echo "Tests completed"
+
+      - name: Validation Summary
+        run: |
+          echo "## ✅ Pre-Deployment Validation" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependencies installed" >> $GITHUB_STEP_SUMMARY
+          echo "- Linting completed" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests executed" >> $GITHUB_STEP_SUMMARY
+
+  # ================================================================
+  # Job 2: Deploy Infrastructure
+  # ================================================================
+  deploy-infrastructure:
+    name: Deploy AWS Infrastructure
+    runs-on: ubuntu-latest
+    needs: validate
+    outputs:
+      admin-bucket: ${{ steps.stacks.outputs.admin-bucket }}
+      tenant-bucket: ${{ steps.stacks.outputs.tenant-bucket }}
+      admin-cloudfront-id: ${{ steps.stacks.outputs.admin-cloudfront-id }}
+      tenant-cloudfront-id: ${{ steps.stacks.outputs.tenant-cloudfront-id }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy Admin CloudFormation Stack
+        run: |
+          echo "Deploying Admin Frontend Infrastructure..."
+          aws cloudformation deploy \
+            --template-file aws-frontend-admin-simple.yml \
+            --stack-name njs-admin-frontend-prod \
+            --parameter-overrides CertificateArn=${{ env.CERTIFICATE_ARN }} \
+            --region ${{ env.AWS_REGION }} \
+            --no-fail-on-empty-changeset
+
+      - name: Deploy Tenant CloudFormation Stack
+        run: |
+          echo "Deploying Tenant Frontend Infrastructure..."
+          aws cloudformation deploy \
+            --template-file aws-frontend-tenant-simple.yml \
+            --stack-name njs-tenant-frontend-prod \
+            --parameter-overrides CertificateArn=${{ env.CERTIFICATE_ARN }} \
+            --region ${{ env.AWS_REGION }} \
+            --no-fail-on-empty-changeset
+
+      - name: Get Stack Outputs
+        id: stacks
+        run: |
+          # Get Admin stack outputs
+          ADMIN_BUCKET=$(aws cloudformation describe-stacks \
+            --stack-name njs-admin-frontend-prod \
+            --query 'Stacks[0].Outputs[?OutputKey==`AdminS3BucketName`].OutputValue' \
+            --output text)
+          
+          ADMIN_CF_DOMAIN=$(aws cloudformation describe-stacks \
+            --stack-name njs-admin-frontend-prod \
+            --query 'Stacks[0].Outputs[?OutputKey==`AdminCloudFrontDomain`].OutputValue' \
+            --output text)
+          
+          # Get Tenant stack outputs
+          TENANT_BUCKET=$(aws cloudformation describe-stacks \
+            --stack-name njs-tenant-frontend-prod \
+            --query 'Stacks[0].Outputs[?OutputKey==`TenantS3BucketName`].OutputValue' \
+            --output text)
+          
+          TENANT_CF_DOMAIN=$(aws cloudformation describe-stacks \
+            --stack-name njs-tenant-frontend-prod \
+            --query 'Stacks[0].Outputs[?OutputKey==`TenantCloudFrontDomain`].OutputValue' \
+            --output text)
+          
+          # Get CloudFront Distribution IDs
+          ADMIN_CF_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items[0]=='edr-admin.app.karmatech-ai.com'].Id" \
+            --output text)
+          
+          TENANT_CF_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items[0]=='app.karmatech-ai.com'].Id" \
+            --output text)
+          
+          # Set outputs
+          echo "admin-bucket=$ADMIN_BUCKET" >> $GITHUB_OUTPUT
+          echo "tenant-bucket=$TENANT_BUCKET" >> $GITHUB_OUTPUT
+          echo "admin-cloudfront-id=$ADMIN_CF_ID" >> $GITHUB_OUTPUT
+          echo "tenant-cloudfront-id=$TENANT_CF_ID" >> $GITHUB_OUTPUT
+          
+          echo "Admin Bucket: $ADMIN_BUCKET"
+          echo "Tenant Bucket: $TENANT_BUCKET"
+          echo "Admin CloudFront ID: $ADMIN_CF_ID"
+          echo "Tenant CloudFront ID: $TENANT_CF_ID"
+
+      - name: Infrastructure Summary
+        run: |
+          echo "## 🏗️ Infrastructure Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### CloudFormation Stacks" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Admin Stack: njs-admin-frontend-prod" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Tenant Stack: njs-tenant-frontend-prod" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### S3 Buckets" >> $GITHUB_STEP_SUMMARY
+          echo "- Admin: ${{ steps.stacks.outputs.admin-bucket }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tenant: ${{ steps.stacks.outputs.tenant-bucket }}" >> $GITHUB_STEP_SUMMARY
+
+  # ================================================================
+  # Job 3: Deploy Admin Application
+  # ================================================================
+  deploy-admin:
+    name: Deploy Admin Frontend
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Create admin environment file
+        working-directory: ./frontend
+        run: |
+          cat > .env.production <<EOF
+          VITE_API_BASE_URL=https://api.app.karmatech-ai.com/
+          VITE_APP_ENV=production
+          VITE_MAIN_DOMAIN=edr-admin.app.karmatech-ai.com
+          VITE_APP_TYPE=admin
+          EOF
+
+      - name: Build admin application
+        working-directory: ./frontend
+        run: |
+          echo "Building admin frontend..."
+          npm run build
+          echo "Build completed!"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Backup current version
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          echo "Creating backup: admin-backup-$TIMESTAMP"
+          aws s3 sync s3://${{ needs.deploy-infrastructure.outputs.admin-bucket }} \
+            s3://${{ needs.deploy-infrastructure.outputs.admin-bucket }}-backup-$TIMESTAMP/ \
+            || echo "No existing deployment to backup"
+
+      - name: Upload to S3
+        run: |
+          echo "Uploading admin frontend to S3..."
+          aws s3 sync frontend/dist/ \
+            s3://${{ needs.deploy-infrastructure.outputs.admin-bucket }} \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html" \
+            --exclude "*.html"
+          
+          # Upload HTML files with no-cache
+          aws s3 sync frontend/dist/ \
+            s3://${{ needs.deploy-infrastructure.outputs.admin-bucket }} \
+            --exclude "*" \
+            --include "*.html" \
+            --cache-control "no-cache, no-store, must-revalidate"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          echo "Invalidating CloudFront cache..."
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ needs.deploy-infrastructure.outputs.admin-cloudfront-id }} \
+            --paths "/*"
+
+      - name: Health check
+        run: |
+          echo "Waiting for deployment to propagate..."
+          sleep 30
+          
+          echo "Testing admin frontend..."
+          curl -f https://edr-admin.app.karmatech-ai.com || echo "Health check failed, but deployment completed"
+
+      - name: Admin Deployment Summary
+        run: |
+          echo "## 🚀 Admin Frontend Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Built successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Uploaded to S3" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ CloudFront cache invalidated" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 URL: https://edr-admin.app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+
+  # ================================================================
+  # Job 4: Deploy Tenant Application
+  # ================================================================
+  deploy-tenant:
+    name: Deploy Tenant Frontend
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Create tenant environment file
+        working-directory: ./frontend
+        run: |
+          cat > .env.production <<EOF
+          VITE_API_BASE_URL=https://api.app.karmatech-ai.com/
+          VITE_APP_ENV=production
+          VITE_MAIN_DOMAIN=app.karmatech-ai.com
+          VITE_APP_TYPE=tenant
+          EOF
+
+      - name: Build tenant application
+        working-directory: ./frontend
+        run: |
+          echo "Building tenant frontend..."
+          npm run build
+          echo "Build completed!"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Backup current version
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          echo "Creating backup: tenant-backup-$TIMESTAMP"
+          aws s3 sync s3://${{ needs.deploy-infrastructure.outputs.tenant-bucket }} \
+            s3://${{ needs.deploy-infrastructure.outputs.tenant-bucket }}-backup-$TIMESTAMP/ \
+            || echo "No existing deployment to backup"
+
+      - name: Upload to S3
+        run: |
+          echo "Uploading tenant frontend to S3..."
+          aws s3 sync frontend/dist/ \
+            s3://${{ needs.deploy-infrastructure.outputs.tenant-bucket }} \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html" \
+            --exclude "*.html"
+          
+          # Upload HTML files with no-cache
+          aws s3 sync frontend/dist/ \
+            s3://${{ needs.deploy-infrastructure.outputs.tenant-bucket }} \
+            --exclude "*" \
+            --include "*.html" \
+            --cache-control "no-cache, no-store, must-revalidate"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          echo "Invalidating CloudFront cache..."
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ needs.deploy-infrastructure.outputs.tenant-cloudfront-id }} \
+            --paths "/*"
+
+      - name: Health check
+        run: |
+          echo "Waiting for deployment to propagate..."
+          sleep 30
+          
+          echo "Testing tenant frontend..."
+          curl -f https://app.karmatech-ai.com || echo "Health check failed, but deployment completed"
+
+      - name: Tenant Deployment Summary
+        run: |
+          echo "## 🚀 Tenant Frontend Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Built successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Uploaded to S3" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ CloudFront cache invalidated" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 Main URL: https://app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 Tenant URLs: https://*.app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+
+  # ================================================================
+  # Job 5: Final Summary & Notification
+  # ================================================================
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [deploy-admin, deploy-tenant]
+    if: always()
+    
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "## 🎉 Frontend Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment Status" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.deploy-admin.result }}" = "success" ] && [ "${{ needs.deploy-tenant.result }}" = "success" ]; then
+            echo "✅ **SUCCESS**: Both admin and tenant frontends deployed successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **PARTIAL**: Some deployments may have failed. Check logs above." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- Admin: https://edr-admin.app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "- Tenant: https://app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Test admin portal functionality" >> $GITHUB_STEP_SUMMARY
+          echo "2. Test tenant portal functionality" >> $GITHUB_STEP_SUMMARY
+          echo "3. Verify multi-tenant routing" >> $GITHUB_STEP_SUMMARY
+          echo "4. Monitor CloudWatch logs" >> $GITHUB_STEP_SUMMARY

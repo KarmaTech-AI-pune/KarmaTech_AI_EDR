@@ -11,6 +11,7 @@ import { authApi } from './services/authApi';
 import { PermissionType } from './models';
 import { routes } from './routes/RouteConfig';
 import { UserSubscriptionProvider } from './context/UserSubscriptionContext'; // Import the new provider
+import { initializeCaches } from './utils/cacheInitializer'; // Import cache initializer
 
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
@@ -106,6 +107,9 @@ function App() {
   }, [user]);
 
   useEffect(() => {
+    // Initialize caches on app startup
+    initializeCaches();
+    
     const checkAuth = async () => {
       try {
         const isValid = await authApi.checkAuth();

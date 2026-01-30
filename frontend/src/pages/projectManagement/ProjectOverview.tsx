@@ -1,11 +1,13 @@
-import React from 'react';
-import { Typography, Box, Grid, Card, CardContent } from '@mui/material';
+import React, { useState } from 'react';
+import { Typography, Box, Grid, Card, CardContent, IconButton } from '@mui/material';
 import { useProjectDetailsContext } from './ProjectDetails';
 import HomeIcon from '@mui/icons-material/Home';
 import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import EditIcon from '@mui/icons-material/Edit';
+import { BudgetUpdateDialog } from '../../components/project/BudgetUpdateDialog';
 
 const InfoCard: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
     <Card sx={{ height: '100%' }}>
@@ -52,6 +54,13 @@ const getManagerName = (managerId: string, managerNames: { [key: string]: string
 
 const ProjectOverview: React.FC = () => {
     const { project, managerNames } = useProjectDetailsContext();
+    const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
+
+    const handleBudgetUpdate = () => {
+      // Refresh project data after budget update
+      window.location.reload(); // Simple refresh for now
+    };
+
   return (
     <Box sx={{ p: 2 }}>
       <Grid container spacing={3}>
@@ -96,6 +105,20 @@ const ProjectOverview: React.FC = () => {
         {/* Financial Info */}
         <Grid item xs={12} md={4}>
           <InfoCard title="Financial Details" icon={<AttachMoneyIcon />}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Budget Information
+              </Typography>
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => setBudgetDialogOpen(true)}
+                data-testid="update-budget-button"
+                aria-label="Update Budget"
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Box>
             <InfoItem
               label="Estimated Project Cost"
               value={formatCurrency(project.estimatedProjectCost, project.currency)}
@@ -116,6 +139,20 @@ const ProjectOverview: React.FC = () => {
           </InfoCard>
         </Grid>
       </Grid>
+
+      {/* Budget Update Dialog */}
+      <BudgetUpdateDialog
+        open={budgetDialogOpen}
+        project={{
+          projectId: parseInt(project.id),
+          projectName: project.projectNo || 'Project',
+          estimatedProjectCost: project.estimatedProjectCost,
+          estimatedProjectFee: project.estimatedProjectFee,
+          currency: project.currency
+        }}
+        onClose={() => setBudgetDialogOpen(false)}
+        onUpdate={handleBudgetUpdate}
+      />
     </Box>
   );
 };
