@@ -5,6 +5,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy production solution file and project files
+COPY VERSION /VERSION
 COPY backend/NJS_backend.Production.sln ./
 COPY backend/src/NJSAPI/NJSAPI.csproj src/NJSAPI/
 COPY backend/src/NJS.Application/NJS.Application.csproj src/NJS.Application/
