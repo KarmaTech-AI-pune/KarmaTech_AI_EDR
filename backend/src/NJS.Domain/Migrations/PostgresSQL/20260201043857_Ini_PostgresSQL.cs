@@ -4,10 +4,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace NJS.Domain.Migrations
+namespace NJS.Domain.Migrations.PostgresSQL
 {
     /// <inheritdoc />
-    public partial class PostgresSQLMigration : Migration
+    public partial class Ini_PostgresSQL : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

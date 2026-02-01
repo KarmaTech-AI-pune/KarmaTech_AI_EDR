@@ -23,8 +23,9 @@ namespace NJS.Domain.Services
         {
             _tenantDbContext = tenantDbContext ?? throw new ArgumentNullException(nameof(tenantDbContext));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _defaultConnectionString = _configuration.GetConnectionString("AppDbConnection") 
-                ?? throw new InvalidOperationException("Default connection string 'AppDbConnection' not found");
+            _defaultConnectionString = GetDefaultConnectionString()
+                                       ?? throw new InvalidOperationException(
+                                           "Default connection string 'AppDbConnection' not found");
         }
 
         public async Task<string> GetConnectionStringAsync(int tenantId)
@@ -49,7 +50,7 @@ namespace NJS.Domain.Services
 
         public async Task<string> GetConnectionStringByDomainAsync(string domain)
         {
-            var tenant = await _tenantDbContext.Tenants                
+            var tenant = await _tenantDbContext.Tenants
                 .FirstOrDefaultAsync(t => t.Domain == domain);
             var tenantDb = await _tenantDbContext.TenantDatabases
                 .FirstOrDefaultAsync(t => t.TenantId == tenant.Id);
@@ -67,6 +68,25 @@ namespace NJS.Domain.Services
         public Task<string> GetDefaultConnectionStringAsync()
         {
             return Task.FromResult(_defaultConnectionString);
+        }
+
+
+        private string GetDefaultConnectionString()
+        {
+            var dbType = _configuration[Constants.DbType];
+
+            return dbType switch
+            {
+                Constants.DbServerType =>
+                    _configuration.GetConnectionString("AppDbConnection")
+                    ?? throw new InvalidOperationException(
+                        "Connection string 'AppDbConnection' not found"),
+
+
+                _ => _configuration.GetConnectionString("SqlDbConnection")
+                     ?? throw new InvalidOperationException(
+                         "Connection string 'SqlDbConnection' not found"),
+            };
         }
     }
 }

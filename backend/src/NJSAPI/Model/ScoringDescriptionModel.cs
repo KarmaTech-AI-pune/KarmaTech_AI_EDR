@@ -1,10 +1,7 @@
 ﻿namespace NJSAPI.Model
 {
     public class ScoringDescriptionModel
-    {
-
-        
-        public string Label { get; set; }
+    {  public string Label { get; set; }
 
         public ScoringDescriptionListModel listModels { get; set; }
     }

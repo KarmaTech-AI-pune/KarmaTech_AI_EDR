@@ -14,7 +14,8 @@ namespace NJS.Domain.Database
     // Factory for TenantDbContext
     public class TenantDbContextFactory : IDesignTimeDbContextFactory<TenantDbContext>
     {
-        public TenantDbContext CreateDbContext(string[] args) // neccessary for EF migration designer to run on this context
+        public TenantDbContext
+            CreateDbContext(string[] args) 
         {
             // Build the configuration by reading from the appsettings.json file (requires Microsoft.Extensions.Configuration.Json Nuget Package)
             IConfigurationRoot configuration = new ConfigurationBuilder()
@@ -22,16 +23,33 @@ namespace NJS.Domain.Database
                 .AddJsonFile("appsettings.json")
                 .Build();
 
-            // Retrieve the connection string from the configuration
-            string connectionString = configuration.GetConnectionString("AppDbConnection");
-            if (string.IsNullOrEmpty(connectionString))
+            DbContextOptionsBuilder<TenantDbContext> optionsBuilder = new();
+
+            string connectionString;
+            if (configuration[Constants.DbType] == Constants.DbServerType)
             {
-                throw new InvalidOperationException("Connection string 'AppDbConnection' not found in appsettings.json");
+                connectionString = configuration.GetConnectionString("AppDbConnection");
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "Connection string 'AppDbConnection' not found in appsettings.json");
+                }
+
+                _ = optionsBuilder.UseNpgsql(connectionString);
+            }
+            else
+            {
+                connectionString = configuration.GetConnectionString("SqlDbConnection");
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "Connection string 'SqlDbConnection' not found in appsettings.json");
+                }
+
+                _ = optionsBuilder.UseSqlServer(connectionString);
             }
 
-            DbContextOptionsBuilder<TenantDbContext> optionsBuilder = new();
-           // _ = optionsBuilder.UseSqlServer(connectionString);
-            _ = optionsBuilder.UseNpgsql(connectionString);
+
             return new TenantDbContext(optionsBuilder.Options);
         }
     }
@@ -52,20 +70,39 @@ namespace NJS.Domain.Database
                 .AddJsonFile(Path.Combine(startupProjectPath, "appsettings.Development.json"), optional: true)
                 .Build();
 
-            var connectionString = configuration.GetConnectionString("AppDbConnection");
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new InvalidOperationException("Connection string 'AppDbConnection' not found in appsettings.json");
-            }
+            string connectionString = string.Empty;
 
             var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
-           // optionsBuilder.UseSqlServer(connectionString);
-           optionsBuilder.UseNpgsql(connectionString);
+            if (configuration[Constants.DbType] == Constants.DbServerType)
+            {
+                connectionString = configuration.GetConnectionString("AppDbConnection");
+
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "Connection string 'AppDbConnection' not found in appsettings.json");
+                }
+
+                optionsBuilder.UseNpgsql(connectionString);
+            }
+            else
+            {
+                connectionString = configuration.GetConnectionString("SqlDbConnection");
+
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "Connection string 'SqlDbConnection' not found in appsettings.json");
+                }
+
+                optionsBuilder.UseSqlServer(connectionString);
+            }
+
 
             // Create a mock tenant service for design-time operations
             var mockTenantService = new DesignTimeTenantService(connectionString);
 
-            return new ProjectManagementContext(optionsBuilder.Options, mockTenantService);
+            return new ProjectManagementContext(optionsBuilder.Options, mockTenantService, configuration);
         }
     }
 

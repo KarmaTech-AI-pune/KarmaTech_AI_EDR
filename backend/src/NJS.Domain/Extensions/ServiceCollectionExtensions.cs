@@ -99,18 +99,25 @@ namespace NJS.Domain.Extensions
                 var tenantConnectionResolver = provider.GetService<ITenantConnectionResolver>();
                 // Use the default connection string during service registration.
                 // The actual tenant-specific connection will be resolved at runtime by TenantConnectionResolver.
-                var connectionString = tenantConnectionResolver?.GetDefaultConnectionStringAsync().Result ?? configuration.GetConnectionString("AppDbConnection");
-
-                // options.UseSqlServer(connectionString,
-                //     sqlServerOptionsAction: sqlOptions =>
-                //     {
-                //         sqlOptions.EnableRetryOnFailure(
-                //             maxRetryCount: 5,
-                //             maxRetryDelay: TimeSpan.FromSeconds(30),
-                //             errorNumbersToAdd: null);
-                //     });
-
-                options.UseNpgsql(connectionString);
+               
+                if (configuration[Constants.DbType] == Constants.DbServerType)
+                {
+                    var connectionString = tenantConnectionResolver?.GetDefaultConnectionStringAsync().Result ?? configuration.GetConnectionString("AppDbConnection");
+                    options.UseNpgsql(connectionString);
+                }
+                else
+                {
+                    var connectionString = tenantConnectionResolver?.GetDefaultConnectionStringAsync().Result ?? configuration.GetConnectionString("SqlDbConnection");
+                    options.UseSqlServer(connectionString,
+                        sqlServerOptionsAction: sqlOptions =>
+                        {
+                            sqlOptions.EnableRetryOnFailure(
+                                maxRetryCount: 5,
+                                maxRetryDelay: TimeSpan.FromSeconds(30),
+                                errorNumbersToAdd: null);
+                        });
+                }
+               
 
                 // Add audit interceptor if audit services are available
                 var auditSubject = provider.GetService<IAuditSubject>();
@@ -142,6 +149,18 @@ namespace NJS.Domain.Extensions
            // services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
            
             return services;
-        }       
+        }
+
+        public static DbContextOptionsBuilder UseConfiguredDatabase(
+            this DbContextOptionsBuilder builder,
+            IConfiguration configuration,
+            string connectionString)
+        {
+            var dbType = configuration[Constants.DbType];
+            return dbType switch
+            {
+              Constants.DbServerType=>builder.UseNpgsql()  
+            };
+        }
     }
 }

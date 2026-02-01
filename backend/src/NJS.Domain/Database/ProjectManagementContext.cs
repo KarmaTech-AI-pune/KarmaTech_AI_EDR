@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using NJS.Domain.Entities;
 using NJS.Domain.Services;
 
@@ -11,28 +12,37 @@ namespace NJS.Domain.Database
         public int? TenantId { get; private set; }
         private readonly ICurrentTenantService _currentTenantService;
         public string CurrentTenantConnectionString { get; set; }
+        private readonly IConfiguration _configuration;
 
 
         public ProjectManagementContext(
             DbContextOptions<ProjectManagementContext> options,
-            ICurrentTenantService currentTenantService
+            ICurrentTenantService currentTenantService,
+            IConfiguration configuration
         ) : base(options)
         {
             _currentTenantService = currentTenantService;
             TenantId = _currentTenantService?.TenantId ?? 1;
             CurrentTenantConnectionString = _currentTenantService?.ConnectionString;
+            _configuration = configuration;
         }
 
-        // protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        // {
-        //     if (!string.IsNullOrEmpty(CurrentTenantConnectionString))
-        //     {
-        //         // optionsBuilder.UseSqlServer(CurrentTenantConnectionString);
-        //         optionsBuilder.UseNpgsql(CurrentTenantConnectionString);
-        //     }
-        //
-        //     base.OnConfiguring(optionsBuilder);
-        // }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!string.IsNullOrEmpty(CurrentTenantConnectionString))
+            {
+                if (_configuration[Constants.DbType] == Constants.DbServerType)
+                {
+                    optionsBuilder.UseNpgsql(CurrentTenantConnectionString);
+                }
+                else
+                {
+                    optionsBuilder.UseSqlServer(CurrentTenantConnectionString);
+                }
+            }
+
+            base.OnConfiguring(optionsBuilder);
+        }
 
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -58,6 +68,7 @@ namespace NJS.Domain.Database
         public DbSet<Program> Programs { get; set; }
         public new DbSet<User> Users { get; set; }
         public new DbSet<Role> Roles { get; set; }
+
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<GoNoGoDecision> GoNoGoDecisions { get; set; }
         public DbSet<WBSHeader> WBSHeaders { get; set; } // Added for WBS Master

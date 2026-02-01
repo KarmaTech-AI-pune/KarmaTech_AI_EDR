@@ -1,10 +1,10 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NJS.Domain.Database;
 using NJS.Domain.Extensions;
 using NJSAPI.Configurations;
 using NJSAPI.Middleware;
-using Microsoft.AspNetCore.HttpOverrides;
 
 namespace NJSAPI.Extensions;
 
@@ -14,66 +14,55 @@ public static class WebApplicationExtensions
     {
         var pathBase = app.Configuration["Api:PathBase"];
 
-
-        //  REQUIRED for AWS ALB
         app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
             ForwardedHeaders =
                 ForwardedHeaders.XForwardedFor |
                 ForwardedHeaders.XForwardedProto
         });
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseHttpsRedirection();
+        }
 
-        // DO NOT USE HTTPS REDIRECTION IN ECS
-        // TLS must terminate at ALB
-        // app.UseHttpsRedirection();
 
         app.UseRouting();
 
         app.UseCors("AllowSpecificOrigin");
 
-        app.UseResponseCompression();
-       
         app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            var swaggerSettings = app.Services
-                .GetRequiredService<IOptions<SwaggerSettings>>().Value;
 
-            options.SwaggerEndpoint(
-                $"/swagger/{swaggerSettings.Version}/swagger.json",
-                swaggerSettings.Title);
+        app.UseSwaggerUI(options =>
+
+        {
+            var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
+
+            options.SwaggerEndpoint($"{pathBase}/swagger/{swaggerSettings.Version}/swagger.json",
+                $"{swaggerSettings.Title}");
         });
 
-      
+        app.UseResponseCompression();
+
+        app.UseMiddleware<TenantResolverMiddleware>();
+
         app.UseAuthentication();
+
         app.UseAuthorization();
 
-       
-        app.UseMiddleware<TenantResolverMiddleware>();
         app.UseMiddleware<TenantMiddleware>();
 
-      
-        app.MapHealthChecks("/health").AllowAnonymous();
-
-        app.MapControllers();
-
         using (var scope = app.Services.CreateScope())
-
         {
-
             var db = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
 
             db.Database.Migrate();
 
             SeedExtensions.InitializeDatabaseAsync(app).Wait();
-
         }
 
-       
+        app.MapControllers();
 
-        // app.MapFallbackToFile("index.html");       
 
         return app;
-
     }
 }

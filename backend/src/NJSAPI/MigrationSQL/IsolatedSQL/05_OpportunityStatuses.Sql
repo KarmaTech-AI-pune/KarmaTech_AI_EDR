@@ -4,7 +4,7 @@
 
 DO $$
 DECLARE
-v_tenant_id INT := 0;
+v_tenant_id INT := {{TENANT_ID}};
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM "OpportunityStatuses" LIMIT 1) THEN
 

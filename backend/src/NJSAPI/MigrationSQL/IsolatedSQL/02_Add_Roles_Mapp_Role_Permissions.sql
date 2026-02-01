@@ -10,6 +10,10 @@
 -- ====================================================
 -- Ensure UNIQUE constraint exists for Roles
 -- ====================================================
+DROP INDEX IF EXISTS "RoleNameIndex";
+DROP INDEX IF EXISTS "uq_AspNetRoles_Name_TenantId";
+DROP INDEX IF EXISTS "uq_RolePermissions_Role_Permission_Tenant";
+
 CREATE UNIQUE INDEX IF NOT EXISTS "uq_AspNetRoles_Name_TenantId"
     ON "AspNetRoles" ("Name", "TenantId");
 
@@ -21,7 +25,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "uq_RolePermissions_Role_Permission_Tenant"
 -- ====================================================
 DO $$
 DECLARE
-v_tenant_id INT := 0;  
+v_tenant_id INT := {{TENANT_ID}};
 BEGIN
 
 -- ====================================================
