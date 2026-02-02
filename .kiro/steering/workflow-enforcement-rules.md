@@ -131,6 +131,12 @@ git checkout -b feature/[name]     # 4. Create clean feature branch
 
 **You MUST implement in this exact order:**
 
+**⚠️ Implementation Scope:**
+- **Full-stack features:** Implement backend FIRST, then frontend
+- **Backend-only features:** Follow backend workflow only, skip frontend
+- **Frontend-only features:** Skip backend workflow, follow frontend only
+- **API integration:** Backend → Types → Services → Components
+
 ✅ **Backend Implementation (Required Order):**
 1. Create/update database entities following BaseEntity pattern
 2. Generate EF Core migrations with proper naming
@@ -141,15 +147,116 @@ git checkout -b feature/[name]     # 4. Create clean feature branch
 7. Implement authentication and authorization
 8. Add input validation using FluentValidation
 
+**📌 Backend-Only Features:** If no frontend changes needed, stop here and proceed to testing.
+
 ✅ **Frontend Implementation (Required Order):**
-1. Create TypeScript interfaces for API contracts
-2. Implement API service layer using Axios
-3. Create React components following established patterns
-4. Implement proper state management
-5. Add form validation using Formik/Yup
-6. Implement proper error handling
-7. Add loading states and user feedback
-8. Ensure responsive design using Material-UI
+
+**MANDATORY: Follow React Top-Down Implementation Workflow**
+
+**📌 Applies to:** Features requiring React/UI changes. Skip if backend-only.
+
+Refer to `react-implementation-workflow.md` for complete details. The implementation MUST follow this exact order:
+
+1. **Create Folder Structure** - Create all required folders and files first
+   - `types/` - TypeScript interfaces
+   - `services/` - API service layer
+   - `hooks/` - Custom hooks (if needed)
+   - `pages/` - Page components
+   - `components/[feature]/` - Feature-specific components
+
+2. **Define TypeScript Types** - Create all interfaces BEFORE components
+   - Create type definition files in `types/` folder
+   - Define all data model interfaces
+   - Define component prop interfaces
+
+3. **Create API Service Layer** - Implement services BEFORE components
+   - Create service files in `services/` folder
+   - Implement API methods using Axios
+   - Use proper TypeScript types
+
+4. **Create Custom Hooks** (if needed) - Data-fetching hooks BEFORE pages
+   - Create hook files in `hooks/` folder
+   - Implement data fetching logic
+   - Handle loading, error, and success states
+
+5. **Create Skeleton Pages & Components** - Basic structure with placeholders
+   - Create skeleton page files in `pages/` folder
+   - Create skeleton component files in `components/[feature]/` folder
+   - Add basic structure with TODO comments
+   - Define prop interfaces
+
+6. **Configure Routing** - Add routes using the skeleton pages
+   - Open routing configuration file
+   - Add new route entry
+   - Import skeleton page component (already exists)
+   - Configure route parameters
+
+7. **Implement Page Component Structure** - Set up page with data fetching (NO components yet)
+   - Add route parameter extraction
+   - Import and use hooks/services
+   - Implement data fetching and state management
+   - Add loading and error handling
+   - Create page structure with placeholders
+   - DO NOT call child components yet
+
+8. **Implement ALL Child Components** - Build all components bottom-up
+   - Identify component hierarchy (which components use which)
+   - Start with leaf components (no dependencies)
+   - Move up to parent components (use leaf components)
+   - Complete all top-level components
+   - Implement from smallest to largest
+   - Ensure all components are fully functional before Step 9
+
+9. **Integrate Components into Page** - Add components one by one
+   - Import all implemented components
+   - Replace placeholders from Step 7
+   - Add components one at a time
+   - Pass props correctly from page state
+   - Wire up event handlers
+   - Test each integration
+
+10. **Add Validation & Error Handling** - Enhance with validation
+    - Add form validation using React Hook Form + Zod
+    - Implement error boundaries
+    - Add user feedback (success/error messages)
+    - Add loading states for async operations
+
+11. **Create Tests** - Write tests for components and pages
+    - Create test files alongside components
+    - Test page component behavior
+    - Test child component rendering
+    - Test user interactions
+
+**🚨 CRITICAL RULE:** For any implementation requiring a page:
+- ✅ Create folders and files FIRST
+- ✅ Create skeleton pages and components SECOND
+- ✅ Configure routes THIRD (using skeleton pages)
+- ✅ Implement page structure FOURTH (data fetching only, NO components)
+- ✅ Implement ALL components FIFTH (bottom-up: smallest to largest)
+- ✅ Integrate components into page LAST (one by one)
+
+**❌ NEVER:**
+- Start with individual components in isolation
+- Create components before defining their page context
+- Skip folder structure creation
+- Create routes after page components
+- Call components in page before they're implemented
+- Integrate components before they're all complete
+
+**🔧 Flexibility Exceptions:**
+- **Reusable component library:** May skip routing/page steps if building shared components
+- **Updating existing features:** Maintain existing structure, apply workflow to new additions
+- **Bug fixes:** Fix in place without restructuring
+- **Styling updates:** No workflow restructuring needed
+- **Backend-only work:** Skip entire frontend workflow
+- ✅ Create the page component THIRD (which calls child components)
+- ✅ Create child components LAST (called by the page)
+
+**❌ NEVER:**
+- Start with individual components in isolation
+- Create components before defining their page context
+- Skip folder structure creation
+- Create routes after page components
 
 ✅ **Quality Gates (Must Pass):**
 - [ ] Code follows ALL coding standards from `coding-standards.md`

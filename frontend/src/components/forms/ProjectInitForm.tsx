@@ -12,6 +12,7 @@ import { percentageCalculation } from '../../utils/calculations.ts';
 import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts';
 import { useCurrencyInput } from '../../hooks/useCurrencyInput';
 import { useFloatInput } from '../../hooks/useFloatInput.ts';
+import { useProject } from '../../context/ProjectContext';
 
 interface ProjectFormType {
   project?: ProjectFormData;
@@ -30,6 +31,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   projectManagers,
   seniorProjectManagers
 }) => {
+  const { programId } = useProject();
 
   const [formData, setFormData] = useState<any>({
     name: project?.name || '',
@@ -58,6 +60,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     opportunityTrackingId: project?.opportunityTrackingId || 0,
     feeType: project?.feeType || 'Lumpsum',
     percentage: project?.percentage || 0,
+    programId: project?.programId || (programId ? parseInt(programId) : 0)
   })
 
   // Currency input hooks for live formatting with cursor position preservation

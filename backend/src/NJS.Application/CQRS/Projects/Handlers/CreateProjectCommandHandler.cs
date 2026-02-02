@@ -13,12 +13,17 @@ namespace NJS.Application.CQRS.Projects.Handlers
     public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand, Project>
     {
         private readonly IProjectRepository _repository;
-        private readonly ILogger<CreateProjectCommandHandler> _logger; // Added logger field
+        private readonly IProgramRepository _programRepository;
+        private readonly ILogger<CreateProjectCommandHandler> _logger;
 
-        public CreateProjectCommandHandler(IProjectRepository repository, ILogger<CreateProjectCommandHandler> logger) // Added logger to constructor
+        public CreateProjectCommandHandler(
+            IProjectRepository repository, 
+            IProgramRepository programRepository,
+            ILogger<CreateProjectCommandHandler> logger)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); // Initialize logger
+            _programRepository = programRepository ?? throw new ArgumentNullException(nameof(programRepository));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<Project> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
@@ -27,6 +32,28 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 throw new ArgumentNullException(nameof(request));
 
             var dto = request.ProjectDto;
+
+            // Validate ProgramId is provided
+            if (dto.ProgramId <= 0)
+            {
+                _logger.LogWarning("Project creation failed: ProgramId is required and must be greater than 0");
+                throw new ArgumentException("ProgramId is required. A project must belong to a program.", nameof(dto.ProgramId));
+            }
+
+            // Validate that the Program exists
+            var program = await _programRepository.GetByIdAsync(dto.ProgramId, cancellationToken);
+            if (program == null)
+            {
+                _logger.LogWarning("Project creation failed: Program with ID {ProgramId} not found", dto.ProgramId);
+                throw new ArgumentException($"Program with ID {dto.ProgramId} does not exist. Please provide a valid ProgramId.", nameof(dto.ProgramId));
+            }
+
+            // Validate tenant match (if multi-tenant)
+            if (dto.TenantId.HasValue && dto.TenantId.Value > 0 && program.TenantId != dto.TenantId.Value)
+            {
+                _logger.LogWarning("Project creation failed: Program {ProgramId} belongs to different tenant", dto.ProgramId);
+                throw new ArgumentException($"Program with ID {dto.ProgramId} does not belong to the specified tenant.", nameof(dto.ProgramId));
+            }
 
             // Set user IDs to null if they are "string" to allow project creation
             var projectManagerId = dto.ProjectManagerId == "string" ? null : dto.ProjectManagerId;
@@ -68,7 +95,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 LastModifiedBy = projectManagerId,
                 LetterOfAcceptance = dto.LetterOfAcceptance,
                 OpportunityTrackingId = dto.OpportunityTrackingId == 0 ? null : dto.OpportunityTrackingId,
-                ProgramId = dto.ProgramId == 0 ? null : dto.ProgramId
+                ProgramId = dto.ProgramId // Validated ProgramId
             };
 
             // Calculate duration in months if not provided and dates are available
@@ -82,6 +109,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             try
             {
                 await _repository.Add(project);
+                _logger.LogInformation("Project created successfully with ID {ProjectId} under Program {ProgramId}", project.Id, project.ProgramId);
                 return project;
             }
             catch (DbUpdateException ex) // Catch specific DB update exception

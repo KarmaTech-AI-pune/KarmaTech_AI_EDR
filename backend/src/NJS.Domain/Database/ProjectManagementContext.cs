@@ -436,7 +436,7 @@ namespace NJS.Domain.Database
 
                 // Configure nullable foreign keys
                 entity.Property(p => p.Sector).IsRequired(false);
-                entity.Property(p => p.ProgramId).IsRequired(false);
+                entity.Property(p => p.ProgramId).IsRequired();
                 entity.Property(p => p.OpportunityTrackingId).IsRequired(false);
 
                 // Configure nullable relationships - fix shadow property issue

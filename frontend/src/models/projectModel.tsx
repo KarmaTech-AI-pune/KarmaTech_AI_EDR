@@ -23,6 +23,7 @@ export type Project = {
     regionalManagerId: string;
     letterOfAcceptance: boolean;
     opportunityId?: number;
+    programId: number;
     createdAt: string;
     updatedAt: string;
     status: ProjectStatus;

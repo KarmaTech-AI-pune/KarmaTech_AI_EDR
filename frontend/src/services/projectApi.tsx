@@ -14,6 +14,7 @@ export const projectApi = {
         startDate: projectData.startDate ? new Date(projectData.startDate).toISOString() : null,
         endDate: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
         opportunityTrackingId: projectData.opportunityTrackingId || 0,
+        programId: projectData.programId || 0, // Ensure programId is included
       };
       const response = await axiosInstance.post(`api/Project`, formattedData);
       return response.data;
@@ -23,9 +24,9 @@ export const projectApi = {
     }
   },
 
-  getAll: async () => {
+  getAll: async (programId: number) => {
     try {
-      const response = await axiosInstance.get(`api/Project`);
+      const response = await axiosInstance.get(`api/Project?programId=${programId}`);
       return response.data;
     } catch (error) {
       console.error('Error getting all projects:', error);
@@ -83,6 +84,7 @@ export const projectApi = {
         progress: 0, // Add missing required field
         letterOfAcceptance: projectData.letterOfAcceptance,
         opportunityTrackingId: projectData.opportunityTrackingId || 0, // Ensure it's not null
+        programId: projectData.programId || 0, // Ensure programId is included
         // Add missing fields with default values
         createdAt: new Date(),
         lastModifiedAt: new Date(),

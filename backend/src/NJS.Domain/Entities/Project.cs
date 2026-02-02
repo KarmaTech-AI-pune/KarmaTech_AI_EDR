@@ -74,9 +74,9 @@ namespace NJS.Domain.Entities
 
         public int? OpportunityTrackingId { get; set; }
 
-        public int? ProgramId { get; set; }
+        public int ProgramId { get; set; }
         [ForeignKey("ProgramId")]
-        public virtual Program? Program { get; set; }
+        public virtual Program Program { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

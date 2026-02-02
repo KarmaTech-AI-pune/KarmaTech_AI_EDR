@@ -2616,7 +2616,7 @@ namespace NJS.Domain.Migrations
                     b.Property<string>("Priority")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ProgramId")
+                    b.Property<int>("ProgramId")
                         .HasColumnType("int");
 
                     b.Property<int>("Progress")
@@ -5579,7 +5579,9 @@ namespace NJS.Domain.Migrations
                 {
                     b.HasOne("NJS.Domain.Entities.Program", "Program")
                         .WithMany("Projects")
-                        .HasForeignKey("ProgramId");
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("NJS.Domain.Entities.User", "ProjectManager")
                         .WithMany("ManagedProjects")
