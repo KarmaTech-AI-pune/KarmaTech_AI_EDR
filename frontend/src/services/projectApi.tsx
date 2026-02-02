@@ -76,7 +76,7 @@ export const projectApi = {
         estimatedProjectCost: Number(projectData.estimatedProjectCost),
         estimatedProjectFee: Number(projectData.estimatedProjectFee || 0),  // Ensure budget is never null
         percentage: Number(projectData.percentage || 0),
-        priority: projectData.priority || '',  // Ensure priority is never null
+        priority: projectData.priority || 'Medium',  // Ensure priority is never null
         currency: projectData.currency || 'INR',
         startDate: projectData.startDate ? new Date(projectData.startDate) : null, // Convert to proper date format
         endDate: projectData.endDate ? new Date(projectData.endDate) : null, // Convert to proper date format

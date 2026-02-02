@@ -59,6 +59,8 @@ export enum ProjectStatus {
   Completed = 7
 }
 
+export type Priority = 'Low' | 'Medium' | 'High';
+
 
 
 export type ProjectFormData = Omit<Project, 'id'>;

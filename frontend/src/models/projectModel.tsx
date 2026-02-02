@@ -1,4 +1,4 @@
-import { ProjectStatus } from "../types/index";
+import { ProjectStatus, Priority } from "../types/index";
 
 export type Project = {
     id: string;
@@ -19,7 +19,7 @@ export type Project = {
     startDate?: string;
     endDate?: string;
     currency: string;
-    priority?: string;
+    priority?: Priority;
     regionalManagerId: string;
     letterOfAcceptance: boolean;
     opportunityId?: number;

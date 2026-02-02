@@ -54,7 +54,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     endDate: formatDateForInput(project?.endDate) || '',
     currency: project?.currency || 'INR',
     estimatedProjectFee: project?.estimatedProjectFee || 0,
-    priority: project?.priority || '',
+    priority: project?.priority || 'Medium',
     regionalManagerId: project?.regionalManagerId || "",
     letterOfAcceptance: project?.letterOfAcceptance || false,
     opportunityTrackingId: project?.opportunityTrackingId || 0,
@@ -354,11 +354,16 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
+              select
               label="Priority"
               name="priority"
               value={formData.priority}
               onChange={handleChange}
-            />
+            >
+              <MenuItem value="Low">Low</MenuItem>
+              <MenuItem value="Medium">Medium</MenuItem>
+              <MenuItem value="High">High</MenuItem>
+            </TextField>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField

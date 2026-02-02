@@ -198,7 +198,7 @@ export const projects: Project[] = Object.values(projectsData).map(project => ({
   startDate: project.startDate || "",
   endDate: project.endDate || "",
   currency: project.currency,
-  priority: project.priority || "",
+  priority: project.priority || "Medium",
   regionalManagerId: project.regionalManagerId || project.regionalManagerID || "0",
   letterOfAcceptance: project.letterOfAcceptance || false,
   opportunityId: project.opportunityId || 0,
