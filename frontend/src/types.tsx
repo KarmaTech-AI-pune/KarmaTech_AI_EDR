@@ -166,6 +166,37 @@ export interface JobStartFormResourceData {
     name?: string; // For ODC resources (taskType=1)
 }
 
+export interface ProjectFormData {
+    id?: number;
+    name: string;
+    details?: string;
+    clientName: string;
+    projectManagerId: string;
+    office?: string;
+    projectNo: string;
+    typeOfJob?: string;
+    seniorProjectManagerId: string;
+    sector?: string;
+    region?: string;
+    status?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    typeOfClient?: string;
+    estimatedProjectCost: number;
+    startDate?: Date | string;
+    endDate?: Date | string;
+    currency?: string;
+    estimatedProjectFee: number;
+    priority?: string;
+    regionalManagerId: string;
+    letterOfAcceptance?: boolean;
+    opportunityTrackingId?: number;
+    feeType?: string;
+    percentage?: number;
+    programId?: number;
+    budgetReason?: string;
+}
+
 export interface JobStartFormData {
     formId?: number | string; // Added optional formId for updates
     projectId: number | string | undefined; // Match context type

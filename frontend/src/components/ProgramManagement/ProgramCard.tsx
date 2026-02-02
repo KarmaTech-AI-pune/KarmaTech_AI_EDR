@@ -9,9 +9,7 @@ interface ProgramCardProps {
 }
 
 const ProgramCard: React.FC<ProgramCardProps> = ({ 
-  program,
-  onEdit,
-  onDelete
+  program
 }) => {
   return (
     <Card sx={{ height: '100%' }}>

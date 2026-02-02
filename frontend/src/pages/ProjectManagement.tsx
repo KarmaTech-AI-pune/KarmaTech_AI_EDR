@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -8,13 +7,10 @@ import {
   Divider,
   IconButton,
   Alert,
-  Snackbar,
-  Breadcrumbs,
-  Link
+  Snackbar
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { ProjectManagementProjectList } from '../components/project/ProjectManagementProjectList.tsx';
 import { ProjectInitializationDialog } from '../components/project/ProjectInitializationDialog.tsx';
 import { Pagination } from '../components/Pagination';
@@ -30,8 +26,7 @@ import { useProject } from '../context/ProjectContext';
 import { Program } from '../types/program';
 
 export const ProjectManagement: React.FC = () => {
-  const navigate = useNavigate();
-  const { programId, setProgramId } = useProject();
+  const { programId } = useProject();
   const [currentUser, setCurrentUser] = useState<UserWithRole | null>(null);
   const [canViewProjects, setCanViewProjects] = useState(false);
   const [canCreateProject, setCanCreateProject] = useState(false);
@@ -70,25 +65,31 @@ export const ProjectManagement: React.FC = () => {
         return;
       }
 
-      let response: any;
+      // If programId is missing, do not fetch projects
+      if (!programId) {
+        setProjects([]);
+      setError(undefined);
+        return;
+    }
 
-      // If programId exists, filter by program
-      if (programId) {
-        response = await projectApi.getAll(parseInt(programId));
+      // Check user permissions before fetching projects
+      if (!currentUser.roleDetails) {
+        setError('User role information not available');
+        return;
       }
-      // Otherwise, fetch based on user role
-      else if (currentUser.roles.some(role => role.name === "Project Manager")) {
-        response = await projectApi.getByUserId(currentUser.id);
-      } 
-      else if (currentUser.roles.some(role => role.name === "Senior Project Manager")) {
-        response = await projectApi.getByUserId(currentUser.id);
-      }  
-      else if (currentUser.roles.some(role => role.name === "Regional Director")) {
-        response = await projectApi.getByUserId(currentUser.id);
-      } 
-      else {
-        response = await projectApi.getAll();
+
+      const hasViewPermission = currentUser.roleDetails.permissions.includes(
+        PermissionType.VIEW_PROJECT
+      );
+
+      if (!hasViewPermission) {
+        setError('You do not have permission to view projects');
+        setProjects([]);
+        return;
       }
+
+      // Always fetch projects by programId since projects must belong to a program
+      const response = await projectApi.getAll(parseInt(programId));
 
       setProjects(response);
       setError(undefined);

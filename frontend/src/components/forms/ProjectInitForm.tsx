@@ -7,12 +7,15 @@ import {
   MenuItem,
   Paper
 } from '@mui/material';
-import { ProjectFormData } from '../../types/index.tsx';
+import { Project } from '../../models';
 import { percentageCalculation } from '../../utils/calculations.ts';
 import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts';
 import { useCurrencyInput } from '../../hooks/useCurrencyInput';
 import { useFloatInput } from '../../hooks/useFloatInput.ts';
 import { useProject } from '../../context/ProjectContext';
+
+// Use Project type directly for form data (excluding id)
+type ProjectFormData = Omit<Project, 'id'>;
 
 interface ProjectFormType {
   project?: ProjectFormData;
@@ -60,7 +63,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     opportunityTrackingId: project?.opportunityTrackingId || 0,
     feeType: project?.feeType || 'Lumpsum',
     percentage: project?.percentage || 0,
-    programId: project?.programId || (programId ? parseInt(programId) : 0)
+    programId: (project as any)?.programId || (programId ? parseInt(programId) : 0)
   })
 
   // Currency input hooks for live formatting with cursor position preservation
