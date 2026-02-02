@@ -1,0 +1,31 @@
+name: Update Release Notes
+
+on:
+  push:
+    branches: [ "Kiro/dev" ]
+
+jobs:
+  update-notes:
+    name: Generate Latest Release Notes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Generate Release Notes
+      run: |
+        npm install --prefix .github/scripts
+        # Calculate a "dev" version based on date or just use "latest-dev"
+        VERSION="v1.1.0-dev.$(date +%Y%m%d)"
+        node .github/scripts/generate-release-notes.js --version "$VERSION" --environment dev
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
