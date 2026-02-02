@@ -285,16 +285,18 @@ const ChangeControlForm: React.FC = () => {
                   backgroundColor: '#fff',
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                   <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     sx={{
                       flexGrow: 1,
+                      minWidth: 0, // Allow content to shrink
                       '&:hover': {
                         backgroundColor: 'rgba(0, 0, 0, 0.04)',
                       },
                       '& .MuiAccordionSummary-content': {
                         margin: '12px 0',
+                        minWidth: 0, // Allow content to shrink
                       },
                     }}
                   >
@@ -305,21 +307,31 @@ const ChangeControlForm: React.FC = () => {
                         </Typography>
                       </Grid>
                       <Grid item xs={2}>
-                        <Typography color="text.secondary">
+                        <Typography color="text.secondary" variant="body2">
                           {row.dateLogged}
                         </Typography>
                       </Grid>
                       <Grid item xs={2}>
-                        <Typography fontWeight="medium">
+                        <Typography fontWeight="medium" variant="body2" noWrap>
                           {row.originator}
                         </Typography>
                       </Grid>
-                      <Grid item xs={5}>
-                        <Typography noWrap>
+                      <Grid item xs={4}>
+                        <Typography 
+                          variant="body2"
+                          sx={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            wordBreak: 'break-word'
+                          }}
+                        >
                           {row.description}
                         </Typography>
                       </Grid>
-                      <Grid item xs={2}>
+                      <Grid item xs={3}>
                         <ChangeControlWorkflow 
                           changeControl={row}
                           onChangeControlUpdated={loadChangeControls}
@@ -327,7 +339,12 @@ const ChangeControlForm: React.FC = () => {
                       </Grid>
                     </Grid>
                   </AccordionSummary>
-                  <Box sx={{ display: 'flex', gap: 1, pr: 2 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 1, 
+                    pr: 2,
+                    flexShrink: 0 // Prevent icons from shrinking
+                  }}>
                     <IconButton
                       size="small"
                       color="primary"
