@@ -12,6 +12,7 @@ import {
   Tooltip,
   Box,
 } from '@mui/material';
+import { ProjectBreadcrumb } from '../navigation/ProjectBreadcrumb';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import EmailIcon from '@mui/icons-material/Email';
@@ -210,6 +211,10 @@ export const SideMenu: React.FC = () => {
           {isDrawerExpanded ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </IconButton>
       </Box>
+      
+      {/* Breadcrumb Navigation */}
+      <ProjectBreadcrumb isExpanded={isDrawerExpanded} />
+      
       <List sx={{ width: '100' }}>
         {menuSections.map((section) => (
           <Box key={section.id}>
