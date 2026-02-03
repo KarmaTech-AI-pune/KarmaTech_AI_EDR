@@ -37,18 +37,44 @@ const WBSHeader: React.FC = () => {
     onEditModeToggle,
     handleStatusUpdate,
     isUnderApproval,
+    selectedProject,
+    currentUser: contextUser
   } = useWBSHeaderLogic({ formType });
 
   const taskType = formType === 'manpower' ? TaskType.Manpower : TaskType.ODC;
 
-  const isProjectManager = currentUser?.roleDetails?.name === 'Project Manager';
-  // Check if status is "Review Changes" (3) or "Approval Changes" (5)
-  const isRejectionStatus = [3, 5].includes(statusId);
+  // Use user from context
+  const user = currentUser || contextUser;
+  // Safely cast project to access manager IDs (assuming it is a Project type)
+  const project = selectedProject as any;
 
-  // Edit is allowed if:
-  // 1. Not under approval (2, 4, 6)
-  // 2. AND (Not in rejection status OR (In rejection status AND user is PM))
-  const canEdit = !isUnderApproval && (!isRejectionStatus || isProjectManager);
+  const currentUserId = user?.id;
+  
+  // Role checks
+  const isAssignedPM = currentUserId && project?.projectManagerId === currentUserId;
+  const isAssignedSPM = currentUserId && project?.seniorProjectManagerId === currentUserId;
+  const isAssignedRM = currentUserId && project?.regionalManagerId === currentUserId;
+  const isRegionalDirector = user?.roleDetails?.name === 'Regional Director';
+
+  let canEdit = false;
+
+  // Logic based on requirements:
+  // 1. While PM is editing (Initial[1], Review Changes[3]): Only PM sees Edit.
+  //    Also (No Form[0]) and (Approved[6]) per new requirement.
+  //    NOTE: Approval Changes[5] moved to SPM.
+  if ([0, 1, 3, 6].includes(statusId)) {
+    if (isAssignedPM) canEdit = true;
+  }
+  // 2. After PM submits to SPM (Sent for Review[2]): Only SPM sees Edit.
+  //    Also Approval Changes[5] (RM Rejection)
+  else if (statusId === 2 || statusId === 5) {
+    if (isAssignedSPM) canEdit = true;
+  }
+  // 3. After SPM sends for approval (Sent for Approval[4]): Only assigned RM or RD sees Edit.
+  else if (statusId === 4) {
+    if (isAssignedRM || isRegionalDirector) canEdit = true;
+  }
+  // Else: canEdit remains false.
 
   // Auto-exit edit mode if permissions change while editing
   useEffect(() => {
