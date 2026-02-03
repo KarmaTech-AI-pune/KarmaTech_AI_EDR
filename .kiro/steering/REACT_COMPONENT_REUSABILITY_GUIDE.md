@@ -1,3 +1,8 @@
+---
+inclusion: manual
+keywords: react, component, reusability, props, context, data-flow
+---
+
 # React Component Reusability & Data Flow Guide
 
 **Last Updated:** January 21, 2025  

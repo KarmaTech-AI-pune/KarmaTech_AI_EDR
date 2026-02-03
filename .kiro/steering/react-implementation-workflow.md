@@ -1,3 +1,8 @@
+---
+inclusion: manual
+keywords: react, frontend, component, ui, page, routing, typescript, material-ui, mui
+---
+
 # React Implementation Workflow - Top-Down Approach
 
 ## Overview

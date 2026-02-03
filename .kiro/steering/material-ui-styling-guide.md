@@ -1,3 +1,8 @@
+---
+inclusion: manual
+keywords: material-ui, mui, styling, theme, sx, components
+---
+
 # Material-UI Styling and Theming Guide
 
 ## Material-UI Version

@@ -1,3 +1,8 @@
+---
+inclusion: manual
+keywords: react, router, routing, navigation, routes, links
+---
+
 # React Router and Navigation Patterns
 
 ## React Router Setup
