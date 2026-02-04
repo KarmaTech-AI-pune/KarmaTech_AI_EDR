@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace NJS.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class kiromigration : Migration
+    public partial class propermigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -1462,6 +1462,43 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SprintWbsPlans",
+                columns: table => new
+                {
+                    SprintWbsPlanId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    WBSTaskId = table.Column<int>(type: "int", nullable: true),
+                    WBSTaskName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ParentWBSTaskId = table.Column<int>(type: "int", nullable: true),
+                    AssignedUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    AssignedUserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    RoleName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MonthYear = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SprintNumber = table.Column<int>(type: "int", nullable: false),
+                    PlannedHours = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    RemainingHours = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ProgramSequence = table.Column<int>(type: "int", nullable: false),
+                    IsConsumed = table.Column<bool>(type: "bit", nullable: false),
+                    AcceptanceCriteria = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TaskDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedOn = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SprintWbsPlans", x => x.SprintWbsPlanId);
+                    table.ForeignKey(
+                        name: "FK_SprintWbsPlans_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WBSTaskPlannedHourHeaders",
                 columns: table => new
                 {
@@ -2426,6 +2463,7 @@ namespace NJS.Domain.Migrations
                     TaskupdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     SprintPlanId = table.Column<int>(type: "int", nullable: true),
                     WbsPlanId = table.Column<int>(type: "int", nullable: true),
+                    SprintWbsPlanId = table.Column<int>(type: "int", nullable: true),
                     UserTaskId = table.Column<int>(type: "int", nullable: true),
                     AcceptanceCriteria = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
@@ -2443,6 +2481,11 @@ namespace NJS.Domain.Migrations
                         column: x => x.SprintPlanId,
                         principalTable: "SprintPlans",
                         principalColumn: "SprintId");
+                    table.ForeignKey(
+                        name: "FK_SprintTasks_SprintWbsPlans_SprintWbsPlanId",
+                        column: x => x.SprintWbsPlanId,
+                        principalTable: "SprintWbsPlans",
+                        principalColumn: "SprintWbsPlanId");
                 });
 
             migrationBuilder.CreateTable(
@@ -3326,6 +3369,11 @@ namespace NJS.Domain.Migrations
                 column: "SprintPlanId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SprintTasks_SprintWbsPlanId",
+                table: "SprintTasks",
+                column: "SprintWbsPlanId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SprintTasks_UserTaskId",
                 table: "SprintTasks",
                 column: "UserTaskId");
@@ -3334,6 +3382,11 @@ namespace NJS.Domain.Migrations
                 name: "IX_SprintTasks_WbsPlanId",
                 table: "SprintTasks",
                 column: "WbsPlanId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SprintWbsPlans_ProjectId",
+                table: "SprintWbsPlans",
+                column: "ProjectId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SubscriptionPlanFeatures_FeatureId",
@@ -3957,6 +4010,9 @@ namespace NJS.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "SprintPlans");
+
+            migrationBuilder.DropTable(
+                name: "SprintWbsPlans");
 
             migrationBuilder.DropTable(
                 name: "UserWBSTasks");

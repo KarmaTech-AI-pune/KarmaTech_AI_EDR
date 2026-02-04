@@ -9,6 +9,8 @@ export const createChangeControl = async (projectId: string | number, changeCont
     // Convert projectId to number if it's a string
     const projectIdNum = typeof projectId === 'string' ? parseInt(projectId) : projectId;
 
+    // update the change controle 
+   
     // Ensure required fields are present
     if (!changeControl.originator) {
       throw new Error("Originator is required");
@@ -17,7 +19,7 @@ export const createChangeControl = async (projectId: string | number, changeCont
       throw new Error("Description is required");
     }
     if (!changeControl.dateLogged) {
-      throw new Error("Date Logged is required");
+      throw new Error("Date Logged is required!!");
     }
 
     // Format data for backend
