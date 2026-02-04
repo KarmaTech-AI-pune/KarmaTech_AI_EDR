@@ -125,11 +125,12 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
-        /// Gets all projects
+        /// Gets all projects, optionally filtered by ProgramId
         /// </summary>
+        /// <param name="programId">Optional: Filter projects by program ID</param>
         [HttpGet]
         [ProducesResponseType(typeof(Project[]), 200)]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int? programId = null)
         {
             try
             {
@@ -140,13 +141,25 @@ namespace NJSAPI.Controllers
                     if (accessCheck != null) return accessCheck;
                 }
 
-                var query = new GetAllProjectsQuery();
+                var query = new GetAllProjectsQuery { ProgramId = programId };
                 var result = await _mediator.Send(query);
+                
+                if (programId.HasValue)
+                {
+                    _logger.LogInformation("Retrieved {Count} projects for Program {ProgramId}", 
+                        result.Count(), programId.Value);
+                }
+                else
+                {
+                    _logger.LogInformation("Retrieved {Count} total projects", result.Count());
+                }
+                
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting projects for tenant {TenantId}", CurrentTenantId);
+                _logger.LogError(ex, "Error getting projects for tenant {TenantId}, programId {ProgramId}", 
+                    CurrentTenantId, programId);
                 return StatusCode(500, new { message = ex.Message });
             }
         }

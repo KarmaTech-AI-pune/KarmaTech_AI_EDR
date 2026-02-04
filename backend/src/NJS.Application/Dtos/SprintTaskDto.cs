@@ -5,7 +5,7 @@ namespace NJS.Application.Dtos
 {
     public class SprintTaskDto
     {
-        public string? Taskid { get; set; }
+        public int Taskid { get; set; }
         public int TenantId { get; set; }
         public string? Taskkey { get; set; }
         public string? TaskTitle { get; set; }
@@ -26,6 +26,7 @@ namespace NJS.Application.Dtos
         public DateTime? TaskupdatedDate { get; set; }
         public int? SprintPlanId { get; set; }
         public int? WbsPlanId { get; set; }
+        public int? SprintWbsPlanId { get; set; }
         public int? UserTaskId { get; set; }
         public string? AcceptanceCriteria { get; set; }
         public int? DisplayOrder { get; set; }

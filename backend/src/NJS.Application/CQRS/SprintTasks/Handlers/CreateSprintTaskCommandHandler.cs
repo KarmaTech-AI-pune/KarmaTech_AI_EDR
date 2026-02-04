@@ -13,7 +13,7 @@ using NJS.Application.Dtos; // Ensure this is included for DTOs
 
 namespace NJS.Application.CQRS.SprintTasks.Handlers
 {
-    public class CreateSprintTaskCommandHandler : IRequestHandler<CreateSprintTaskCommand, string>
+    public class CreateSprintTaskCommandHandler : IRequestHandler<CreateSprintTaskCommand, int>
     {
         private readonly ProjectManagementContext _context;
         private readonly ILogger<CreateSprintTaskCommandHandler> _logger;
@@ -24,7 +24,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<string> Handle(CreateSprintTaskCommand request, CancellationToken cancellationToken)
+        public async Task<int> Handle(CreateSprintTaskCommand request, CancellationToken cancellationToken)
         {
             var sprintTaskDto = request.SprintTask;
 
@@ -45,26 +45,12 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 }
             }
 
-            // Generate Taskid if not provided (e.g., "T-101")
-            if (string.IsNullOrWhiteSpace(sprintTaskDto.Taskid))
-            {
-                var lastTaskId = await _context.SprintTasks
-                                                .OrderByDescending(t => t.Taskid)
-                                                .Select(t => t.Taskid)
-                                                .FirstOrDefaultAsync(cancellationToken);
-
-                int nextId = 1;
-                if (lastTaskId != null && lastTaskId.StartsWith("T-") && int.TryParse(lastTaskId.Substring(2), out int numId))
-                {
-                    nextId = numId + 1;
-                }
-                sprintTaskDto.Taskid = $"T-{nextId}";
-            }
+            // Taskid is identity, no manual generation needed.
 
             var sprintTask = new SprintTask
             {
-                Taskid = sprintTaskDto.Taskid,
-                TenantId = sprintTaskDto.TenantId,
+                // Taskid = sprintTaskDto.Taskid, // Identity column
+                TenantId = _context.TenantId ?? 0,
                 Taskkey = sprintTaskDto.Taskkey,
                 TaskTitle = sprintTaskDto.TaskTitle,
                 Taskdescription = sprintTaskDto.Taskdescription,
@@ -84,12 +70,13 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 TaskupdatedDate = DateTime.UtcNow,
                 SprintPlanId = sprintTaskDto.SprintPlanId,
                 WbsPlanId = sprintTaskDto.WbsPlanId,
+                SprintWbsPlanId = sprintTaskDto.SprintWbsPlanId,
                 UserTaskId = sprintTaskDto.UserTaskId,
                 AcceptanceCriteria = sprintTaskDto.AcceptanceCriteria,
-                DisplayOrder = sprintTaskDto.DisplayOrder,
-                EstimatedHours = sprintTaskDto.EstimatedHours,
-                ActualHours = sprintTaskDto.ActualHours,
-                RemainingHours = sprintTaskDto.RemainingHours,
+                DisplayOrder = sprintTaskDto.DisplayOrder ?? 0,
+                EstimatedHours = sprintTaskDto.EstimatedHours ?? 0,
+                ActualHours = sprintTaskDto.ActualHours ?? 0,
+                RemainingHours = sprintTaskDto.RemainingHours ?? 0,
                 StartedAt = sprintTaskDto.StartedAt,
                 CompletedAt = sprintTaskDto.CompletedAt
             };

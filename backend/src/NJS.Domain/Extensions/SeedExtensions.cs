@@ -105,7 +105,7 @@ namespace NJS.Domain.Extensions
                         "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "SUBMIT_PROJECT_FOR_REVIEW"
                     }},
                     new { Name = "Senior Project Manager", Description = "Senior Project Manager role", MinRate = 100.00m, IsResourceRole = true, Permissions = new[] {
-                        "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "REVIEW_PROJECT", "SUBMIT_FOR_APPROVAL"
+                        "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "REVIEW_PROJECT", "SUBMIT_PROJECT_FOR_APPROVAL", "SUBMIT_FOR_APPROVAL"
                     }},
                     new { Name = "Regional Manager", Description = "Regional Manager is Bid form reviewer role", MinRate = 0.00m, IsResourceRole = true, Permissions = new[] {
                         "VIEW_PROJECT", "CREATE_PROJECT", "EDIT_PROJECT", "DELETE_PROJECT", "APPROVE_PROJECT", "CREATE_BUSINESS_DEVELOPMENT", "EDIT_BUSINESS_DEVELOPMENT", "DELETE_BUSINESS_DEVELOPMENT", "VIEW_BUSINESS_DEVELOPMENT", "REVIEW_BUSINESS_DEVELOPMENT", "SUBMIT_FOR_APPROVAL"
@@ -129,9 +129,10 @@ namespace NJS.Domain.Extensions
 
                 foreach (var roleData in roles)
                 {
+                    Role role = null;
                     if (!await roleManager.RoleExistsAsync(roleData.Name))
                     {
-                        var role = new Role
+                        role = new Role
                         {
                             Name = roleData.Name,
                             Description = roleData.Description,
@@ -141,20 +142,39 @@ namespace NJS.Domain.Extensions
                         };
 
                         var result = await roleManager.CreateAsync(role);
-                        if (result.Succeeded)
+                        if (!result.Succeeded)
                         {
-                            // Create RolePermission entries
-                            var dbRole = await roleManager.FindByNameAsync(roleData.Name);
-                            var rolePermissions = dbPermissions
-                                .Where(p => roleData.Permissions.Contains(p.Name))
-                                .Select(p => new RolePermission
-                                {
-                                    RoleId = dbRole.Id,
-                                    PermissionId = p.Id,
-                                    CreatedAt = DateTime.UtcNow,
-                                    CreatedBy = "System"
-                                });
+                            continue; // Skip if creation failed
+                        }
+                    }
+                    else
+                    {
+                        role = await roleManager.FindByNameAsync(roleData.Name);
+                    }
 
+                    if (role != null)
+                    {
+                        // Create RolePermission entries if they don't exist
+                        var dbRole = role; // Use the role object we have
+                        
+                        // Fetch existing permissions for this role to avoid duplicates
+                        var existingRolePermissionIds = await context.RolePermissions
+                            .Where(rp => rp.RoleId == dbRole.Id)
+                            .Select(rp => rp.PermissionId)
+                            .ToListAsync();
+
+                        var rolePermissions = dbPermissions
+                            .Where(p => roleData.Permissions.Contains(p.Name) && !existingRolePermissionIds.Contains(p.Id))
+                            .Select(p => new RolePermission
+                            {
+                                RoleId = dbRole.Id,
+                                PermissionId = p.Id,
+                                CreatedAt = DateTime.UtcNow,
+                                CreatedBy = "System"
+                            });
+
+                        if (rolePermissions.Any())
+                        {
                             context.AddRange(rolePermissions);
                             await context.SaveChangesAsync();
                         }

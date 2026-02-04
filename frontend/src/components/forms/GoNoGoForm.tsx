@@ -19,10 +19,15 @@ import {
   CardContent,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+  Alert,
+  Chip,
+  Tooltip
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { projectManagementAppContextType } from '../../types';
 import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
 import { GoNoGoStatus, TypeOfBid } from "../../models/types";
@@ -34,8 +39,9 @@ import { projectManagementAppContext } from '../../App';
 import { goNoGoApi } from '../../dummyapi/api';
 import { getScoringDescriptions } from '../../services/scoringDescriptionApi';
 import { GoNoGoDecisionPayload } from '../../models/goNoGoDecisionModel';
+import { getUserById } from '../../services/userApi';
 
-interface ScoringCriteria { 
+interface ScoringCriteria {
   comments: string;
   score: number;
   showComments: boolean;
@@ -57,9 +63,30 @@ interface HeaderInfo {
 }
 
 const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNumber: number) => void }> = ({ onDecisionStatusChange }) => {
-  const { opportunityId } = useBusinessDevelopment();
+  const { opportunityId, opportunity } = useBusinessDevelopment();
   const context = useContext(projectManagementAppContext) as projectManagementAppContextType;
   const [descriptions, setDescriptions] = useState<ScoringDescriptionsResponse>({ descriptions: {} });
+
+  // Fetch BD Manager name from opportunity data and auto-populate BD Head field
+  useEffect(() => {
+    const fetchBdManagerName = async () => {
+      if (opportunity && opportunity.bidManagerId) {
+        try {
+          const user = await getUserById(opportunity.bidManagerId);
+          if (user && user.name) {
+            setHeaderInfo(prev => ({
+              ...prev,
+              bdHead: user.name
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching BD Manager details:', error);
+        }
+      }
+    };
+
+    fetchBdManagerName();
+  }, [opportunity]);
 
   // Load initial Go/No Go decision data
   useEffect(() => {
@@ -174,29 +201,55 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
   });
 
   const [criteria, setCriteria] = useState<{ [key: string]: ScoringCriteria }>({
-    marketingplan: {   comments: '', score: 0, showComments: false, scoringDescriptionId: 1 },
-    clientrelationship:   { comments: '', score: 0, showComments: false, scoringDescriptionId: 2 },
-    projectknowledge:     { comments: '', score: 0, showComments: false, scoringDescriptionId: 3 },
+    marketingplan: { comments: '', score: 0, showComments: false, scoringDescriptionId: 1 },
+    clientrelationship: { comments: '', score: 0, showComments: false, scoringDescriptionId: 2 },
+    projectknowledge: { comments: '', score: 0, showComments: false, scoringDescriptionId: 3 },
     technicaleligibility: { comments: '', score: 0, showComments: false, scoringDescriptionId: 4 },
     financialeligibility: { comments: '', score: 0, showComments: false, scoringDescriptionId: 5 },
     keystaffavailability: { comments: '', score: 0, showComments: false, scoringDescriptionId: 6 },
-    projectcompetition:   { comments: '', score: 0, showComments: false, scoringDescriptionId: 7 },
-    competitionposition:  { comments: '', score: 0, showComments: false, scoringDescriptionId: 8 },
-    futureworkpotential:  { comments: '', score: 0, showComments: false, scoringDescriptionId: 9 },
+    projectcompetition: { comments: '', score: 0, showComments: false, scoringDescriptionId: 7 },
+    competitionposition: { comments: '', score: 0, showComments: false, scoringDescriptionId: 8 },
+    futureworkpotential: { comments: '', score: 0, showComments: false, scoringDescriptionId: 9 },
     projectprofitability: { comments: '', score: 0, showComments: false, scoringDescriptionId: 10 },
-    projectschedule:      { comments: '', score: 0, showComments: false, scoringDescriptionId: 11 },
-    bidtimeandcosts:      { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
+    projectschedule: { comments: '', score: 0, showComments: false, scoringDescriptionId: 11 },
+    bidtimeandcosts: { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
 
+  const MAX_POSSIBLE_SCORE = 120; // 12 criteria × 10 points each
+
   const calculateTotalScore = () => {
+    // Return raw total (0-120) - no capping
     return Object.values(criteria).reduce((sum, item) => sum + item.score, 0);
   };
 
+  const calculateScorePercentage = () => {
+    const rawTotal = calculateTotalScore();
+    return Math.round((rawTotal / MAX_POSSIBLE_SCORE) * 100);
+  };
+
+  const isPerfectScore = () => {
+    return calculateTotalScore() === MAX_POSSIBLE_SCORE;
+  };
+
+  // Legacy function for backward compatibility - prefixed with underscore to indicate intentionally unused
+  const _getRawTotalScore = () => {
+    return calculateTotalScore();
+  };
+
+  // Legacy function for backward compatibility - prefixed with underscore to indicate intentionally unused
+  const _isScoreCapped = () => {
+    return false; // No longer capping scores
+  };
+
+  // Suppress unused variable warnings for legacy functions
+  void _getRawTotalScore;
+  void _isScoreCapped;
+
   const getDecisionStatus = () => {
-    const totalScore = calculateTotalScore();
-    if (totalScore >= 84) return { text: 'GO', color: '#4caf50' };
-    if (totalScore >= 50) return { text: 'GO', color: '#ff9800' };
-    return { text: 'NO GO', color: '#f44336' };
+    const scorePercentage = calculateScorePercentage(); // Use percentage calculation
+    if (scorePercentage >= 70) return { text: 'GO', color: '#4caf50' }; // Green
+    if (scorePercentage >= 42) return { text: 'GO', color: '#ff9800' }; // Amber
+    return { text: 'NO GO', color: '#f44336' }; // Red
   };
 
   const handleCriteriaChange = (
@@ -216,7 +269,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
   };
 
   const handleScoreChange = (criteriaKey: string, value: string | number) => {
-    const numericValue = typeof value === 'string' ? parseInt(value, 10) : value;
+    const numericValue = typeof value === 'string' ? parseInt(value, 10) : Math.floor(value);
     handleCriteriaChange(criteriaKey, 'score', numericValue);
   };
 
@@ -237,11 +290,11 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     };
 
     const newCriteria: { [key: string]: ScoringCriteria } = {};
-    
+
     Object.entries(mappings).forEach(([dbKey, stateKey]) => {
       const dbValue = dbCriteria[dbKey];
       if (dbValue) {
-        newCriteria[stateKey] = {        
+        newCriteria[stateKey] = {
           comments: dbValue.Comments || '',
           score: dbValue.Score || 0,
           showComments: false,
@@ -301,7 +354,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
       // Set the versions in the correct order (RD -> RM -> BDM)
       const orderedVersions = [rdVersion, rmVersion, bdmVersion].filter((v): v is GoNoGoVersionDto => v !== undefined);
       setVersions(orderedVersions);
-      
+
       // Set the current version to the RD version if it exists
       if (rdVersion) {
         setCurrentVersion(rdVersion);
@@ -332,16 +385,16 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
           // Get the updated version data after approval
           const updatedVersions = await goNoGoApi.getVersions(version.goNoGoDecisionHeaderId);
           const rdVersion = updatedVersions.find(v => v.versionNumber === 3);
-          
+
           if (rdVersion) {
             // Parse the form data to get the actual score
             const formData = JSON.parse(rdVersion.formData);
             const totalScore = formData.Summary.TotalScore;
             const decisionStatus = totalScore >= 50 ? "GO" : "NO GO";
-            
+
             // Call the callback with the correct status and version number
             onDecisionStatusChange(decisionStatus, version.versionNumber);
-            
+
           }
         }
       }
@@ -353,38 +406,38 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
   }, [context?.user?.name, onDecisionStatusChange, loadVersions]);
 
 
-const canEditForm = useCallback((): boolean => {
-  if (!currentVersion) return true;
+  const canEditForm = useCallback((): boolean => {
+    if (!currentVersion) return true;
 
-  const status = currentVersion.status as GoNoGoVersionStatus;
-  const userRole = context?.user?.roles?.[0].name;
+    const status = currentVersion.status as GoNoGoVersionStatus;
+    const userRole = context?.user?.roles?.[0].name;
 
-  // Allow editing if it's the user's turn to approve or if they are the creator
-  switch (status) {
-    case GoNoGoVersionStatus.BDM_PENDING:
-      return userRole === 'Business Development Manager';
-    case GoNoGoVersionStatus.RM_PENDING:
-      return userRole === 'Regional Manager';
-    case GoNoGoVersionStatus.RD_PENDING:
-      return userRole === 'Regional Director';
-    case GoNoGoVersionStatus.BDM_APPROVED:
-      return userRole === 'Regional Manager';
-    case GoNoGoVersionStatus.RM_APPROVED:
-      return userRole === 'Regional Director';
-    case GoNoGoVersionStatus.RD_APPROVED:
-      return userRole === 'Regional Director';
-    default:
-      return false;
-  }
-}, [currentVersion, context?.user?.roles]);
+    // Allow editing if it's the user's turn to approve or if they are the creator
+    switch (status) {
+      case GoNoGoVersionStatus.BDM_PENDING:
+        return userRole === 'Business Development Manager';
+      case GoNoGoVersionStatus.RM_PENDING:
+        return userRole === 'Regional Manager';
+      case GoNoGoVersionStatus.RD_PENDING:
+        return userRole === 'Regional Director';
+      case GoNoGoVersionStatus.BDM_APPROVED:
+        return userRole === 'Regional Manager';
+      case GoNoGoVersionStatus.RM_APPROVED:
+        return userRole === 'Regional Director';
+      case GoNoGoVersionStatus.RD_APPROVED:
+        return userRole === 'Regional Director';
+      default:
+        return false;
+    }
+  }, [currentVersion, context?.user?.roles]);
 
-const isHeaderReadOnly = useCallback((): boolean => {
-  // Header is read-only if:
-  // 1. There is a current version (form has been submitted)
-  // 2. The current version's status is not BDM_PENDING (BDM has submitted it)
-  return !!(currentVersion && 
-    currentVersion.status !== GoNoGoVersionStatus.BDM_PENDING);
-}, [currentVersion]);
+  const isHeaderReadOnly = useCallback((): boolean => {
+    // Header is read-only if:
+    // 1. There is a current version (form has been submitted)
+    // 2. The current version's status is not BDM_PENDING (BDM has submitted it)
+    return !!(currentVersion &&
+      currentVersion.status !== GoNoGoVersionStatus.BDM_PENDING);
+  }, [currentVersion]);
 
 
   const handleHeaderChange = (field: keyof HeaderInfo, value: string | TypeOfBid) => {
@@ -393,7 +446,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
       console.log('Header information cannot be modified after submission.');
       return;
     }
-    
+
     setHeaderInfo(prev => {
       if (field === 'typeOfBid') {
         // Convert string to TypeOfBid enum
@@ -421,7 +474,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
       bidtimeandcosts: 'Bid Time and Costs'
     };
     return displayNames[key] || key;
-};
+  };
 
 
   const handleSubmit = async () => {
@@ -431,8 +484,8 @@ const isHeaderReadOnly = useCallback((): boolean => {
         return;
       }
 
-      const tenderFee = parseInt(headerInfo.tenderFee) || 0;
-      const emdAmount = parseInt(headerInfo.emd) || 0;
+      const tenderFee = parseFloat(headerInfo.tenderFee) || 0;
+      const emdAmount = parseFloat(headerInfo.emd) || 0;
 
       const updatedFields: GoNoGoDecisionPayload = {
         HeaderInfo: {
@@ -506,7 +559,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
           }
         },
         Summary: {
-          TotalScore: calculateTotalScore(),
+          TotalScore: calculateTotalScore(), // Raw total score (0-120)
           Status: getDecisionStatus().text === 'GO' ? GoNoGoStatus.Green : GoNoGoStatus.Red,
           DecisionComments: '',
           ActionPlan: ''
@@ -554,7 +607,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
               currentVersion.versionNumber
             );
           }
-          
+
           // Scroll to top to make version visible to user
           window.scrollTo({
             top: 0,
@@ -568,7 +621,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
         const response = await goNoGoApi.create(updatedFields);
         if (response.headerId) {
           await loadVersions(response.headerId);
-          
+
           // Scroll to top to make version visible to user
           window.scrollTo({
             top: 0,
@@ -641,7 +694,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
           Loading...
         </Typography>
       )}
-      
+
       {currentVersion && isVersionSelected && (
         <GoNoGoApprovalStatus
           status={currentVersion.status as GoNoGoVersionStatus}
@@ -682,8 +735,9 @@ const isHeaderReadOnly = useCallback((): boolean => {
                   onChange={(e) => handleHeaderChange('typeOfBid', Number(e.target.value) as TypeOfBid)}
                   label="Type of Bid"
                 >
+                  <MenuItem value={TypeOfBid.TimeAndExpense.toString()}>Time&Expense</MenuItem>
                   <MenuItem value={TypeOfBid.Lumpsum.toString()}>Lumpsum</MenuItem>
-                  <MenuItem value={TypeOfBid.ItemRate.toString()}>Item Rate</MenuItem>
+                  <MenuItem value={TypeOfBid.Percentage.toString()}>Percentage(%)</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -701,8 +755,10 @@ const isHeaderReadOnly = useCallback((): boolean => {
                 fullWidth
                 label="BD Head"
                 value={headerInfo.bdHead}
-                onChange={(e) => handleHeaderChange('bdHead', e.target.value)}
-                disabled={isHeaderReadOnly()}
+                InputProps={{
+                  readOnly: true,
+                }}
+                helperText="Auto-populated from Opportunity"
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -717,7 +773,7 @@ const isHeaderReadOnly = useCallback((): boolean => {
             {isHeaderReadOnly() && (
               <Grid item xs={12}>
                 <Typography variant="caption" color="text.secondary">
-                Header information cannot be modified after submission.
+                  Header information cannot be modified after submission.
                 </Typography>
               </Grid>
             )}
@@ -795,10 +851,40 @@ const isHeaderReadOnly = useCallback((): boolean => {
         <Typography variant="h6" gutterBottom>
           Decision Summary
         </Typography>
+        
+        {/* Perfect Score Success Indicator - Requirement 2.5 */}
+        {isPerfectScore() && (
+          <Alert 
+            severity="success" 
+            icon={<CheckCircleIcon />}
+            sx={{ mb: 2 }}
+          >
+            <Typography variant="body2" fontWeight="medium">
+              Excellent! You've achieved a perfect score of 100%.
+            </Typography>
+          </Alert>
+        )}
+
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <Typography variant="body1">
-              Total Score: {calculateTotalScore()}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body1">
+                Total Score:
+              </Typography>
+              {/* Display percentage with "%" suffix - Requirement 2.1 */}
+              <Chip 
+                label={`${calculateScorePercentage()}%`}
+                color={isPerfectScore() ? "success" : "default"}
+                size="medium"
+                sx={{ fontWeight: 'bold', fontSize: '1rem' }}
+              />
+              <Tooltip title={`Raw total: ${calculateTotalScore()}/120`}>
+                <InfoOutlinedIcon color="action" fontSize="small" sx={{ cursor: 'help' }} />
+              </Tooltip>
+            </Box>
+            {/* Show raw score for transparency and indicate maximum possible score - Requirements 2.2, 2.3 */}
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              {calculateScorePercentage()}% ({calculateTotalScore()}/120) - Maximum possible score: 120
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>

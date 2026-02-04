@@ -107,6 +107,10 @@ namespace NJS.Application.Extensions
             services.AddScoped<IFeatureRepository, FeatureRepository>();
             services.AddScoped<ITwoFactorService, TwoFactorService>();
             services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+            services.AddScoped<IDeploymentLogService, DeploymentLogService>();
+            services.AddScoped<IReleaseNotesGeneratorService, ReleaseNotesGeneratorService>();
+            services.AddScoped<IGitHubService, GitHubService>();
+            services.AddScoped<IReleaseNotesRepository, ReleaseNotesRepository>();
 
             return services;
         }

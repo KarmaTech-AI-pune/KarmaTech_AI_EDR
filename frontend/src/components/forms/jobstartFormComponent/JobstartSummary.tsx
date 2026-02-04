@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { addCalculation, percentageCalculation, getPercentage } from '../../../utils/calculations';
+import { formatToIndianNumber } from '../../../utils/numberFormatting';
 import {
   Box,
   TableContainer,
@@ -142,7 +143,7 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
     // Calculate profit as project fees minus grand total
     const fees = parseFloat(projectFees) || 0;
     const profit =  fees - grandTotal;
-    return profit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return formatToIndianNumber(profit);
   };
 
   const calculateServiceTax = () => {
@@ -150,7 +151,7 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
     const fees = parseFloat(projectFees) || 0;
     const taxRate = parseFloat(serviceTax.percentage) || 0;
     const taxAmount = percentageCalculation(taxRate, fees);
-    return taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return formatToIndianNumber(taxAmount);
   };
 
   const calculateTotalProjectFees = () => {
@@ -158,7 +159,7 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
     const fees = parseFloat(projectFees) || 0;
     const tax = parseFloat(calculateServiceTax().replace(/,/g, '')) || 0;
     const total = addCalculation(fees, tax);
-    return total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return formatToIndianNumber(total);
   };
 
   return (
@@ -227,7 +228,7 @@ const JobstartSummary = ({ grandTotal, initialProjectFees, initialServiceTaxPerc
               <TableRow sx={{ bgcolor: '#fafafa' }}>
                 <TableCell colSpan={4} sx={{ ...tableCellStyle, width: 'calc(100% - 256px)', fontWeight: 'bold' }}>PROJECT FEES</TableCell>
                 <TableCell align="right" sx={{...tableCellStyle, width: '240px', fontWeight: 'bold', color: '#1976d2', fontSize: '1.2em'}}>
-                  {parseFloat(projectFees).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatToIndianNumber(parseFloat(projectFees))}
                 </TableCell>
                 <TableCell sx={{...tableCellStyle, width: '16px'}}></TableCell>
               </TableRow>

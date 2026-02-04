@@ -4,6 +4,17 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Version information from VERSION file -->
+    <Version>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/../../../VERSION').Trim())</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
+    <!-- Build metadata -->
+    <AssemblyTitle>KarmaTech AI EDR API</AssemblyTitle>
+    <AssemblyDescription>Project Management API for KarmaTech AI EDR System</AssemblyDescription>
+    <AssemblyCompany>KarmaTech</AssemblyCompany>
+    <AssemblyProduct>AI EDR</AssemblyProduct>
+    <AssemblyCopyright>Copyright © KarmaTech 2024</AssemblyCopyright>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +38,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Templates\Email\otp-login.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\NonIsolatedSQL\01_DropIndex.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\NonIsolatedSQL\02_Setup_user.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\NonIsolatedSQL\01_Permissions.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -58,7 +78,21 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="MigrationSQL\NonIsolatedSQL\" />
+    <Compile Update="LoggerFactory\EnvironmentProvider.cs">
+      <DependentUpon>IEnvironmentProvider.cs</DependentUpon>
+    </Compile>
+    <Compile Update="LoggerFactory\NLogWebLoggerProviderFactory.cs">
+      <DependentUpon>ILoggerProviderFactory.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Strategies\TenantUserMigrationStrategySelector.cs">
+      <DependentUpon>ITenantUserMigrationStrategySelector.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Strategies\IsolatedTenantUserMigrationStrategy.cs">
+      <DependentUpon>ITenantUserMigrationStrategy.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Strategies\SharedTenantUserMigrationStrategy.cs">
+      <DependentUpon>ITenantUserMigrationStrategy.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

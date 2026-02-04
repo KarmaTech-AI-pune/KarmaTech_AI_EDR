@@ -4,9 +4,9 @@
 # -------------------------------
 # CONFIGURATION
 # -------------------------------
-$frontendPath = ".\frontend"     # React app folder
-$backendPath  = ".\backend\src\njsapi"  # Main .NET project folder
-$publishPath  = ".\backend\src\NJSAPI\bin\Release\net8.0\publish"       # Publish output folder
+$frontendPath = "D:\KSmartBiz\KarmaTech_AI_EDR\frontend\"     # React app folder
+$backendPath  = "D:\KSmartBiz\KarmaTech_AI_EDR\backend\src\NJSAPI"  # Main .NET project folder
+$publishPath  = "D:\KSmartBiz\KarmaTech_AI_EDR\backend\src\NJSAPI\bin\Release\net8.0\publish"       # Publish output folder
 $envName      = "Production"      # Environment: Development/Production
 
 # -------------------------------

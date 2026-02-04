@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: fileMatch
+fileMatchPattern: '**/src/**|**/backend/**|**/frontend/**|**/Components/**'
 ---
 
 # EDR Architecture Patterns for AI-DLC Implementation
@@ -193,6 +194,33 @@ public class ProjectsController : ControllerBase
 ```
 
 ## Frontend Architecture Patterns
+
+**🚨 MANDATORY: React Implementation Workflow**
+
+Before implementing any React feature, you MUST follow the top-down implementation workflow defined in `react-implementation-workflow.md`. 
+
+**📌 When This Applies:**
+- ✅ New pages with routes
+- ✅ New features with UI components
+- ✅ Full-stack features (after backend is complete)
+
+**🔧 When You Can Be Flexible:**
+- Backend-only API changes (skip frontend workflow)
+- Reusable component libraries (may skip routing/page steps)
+- Bug fixes and updates (maintain existing structure)
+- Styling/CSS changes (no workflow needed)
+
+**Key Implementation Order:**
+1. Create folders and files FIRST
+2. Define TypeScript types SECOND
+3. Create API services THIRD
+4. Configure routes FOURTH
+5. Create page components FIFTH (containers that orchestrate)
+6. Create child components LAST (UI elements called by pages)
+
+**Never start with individual components in isolation. Always start with folder structure, then routes, then pages, then components.**
+
+---
 
 ### 1. Component-Based Architecture
 ```typescript

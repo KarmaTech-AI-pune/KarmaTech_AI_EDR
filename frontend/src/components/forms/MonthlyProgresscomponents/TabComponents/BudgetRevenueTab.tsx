@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { Controller, useFormContext, Control, FieldPath } from 'react-hook-form';
 import { MonthlyProgressSchemaType } from '../../../../schemas/monthlyProgress/MonthlyProgressSchema';
 import { getPercentage } from '../../../../utils/calculations';
+import { formatToIndianNumber } from '../../../../utils/numberFormatting';
 import textFieldStyle from '../../../../theme/textFieldStyle';
 import {
   Box,
@@ -48,10 +49,10 @@ const BudgetTextField: React.FC<BudgetTextFieldProps> = ({
           {...field}
           fullWidth
           size="small"
-          type="number"
+          type="text"
           placeholder={placeholder}
-          value={field.value ?? 0}
-          onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+          value={formatToIndianNumber(field.value as number | null | undefined)}
+          onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value.replace(/,/g, '')))}
           onWheel={(e) => (e.target as HTMLInputElement).blur()}
           error={!!error}
           helperText={error?.message || ''}

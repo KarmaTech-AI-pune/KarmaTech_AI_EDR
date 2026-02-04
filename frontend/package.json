@@ -1,7 +1,7 @@
 {
   "name": "njsprojectmanagement-frontend",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.38",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -23,6 +23,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.0.1",
     "@mui/icons-material": "^6.5.0",
     "@mui/lab": "^7.0.1-beta.19",

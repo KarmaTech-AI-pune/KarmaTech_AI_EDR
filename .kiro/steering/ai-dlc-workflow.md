@@ -1,3 +1,7 @@
+---
+inclusion: always
+---
+
 # 🎯 AI-DLC 7-Step Workflow with GitHub Automation
 
 **Updated:** December 2024  
@@ -14,37 +18,54 @@ The AI-DLC workflow now includes **automatic GitHub operations** at key points:
 ### **Complete Workflow Sequence:**
 
 ```
+0. 🚨 MANDATORY: Git branch setup (FIRST STEP ALWAYS)
+   └─ git branch --show-current
+   └─ git checkout Kiro/dev  
+   └─ git pull origin Kiro/dev
+   └─ git checkout -b feature/[name]
+   ↓
 1. User provides requirement
    ↓
-2. Kiro creates spec (Step 1: Requirements Analysis)
-   ├─ requirements.md
-   ├─ design.md
-   └─ tasks.md
+1.5. 🔍 MANDATORY: Check existing codebase files (BEFORE creating new files)
+   └─ Scan Controllers: backend/src/NJSAPI/Controllers
+   └─ Scan Entities: backend/src/NJS.Domain/Entities
+   └─ Scan DTOs: backend/src/NJS.Application/Dtos
+   └─ Scan CQRS: backend/src/NJS.Application/CQRS
+   └─ Scan Repositories: backend/NJS.Repositories
+   └─ Identify existing files vs new files needed
    ↓
-3. 🤖 AUTOMATIC: Feature branch created
-   └─ git checkout -b feature/[name]
+2. Kiro creates spec (Step 1: Requirements Analysis)
+   └─ requirements.md (created and approved first)
+   ↓
+3. Kiro creates design (Step 3: Design Analysis)  
+   └─ design.md (created and approved second)
+   ↓
+4. Kiro creates tasks (Step 4: Task Planning)
+   └─ tasks.md (created and approved third)
+   ↓
+5. 🤖 AUTOMATIC: Feature branch pushed to GitHub
    └─ git push -u origin feature/[name]
    ↓
-4. Kiro analyzes impact (Step 2: Impact Analysis)
+6. Kiro analyzes impact (Step 2: Impact Analysis)
    ↓
-5. Kiro creates design (Step 3: Technical Design)
+7. Kiro creates design (Step 3: Technical Design)
    ↓
-6. Kiro implements feature (Step 4: Implementation)
+8. Kiro implements feature (Step 4: Implementation)
    └─ 🤖 AUTOMATIC: Commits & pushes during development
    ↓
-7. 🤖 AUTOMATIC: Tests run (Step 5: Testing)
+9. 🤖 AUTOMATIC: Tests run (Step 5: Testing)
    └─ dotnet test & npm test
    └─ Generate coverage reports
    ↓
-8. Kiro validates code (Step 6: Validation)
+10. Kiro validates code (Step 6: Validation)
+    ↓
+11. 🤖 AUTOMATIC: PR created (Step 6)
+    └─ gh pr create with test results
    ↓
-9. 🤖 AUTOMATIC: PR created (Step 6)
-   └─ gh pr create with test results
-   ↓
-10. 👤 MANUAL: Human reviews & approves PR
+12. 👤 MANUAL: Human reviews & approves PR
     └─ ONLY MANUAL STEP (10-15 minutes)
    ↓
-11. 🤖 AUTOMATIC: Merge & deploy (Step 7)
+13. 🤖 AUTOMATIC: Merge & deploy (Step 7)
     └─ gh pr merge --delete-branch
     └─ Triggers deploy-dev-with-tags.yml
 ```
@@ -127,7 +148,7 @@ Frontend:
 ✓ History is read-only (cannot be edited/deleted)
 ✓ Frontend displays history as timeline
 ✓ API response time < 500ms
-✓ Test coverage ≥ 80%
+✓ Test coverage = 100%
 ```
 
 #### **1.5 Generate AI-DLC Spec**
@@ -195,6 +216,134 @@ Kiro: "🌿 Creating feature branch..."
 Kiro: "✅ Branch 'feature/project-status-history' created and pushed"
 Kiro: "📝 Moving to Step 2: Impact Analysis"
 ```
+
+---
+
+### **STEP 1.5: EXISTING CODEBASE ANALYSIS** (What I'll Do)
+
+**🔍 MANDATORY: Check existing files BEFORE creating new ones**
+
+#### **1.5.1 Scan Existing File Structure**
+```
+I will systematically check these specific paths:
+
+Controllers:
+- Path: backend/src/NJSAPI/Controllers
+- Look for: [FeatureName]Controller.cs
+- Check: Existing endpoints, methods, patterns
+
+Entities:
+- Path: backend/src/NJS.Domain/Entities  
+- Look for: [FeatureName].cs, related entities
+- Check: Properties, relationships, base classes
+
+DTOs:
+- Path: backend/src/NJS.Application/Dtos
+- Look for: [FeatureName]Dto.cs, related DTOs
+- Check: Properties, validation attributes
+
+CQRS Commands/Queries:
+- Path: backend/src/NJS.Application/CQRS
+- Look for: [FeatureName] folders, commands, queries
+- Check: Existing handlers, request/response patterns
+
+Repositories:
+- Path: backend/NJS.Repositories
+- Look for: I[FeatureName]Repository.cs, implementations
+- Check: Interface methods, repository patterns
+```
+
+#### **1.5.2 File Existence Decision Matrix**
+```
+For each required file, I will determine:
+
+✅ EXISTS: File found in codebase
+   → Action: UPDATE existing file (add new methods/properties)
+   → Reason: Avoid duplicates, maintain consistency
+   
+❌ NOT EXISTS: File not found in codebase  
+   → Action: CREATE new file following existing patterns
+   → Reason: New functionality requires new file
+
+🔄 PARTIAL EXISTS: Similar file exists but different purpose
+   → Action: CREATE new file with different name
+   → Reason: Avoid conflicts, maintain separation of concerns
+```
+
+#### **1.5.3 Pattern Analysis**
+```
+I will analyze existing files to understand:
+
+Naming Conventions:
+- Controller naming: [Entity]Controller.cs
+- Entity naming: [EntityName].cs  
+- DTO naming: [EntityName]Dto.cs
+- Repository naming: I[EntityName]Repository.cs
+
+Code Patterns:
+- Base classes used (BaseEntity, BaseController)
+- Attribute patterns ([Route], [HttpPost], etc.)
+- Dependency injection patterns
+- Error handling patterns
+- Validation patterns
+
+Folder Structure:
+- CQRS organization (Commands, Queries, Handlers)
+- DTO organization (by feature or alphabetical)
+- Repository organization (Interfaces vs Implementations)
+```
+
+#### **1.5.4 Integration Points Identification**
+```
+I will identify where new code integrates with existing:
+
+Database Context:
+- Check: ApplicationDbContext.cs for existing DbSets
+- Action: Add new DbSet if entity doesn't exist
+
+Dependency Injection:
+- Check: Startup.cs or Program.cs for service registrations
+- Action: Add new repository/service registrations
+
+Navigation Properties:
+- Check: Related entities for existing relationships
+- Action: Add navigation properties to existing entities
+
+API Routes:
+- Check: Existing controller routes for conflicts
+- Action: Ensure new routes don't conflict
+```
+
+#### **1.5.5 Output Documentation**
+```
+I will create: EXISTING_FILES_ANALYSIS.md with:
+
+Found Files:
+✅ ProjectController.cs - EXISTS (will update)
+✅ Project.cs - EXISTS (will add navigation property)  
+❌ ProjectStatusHistoryController.cs - NOT EXISTS (will create)
+❌ ProjectStatusHistory.cs - NOT EXISTS (will create)
+❌ ProjectStatusHistoryDto.cs - NOT EXISTS (will create)
+
+Integration Points:
+- ApplicationDbContext.cs: Add DbSet<ProjectStatusHistory>
+- ProjectController.cs: Add ChangeStatus endpoint
+- Project.cs: Add StatusHistory navigation property
+
+Patterns to Follow:
+- Controller: Inherit from BaseController
+- Entity: Inherit from BaseEntity  
+- DTO: Use DataAnnotations for validation
+- Repository: Follow IGenericRepository pattern
+```
+
+**Why this step is CRITICAL:**
+- ✅ Prevents duplicate file creation
+- ✅ Maintains code consistency
+- ✅ Follows existing patterns
+- ✅ Identifies integration points
+- ✅ Reduces merge conflicts
+- ✅ Ensures proper folder structure
 
 ---
 
@@ -383,11 +532,15 @@ Response: 200 OK [
 
 **🤖 GitHub Automation:** Automatically commits and pushes code during development
 
-#### **4.1 Generate Database Layer**
+**🚨 CRITICAL: Follow Exact Folder Paths**
+
+#### **4.1 Generate Database Layer (Following Your Structure)**
 
 **File: `backend/src/NJS.Domain/Entities/ProjectStatusHistory.cs`**
 ```csharp
 // I will generate this following your entity pattern
+// Path: backend/src/NJS.Domain/Entities/
+// Pattern: Analyzed from existing entities in this folder
 
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -429,87 +582,70 @@ namespace NJS.Domain.Entities
 ```
 
 **Why this code:**
-- Follows your entity pattern (I read from existing entities)
-- Data annotations for validation
-- Navigation property for EF Core
-- UTC timestamps (best practice)
-- MaxLength constraints (prevents SQL errors)
+- ✅ **Correct Path**: backend/src/NJS.Domain/Entities/
+- ✅ **Pattern Match**: Follows existing entity patterns from this folder
+- ✅ **Namespace**: Matches existing NJS.Domain.Entities namespace
+- ✅ **Attributes**: Uses same validation patterns as existing entities
 
-**File: `backend/src/NJS.Infrastructure/Configurations/ProjectStatusHistoryConfiguration.cs`**
+#### **4.2 Generate DTO Layer (Following Your Structure)**
+
+**File: `backend/src/NJS.Application/Dtos/ProjectStatusHistoryDto.cs`**
 ```csharp
-// I will generate EF Core configuration
+// I will generate this following your DTO pattern  
+// Path: backend/src/NJS.Application/Dtos/
+// Pattern: Analyzed from existing DTOs in this folder
 
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using NJS.Domain.Entities;
+using System;
+using System.ComponentModel.DataAnnotations;
 
-namespace NJS.Infrastructure.Configurations
+namespace NJS.Application.Dtos
 {
-    public class ProjectStatusHistoryConfiguration : IEntityTypeConfiguration<ProjectStatusHistory>
+    public class ProjectStatusHistoryDto
     {
-        public void Configure(EntityTypeBuilder<ProjectStatusHistory> builder)
-        {
-            builder.ToTable("ProjectStatusHistory");
-            
-            builder.HasKey(x => x.Id);
-            
-            builder.Property(x => x.OldStatus)
-                .IsRequired()
-                .HasMaxLength(50);
-            
-            builder.Property(x => x.NewStatus)
-                .IsRequired()
-                .HasMaxLength(50);
-            
-            builder.Property(x => x.ChangedBy)
-                .IsRequired()
-                .HasMaxLength(100);
-            
-            builder.Property(x => x.ChangedDate)
-                .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()");
-            
-            builder.Property(x => x.Reason)
-                .HasMaxLength(500);
-            
-            // Foreign key
-            builder.HasOne(x => x.Project)
-                .WithMany()
-                .HasForeignKey(x => x.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-            
-            // Indexes
-            builder.HasIndex(x => x.ProjectId)
-                .HasDatabaseName("IX_ProjectStatusHistory_ProjectId");
-            
-            builder.HasIndex(x => x.ChangedDate)
-                .HasDatabaseName("IX_ProjectStatusHistory_ChangedDate");
-            
-            // Check constraint
-            builder.HasCheckConstraint(
-                "CK_ProjectStatusHistory_StatusChange",
-                "[OldStatus] != [NewStatus]"
-            );
-        }
+        public int Id { get; set; }
+        
+        [Required]
+        public int ProjectId { get; set; }
+        
+        [Required]
+        [MaxLength(50)]
+        public string OldStatus { get; set; }
+        
+        [Required]
+        [MaxLength(50)]
+        public string NewStatus { get; set; }
+        
+        [Required]
+        [MaxLength(100)]
+        public string ChangedBy { get; set; }
+        
+        [Required]
+        public DateTime ChangedDate { get; set; }
+        
+        [MaxLength(500)]
+        public string Reason { get; set; }
     }
 }
 ```
 
-**Why this configuration:**
-- Fluent API (cleaner than attributes)
-- Explicit constraints (database-level validation)
-- Indexes for performance
-- Check constraint (data integrity)
+**Why this code:**
+- ✅ **Correct Path**: backend/src/NJS.Application/Dtos/
+- ✅ **Pattern Match**: Follows existing DTO patterns from this folder
+- ✅ **Namespace**: Matches existing NJS.Application.Dtos namespace
+- ✅ **Validation**: Uses same DataAnnotations as existing DTOs
 
-#### **4.2 Generate Backend Layer (CQRS)**
+#### **4.3 Generate CQRS Layer (Following Your Structure)**
 
-**File: `backend/src/NJS.Application/Commands/ChangeProjectStatusCommand.cs`**
+**File: `backend/src/NJS.Application/CQRS/Commands/ChangeProjectStatusCommand.cs`**
 ```csharp
 // I will generate CQRS command following your pattern
+// Path: backend/src/NJS.Application/CQRS/Commands/
+// Pattern: Analyzed from existing commands in this folder
 
 using MediatR;
+using NJS.Application.Dtos;
 
-namespace NJS.Application.Commands
+namespace NJS.Application.CQRS.Commands
 {
     public class ChangeProjectStatusCommand : IRequest<ProjectStatusHistoryDto>
     {
@@ -521,94 +657,202 @@ namespace NJS.Application.Commands
 }
 ```
 
-**File: `backend/src/NJS.Application/Handlers/ChangeProjectStatusHandler.cs`**
+**File: `backend/src/NJS.Application/CQRS/Queries/GetProjectStatusHistoryQuery.cs`**
 ```csharp
-// I will generate handler with business logic
+// I will generate CQRS query following your pattern
+// Path: backend/src/NJS.Application/CQRS/Queries/
+// Pattern: Analyzed from existing queries in this folder
 
 using MediatR;
-using NJS.Application.Commands;
-using NJS.Application.DTOs;
+using NJS.Application.Dtos;
+using System.Collections.Generic;
+
+namespace NJS.Application.CQRS.Queries
+{
+    public class GetProjectStatusHistoryQuery : IRequest<List<ProjectStatusHistoryDto>>
+    {
+        public int ProjectId { get; set; }
+    }
+}
+```
+
+**Why this code:**
+- ✅ **Correct Path**: backend/src/NJS.Application/CQRS/Commands/ and /Queries/
+- ✅ **Pattern Match**: Follows existing CQRS patterns from these folders
+- ✅ **Namespace**: Matches existing NJS.Application.CQRS namespaces
+- ✅ **MediatR**: Uses same IRequest patterns as existing commands/queries
+
+#### **4.4 Generate Repository Layer (Following Your Structure)**
+
+**File: `backend/NJS.Repositories/Interfaces/IProjectStatusHistoryRepository.cs`**
+```csharp
+// I will generate repository interface following your pattern
+// Path: backend/NJS.Repositories/Interfaces/
+// Pattern: Analyzed from existing interfaces in this folder
+
 using NJS.Domain.Entities;
-using NJS.Repositories.Interfaces;
-using System;
-using System.Threading;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace NJS.Application.Handlers
+namespace NJS.Repositories.Interfaces
 {
-    public class ChangeProjectStatusHandler 
-        : IRequestHandler<ChangeProjectStatusCommand, ProjectStatusHistoryDto>
+    public interface IProjectStatusHistoryRepository
     {
-        private readonly IProjectRepository _projectRepository;
-        private readonly IProjectStatusHistoryRepository _historyRepository;
-        private readonly IUnitOfWork _unitOfWork;
+        Task<ProjectStatusHistory> AddAsync(ProjectStatusHistory entity);
+        Task<List<ProjectStatusHistory>> GetByProjectIdAsync(int projectId);
+        Task<ProjectStatusHistory> GetByIdAsync(int id);
+    }
+}
+```
+
+**File: `backend/NJS.Repositories/Repositories/ProjectStatusHistoryRepository.cs`**
+```csharp
+// I will generate repository implementation following your pattern
+// Path: backend/NJS.Repositories/Repositories/
+// Pattern: Analyzed from existing repositories in this folder
+
+using NJS.Domain.Entities;
+using NJS.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace NJS.Repositories.Repositories
+{
+    public class ProjectStatusHistoryRepository : IProjectStatusHistoryRepository
+    {
+        private readonly ApplicationDbContext _context;
         
-        public ChangeProjectStatusHandler(
-            IProjectRepository projectRepository,
-            IProjectStatusHistoryRepository historyRepository,
-            IUnitOfWork unitOfWork)
+        public ProjectStatusHistoryRepository(ApplicationDbContext context)
         {
-            _projectRepository = projectRepository;
-            _historyRepository = historyRepository;
-            _unitOfWork = unitOfWork;
+            _context = context;
         }
         
-        public async Task<ProjectStatusHistoryDto> Handle(
-            ChangeProjectStatusCommand request, 
-            CancellationToken cancellationToken)
+        public async Task<ProjectStatusHistory> AddAsync(ProjectStatusHistory entity)
         {
-            // Get current project
-            var project = await _projectRepository.GetByIdAsync(request.ProjectId);
-            if (project == null)
-                throw new NotFoundException($"Project {request.ProjectId} not found");
-            
-            // Validate status change
-            if (project.Status == request.NewStatus)
-                throw new ValidationException("New status must be different from current status");
-            
-            // Create history record
-            var history = new ProjectStatusHistory
-            {
-                ProjectId = request.ProjectId,
-                OldStatus = project.Status,
-                NewStatus = request.NewStatus,
-                ChangedBy = request.ChangedBy,
-                ChangedDate = DateTime.UtcNow,
-                Reason = request.Reason
-            };
-            
-            // Update project status
-            project.Status = request.NewStatus;
-            project.LastModifiedBy = request.ChangedBy;
-            project.LastModifiedDate = DateTime.UtcNow;
-            
-            // Save changes
-            await _historyRepository.AddAsync(history);
-            await _projectRepository.UpdateAsync(project);
-            await _unitOfWork.CommitAsync();
-            
-            // Return DTO
-            return new ProjectStatusHistoryDto
-            {
-                Id = history.Id,
-                ProjectId = history.ProjectId,
-                OldStatus = history.OldStatus,
-                NewStatus = history.NewStatus,
-                ChangedBy = history.ChangedBy,
-                ChangedDate = history.ChangedDate,
-                Reason = history.Reason
-            };
+            _context.ProjectStatusHistory.Add(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+        
+        public async Task<List<ProjectStatusHistory>> GetByProjectIdAsync(int projectId)
+        {
+            return await _context.ProjectStatusHistory
+                .Where(h => h.ProjectId == projectId)
+                .OrderByDescending(h => h.ChangedDate)
+                .ToListAsync();
+        }
+        
+        public async Task<ProjectStatusHistory> GetByIdAsync(int id)
+        {
+            return await _context.ProjectStatusHistory
+                .FirstOrDefaultAsync(h => h.Id == id);
         }
     }
 }
 ```
 
-**Why this handler:**
-- Follows CQRS pattern (I learned from your code)
-- Unit of Work pattern (transaction safety)
-- Validation before changes
-- Updates both project and history atomically
-- Returns DTO (not entity)
+**Why this code:**
+- ✅ **Correct Path**: backend/NJS.Repositories/Interfaces/ and /Repositories/
+- ✅ **Pattern Match**: Follows existing repository patterns from these folders
+- ✅ **Namespace**: Matches existing NJS.Repositories namespaces
+- ✅ **DbContext**: Uses same context patterns as existing repositories
+
+#### **4.5 Generate Controller Layer (Following Your Structure)**
+
+**File: `backend/src/NJSAPI/Controllers/ProjectStatusHistoryController.cs`**
+```csharp
+// I will generate controller following your pattern
+// Path: backend/src/NJSAPI/Controllers/
+// Pattern: Analyzed from existing controllers in this folder
+
+using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using NJS.Application.CQRS.Commands;
+using NJS.Application.CQRS.Queries;
+using NJS.Application.Dtos;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace NJSAPI.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ProjectStatusHistoryController : ControllerBase
+    {
+        private readonly IMediator _mediator;
+        
+        public ProjectStatusHistoryController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+        
+        [HttpPost("change-status")]
+        public async Task<ActionResult<ProjectStatusHistoryDto>> ChangeProjectStatus(
+            [FromBody] ChangeProjectStatusCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        
+        [HttpGet("project/{projectId}")]
+        public async Task<ActionResult<List<ProjectStatusHistoryDto>>> GetProjectStatusHistory(
+            int projectId)
+        {
+            var query = new GetProjectStatusHistoryQuery { ProjectId = projectId };
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+    }
+}
+```
+
+**Why this code:**
+- ✅ **Correct Path**: backend/src/NJSAPI/Controllers/
+- ✅ **Pattern Match**: Follows existing controller patterns from this folder
+- ✅ **Namespace**: Matches existing NJSAPI.Controllers namespace
+- ✅ **Attributes**: Uses same routing and HTTP method patterns
+- ✅ **MediatR**: Uses same mediator patterns as existing controllers
+
+#### **4.6 File Path Compliance Checklist**
+
+**Before creating any file, I will verify:**
+
+```
+✅ Controllers → backend/src/NJSAPI/Controllers/
+   - Namespace: NJSAPI.Controllers
+   - Pattern: [Entity]Controller.cs
+   - Base: ControllerBase (from existing controllers)
+
+✅ Entities → backend/src/NJS.Domain/Entities/  
+   - Namespace: NJS.Domain.Entities
+   - Pattern: [EntityName].cs
+   - Base: Follow existing entity patterns
+
+✅ DTOs → backend/src/NJS.Application/Dtos/
+   - Namespace: NJS.Application.Dtos  
+   - Pattern: [EntityName]Dto.cs
+   - Validation: DataAnnotations (from existing DTOs)
+
+✅ CQRS → backend/src/NJS.Application/CQRS/
+   - Commands: /Commands/[Action]Command.cs
+   - Queries: /Queries/[Action]Query.cs
+   - Handlers: /Handlers/[Action]Handler.cs
+   - Namespace: NJS.Application.CQRS.[Commands|Queries|Handlers]
+
+✅ Repositories → backend/NJS.Repositories/
+   - Interfaces: /Interfaces/I[Entity]Repository.cs
+   - Implementations: /Repositories/[Entity]Repository.cs
+   - Namespace: NJS.Repositories.[Interfaces|Repositories]
+```
+
+**🚨 CRITICAL RULE: NO FILE CREATION WITHOUT PATH VERIFICATION**
+
+- I will NEVER create files in wrong locations
+- I will ALWAYS check existing folder structure first  
+- I will ALWAYS follow your exact namespace patterns
+- I will ALWAYS match existing code patterns from each folder
 
 #### **4.3 Generate Frontend Layer**
 
@@ -752,6 +996,15 @@ git push origin feature/project-status-history
 
 **🤖 GitHub Automation:** Automatically runs tests and generates reports
 
+**📋 MANDATORY TEST REPORT RULE:**
+When executing testing tasks from `tasks.md`, a comprehensive test report MUST be created and saved to `.kiro/specs/[feature-name]/test-report.md` for reviewer evaluation. This report must include:
+- Test execution summary (passed/failed counts)
+- Code coverage metrics (backend and frontend)
+- Performance benchmarks
+- Security test results
+- Any test failures with detailed explanations
+- Recommendations for reviewers
+
 #### **5.1 Generate Unit Tests**
 
 **File: `backend/tests/NJS.Application.Tests/Handlers/ChangeProjectStatusHandlerTests.cs`**
@@ -889,7 +1142,7 @@ namespace NJS.Application.Tests.Handlers
 - FluentAssertions for readability
 - Tests happy path + error cases
 - Verifies all interactions
-- **Coverage: 85%** (exceeds 80% requirement)
+- **Coverage: 100%** (meets 100% requirement)
 
 **🤖 Automatic Test Execution:**
 ```powershell
@@ -898,35 +1151,79 @@ namespace NJS.Application.Tests.Handlers
 # Backend tests
 cd backend
 dotnet test --collect:"XPlat Code Coverage"
-# Output: 45 passed, 0 failed, 87% coverage
+# Output: 45 passed, 0 failed, 100% coverage
 
 # Frontend tests
 cd frontend
 npm run test -- --coverage
-# Output: 32 passed, 0 failed, 83% coverage
+# Output: 32 passed, 0 failed, 100% coverage
 
-# Generate test report
-# Saves to: .kiro/specs/project-status-history/test-report.md
+# Generate comprehensive test report
+# MANDATORY: Saves to: .kiro/specs/project-status-history/test-report.md
 ```
 
-**Test Report Generated:**
+**📋 MANDATORY Test Report Template:**
 ```markdown
-# Test Results - Project Status History
+# Test Results - [Feature Name]
+
+## Executive Summary
+- ✅ Overall Status: PASSED/FAILED
+- 📊 Total Coverage: XX%
+- ⏱️ Execution Time: XX minutes
+- 🎯 Quality Gate: PASSED/FAILED
 
 ## Backend Tests
-- ✅ Passed: 45
-- ❌ Failed: 0
-- 📊 Coverage: 87%
+- ✅ Passed: XX
+- ❌ Failed: XX
+- 📊 Coverage: XX%
+- 🔍 Unit Tests: XX/XX passed
+- 🔗 Integration Tests: XX/XX passed
+- 🛡️ Security Tests: XX/XX passed
 
 ## Frontend Tests
-- ✅ Passed: 32
-- ❌ Failed: 0
-- 📊 Coverage: 83%
+- ✅ Passed: XX
+- ❌ Failed: XX
+- 📊 Coverage: XX%
+- 🧪 Component Tests: XX/XX passed
+- 🎭 E2E Tests: XX/XX passed
 
-## Overall
-- ✅ All tests passing
-- 📊 Total coverage: 85%
-- ✅ Meets 80% requirement
+## Performance Benchmarks
+- 🚀 API Response Time: XXXms (target: <500ms)
+- 💾 Memory Usage: XXXmb
+- 🔄 Load Test Results: XX concurrent users
+
+## Test Failures (if any)
+### Backend Failures
+- Test Name: [Description of failure and recommended fix]
+
+### Frontend Failures
+- Test Name: [Description of failure and recommended fix]
+
+## Code Quality Metrics
+- 📏 Code Complexity: XX/10
+- 🔍 Static Analysis: XX issues found
+- 📝 Documentation Coverage: XX%
+
+## Reviewer Recommendations
+- ✅ Ready for review: YES/NO
+- 🚨 Critical Issues: [List any blocking issues]
+- 💡 Suggestions: [Optional improvements]
+- 📋 Checklist for Reviewer:
+  - [ ] All tests passing
+  - [ ] Coverage meets 100% threshold
+  - [ ] Performance benchmarks met
+  - [ ] No critical security issues
+  - [ ] Code quality acceptable
+
+## Test Evidence
+- 📁 Coverage Reports: [Links to detailed coverage reports]
+- 📊 Performance Reports: [Links to performance test results]
+- 🛡️ Security Scan Results: [Links to security test outputs]
+
+---
+**Generated:** [Timestamp]
+**Feature:** [Feature Name]
+**Spec Location:** .kiro/specs/[feature-name]/
 ```
 
 **Why this automation?**
@@ -934,6 +1231,44 @@ npm run test -- --coverage
 - Provides coverage metrics automatically
 - Test failures documented (don't block PR)
 - Consistent testing every time
+
+---
+
+## 📋 **TASK EXECUTION RULES**
+
+### **MANDATORY: Test Report Generation**
+
+**When executing ANY testing task from `tasks.md`, the following rules MUST be followed:**
+
+1. **📄 Test Report Creation**: A comprehensive test report MUST be generated and saved to `.kiro/specs/[feature-name]/test-report.md`
+
+2. **📊 Required Content**: The test report MUST include:
+   - Executive summary with pass/fail status
+   - Detailed test results (backend and frontend)
+   - Code coverage metrics
+   - Performance benchmarks
+   - Security test results
+   - Any failures with explanations and fixes
+   - Reviewer recommendations and checklist
+
+3. **🎯 Quality Gates**: The report MUST clearly indicate:
+   - Whether all quality gates passed
+   - If the feature is ready for review
+   - Any blocking issues that need attention
+
+4. **📁 Evidence Links**: Include links to:
+   - Detailed coverage reports
+   - Performance test outputs
+   - Security scan results
+
+5. **👥 Reviewer Focus**: The report MUST provide:
+   - Clear pass/fail indicators
+   - Specific items for reviewers to check
+   - Recommendations for approval/rejection
+
+**🚫 NON-COMPLIANCE**: Features without proper test reports will be rejected during PR review.
+
+**✅ COMPLIANCE CHECK**: Before creating PR, verify test report exists and contains all required sections.
 
 ---
 
@@ -964,7 +1299,7 @@ npm run test -- --coverage
 
 #### **6.3 Test Coverage Check**
 ```
-✓ Unit tests: 85% coverage (> 80% requirement)
+✓ Unit tests: 100% coverage (meets 100% requirement)
 ✓ Integration tests: Included
 ✓ E2E tests: Included
 ✓ All edge cases covered
@@ -987,9 +1322,9 @@ Tracks all project status changes with audit trail (who, when, why).
 - [Tasks](.kiro/specs/project-status-history/tasks.md)
 
 ## Test Results
-- ✅ Backend: 45 passed, 0 failed (87% coverage)
-- ✅ Frontend: 32 passed, 0 failed (83% coverage)
-- ✅ Overall: 85% coverage (meets 80% requirement)
+- ✅ Backend: 45 passed, 0 failed (100% coverage)
+- ✅ Frontend: 32 passed, 0 failed (100% coverage)
+- ✅ Overall: 100% coverage (meets 100% requirement)
 
 ## Implementation Checklist
 - [x] Database schema created
@@ -1083,7 +1418,7 @@ GET /api/projects/{projectId}/status-history
 - `StatusChangeDialog` - Modal for status changes
 
 ## Testing
-- Unit test coverage: 85%
+- Unit test coverage: 100%
 - Integration tests: Included
 - E2E tests: Included
 ```
@@ -1410,7 +1745,7 @@ gh run list --workflow=deploy-dev-with-tags.yml --limit 1
 ### **Do's:**
 ✅ Always create specs before starting development  
 ✅ Review PRs thoroughly (only manual quality gate)  
-✅ Monitor test coverage (maintain ≥80%)  
+✅ Monitor test coverage (maintain 100%)  
 ✅ Keep feature branches short-lived (merge within 1-2 days)  
 ✅ Use conventional commit messages  
 ✅ Document test failures in PR if they occur  
@@ -1434,7 +1769,7 @@ Track these KPIs to measure automation effectiveness:
 | **Lead Time** | <6 hours | Spec creation to deployment |
 | **Change Failure Rate** | <5% | Failed deployments / total |
 | **Process Compliance** | 100% | All features follow workflow |
-| **Test Coverage** | ≥80% | Automated coverage reports |
+| **Test Coverage** | = 100% | Automated coverage reports |
 | **Manual Steps** | 1 per feature | PR approval only |
 
 ---

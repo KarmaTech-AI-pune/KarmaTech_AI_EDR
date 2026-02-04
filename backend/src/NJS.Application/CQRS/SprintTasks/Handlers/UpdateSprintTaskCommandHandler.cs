@@ -27,14 +27,14 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
         {
             var sprintTaskInputDto = request.SprintTask;
 
-            if (sprintTaskInputDto == null || string.IsNullOrWhiteSpace(sprintTaskInputDto.Taskid))
+            if (sprintTaskInputDto == null || !sprintTaskInputDto.Taskid.HasValue || sprintTaskInputDto.Taskid.Value <= 0)
             {
-                _logger.LogError("SprintTaskInputDto or TaskId is null or empty in the request.");
-                throw new ArgumentException("SprintTask or TaskId cannot be null or empty for update.");
+                _logger.LogError("SprintTaskInputDto or TaskId is invalid in the request.");
+                throw new ArgumentException("SprintTask or TaskId cannot be null or invalid for update.");
             }
 
             var existingSprintTask = await _context.SprintTasks
-                                                   .FirstOrDefaultAsync(st => st.Taskid == sprintTaskInputDto.Taskid, cancellationToken);
+                                                   .FirstOrDefaultAsync(st => st.Taskid == sprintTaskInputDto.Taskid.Value, cancellationToken);
 
             if (existingSprintTask == null)
             {
@@ -42,34 +42,57 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 return false;
             }
 
-            // Update properties from DTO to entity
-            existingSprintTask.TenantId = sprintTaskInputDto.TenantId;
-            existingSprintTask.Taskkey = sprintTaskInputDto.Taskkey;
-            existingSprintTask.TaskTitle = sprintTaskInputDto.TaskTitle;
-            existingSprintTask.Taskdescription = sprintTaskInputDto.Taskdescription;
-            existingSprintTask.TaskType = sprintTaskInputDto.TaskType;
-            existingSprintTask.Taskpriority = sprintTaskInputDto.Taskpriority;
-            existingSprintTask.TaskAssineid = sprintTaskInputDto.TaskAssineid;
-            existingSprintTask.TaskAssigneeName = sprintTaskInputDto.TaskAssigneeName;
-            existingSprintTask.TaskAssigneeAvatar = sprintTaskInputDto.TaskAssigneeAvatar;
-            existingSprintTask.TaskReporterId = sprintTaskInputDto.TaskReporterId;
-            existingSprintTask.TaskReporterName = sprintTaskInputDto.TaskReporterName;
-            existingSprintTask.TaskReporterAvatar = sprintTaskInputDto.TaskReporterAvatar;
-            existingSprintTask.Taskstatus = sprintTaskInputDto.Taskstatus;
-            existingSprintTask.StoryPoints = sprintTaskInputDto.StoryPoints;
-            existingSprintTask.Attachments = sprintTaskInputDto.Attachments;
-            existingSprintTask.IsExpanded = sprintTaskInputDto.IsExpanded;
+            // Update properties from DTO to entity - using null-coalescing to preserve existing data if DTO field is null
+            existingSprintTask.TenantId = _context.TenantId ?? 0;
+            existingSprintTask.Taskkey = sprintTaskInputDto.Taskkey ?? existingSprintTask.Taskkey;
+            existingSprintTask.TaskTitle = sprintTaskInputDto.TaskTitle ?? existingSprintTask.TaskTitle;
+            existingSprintTask.Taskdescription = sprintTaskInputDto.Taskdescription ?? existingSprintTask.Taskdescription;
+            existingSprintTask.TaskType = sprintTaskInputDto.TaskType ?? existingSprintTask.TaskType;
+            existingSprintTask.Taskpriority = sprintTaskInputDto.Taskpriority ?? existingSprintTask.Taskpriority;
+            existingSprintTask.TaskAssineid = sprintTaskInputDto.TaskAssineid ?? existingSprintTask.TaskAssineid;
+            existingSprintTask.TaskAssigneeName = sprintTaskInputDto.TaskAssigneeName ?? existingSprintTask.TaskAssigneeName;
+            existingSprintTask.TaskAssigneeAvatar = sprintTaskInputDto.TaskAssigneeAvatar ?? existingSprintTask.TaskAssigneeAvatar;
+            existingSprintTask.TaskReporterId = sprintTaskInputDto.TaskReporterId ?? existingSprintTask.TaskReporterId;
+            existingSprintTask.TaskReporterName = sprintTaskInputDto.TaskReporterName ?? existingSprintTask.TaskReporterName;
+            existingSprintTask.TaskReporterAvatar = sprintTaskInputDto.TaskReporterAvatar ?? existingSprintTask.TaskReporterAvatar;
+            existingSprintTask.Taskstatus = sprintTaskInputDto.Taskstatus ?? existingSprintTask.Taskstatus;
+            existingSprintTask.StoryPoints = sprintTaskInputDto.StoryPoints ?? existingSprintTask.StoryPoints;
+            existingSprintTask.Attachments = sprintTaskInputDto.Attachments ?? existingSprintTask.Attachments;
+            existingSprintTask.IsExpanded = sprintTaskInputDto.IsExpanded ?? existingSprintTask.IsExpanded;
             existingSprintTask.TaskupdatedDate = DateTime.UtcNow;
-            existingSprintTask.SprintPlanId = sprintTaskInputDto.SprintPlanId;
-            existingSprintTask.WbsPlanId = sprintTaskInputDto.WbsPlanId;
-            existingSprintTask.UserTaskId = sprintTaskInputDto.UserTaskId;
-            existingSprintTask.AcceptanceCriteria = sprintTaskInputDto.AcceptanceCriteria;
-            existingSprintTask.DisplayOrder = sprintTaskInputDto.DisplayOrder;
-            existingSprintTask.EstimatedHours = sprintTaskInputDto.EstimatedHours;
-            existingSprintTask.ActualHours = sprintTaskInputDto.ActualHours;
-            existingSprintTask.RemainingHours = sprintTaskInputDto.RemainingHours;
-            existingSprintTask.StartedAt = sprintTaskInputDto.StartedAt;
-            existingSprintTask.CompletedAt = sprintTaskInputDto.CompletedAt;
+            existingSprintTask.SprintPlanId = sprintTaskInputDto.SprintPlanId ?? existingSprintTask.SprintPlanId;
+            existingSprintTask.WbsPlanId = sprintTaskInputDto.WbsPlanId ?? existingSprintTask.WbsPlanId;
+            existingSprintTask.SprintWbsPlanId = sprintTaskInputDto.SprintWbsPlanId ?? existingSprintTask.SprintWbsPlanId;
+            existingSprintTask.UserTaskId = sprintTaskInputDto.UserTaskId ?? existingSprintTask.UserTaskId;
+            existingSprintTask.AcceptanceCriteria = sprintTaskInputDto.AcceptanceCriteria ?? existingSprintTask.AcceptanceCriteria;
+            existingSprintTask.DisplayOrder = sprintTaskInputDto.DisplayOrder ?? existingSprintTask.DisplayOrder;
+            existingSprintTask.EstimatedHours = sprintTaskInputDto.EstimatedHours.HasValue ? sprintTaskInputDto.EstimatedHours.Value : existingSprintTask.EstimatedHours;
+            existingSprintTask.ActualHours = sprintTaskInputDto.ActualHours.HasValue ? sprintTaskInputDto.ActualHours.Value : existingSprintTask.ActualHours;
+            
+            // Allow 0 as valid value
+            int newRemaining = sprintTaskInputDto.RemainingHours.HasValue ? sprintTaskInputDto.RemainingHours.Value : existingSprintTask.RemainingHours;
+            
+            // NEW LOGIC: Update SprintWbsPlan if RemainingHours changes
+            int diffRemaining = existingSprintTask.RemainingHours - newRemaining;
+
+            if (diffRemaining != 0 && existingSprintTask.SprintWbsPlanId.HasValue)
+            {
+                var plan = await _context.SprintWbsPlans.FindAsync(existingSprintTask.SprintWbsPlanId.Value);
+                if (plan != null)
+                {
+                    plan.RemainingHours -= diffRemaining;
+                    
+                    // User Rule: If remaining hours decrease (consumed), IsConsumed = true
+                    if (diffRemaining > 0)
+                    {
+                        plan.IsConsumed = true;
+                    }
+                }
+            }
+
+            existingSprintTask.RemainingHours = newRemaining;
+            existingSprintTask.StartedAt = sprintTaskInputDto.StartedAt ?? existingSprintTask.StartedAt;
+            existingSprintTask.CompletedAt = sprintTaskInputDto.CompletedAt ?? existingSprintTask.CompletedAt;
 
             // Note: Subtasks are intentionally not handled here as per the simplified input DTO.
             // If subtask updates are needed, a separate endpoint/command should be used.

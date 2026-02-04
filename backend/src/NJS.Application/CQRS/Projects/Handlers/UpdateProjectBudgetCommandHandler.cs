@@ -60,7 +60,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
                     "EstimatedProjectCost",
                     existingProject.EstimatedProjectCost ?? 0,
                     request.EstimatedProjectCost.Value,
-                    existingProject.Currency,
+                    existingProject.Currency ?? "USD",
                     request.ChangedBy,
                     request.Reason);
 
@@ -80,7 +80,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
                     "EstimatedProjectFee",
                     existingProject.EstimatedProjectFee ?? 0,
                     request.EstimatedProjectFee.Value,
-                    existingProject.Currency,
+                    existingProject.Currency ?? "USD",
                     request.ChangedBy,
                     request.Reason);
 

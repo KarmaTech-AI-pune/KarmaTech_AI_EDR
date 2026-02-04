@@ -74,9 +74,9 @@ namespace NJS.Domain.Entities
 
         public int? OpportunityTrackingId { get; set; }
 
-        public int? ProgramId { get; set; }
+        public int ProgramId { get; set; }
         [ForeignKey("ProgramId")]
-        public virtual Program? Program { get; set; }
+        public virtual Program Program { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
@@ -85,5 +85,7 @@ namespace NJS.Domain.Entities
         public DateTime? LastModifiedAt { get; set; }
 
         public string? LastModifiedBy { get; set; }
+
+        public virtual ICollection<SprintWbsPlan> SprintWbsPlans { get; set; }
     }
 }

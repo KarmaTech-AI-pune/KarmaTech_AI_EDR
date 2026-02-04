@@ -22,6 +22,7 @@ interface WBSSummaryProps {
   disabled: boolean;
   onSave: () => void;
   loading: boolean;
+  formType: 'manpower' | 'odc';
 }
 
 const WBSSummary: React.FC<WBSSummaryProps> = ({
@@ -30,31 +31,41 @@ const WBSSummary: React.FC<WBSSummaryProps> = ({
   currency,
   disabled,
   onSave,
-  loading
+  loading,
+  formType
 }) => {
   return (
-    <Box sx={{ 
-      display: 'flex', 
+    <Box sx={{
+      display: 'flex',
       alignItems: 'center',
       justifyContent: 'flex-end',
       gap: 3,
       p: 1
     }}>
+      {formType !== 'odc' && (
+        <>
+          <SummaryText>
+            Total Hours: {Number(totalHours).toFixed(2)}
+          </SummaryText>
+          <Divider orientation="vertical" flexItem />
+        </>
+      )}
       <SummaryText>
-        Total Hours: {totalHours}
+        Total Cost: {currency} {Number(totalCost).toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}
       </SummaryText>
-      <Divider orientation="vertical" flexItem />
-      <SummaryText>
-        Total Cost: {currency} {totalCost.toLocaleString()}
-      </SummaryText>
-      <LoadingButton 
-      onClick={onSave}
-      loading={loading}
-      disabled={disabled}
-      text='Save'
-      loadingText='Saving...'
-      size='medium'
-      />
+      {!disabled && (
+        <LoadingButton
+          onClick={onSave}
+          loading={loading}
+          disabled={disabled}
+          text='Save'
+          loadingText='Saving...'
+          size='medium'
+        />
+      )}
     </Box>
   );
 };

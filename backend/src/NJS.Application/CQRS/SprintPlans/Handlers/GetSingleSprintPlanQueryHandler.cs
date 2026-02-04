@@ -25,9 +25,11 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
 
         public async Task<SprintPlanDto?> Handle(GetSingleSprintPlanQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Attempting to retrieve SprintPlan with ID: {SprintId}", request.SprintId);
+            _logger.LogInformation("Attempting to retrieve SprintPlan with ID: {SprintId}, ProjectId filter: {ProjectId}", request.SprintId, request.ProjectId);
 
             var sprintPlanEntity = await _context.SprintPlans
+                .Include(sp => sp.SprintTasks!)
+                    .ThenInclude(st => st.Subtasks!)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(sp => sp.SprintId == request.SprintId, cancellationToken);
 
@@ -35,6 +37,18 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
             {
                 _logger.LogWarning("SprintPlan with ID {SprintId} not found.", request.SprintId);
                 return null;
+            }
+
+            // Project validation: Ensure sprint belongs to the requested project
+            if (request.ProjectId.HasValue && sprintPlanEntity.ProjectId != request.ProjectId.Value)
+            {
+                _logger.LogWarning(
+                    "SprintPlan {SprintId} belongs to Project {ActualProjectId}, " +
+                    "but was requested for Project {RequestedProjectId}. Returning null.",
+                    request.SprintId,
+                    sprintPlanEntity.ProjectId,
+                    request.ProjectId.Value);
+                return null;  // Treat as not found for security
             }
 
             _logger.LogInformation("SprintPlan with ID {SprintId} found. Converting to DTO.", request.SprintId);
@@ -48,8 +62,75 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
                 EndDate = sprintPlanEntity.EndDate,
                 SprintGoal = sprintPlanEntity.SprintGoal,
                 ProjectId = sprintPlanEntity.ProjectId,
-                // SprintEmployee will be dynamically populated
-                SprintTasks = null
+                SprintName = sprintPlanEntity.SprintName,
+                PlannedStoryPoints = sprintPlanEntity.PlannedStoryPoints,
+                ActualStoryPoints = sprintPlanEntity.ActualStoryPoints,
+                Velocity = sprintPlanEntity.Velocity,
+                Status = sprintPlanEntity.Status,
+                StartedAt = sprintPlanEntity.StartedAt,
+                CompletedAt = sprintPlanEntity.CompletedAt,
+                CreatedAt = sprintPlanEntity.CreatedAt,
+                UpdatedAt = sprintPlanEntity.UpdatedAt,
+                SprintTasks = sprintPlanEntity.SprintTasks?.Select(t => new SprintTaskDto
+                {
+                    Taskid = t.Taskid,
+                    TenantId = t.TenantId,
+                    Taskkey = t.Taskkey,
+                    TaskTitle = t.TaskTitle,
+                    Taskdescription = t.Taskdescription,
+                    TaskType = t.TaskType,
+                    Taskpriority = t.Taskpriority,
+                    TaskAssineid = t.TaskAssineid,
+                    TaskAssigneeName = t.TaskAssigneeName,
+                    TaskAssigneeAvatar = t.TaskAssigneeAvatar,
+                    TaskReporterId = t.TaskReporterId,
+                    TaskReporterName = t.TaskReporterName,
+                    TaskReporterAvatar = t.TaskReporterAvatar,
+                    Taskstatus = t.Taskstatus,
+                    StoryPoints = t.StoryPoints,
+                    Attachments = t.Attachments,
+                    IsExpanded = t.IsExpanded,
+                    TaskcreatedDate = t.TaskcreatedDate,
+                    TaskupdatedDate = t.TaskupdatedDate,
+                    SprintPlanId = t.SprintPlanId,
+                    WbsPlanId = t.WbsPlanId,
+                    SprintWbsPlanId = t.SprintWbsPlanId,
+                    UserTaskId = t.UserTaskId,
+                    AcceptanceCriteria = t.AcceptanceCriteria,
+                    DisplayOrder = t.DisplayOrder,
+                    EstimatedHours = t.EstimatedHours,
+                    ActualHours = t.ActualHours,
+                    RemainingHours = t.RemainingHours,
+                    StartedAt = t.StartedAt,
+                    CompletedAt = t.CompletedAt,
+                    Subtasks = t.Subtasks?.Select(s => new SprintSubtaskDto
+                    {
+                        SubtaskId = s.SubtaskId,
+                        Subtaskkey = s.Subtaskkey,
+                        TenantId = s.TenantId,
+                        Subtasktitle = s.Subtasktitle,
+                        Subtaskdescription = s.Subtaskdescription,
+                        Subtaskpriority = s.Subtaskpriority,
+                        Subtaskstatus = s.Subtaskstatus,
+                        SubtaskAssineid = s.SubtaskAssineid,
+                        SubtaskAssigneeName = s.SubtaskAssigneeName,
+                        SubtaskAssigneeAvatar = s.SubtaskAssigneeAvatar,
+                        SubtaskReporterId = s.SubtaskReporterId,
+                        SubtaskReporterName = s.SubtaskReporterName,
+                        SubtaskReporterAvatar = s.SubtaskReporterAvatar,
+                        Attachments = s.Attachments,
+                        SubtaskisExpanded = s.SubtaskisExpanded,
+                        SubtaskcreatedDate = s.SubtaskcreatedDate,
+                        SubtaskupdatedDate = s.SubtaskupdatedDate,
+                        SubtaskType = s.SubtaskType,
+                        Taskid = s.Taskid,
+                        DisplayOrder = s.DisplayOrder,
+                        EstimatedHours = s.EstimatedHours,
+                        ActualHours = s.ActualHours,
+                        StartedAt = s.StartedAt,
+                        CompletedAt = s.CompletedAt
+                    }).ToList()
+                }).ToList()
             };
 
             // Step 1 & 2: Get required employee count for the current sprint

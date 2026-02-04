@@ -1,4 +1,4 @@
-import React from 'react'; // Keep React for JSX
+import React, { useRef, useEffect } from 'react'; // Added useRef and useEffect
 import {
   Dialog,
   DialogTitle,
@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Controller } from 'react-hook-form'; // Keep Controller for rendering the input
-import { IWBSFormInputs, IWBSItem, IWBSLevel2 } from '../types/wbs'; // Use IWBSItem here
+import { IWBSFormInputs, IWBSItem } from '../types/wbs'; // Use IWBSItem here
 import { useWBSFormDialogLogic } from '../hooks/useWBSFormDialogLogic'; // Import the custom hook
 
 interface WBSFormDialogProps {
@@ -25,6 +25,7 @@ interface WBSFormDialogProps {
   allLevelsData: any; // Use a more generic type as specific levels are handled by hook
   dialogTitle: string;
   disabled?: boolean;
+  preSelectedParentId?: string | null;
 }
 
 const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
@@ -36,6 +37,7 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
   allLevelsData, // No longer directly used for options here, but kept if passed through.
   dialogTitle,
   disabled = false,
+  preSelectedParentId,
 }) => {
   const {
     control,
@@ -51,7 +53,22 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
     allLevelsData,
     onSubmit,
     onClose,
+    preSelectedParentId,
   });
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Small timeout to ensure the dialog is fully mounted and animation initialized
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
@@ -65,6 +82,7 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
+                inputRef={inputRef}
                 label="Description"
                 fullWidth
                 margin="normal"
@@ -75,31 +93,34 @@ const WBSFormDialog: React.FC<WBSFormDialogProps> = ({
             )}
           />
 
-          {level === 3 && (
-            <FormControl fullWidth margin="normal" error={!!errors.parentValue}>
-              <InputLabel id="parent-level-label">Parent Level</InputLabel>
+          {(level === 2 || level === 3) && !preSelectedParentId && (
+            <FormControl fullWidth margin="normal" error={!!errors.parentId}>
+              <InputLabel id="parent-level-label">
+                {level === 2 ? 'Parent Level 1' : 'Parent Level 2'}
+              </InputLabel>
               <Controller
-                name="parentValue"
+                name="parentId"
                 control={control}
                 rules={{ required: 'Parent Level is required' }}
                 render={({ field }) => (
                   <Select
                     {...field}
                     labelId="parent-level-label"
-                    label="Parent Level"
+                    label={level === 2 ? 'Parent Level 1' : 'Parent Level 2'}
                     value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value as string) : null)}
                   >
-                    {parentOptionsData.map((lvl2: IWBSLevel2) => ( // Map data to MenuItem
-                      <MenuItem key={lvl2.value} value={lvl2.value}>
-                        {lvl2.label}
+                    {parentOptionsData.map((option) => (
+                      <MenuItem key={option.id} value={option.id}>
+                        {option.label}
                       </MenuItem>
                     ))}
                   </Select>
                 )}
               />
-              {errors.parentValue && (
+              {errors.parentId && (
                 <Typography color="error" variant="caption">
-                  {errors.parentValue.message as string}
+                  {errors.parentId.message as string}
                 </Typography>
               )}
             </FormControl>

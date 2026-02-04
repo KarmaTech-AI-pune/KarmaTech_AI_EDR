@@ -7,9 +7,15 @@ import {
   MenuItem,
   Paper
 } from '@mui/material';
-import { ProjectFormData } from '../../types/index.tsx';
+import { Project } from '../../models';
 import { percentageCalculation } from '../../utils/calculations.ts';
 import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts';
+import { useCurrencyInput } from '../../hooks/useCurrencyInput';
+import { useFloatInput } from '../../hooks/useFloatInput.ts';
+import { useProject } from '../../context/ProjectContext';
+
+// Use Project type directly for form data (excluding id)
+type ProjectFormData = Omit<Project, 'id'>;
 
 interface ProjectFormType {
   project?: ProjectFormData;
@@ -28,8 +34,9 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   projectManagers,
   seniorProjectManagers
 }) => {
+  const { programId } = useProject();
 
-  const [formData, setFormData] = useState<ProjectFormData>({
+  const [formData, setFormData] = useState<any>({
     name: project?.name || '',
     details: project?.details || '',
     clientName: project?.clientName || '',
@@ -40,7 +47,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     seniorProjectManagerId: project?.seniorProjectManagerId || "",
     sector: project?.sector || '',
     region: project?.region || '',
-    status: project?.status ||  0,
+    status: project?.status || 0,
     createdAt: project?.createdAt || '',
     updatedAt: project?.updatedAt || '',
     typeOfClient: project?.typeOfClient || '',
@@ -52,32 +59,41 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
     estimatedProjectFee: project?.estimatedProjectFee || 0,
     priority: project?.priority || '',
     regionalManagerId: project?.regionalManagerId || "",
-    letterOfAcceptance:project?.letterOfAcceptance|| false,
+    letterOfAcceptance: project?.letterOfAcceptance || false,
     opportunityTrackingId: project?.opportunityTrackingId || 0,
     feeType: project?.feeType || 'Lumpsum',
     percentage: project?.percentage || 0,
+    programId: (project as any)?.programId || (programId ? parseInt(programId) : 0)
   })
 
-  // Track original budget values for comparison
-  const [originalBudget] = useState({
-    estimatedProjectCost: project?.estimatedProjectCost || 0,
-    estimatedProjectFee: project?.estimatedProjectFee || 0,
-  });
+  // Currency input hooks for live formatting with cursor position preservation
+  const estimatedCost = useCurrencyInput(formData.estimatedProjectCost, 'estimatedProjectCost');
+  const estimatedFee = useCurrencyInput(formData.estimatedProjectFee, 'estimatedProjectFee');
+
+  // Percentage input hook (shows "0" initially, auto-clears on typing)
+  const percentage = useFloatInput(formData.percentage, 'percentage');
+
+  // Helper function to sync currency input changes to formData
+  const syncCurrencyToFormData = (fieldName: string) => (rawValue: number) => {
+    setFormData((prev: any) => ({ ...prev, [fieldName]: rawValue }));
+  };
 
   const [budgetReason, setBudgetReason] = useState('');
 
-  // Check if budget values have changed
   const hasBudgetChanged = () => {
+    if (!project) return false;
     return (
-      Number(formData.estimatedProjectCost) !== Number(originalBudget.estimatedProjectCost) ||
-      Number(formData.estimatedProjectFee) !== Number(originalBudget.estimatedProjectFee)
+      Number(formData.estimatedProjectCost) !== Number(project.estimatedProjectCost) ||
+      Number(formData.estimatedProjectFee) !== Number(project.estimatedProjectFee)
     );
   };
 
   useEffect(() => {
     if (formData.feeType === 'Percentage') {
-      const fee = percentageCalculation(formData.percentage || 0, Number(formData.estimatedProjectCost));
-      setFormData(prev => ({ ...prev, estimatedProjectFee: fee }));
+      const cost = formData.estimatedProjectCost;
+      const fee = percentageCalculation(formData.percentage || 0, cost);
+      setFormData((prev: any) => ({ ...prev, estimatedProjectFee: fee }));
+      estimatedFee.setValue(fee);
     }
   }, [formData.percentage, formData.estimatedProjectCost, formData.feeType]);
 
@@ -85,35 +101,29 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       [name]: value
     }));
   };
 
-const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: (value.replace(/[^0-9]/g, '').replace(/^0+/, '') || '0').toString(),
-    }));
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const submissionData: ProjectFormData & { budgetReason?: string } = {
       ...formData,
-      estimatedProjectCost: Number(formData.estimatedProjectCost),
-      estimatedProjectFee: Number(formData.estimatedProjectFee || 0),
+      // No need to parse - formData already contains raw numbers from hook sync
+      estimatedProjectCost: formData.estimatedProjectCost,
+      estimatedProjectFee: formData.estimatedProjectFee,
       projectManagerId: formData.projectManagerId,
       seniorProjectManagerId: formData.seniorProjectManagerId,
       regionalManagerId: formData.regionalManagerId,
       startDate: parseDateFromInput(formData.startDate || '') || undefined,
       endDate: parseDateFromInput(formData.endDate || '') || undefined,
       office: formData.office || '',
-        typeOfJob: formData.typeOfJob || '',
-        priority: formData.priority || '',
+      typeOfJob: formData.typeOfJob || '',
+      priority: formData.priority || '',
       updatedAt: new Date().toISOString()
     };
 
@@ -297,8 +307,8 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               label="Estimated Project Cost"
               name="estimatedProjectCost"
               type="text"
-              value={formData.estimatedProjectCost}
-              onChange={handleNumberChange}
+              value={estimatedCost.value}
+              onChange={estimatedCost.getChangeHandler(syncCurrencyToFormData('estimatedProjectCost'))}
               required
             />
           </Grid>
@@ -309,8 +319,10 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 label="Percentage"
                 name="percentage"
                 type="text"
-                value={formData.percentage}
-                onChange={handleNumberChange}
+                value={percentage.value}
+                onChange={percentage.getChangeHandler((rawValue) => {
+                  setFormData((prev: any) => ({ ...prev, percentage: rawValue }));
+                })}
                 required
               />
             </Grid>
@@ -321,9 +333,9 @@ const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               label="Estimated Project Fee"
               name="estimatedProjectFee"
               type="text"
-              value={formData.estimatedProjectFee}
-              onChange={handleNumberChange}
-              // disabled={formData.feeType === 'Percentage'}
+              value={estimatedFee.value}
+              onChange={estimatedFee.getChangeHandler(syncCurrencyToFormData('estimatedProjectFee'))}
+            // disabled={formData.feeType === 'Percentage'}
             />
           </Grid>
           {project && hasBudgetChanged() && (

@@ -28,7 +28,10 @@ namespace NJS.Application.CQRS.Projects.Handlers
 
             // Calculate utilization: (ActualCost / EstimatedBudget) * 100
             decimal utilizationPercentage = 0;
-            if (project.EstimatedProjectCost > 0)
+            var estimatedCost = project.EstimatedProjectCost ?? 0;
+            var estimatedFee = project.EstimatedProjectFee ?? 0;
+            
+            if (estimatedCost > 0)
             {
                 utilizationPercentage = ((project.EstimatedProjectFee ?? 0) / project.EstimatedProjectCost.Value) * 100;
             }

@@ -8,6 +8,7 @@ using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 using System.Security.Claims;
+using System.Linq;
 
 namespace NJS.Application.Services
 {
@@ -201,5 +202,12 @@ namespace NJS.Application.Services
             return true;
         }
 
+        public async Task<List<TenantUser>> GetTenantUsersByUserIdAsync(string userId)
+        {
+            return await _tenantDbContext.TenantUsers
+                .Where(tu => tu.UserId == userId && tu.IsActive)
+                .Include(tu => tu.Tenant)
+                .ToListAsync();
+        }
     }
 }

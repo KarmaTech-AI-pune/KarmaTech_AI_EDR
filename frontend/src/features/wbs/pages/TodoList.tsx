@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box } from '@mui/material';
+import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useTodolistIssues } from '../../../hooks/useTodolistIssues';
 import { useIssueFiltering } from '../../../hooks/useIssueFiltering';
 import { useModalState } from '../../../hooks/useModalState';
-import { useDragAndDrop } from '../../../hooks/useDragAndDrop';
 import { TodolistHeader } from '../../../components/todolist/TodolistHeader';
 import { TodolistColumn } from '../../../components/todolist/TodolistColumn';
 import { CreateIssueModal } from '../../../components/todolist/modals/CreateIssueModal';
@@ -21,8 +21,17 @@ export default function TodoList() {
     createSubtask,
     updateSubtask,
     deleteSubtask,
-    addComment, // Destructure new function
+    addComment,
+    updateComment,
+    deleteComment,
+    fetchTaskComments,
+    addSubtaskComment,
+    updateSubtaskComment,
+    deleteSubtaskComment,
+    fetchSubtaskComments,
     teamMembers,
+    sprintEmployees,
+    completeSprint,
   } = useTodolistIssues();
 
   const {
@@ -41,9 +50,27 @@ export default function TodoList() {
     setEditingIssue,
   } = useModalState();
 
-  const {
-    handleDrop,
-  } = useDragAndDrop(moveIssue);
+  const handleDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId } = result;
+
+    // Dropped outside the list
+    if (!destination) {
+      return;
+    }
+
+    // Dropped in the same position
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    // Move to different column
+    if (destination.droppableId !== source.droppableId) {
+      moveIssue(draggableId, destination.droppableId as Issue['status']);
+    }
+  };
 
   const columns = [
     { id: 'To Do', title: 'TO DO', color: '#DFE1E6', issues: filteredIssues.filter(i => i.status === 'To Do') },
@@ -62,6 +89,8 @@ export default function TodoList() {
     storyPoints: '',
     components: 'UI',
     fixVersion: 'Version 1.0',
+    estimatedHours: '',
+    remainingHours: '',
   });
 
   const handleCreateIssue = () => {
@@ -76,6 +105,8 @@ export default function TodoList() {
       storyPoints: '',
       components: 'UI',
       fixVersion: 'Version 1.0',
+      estimatedHours: '',
+      remainingHours: '',
     });
     setShowCreateModal(false);
   };
@@ -88,24 +119,27 @@ export default function TodoList() {
         quickFilters={quickFilters}
         setQuickFilters={(filters) => setQuickFilters(filters)}
         setShowCreateModal={setShowCreateModal}
+        sprintEmployees={sprintEmployees}
+        onCompleteSprint={completeSprint}
       />
 
       <Box sx={{ py: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto' }}>
-          {columns.map((column) => (
-            <TodolistColumn
-              key={column.id}
-              id={column.id as Issue['status']}
-              title={column.title}
-              color={column.color}
-              issues={column.issues}
-              onIssueClick={setShowIssueDetail}
-              onToggleFlag={toggleFlag}
-              onDrop={handleDrop}
-              setShowCreateModal={setShowCreateModal}
-            />
-          ))}
-        </Box>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto' }}>
+            {columns.map((column) => (
+              <TodolistColumn
+                key={column.id}
+                id={column.id as Issue['status']}
+                title={column.title}
+                color={column.color}
+                issues={column.issues}
+                onIssueClick={setShowIssueDetail}
+                onToggleFlag={toggleFlag}
+                setShowCreateModal={setShowCreateModal}
+              />
+            ))}
+          </Box>
+        </DragDropContext>
       </Box>
 
       <CreateIssueModal
@@ -114,11 +148,10 @@ export default function TodoList() {
         newIssue={newIssueFormState}
         setNewIssue={setNewIssueFormState}
         createIssue={handleCreateIssue}
-        teamMembers={teamMembers}
       />
 
       <IssueDetailModal
-        showIssueDetail={showIssueDetail}
+        showIssueDetail={issues.find(i => i.id === showIssueDetail?.id) || showIssueDetail}
         setShowIssueDetail={setShowIssueDetail}
         setEditingIssue={setEditingIssue}
         onDeleteIssue={deleteIssue}
@@ -127,7 +160,14 @@ export default function TodoList() {
         onCreateSubtask={createSubtask}
         onUpdateSubtask={updateSubtask}
         onDeleteSubtask={deleteSubtask}
-        onAddComment={addComment} // Pass the new function
+        onAddComment={addComment}
+        onUpdateComment={updateComment}
+        onDeleteComment={deleteComment}
+        onFetchTaskComments={fetchTaskComments}
+        onAddSubtaskComment={addSubtaskComment}
+        onUpdateSubtaskComment={updateSubtaskComment}
+        onDeleteSubtaskComment={deleteSubtaskComment}
+        onFetchSubtaskComments={fetchSubtaskComments}
         teamMembers={teamMembers}
       />
 

@@ -43,7 +43,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(SprintSubtaskDto), 201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> CreateSprintSubtask(string taskId, [FromBody] SprintSubtaskDto subtaskDto)
+        public async Task<IActionResult> CreateSprintSubtask(int taskId, [FromBody] SprintSubtaskDto subtaskDto)
         {
             if (taskId != subtaskDto.Taskid)
             {
@@ -199,22 +199,27 @@ namespace NJSAPI.Controllers
         /// Gets a single SprintPlan by its ID.
         /// </summary>
         /// <param name="sprintId">The ID of the SprintPlan.</param>
+        /// <param name="projectId">Optional: The ID of the Project to validate sprint belongs to.</param>
         /// <returns>The SprintPlan data.</returns>
         [HttpGet("single-sprint-plan/{sprintId}")]
         [ProducesResponseType(typeof(SprintPlanDto), 200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> GetSingleSprintPlan(int sprintId)
+        public async Task<IActionResult> GetSingleSprintPlan(int sprintId, [FromQuery] int? projectId = null)
         {
-            _logger.LogInformation("Attempting to retrieve single SprintPlan with ID: {SprintId}", sprintId);
+            _logger.LogInformation("Attempting to retrieve single SprintPlan with ID: {SprintId}, ProjectId filter: {ProjectId}", sprintId, projectId);
 
             try
             {
-                var query = new GetSingleSprintPlanQuery { SprintId = sprintId };
+                var query = new GetSingleSprintPlanQuery 
+                { 
+                    SprintId = sprintId,
+                    ProjectId = projectId
+                };
                 var sprintPlanDto = await _mediator.Send(query);
 
                 if (sprintPlanDto == null)
                 {
-                    _logger.LogWarning("SprintPlan with ID {SprintId} not found.", sprintId);
+                    _logger.LogWarning("SprintPlan with ID {SprintId} not found or doesn't belong to project {ProjectId}.", sprintId, projectId);
                     return NotFound($"SprintPlan with ID {sprintId} not found.");
                 }
 
@@ -227,6 +232,43 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Gets the next sprint for a project relative to the current sprint ID.
+        /// </summary>
+        /// <param name="projectId">The Project ID.</param>
+        /// <param name="currentSprintId">The Current Sprint ID.</param>
+        /// <returns>The Next SprintPlan data or NotFound if none exists.</returns>
+        [HttpGet("next")]
+        [ProducesResponseType(typeof(SprintPlanDto), 200)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetNextSprint([FromQuery] int projectId, [FromQuery] int currentSprintId)
+        {
+            _logger.LogInformation("Attempting to retrieve next SprintPlan for Project {ProjectId} after Sprint {CurrentSprintId}", projectId, currentSprintId);
+
+            try
+            {
+                var query = new GetNextSprintQuery
+                {
+                    ProjectId = projectId,
+                    CurrentSprintId = currentSprintId
+                };
+                var sprintPlanDto = await _mediator.Send(query);
+
+                if (sprintPlanDto == null)
+                {
+                    return NotFound(new { message = "No next sprint found for this project." });
+                }
+
+                return Ok(sprintPlanDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving next SprintPlan.");
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
 
         /// <summary>
         /// Updates an existing SprintPlan based on its SprintId.
@@ -281,7 +323,7 @@ namespace NJSAPI.Controllers
         /// <param name="sprintTaskDto">The SprintTask data to create.</param>
         /// <returns>The TaskId of the newly created SprintTask.</returns>
         [HttpPost("single-sprint-task")]
-        [ProducesResponseType(typeof(string), 201)]
+        [ProducesResponseType(typeof(int), 201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [SwaggerRequestExample(typeof(SprintTaskInputDto), typeof(SprintTaskInputDtoExample))]
@@ -322,7 +364,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(SprintTaskDto), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetSingleSprintTask(string taskId)
+        public async Task<IActionResult> GetSingleSprintTask(int taskId)
         {
             _logger.LogInformation("Attempting to retrieve SprintTask with ID: {TaskId}", taskId);
 
@@ -403,7 +445,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(IEnumerable<SprintSubtaskDto>), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetAllSprintSubtasksByTaskId(string taskId)
+        public async Task<IActionResult> GetAllSprintSubtasksByTaskId(int taskId)
         {
             _logger.LogInformation("Attempting to retrieve all SprintSubtasks for Task ID: {TaskId}", taskId);
 
@@ -472,9 +514,9 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> DeleteSprintTask(string taskId)
+        public async Task<IActionResult> DeleteSprintTask(int taskId)
         {
-            if (string.IsNullOrEmpty(taskId))
+            if (taskId <= 0)
             {
                 _logger.LogWarning("TaskId is invalid for DeleteSprintTask request.");
                 return BadRequest(new { message = "TaskId cannot be invalid." });
@@ -518,7 +560,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(IEnumerable<SprintTaskCommentDto>), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetSprintTaskCommentsByTaskId(string taskId)
+        public async Task<IActionResult> GetSprintTaskCommentsByTaskId(int taskId)
         {
             _logger.LogInformation("Attempting to retrieve SprintTask comments for Task ID: {TaskId}", taskId);
 
@@ -588,7 +630,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> AddSprintTaskComment(string taskId, [FromBody] AddSprintTaskCommentCommand commentDto)
+        public async Task<IActionResult> AddSprintTaskComment(int taskId, [FromBody] AddSprintTaskCommentCommand commentDto)
         {
             if (!ModelState.IsValid)
             {
@@ -636,7 +678,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateSprintTaskComment(string taskId, int commentId, [FromBody] UpdateSprintTaskCommentCommand commentDto)
+        public async Task<IActionResult> UpdateSprintTaskComment(int taskId, int commentId, [FromBody] UpdateSprintTaskCommentCommand commentDto)
         {
             if (!ModelState.IsValid)
             {
@@ -728,7 +770,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(typeof(IEnumerable<SprintSubtaskCommentDto>), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetSprintSubtaskCommentsBySubtaskId(string taskId, int subtaskId)
+        public async Task<IActionResult> GetSprintSubtaskCommentsBySubtaskId(int taskId, int subtaskId)
         {
             _logger.LogInformation("Attempting to retrieve SprintSubtask comments for Task ID: {TaskId}, Subtask ID: {SubtaskId}", taskId, subtaskId);
 
@@ -749,6 +791,45 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving SprintSubtask comments for Subtask ID: {SubtaskId}.", subtaskId);
+                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Updates the actual and remaining hours for a SprintTask and adjusts the SprintWbsPlan accordingly.
+        /// </summary>
+        /// <param name="command">The time update command.</param>
+        /// <returns>A status indicating success or failure of the update operation.</returns>
+        [HttpPut("update-time")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateSprintTaskTime([FromBody] UpdateSprintTaskTimeCommand command)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var success = await _mediator.Send(command);
+
+                if (success)
+                {
+                    _logger.LogInformation("Time updated successfully for Task ID {TaskId}.", command.TaskId);
+                    return Ok(new { message = $"Time updated successfully for Task ID {command.TaskId}." });
+                }
+                else
+                {
+                    _logger.LogWarning("Task ID {TaskId} or SprintWbsPlan ID {PlanId} not found.", command.TaskId, command.SprintWbsPlanId);
+                    return NotFound(new { message = "Task or SprintWbsPlan not found." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating time for Task ID: {TaskId}.", command.TaskId);
                 return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
             }
         }
@@ -799,7 +880,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> AddSprintSubtaskComment(string taskId, int subtaskId, [FromBody] AddSprintSubtaskCommentCommand commentDto)
+        public async Task<IActionResult> AddSprintSubtaskComment(int taskId, int subtaskId, [FromBody] AddSprintSubtaskCommentCommand commentDto)
         {
             if (!ModelState.IsValid)
             {
@@ -849,7 +930,7 @@ namespace NJSAPI.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateSprintSubtaskComment(string taskId, int subtaskId, int subtaskCommentId, [FromBody] UpdateSprintSubtaskCommentCommand commentDto)
+        public async Task<IActionResult> UpdateSprintSubtaskComment(int taskId, int subtaskId, int subtaskCommentId, [FromBody] UpdateSprintSubtaskCommentCommand commentDto)
         {
             if (!ModelState.IsValid)
             {

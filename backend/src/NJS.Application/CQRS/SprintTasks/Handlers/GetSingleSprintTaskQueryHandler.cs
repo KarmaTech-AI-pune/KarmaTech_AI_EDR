@@ -25,6 +25,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             _logger.LogInformation("Attempting to retrieve SprintTask with ID: {TaskId}", request.TaskId);
 
             var sprintTask = await _context.SprintTasks
+                                           .Include(st => st.Subtasks)
                                            .FirstOrDefaultAsync(st => st.Taskid == request.TaskId, cancellationToken);
 
             if (sprintTask == null)
@@ -56,7 +57,42 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
                 TaskupdatedDate = sprintTask.TaskupdatedDate,
                 SprintPlanId = sprintTask.SprintPlanId,
                 WbsPlanId = sprintTask.WbsPlanId,
-                UserTaskId = sprintTask.UserTaskId
+                SprintWbsPlanId = sprintTask.SprintWbsPlanId,
+                UserTaskId = sprintTask.UserTaskId,
+                AcceptanceCriteria = sprintTask.AcceptanceCriteria,
+                DisplayOrder = sprintTask.DisplayOrder,
+                EstimatedHours = sprintTask.EstimatedHours,
+                ActualHours = sprintTask.ActualHours,
+                RemainingHours = sprintTask.RemainingHours,
+                StartedAt = sprintTask.StartedAt,
+                CompletedAt = sprintTask.CompletedAt,
+                Subtasks = sprintTask.Subtasks?.Select(s => new SprintSubtaskDto
+                {
+                    SubtaskId = s.SubtaskId,
+                    Subtaskkey = s.Subtaskkey,
+                    TenantId = s.TenantId,
+                    Subtasktitle = s.Subtasktitle,
+                    Subtaskdescription = s.Subtaskdescription,
+                    Subtaskpriority = s.Subtaskpriority,
+                    Subtaskstatus = s.Subtaskstatus,
+                    SubtaskAssineid = s.SubtaskAssineid,
+                    SubtaskAssigneeName = s.SubtaskAssigneeName,
+                    SubtaskAssigneeAvatar = s.SubtaskAssigneeAvatar,
+                    SubtaskReporterId = s.SubtaskReporterId,
+                    SubtaskReporterName = s.SubtaskReporterName,
+                    SubtaskReporterAvatar = s.SubtaskReporterAvatar,
+                    Attachments = s.Attachments,
+                    SubtaskisExpanded = s.SubtaskisExpanded,
+                    SubtaskcreatedDate = s.SubtaskcreatedDate,
+                    SubtaskupdatedDate = s.SubtaskupdatedDate,
+                    SubtaskType = s.SubtaskType,
+                    Taskid = s.Taskid,
+                    DisplayOrder = s.DisplayOrder,
+                    EstimatedHours = s.EstimatedHours,
+                    ActualHours = s.ActualHours,
+                    StartedAt = s.StartedAt,
+                    CompletedAt = s.CompletedAt
+                }).ToList()
             };
 
             _logger.LogInformation("SprintTask with ID {TaskId} found.", request.TaskId);

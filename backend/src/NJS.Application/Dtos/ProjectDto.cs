@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Metrics;
 using NJS.Domain.Entities;
 
@@ -36,7 +37,11 @@ namespace NJS.Application.Dtos
         public string? ContractType { get; set; }
         public bool? LetterOfAcceptance { get; set; }
         public int? OpportunityTrackingId { get; set; }
-        public int? ProgramId { get; set; }
+        
+        [Required(ErrorMessage = "ProgramId is required. A project must belong to a program.")]
+        [Range(1, int.MaxValue, ErrorMessage = "ProgramId must be greater than 0.")]
+        public int ProgramId { get; set; }
+        
         public DateTime CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? LastModifiedAt { get; set; }
