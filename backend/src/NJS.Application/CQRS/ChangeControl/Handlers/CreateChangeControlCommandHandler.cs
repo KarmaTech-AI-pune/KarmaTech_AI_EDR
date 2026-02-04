@@ -26,6 +26,11 @@ namespace NJS.Application.CQRS.ChangeControl.Handlers
 
             // Ensure all string fields have values and set audit fields
             var project = _projectRepository.GetById(request.ChangeControlDto.ProjectId);
+            
+            if (project == null)
+            {
+                 throw new KeyNotFoundException($"Project with ID {request.ChangeControlDto.ProjectId} not found.");
+            }
 
             var dateNow= DateTime.UtcNow;
 
@@ -35,8 +40,8 @@ namespace NJS.Application.CQRS.ChangeControl.Handlers
             entity.ProjectId = request.ChangeControlDto.ProjectId;
             entity.SrNo = request.ChangeControlDto.SrNo;
             entity.DateLogged = request.ChangeControlDto.DateLogged;
-            entity.Originator = request.ChangeControlDto.Originator ?? string.Empty;
-            entity.Description = request.ChangeControlDto.Description ?? string.Empty;
+            entity.Originator = request.ChangeControlDto.Originator;
+            entity.Description = request.ChangeControlDto.Description;
             entity.CostImpact = request.ChangeControlDto.CostImpact ?? string.Empty;
             entity.TimeImpact = request.ChangeControlDto.TimeImpact ?? string.Empty;
             entity.ResourcesImpact = request.ChangeControlDto.ResourcesImpact ?? string.Empty;
