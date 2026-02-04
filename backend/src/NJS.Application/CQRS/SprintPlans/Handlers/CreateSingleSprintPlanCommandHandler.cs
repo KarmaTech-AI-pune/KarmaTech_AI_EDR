@@ -24,6 +24,11 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
 
         public async Task<int> Handle(CreateSingleSprintPlanCommand request, CancellationToken cancellationToken)
         {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
             var sprintPlanDto = request.SprintPlan;
 
             if (sprintPlanDto == null || sprintPlanDto.ProjectId == null)
