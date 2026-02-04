@@ -30,8 +30,8 @@ const navLinks = [
     permission: PermissionType.VIEW_BUSINESS_DEVELOPMENT,
   },
   {
-    label: 'Project Management',
-    path: '/project-management',
+    label: 'Program Management',
+    path: '/program-management',
     permission: PermissionType.VIEW_PROJECT,
   },
 ];

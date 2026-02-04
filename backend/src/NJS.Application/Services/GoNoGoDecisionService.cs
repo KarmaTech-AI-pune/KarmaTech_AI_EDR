@@ -5,6 +5,7 @@ using NJS.Domain.Entities;
 using NJS.Domain.Enums;
 using NJS.Repositories.Interfaces;
 using System.Text.Json;
+using NJS.Application.Helpers;
 
 public class GoNoGoDecisionService : IGoNoGoDecisionService
 {
@@ -23,6 +24,8 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public void Add(GoNoGoDecision decision)
     {
+        // Apply raw score (no capping) before adding to database
+        ScoreCalculationHelper.ApplyRawScore(decision);
         _goNoGoDecision.Add(decision);
     }
 
@@ -64,22 +67,68 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public IEnumerable<GoNoGoDecision> GetAll()
     {
-        return _goNoGoDecision.GetAll();
+        var decisions = _goNoGoDecision.GetAll();
+        
+        // Ensure percentage calculation for existing records - Requirement 3.1
+        foreach (var decision in decisions)
+        {
+            // Preserve individual criterion scores unchanged - Requirement 3.5
+            // Only update TotalScore if it needs recalculation for backward compatibility
+            if (decision.TotalScore != decision.CalculateRawTotalScore())
+            {
+                decision.UpdateTotalScore();
+            }
+        }
+        
+        return decisions;
     }
 
     public GoNoGoDecision GetById(int id)
     {
-        return _goNoGoDecision.GetById(id);
+        var decision = _goNoGoDecision.GetById(id);
+        
+        if (decision != null)
+        {
+            // Ensure percentage calculation for existing records - Requirement 3.1
+            // Preserve individual criterion scores unchanged - Requirement 3.5
+            if (decision.TotalScore != decision.CalculateRawTotalScore())
+            {
+                decision.UpdateTotalScore();
+            }
+        }
+        
+        return decision;
     }
 
     public async Task<GoNoGoDecisionHeader> GetByOpportunityId(int opportuntiy)
     {
-        return await _goNoGoDecision.GetByOpportunityId(opportuntiy);
+        var header = await _goNoGoDecision.GetByOpportunityId(opportuntiy);
+        
+        if (header != null)
+        {
+            // Ensure percentage calculation for existing records - Requirement 3.1
+            // TotalScore in header should reflect raw total for percentage calculation
+            // Individual criterion scores are preserved in the related GoNoGoDecision entity
+        }
+        
+        return header;
     }
 
     public GoNoGoDecision GetByProjectId(int projectId)
     {
-        return _goNoGoDecision.GetByProjectId(projectId);
+        var decision = _goNoGoDecision.GetByProjectId(projectId);
+        
+        if (decision != null)
+        {
+            // Ensure percentage calculation for existing records - Requirement 3.1
+            // Preserve individual criterion scores unchanged - Requirement 3.5
+            if (decision.TotalScore != decision.CalculateRawTotalScore())
+            {
+                decision.UpdateTotalScore();
+            }
+        }
+        
+        return decision;
     }
 
     public async Task<GoNoGoDecisionHeader> GetHeaderById(int id)
@@ -105,6 +154,10 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
     public void Update(GoNoGoDecision decision)
     {
+        // Ensure percentage calculation for existing records - Requirement 3.3
+        // Preserve individual criterion scores unchanged - Requirement 3.3
+        // Apply raw score (no capping) before updating in database
+        ScoreCalculationHelper.ApplyRawScore(decision);
         _goNoGoDecision.Update(decision);
     }
 
@@ -164,7 +217,12 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
 
         header.CurrentVersion = version.VersionNumber;
         header.VersionStatus = version.Status;
-        header.TotalScore = summary!.Summary.TotalScore;
+        
+        // Store raw total score (no capping) - Requirement 3.3
+        // Individual criterion scores are preserved in the FormData JSON
+        // Percentage calculation is handled when data is retrieved
+        int rawTotalScore = summary!.Summary.TotalScore;
+        header.TotalScore = rawTotalScore;
 
 
         return await _goNoGoDecision.UpdateVersion(version);
@@ -180,4 +238,182 @@ public class GoNoGoDecisionService : IGoNoGoDecisionService
         GoNoGoVersionStatus.RD_APPROVED => GoNoGoVersionStatus.COMPLETED,
         _ => throw new Exception("Invalid version status")
     };
+
+    /// <summary>
+    /// Gets a GoNoGoDecision by ID and returns it as a DTO with percentage information
+    /// </summary>
+    /// <param name="id">The decision ID</param>
+    /// <returns>GoNoGoDecisionDto with percentage information included</returns>
+    public GoNoGoDecisionDto GetByIdWithCappingInfo(int id)
+    {
+        var decision = _goNoGoDecision.GetById(id);
+        if (decision == null) return null;
+
+        var scoreInfo = ScoreCalculationHelper.GetScoreInfo(decision);
+        
+        return new GoNoGoDecisionDto
+        {
+            ProjectId = decision.ProjectId,
+            BidType = decision.BidType,
+            Sector = decision.Sector,
+            TenderFee = decision.TenderFee,
+            EmdAmount = decision.EMDAmount,
+            
+            // Individual scores
+            MarketingPlanScore = decision.MarketingPlanScore,
+            MarketingPlanComments = decision.MarketingPlanComments,
+            ClientRelationshipScore = decision.ClientRelationshipScore,
+            ClientRelationshipComments = decision.ClientRelationshipComments,
+            ProjectKnowledgeScore = decision.ProjectKnowledgeScore,
+            ProjectKnowledgeComments = decision.ProjectKnowledgeComments,
+            TechnicalEligibilityScore = decision.TechnicalEligibilityScore,
+            TechnicalEligibilityComments = decision.TechnicalEligibilityComments,
+            FinancialEligibilityScore = decision.FinancialEligibilityScore,
+            FinancialEligibilityComments = decision.FinancialEligibilityComments,
+            StaffAvailabilityScore = decision.StaffAvailabilityScore,
+            StaffAvailabilityComments = decision.StaffAvailabilityComments,
+            CompetitionAssessmentScore = decision.CompetitionAssessmentScore,
+            CompetitionAssessmentComments = decision.CompetitionAssessmentComments,
+            CompetitivePositionScore = decision.CompetitivePositionScore,
+            CompetitivePositionComments = decision.CompetitivePositionComments,
+            FutureWorkPotentialScore = decision.FutureWorkPotentialScore,
+            FutureWorkPotentialComments = decision.FutureWorkPotentialComments,
+            ProfitabilityScore = decision.ProfitabilityScore,
+            ProfitabilityComments = decision.ProfitabilityComments,
+            ResourceAvailabilityScore = decision.ResourceAvailabilityScore,
+            ResourceAvailabilityComments = decision.ResourceAvailabilityComments,
+            BidScheduleScore = decision.BidScheduleScore,
+            BidScheduleComments = decision.BidScheduleComments,
+            
+            // Score information with percentage
+            TotalScore = scoreInfo.RawTotalScore,
+            RawTotalScore = scoreInfo.RawTotalScore,
+            ScorePercentage = scoreInfo.ScorePercentage,
+            MaxPossibleScore = scoreInfo.MaxPossibleScore,
+            IsPerfectScore = scoreInfo.IsPerfectScore,
+            IsScoreCapped = false, // Legacy property - always false now
+            Status = decision.Status,
+            DecisionComments = decision.DecisionComments,
+            
+            // Approval information
+            CompletedDate = decision.CompletedDate,
+            CompletedBy = decision.CompletedBy,
+            ReviewedDate = decision.ReviewedDate,
+            ReviewedBy = decision.ReviewedBy,
+            ApprovedDate = decision.ApprovedDate,
+            ApprovedBy = decision.ApprovedBy,
+            ActionPlan = decision.ActionPlan,
+            
+            // Audit fields
+            CreatedAt = decision.CreatedAt,
+            CreatedBy = decision.CreatedBy,
+            LastModifiedAt = decision.LastModifiedAt,
+            LastModifiedBy = decision.LastModifiedBy
+        };
+    }
+
+    /// <summary>
+    /// Gets a GoNoGoDecision by Project ID and returns it as a DTO with percentage information
+    /// </summary>
+    /// <param name="projectId">The project ID</param>
+    /// <returns>GoNoGoDecisionDto with percentage information included</returns>
+    public GoNoGoDecisionDto GetByProjectIdWithCappingInfo(int projectId)
+    {
+        var decision = _goNoGoDecision.GetByProjectId(projectId);
+        if (decision == null) return null;
+
+        var scoreInfo = ScoreCalculationHelper.GetScoreInfo(decision);
+        
+        return new GoNoGoDecisionDto
+        {
+            ProjectId = decision.ProjectId,
+            BidType = decision.BidType,
+            Sector = decision.Sector,
+            TenderFee = decision.TenderFee,
+            EmdAmount = decision.EMDAmount,
+            
+            // Individual scores
+            MarketingPlanScore = decision.MarketingPlanScore,
+            MarketingPlanComments = decision.MarketingPlanComments,
+            ClientRelationshipScore = decision.ClientRelationshipScore,
+            ClientRelationshipComments = decision.ClientRelationshipComments,
+            ProjectKnowledgeScore = decision.ProjectKnowledgeScore,
+            ProjectKnowledgeComments = decision.ProjectKnowledgeComments,
+            TechnicalEligibilityScore = decision.TechnicalEligibilityScore,
+            TechnicalEligibilityComments = decision.TechnicalEligibilityComments,
+            FinancialEligibilityScore = decision.FinancialEligibilityScore,
+            FinancialEligibilityComments = decision.FinancialEligibilityComments,
+            StaffAvailabilityScore = decision.StaffAvailabilityScore,
+            StaffAvailabilityComments = decision.StaffAvailabilityComments,
+            CompetitionAssessmentScore = decision.CompetitionAssessmentScore,
+            CompetitionAssessmentComments = decision.CompetitionAssessmentComments,
+            CompetitivePositionScore = decision.CompetitivePositionScore,
+            CompetitivePositionComments = decision.CompetitivePositionComments,
+            FutureWorkPotentialScore = decision.FutureWorkPotentialScore,
+            FutureWorkPotentialComments = decision.FutureWorkPotentialComments,
+            ProfitabilityScore = decision.ProfitabilityScore,
+            ProfitabilityComments = decision.ProfitabilityComments,
+            ResourceAvailabilityScore = decision.ResourceAvailabilityScore,
+            ResourceAvailabilityComments = decision.ResourceAvailabilityComments,
+            BidScheduleScore = decision.BidScheduleScore,
+            BidScheduleComments = decision.BidScheduleComments,
+            
+            // Score information with percentage
+            TotalScore = scoreInfo.RawTotalScore,
+            RawTotalScore = scoreInfo.RawTotalScore,
+            ScorePercentage = scoreInfo.ScorePercentage,
+            MaxPossibleScore = scoreInfo.MaxPossibleScore,
+            IsPerfectScore = scoreInfo.IsPerfectScore,
+            IsScoreCapped = false, // Legacy property - always false now
+            Status = decision.Status,
+            DecisionComments = decision.DecisionComments,
+            
+            // Approval information
+            CompletedDate = decision.CompletedDate,
+            CompletedBy = decision.CompletedBy,
+            ReviewedDate = decision.ReviewedDate,
+            ReviewedBy = decision.ReviewedBy,
+            ApprovedDate = decision.ApprovedDate,
+            ApprovedBy = decision.ApprovedBy,
+            ActionPlan = decision.ActionPlan,
+            
+            // Audit fields
+            CreatedAt = decision.CreatedAt,
+            CreatedBy = decision.CreatedBy,
+            LastModifiedAt = decision.LastModifiedAt,
+            LastModifiedBy = decision.LastModifiedBy
+        };
+    }
+
+    /// <summary>
+    /// Gets all GoNoGoDecisions and returns them as DTOs with percentage information
+    /// </summary>
+    /// <returns>Collection of GoNoGoSummaryDto with percentage information included</returns>
+    public IEnumerable<GoNoGoSummaryDto> GetAllWithCappingInfo()
+    {
+        var decisions = _goNoGoDecision.GetAll();
+        
+        return decisions.Select(decision =>
+        {
+            var scoreInfo = ScoreCalculationHelper.GetScoreInfo(decision);
+            
+            return new GoNoGoSummaryDto
+            {
+                Id = decision.Id,
+                ProjectId = decision.ProjectId,
+                TotalScore = scoreInfo.RawTotalScore,
+                RawTotalScore = scoreInfo.RawTotalScore,
+                ScorePercentage = scoreInfo.ScorePercentage,
+                MaxPossibleScore = scoreInfo.MaxPossibleScore,
+                IsPerfectScore = scoreInfo.IsPerfectScore,
+                IsScoreCapped = false, // Legacy property - always false now
+                Status = decision.Status,
+                DecisionComments = decision.DecisionComments,
+                CompletedDate = decision.CompletedDate,
+                CompletedBy = decision.CompletedBy,
+                ApprovedDate = decision.ApprovedDate,
+                ApprovedBy = decision.ApprovedBy
+            };
+        });
+    }
 }

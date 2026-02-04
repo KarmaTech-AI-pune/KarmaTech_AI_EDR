@@ -7,6 +7,7 @@ using NJS.Application.Services.IContract;
 using NJS.Domain.Extensions;
 using NJS.Domain.Services;
 using NJSAPI.Extensions;
+using NJSAPI.Strategies;
 using NLog;
 using NLog.Extensions.Logging;
 
@@ -33,7 +34,8 @@ public class Program
             Environment.ExitCode = -1;
         }
         finally
-        {logger.LogInformation("The my application has been stopped");
+        {
+            logger.LogInformation("The my application has been stopped");
             LogManager.Shutdown();
         }
     }
@@ -63,12 +65,12 @@ public class Program
             options.ValidateScopes = true;
             options.ValidateOnBuild = true;
         });
-        
-        
-        builder.WebHost.UseKestrel((_, options) => { options.AllowSynchronousIO = true; });
+
+
+        //builder.WebHost.UseKestrel((_, options) => { options.AllowSynchronousIO = true; });
         builder.Services.AddHealthChecks();
         builder.Services.AddCompression();
-        
+
         builder.Services.AddControllers();
         builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
@@ -135,6 +137,10 @@ public class Program
             });
         builder.Services.AddAuditServices();
         builder.Services.ConfigureAuditObservers();
+
+        builder.Services.AddScoped<ITenantUserMigrationStrategy, IsolatedTenantUserMigrationStrategy>();
+        builder.Services.AddScoped<ITenantUserMigrationStrategy, SharedTenantUserMigrationStrategy>();
+        builder.Services.AddScoped<ITenantUserMigrationStrategySelector, TenantUserMigrationStrategySelector>();
         return builder;
     }
 }

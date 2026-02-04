@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Application.CQRS.Projects.Queries;
 using NJS.Application.Dtos;
+using NJS.Application.DTOs;
 using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
@@ -124,11 +125,12 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
-        /// Gets all projects
+        /// Gets all projects, optionally filtered by ProgramId
         /// </summary>
+        /// <param name="programId">Optional: Filter projects by program ID</param>
         [HttpGet]
         [ProducesResponseType(typeof(Project[]), 200)]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int? programId = null)
         {
             try
             {
@@ -139,13 +141,25 @@ namespace NJSAPI.Controllers
                     if (accessCheck != null) return accessCheck;
                 }
 
-                var query = new GetAllProjectsQuery();
+                var query = new GetAllProjectsQuery { ProgramId = programId };
                 var result = await _mediator.Send(query);
+                
+                if (programId.HasValue)
+                {
+                    _logger.LogInformation("Retrieved {Count} projects for Program {ProgramId}", 
+                        result.Count(), programId.Value);
+                }
+                else
+                {
+                    _logger.LogInformation("Retrieved {Count} total projects", result.Count());
+                }
+                
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting projects for tenant {TenantId}", CurrentTenantId);
+                _logger.LogError(ex, "Error getting projects for tenant {TenantId}, programId {ProgramId}", 
+                    CurrentTenantId, programId);
                 return StatusCode(500, new { message = ex.Message });
             }
         }
@@ -265,6 +279,34 @@ namespace NJSAPI.Controllers
             {
                 _logger.LogError(ex, "Error getting tenant context");
                 return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets budget health status for a project
+        /// </summary>
+        [HttpGet("{id}/budget/health")]
+        [ProducesResponseType(typeof(BudgetHealthDto), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetBudgetHealth(int id)
+        {
+            try
+            {
+                var query = new GetBudgetHealthQuery { ProjectId = id };
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting budget health for project {ProjectId}", id);
+                
+                if (ex.Message.Contains("not found"))
+                {
+                    return NotFound(new { message = ex.Message });
+                }
+                
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 

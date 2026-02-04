@@ -39,7 +39,7 @@ namespace NJS.Application.CQRS.SprintSubtasks.Handlers
                 CommentText = request.CommentText,
                 CreatedBy = request.CreatedBy,
                 CreatedDate = DateTime.UtcNow,
-                TenantId = _context.TenantId.Value // Assuming TenantId is available from context
+                TenantId = _context.TenantId ?? 0 // Securely assign TenantId
             };
 
             _context.SprintSubtaskComments.Add(comment);

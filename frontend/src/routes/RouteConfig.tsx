@@ -1,6 +1,6 @@
 import { RouteObject } from 'react-router-dom';
 import { businessDevelopmentRoutes } from './businessDevelopmentRoutes';
-import { projectManagementRoutes } from './projectManagementRoutes';
+import { programManagementRoutes } from './programManagementRoutes';
 import { adminRoutes } from './adminRoutes';
 import Layout from '../components/Layout';
 import ProtectedRoute from './ProtectedRoute';
@@ -17,7 +17,7 @@ const UserProfile = lazy(() => import('../pages/UserProfile'));
 
 const protectedRoutes: RouteObject[] = [
   ...businessDevelopmentRoutes,
-  ...projectManagementRoutes,
+  ...programManagementRoutes,
   ...adminRoutes,
 ];
 

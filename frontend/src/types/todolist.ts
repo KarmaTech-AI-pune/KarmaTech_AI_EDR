@@ -34,12 +34,16 @@ export interface Issue {
   key: string;
   summary: string;
   description: string;
+  acceptanceCriteria?: string;
   issueType: "Story" | "Task" | "Bug" | "Epic";
   priority: "Lowest" | "Low" | "Medium" | "High" | "Highest";
   assignee: TeamMember | null;
   reporter: TeamMember;
   status: "To Do" | "In Progress" | "Review" | "Done";
   storyPoints: number;
+  estimatedHours?: number;   // Original Estimate
+  remainingHours?: number;   // Remaining Estimate
+  actualHours?: number;      // Time Spent
   fixVersion: string;
   components: string[];
   flagged: boolean;
@@ -49,6 +53,7 @@ export interface Issue {
   isExpanded: boolean;
   createdDate: string;
   updatedDate: string;
+  sprintWbsPlanId?: number;
 }
 
 export interface NewIssueFormState {
@@ -61,6 +66,8 @@ export interface NewIssueFormState {
   storyPoints: string; // Stores story points as a string for the select input
   components: string; // Stores component as a string
   fixVersion: string; // Stores fix version as a string
+  estimatedHours: string;
+  remainingHours: string;
 }
 
 export interface NewSubtaskFormState {

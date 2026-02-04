@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react'
+import { useState, useContext, useEffect } from 'react'
 import { Navigate } from 'react-router-dom';
 import {
     TextField,
@@ -17,6 +17,10 @@ import { projectManagementAppContextType, Credentials } from '../types';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { OTPVerification } from '../components/OTPVerification';
 import UserSubscriptionContext from '../context/UserSubscriptionContext'; // Import UserSubscriptionContext
+import { VersionDisplay } from '../components/VersionDisplay';
+import ReleaseNotesModal from '../components/ReleaseNotesModal';
+import { releaseNotesApi } from '../services/releaseNotesApi';
+import { versionApi } from '../services/versionApi';
 
 export const LoginScreen: React.FC = () => {
     const [email, setUsername] = useState('');
@@ -24,6 +28,8 @@ export const LoginScreen: React.FC = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [requiresOtp, setRequiresOtp] = useState(false);
+    const [isReleaseNotesModalOpen, setIsReleaseNotesModalOpen] = useState(false);
+    const [currentVersion, setCurrentVersion] = useState('');
     const { isAuthenticated, setIsAuthenticated, setUser } = useContext(projectManagementAppContext) as projectManagementAppContextType;
     const { refreshSubscription } = useContext(UserSubscriptionContext)!; // Access refreshSubscription
     const navigation = useAppNavigation();
@@ -31,6 +37,30 @@ export const LoginScreen: React.FC = () => {
     if (isAuthenticated) {
         return <Navigate to="/" replace />;
     }
+
+    // Background preloading of release notes for current version
+    useEffect(() => {
+        const preloadReleaseNotes = async () => {
+            try {
+                // First get the current version
+                const versionInfo = await versionApi.getCurrentVersion();
+                if (versionInfo?.version) {
+                    // Preload release notes for this version in the background
+                    // This will cache the data for instant display when modal opens
+                    await releaseNotesApi.getReleaseNotes(versionInfo.version);
+                    console.log(`Preloaded release notes for version ${versionInfo.version}`);
+                }
+            } catch (error) {
+                // Silently fail - preloading is not critical
+                console.log('Background preloading of release notes failed:', error);
+            }
+        };
+
+        // Start preloading after a short delay to not block UI
+        const timeoutId = setTimeout(preloadReleaseNotes, 1000);
+        
+        return () => clearTimeout(timeoutId);
+    }, []); // Run once when component mounts
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -92,6 +122,15 @@ export const LoginScreen: React.FC = () => {
         setError('');
     };
 
+    const handleVersionClick = (version: string) => {
+        setCurrentVersion(version);
+        setIsReleaseNotesModalOpen(true);
+    };
+
+    const handleCloseReleaseNotesModal = () => {
+        setIsReleaseNotesModalOpen(false);
+    };
+
     // Show OTP verification if required
     if (requiresOtp) {
         return (
@@ -136,15 +175,18 @@ export const LoginScreen: React.FC = () => {
                 >
                     KarmaTech-AI EDR(Enterprise Digital Runner)
                 </Typography>
-                <Typography
+                <VersionDisplay
                     variant="h6"
                     color="text.secondary"
                     sx={{
                         mb: 1,
                     }}
-                >
-                    Version 1.11.11
-                </Typography>
+                    showBuildDate={true}
+                    showDevIndicator={true}
+                    fetchVersionFromAPI={true}
+                    clickable={true}
+                    onVersionClick={handleVersionClick}
+                />
             </Container>
 
             <Card
@@ -242,6 +284,12 @@ export const LoginScreen: React.FC = () => {
                     {error}
                 </Alert>
             )}
+
+            <ReleaseNotesModal
+                version={currentVersion}
+                isOpen={isReleaseNotesModalOpen}
+                onClose={handleCloseReleaseNotesModal}
+            />
         </Box>
     );
 };

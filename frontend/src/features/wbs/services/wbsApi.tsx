@@ -55,7 +55,7 @@ export const WBSStructureAPI = {
             monthlyHours.push({
               Year: parseInt(year),
               Month: month,
-              PlannedHours: hours
+              PlannedHours: Number(hours)
             });
           });
         });
@@ -93,7 +93,7 @@ export const WBSStructureAPI = {
           taskType: row.taskType !== undefined ? row.taskType : (row.title.toLowerCase().includes('odc') ? TaskType.ODC : TaskType.Manpower), // Use taskType if set, otherwise infer from title
           assignedUserId: isOdcTask ? null : row.assignedUserId, // Use assignedUserId from row
           assignedUserName: isOdcTask ? null : row.name, // Use row.name as assignedUserName
-          costRate: row.costRate,
+          costRate: Number(row.costRate),
           resourceName: isOdcTask ? row.name : null, // Use row.name as resourceName for ODC tasks
           resourceUnit: isOdcTask ? (row.unit || "") : (row.unit || ""),
           resourceRoleId: row.resource_role, // Add ResourceRoleId to the payload
@@ -241,19 +241,19 @@ export const WBSOptionsAPI = {
         throw new Error(`Invalid ID format: ${id}`);
       }
 
-      // Format payload to match backend WBSOptionDto exactly
-      const payload = {
+      // Format payload to match backend WBSOptionDto exactly (expects a list)
+      const payload = [{
         Id: numericId,
         Value: updatedOption.value,
         Label: updatedOption.label,
         Level: updatedOption.level || 1,
         ParentId: updatedOption.parentValue ? parseInt(updatedOption.parentValue) : null, // Convert parentValue to ParentId (integer)
         FormType: updatedOption.formType || 0
-      };
+      }];
 
       console.log('Update WBS Option payload:', payload);
 
-      const response = await axiosInstance.put(`/api/WBSOptions/${numericId}`, payload);
+      const response = await axiosInstance.put('/api/WBSOptions', payload);
       return response.data;
     } catch (error) {
       console.error(`Error updating WBS option ${id}:`, error);

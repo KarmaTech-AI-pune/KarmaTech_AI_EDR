@@ -58,6 +58,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             existingSubtask.SubtaskisExpanded = sprintSubtaskDto.SubtaskisExpanded ?? existingSubtask.SubtaskisExpanded;
             existingSubtask.SubtaskupdatedDate = DateTime.UtcNow;
             existingSubtask.SubtaskType = sprintSubtaskDto.SubtaskType ?? existingSubtask.SubtaskType;
+            existingSubtask.TenantId = _context.TenantId ?? 0;
             existingSubtask.DisplayOrder = sprintSubtaskDto.DisplayOrder ?? existingSubtask.DisplayOrder;
             existingSubtask.EstimatedHours = sprintSubtaskDto.EstimatedHours ?? existingSubtask.EstimatedHours;
             existingSubtask.ActualHours = sprintSubtaskDto.ActualHours ?? existingSubtask.ActualHours;

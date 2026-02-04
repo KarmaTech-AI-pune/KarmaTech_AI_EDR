@@ -38,8 +38,19 @@ export const WBSItemRow: React.FC<WBSItemRowProps> = ({
   addChildLabel,
 }) => {
   return (
-    <TableRow sx={{ backgroundColor }}>
-      <TableCell sx={{ paddingLeft }}>
+    <TableRow
+      onClick={() => hasChildren && onToggle()}
+      sx={{
+        backgroundColor: backgroundColor,
+        cursor: hasChildren ? 'pointer' : 'default',
+        '&:hover': {
+          backgroundColor: hasChildren ? backgroundColor : backgroundColor,
+          filter: hasChildren ? 'brightness(0.88) !important' : 'none',
+        },
+        transition: 'filter 0.2s ease-in-out',
+      }}
+    >
+      <TableCell sx={{ paddingLeft, width: '15%' }}>
         <Box display="flex" alignItems="center" gap={1}>
           <ExpandableIcon
             isExpanded={isExpanded}
@@ -51,22 +62,22 @@ export const WBSItemRow: React.FC<WBSItemRowProps> = ({
           </Typography>
         </Box>
       </TableCell>
-      <TableCell>
+      <TableCell sx={{ width: '40%' }}>
         <Box sx={{ paddingLeft: hasChildren ? 0 : 2 }}>
           <Typography variant="body2" fontWeight={fontWeight}>
             {label}
           </Typography>
         </Box>
       </TableCell>
-      <TableCell>
+      <TableCell sx={{ width: '25%' }}>
         <Typography variant="body2" color="text.secondary">
           {parentLabel || '—'}
         </Typography>
       </TableCell>
-      <TableCell>
-        <ItemActionButtons 
-          onEdit={onEdit} 
-          onDelete={onDelete} 
+      <TableCell sx={{ width: '20%' }}>
+        <ItemActionButtons
+          onEdit={onEdit}
+          onDelete={onDelete}
           onAddChild={onAddChild}
           showAddChild={showAddChild}
           addChildLabel={addChildLabel}
