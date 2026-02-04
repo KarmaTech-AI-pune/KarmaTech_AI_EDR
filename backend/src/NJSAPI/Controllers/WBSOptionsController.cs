@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
 using NJS.Application.Dtos;
@@ -9,6 +10,7 @@ namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class WBSOptionsController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -47,73 +49,57 @@ namespace NJSAPI.Controllers
         }
 
         /// <summary>
-        /// Retrieves all level 2 WBS options
+        /// Retrieves all level 2 WBS options for a given level 1 parent
         /// </summary>
+        /// <param name="level1Id">The ID of the level 1 parent option</param>
         /// <param name="formType">Optional form type filter (0 = Manpower, 1 = ODC)</param>
         /// <returns>List of level 2 WBS options</returns>
         [HttpGet("level2")]
         [ProducesResponseType(typeof(List<WBSOptionDto>), 200)]
-        public async Task<ActionResult<List<WBSOptionDto>>> GetLevel2Options([FromQuery] FormType? formType = null)
+        public async Task<ActionResult<List<WBSOptionDto>>> GetLevel2Options([FromQuery] int level1Id, [FromQuery] FormType? formType = null)
         {
-            var query = new GetWBSLevel2OptionsQuery { FormType = formType };
+            var query = new GetWBSLevel2OptionsQuery { Level1Id = level1Id, FormType = formType };
             var result = await _mediator.Send(query);
             return Ok(result);
         }
 
         /// <summary>
-        /// Retrieves level 3 WBS options for a specific level 2 value
+        /// Retrieves level 3 WBS options for a specific level 2 parent
         /// </summary>
-        /// <param name="level2Value">The level 2 value to get level 3 options for</param>
+        /// <param name="level2Id">The ID of the level 2 parent option</param>
         /// <param name="formType">Optional form type filter (0 = Manpower, 1 = ODC)</param>
-        /// <returns>List of level 3 WBS options for the specified level 2 value</returns>
-        [HttpGet("level3/{level2Value}")]
+        /// <returns>List of level 3 WBS options for the specified level 2 parent</returns>
+        [HttpGet("level3")]
         [ProducesResponseType(typeof(List<WBSOptionDto>), 200)]
-        public async Task<ActionResult<List<WBSOptionDto>>> GetLevel3Options(string level2Value, [FromQuery] FormType? formType = null)
+        public async Task<ActionResult<List<WBSOptionDto>>> GetLevel3Options([FromQuery] int level2Id,
+            [FromQuery] FormType? formType = null)
         {
-            var query = new GetWBSLevel3OptionsQuery { Level2Value = level2Value, FormType = formType };
+            var query = new GetWBSLevel3OptionsQuery { Level2Id = level2Id, FormType = formType };
             var result = await _mediator.Send(query);
             return Ok(result);
         }
 
         [HttpPost]
-        public async Task<ActionResult<WBSOptionDto>> CreateWBSOption(WBSOptionDto request)
+        public async Task<ActionResult<List<WBSOptionDto>>> CreateWBSOption(List<WBSOptionDto> requests)
         {
             var command = new CreateWBSOptionCommand
             {
-                Label = request.Label,
-                Level = request.Level,
-                ParentValue = request.ParentValue,
-                FormType = request.FormType
+                Options = requests
             };
 
             var result = await _mediator.Send(command);
-            return CreatedAtAction(nameof(GetWBSOptions), new { id = result.Id }, result);
+            return Ok(result);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<WBSOptionDto>> UpdateWBSOption(int id, WBSOptionDto request)
+        [HttpPut]
+        public async Task<ActionResult<List<WBSOptionDto>>> UpdateWBSOptions(List<WBSOptionDto> requests)
         {
-            if (id != request.Id)
-            {
-                return BadRequest();
-            }
-
             var command = new UpdateWBSOptionCommand
             {
-                Id = id,
-                Value = request.Value,
-                Label = request.Label,
-                Level = request.Level,
-                ParentValue = request.ParentValue,
-                FormType = request.FormType
+                Options = requests
             };
 
             var result = await _mediator.Send(command);
-
-            if (result == null)
-            {
-                return NotFound();
-            }
 
             return Ok(result);
         }
@@ -121,15 +107,22 @@ namespace NJSAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<bool>> DeleteWBSOption(int id)
         {
-            var command = new DeleteWBSOptionCommand { Id = id };
-            var result = await _mediator.Send(command);
-
-            if (!result)
+            try
             {
-                return NotFound();
-            }
+                var command = new DeleteWBSOptionCommand { Id = id };
+                var result = await _mediator.Send(command);
 
-            return NoContent();
+                if (!result)
+                {
+                    return NotFound();
+                }
+
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

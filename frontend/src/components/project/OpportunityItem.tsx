@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { BDChips } from '../common/BDChips';
-import { OpportunityTrackingWorkflow } from '../common/OpportunityTrackingWorkflow';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { OpportunityItemProps } from '../../types';
 import { useState, useEffect } from 'react';
@@ -23,6 +22,8 @@ import { authApi } from '../../dummyapi/authApi';
 import { PermissionType } from '../../models';
 import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
 import { useNavigate } from 'react-router-dom';
+import { getUserById } from '../../services/userApi'; // Import getUserById
+import { getEnhancedWorkflowStatus } from '../../utils/workflowStatusFormatter';
 
 export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   opportunity,
@@ -31,6 +32,11 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
 }) => {
   // Add state to track the current opportunity
   const [currentOpportunity, setCurrentOpportunity] = useState<OpportunityTracking>(opportunity);
+  const [reviewerName, setReviewerName] = useState<string | null>(null);
+  const [reviewerDesignation, setReviewerDesignation] = useState<string | null>(null);
+  const [approverName, setApproverName] = useState<string | null>(null);
+  const [approverDesignation, setApproverDesignation] = useState<string | null>(null);
+
   const getWorkflowColor = (workflowId: number) => {
     const status = getWorkflowStatusById(workflowId)?.status;
     switch (status) {
@@ -60,6 +66,53 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
   // Update current opportunity when the prop changes
   useEffect(() => {
     setCurrentOpportunity(opportunity);
+
+    const fetchReviewerDetails = async () => {
+      if (opportunity.reviewManagerId) {
+        try {
+          const user = await getUserById(opportunity.reviewManagerId);
+          if (user) {
+            setReviewerName(user.name);
+            setReviewerDesignation(user.roles[0]?.name || null); // Get the name of the first role
+          } else {
+            setReviewerName(null);
+            setReviewerDesignation(null);
+          }
+        } catch (error) {
+          console.error("Error fetching reviewer details:", error);
+          setReviewerName(null);
+          setReviewerDesignation(null);
+        }
+      } else {
+        setReviewerName(null);
+        setReviewerDesignation(null);
+      }
+    };
+
+    const fetchApproverDetails = async () => {
+      if (opportunity.approvalManagerId) {
+        try {
+          const user = await getUserById(opportunity.approvalManagerId);
+          if (user) {
+            setApproverName(user.name);
+            setApproverDesignation(user.roles[0]?.name || null); // Get the name of the first role
+          } else {
+            setApproverName(null);
+            setApproverDesignation(null);
+          }
+        } catch (error) {
+          console.error("Error fetching approver details:", error);
+          setApproverName(null);
+          setApproverDesignation(null);
+        }
+      } else {
+        setApproverName(null);
+        setApproverDesignation(null);
+      }
+    };
+
+    fetchReviewerDetails();
+    fetchApproverDetails();
   }, [opportunity]);
 
   useEffect(() => {
@@ -120,28 +173,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
     setEditDialogOpen(false);
   };
 
-  // Enhanced handler for opportunity updates
-  const handleOpportunityUpdate = async (updatedOpp?: OpportunityTracking) => {
-    if (updatedOpp) {
-      // Use the provided updated opportunity
-      setCurrentOpportunity(updatedOpp);
-      if (onOpportunityUpdated) {
-        onOpportunityUpdated();
-      }
-    } else {
-      // Fallback to fetching from API
-      try {
-        const fetchedOpportunity = await opportunityApi.getById(opportunity.id);
-        console.log("fetched opportunity", fetchedOpportunity);
-        setCurrentOpportunity(fetchedOpportunity);
-        if (onOpportunityUpdated) {
-          onOpportunityUpdated();
-        }
-      } catch (error) {
-        console.error('Error updating opportunity:', error);
-      }
-    }
-  };
 
   const handleEditSubmit = async (formData: Partial<OpportunityTracking>) => {
     if (!canEditOpportunity) return;
@@ -267,12 +298,15 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
             mt: 1,
           }}>
               <Chip
-                label={`Workflow: ${currentOpportunity.currentHistory
-                    ? Array.isArray(currentOpportunity.currentHistory)
-                      ? getWorkflowStatusById(currentOpportunity.currentHistory[0]?.statusId)?.status || 'Not specified'
-                      : getWorkflowStatusById(currentOpportunity.currentHistory.statusId)?.status || 'Not specified'
-                    : 'Not specified'
-                  }`}
+                label={`Workflow: ${getEnhancedWorkflowStatus(
+                  Array.isArray(currentOpportunity.currentHistory)
+                    ? currentOpportunity.currentHistory[0]?.statusId || 0
+                    : currentOpportunity.currentHistory?.statusId || 0,
+                  reviewerName,
+                  reviewerDesignation,
+                  approverName,
+                  approverDesignation
+                )}`}
                 color={
                   Array.isArray(currentOpportunity.currentHistory)
                     ? getWorkflowColor(currentOpportunity.currentHistory[0]?.statusId || 0)
@@ -291,13 +325,6 @@ export const OpportunityItem: React.FC<OpportunityItemProps> = ({
           }}>
             <Box>
               <BDChips opportunityId={currentOpportunity.id} />
-            </Box>
-
-            <Box>
-              <OpportunityTrackingWorkflow
-                opportunity={currentOpportunity}
-                onOpportunityUpdated={handleOpportunityUpdate}
-              />
             </Box>
           </Box>
         </Box>

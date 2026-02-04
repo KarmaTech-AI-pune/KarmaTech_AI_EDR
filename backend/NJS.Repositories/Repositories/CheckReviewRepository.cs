@@ -2,10 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJS.Repositories.Repositories
 {
@@ -43,9 +39,6 @@ namespace NJS.Repositories.Repositories
         public async Task<int> AddAsync(CheckReview checkReview)
         {
             if (checkReview == null) throw new ArgumentNullException(nameof(checkReview));
-
-            // Check if we need to reset the identity seed before adding a new entry
-            await ResetIdentitySeedAsync();
 
             checkReview.CreatedAt = DateTime.Now;
 
@@ -87,11 +80,8 @@ namespace NJS.Repositories.Repositories
 
         public async Task<int> GetNextIdAsync()
         {
-            // If there are no records, start with ID 1
             if (!await _context.CheckReviews.AnyAsync())
                 return 1;
-
-            // Otherwise, get the next available ID
             return await _context.CheckReviews.MaxAsync(cr => cr.Id) + 1;
         }
 

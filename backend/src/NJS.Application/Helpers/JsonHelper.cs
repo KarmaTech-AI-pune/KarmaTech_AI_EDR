@@ -15,7 +15,7 @@ namespace NJS.Application.Helpers
         /// <summary>
         /// Serializes an object to a JSON string
         /// </summary>
-        public static string Serialize<T>(T obj)
+        public static string? Serialize<T>(T obj)
         {
             if (obj == null)
                 return null;
@@ -26,7 +26,7 @@ namespace NJS.Application.Helpers
         /// <summary>
         /// Deserializes a JSON string to an object
         /// </summary>
-        public static T Deserialize<T>(string json)
+        public static T? Deserialize<T>(string json)
         {
             if (string.IsNullOrEmpty(json))
                 return default;

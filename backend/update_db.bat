@@ -34,10 +34,9 @@ echo Migration name: %migrationName%
 ::dotnet ef migrations remove --project src/NJS.Domain --startup-project src/NJSAPI
 
 echo Adding migration: %migrationName%...
-dotnet ef migrations add %migrationName% --project src/NJS.Domain --startup-project src/NJSAPI
+dotnet ef migrations add %migrationName% --context ProjectManagementContext --project src/NJS.Domain --startup-project src/NJSAPI
 
 echo Updating database...
-dotnet ef database update --project src/NJS.Domain --startup-project src/NJSAPI
+dotnet ef database update --context ProjectManagementContext --project src/NJS.Domain --startup-project src/NJSAPI
 
 pause
-

@@ -57,26 +57,57 @@ namespace NJS.Application.Services
                 if (isSuperAdmin)
                 {
                     // Super admin can access without tenant context
-                    var token = await GenerateJwtTokenAsync(user, null, true);
+                    var token = await GenerateJwtTokenAsync(user, null, true, null);
                     return (true, user, token);
                 }
                 else
                 {
                     // Regular user needs tenant context
                     var currentTenantId = await GetCurrentTenantIdAsync();
+                    TenantUser tenantUser = null;
+
+                    // Fallback: Check user's tenant associations
+                    var userTenants = await _tenantService.GetTenantUsersByUserIdAsync(user.Id);
+
                     if (!currentTenantId.HasValue)
                     {
-                        return (false, null, null); // No tenant context
+                        // Try to find a default tenant for the user
+                        if (userTenants != null && userTenants.Any(t => t.IsActive))
+                        {
+                            tenantUser = userTenants.FirstOrDefault(t => t.IsActive);
+                            currentTenantId = tenantUser?.TenantId;
+                        }
+                        else if (user.TenantId > 0)
+                        {
+                             // Fallback to User table TenantId
+                             currentTenantId = user.TenantId;
+                        }
                     }
-
-                    // Check if user belongs to current tenant
-                    var tenantUser = await GetTenantUserAsync(user.Id, currentTenantId.Value);
-                    if (tenantUser == null || !tenantUser.IsActive)
+                    else
                     {
-                        return (false, null, null); // User not authorized for this tenant
+                        // Verify user belongs to the requested tenant
+                        tenantUser = userTenants?.FirstOrDefault(t => t.TenantId == currentTenantId.Value && t.IsActive);
                     }
 
-                    var token = await GenerateJwtTokenAsync(user, tenantUser.Role, false);
+                    if (!currentTenantId.HasValue)
+                    {
+                        return (false, null, null); // No tenant context resolved
+                    }
+
+                    if (tenantUser == null)
+                    {
+                        // Implicit access if TenantId matches User.TenantId but no TenantUser record exists
+                        // Or fail? For now, we allow it if we have a valid TenantId from User table
+                        tenantUser = new TenantUser
+                        {
+                             UserId = user.Id,
+                             TenantId = currentTenantId.Value,
+                             Role = TenantUserRole.User,
+                             IsActive = true
+                        };
+                    }
+
+                    var token = await GenerateJwtTokenAsync(user, tenantUser.Role, false, currentTenantId);
                     return (true, user, token);
                 }
             }
@@ -94,7 +125,7 @@ namespace NJS.Application.Services
                 var roleEntity = await _roleManager.FindByNameAsync(role);
                 if (roleEntity != null)
                 {
-                    var permissions = await _permissionRepository.GetPermissionsByRoleId(roleEntity.Id);
+                    var permissions = await _permissionRepository.GetPermissionsByRoleIdAsync(roleEntity.Id);
                     if (permissions.Any(p => p.Name == "SYSTEM_ADMIN"))
                     {
                         return true;
@@ -110,20 +141,9 @@ namespace NJS.Application.Services
             return await _tenantService.GetCurrentTenantIdAsync();
         }
 
-        private async Task<TenantUser> GetTenantUserAsync(string userId, int tenantId)
-        {
-            // This would query the TenantUser table
-            // For now, we'll return a mock tenant user for testing
-            return new TenantUser
-            {
-                UserId = userId,
-                TenantId = tenantId,
-                Role = TenantUserRole.Manager,
-                IsActive = true
-            };
-        }
 
-        private async Task<string> GenerateJwtTokenAsync(User user, TenantUserRole? tenantRole, bool isSuperAdmin)
+
+        private async Task<string> GenerateJwtTokenAsync(User user, TenantUserRole? tenantRole, bool isSuperAdmin, int? resolvedTenantId)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -144,8 +164,8 @@ namespace NJS.Application.Services
             }
             else if (tenantRole.HasValue)
             {
-                // Get current tenant ID from context
-                var currentTenantId = await GetCurrentTenantIdAsync();
+                // Get current tenant ID from context or passed resolved value
+                var currentTenantId = resolvedTenantId ?? await GetCurrentTenantIdAsync();
                 if (currentTenantId.HasValue)
                 {
                     claims.Add(new Claim("TenantId", currentTenantId.Value.ToString()));
@@ -170,10 +190,10 @@ namespace NJS.Application.Services
                 var roleEntity = await _roleManager.FindByNameAsync(role);
                 if (roleEntity != null)
                 {
-                    var rolePermissions = await _permissionRepository.GetPermissionsByRoleId(roleEntity.Id);
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                    var rolePermissions = await _permissionRepository.GetPermissionsByRoleIdAsync(roleEntity.Id);
                     if (rolePermissions != null && rolePermissions.Any())
                     {
-                        claims.Add(new Claim(ClaimTypes.Role, role));
                         permissions.AddRange(rolePermissions.Select(p => p.Name));
                     }
                 }
@@ -195,7 +215,7 @@ namespace NJS.Application.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        private async Task<string> GenerateJwtTokenAsync(User user)
+        public async Task<string> GenerateJwtTokenAsync(User user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -216,16 +236,16 @@ namespace NJS.Application.Services
             foreach (var role in roles)
             {
                 var roleDetils = await _roleManager.FindByNameAsync(role).ConfigureAwait(false);
-                var rolePermissions = await _permissionRepository.GetPermissionsByRoleId(roleDetils.Id).ConfigureAwait(false);
-                // claims.Add(new Claim(ClaimTypes.Role, role));
-                if (rolePermissions != null && rolePermissions.Any())
+                if (roleDetils != null)
                 {
                     claims.Add(new Claim(ClaimTypes.Role, role));
-                    var permissionsString = string.Join(",", rolePermissions.Select(p => p.Name));
-                    claims.Add(new Claim("Permissions", permissionsString));
+                    var rolePermissions = await _permissionRepository.GetPermissionsByRoleIdAsync(roleDetils.Id).ConfigureAwait(false);
+                    if (rolePermissions != null && rolePermissions.Any())
+                    {
+                        var permissionsString = string.Join(",", rolePermissions.Select(p => p.Name));
+                        claims.Add(new Claim("Permissions", permissionsString));
+                    }
                 }
-
-
             }
 
             var token = new JwtSecurityToken(
@@ -288,5 +308,22 @@ namespace NJS.Application.Services
             var result = await _userManager.AddToRoleAsync(user, roleName);
             return result.Succeeded;
         }
+
+        public async  Task<bool> ValidateUserAnsPasswordAsync(string email, string password)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return false;
+            }
+
+            var isValidPassword = await _userManager.CheckPasswordAsync(user, password);
+            if (!isValidPassword)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
-} 
+}

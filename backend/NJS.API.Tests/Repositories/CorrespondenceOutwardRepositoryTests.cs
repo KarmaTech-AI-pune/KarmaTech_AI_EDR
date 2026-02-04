@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
+using NJS.Domain.Services;
 using NJS.Repositories.Interfaces;
 using NJS.Repositories.Repositories;
 
@@ -12,11 +13,12 @@ namespace NJS.API.Tests.Repositories
     {
         private ProjectManagementContext CreateContext()
         {
+            var currentTenantService = new Mock<ICurrentTenantService>();
             var options = new DbContextOptionsBuilder<ProjectManagementContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
-            var context = new ProjectManagementContext(options);
+            var context = new ProjectManagementContext(options,currentTenantService.Object);
             context.Database.EnsureCreated();
             return context;
         }

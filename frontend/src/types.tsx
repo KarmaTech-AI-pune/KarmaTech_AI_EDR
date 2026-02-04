@@ -19,6 +19,7 @@ export interface UserWithRole extends User {
     tenantContext?: string;
     tenantId?: number;
     tenantDomain?: string;
+    twoFactorEnabled?: boolean;
 }
 
 export interface projectManagementAppContextType {
@@ -68,6 +69,7 @@ export interface LoginResponse {
     user?: UserWithRole;
     token?: string;
     message?: string;
+    requiresOtp?: boolean; 
 }
 
 export interface OpportunityItemProps {
@@ -162,6 +164,37 @@ export interface JobStartFormResourceData {
     remarks?: string;
     employeeName?: string; // For Manpower resources (taskType=0)
     name?: string; // For ODC resources (taskType=1)
+}
+
+export interface ProjectFormData {
+    id?: number;
+    name: string;
+    details?: string;
+    clientName: string;
+    projectManagerId: string;
+    office?: string;
+    projectNo: string;
+    typeOfJob?: string;
+    seniorProjectManagerId: string;
+    sector?: string;
+    region?: string;
+    status?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    typeOfClient?: string;
+    estimatedProjectCost: number;
+    startDate?: Date | string;
+    endDate?: Date | string;
+    currency?: string;
+    estimatedProjectFee: number;
+    priority?: string;
+    regionalManagerId: string;
+    letterOfAcceptance?: boolean;
+    opportunityTrackingId?: number;
+    feeType?: string;
+    percentage?: number;
+    programId?: number;
+    budgetReason?: string;
 }
 
 export interface JobStartFormData {

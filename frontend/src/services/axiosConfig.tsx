@@ -36,9 +36,9 @@ export const getTenantContext = (): string | null => {
   // }
   
   // return subdomain;
-debugger;
+// debugger;
   const hostname = window.location.hostname;
-  debugger;
+  // debugger;
   // Support "companya.localhost" and "companya.dev.localhost"
   if (hostname.includes('localhost')) {
     const parts = hostname.split('.');

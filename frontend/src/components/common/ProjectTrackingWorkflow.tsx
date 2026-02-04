@@ -5,7 +5,7 @@ import ReviewBox from "../dialogbox/ProjectReviewWorkflow/ReviewBox";
 import SendApprovalBox from "../dialogbox/ProjectReviewWorkflow/SendApprovalBox";
 import { wbsWorkflowApi } from "../../services/wbsWorkflowApi";
 import { projectManagementAppContext } from "../../App";
-import { TaskType } from "../../types/wbs";
+import { TaskType } from "../../features/wbs/types/wbs";
 import { PermissionType } from "../../models/permissionTypeModel";
 import { PMWorkflowHistory } from "../../models/pmWorkflowModel";
 
@@ -82,8 +82,8 @@ export const ProjectTrackingWorkflow: React.FC<ProjectTrackingWorkflowProps> = (
     // Check permissions
     const permissions = context?.currentUser?.roleDetails?.permissions || [];
     const canSubmitForReview = permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_REVIEW);
-    const canSubmitForApproval = permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_APPROVAL) || 
-                                permissions.includes(PermissionType.SUBMIT_FOR_APPROVAL);
+    // Check only PROJECT-specific permission, not Business Development permission
+    const canSubmitForApproval = permissions.includes(PermissionType.SUBMIT_PROJECT_FOR_APPROVAL);
     const canApprove = permissions.includes(PermissionType.APPROVE_PROJECT);
 
     return {

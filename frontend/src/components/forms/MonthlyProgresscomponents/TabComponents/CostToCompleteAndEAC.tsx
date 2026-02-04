@@ -4,6 +4,8 @@ import { MonthlyProgressSchemaType } from "../../../../schemas/monthlyProgress/M
 import { Grid, Paper, TextField, Typography, Tooltip } from "@mui/material";
 import textFieldStyle from "../../../../theme/textFieldStyle";
 import { calculateGrossPercentage } from "../../../../utils/calculations";
+import { formatToIndianNumber } from "../../../../utils/numberFormatting";
+import { useCurrencyInput } from "../../../../hooks/useCurrencyInput";
 
 interface FormFieldProps {
   name: keyof MonthlyProgressSchemaType['ctcAndEac'];
@@ -23,28 +25,42 @@ const FormField: React.FC<FormFieldProps> = ({ name, label, control, readOnly = 
       name={`ctcAndEac.${name}`}
       control={control}
       defaultValue={defaultValue}
-      render={({ field }) => (
-        <TextField
-          fullWidth
-          label={label}
-          type="number"
-          value={value !== undefined ? value : field.value}
-          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-          onWheel={(e) => (e.target as HTMLInputElement).blur()}
-          error={!!error}
-          helperText={error?.message}
-          margin="normal"
-          InputProps={{
-            readOnly,
-          }}
-          sx={{
-            ...textFieldStyle,
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: readOnly ? '#f5f5f5' : 'inherit',
-            },
-          }}
-        />
-      )}
+      render={({ field }) => {
+        // Convert null to undefined for useCurrencyInput hook
+        const fieldValue = field.value ?? undefined;
+        const displayValue = value !== undefined ? value : fieldValue;
+        
+        // Use currency input hook for editable fields only
+        const currencyInput = useCurrencyInput(
+          readOnly ? displayValue : fieldValue,
+          name
+        );
+
+        return (
+          <TextField
+            fullWidth
+            label={label}
+            type="text"
+            value={readOnly ? formatToIndianNumber(displayValue) : currencyInput.value}
+            onChange={readOnly ? undefined : currencyInput.getChangeHandler((rawValue) => {
+              field.onChange(rawValue);
+            })}
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+            error={!!error}
+            helperText={error?.message}
+            margin="normal"
+            InputProps={{
+              readOnly,
+            }}
+            sx={{
+              ...textFieldStyle,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: readOnly ? '#f5f5f5' : 'inherit',
+              },
+            }}
+          />
+        );
+      }}
     />
   );
 };

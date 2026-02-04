@@ -1,4 +1,4 @@
-export { default as WorkBreakdownStructureForm } from './WorkBreakdownStructureForm';
+export { default as WorkBreakdownStructureForm } from '../../features/wbs/pages/WorkBreakdownStructureForm';
 export { default as JobStartForm } from './JobStartForm';
 export { default as InputRegisterForm } from './InputRegisterForm';
 export { default as CorrespondenceForm } from './CorrespondenceForm';

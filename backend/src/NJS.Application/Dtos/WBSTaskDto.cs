@@ -7,12 +7,10 @@ namespace NJS.Application.Dtos
 {
     public class WBSTaskDto
     {
-        // Frontend might send temporary IDs for new tasks, handle appropriately
         public int Id { get; set; }
         public int WorkBreakdownStructureId { get; set; } // Needed for context if creating WBS + tasks together
-        public int? ParentId { get; set; }
         public WBSTaskLevel Level { get; set; }
-        public string Title { get; set; }
+        public string? Title { get; set; }
         public string Description { get; set; }
         public int DisplayOrder { get; set; } // To maintain order from frontend
         public decimal EstimatedBudget { get; set; }
@@ -36,12 +34,9 @@ namespace NJS.Application.Dtos
         public double TotalHours { get; set; }
         public decimal TotalCost { get; set; }
 
-        // Used to map parent/child relationships for newly created tasks
-        public string? FrontendTempId { get; set; }
-        // If the parent task is also new, this holds the parent's temporary frontend ID
-        public string? ParentFrontendTempId { get; set; }
+        public int WBSOptionId { get; set; } // Added for WBS Option relationship
+        public string? WBSOptionLabel { get; set; } // Added for displaying WBS Option label
 
-        // Flag to indicate if this DTO represents a new task (frontend might not send Id=0)
-        // public bool IsNew { get; set; } // Optional: Could help backend diffing logic
+        public int? ParentId { get; set; } // Added to reflect parent-child relationship
     }
 }

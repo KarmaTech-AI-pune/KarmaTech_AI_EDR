@@ -78,7 +78,7 @@ export const createUser = async (user: Omit<AuthUser, 'id'>): Promise<AuthUser> 
     // Convert Role[] to RoleDto[]
     const roles = user.roles;
     
-    const createUserData = {
+    const createUserData = [{
       userName: user.userName,
       name: user.name,
       email: user.email,
@@ -87,7 +87,7 @@ export const createUser = async (user: Omit<AuthUser, 'id'>): Promise<AuthUser> 
       IsConsultant: user.isConsultant,
       StandardRate: user.standardRate
       // Note: Password is set to "Admin@123" by backend
-    };
+    }];
     
     const response = await axiosInstance.post('/api/user/Create', createUserData);
     return response.data;
@@ -108,8 +108,8 @@ export const updateUser = async (id: string, user: Partial<AuthUser>): Promise<A
       email: user.email,
       avatar: user.avatar,
       roles: roles,
-      isConsultant: false,
-      standardRate: 0
+      isConsultant: user.isConsultant,
+      standardRate: user.standardRate,
     };
     
     const response = await axiosInstance.put(`/api/user/${id}`, updateUserData);
@@ -125,5 +125,20 @@ export const deleteUser = async (id: string): Promise<void> => {
     await axiosInstance.delete(`/api/user/${id}`);
   } catch (error) {
     console.error(`Error deleting user with id ${id}:`, error);
+  }
+};
+
+export const resetUserPassword = async (userId: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await axiosInstance.post(`/api/user/${userId}/reset-password`, {});
+    return {
+      success: true,
+      message: response.data.message || 'Password reset successfully'
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Failed to reset password'
+    };
   }
 };

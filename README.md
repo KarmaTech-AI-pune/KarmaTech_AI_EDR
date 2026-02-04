@@ -1,5 +1,4 @@
-# NJSEI Project Management Web Application
-
+# KarmaTech AI EDR(Enterprise Digital Runner) Application 
 ## Description
 TODO: Add project description
 

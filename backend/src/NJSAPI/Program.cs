@@ -1,51 +1,86 @@
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using NJS.Domain.Extensions;
 using NJS.Application.Extensions;
-using Microsoft.AspNetCore.Authorization;
-using NJSAPI.Extensions;
-using NLog.Web;
-using Microsoft.Extensions.Options;
-using NJSAPI.Configurations;
-using NJSAPI.Middleware;
-using NJS.Domain.Services;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using NJS.Application.Services;
 using NJS.Application.Services.IContract;
+using NJS.Domain.Extensions;
+using NJS.Domain.Services;
+using NJSAPI.Extensions;
+using NJSAPI.Strategies;
+using NLog;
+using NLog.Extensions.Logging;
 
-internal class Program
+namespace NJSAPI;
+
+public class Program
 {
-    private static async Task Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
+        using var loggerProvider = (NLogLoggerProvider)LoggerWebConfiguration.Configure();
+        using var loggerFactory = new NLogLoggerFactory(loggerProvider);
+        var logger = loggerFactory.CreateLogger<Program>();
 
-       
+        try
+        {
+            logger.LogInformation("Starting application");
+            WebApplication application = CreateHostBuilder(loggerProvider, args).Build();
+            WebApplication configuredApplication = application.ConfigureApplication();
+            await configuredApplication.RunAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogCritical(ex, "Failed to start application");
+            Environment.ExitCode = -1;
+        }
+        finally
+        {
+            logger.LogInformation("The my application has been stopped");
+            LogManager.Shutdown();
+        }
+    }
+
+    private static WebApplicationBuilder CreateHostBuilder(NLogLoggerProvider loggerProvider, string[] args)
+    {
+        string contentRootPath = Directory.GetCurrentDirectory();
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+        {
+            Args = args,
+            ContentRootPath = contentRootPath
+        });
+
+        builder.Configuration
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true,
+                reloadOnChange: false)
+            .AddEnvironmentVariables();
+
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+        builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+        builder.Logging.AddProvider(loggerProvider);
+
+        builder.Host.UseDefaultServiceProvider((_, options) =>
+        {
+            options.ValidateScopes = true;
+            options.ValidateOnBuild = true;
+        });
+
+
+        //builder.WebHost.UseKestrel((_, options) => { options.AllowSynchronousIO = true; });
+        builder.Services.AddHealthChecks();
+        builder.Services.AddCompression();
 
         builder.Services.AddControllers();
-        builder.Services.AddLogging();
-
-        // Add HttpContextAccessor as singleton
         builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
         builder.Services.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>();
         builder.Services.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>();
         builder.Services.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>();
-
-        // Add tenant resolution strategies in priority order
-        //builder.Services.TryAddEnumerable(new[]
-        //{
-          //  ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, ClaimsResolutionStrategy>(),
-            //ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, HeaderResolutionStrategy>(),
-            //ServiceDescriptor.AddSingleton<ITenantResolutionStrategy, DomainResolutionStrategy>()
-        //});
-
-        // Add tenant services
         builder.Services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
-        //  builder.Services.AddScoped<ITenantDatabaseService, TenantDatabaseService>();
 
         var environment = builder.Configuration.GetValue<string>("DNS:Env");
-        if (environment == "Development" || environment=="Dev")
+        if (environment is "Development" or "Dev")
         {
             builder.Services.AddScoped<IDNSManagementService, MockDNSManagementService>();
         }
@@ -56,13 +91,10 @@ internal class Program
             // Note: For production, you'll need to configure AWS credentials and region
             // services.AddAWSService<IAmazonRoute53>();
         }
+
         builder.Services.AddDatabaseServices(builder.Configuration);
         builder.Services.AddApplicationServices();
         builder.Services.AddTenantServices(builder.Configuration);
-       // builder.Services.AddAndMigrateTenantDatabases(builder.Configuration);
-
-        // Add tenant connection resolver
-        //builder.Services.AddScoped<ProjectManagementContextFactory>();
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddConfiguredSwagger(builder.Configuration);
@@ -76,7 +108,7 @@ internal class Program
 
             options.AddPolicy("AllowSpecificOrigin",
                 builder => builder
-                    .SetIsOriginAllowedToAllowWildcardSubdomains()  
+                    .SetIsOriginAllowedToAllowWildcardSubdomains()
                     .WithOrigins(allOrigins.ToArray())
                     .AllowAnyHeader()
                     .AllowAnyMethod()
@@ -84,74 +116,31 @@ internal class Program
         });
 
         builder.Services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                ValidAudience = builder.Configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-            };
-        });
-
-        // Configure Authorization Policies
-        builder.Services.AddAuthorization(options =>
-        {
-            options.AddPolicy("RequireAdminRole", policy =>
-                policy.RequireRole("Admin"));
-
-            options.AddPolicy("RequireManagerRole", policy =>
-                policy.RequireRole("Manager"));
-
-            options.AddPolicy("RequireUserRole", policy =>
-                policy.RequireRole("User"));
-
-            options.AddPolicy("RequireAdminOrManager", policy =>
-                policy.RequireRole("Admin", "Manager"));
-
-            options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-        });
-
-        builder.Services.AddCompression();
-        builder.Host.UseNLog();
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                };
+            });
         builder.Services.AddAuditServices();
         builder.Services.ConfigureAuditObservers();
 
-        // Configure the app
-        var app = builder.Build();
-
-        // Use CORS before other middleware
-        app.UseCors("AllowSpecificOrigin");
-
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
-            options.SwaggerEndpoint($"/swagger/{swaggerSettings.Version}/swagger.json", $"{swaggerSettings.Title}");
-        });
-        
-       // app.UseTenantCors();
-        app.UseResponseCompression();
-        app.UseHttpsRedirection();       
-       
-        app.UseMiddleware<TenantResolverMiddleware>();
-        app.UseAuthentication();
-        app.UseAuthorization();
-        app.SeedApplicationData();
-        app.MapControllers();
-
-        app.Run();
+        builder.Services.AddScoped<ITenantUserMigrationStrategy, IsolatedTenantUserMigrationStrategy>();
+        builder.Services.AddScoped<ITenantUserMigrationStrategy, SharedTenantUserMigrationStrategy>();
+        builder.Services.AddScoped<ITenantUserMigrationStrategySelector, TenantUserMigrationStrategySelector>();
+        return builder;
     }
 }

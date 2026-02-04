@@ -6,6 +6,8 @@ import Layout from '../components/Layout';
 
 const Dashboard = lazy(() => import('../components/Dashboard'));
 const NotFound = lazy(() => import('../pages/NotFound'));
+const UserProfile = lazy(() => import('../pages/UserProfile'));
+
 
 export const coreRoutes: RouteObject[] = [
   {
@@ -24,6 +26,10 @@ export const coreRoutes: RouteObject[] = [
             index: true,
             element: <Dashboard />,
           },
+          {
+            path: 'profile',
+            element: <UserProfile />,
+          }          
         ],
       },
       { path: '*', element: <NotFound /> },

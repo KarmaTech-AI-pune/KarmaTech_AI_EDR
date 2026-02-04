@@ -6,11 +6,13 @@ import { createContext, useState, useEffect } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ProjectProvider } from './context/ProjectContext';
 import { BusinessDevelopmentProvider } from './context/BusinessDevelopmentContext';
-import { SubscriptionFeaturesProvider } from './context/SubscriptionFeaturesContext';
 import { TenantProvider } from './hooks/useTenantContext';
-import { authApi } from './services/authApi'
-import { PermissionType } from './models'
+import { authApi } from './services/authApi';
+import { PermissionType } from './models';
 import { routes } from './routes/RouteConfig';
+import { UserSubscriptionProvider } from './context/UserSubscriptionContext'; // Import the new provider
+import { initializeCaches } from './utils/cacheInitializer'; // Import cache initializer
+
 export const projectManagementAppContext = createContext<projectManagementAppContextType | null>(null)
 
 function App() {
@@ -105,6 +107,9 @@ function App() {
   }, [user]);
 
   useEffect(() => {
+    // Initialize caches on app startup
+    initializeCaches();
+    
     const checkAuth = async () => {
       try {
         const isValid = await authApi.checkAuth();
@@ -191,13 +196,13 @@ function App() {
   return (
     <projectManagementAppContext.Provider value={contextValue}>
       <TenantProvider>
-        <SubscriptionFeaturesProvider>
+        <UserSubscriptionProvider> {/* Wrap the application with UserSubscriptionProvider */}
           <ProjectProvider>
             <BusinessDevelopmentProvider>
               <RouterProvider router={router} />
             </BusinessDevelopmentProvider>
           </ProjectProvider>
-        </SubscriptionFeaturesProvider>
+        </UserSubscriptionProvider>
       </TenantProvider>
     </projectManagementAppContext.Provider>
   );

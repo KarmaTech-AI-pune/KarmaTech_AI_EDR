@@ -101,7 +101,7 @@ const CorrespondenceForm: React.FC = () => {
   const [editData, setEditData] = useState<InwardRow | OutwardRow | null>(null);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
-  const [itemToDelete, setItemToDelete] = useState<{id: number, type: 'inward' | 'outward'} | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ id: number, type: 'inward' | 'outward' } | null>(null);
   const [isTokenValid, setIsTokenValid] = useState<boolean>(true);
 
   // Check if token is valid
@@ -248,17 +248,17 @@ const CorrespondenceForm: React.FC = () => {
           delete formattedData.updatedAt;
           delete formattedData.updatedBy;
 
-        // Add createdBy for new records
-        const user = context?.user;
-        formattedData.createdBy = user?.userName || 'System';
-      } else {
-        // For updates, keep ID but remove other backend-managed fields
-        delete formattedData.createdAt;
+          // Add createdBy for new records
+          const user = context?.user;
+          formattedData.createdBy = user?.userName || 'System';
+        } else {
+          // For updates, keep ID but remove other backend-managed fields
+          delete formattedData.createdAt;
 
-        // Add updatedBy for update operations
-        const user = context?.user;
-        formattedData.updatedBy = user?.userName || 'System';
-      }
+          // Add updatedBy for update operations
+          const user = context?.user;
+          formattedData.updatedBy = user?.userName || 'System';
+        }
 
         // Format all date fields properly
         const formatDate = (dateValue: any) => {
@@ -296,6 +296,12 @@ const CorrespondenceForm: React.FC = () => {
         // Ensure projectId is a number
         if (formattedData.projectId && typeof formattedData.projectId !== 'number') {
           formattedData.projectId = Number(formattedData.projectId);
+        }
+
+        // Map inwardNo to NjsInwardNo for backend compatibility
+        if (formattedData.inwardNo) {
+          formattedData.njsInwardNo = formattedData.inwardNo;
+          delete formattedData.inwardNo;
         }
 
         return formattedData;
@@ -582,7 +588,7 @@ const CorrespondenceForm: React.FC = () => {
                   Letter Information
                 </Typography>
                 <Typography variant="body2" paragraph>
-                  NJS Inward No: {row.njsInwardNo}
+                  Inward No: {row.inwardNo}
                 </Typography>
                 <Typography variant="body2" paragraph>
                   Receipt Date: {row.receiptDate}

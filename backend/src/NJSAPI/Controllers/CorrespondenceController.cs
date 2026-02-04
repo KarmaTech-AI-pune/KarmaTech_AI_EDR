@@ -9,22 +9,24 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using NJS.Application.Services.IContract;
+using NJS.Repositories.Interfaces;
 
 namespace NJSAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] 
-    public class CorrespondenceController : ControllerBase
+    [Authorize]
+    public class CorrespondenceController(
+        IMediator mediator,
+        ILogger<CorrespondenceController> logger,
+        ITenantService tenantService,
+        ICurrentUserService currentUserService)
+        : BaseController(tenantService,
+            currentUserService)
     {
-        private readonly IMediator _mediator;
-        private readonly ILogger<CorrespondenceController> _logger;
-
-        public CorrespondenceController(IMediator mediator, ILogger<CorrespondenceController> logger)
-        {
-            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
+        private readonly IMediator _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        private readonly ILogger<CorrespondenceController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         #region Inward Correspondence
 
@@ -41,7 +43,8 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all inward correspondence");
-                return StatusCode(500, new { message = "An error occurred while retrieving inward correspondence.", error = ex.Message });
+                return StatusCode(500,
+                    new { message = "An error occurred while retrieving inward correspondence.", error = ex.Message });
             }
         }
 
@@ -64,7 +67,12 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting inward correspondence with ID {Id}", id);
-                return StatusCode(500, new { message = $"An error occurred while retrieving inward correspondence with ID {id}.", error = ex.Message });
+                return StatusCode(500,
+                    new
+                    {
+                        message = $"An error occurred while retrieving inward correspondence with ID {id}.",
+                        error = ex.Message
+                    });
             }
         }
 
@@ -81,13 +89,18 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting inward correspondence for project {ProjectId}", projectId);
-                return StatusCode(500, new { message = $"An error occurred while retrieving inward correspondence for project {projectId}.", error = ex.Message });
+                return StatusCode(500,
+                    new
+                    {
+                        message = $"An error occurred while retrieving inward correspondence for project {projectId}.",
+                        error = ex.Message
+                    });
             }
         }
 
         [HttpPost("inward")]
-        [AllowAnonymous] // Allow anonymous access for testing
-        public async Task<ActionResult<CorrespondenceInwardDto>> CreateInward([FromBody] CreateCorrespondenceInwardCommand command)
+        public async Task<ActionResult<CorrespondenceInwardDto>> CreateInward(
+            [FromBody] CreateCorrespondenceInwardCommand command)
         {
             try
             {
@@ -97,9 +110,9 @@ namespace NJSAPI.Controllers
                 }
 
                 // Get the username from the authenticated user or use "System" as fallback
-                command.CreatedBy = User.Identity?.IsAuthenticated == true ?
-                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
-                    "System";
+                command.CreatedBy = User.Identity?.IsAuthenticated == true
+                    ? User.FindFirstValue(ClaimTypes.Name) ?? "System"
+                    : "System";
 
                 try
                 {
@@ -115,13 +128,15 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating inward correspondence");
-                return StatusCode(500, new { message = "An error occurred while creating inward correspondence.", error = ex.Message });
+                return StatusCode(500,
+                    new { message = "An error occurred while creating inward correspondence.", error = ex.Message });
             }
         }
 
         [HttpPut("inward/{id}")]
         [AllowAnonymous] // Allow anonymous access for testing
-        public async Task<ActionResult<CorrespondenceInwardDto>> UpdateInward(int id, [FromBody] UpdateCorrespondenceInwardCommand command)
+        public async Task<ActionResult<CorrespondenceInwardDto>> UpdateInward(int id,
+            [FromBody] UpdateCorrespondenceInwardCommand command)
         {
             try
             {
@@ -136,16 +151,21 @@ namespace NJSAPI.Controllers
                 }
 
                 // Get the username from the authenticated user or use "System" as fallback
-                command.UpdatedBy = User.Identity?.IsAuthenticated == true ?
-                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
-                    "System";
+                command.UpdatedBy = User.Identity?.IsAuthenticated == true
+                    ? User.FindFirstValue(ClaimTypes.Name) ?? "System"
+                    : "System";
                 var result = await _mediator.Send(command);
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating inward correspondence with ID {Id}", id);
-                return StatusCode(500, new { message = $"An error occurred while updating inward correspondence with ID {id}.", error = ex.Message });
+                return StatusCode(500,
+                    new
+                    {
+                        message = $"An error occurred while updating inward correspondence with ID {id}.",
+                        error = ex.Message
+                    });
             }
         }
 
@@ -168,7 +188,12 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting inward correspondence with ID {Id}", id);
-                return StatusCode(500, new { message = $"An error occurred while deleting inward correspondence with ID {id}.", error = ex.Message });
+                return StatusCode(500,
+                    new
+                    {
+                        message = $"An error occurred while deleting inward correspondence with ID {id}.",
+                        error = ex.Message
+                    });
             }
         }
 
@@ -189,7 +214,8 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all outward correspondence");
-                return StatusCode(500, new { message = "An error occurred while retrieving outward correspondence.", error = ex.Message });
+                return StatusCode(500,
+                    new { message = "An error occurred while retrieving outward correspondence.", error = ex.Message });
             }
         }
 
@@ -212,7 +238,12 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting outward correspondence with ID {Id}", id);
-                return StatusCode(500, new { message = $"An error occurred while retrieving outward correspondence with ID {id}.", error = ex.Message });
+                return StatusCode(500,
+                    new
+                    {
+                        message = $"An error occurred while retrieving outward correspondence with ID {id}.",
+                        error = ex.Message
+                    });
             }
         }
 
@@ -229,13 +260,19 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting outward correspondence for project {ProjectId}", projectId);
-                return StatusCode(500, new { message = $"An error occurred while retrieving outward correspondence for project {projectId}.", error = ex.Message });
+                return StatusCode(500,
+                    new
+                    {
+                        message = $"An error occurred while retrieving outward correspondence for project {projectId}.",
+                        error = ex.Message
+                    });
             }
         }
 
         [HttpPost("outward")]
         [AllowAnonymous] // Allow anonymous access for testing
-        public async Task<ActionResult<CorrespondenceOutwardDto>> CreateOutward([FromBody] CreateCorrespondenceOutwardCommand command)
+        public async Task<ActionResult<CorrespondenceOutwardDto>> CreateOutward(
+            [FromBody] CreateCorrespondenceOutwardCommand command)
         {
             try
             {
@@ -245,9 +282,9 @@ namespace NJSAPI.Controllers
                 }
 
                 // Get the username from the authenticated user or use "System" as fallback
-                command.CreatedBy = User.Identity?.IsAuthenticated == true ?
-                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
-                    "System";
+                command.CreatedBy = User.Identity?.IsAuthenticated == true
+                    ? User.FindFirstValue(ClaimTypes.Name) ?? "System"
+                    : "System";
 
                 try
                 {
@@ -263,13 +300,15 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating outward correspondence");
-                return StatusCode(500, new { message = "An error occurred while creating outward correspondence.", error = ex.Message });
+                return StatusCode(500,
+                    new { message = "An error occurred while creating outward correspondence.", error = ex.Message });
             }
         }
 
         [HttpPut("outward/{id}")]
         [AllowAnonymous] // Allow anonymous access for testing
-        public async Task<ActionResult<CorrespondenceOutwardDto>> UpdateOutward(int id, [FromBody] UpdateCorrespondenceOutwardCommand command)
+        public async Task<ActionResult<CorrespondenceOutwardDto>> UpdateOutward(int id,
+            [FromBody] UpdateCorrespondenceOutwardCommand command)
         {
             try
             {
@@ -284,16 +323,21 @@ namespace NJSAPI.Controllers
                 }
 
                 // Get the username from the authenticated user or use "System" as fallback
-                command.UpdatedBy = User.Identity?.IsAuthenticated == true ?
-                    User.FindFirstValue(ClaimTypes.Name) ?? "System" :
-                    "System";
+                command.UpdatedBy = User.Identity?.IsAuthenticated == true
+                    ? User.FindFirstValue(ClaimTypes.Name) ?? "System"
+                    : "System";
                 var result = await _mediator.Send(command);
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating outward correspondence with ID {Id}", id);
-                return StatusCode(500, new { message = $"An error occurred while updating outward correspondence with ID {id}.", error = ex.Message });
+                return StatusCode(500,
+                    new
+                    {
+                        message = $"An error occurred while updating outward correspondence with ID {id}.",
+                        error = ex.Message
+                    });
             }
         }
 
@@ -316,7 +360,12 @@ namespace NJSAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting outward correspondence with ID {Id}", id);
-                return StatusCode(500, new { message = $"An error occurred while deleting outward correspondence with ID {id}.", error = ex.Message });
+                return StatusCode(500,
+                    new
+                    {
+                        message = $"An error occurred while deleting outward correspondence with ID {id}.",
+                        error = ex.Message
+                    });
             }
         }
 

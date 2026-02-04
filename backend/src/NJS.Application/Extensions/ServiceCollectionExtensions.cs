@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MediatR;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.Events;
@@ -17,6 +18,13 @@ using NJS.Repositories.Repositories;
 using NJS.Repositories.Interfaces;
 using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
+using NJS.Application.CQRS.SprintTasks.Commands; // Added for SprintTask commands
+using NJS.Application.CQRS.SprintTasks.Queries; // Added for SprintTask queries
+using NJS.Application.CQRS.SprintSubtasks.Commands; // Added for SprintSubtask commands
+using NJS.Application.CQRS.SprintSubtasks.Queries; // Added for SprintSubtask queries
+using FluentValidation;
+using NJS.Application.Behaviors;
+
 
 namespace NJS.Application.Extensions
 {
@@ -25,13 +33,22 @@ namespace NJS.Application.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            
+            // Add FluentValidation
+            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            
             services.AddMediatR(cfg =>
             {
-                cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-                cfg.RegisterServicesFromAssembly(typeof(IMonthlyProgressRepository).Assembly); // Register repository assembly
+                cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly); // NJS.Application assembly
+                cfg.RegisterServicesFromAssembly(typeof(ProjectManagementContext).Assembly); // NJS.Domain assembly
+                cfg.RegisterServicesFromAssembly(typeof(ProjectRepository).Assembly); // NJS.Repositories assembly
+                
+                // Add validation behavior to MediatR pipeline
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             });
 
             services.AddScoped<IProjectRepository, ProjectRepository>();
+            services.AddScoped<IProjectBudgetChangeHistoryRepository, ProjectBudgetChangeHistoryRepository>();
             services.AddScoped<IMonthlyProgressRepository, MonthlyProgressRepository>(); // Added for Monthly Progress module
             services.AddScoped<IScoringDescriptionRepository, ScoringDescriptionRepository>();
             services.AddScoped<IScoringDescriptionService, ScoringDescriptionService>();
@@ -55,10 +72,14 @@ namespace NJS.Application.Extensions
             services.AddScoped<IChangeControlRepository, ChangeControlRepository>();
             services.AddScoped<IProjectClosureRepository, ProjectClosureRepository>();
             services.AddScoped<ITenantRepository, TenantRepository>();
+            services.AddScoped<IProgramRepository, ProgramRepository>();
 
             services.AddScoped<ICreateAccountRepository, CreateAccountRepository>();
+            services.AddScoped<ICashflowRepository, CashflowRepository>();
+            services.AddScoped<IMeasurementUnitRepository, MeasurementUnitRepository>();
+            services.AddScoped<IProjectScheduleRepository, ProjectScheduleRepository>();
 
-           // services.AddScoped<IAuthService, AuthService>();
+            // services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAuthService, EnhancedAuthService>();
             services.AddScoped<IProjectManagementService, ProjectManagementService>();
             services.AddScoped<IOpportunityHistoryService, OpportunityHistoryService>();
@@ -69,9 +90,12 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
+            services.AddScoped<ITenantMigrationService, TenantMigrationService>();
+
+
 
             // Register DNS Management Service based on environment
-           
+
 
             //Define Strategy pattern
             services.AddScoped<IEntityWorkflowStrategy, ChangeControlWorkflowStrategy>();
@@ -79,11 +103,17 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEntityWorkflowStrategy, WBSWorkflowStrategy>();
             services.AddScoped<IEntityWorkflowStrategy, WBSVersionWorkflowStrategy>(); // Add WBS version workflow strategy
             services.AddScoped<IEntityWorkflowStrategy, JobStartFormWorkflowStrategy>();
-            services.AddScoped<IEntityWorkflowStrategySelector,EntityWorkflowStrategySelector>();
+            services.AddScoped<IEntityWorkflowStrategySelector, EntityWorkflowStrategySelector>();
             services.AddScoped<IFeatureRepository, FeatureRepository>();
+            services.AddScoped<ITwoFactorService, TwoFactorService>();
+            services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+            services.AddScoped<IDeploymentLogService, DeploymentLogService>();
+            services.AddScoped<IReleaseNotesGeneratorService, ReleaseNotesGeneratorService>();
+            services.AddScoped<IGitHubService, GitHubService>();
+            services.AddScoped<IReleaseNotesRepository, ReleaseNotesRepository>();
 
             return services;
         }
-        
+
     }
 }

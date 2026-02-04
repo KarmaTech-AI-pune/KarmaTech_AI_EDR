@@ -26,7 +26,7 @@ const EditableTableCell: React.FC<{
 }> = ({ name, index, placeholder, isReadOnly = false, align = 'left', type = 'text' }) => {
   const { control, formState: { errors } } = useFormContext<MonthlyProgressSchemaType>();
   const fieldName = `manpowerPlanning.manpower.${index}.${name}`;
-  
+
   const getNestedError = (name: string, index: number) => {
     if (!errors.manpowerPlanning?.manpower?.[index]) {
       return null;
@@ -75,7 +75,7 @@ const EditableTableCell: React.FC<{
             InputProps={{
               readOnly: isReadOnly,
             }}
-            inputProps={{ min: 0 }}
+            inputProps={{ min: 0, step: "any" }}
           />
         )}
       />
@@ -96,12 +96,12 @@ const tableColumns = [
 
 const ManpowerPlanningTab: React.FC = () => {
   const { control, setValue } = useFormContext<MonthlyProgressSchemaType>();
-  
+
   const { fields } = useFieldArray({
     control,
     name: "manpowerPlanning.manpower"
   });
-  
+
   const manpowerEntries = useWatch({
     control,
     name: "manpowerPlanning.manpower"
@@ -116,12 +116,12 @@ const ManpowerPlanningTab: React.FC = () => {
         nextMonthPlanningTotal: 0
       };
     }
-    
+
     const plannedTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.planned || 0), 0);
     const consumedTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.consumed || 0), 0);
     const balanceTotal = plannedTotal - consumedTotal;
     const nextMonthPlanningTotal = manpowerEntries.reduce((sum, entry) => sum + (entry.nextMonthPlanning || 0), 0);
-    
+
     return {
       plannedTotal,
       consumedTotal,
@@ -129,7 +129,7 @@ const ManpowerPlanningTab: React.FC = () => {
       nextMonthPlanningTotal
     };
   }, [manpowerEntries]);
-  
+
   useEffect(() => {
     if (!manpowerEntries) return;
 
@@ -159,7 +159,7 @@ const ManpowerPlanningTab: React.FC = () => {
       }
     });
   }, [manpowerEntries, setValue]);
-  
+
   return (
     <Box>
       <Paper elevation={1} sx={{ p: 2 }}>
@@ -169,7 +169,7 @@ const ManpowerPlanningTab: React.FC = () => {
           </Typography>
         </Box>
 
-        <TableContainer> 
+        <TableContainer>
           <Table sx={{ '& .MuiTableCell-root': { border: 'none' } }}>
             <TableHead>
               <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 600, backgroundColor: '#f5f5f5', border: 'none' } }}>
@@ -196,10 +196,10 @@ const ManpowerPlanningTab: React.FC = () => {
                   ))}
                 </TableRow>
               ))}
-              
-              <TableRow sx={{ 
+
+              <TableRow sx={{
                 backgroundColor: '#f5f5f5',
-                '& .MuiTableCell-root': { 
+                '& .MuiTableCell-root': {
                   fontWeight: 600,
                   border: 'none'
                 }

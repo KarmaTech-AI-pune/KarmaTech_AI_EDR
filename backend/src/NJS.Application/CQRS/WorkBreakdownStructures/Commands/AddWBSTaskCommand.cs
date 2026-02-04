@@ -4,19 +4,17 @@ using NJS.Application.Dtos;
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Commands
 {
     /// <summary>
-    /// Command to add a single new task to a Work Breakdown Structure.
+    /// Command to add tasks to a Work Breakdown Structure using WBSMasterDto.
     /// </summary>
-    public class AddWBSTaskCommand : IRequest<int> // Returns the ID of the new task
+    public class AddWBSTaskCommand : IRequest<WBSMasterDto> // Returns WBSMasterDto
     {
         public int ProjectId { get; }
-        public WBSTaskDto TaskDto { get; }
+        public WBSMasterDto WBSMaster { get; }
 
-        public AddWBSTaskCommand(int projectId, WBSTaskDto taskDto)
+        public AddWBSTaskCommand(int projectId, WBSMasterDto wbsMaster)
         {
             ProjectId = projectId;
-            TaskDto = taskDto;
-            // Ensure the ID is 0 for a new task, preventing accidental updates
-            TaskDto.Id = 0;
+            WBSMaster = wbsMaster;
         }
     }
 }

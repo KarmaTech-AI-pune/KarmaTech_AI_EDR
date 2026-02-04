@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using NJS.Domain.Entities;
 
 namespace NJS.Repositories.Interfaces

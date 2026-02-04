@@ -1,4 +1,6 @@
 ﻿﻿using MediatR;
+using Microsoft.EntityFrameworkCore; // Added for DbUpdateException
+using Microsoft.Extensions.Logging; // Added for ILogger
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
@@ -8,21 +10,56 @@ using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.Projects.Handlers
 {
-    public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand, int>
+    public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand, Project>
     {
         private readonly IProjectRepository _repository;
+        private readonly IProgramRepository _programRepository;
+        private readonly ILogger<CreateProjectCommandHandler> _logger;
 
-        public CreateProjectCommandHandler(IProjectRepository repository)
+        public CreateProjectCommandHandler(
+            IProjectRepository repository, 
+            IProgramRepository programRepository,
+            ILogger<CreateProjectCommandHandler> logger)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _programRepository = programRepository ?? throw new ArgumentNullException(nameof(programRepository));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<int> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
+        public async Task<Project> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
         {
             if (request?.ProjectDto == null)
                 throw new ArgumentNullException(nameof(request));
 
             var dto = request.ProjectDto;
+
+            // Validate ProgramId is provided
+            if (dto.ProgramId <= 0)
+            {
+                _logger.LogWarning("Project creation failed: ProgramId is required and must be greater than 0");
+                throw new ArgumentException("ProgramId is required. A project must belong to a program.", nameof(dto.ProgramId));
+            }
+
+            // Validate that the Program exists
+            var program = await _programRepository.GetByIdAsync(dto.ProgramId, cancellationToken);
+            if (program == null)
+            {
+                _logger.LogWarning("Project creation failed: Program with ID {ProgramId} not found", dto.ProgramId);
+                throw new ArgumentException($"Program with ID {dto.ProgramId} does not exist. Please provide a valid ProgramId.", nameof(dto.ProgramId));
+            }
+
+            // Validate tenant match (if multi-tenant)
+            if (dto.TenantId.HasValue && dto.TenantId.Value > 0 && program.TenantId != dto.TenantId.Value)
+            {
+                _logger.LogWarning("Project creation failed: Program {ProgramId} belongs to different tenant", dto.ProgramId);
+                throw new ArgumentException($"Program with ID {dto.ProgramId} does not belong to the specified tenant.", nameof(dto.ProgramId));
+            }
+
+            // Set user IDs to null if they are "string" to allow project creation
+            var projectManagerId = dto.ProjectManagerId == "string" ? null : dto.ProjectManagerId;
+            var seniorProjectManagerId = dto.SeniorProjectManagerId == "string" ? null : dto.SeniorProjectManagerId;
+            var regionalManagerId = dto.RegionalManagerId == "string" ? null : dto.RegionalManagerId;
+
             var project = new Project
             {
                 TenantId = dto.TenantId ?? 0, // Set to 0 to let database context handle it
@@ -30,13 +67,13 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 ClientName = dto.ClientName,
                 ProjectNo = dto.ProjectNo,
                 TypeOfClient = dto.TypeOfClient,
-				ProjectManagerId = dto.ProjectManagerId,
-				SeniorProjectManagerId = dto.SeniorProjectManagerId,
-				RegionalManagerId = dto.RegionalManagerId,
-                Office=dto.Office,
+				ProjectManagerId = projectManagerId,
+				SeniorProjectManagerId = seniorProjectManagerId,
+				RegionalManagerId = regionalManagerId,
+                Office = dto.Office,
 				Region = dto.Region,
                 TypeOfJob = dto.TypeOfJob,
-				Sector = dto.Sector,
+				Sector = dto.Sector ?? string.Empty, // Assign empty string if Sector is null in DTO, as Entity's Sector is non-nullable
                 FeeType = dto.FeeType,
                 EstimatedProjectCost = dto.EstimatedProjectCost,
                 EstimatedProjectFee = dto.EstimatedProjectFee,
@@ -51,13 +88,14 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 Progress = 0, // Initial progress
                 DurationInMonths = dto.DurationInMonths,
                 FundingStream = dto.FundingStream,
-                ContractType = dto.ContractType,               
+                ContractType = dto.ContractType,
                 CreatedAt = DateTime.UtcNow,
                 LastModifiedAt = DateTime.UtcNow,
-                CreatedBy = dto.ProjectManagerId, // Using Project Manager as creator
-                LastModifiedBy = dto.ProjectManagerId,
+                CreatedBy = projectManagerId, // Using Project Manager as creator
+                LastModifiedBy = projectManagerId,
                 LetterOfAcceptance = dto.LetterOfAcceptance,
                 OpportunityTrackingId = dto.OpportunityTrackingId == 0 ? null : dto.OpportunityTrackingId,
+                ProgramId = dto.ProgramId // Validated ProgramId
             };
 
             // Calculate duration in months if not provided and dates are available
@@ -71,12 +109,22 @@ namespace NJS.Application.CQRS.Projects.Handlers
             try
             {
                 await _repository.Add(project);
-                return project.Id;
+                _logger.LogInformation("Project created successfully with ID {ProjectId} under Program {ProgramId}", project.Id, project.ProgramId);
+                return project;
             }
-            catch (Exception ex)
+            catch (DbUpdateException ex) // Catch specific DB update exception
             {
-                throw new ApplicationException("Error creating project", ex);
+                // Log the inner exception for detailed debugging
+                _logger.LogError(ex, "Database error creating project for tenant {TenantId}. Inner Exception: {InnerExceptionMessage}", dto.TenantId, ex.InnerException?.Message ?? ex.Message);
+                // Throw a more informative exception to the caller
+                throw new ApplicationException($"Error creating project. Database error: {ex.InnerException?.Message ?? ex.Message}", ex.InnerException ?? ex);
+            }
+            catch (Exception ex) // Catch any other unexpected exceptions
+            {
+                _logger.LogError(ex, "Unexpected error creating project for tenant {TenantId}", dto.TenantId);
+                throw new ApplicationException("An unexpected error occurred while creating the project.", ex);
             }
         }
+
     }
 }

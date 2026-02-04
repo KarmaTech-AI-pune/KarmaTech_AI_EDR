@@ -1,6 +1,6 @@
-﻿﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NJS.Application.Dtos;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJSAPI.Model;
@@ -11,6 +11,7 @@ namespace NJSAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class GoNoGoDecisionOpportunityController : ControllerBase
 {
     private ProjectManagementContext _context;

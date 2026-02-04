@@ -1,6 +1,6 @@
 -- Add SaaS Tables to Existing Database
 -- This script adds the new SaaS multi-tenant tables to the existing database
-
+ -- 
 -- 0. Create Permissions table (if missing)
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Permissions]') AND type in (N'U'))
 BEGIN

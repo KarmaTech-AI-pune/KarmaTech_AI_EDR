@@ -27,9 +27,10 @@ namespace NJS.Domain.Entities
         [Required]
         public int Level { get; set; }
 
-        [StringLength(100)]
-        public string ParentValue { get; set; }
-
+        public int? ParentId { get; set; } // New field for Parent ID
         public FormType FormType { get; set; } = FormType.Manpower; // Default to Manpower for backward compatibility
+
+        // Navigation property for the "many" side of the relationship
+        public virtual ICollection<WBSTask> WBSTasks { get; set; } = new List<WBSTask>();
     }
 }

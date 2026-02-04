@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NJS.Domain.Database;
 using System;
@@ -8,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NJS.Domain.Entities;
 
 namespace NJS.Domain.Services
 {
@@ -17,6 +20,8 @@ namespace NJS.Domain.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly TenantDbContext _context;
         private readonly ILogger<CurrentTenantService> _logger;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IConfiguration _configuration;
         private int? _tenantId;
         private string? _connectionString;
 
@@ -33,13 +38,17 @@ namespace NJS.Domain.Services
         }
 
         public CurrentTenantService(
-            IHttpContextAccessor httpContextAccessor, 
+            IHttpContextAccessor httpContextAccessor,
             TenantDbContext context,
-            ILogger<CurrentTenantService> logger)
+            ILogger<CurrentTenantService> logger,
+            IServiceProvider serviceProvider,
+            IConfiguration configuration)
         {
             _httpContextAccessor = httpContextAccessor;
             _context = context;
             _logger = logger;
+            _serviceProvider = serviceProvider;
+            _configuration = configuration;
             _logger.LogInformation("CurrentTenantService initialized");
         }
 
@@ -50,7 +59,7 @@ namespace NJS.Domain.Services
 
             if (httpContext == null)
             {
-                _logger.LogWarning("HttpContext is null when trying to get tenant ID");
+                _logger.LogDebug("HttpContext is null when trying to get tenant ID");
                 return null;
             }
 
@@ -61,7 +70,7 @@ namespace NJS.Domain.Services
                 return resolvedTenantId;
             }
 
-            _logger.LogWarning("No tenant ID found in HttpContext.Items");
+            _logger.LogDebug("No tenant ID found in HttpContext.Items");
             return null;
         }
 
@@ -75,14 +84,14 @@ namespace NJS.Domain.Services
                 if (tenantInfo == null)
                 {
                     _logger.LogWarning("Tenant not found with ID: {TenantId}", tenant);
-                    throw new Exception($"Tenant not found with ID: {tenant}");
+                    return false;
                 }
 
                 var tenantDb = await _context.TenantDatabases.Where(x => x.TenantId == tenantInfo.Id).FirstOrDefaultAsync();
                 if (tenantDb == null)
                 {
                     _logger.LogWarning("No database configuration found for tenant: {TenantId}", tenant);
-                    throw new Exception($"No database configuration found for tenant: {tenant}");
+                    return false;
                 }
 
                 _tenantId = tenant;
@@ -96,7 +105,7 @@ namespace NJS.Domain.Services
                 }
                 else
                 {
-                    _logger.LogWarning("HttpContext is null, could not set TenantId in Items");
+                    _logger.LogDebug("HttpContext is null, could not set TenantId in Items");
                 }
                 
                 _logger.LogInformation("Successfully set tenant ID: {TenantId} with connection string: {ConnectionStringStart}...", 
@@ -110,6 +119,50 @@ namespace NJS.Domain.Services
                 _logger.LogError(ex, "Error setting tenant ID: {TenantId}", tenant);
                 throw;
             }
+        }
+
+        public async Task<List<MigrationResult>> ApplyMigrationsToAllTenantsAsync()
+        {
+            var results = new List<MigrationResult>();
+            var tenants = await _context.TenantDatabases.ToListAsync();
+
+            foreach (var tenant in tenants)
+            {
+                var tenantResult = new MigrationResult { TenantId = tenant.Id };
+                try
+                {
+                    string connectionString = !string.IsNullOrEmpty(tenant.ConnectionString)
+                        ? tenant.ConnectionString
+                        : _configuration.GetConnectionString("AppDbConnection");
+
+                    using var scope = _serviceProvider.CreateScope();
+                    var dbContext = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+                    dbContext.Database.SetConnectionString(connectionString);
+
+                    var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+
+                    if (pendingMigrations.Any())
+                    {
+                        _logger.LogInformation($"Applying {pendingMigrations.Count()} migration(s) to tenant {tenant.Id}");
+                        await dbContext.Database.MigrateAsync();
+                        tenantResult.Success = true;
+                        tenantResult.Message = $"Applied {pendingMigrations.Count()} migration(s)";
+                    }
+                    else
+                    {
+                        tenantResult.Success = true;
+                        tenantResult.Message = "No pending migrations";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error applying migrations to tenant {tenant.Id}");
+                    tenantResult.Success = false;
+                    tenantResult.Message = ex.Message;
+                }
+                results.Add(tenantResult);
+            }
+            return results;
         }
     }
 }

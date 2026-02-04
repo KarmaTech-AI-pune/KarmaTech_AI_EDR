@@ -15,12 +15,16 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import SecurityIcon from '@mui/icons-material/Security';
 import EmailIcon from '@mui/icons-material/Email';
 import StorageIcon from '@mui/icons-material/Storage';
+import { getVersionInfo } from '../../utils/version';
 
 const SystemSettings = () => {
+  // Get dynamic version from build-time injection
+  const versionInfo = getVersionInfo();
+  
   const [settings, setSettings] = useState({
     // General Settings
-    appName: 'NJS Project Management',
-    appVersion: '1.0.0',
+    appName: 'Project Management',
+    appVersion: versionInfo.displayVersion,
     maintenanceMode: false,
     
     // Email Settings

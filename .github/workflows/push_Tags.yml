@@ -1,0 +1,195 @@
+# ====================================================================
+# Auto Tag Release on PR Merge - Enhanced Version
+# ====================================================================
+# Creates environment-specific version tags when PRs are merged
+# Tag format: v{MAJOR}.{MINOR}.{PATCH}-{ENV}.{DATE}.{BUILD}
+# Production also creates clean tag: v{MAJOR}.{MINOR}.{PATCH}
+
+name: Auto Tag Release on PR Merge
+run-name: "Create release tag for ${{ github.event.pull_request.base.ref }} after PR #${{ github.event.pull_request.number }}"
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  create-tag:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version-tag: ${{ steps.version.outputs.new_tag }}
+      clean-version: ${{ steps.version.outputs.clean_version }}
+      environment: ${{ steps.version.outputs.environment }}
+    
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set Git config
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine environment from branch
+        id: env
+        run: |
+          BRANCH="${{ github.event.pull_request.base.ref }}"
+          echo "Target branch: $BRANCH"
+          
+          case "$BRANCH" in
+            "Kiro/dev"|"kiro/dev"|"dev"|"Saas/dev")
+              ENVIRONMENT="dev"
+              ;;
+            "staging")
+              ENVIRONMENT="staging"
+              ;;
+            "qa")
+              ENVIRONMENT="qa"
+              ;;
+            "main"|"master"|"production")
+              ENVIRONMENT="prod"
+              ;;
+            *)
+              echo "⚠️ Unknown branch: $BRANCH. Defaulting to dev."
+              ENVIRONMENT="dev"
+              ;;
+          esac
+          
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          echo "Determined environment: $ENVIRONMENT"
+
+      - name: Determine next version tag
+        id: version
+        run: |
+          git fetch --tags
+          
+          ENV="${{ steps.env.outputs.environment }}"
+          DATE=$(date +%Y%m%d)
+          
+          # Get latest clean version tag (vX.Y.Z without suffix)
+          latest_clean=$(git tag --list "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+$" | head -n1)
+          
+          if [[ -z "$latest_clean" ]]; then
+            MAJOR=1
+            MINOR=0
+            PATCH=0
+          else
+            base=${latest_clean#v}
+            MAJOR=$(echo $base | cut -d. -f1)
+            MINOR=$(echo $base | cut -d. -f2)
+            PATCH=$(echo $base | cut -d. -f3)
+            
+            # Check PR labels for bump type
+            labels="${{ join(github.event.pull_request.labels.*.name, ' ') }}"
+            bump="patch"
+            
+            if echo "$labels" | grep -qi "major"; then
+              bump="major"
+            elif echo "$labels" | grep -qi "minor"; then
+              bump="minor"
+            fi
+            
+            case $bump in
+              major)
+                MAJOR=$((MAJOR+1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR+1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH+1))
+                ;;
+            esac
+          fi
+          
+          CLEAN_VERSION="$MAJOR.$MINOR.$PATCH"
+          
+          # Calculate build number for today
+          existing_tags=$(git tag --list "v$CLEAN_VERSION-$ENV.$DATE.*" --sort=-v:refname)
+          
+          if [[ -z "$existing_tags" ]]; then
+            BUILD_NUM=1
+          else
+            latest_build=$(echo "$existing_tags" | head -n1 | rev | cut -d. -f1 | rev)
+            BUILD_NUM=$((latest_build+1))
+          fi
+          
+          # Create environment-specific tag
+          NEW_TAG="v$CLEAN_VERSION-$ENV.$DATE.$BUILD_NUM"
+          
+          echo "latest_clean=$latest_clean" >> $GITHUB_OUTPUT
+          echo "clean_version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUM" >> $GITHUB_OUTPUT
+          
+          echo "Latest clean version: $latest_clean"
+          echo "New clean version: v$CLEAN_VERSION"
+          echo "New environment tag: $NEW_TAG"
+
+      - name: Create and push environment tag
+        run: |
+          NEW_TAG="${{ steps.version.outputs.new_tag }}"
+          ENV="${{ steps.version.outputs.environment }}"
+          CLEAN_VERSION="${{ steps.version.outputs.clean_version }}"
+          
+          echo "Creating tag: $NEW_TAG"
+          
+          # Create annotated tag with metadata
+          git tag -a "$NEW_TAG" -m "Release $NEW_TAG for $ENV environment" \
+            -m "" \
+            -m "Deployment Details:" \
+            -m "- Version: $CLEAN_VERSION" \
+            -m "- Environment: $ENV" \
+            -m "- Build: ${{ steps.version.outputs.build_number }}" \
+            -m "- Commit: ${{ github.sha }}" \
+            -m "- PR: #${{ github.event.pull_request.number }}" \
+            -m "- Merged by: ${{ github.actor }}"
+          
+          git push origin "$NEW_TAG"
+          echo "✅ Environment tag pushed: $NEW_TAG"
+
+      - name: Create clean production tag
+        if: steps.version.outputs.environment == 'prod'
+        run: |
+          CLEAN_TAG="v${{ steps.version.outputs.clean_version }}"
+          
+          # Check if clean tag already exists
+          if git rev-parse "$CLEAN_TAG" >/dev/null 2>&1; then
+            echo "⚠️ Clean tag $CLEAN_TAG already exists. Skipping."
+          else
+            echo "Creating clean production tag: $CLEAN_TAG"
+            
+            git tag -a "$CLEAN_TAG" -m "Production Release $CLEAN_TAG" \
+              -m "" \
+              -m "Commit: ${{ github.sha }}" \
+              -m "Environment Tag: ${{ steps.version.outputs.new_tag }}"
+            
+            git push origin "$CLEAN_TAG"
+            echo "✅ Clean production tag pushed: $CLEAN_TAG"
+          fi
+
+      - name: Tag Summary
+        run: |
+          echo "## 🏷️ Release Tag Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tag Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment Tag:** \`${{ steps.version.outputs.new_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Clean Version:** \`v${{ steps.version.outputs.clean_version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** \`${{ steps.version.outputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number:** \`${{ steps.version.outputs.build_number }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR:** #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Tag](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.new_tag }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [View PR](https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }})" >> $GITHUB_STEP_SUMMARY

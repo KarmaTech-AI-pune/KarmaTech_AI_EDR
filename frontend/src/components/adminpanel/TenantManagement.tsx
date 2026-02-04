@@ -26,6 +26,8 @@ import {
   CardContent,
   Alert,
   Tooltip,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -43,7 +45,8 @@ const TenantManagement = () => {
   const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
   const [open, setOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
-  const [formData, setFormData] = useState({id: 0,
+  const [formData, setFormData] = useState({
+    id: 0,
     name: '',
     domain: '',
     companyName: '',
@@ -53,6 +56,7 @@ const TenantManagement = () => {
     maxUsers: 10,
     maxProjects: 50,
     status: TenantStatus.Active,
+    isIsolated: false,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -94,6 +98,7 @@ const TenantManagement = () => {
       maxUsers: 10,
       maxProjects: 50,
       status: TenantStatus.Active,
+      isIsolated: false,
     });
     setError(null);
   };
@@ -117,12 +122,13 @@ const TenantManagement = () => {
       maxUsers: tenant.maxUsers,
       maxProjects: tenant.maxProjects,
       status: tenant.status,
+      isIsolated: tenant.isIsolated,
     });
     setOpen(true);
   };
 
   const handleSubmit = async () => {
-    debugger;
+    // debugger;
     try {
       const dataToSubmit = {
         ...formData,
@@ -264,9 +270,9 @@ const TenantManagement = () => {
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Chip 
-                    label={tenant.domain} 
-                    variant="outlined" 
+                  <Chip
+                    label={tenant.domain}
+                    variant="outlined"
                     size="small"
                     icon={<BusinessIcon />}
                   />
@@ -279,7 +285,7 @@ const TenantManagement = () => {
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Chip 
+                  <Chip
                     label={`${getStatusIcon(tenant.status)} ${tenant.status}`}
                     color={getStatusColor(tenant.status)}
                     size="small"
@@ -300,7 +306,7 @@ const TenantManagement = () => {
                 <TableCell>
                   <Box display="flex" gap={1} flexWrap="wrap">
                     <Tooltip title={`${tenant.tenantUsers?.length || 0} / ${tenant.maxUsers} Users`}>
-                      <Chip 
+                      <Chip
                         label={`${tenant.tenantUsers?.length || 0}/${tenant.maxUsers}`}
                         icon={<PeopleIcon />}
                         size="small"
@@ -308,7 +314,7 @@ const TenantManagement = () => {
                       />
                     </Tooltip>
                     <Tooltip title={`${tenant.maxProjects} Projects`}>
-                      <Chip 
+                      <Chip
                         label={`${tenant.maxProjects}`}
                         icon={<StorageIcon />}
                         size="small"
@@ -321,9 +327,9 @@ const TenantManagement = () => {
                     <EditIcon />
                   </IconButton>
                   <Tooltip title="Manage Users">
-                    <IconButton 
-                      onClick={() => window.location.href = '/admin?section=tenantUsers&tenantId=' + tenant.id} 
-                      color="secondary" 
+                    <IconButton
+                      onClick={() => window.location.href = '/admin?section=tenantUsers&tenantId=' + tenant.id}
+                      color="secondary"
                       size="small"
                     >
                       <GroupIcon />
@@ -449,6 +455,20 @@ const TenantManagement = () => {
                   <MenuItem value={TenantStatus.Cancelled}>Cancelled</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.isIsolated}
+                    onChange={(e) =>
+                      setFormData({ ...formData, isIsolated: e.target.checked })
+                    }
+                  />
+                }
+                label="Isolated Tenant"
+              />
             </Grid>
           </Grid>
         </DialogContent>

@@ -1,6 +1,6 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using NJS.Application.Dtos;
 using NJS.Application.CQRS.WorkBreakdownStructures.Commands;
 using NJS.Application.CQRS.WorkBreakdownStructures.Queries;
@@ -9,6 +9,7 @@ namespace NJSAPI.Controllers
 {
     [Route("api/projects/{projectId}/[controller]")]
     [ApiController]
+    [Authorize]
     public class WBSController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -24,16 +25,28 @@ namespace NJSAPI.Controllers
         /// Gets the active Work Breakdown Structure for a project.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <returns>The WBS structure including tasks.</returns>
+        /// <returns>The WBS master data with all workBreakdownStructures array and tasks.</returns>
+        /// <remarks>
+        /// Response structure:
+        /// {
+        ///   "wbsHeaderId": 101,
+        ///   "workBreakdownStructures": [
+        ///     {
+        ///       "workBreakdownStructureId": 1,
+        ///       "name": "Foundation",
+        ///       "description": "Base structure",
+        ///       "displayOrder": 1,
+        ///       "tasks": [...]
+        ///     }
+        ///   ]
+        /// }
+        /// </remarks>
         [HttpGet]
-        [ProducesResponseType(typeof(WBSStructureDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)] // If handler throws NotFoundException
-        public async Task<ActionResult<WBSStructureDto>> GetWBS(int projectId)
+        [ProducesResponseType(typeof(WBSMasterDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<WBSMasterDto>> GetWBS(int projectId)
         {
-            // Use the renamed query GetWBSByProjectIdQuery
             var result = await _mediator.Send(new GetWBSByProjectIdQuery(projectId));
-            // The handler now returns an empty structure instead of throwing NotFound,
-            // so we might not need specific 404 handling here unless requirements change.
             return Ok(result);
         }
 
@@ -41,94 +54,131 @@ namespace NJSAPI.Controllers
         /// Creates or replaces the entire Work Breakdown Structure for a project.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <param name="tasks">A list representing the desired state of WBS tasks.</param>
-        /// <returns>No content if successful.</returns>
+        /// <param name="wbsMaster">The WBS master data including workBreakdownStructures array with tasks.</param>
+        /// <returns>The saved WBS master data with generated IDs.</returns>
+        /// Note: For new entities, use 0 for IDs (wbsHeaderId, workBreakdownStructureId, id).
+        /// The response will contain the saved data with generated IDs.
+        /// </remarks>
         [HttpPut]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(WBSMasterDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)] // If handler throws NotFoundException for project
-        public async Task<IActionResult> SetWBS(int projectId, [FromBody] List<WBSTaskDto> tasks)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<WBSMasterDto>> SetWBS(int projectId, [FromBody] WBSMasterDto wbsMaster)
         {
-            if (tasks == null)
+            try
             {
-                return BadRequest("WBS task list cannot be null.");
-            }
-            // Basic validation: Check if ParentIds point to valid Ids within the list for new tasks? Optional.
+                _logger.LogInformation("SetWBS called for ProjectId: {ProjectId}, WbsHeaderId: {WbsHeaderId}",
+                    projectId, wbsMaster?.WbsHeaderId);
 
-            var command = new SetWBSCommand(projectId, tasks);
-            await _mediator.Send(command);
-            return NoContent();
+                if (wbsMaster == null)
+                {
+                    _logger.LogWarning("SetWBS: WBS master data is null");
+                    return BadRequest("WBS master data cannot be null.");
+                }
+
+                if (wbsMaster.WorkBreakdownStructures == null || !wbsMaster.WorkBreakdownStructures.Any())
+                {
+                    _logger.LogWarning("SetWBS: WorkBreakdownStructures array is null or empty");
+                    return BadRequest("WorkBreakdownStructures array cannot be null or empty.");
+                }
+
+                _logger.LogInformation("SetWBS: Processing {Count} WBS groups with {TaskCount} total tasks",
+                    wbsMaster.WorkBreakdownStructures.Count,
+                    wbsMaster.WorkBreakdownStructures.Sum(w => w.Tasks?.Count ?? 0));
+
+                var command = new SetWBSCommand(projectId, wbsMaster);
+                var savedData = await _mediator.Send(command);
+
+                _logger.LogInformation("SetWBS command executed successfully for ProjectId: {ProjectId}", projectId);
+
+                if (savedData == null)
+                {
+                    _logger.LogError("SetWBS: Failed to save WBS data for ProjectId: {ProjectId}", projectId);
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        new { message = "WBS was not saved successfully." });
+                }
+
+                _logger.LogInformation("Returning saved WBS data for ProjectId: {ProjectId}, WbsHeaderId: {WbsHeaderId}, WBS Groups: {Count}, Total Tasks: {TaskCount}",
+                    projectId,
+                    savedData.WbsHeaderId,
+                    savedData.WorkBreakdownStructures?.Count ?? 0,
+                    savedData.WorkBreakdownStructures?.Sum(w => w.Tasks?.Count ?? 0) ?? 0);
+
+                return StatusCode(StatusCodes.Status201Created, savedData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in SetWBS for ProjectId: {ProjectId}", projectId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = "An error occurred while saving WBS data.", error = ex.Message });
+            }
         }
 
         /// <summary>
-        /// Adds a new task to the Work Breakdown Structure for a project.
+        /// Adds new tasks to the Work Breakdown Structure for a project using WBSMasterDto.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <param name="taskDto">The details of the task to add.</param>
-        /// <returns>The created task details or its ID.</returns>
+        /// <param name="wbsMaster">The WBS master data with tasks to add.</param>
+        /// <returns>The updated WBS master data.</returns>
         [HttpPost("tasks")]
-        [ProducesResponseType(typeof(WBSTaskDto), StatusCodes.Status201Created)] // Or just the ID
+        [ProducesResponseType(typeof(WBSMasterDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)] // If WBS not found
-        public async Task<ActionResult<WBSTaskDto>> AddTask(int projectId, [FromBody] WBSTaskDto taskDto)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<WBSMasterDto>> AddTask(int projectId, [FromBody] WBSMasterDto wbsMaster)
         {
-            if (taskDto == null)
+            if (wbsMaster == null)
             {
-                return BadRequest("Task data cannot be null.");
-            }
-            if (taskDto.Id != 0)
-            {
-                return BadRequest("ID must be 0 for a new task.");
+                return BadRequest("WBS master data cannot be null.");
             }
 
-            var command = new AddWBSTaskCommand(projectId, taskDto);
-            var newTaskId = await _mediator.Send(command);
-          
-             return CreatedAtAction(nameof(GetWBS), new { projectId }, new { id = newTaskId });
+            var command = new AddWBSTaskCommand(projectId, wbsMaster);
+            var result = await _mediator.Send(command);
+
+            return StatusCode(StatusCodes.Status201Created, result);
         }
 
         /// <summary>
-        /// Updates a specific task within the Work Breakdown Structure.
+        /// Updates the Work Breakdown Structure using WBSMasterDto.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <param name="taskId">The ID of the task to update.</param>
-        /// <param name="taskDto">The updated task details.</param>
-        /// <returns>No content if successful.</returns>
-        [HttpPut("tasks/{taskId}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        /// <param name="wbsMaster">The WBS master data with updated tasks.</param>
+        /// <returns>The updated WBS master data.</returns>
+        [HttpPut("tasks")]
+        [ProducesResponseType(typeof(WBSMasterDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)] // If task or WBS not found
-        public async Task<IActionResult> UpdateTask(int projectId, int taskId, [FromBody] WBSTaskDto taskDto)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<WBSMasterDto>> UpdateTask(int projectId, [FromBody] WBSMasterDto wbsMaster)
         {
-            if (taskDto == null)
+            if (wbsMaster == null)
             {
-                return BadRequest("Task data cannot be null.");
-            }
-            if (taskId != taskDto.Id)
-            {
-                // Ensure the ID in the route matches the ID in the body
-                return BadRequest("Task ID mismatch between route and body.");
+                return BadRequest("WBS master data cannot be null.");
             }
 
-            var command = new UpdateWBSTaskCommand(projectId, taskId, taskDto);
-            await _mediator.Send(command);
-            return NoContent();
+            var command = new UpdateWBSTaskCommand(projectId, wbsMaster);
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
 
         /// <summary>
-        /// Deletes (soft deletes) a specific task from the Work Breakdown Structure.
+        /// Deletes a task from the Work Breakdown Structure by its ID.
         /// </summary>
         /// <param name="projectId">The ID of the project.</param>
-        /// <param name="taskId">The ID of the task to delete.</param>
-        /// <returns>No content if successful.</returns>
-        [HttpDelete("tasks/{taskId}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)] // If task not found (optional, handler returns success if already deleted)
-        public async Task<IActionResult> DeleteTask(int projectId, int taskId)
+        /// <param name="wbsTaskId">The ID of the WBS task to delete.</param>
+        /// <returns>Result of deletion.</returns>
+        [HttpDelete("tasks")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<bool>> DeleteTask(int projectId, [FromQuery] int wbsTaskId)
         {
-            var command = new DeleteWBSTaskCommand(projectId, taskId);
-            await _mediator.Send(command);
-            return NoContent();
+            var command = new DeleteWBSTaskCommand(projectId, wbsTaskId);
+            var result = await _mediator.Send(command);
+
+            if (!result)
+            {
+                 return NotFound($"WBSTask with Id {wbsTaskId} not found in Project {projectId}");
+            }
+
+            return Ok(result);
         }
 
         // TODO: Consider adding a GetTaskById endpoint if needed for CreatedAtAction links.

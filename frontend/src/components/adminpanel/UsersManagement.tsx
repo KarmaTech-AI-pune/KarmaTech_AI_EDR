@@ -16,18 +16,32 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import LockResetIcon from '@mui/icons-material/LockReset';
+import { Alert, Snackbar } from '@mui/material';
 import { Role } from '../../models/roleModel';
 import { AuthUser } from '../../models/userModel';
 
 import { PermissionType, RoleDefinition } from '../../models/index';
 import * as usersApi from '../../services/userApi';
 import UserDialog from '../dialogbox/adminpage/UserDialog';
+import PasswordDialog from '../dialogbox/adminpage/PasswordDialog';
 import { useRoles } from '../../hooks/useRoles';
 
 const UsersManagement = () => {
   const [users, setUsers] = useState<AuthUser[]>([]);
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AuthUser | null>(null);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
   const [formData, setFormData] = useState({
     userName: '',
     name: '',
@@ -99,11 +113,33 @@ const UsersManagement = () => {
       try {
         await usersApi.deleteUser(id);
         await loadUsers();
+        setSnackbar({
+          open: true,
+          message: 'User deleted successfully',
+          severity: 'success'
+        });
       } catch (error) {
         console.error('Error deleting user:', error);
-        alert('Failed to delete user');
+        setSnackbar({
+          open: true,
+          message: 'Failed to delete user',
+          severity: 'error'
+        });
       }
     }
+  };
+
+  const handleResetPassword = (user: AuthUser) => {
+    setSelectedUser(user);
+    setPasswordDialogOpen(true);
+  };
+
+  const handlePasswordSuccess = () => {
+    setSnackbar({
+      open: true,
+      message: 'Password updated successfully',
+      severity: 'success'
+    });
   };
 
   const handleSubmit = async () => {
@@ -205,10 +241,13 @@ const UsersManagement = () => {
                   ))}
                 </TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleEdit(user)} color="primary">
+                  <IconButton onClick={() => handleEdit(user)} color="primary" title="Edit user">
                     <EditIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleDelete(user.id)} color="error">
+                  <IconButton onClick={() => handleResetPassword(user)} color="warning" title="Reset password">
+                    <LockResetIcon />
+                  </IconButton>
+                  <IconButton onClick={() => handleDelete(user.id)} color="error" title="Delete user">
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -228,6 +267,27 @@ const UsersManagement = () => {
         handleRoleChange={handleRoleChange}
         handleCheckboxChange={handleCheckboxChange}
       />
+
+      <PasswordDialog
+        open={passwordDialogOpen}
+        onClose={() => setPasswordDialogOpen(false)}
+        user={selectedUser}
+        onSuccess={handlePasswordSuccess}
+      />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+      >
+        <Alert 
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

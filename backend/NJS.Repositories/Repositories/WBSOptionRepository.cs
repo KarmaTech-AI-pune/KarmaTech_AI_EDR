@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
@@ -32,10 +29,10 @@ namespace NJS.Repositories.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<WBSOption>> GetByLevelAndParentAsync(int level, string parentValue)
+        public async Task<IEnumerable<WBSOption>> GetByLevelAndParentAsync(int level, int? parentId)
         {
             return await _context.WBSOptions
-                .Where(o => o.Level == level && o.ParentValue == parentValue)
+                .Where(o => o.Level == level && o.ParentId == parentId)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -56,10 +53,11 @@ namespace NJS.Repositories.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<WBSOption>> GetByLevelParentAndFormTypeAsync(int level, string parentValue, FormType formType)
+        public async Task<IEnumerable<WBSOption>> GetByLevelParentAndFormTypeAsync(int level, int? parentId,
+            FormType formType)
         {
             return await _context.WBSOptions
-                .Where(o => o.Level == level && o.ParentValue == parentValue && o.FormType == formType)
+                .Where(o => o.Level == level && o.ParentId == parentId && o.FormType == formType)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -94,6 +92,14 @@ namespace NJS.Repositories.Repositories
         public async Task<WBSOption> GetByIdAsync(int id)
         {
             return await _context.WBSOptions.FindAsync(id);
+        }
+
+        public async Task<IEnumerable<WBSOption>> GetByIdsAsync(List<int> ids)
+        {
+            return await _context.WBSOptions
+                .Where(o => ids.Contains(o.Id))
+                .AsNoTracking()
+                .ToListAsync();
         }
     }
 }

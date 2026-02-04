@@ -372,8 +372,6 @@ namespace NJS.Application.Services
             });
         }
 
-
-
         public async Task<PlanByNameResponseDto?> GetPlanByNameAsync(string planName)
         {
             if (string.IsNullOrWhiteSpace(planName))
@@ -697,7 +695,7 @@ namespace NJS.Application.Services
             }
         }
 
-        private static string MapFeatureToSlug(string featureName)
+        private static string? MapFeatureToSlug(string featureName)
         {
             return featureName?.ToLower() switch
             {
@@ -726,21 +724,21 @@ namespace NJS.Application.Services
             };
         }
 
-        public async Task<SubscriptionFeaturesResponseDto> GetSubscriptionFeaturesByPlanNameAsync(string planName)
+        public async Task<SubscriptionFeaturesResponseDto> GetSubscriptionFeaturesByPlanIdAsync(int planId)
         {
-            _logger.LogInformation("Getting subscription plan '{PlanName}' with features, pricing, and limitations", planName);
+            _logger.LogInformation("Getting subscription plan with ID '{PlanId}' with features, pricing, and limitations", planId);
 
             try
             {
                 var subscriptionPlan = await _projectManagementContext.SubscriptionPlans
                     .Include(sp => sp.SubscriptionPlanFeatures)
                         .ThenInclude(spf => spf.Feature)
-                    .Where(sp => sp.IsActive && sp.Name.ToLower() == planName.ToLower())
+                    .Where(sp => sp.IsActive && sp.Id == planId)
                     .FirstOrDefaultAsync();
 
                 if (subscriptionPlan == null)
                 {
-                    _logger.LogWarning("Subscription plan '{PlanName}' not found", planName);
+                    _logger.LogWarning("Subscription plan with ID '{PlanId}' not found", planId);
                     return new SubscriptionFeaturesResponseDto();
                 }
 
@@ -775,12 +773,12 @@ namespace NJS.Application.Services
 
                 response.Plans.Add(planDto);
 
-                _logger.LogInformation("Successfully retrieved subscription plan '{PlanName}' with {FeatureCount} features", planName, featureNames.Count);
+                _logger.LogInformation("Successfully retrieved subscription plan with ID '{PlanId}' with {FeatureCount} features", planId, featureNames.Count);
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving subscription plan '{PlanName}' with details", planName);
+                _logger.LogError(ex, "Error retrieving subscription plan with ID '{PlanId}' with details", planId);
                 throw;
             }
         }

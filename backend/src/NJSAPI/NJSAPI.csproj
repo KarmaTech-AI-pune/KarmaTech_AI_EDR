@@ -4,10 +4,51 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Version information from VERSION file -->
+    <Version>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/../../../VERSION').Trim())</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
+    <!-- Build metadata -->
+    <AssemblyTitle>KarmaTech AI EDR API</AssemblyTitle>
+    <AssemblyDescription>Project Management API for KarmaTech AI EDR System</AssemblyDescription>
+    <AssemblyCompany>KarmaTech</AssemblyCompany>
+    <AssemblyProduct>AI EDR</AssemblyProduct>
+    <AssemblyCopyright>Copyright © KarmaTech 2024</AssemblyCopyright>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Properties\PublishProfiles\FolderProfile.pubxml" />
+    <None Update="MigrationSQL\IsolatedSQL\01_Permissions.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\02_Add_Roles_Mapp_Role_Permissions.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\03_Migrate_User_From_Soure_Target_DBs.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\04_PMWorkFlow.Sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\IsolatedSQL\05_OpportunityStatuses.Sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Templates\Email\onboarding.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Templates\Email\otp-login.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\NonIsolatedSQL\01_DropIndex.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\NonIsolatedSQL\02_Setup_user.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MigrationSQL\NonIsolatedSQL\01_Permissions.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -28,11 +69,30 @@
     </PackageReference>
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NJS.Application\NJS.Application.csproj" />
     <ProjectReference Include="..\NJS.Domain\NJS.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="LoggerFactory\EnvironmentProvider.cs">
+      <DependentUpon>IEnvironmentProvider.cs</DependentUpon>
+    </Compile>
+    <Compile Update="LoggerFactory\NLogWebLoggerProviderFactory.cs">
+      <DependentUpon>ILoggerProviderFactory.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Strategies\TenantUserMigrationStrategySelector.cs">
+      <DependentUpon>ITenantUserMigrationStrategySelector.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Strategies\IsolatedTenantUserMigrationStrategy.cs">
+      <DependentUpon>ITenantUserMigrationStrategy.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Strategies\SharedTenantUserMigrationStrategy.cs">
+      <DependentUpon>ITenantUserMigrationStrategy.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

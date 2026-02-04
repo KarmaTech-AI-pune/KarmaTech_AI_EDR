@@ -15,7 +15,7 @@ import {
 import React, { useState, useContext, useCallback } from 'react';
 import { projectManagementAppContext } from '../../../App';
 import { projectManagementAppContextType } from '../../../types';
-import { TaskType } from '../../../types/wbs';
+import { TaskType } from '../../../features/wbs/types/wbs';
 
 // Define workflow status enum for consistency
 enum WorkflowStatus {

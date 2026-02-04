@@ -1,0 +1,303 @@
+# Version System Monitoring Workflow
+# Runs automated checks on version consistency and system health
+# Requirements: 4.4, 7.1, 7.2, 4.5, 3.5, 8.1, 8.2, 8.4
+
+name: Version System Monitoring
+
+on:
+  schedule:
+    # Run every 6 hours (Requirement: 8.1 - Monitor version calculation success rate)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      alert-on-warnings:
+        description: 'Send alerts for warnings (not just errors)'
+        required: false
+        default: 'false'
+        type: boolean
+      force-notification:
+        description: 'Force send notification even if no errors'
+        required: false
+        default: 'false'
+        type: boolean
+  push:
+    branches: [ Kiro/dev ]
+    paths:
+      - 'VERSION'
+      - 'frontend/package.json'
+      - '.github/scripts/version-*.js'
+      - '.github/workflows/version-monitoring.yml'
+
+env:
+  MONITORING_ENABLED: true
+
+jobs:
+  version-monitoring:
+    name: Version System Health Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write  # For creating alerts
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Make monitoring scripts executable
+        run: |
+          chmod +x .github/scripts/version-monitor.js
+          chmod +x .github/scripts/version-error-notifier.js
+
+      - name: Run version system monitoring
+        id: monitor
+        continue-on-error: true
+        env:
+          ENVIRONMENT: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          echo "🔍 Starting version system monitoring..."
+          echo "   Environment: $ENVIRONMENT"
+          echo "   Repository: $GITHUB_REPOSITORY"
+          
+          # Create monitoring directory if it doesn't exist
+          mkdir -p .github/monitoring
+          
+          # Run the monitoring script
+          node .github/scripts/version-monitor.js
+          
+          # Capture exit code
+          MONITOR_EXIT_CODE=$?
+          echo "monitor-exit-code=$MONITOR_EXIT_CODE" >> $GITHUB_OUTPUT
+          
+          # Check if report was generated
+          if [ -f ".github/monitoring/version-monitor-report.json" ]; then
+            echo "report-generated=true" >> $GITHUB_OUTPUT
+            
+            # Extract key metrics from report
+            TOTAL_CHECKS=$(jq -r '.summary.totalChecks // 0' .github/monitoring/version-monitor-report.json)
+            ERROR_COUNT=$(jq -r '.summary.errorCount // 0' .github/monitoring/version-monitor-report.json)
+            WARNING_COUNT=$(jq -r '.summary.warningCount // 0' .github/monitoring/version-monitor-report.json)
+            STATUS=$(jq -r '.status // "UNKNOWN"' .github/monitoring/version-monitor-report.json)
+            
+            echo "total-checks=$TOTAL_CHECKS" >> $GITHUB_OUTPUT
+            echo "error-count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+            echo "warning-count=$WARNING_COUNT" >> $GITHUB_OUTPUT
+            echo "status=$STATUS" >> $GITHUB_OUTPUT
+          else
+            echo "report-generated=false" >> $GITHUB_OUTPUT
+            echo "status=FAILED" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check version synchronization
+        id: sync-check
+        run: |
+          echo "🔄 Checking version synchronization..."
+          
+          # Read VERSION file
+          if [ -f "VERSION" ]; then
+            VERSION_FILE=$(cat VERSION | tr -d '\n\r')
+            echo "VERSION file: $VERSION_FILE"
+          else
+            echo "❌ VERSION file not found"
+            echo "sync-status=error" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Read package.json version
+          if [ -f "frontend/package.json" ]; then
+            PACKAGE_VERSION=$(jq -r '.version' frontend/package.json)
+            echo "package.json version: $PACKAGE_VERSION"
+          else
+            echo "❌ frontend/package.json not found"
+            echo "sync-status=error" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Compare versions (Requirement: 3.5, 4.5)
+          if [ "$VERSION_FILE" = "$PACKAGE_VERSION" ]; then
+            echo "✅ Versions are synchronized: $VERSION_FILE"
+            echo "sync-status=synchronized" >> $GITHUB_OUTPUT
+            echo "current-version=$VERSION_FILE" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Version mismatch detected!"
+            echo "   VERSION file: $VERSION_FILE"
+            echo "   package.json: $PACKAGE_VERSION"
+            echo "sync-status=mismatch" >> $GITHUB_OUTPUT
+            echo "version-file=$VERSION_FILE" >> $GITHUB_OUTPUT
+            echo "package-version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload monitoring report
+        if: steps.monitor.outputs.report-generated == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: version-monitoring-report
+          path: .github/monitoring/version-monitor-report.json
+          retention-days: 30
+
+      - name: Create monitoring summary
+        run: |
+          echo "## 🔍 Version System Monitoring Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.monitor.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Checks:** ${{ steps.monitor.outputs.total-checks }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Errors:** ${{ steps.monitor.outputs.error-count }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Warnings:** ${{ steps.monitor.outputs.warning-count }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version Sync:** ${{ steps.sync-check.outputs.sync-status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.monitor.outputs.status }}" = "PASSED" ]; then
+            echo "✅ **All version system checks passed successfully**" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.monitor.outputs.status }}" = "WARNING" ]; then
+            echo "⚠️ **Monitoring completed with warnings**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Monitoring failed with errors**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.sync-check.outputs.sync-status }}" = "mismatch" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ⚠️ Version Mismatch Detected" >> $GITHUB_STEP_SUMMARY
+            echo "- VERSION file: \`${{ steps.sync-check.outputs.version-file }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- package.json: \`${{ steps.sync-check.outputs.package-version }}\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [Admin Portal](https://edr-admin.app.karmatech-ai.com)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Tenant Portal](https://app.karmatech-ai.com)" >> $GITHUB_STEP_SUMMARY
+          echo "- [API Health](https://api.app.karmatech-ai.com/api/version/health)" >> $GITHUB_STEP_SUMMARY
+          echo "- [API Metrics](https://api.app.karmatech-ai.com/api/version/metrics)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Version Sync Status](https://api.app.karmatech-ai.com/api/version/sync-status)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Version History](https://github.com/${{ github.repository }}/tags)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create alert issue for errors
+        if: steps.monitor.outputs.error-count > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🚨 Version System Monitoring Alert - ${new Date().toISOString().split('T')[0]}`;
+            const body = `
+            # Version System Monitoring Alert
+            
+            **Status:** FAILED ❌
+            **Timestamp:** ${new Date().toISOString()}
+            **Errors Found:** ${{ steps.monitor.outputs.error-count }}
+            **Warnings:** ${{ steps.monitor.outputs.warning-count }}
+            **Total Checks:** ${{ steps.monitor.outputs.total-checks }}
+            
+            ## Summary
+            The automated version system monitoring has detected **${{ steps.monitor.outputs.error-count }} error(s)** that require immediate attention.
+            
+            ## Actions Required
+            1. Review the monitoring report in the workflow artifacts
+            2. Check version consistency across all files
+            3. Verify API health endpoints are responding correctly
+            4. Ensure deployment versions match expected versions
+            5. Validate git tags are properly created
+            
+            ## Quick Links
+            - [Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [API Health Check](https://api.app.karmatech-ai.com/api/version/health)
+            - [Admin Portal](https://edr-admin.app.karmatech-ai.com)
+            - [Tenant Portal](https://app.karmatech-ai.com)
+            
+            ## Troubleshooting
+            - Check if VERSION file matches frontend/package.json
+            - Verify API endpoints are accessible
+            - Ensure latest deployment completed successfully
+            - Check git tags are properly pushed
+            
+            ---
+            *This issue was automatically created by the version monitoring system.*
+            *Auto-close this issue once all errors are resolved.*
+            `;
+            
+            // Check if there's already an open monitoring alert
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'version-monitoring,alert'
+            });
+            
+            if (issues.length === 0) {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['version-monitoring', 'alert', 'bug', 'high-priority']
+              });
+              console.log('Created new monitoring alert issue');
+            } else {
+              // Update existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body: `## New Alert - ${new Date().toISOString()}\n\n${body}`
+              });
+              console.log('Updated existing monitoring alert issue');
+            }
+
+      - name: Create alert issue for warnings
+        if: steps.monitor.outputs.warning-count > 0 && github.event.inputs.alert-on-warnings == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `⚠️ Version System Monitoring Warning - ${new Date().toISOString().split('T')[0]}`;
+            const body = `
+            # Version System Monitoring Warning
+            
+            **Status:** WARNING ⚠️
+            **Timestamp:** ${new Date().toISOString()}
+            **Warnings Found:** ${{ steps.monitor.outputs.warning-count }}
+            **Total Checks:** ${{ steps.monitor.outputs.total-checks }}
+            
+            ## Summary
+            The automated version system monitoring has detected **${{ steps.monitor.outputs.warning-count }} warning(s)** that should be reviewed.
+            
+            ## Recommended Actions
+            1. Review the monitoring report in the workflow artifacts
+            2. Check if warnings indicate potential issues
+            3. Consider updating version-related files if needed
+            
+            ## Quick Links
+            - [Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [API Health Check](https://api.app.karmatech-ai.com/api/version/health)
+            
+            ---
+            *This issue was automatically created by the version monitoring system.*
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['version-monitoring', 'warning', 'enhancement']
+            });
+
+      - name: Fail workflow if errors found
+        if: steps.monitor.outputs.error-count > 0
+        run: |
+          echo "❌ Version system monitoring failed with ${{ steps.monitor.outputs.error-count }} error(s)"
+          echo "Check the monitoring report for details"
+          exit 1
+
+      - name: Success notification
+        if: steps.monitor.outputs.status == 'PASSED'
+        run: |
+          echo "✅ Version system monitoring completed successfully"
+          echo "All ${{ steps.monitor.outputs.total-checks }} checks passed"

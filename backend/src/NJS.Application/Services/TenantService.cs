@@ -2,8 +2,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using NJS.Domain.Database;
+using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 using System.Security.Claims;
+using System.Linq;
 
 namespace NJS.Application.Services
 {
@@ -195,6 +200,14 @@ namespace NJS.Application.Services
             // This would query the TenantUser table
             // For now, return true (implement actual validation)
             return true;
+        }
+
+        public async Task<List<TenantUser>> GetTenantUsersByUserIdAsync(string userId)
+        {
+            return await _tenantDbContext.TenantUsers
+                .Where(tu => tu.UserId == userId && tu.IsActive)
+                .Include(tu => tu.Tenant)
+                .ToListAsync();
         }
     }
 }

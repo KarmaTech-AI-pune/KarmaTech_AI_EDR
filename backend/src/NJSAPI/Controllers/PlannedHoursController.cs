@@ -1,11 +1,7 @@
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NJSAPI.Controllers
 {
@@ -32,7 +28,8 @@ namespace NJSAPI.Controllers
                 .Include(w => w.Tasks)
                     .ThenInclude(t => t.PlannedHours)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(w => w.ProjectId == projectId && w.IsActive);
+                .Include(w => w.WBSHeader) // Ensure WBSHeader is loaded
+                .FirstOrDefaultAsync(w => w.WBSHeader.ProjectId == projectId && w.WBSHeader.IsActive);
 
             if (wbs == null)
             {
@@ -71,7 +68,7 @@ namespace NJSAPI.Controllers
                 .Include(t => t.PlannedHours)
                 .Include(t => t.UserWBSTasks)
                 .FirstOrDefaultAsync(t => t.Id == taskId &&
-                                         t.WorkBreakdownStructure.ProjectId == projectId &&
+                                         t.WorkBreakdownStructure.WBSHeader.ProjectId == projectId &&
                                          !t.IsDeleted);
 
             if (task == null)

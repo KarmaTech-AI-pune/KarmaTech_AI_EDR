@@ -17,8 +17,11 @@ import BusinessIcon from '@mui/icons-material/Business';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import SettingsIcon from '@mui/icons-material/Settings';
+import TuneIcon from '@mui/icons-material/Tune'; // New import
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import DnsIcon from '@mui/icons-material/Dns'; // New icon for migrations
+
 import UsersManagement from '../components/adminpanel/UsersManagement';
 import RolesManagement from '../components/adminpanel/RolesManagement';
 import TenantManagement from '../components/adminpanel/TenantManagement';
@@ -26,6 +29,8 @@ import TenantUsersManagement from '../components/adminpanel/TenantUsersManagemen
 import SubscriptionManagement from '../components/adminpanel/SubscriptionManagement';
 import BillingManagement from '../components/adminpanel/BillingManagement';
 import SystemSettings from '../components/adminpanel/SystemSettings';
+import GeneralSettings from '../features/generalSettings/pages/GeneralSettings';
+import MigrationManagement from '../pages/MigrationManagement'; // Import the new component
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
@@ -36,7 +41,8 @@ const AdminPanel: React.FC = () => {
   const { isSuperAdmin } = useTenantContext();
   const [hasSystemAdminPermission, setHasSystemAdminPermission] = useState(false);
   const [hasTenantAdminPermission, setHasTenantAdminPermission] = useState(false);
-  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'settings'>('settings');
+  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'settings'>('settings');
+
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -45,18 +51,18 @@ const AdminPanel: React.FC = () => {
         console.log('Current User:', user);
         console.log('Role Details:', user?.roleDetails);
         console.log('Permissions:', user?.roleDetails?.permissions);
-        
+
         if (user?.roleDetails?.permissions) {
           const isSystemAdmin = user.roleDetails.permissions.includes('SYSTEM_ADMIN');
           const isTenantAdmin = user.roleDetails.permissions.includes('Tenant_ADMIN');
-          
+
           console.log('Is System Admin?', isSystemAdmin);
           console.log('Is Tenant Admin?', isTenantAdmin);
           console.log('User Permissions:', user.roleDetails.permissions);
-          
+
           setHasSystemAdminPermission(isSystemAdmin);
           setHasTenantAdminPermission(isTenantAdmin);
-          
+
           // Set initial section based on permissions
           if (isSystemAdmin || isSuperAdmin) {
             setSelectedSection('tenants');
@@ -72,7 +78,7 @@ const AdminPanel: React.FC = () => {
   }, [isSuperAdmin]);
 
   interface MenuItem {
-    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'settings';
+    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'settings';
     text: string;
     icon: JSX.Element;
     requiresSystemAdmin?: boolean;
@@ -85,11 +91,15 @@ const AdminPanel: React.FC = () => {
     { id: 'tenantUsers', text: 'Tenant Users', icon: <PeopleIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
     { id: 'subscriptions', text: 'Subscription Plans', icon: <AttachMoneyIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
     { id: 'billing', text: 'Billing Management', icon: <ReceiptIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
+    { id: 'migrations', text: 'Migration Management', icon: <DnsIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false }, // New migration item
     // Tenant Admin menu items
     { id: 'users', text: 'Users Management', icon: <PeopleIcon />, requiresTenantAdmin: true },
     { id: 'roles', text: 'Roles Management', icon: <SecurityIcon />, requiresTenantAdmin: true },
-    { id: 'settings', text: 'System Settings', icon: <SettingsIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false}
+    { id: 'generalSettings', text: 'General Setting', icon: <TuneIcon />, requiresSystemAdmin: false, requiresTenantAdmin: true },
+    { id: 'settings', text: 'System Settings', icon: <SettingsIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false }
   ];
+
+
 
   // Ensure permissions are properly checked
   const hasRequiredPermissions = (item: MenuItem): boolean => {
@@ -144,16 +154,20 @@ const AdminPanel: React.FC = () => {
         return <UsersManagement />;
       case 'roles':
         return <RolesManagement />;
+      case 'generalSettings':
+        return <GeneralSettings />;
       case 'settings':
         return <SystemSettings />;
+      case 'migrations':
+        return <MigrationManagement />;
       default:
         return null;
     }
   };
 
   return (
-    <Box 
-      sx={{ 
+    <Box
+      sx={{
         display: 'flex',
         height: `calc(100vh - ${NAVBAR_HEIGHT})`,
         pt: `${NAVBAR_HEIGHT}`,
@@ -187,7 +201,7 @@ const AdminPanel: React.FC = () => {
           {visibleMenuItems.map((item) => (
             <ListItemButton
               key={item.id}
-              onClick={() => setSelectedSection(item.id as 'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'settings')}
+              onClick={() => setSelectedSection(item.id as 'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'generalSettings' | 'settings')}
               selected={selectedSection === item.id}
               sx={{
                 minHeight: 48,
@@ -213,7 +227,7 @@ const AdminPanel: React.FC = () => {
                 </ListItemIcon>
               </Tooltip>
               {isDrawerExpanded && (
-                <ListItemText 
+                <ListItemText
                   primary={item.text}
                   primaryTypographyProps={{
                     variant: 'body1'

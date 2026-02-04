@@ -1,64 +1,84 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.WorkBreakdownStructures.Commands;
+using NJS.Application.Dtos;
 using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Domain.UnitWork;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace NJS.Application.CQRS.WorkBreakdownStructures.Handlers
 {
-    public class DeleteWBSTaskCommandHandler : IRequestHandler<DeleteWBSTaskCommand, Unit>
+    public class DeleteWBSTaskCommandHandler : IRequestHandler<DeleteWBSTaskCommand, bool>
     {
         private readonly ProjectManagementContext _context;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<DeleteWBSTaskCommandHandler> _logger;
 
-        // TODO: Inject ICurrentUserService or similar
-        private readonly string _currentUser = "System"; // Placeholder
-
-        public DeleteWBSTaskCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork)
+        public DeleteWBSTaskCommandHandler(ProjectManagementContext context, IUnitOfWork unitOfWork, ILogger<DeleteWBSTaskCommandHandler> logger)
         {
             _context = context;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
-        public async Task<Unit> Handle(DeleteWBSTaskCommand request, CancellationToken cancellationToken)
+        public async Task<bool> Handle(DeleteWBSTaskCommand request, CancellationToken cancellationToken)
         {
-            // --- 1. Find the task to delete ---
-            var taskEntity = await _context.WBSTasks
-                .Include(t => t.WorkBreakdownStructure) // Include WBS to check ProjectId
-                .FirstOrDefaultAsync(t => t.Id == request.TaskId && !t.IsDeleted, cancellationToken);
+            _logger.LogInformation("Handling DeleteWBSTaskCommand for ProjectId {ProjectId}, WBSTaskId {WBSTaskId}",
+                request.ProjectId, request.WBSTaskId);
 
-            if (taskEntity == null)
+            // Fetch the target task to verify it exists and get its WBS ID
+            var targetTask = await _context.WBSTasks
+                .Include(t => t.WorkBreakdownStructure)
+                    .ThenInclude(wbs => wbs.WBSHeader)
+                .Include(t => t.PlannedHours)
+                .Include(t => t.UserWBSTasks)
+                .FirstOrDefaultAsync(t => t.Id == request.WBSTaskId && t.WorkBreakdownStructure.WBSHeader.ProjectId == request.ProjectId, cancellationToken);
+            
+            if (targetTask == null)
             {
-                // Task already deleted or never existed, return success (idempotent)
-                return Unit.Value;
-                // Or throw NotFoundException if strict checking is required
-                // throw new NotFoundException(nameof(WBSTask), request.TaskId);
+                _logger.LogWarning("WBSTask with Id {WBSTaskId} not found in Project {ProjectId}", request.WBSTaskId, request.ProjectId);
+                return false;
             }
 
-            // --- 2. Verify task belongs to the correct project's WBS ---
-            if (taskEntity.WorkBreakdownStructure == null || taskEntity.WorkBreakdownStructure.ProjectId != request.ProjectId)
+            // Fetch all tasks in the same Work Breakdown Structure to find children
+            // We fetch only tasks in the same WBS Group as parents/children are within the same group usually
+            var allTasksInWbs = await _context.WBSTasks
+                .Where(t => t.WorkBreakdownStructureId == targetTask.WorkBreakdownStructureId)
+                .Include(t => t.PlannedHours)
+                .Include(t => t.UserWBSTasks)
+                .ToListAsync(cancellationToken);
+
+            var tasksToDelete = new List<WBSTask>();
+            CollectTasksToDelete(targetTask, allTasksInWbs, tasksToDelete);
+
+            if (tasksToDelete.Count > 0)
             {
-                // Or throw an authorization/forbidden exception
-                throw new Exception($"Task {request.TaskId} does not belong to Project {request.ProjectId}.");
+                 _logger.LogInformation("Found {Count} tasks to delete (Target + Children)", tasksToDelete.Count);
+                _context.WBSTasks.RemoveRange(tasksToDelete);
+                await _unitOfWork.SaveChangesAsync();
             }
 
-            // --- 3. Mark as deleted (Soft Delete) ---
-            taskEntity.IsDeleted = true;
-            taskEntity.UpdatedAt = DateTime.UtcNow;
-            taskEntity.UpdatedBy = _currentUser;
+            _logger.LogInformation("WBSTask {WBSTaskId} and its children deleted successfully for ProjectId {ProjectId}", request.WBSTaskId, request.ProjectId);
 
-            // TODO: Consider cascading soft delete for child tasks if required by business logic.
-            // This would involve recursively finding and marking children as deleted.
-            // For now, only the specified task is marked.
+            return true;
+        }
 
-            // --- 4. Save Changes ---
-            await _unitOfWork.SaveChangesAsync();
+        private void CollectTasksToDelete(WBSTask currentTask, List<WBSTask> allTasks, List<WBSTask> tasksToDelete)
+        {
+            tasksToDelete.Add(currentTask);
 
-            return Unit.Value;
+            // Find direct children
+            var children = allTasks.Where(t => t.ParentId == currentTask.Id).ToList();
+
+            foreach (var child in children)
+            {
+                // Recursive call for each child
+                CollectTasksToDelete(child, allTasks, tasksToDelete);
+            }
         }
     }
 }

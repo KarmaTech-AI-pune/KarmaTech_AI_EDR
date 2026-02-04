@@ -8,15 +8,15 @@ namespace NJS.Application.Services
     {
         private readonly IProjectRepository _projectRepository;
         private readonly IWorkBreakdownStructureRepository _wbsRepository;
-        private readonly IGoNoGoDecisionRepository _goNoGoDecisionRepository;
+        private readonly IGoNoGoDecisionService _goNoGoDecisionService;
         public ProjectManagementService(
         IProjectRepository projectRepository,
         IWorkBreakdownStructureRepository wbsRepository,
-        IGoNoGoDecisionRepository goNoGoDecisionRepository)
+        IGoNoGoDecisionService goNoGoDecisionService)
         {
             _projectRepository = projectRepository;
             _wbsRepository = wbsRepository;
-            _goNoGoDecisionRepository = goNoGoDecisionRepository;
+            _goNoGoDecisionService = goNoGoDecisionService;
         }
 
         public void AddWorkBreakdownStructure(int projectId, WorkBreakdownStructure wbs)
@@ -26,19 +26,19 @@ namespace NJS.Application.Services
             {
                 throw new ArgumentException("Project not found", nameof(projectId));
             }
-            wbs.ProjectId = projectId;
             _wbsRepository.Add(wbs);
         }
 
         public GoNoGoDecision SubmitGoNoGoDecision(GoNoGoDecision decision)
         {
-            _goNoGoDecisionRepository.Add(decision);
+            // Use service to ensure score capping is applied
+            _goNoGoDecisionService.Add(decision);
             return decision;
         }
 
         public GoNoGoDecision GetGoNoGoDecision(int projectId)
         {
-            return _goNoGoDecisionRepository.GetByProjectId(projectId);
+            return _goNoGoDecisionService.GetByProjectId(projectId);
         }
 
         public WorkBreakdownStructure CreateWBS(WorkBreakdownStructure wbs)

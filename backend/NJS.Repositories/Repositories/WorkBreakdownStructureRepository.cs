@@ -1,4 +1,3 @@
-//File: backend/src/NJS.Application/Repositories/WorkBreakdownStructureRepository.cs
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 
@@ -6,11 +5,11 @@ namespace NJS.Repositories.Repositories
 {
     public class WorkBreakdownStructureRepository : IWorkBreakdownStructureRepository
     {
-        private static List<WorkBreakdownStructure> _wbsList = new List<WorkBreakdownStructure>();
+        private static List<WorkBreakdownStructure> _wbsList = new();
 
         public IEnumerable<WorkBreakdownStructure> GetAllByProjectId(int projectId)
         {
-            return _wbsList.Where(wbs => wbs.ProjectId == projectId);
+            return _wbsList.Where(wbs => wbs.WBSHeader?.ProjectId == projectId);
         }
 
         public WorkBreakdownStructure GetById(int id)
@@ -20,7 +19,7 @@ namespace NJS.Repositories.Repositories
 
         public WorkBreakdownStructure GetByProjectId(int projectId)
         {
-            return _wbsList.FirstOrDefault(wbs => wbs.ProjectId == projectId);
+            return _wbsList.FirstOrDefault(wbs => wbs.WBSHeader?.ProjectId == projectId);
         }
 
         public void Add(WorkBreakdownStructure wbs)
