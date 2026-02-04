@@ -981,8 +981,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<ChangeControl>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Originator).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Originator).IsRequired(false).HasMaxLength(100);
+                entity.Property(e => e.Description).IsRequired(false).HasMaxLength(500);
                 entity.Property(e => e.CostImpact).HasMaxLength(255).IsRequired(false);
                 entity.Property(e => e.TimeImpact).HasMaxLength(255).IsRequired(false);
                 entity.Property(e => e.ResourcesImpact).HasMaxLength(255).IsRequired(false);
