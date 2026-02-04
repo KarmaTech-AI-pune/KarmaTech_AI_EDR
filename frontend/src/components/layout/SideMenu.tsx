@@ -62,6 +62,12 @@ const formSections = [
           title: 'Sprint Planning',
           icon: <ChecklistRtlIcon />,
           path: 'forms/wbs/todo-list'
+        },
+        {
+          id: 'cashflow',
+          title: 'Cashflow',
+          icon: <PaymentsIcon />,
+          path: 'forms/cashflow'
         }
       ]
     },
@@ -112,12 +118,6 @@ const formSections = [
       title: 'Monthly Reports',
       icon: <AssessmentIcon />,
       path: 'forms/monthly-reports'
-    },
-    {
-      id: 'cashflow',
-      title: 'Cashflow',
-      icon: <PaymentsIcon />,
-      path: 'forms/cashflow'
     },
   ];
 
