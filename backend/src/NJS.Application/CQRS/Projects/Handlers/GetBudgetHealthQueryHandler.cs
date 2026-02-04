@@ -33,7 +33,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             
             if (estimatedCost > 0)
             {
-                utilizationPercentage = (estimatedFee / estimatedCost) * 100;
+                utilizationPercentage = ((project.EstimatedProjectFee ?? 0) / project.EstimatedProjectCost.Value) * 100;
             }
 
             // Determine status based on thresholds
@@ -56,8 +56,8 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 ProjectId = project.Id,
                 Status = status,
                 UtilizationPercentage = Math.Round(utilizationPercentage, 2),
-                EstimatedBudget = estimatedCost,
-                ActualCost = estimatedFee // Using fee as "actual cost" for demo
+                EstimatedBudget = project.EstimatedProjectCost ?? 0,
+                ActualCost = project.EstimatedProjectFee ?? 0 // Using fee as "actual cost" for demo
             };
 
             return Task.FromResult(result);
