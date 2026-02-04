@@ -2622,6 +2622,75 @@ namespace NJS.Domain.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectBudgetChangeHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ChangedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("NewValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OldValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PercentageVariance")
+                        .HasColumnType("decimal(10,4)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Variance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedBy");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectBudgetChangeHistories");
+                });
+
             modelBuilder.Entity("NJS.Domain.Entities.ProjectClosure", b =>
                 {
                     b.Property<int>("Id")
@@ -5348,6 +5417,25 @@ namespace NJS.Domain.Migrations
                     b.Navigation("RegionalManager");
 
                     b.Navigation("SeniorProjectManager");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.ProjectBudgetChangeHistory", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.User", "ChangedByUser")
+                        .WithMany()
+                        .HasForeignKey("ChangedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChangedByUser");
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ProjectClosure", b =>

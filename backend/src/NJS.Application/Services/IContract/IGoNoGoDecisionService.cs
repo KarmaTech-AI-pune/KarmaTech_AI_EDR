@@ -1,5 +1,6 @@
 ﻿using NJS.Domain.Entities;
 using NJS.Domain.Enums;
+using NJS.Application.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,5 +37,10 @@ namespace NJS.Application.Services.IContract
         Task<bool> DeleteHeader(int id);
         Task<bool> DeleteTransaction(int id);
         Task<GoNoGoDecisionHeader?> GetHeaderIncludeVersionsByHeaderIdAsync(int id);
+
+        // Methods with capping information
+        GoNoGoDecisionDto GetByIdWithCappingInfo(int id);
+        GoNoGoDecisionDto GetByProjectIdWithCappingInfo(int projectId);
+        IEnumerable<GoNoGoSummaryDto> GetAllWithCappingInfo();
     }
 }

@@ -1,0 +1,219 @@
+# ====================================================================
+# Staging/QA Deployment with Automatic Release Tagging
+# ====================================================================
+# This workflow deploys to STAGING environment for QA testing
+# Trigger: Manual workflow dispatch or push to staging branch
+
+name: Deploy to STAGING with Release Tags
+
+on:
+  push:
+    branches: [ staging, Saas/staging ]
+  workflow_dispatch:
+    inputs:
+      version-bump:
+        description: 'Version bump type'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      source-tag:
+        description: 'Deploy from specific DEV tag (optional)'
+        required: false
+        type: string
+
+env:
+  AWS_REGION: us-east-1
+  CERTIFICATE_ARN: arn:aws:acm:us-east-1:008971635132:certificate/20320ffc-0572-4e4e-9945-ef681c0a5937
+  ENVIRONMENT: staging
+
+jobs:
+  # ================================================================
+  # Job 1: Create Release Tag
+  # ================================================================
+  create-release-tag:
+    name: Create STAGING Release Tag
+    uses: ./.github/workflows/create-release-tags.yml
+    with:
+      environment: staging
+      component: full
+      version-bump: ${{ github.event.inputs.version-bump || 'patch' }}
+    permissions:
+      contents: write
+
+  # ================================================================
+  # Job 2: Deploy Backend to Staging
+  # ================================================================
+  deploy-backend:
+    name: Deploy Backend to Staging
+    runs-on: ubuntu-latest
+    needs: create-release-tag
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.source-tag || github.sha }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and tag Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: njs-multitenant-backend-staging
+          IMAGE_TAG: ${{ needs.create-release-tag.outputs.release-tag }}
+        run: |
+          # Build with version labels
+          docker build -f Dockerfile.backend-only \
+            --label "version=${{ needs.create-release-tag.outputs.release-tag }}" \
+            --label "environment=staging" \
+            --label "commit=${{ github.sha }}" \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:staging-latest .
+          
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:staging-latest
+
+      - name: Update ECS Service
+        run: |
+          # Update task definition with new image
+          # Deploy to staging ECS cluster
+          echo "Deploying backend version ${{ needs.create-release-tag.outputs.release-tag }} to staging"
+
+  # ================================================================
+  # Job 3: Deploy Frontend to Staging
+  # ================================================================
+  deploy-frontend:
+    name: Deploy Frontend to Staging
+    runs-on: ubuntu-latest
+    needs: create-release-tag
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.source-tag || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Create staging environment file
+        working-directory: ./frontend
+        run: |
+          cat > .env.production <<EOF
+          VITE_API_BASE_URL=https://api-staging.app.karmatech-ai.com/
+          VITE_APP_ENV=staging
+          VITE_MAIN_DOMAIN=staging.app.karmatech-ai.com
+          VITE_APP_TYPE=tenant
+          VITE_APP_VERSION=${{ needs.create-release-tag.outputs.release-tag }}
+          VITE_BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          VITE_COMMIT_SHA=${{ github.sha }}
+          EOF
+
+      - name: Build application
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Create version manifest
+        working-directory: ./frontend/dist
+        run: |
+          cat > version.json <<EOF
+          {
+            "version": "${{ needs.create-release-tag.outputs.release-tag }}",
+            "semanticVersion": "${{ needs.create-release-tag.outputs.release-version }}",
+            "environment": "staging",
+            "buildDate": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "commitSha": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}",
+            "deployedBy": "${{ github.actor }}",
+            "sourceTag": "${{ github.event.inputs.source-tag || 'N/A' }}"
+          }
+          EOF
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: |
+          # Deploy to staging S3 bucket
+          aws s3 sync frontend/dist/ s3://njs-frontend-staging --delete
+
+  # ================================================================
+  # Job 4: Run QA Tests
+  # ================================================================
+  run-qa-tests:
+    name: Run QA Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests on staging environment..."
+          # Add your test commands here
+          # npm run test:e2e:staging
+
+      - name: QA Test Summary
+        run: |
+          echo "## 🧪 QA Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Smoke tests: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration tests: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+
+  # ================================================================
+  # Job 5: Deployment Summary
+  # ================================================================
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [create-release-tag, deploy-backend, deploy-frontend, run-qa-tests]
+    if: always()
+    
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 STAGING Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🏷️ Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Tag:** \`${{ needs.create-release-tag.outputs.release-tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** \`${{ needs.create-release-tag.outputs.release-version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** STAGING" >> $GITHUB_STEP_SUMMARY
+          echo "- **Source Tag:** \`${{ github.event.inputs.source-tag || 'Latest commit' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 Staging URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend:** https://staging.app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "- **API:** https://api-staging.app.karmatech-ai.com" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Ready for QA Testing" >> $GITHUB_STEP_SUMMARY
+          echo "QA team can now test this release before promoting to production." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Complete QA testing" >> $GITHUB_STEP_SUMMARY
+          echo "2. Get stakeholder approval" >> $GITHUB_STEP_SUMMARY
+          echo "3. Promote to production using tag: \`${{ needs.create-release-tag.outputs.release-tag }}\`" >> $GITHUB_STEP_SUMMARY

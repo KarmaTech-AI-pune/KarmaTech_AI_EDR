@@ -19,10 +19,15 @@ import {
   CardContent,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+  Alert,
+  Chip,
+  Tooltip
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CommentIcon from '@mui/icons-material/Comment';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { projectManagementAppContextType } from '../../types';
 import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext';
 import { GoNoGoStatus, TypeOfBid } from "../../models/types";
@@ -210,15 +215,41 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
     bidtimeandcosts: { comments: '', score: 0, showComments: false, scoringDescriptionId: 12 }
   });
 
+  const MAX_POSSIBLE_SCORE = 120; // 12 criteria × 10 points each
+
   const calculateTotalScore = () => {
+    // Return raw total (0-120) - no capping
     return Object.values(criteria).reduce((sum, item) => sum + item.score, 0);
   };
 
+  const calculateScorePercentage = () => {
+    const rawTotal = calculateTotalScore();
+    return Math.round((rawTotal / MAX_POSSIBLE_SCORE) * 100);
+  };
+
+  const isPerfectScore = () => {
+    return calculateTotalScore() === MAX_POSSIBLE_SCORE;
+  };
+
+  // Legacy function for backward compatibility - prefixed with underscore to indicate intentionally unused
+  const _getRawTotalScore = () => {
+    return calculateTotalScore();
+  };
+
+  // Legacy function for backward compatibility - prefixed with underscore to indicate intentionally unused
+  const _isScoreCapped = () => {
+    return false; // No longer capping scores
+  };
+
+  // Suppress unused variable warnings for legacy functions
+  void _getRawTotalScore;
+  void _isScoreCapped;
+
   const getDecisionStatus = () => {
-    const totalScore = calculateTotalScore();
-    if (totalScore >= 84) return { text: 'GO', color: '#4caf50' };
-    if (totalScore >= 50) return { text: 'GO', color: '#ff9800' };
-    return { text: 'NO GO', color: '#f44336' };
+    const scorePercentage = calculateScorePercentage(); // Use percentage calculation
+    if (scorePercentage >= 70) return { text: 'GO', color: '#4caf50' }; // Green
+    if (scorePercentage >= 42) return { text: 'GO', color: '#ff9800' }; // Amber
+    return { text: 'NO GO', color: '#f44336' }; // Red
   };
 
   const handleCriteriaChange = (
@@ -528,7 +559,7 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
           }
         },
         Summary: {
-          TotalScore: calculateTotalScore(),
+          TotalScore: calculateTotalScore(), // Raw total score (0-120)
           Status: getDecisionStatus().text === 'GO' ? GoNoGoStatus.Green : GoNoGoStatus.Red,
           DecisionComments: '',
           ActionPlan: ''
@@ -820,10 +851,40 @@ const GoNoGoForm: React.FC<{ onDecisionStatusChange?: (status: string, versionNu
         <Typography variant="h6" gutterBottom>
           Decision Summary
         </Typography>
+        
+        {/* Perfect Score Success Indicator - Requirement 2.5 */}
+        {isPerfectScore() && (
+          <Alert 
+            severity="success" 
+            icon={<CheckCircleIcon />}
+            sx={{ mb: 2 }}
+          >
+            <Typography variant="body2" fontWeight="medium">
+              Excellent! You've achieved a perfect score of 100%.
+            </Typography>
+          </Alert>
+        )}
+
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <Typography variant="body1">
-              Total Score: {calculateTotalScore()}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body1">
+                Total Score:
+              </Typography>
+              {/* Display percentage with "%" suffix - Requirement 2.1 */}
+              <Chip 
+                label={`${calculateScorePercentage()}%`}
+                color={isPerfectScore() ? "success" : "default"}
+                size="medium"
+                sx={{ fontWeight: 'bold', fontSize: '1rem' }}
+              />
+              <Tooltip title={`Raw total: ${calculateTotalScore()}/120`}>
+                <InfoOutlinedIcon color="action" fontSize="small" sx={{ cursor: 'help' }} />
+              </Tooltip>
+            </Box>
+            {/* Show raw score for transparency and indicate maximum possible score - Requirements 2.2, 2.3 */}
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              {calculateScorePercentage()}% ({calculateTotalScore()}/120) - Maximum possible score: 120
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>

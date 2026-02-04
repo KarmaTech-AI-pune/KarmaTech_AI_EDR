@@ -1194,6 +1194,45 @@ namespace NJS.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProjectBudgetChangeHistories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    FieldName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    OldValue = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    NewValue = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Variance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PercentageVariance = table.Column<decimal>(type: "decimal(10,4)", nullable: false),
+                    Currency = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    ChangedBy = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    ChangedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectBudgetChangeHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectBudgetChangeHistories_AspNetUsers_ChangedBy",
+                        column: x => x.ChangedBy,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProjectBudgetChangeHistories_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProjectClosures",
                 columns: table => new
                 {
@@ -3080,6 +3119,16 @@ namespace NJS.Domain.Migrations
                 column: "MonthlyProgressId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProjectBudgetChangeHistories_ChangedBy",
+                table: "ProjectBudgetChangeHistories",
+                column: "ChangedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectBudgetChangeHistories_ProjectId",
+                table: "ProjectBudgetChangeHistories",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProjectClosures_PMWorkflowStatusId",
                 table: "ProjectClosures",
                 column: "PMWorkflowStatusId");
@@ -3711,6 +3760,9 @@ namespace NJS.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "ProgressDeliverables");
+
+            migrationBuilder.DropTable(
+                name: "ProjectBudgetChangeHistories");
 
             migrationBuilder.DropTable(
                 name: "ProjectClosureWorkflowHistories");

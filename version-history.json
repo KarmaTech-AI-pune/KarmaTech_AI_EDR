@@ -1,0 +1,96 @@
+{
+  "versions": [
+    {
+      "version": "1.0.38",
+      "tag": "v1.0.38",
+      "releaseDate": "2024-12-25T12:00:00Z",
+      "commitHash": "abc123def456",
+      "author": "KarmaTech Development Team",
+      "isCurrent": true,
+      "environment": "dev",
+      "releaseNotes": {
+        "features": [
+          {
+            "description": "Interactive Version Display - Click version number to view release notes",
+            "commitSha": "abc123",
+            "impact": "Medium",
+            "author": "Development Team"
+          },
+          {
+            "description": "Dynamic version synchronization with GitHub tags",
+            "commitSha": "def456",
+            "impact": "Medium",
+            "author": "Development Team"
+          },
+          {
+            "description": "Release notes modal with organized sections (Features, Bug Fixes, Improvements)",
+            "commitSha": "ghi789",
+            "impact": "Low",
+            "author": "Development Team"
+          },
+          {
+            "description": "Background preloading of release notes for better performance",
+            "commitSha": "jkl012",
+            "impact": "Low",
+            "author": "Development Team"
+          }
+        ],
+        "bugFixes": [
+          {
+            "description": "Fixed hardcoded version display showing incorrect version number",
+            "commitSha": "mno345",
+            "impact": "High",
+            "author": "Development Team"
+          },
+          {
+            "description": "Improved error handling for version API failures",
+            "commitSha": "pqr678",
+            "impact": "Medium",
+            "author": "Development Team"
+          },
+          {
+            "description": "Fixed responsive design issues on mobile devices",
+            "commitSha": "stu901",
+            "impact": "Medium",
+            "author": "Development Team"
+          }
+        ],
+        "improvements": [
+          {
+            "description": "Enhanced caching strategy for version and release notes data",
+            "commitSha": "vwx234",
+            "impact": "Low",
+            "author": "Development Team"
+          },
+          {
+            "description": "Added loading states and skeleton loaders for better UX",
+            "commitSha": "yza567",
+            "impact": "Low",
+            "author": "Development Team"
+          },
+          {
+            "description": "Improved accessibility with proper ARIA labels and keyboard navigation",
+            "commitSha": "bcd890",
+            "impact": "Medium",
+            "author": "Development Team"
+          }
+        ],
+        "breakingChanges": [],
+        "other": [
+          {
+            "description": "Updated documentation for interactive version display feature",
+            "commitSha": "efg123",
+            "impact": "Low",
+            "author": "Development Team"
+          }
+        ],
+        "totalCommits": 10
+      }
+    }
+  ],
+  "metadata": {
+    "lastUpdated": "2024-12-25T12:00:00Z",
+    "totalVersions": 1,
+    "currentVersion": "1.0.38"
+  }
+}

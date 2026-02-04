@@ -54,7 +54,7 @@ export const projectApi = {
     }
   },
 
-  update: async (projectId: string, projectData: Project) => {
+  update: async (projectId: string, projectData: Project, budgetReason?: string) => {
     try {
       // Make sure we're sending the correct data format to the backend
       const formattedData = {
@@ -87,7 +87,9 @@ export const projectApi = {
         createdAt: new Date(),
         lastModifiedAt: new Date(),
         createdBy: projectData.projectManagerId,
-        lastModifiedBy: projectData.projectManagerId
+        lastModifiedBy: projectData.projectManagerId,
+        // Include budget reason if provided
+        budgetReason: budgetReason || undefined
       };
 
       // Log the data being sent

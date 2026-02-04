@@ -20,6 +20,17 @@ namespace NJS.API.Tests.Validation
 {
     public class CommandValidationTests
     {
+        private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+        private readonly Mock<IJobStartFormRepository> _mockRepository;
+        private readonly Mock<IProjectRepository> _mockProjectRepository;
+
+        public CommandValidationTests()
+        {
+            _mockUnitOfWork = new Mock<IUnitOfWork>();
+            _mockRepository = new Mock<IJobStartFormRepository>();
+            _mockProjectRepository = new Mock<IProjectRepository>();
+        }
+
         [Fact]
         public async Task CreateJobStartFormCommand_WithNullJobStartForm_ShouldThrowArgumentNullException()
         {
@@ -77,7 +88,7 @@ namespace NJS.API.Tests.Validation
             mockRepository.Setup(repo => repo.AddAsync(It.IsAny<JobStartForm>()))
                 .Returns(Task.CompletedTask);
 
-            mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
+            _mockUnitOfWork.Setup(uow => uow.SaveChangesAsync())
                 .ReturnsAsync(1);
 
             var handler = new CreateJobStartFormCommandHandler(mockRepository.Object, mockUnitOfWork.Object, mockProjectRepository.Object);
@@ -98,7 +109,7 @@ namespace NJS.API.Tests.Validation
             var result = await handler.Handle(command, CancellationToken.None);
 
             // Verify the repository was called with a valid entity
-            mockRepository.Verify(repo => repo.AddAsync(It.Is<JobStartForm>(
+            _mockRepository.Verify(repo => repo.AddAsync(It.Is<JobStartForm>(
                 jsf => jsf.ProjectId == 1 &&
                        jsf.FormTitle == "Test Form" &&
                        jsf.Description == "Test Description"
