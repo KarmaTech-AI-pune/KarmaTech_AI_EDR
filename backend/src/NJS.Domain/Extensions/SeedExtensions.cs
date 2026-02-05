@@ -449,7 +449,7 @@ namespace NJS.Domain.Extensions
                     new Feature { Name = "Work Breakdown Structure (WBS)" },
                     new Feature { Name = "ODC (Other Direct Cost) Table" },
                     new Feature { Name = "Job Start Form" },
-                    new Feature { Name = "Input Register" },
+                    new Feature { Name = "Input/Output Register" },
                     new Feature { Name = "Email Notifications" },
                     new Feature { Name = "Monthly Progress Review" },
                     new Feature { Name = "Manpower Planning" },
@@ -472,7 +472,34 @@ namespace NJS.Domain.Extensions
                     new Feature { Name = "Milestone Tracking" },
                     new Feature { Name = "Budget vs Actual Analysis" },
                     new Feature { Name = "API Integration" },
-                    new Feature { Name = "Tailored UI/UX" }
+                    new Feature { Name = "Tailored UI/UX" },
+                    
+                    // New Features
+                    new Feature { Name = "Opportunity Tracking" },
+                    new Feature { Name = "Go/No Go Decision" },
+                    new Feature { Name = "Bid Preparation" },
+                    new Feature { Name = "Bid Creation (EAR)" },
+                    new Feature { Name = "WBS CashFlow" },
+                    new Feature { Name = "Sprint Mgmt (L4)" },
+                    new Feature { Name = "User Stories (L5)" },
+                    new Feature { Name = "Yearly Progress Review" },
+                    new Feature { Name = "Approval Workflow" },
+                    new Feature { Name = "Dynamic Approval" },
+                    new Feature { Name = "Dashboard" },
+                    new Feature { Name = "EAR PM Integration" },
+                    new Feature { Name = "DMS" },
+                    new Feature { Name = "EAR Notification Int." },
+                    new Feature { Name = "EAR Finance Int." },
+                    new Feature { Name = "EAR HR Int." },
+                    new Feature { Name = "Deep EAR PM Int." },
+                    new Feature { Name = "MultiTenant SAAS" },
+                    new Feature { Name = "SAAS Package" },
+                    new Feature { Name = "Jira Integration" },
+                    new Feature { Name = "On Premise" },
+                    new Feature { Name = "Private LLM (Proxzar)" },
+                    new Feature { Name = "Client HRMS Int." },
+                    new Feature { Name = "Client Finance Int." },
+                    new Feature { Name = "Program Management" }
                 };
 
                 try
@@ -545,7 +572,7 @@ namespace NJS.Domain.Extensions
             var odcTableFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "ODC (Other Direct Cost) Table");
             var jobStartFormFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Job Start Form");
             var estimatedExpensesTableFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Estimated Expenses Table");
-            var inputRegisterFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Input Register");
+            var inputRegisterFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Input/Output Register");
             var emailNotificationsFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Email Notifications");
             var checkReviewLogsFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Check & Review Logs");
             var changeControlRegisterFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Change Control Register");
@@ -560,6 +587,33 @@ namespace NJS.Domain.Extensions
             var enhancedUxFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Enhanced UX");
             var tailoredUiUxFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Tailored UI/UX");
             var basicExportPdfFeature = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Basic Export (PDF)");
+            
+            // New Feature Lookups
+            var opportunityTracking = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Opportunity Tracking");
+            var goNoGoDecision = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Go/No Go Decision");
+            var bidPreparation = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Bid Preparation");
+            var bidCreationEAR = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Bid Creation (EAR)");
+            var wbsCashFlow = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "WBS CashFlow");
+            var sprintMgmtL4 = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Sprint Mgmt (L4)");
+            var userStoriesL5 = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "User Stories (L5)");
+            var yearlyProgressReview = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Yearly Progress Review");
+            var approvalWorkflow = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Approval Workflow");
+            var dynamicApproval = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Dynamic Approval");
+            var dashboard = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Dashboard");
+            var earPMIntegration = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "EAR PM Integration");
+            var dms = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "DMS");
+            var earNotificationInt = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "EAR Notification Int.");
+            var earFinanceInt = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "EAR Finance Int.");
+            var earHRInt = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "EAR HR Int.");
+            var deepEARPMInt = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Deep EAR PM Int.");
+            var multiTenantSAAS = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "MultiTenant SAAS");
+            var saasPackage = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "SAAS Package");
+            var jiraIntegration = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Jira Integration");
+            var onPremise = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "On Premise");
+            var privateLLM = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Private LLM (Proxzar)");
+            var clientHRMSInt = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Client HRMS Int.");
+            var clientFinanceInt = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Client Finance Int.");
+            var programManagement = await context.Set<Feature>().FirstOrDefaultAsync(f => f.Name == "Program Management");
 
             // Starter Plan Features
             if (existingStarterPlan != null)
@@ -573,6 +627,11 @@ namespace NJS.Domain.Extensions
                 if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = manpowerPlanningFeature.Id });
                 if (basicUiFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = basicUiFeature.Id });
                 if (basicExportPdfFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = basicExportPdfFeature.Id });
+                
+                // New Starter Features
+                if (dashboard != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = dashboard.Id });
+                if (yearlyProgressReview != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingStarterPlan.Id, FeatureId = yearlyProgressReview.Id });
+                // Input/Output Register already added
             }
 
             // Business Plan Features
@@ -590,6 +649,14 @@ namespace NJS.Domain.Extensions
                 if (manpowerPlanningFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = manpowerPlanningFeature.Id });
                 if (enhancedUxFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = enhancedUxFeature.Id });
                 if (basicExportPdfFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = basicExportPdfFeature.Id });
+                
+                // New Business Features (Includes Starter features logic effectively)
+                if (dashboard != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = dashboard.Id });
+                if (yearlyProgressReview != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = yearlyProgressReview.Id });
+                if (opportunityTracking != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = opportunityTracking.Id });
+                if (goNoGoDecision != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = goNoGoDecision.Id });
+                if (bidPreparation != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = bidPreparation.Id });
+                if (approvalWorkflow != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingBusinessPlan.Id, FeatureId = approvalWorkflow.Id });
             }
 
             // Enterprise Plan Features
@@ -614,6 +681,34 @@ namespace NJS.Domain.Extensions
                 if (apiIntegrationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = apiIntegrationFeature.Id });
                 if (tailoredUiUxFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = tailoredUiUxFeature.Id });
                 if (basicExportPdfFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = basicExportPdfFeature.Id });
+                
+                // New Enterprise Features
+                if (dashboard != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = dashboard.Id });
+                if (yearlyProgressReview != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = yearlyProgressReview.Id });
+                if (opportunityTracking != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = opportunityTracking.Id });
+                if (goNoGoDecision != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = goNoGoDecision.Id });
+                if (bidPreparation != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = bidPreparation.Id });
+                if (approvalWorkflow != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = approvalWorkflow.Id });
+                
+                if (bidCreationEAR != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = bidCreationEAR.Id });
+                if (wbsCashFlow != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = wbsCashFlow.Id });
+                if (sprintMgmtL4 != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = sprintMgmtL4.Id });
+                if (userStoriesL5 != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = userStoriesL5.Id });
+                if (dynamicApproval != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = dynamicApproval.Id });
+                if (earPMIntegration != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = earPMIntegration.Id });
+                if (dms != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = dms.Id });
+                if (earNotificationInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = earNotificationInt.Id });
+                if (earFinanceInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = earFinanceInt.Id });
+                if (earHRInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = earHRInt.Id });
+                if (deepEARPMInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = deepEARPMInt.Id });
+                if (multiTenantSAAS != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = multiTenantSAAS.Id });
+                if (saasPackage != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = saasPackage.Id });
+                if (jiraIntegration != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = jiraIntegration.Id });
+                if (onPremise != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = onPremise.Id });
+                if (privateLLM != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = privateLLM.Id });
+                if (clientHRMSInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = clientHRMSInt.Id });
+                if (clientFinanceInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = clientFinanceInt.Id });
+                if (programManagement != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingEnterprisePlan.Id, FeatureId = programManagement.Id });
             }
 
             // One-Time License Plan Features (All Enterprise features)
@@ -638,6 +733,33 @@ namespace NJS.Domain.Extensions
                 if (apiIntegrationFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = apiIntegrationFeature.Id });
                 if (tailoredUiUxFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = tailoredUiUxFeature.Id });
                 if (basicExportPdfFeature != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = basicExportPdfFeature.Id });
+
+                // New One-Time Features (Same as Enterprise)
+                 if (dashboard != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = dashboard.Id });
+                if (yearlyProgressReview != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = yearlyProgressReview.Id });
+                if (opportunityTracking != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = opportunityTracking.Id });
+                if (goNoGoDecision != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = goNoGoDecision.Id });
+                if (bidPreparation != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = bidPreparation.Id });
+                if (approvalWorkflow != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = approvalWorkflow.Id });
+                if (bidCreationEAR != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = bidCreationEAR.Id });
+                if (wbsCashFlow != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = wbsCashFlow.Id });
+                if (sprintMgmtL4 != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = sprintMgmtL4.Id });
+                if (userStoriesL5 != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = userStoriesL5.Id });
+                if (dynamicApproval != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = dynamicApproval.Id });
+                if (earPMIntegration != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = earPMIntegration.Id });
+                if (dms != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = dms.Id });
+                if (earNotificationInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = earNotificationInt.Id });
+                if (earFinanceInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = earFinanceInt.Id });
+                if (earHRInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = earHRInt.Id });
+                if (deepEARPMInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = deepEARPMInt.Id });
+                if (multiTenantSAAS != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = multiTenantSAAS.Id });
+                if (saasPackage != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = saasPackage.Id });
+                if (jiraIntegration != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = jiraIntegration.Id });
+                if (onPremise != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = onPremise.Id });
+                if (privateLLM != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = privateLLM.Id });
+                if (clientHRMSInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = clientHRMSInt.Id });
+                if (clientFinanceInt != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = clientFinanceInt.Id });
+                if (programManagement != null) context.Set<SubscriptionPlanFeature>().Add(new SubscriptionPlanFeature { SubscriptionPlanId = existingOneTimeLicensePlan.Id, FeatureId = programManagement.Id });
             }
 
             await context.SaveChangesAsync();

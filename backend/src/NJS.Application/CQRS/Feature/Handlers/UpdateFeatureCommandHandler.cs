@@ -32,8 +32,7 @@ namespace NJS.Application.CQRS.Feature.Handlers
 
             feature.Name = request.Name;
             feature.Description = request.Description;
-            feature.PriceUSD = request.PriceUSD;
-            feature.PriceINR = request.PriceINR;
+            feature.IsActive = request.IsActive;
 
             await _featureRepository.UpdateFeatureAsync(feature);
 
@@ -42,8 +41,7 @@ namespace NJS.Application.CQRS.Feature.Handlers
                 Id = feature.Id,
                 Name = feature.Name,
                 Description = feature.Description,
-                PriceUSD = feature.PriceUSD,
-                PriceINR = feature.PriceINR
+                IsActive = feature.IsActive
             };
         }
     }

@@ -354,8 +354,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Cost).HasPrecision(18, 2);
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Fee).HasPrecision(18, 2);
 
-            modelBuilder.Entity<Feature>().Property(f => f.PriceINR).HasPrecision(18, 2);
-            modelBuilder.Entity<Feature>().Property(f => f.PriceUSD).HasPrecision(18, 2);
+
 
             // Configure Identity tables
             modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
