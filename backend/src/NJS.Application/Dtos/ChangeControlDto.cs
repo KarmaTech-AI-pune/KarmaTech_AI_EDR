@@ -17,13 +17,11 @@ namespace NJS.Application.Dtos
         [Required]
         public DateTime DateLogged { get; set; }
 
-        [Required]
         [StringLength(100)]
-        public string Originator { get; set; }
+        public string? Originator { get; set; }
 
-        [Required]
         [StringLength(500)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public string CostImpact { get; set; }
         public string TimeImpact { get; set; }

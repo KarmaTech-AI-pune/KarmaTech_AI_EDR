@@ -90,114 +90,119 @@ export const BudgetChangeTimeline: React.FC<BudgetChangeTimelineProps> = ({ chan
   }
 
   return (
-    <Timeline position="alternate">
-      {changes.map((change, index) => (
-        <TimelineItem key={change.id}>
-          {/* Left side - Date and User info */}
-          <TimelineOppositeContent
-            sx={{ m: 'auto 0' }}
-          >
-            <Typography variant="body2" fontWeight="bold">
-              {formatDate(change.changedDate)}
-            </Typography>
-            <Typography variant="caption" display="block">
-              by {change.changedByUser.firstName} {change.changedByUser.lastName}
-            </Typography>
-            <Typography variant="caption" display="block" color="text.disabled">
-              {change.changedByUser.email}
-            </Typography>
-          </TimelineOppositeContent>
-
-          {/* Center - Timeline dot and connector */}
-          <TimelineSeparator>
-            <TimelineDot color={getFieldColor(change.fieldName)} variant="outlined">
-              {getFieldIcon(change.fieldName)}
-            </TimelineDot>
-            {index < changes.length - 1 && <TimelineConnector />}
-          </TimelineSeparator>
-
-          {/* Right side - Change details */}
-          <TimelineContent sx={{ py: '12px', px: 2 }}>
-            <Paper
-              elevation={3}
-              sx={{
-                p: 2,
-                backgroundColor: index % 2 === 0 ? 'background.paper' : 'grey.50',
-              }}
-            >
-              {/* Field name chip */}
-              <Box sx={{ mb: 1 }}>
-                <Chip
-                  label={getFieldDisplayName(change.fieldName)}
-                  color={getFieldColor(change.fieldName)}
-                  size="small"
-                  sx={{ fontWeight: 'bold' }}
-                />
-              </Box>
-
-              {/* Value change display */}
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Value Change:
+    <>
+      {/* @ts-ignore */}
+      <Timeline position="alternate">
+        {
+          changes.map((change, index) => (
+            <TimelineItem key={change.id}>
+              {/* Left side - Date and User info */}
+              <TimelineOppositeContent
+                sx={{ m: 'auto 0' }}
+              >
+                <Typography variant="body2" fontWeight="bold">
+                  {formatDate(change.changedDate)}
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                  <Chip
-                    label={formatCurrency(change.oldValue, change.currency)}
-                    size="small"
-                    variant="outlined"
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    →
-                  </Typography>
-                  <Chip
-                    label={formatCurrency(change.newValue, change.currency)}
-                    size="small"
-                    variant="outlined"
-                    color={getFieldColor(change.fieldName)}
-                  />
-                </Box>
-              </Box>
-
-              {/* Variance indicator */}
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Variance:
+                <Typography variant="caption" display="block">
+                  by {change.changedByUser.firstName} {change.changedByUser.lastName}
                 </Typography>
-                <VarianceIndicator
-                  variance={change.variance}
-                  percentageVariance={change.percentageVariance}
-                  currency={change.currency}
-                  size="medium"
-                />
-              </Box>
+                <Typography variant="caption" display="block" color="text.disabled">
+                  {change.changedByUser.email}
+                </Typography>
+              </TimelineOppositeContent>
 
-              {/* Reason (if provided) */}
-              {change.reason && (
-                <>
-                  <Divider sx={{ my: 1 }} />
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Reason:
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontStyle: 'italic',
-                        backgroundColor: 'action.hover',
-                        p: 1,
-                        borderRadius: 1,
-                      }}
-                    >
-                      "{change.reason}"
-                    </Typography>
+              {/* Center - Timeline dot and connector */}
+              <TimelineSeparator>
+                <TimelineDot color={getFieldColor(change.fieldName)} variant="outlined">
+                  {getFieldIcon(change.fieldName)}
+                </TimelineDot>
+                {index < changes.length - 1 && <TimelineConnector />}
+              </TimelineSeparator>
+
+              {/* Right side - Change details */}
+              <TimelineContent sx={{ py: '12px', px: 2 }}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: 2,
+                    backgroundColor: index % 2 === 0 ? 'background.paper' : 'grey.50',
+                  }}
+                >
+                  {/* Field name chip */}
+                  <Box sx={{ mb: 1 }}>
+                    <Chip
+                      label={getFieldDisplayName(change.fieldName)}
+                      color={getFieldColor(change.fieldName)}
+                      size="small"
+                      sx={{ fontWeight: 'bold' }}
+                    />
                   </Box>
-                </>
-              )}
-            </Paper>
-          </TimelineContent>
-        </TimelineItem>
-      ))}
-    </Timeline>
+
+                  {/* Value change display */}
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Value Change:
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                      <Chip
+                        label={formatCurrency(change.oldValue, change.currency)}
+                        size="small"
+                        variant="outlined"
+                      />
+                      <Typography variant="body2" color="text.secondary">
+                        →
+                      </Typography>
+                      <Chip
+                        label={formatCurrency(change.newValue, change.currency)}
+                        size="small"
+                        variant="outlined"
+                        color={getFieldColor(change.fieldName)}
+                      />
+                    </Box>
+                  </Box>
+
+                  {/* Variance indicator */}
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Variance:
+                    </Typography>
+                    <VarianceIndicator
+                      variance={change.variance}
+                      percentageVariance={change.percentageVariance}
+                      currency={change.currency}
+                      size="medium"
+                    />
+                  </Box>
+
+                  {/* Reason (if provided) */}
+                  {change.reason && (
+                    <>
+                      <Divider sx={{ my: 1 }} />
+                      <Box>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Reason:
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontStyle: 'italic',
+                            backgroundColor: 'action.hover',
+                            p: 1,
+                            borderRadius: 1,
+                          }}
+                        >
+                          "{change.reason}"
+                        </Typography>
+                      </Box>
+                    </>
+                  )}
+                </Paper>
+              </TimelineContent>
+            </TimelineItem>
+          ))
+        }
+      </Timeline>
+    </>
   );
 };
 

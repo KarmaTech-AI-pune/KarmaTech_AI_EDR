@@ -28,6 +28,13 @@ namespace NJS.Repositories.Repositories
             return  await _repository.GetAllAsync().ConfigureAwait(false);
         }
 
+        public async Task<IEnumerable<Project>> GetAllByProgramId(int programId)
+        {
+            var query = _repository.Query();
+            var programProjects = query.Where(project => project.ProgramId == programId);
+            return await programProjects.ToListAsync();
+        }
+
         public Project GetById(int id)
         {
             return _repository.GetByIdAsync(id).GetAwaiter().GetResult();

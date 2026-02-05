@@ -30,8 +30,8 @@ namespace NJS.Application.CQRS.ChangeControl.Handlers
             existingEntity.ProjectId = request.ChangeControlDto.ProjectId;
             existingEntity.SrNo = request.ChangeControlDto.SrNo;
             existingEntity.DateLogged = request.ChangeControlDto.DateLogged;
-            existingEntity.Originator = request.ChangeControlDto.Originator ?? string.Empty;
-            existingEntity.Description = request.ChangeControlDto.Description ?? string.Empty;
+            existingEntity.Originator = request.ChangeControlDto.Originator;
+            existingEntity.Description = request.ChangeControlDto.Description;
             existingEntity.CostImpact = request.ChangeControlDto.CostImpact ?? string.Empty;
             existingEntity.TimeImpact = request.ChangeControlDto.TimeImpact ?? string.Empty;
             existingEntity.ResourcesImpact = request.ChangeControlDto.ResourcesImpact ?? string.Empty;
