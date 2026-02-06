@@ -21,6 +21,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
         {
             var comment = await _context.SprintTaskComments
                                         .AsNoTracking()
+                                        .Where(c => c.TenantId == (_context.TenantId ?? 0))
                                         .FirstOrDefaultAsync(c => c.CommentId == request.CommentId, cancellationToken);
 
             if (comment == null)
