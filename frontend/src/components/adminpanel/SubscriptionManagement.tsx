@@ -124,14 +124,42 @@ const SubscriptionManagement = () => {
 
   const handleSubmit = async () => {
     try {
+      let planId: number;
+
       if (editingPlan) {
+        // 1. Update basic plan details
         await subscriptionApi.updateSubscriptionPlan(editingPlan.id, { 
             id: editingPlan.id,
             ...formData 
         });
+        planId = editingPlan.id;
+
+        // 2. Handle Feature Changes
+        const originalFeatureIds = editingPlan.features ? editingPlan.features.map(f => f.id) : [];
+        const newFeatureIds = formData.featureIds;
+
+        // Features to Add
+        const toAdd = newFeatureIds.filter(id => !originalFeatureIds.includes(id));
+        // Features to Remove
+        const toRemove = originalFeatureIds.filter(id => !newFeatureIds.includes(id));
+
+        // Execute additions
+        await Promise.all(toAdd.map(featureId => subscriptionApi.addFeatureToPlan(planId, featureId)));
+        
+        // Execute removals
+        await Promise.all(toRemove.map(featureId => subscriptionApi.removeFeatureFromPlan(planId, featureId)));
+
       } else {
-        await subscriptionApi.createSubscriptionPlan(formData);
+        // 1. Create the plan
+        const newPlan = await subscriptionApi.createSubscriptionPlan(formData);
+        planId = newPlan.id;
+
+        // 2. Add all selected features
+        if (formData.featureIds.length > 0) {
+             await Promise.all(formData.featureIds.map(featureId => subscriptionApi.addFeatureToPlan(planId, featureId)));
+        }
       }
+
       await loadPlans();
       handleClose();
     } catch (error) {

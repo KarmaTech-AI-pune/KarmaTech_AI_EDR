@@ -54,6 +54,16 @@ export const updateTenantSubscription = async (tenantId: number, planId: number)
   return response.data.success;
 };
 
+export const addFeatureToPlan = async (planId: number, featureId: number): Promise<boolean> => {
+    const response = await axiosInstance.post(`api/subscriptions/plans/${planId}/features/${featureId}`);
+    return response.status === 200;
+};
+
+export const removeFeatureFromPlan = async (planId: number, featureId: number): Promise<boolean> => {
+    const response = await axiosInstance.delete(`api/subscriptions/plans/${planId}/features/${featureId}`);
+    return response.status === 200;
+};
+
 export const getSubscriptionStats = async (): Promise<SubscriptionStats> => {
   const response = await axiosInstance.get(`api/subscriptions/stats`);
   return response.data;
