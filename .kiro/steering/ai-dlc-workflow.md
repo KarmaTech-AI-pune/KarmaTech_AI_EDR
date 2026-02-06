@@ -24,6 +24,11 @@ The AI-DLC workflow now includes **automatic GitHub operations** at key points:
    └─ git pull origin Kiro/dev
    └─ git checkout -b feature/[name]
    ↓
+0.5. ⚠️ CONDITIONAL: Database migration update (ONLY IF ENTITY CHANGES)
+   └─ Check: Did you modify/add entities?
+   └─ YES → cd backend → .\update_db.bat
+   └─ NO → Skip this step
+   ↓
 1. User provides requirement
    ↓
 1.5. 🔍 MANDATORY: Check existing codebase files (BEFORE creating new files)
