@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, FormControl, Grid, Box, Typography } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, Box, Typography } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import { SprintPlanInputDto, createSprintPlanAPI } from '../../../data/todolistData';
 
