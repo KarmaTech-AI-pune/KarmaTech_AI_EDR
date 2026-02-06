@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace NJS.Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class propermigration : Migration
+    public partial class programmigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

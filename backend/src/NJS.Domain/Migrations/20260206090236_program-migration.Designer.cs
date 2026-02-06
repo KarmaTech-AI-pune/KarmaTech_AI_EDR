@@ -12,8 +12,8 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20260204135128_proper-migration")]
-    partial class propermigration
+    [Migration("20260206090236_program-migration")]
+    partial class programmigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
