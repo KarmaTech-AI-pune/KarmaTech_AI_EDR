@@ -12,8 +12,8 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20260106103208_kiro-migration")]
-    partial class kiromigration
+    [Migration("20260204135128_proper-migration")]
+    partial class propermigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -464,12 +464,10 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Originator")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -2619,7 +2617,7 @@ namespace NJS.Domain.Migrations
                     b.Property<string>("Priority")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ProgramId")
+                    b.Property<int>("ProgramId")
                         .HasColumnType("int");
 
                     b.Property<int>("Progress")
@@ -3784,6 +3782,9 @@ namespace NJS.Domain.Migrations
                     b.Property<int?>("SprintPlanId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("SprintWbsPlanId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("StartedAt")
                         .HasColumnType("datetime2");
 
@@ -3845,6 +3846,8 @@ namespace NJS.Domain.Migrations
 
                     b.HasIndex("SprintPlanId");
 
+                    b.HasIndex("SprintWbsPlanId");
+
                     b.HasIndex("UserTaskId");
 
                     b.HasIndex("WbsPlanId");
@@ -3886,6 +3889,78 @@ namespace NJS.Domain.Migrations
                     b.HasIndex("Taskid");
 
                     b.ToTable("SprintTaskComments");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.SprintWbsPlan", b =>
+                {
+                    b.Property<int>("SprintWbsPlanId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SprintWbsPlanId"));
+
+                    b.Property<string>("AcceptanceCriteria")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("AssignedUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AssignedUserName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsConsumed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MonthYear")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ParentWBSTaskId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PlannedHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProgramSequence")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("RemainingHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RoleName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SprintNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TaskDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("WBSTaskId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WBSTaskName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("SprintWbsPlanId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("SprintWbsPlans");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.SubscriptionPlan", b =>
@@ -5505,7 +5580,9 @@ namespace NJS.Domain.Migrations
                 {
                     b.HasOne("NJS.Domain.Entities.Program", "Program")
                         .WithMany("Projects")
-                        .HasForeignKey("ProgramId");
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("NJS.Domain.Entities.User", "ProjectManager")
                         .WithMany("ManagedProjects")
@@ -5722,6 +5799,10 @@ namespace NJS.Domain.Migrations
                         .WithMany("SprintTasks")
                         .HasForeignKey("SprintPlanId");
 
+                    b.HasOne("NJS.Domain.Entities.SprintWbsPlan", "SprintWbsPlan")
+                        .WithMany()
+                        .HasForeignKey("SprintWbsPlanId");
+
                     b.HasOne("NJS.Domain.Entities.UserWBSTask", "UserTask")
                         .WithMany()
                         .HasForeignKey("UserTaskId");
@@ -5731,6 +5812,8 @@ namespace NJS.Domain.Migrations
                         .HasForeignKey("WbsPlanId");
 
                     b.Navigation("SprintPlan");
+
+                    b.Navigation("SprintWbsPlan");
 
                     b.Navigation("UserTask");
 
@@ -5746,6 +5829,17 @@ namespace NJS.Domain.Migrations
                         .IsRequired();
 
                     b.Navigation("SprintTask");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.SprintWbsPlan", b =>
+                {
+                    b.HasOne("NJS.Domain.Entities.Project", "Project")
+                        .WithMany("SprintWbsPlans")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.SubscriptionPlanFeature", b =>
@@ -6194,6 +6288,11 @@ namespace NJS.Domain.Migrations
             modelBuilder.Entity("NJS.Domain.Entities.Program", b =>
                 {
                     b.Navigation("Projects");
+                });
+
+            modelBuilder.Entity("NJS.Domain.Entities.Project", b =>
+                {
+                    b.Navigation("SprintWbsPlans");
                 });
 
             modelBuilder.Entity("NJS.Domain.Entities.ProjectClosure", b =>
