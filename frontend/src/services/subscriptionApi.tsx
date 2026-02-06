@@ -3,13 +3,20 @@ import {
   SubscriptionPlan, 
   CreateSubscriptionPlanRequest, 
   UpdateSubscriptionPlanRequest,
-  SubscriptionStats 
+  SubscriptionStats,
+  Feature
 } from '../models/subscriptionModel';
 import { SubscriptionData } from '../types/subscriptionType';
 import { getUserPlan } from '../dummyapi/subscriptionPlanData';
 
 export const getSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
-  const response = await axiosInstance.get(`api/subscriptions/plans`);
+  const response = await axiosInstance.get(`api/subscriptions/plans?includeFeatures=true`);
+  // Handle DTO response potentially wrapping plans
+  return response.data.plans || response.data;
+};
+
+export const getAllFeatures = async (): Promise<Feature[]> => {
+  const response = await axiosInstance.get(`api/Feature`);
   return response.data;
 };
 
