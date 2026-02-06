@@ -27,7 +27,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             _logger.LogInformation("Attempting to retrieve all SprintSubtasks for Task ID: {TaskId}", request.TaskId);
 
             var subtasks = await _context.SprintSubtasks
-                                         .Where(st => st.Taskid == request.TaskId)
+                                         .Where(st => st.Taskid == request.TaskId && st.TenantId == (_context.TenantId ?? 0))
                                          .Select(st => new SprintSubtaskDto
                                          {
                                              SubtaskId = st.SubtaskId,

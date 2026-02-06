@@ -23,7 +23,7 @@ namespace NJS.Application.CQRS.SprintSubtasks.Handlers
         {
             var comments = await _context.SprintSubtaskComments
                                          .AsNoTracking()
-                                         .Where(c => c.SubtaskId == request.SubtaskId)
+                                         .Where(c => c.SubtaskId == request.SubtaskId && c.TenantId == (_context.TenantId ?? 0))
                                          .Select(c => new SprintSubtaskCommentDto
                                          {
                                              SubtaskCommentId = c.SubtaskCommentId,
