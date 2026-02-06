@@ -1,3 +1,8 @@
+---
+inclusion: manual
+keywords: react, frontend, component, ui, page, routing, workflow, visual
+---
+
 # React Implementation Workflow - Visual Guide
 
 **Last Updated:** January 21, 2025
