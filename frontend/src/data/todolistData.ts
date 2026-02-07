@@ -116,6 +116,25 @@ export interface SprintPlanDto {
   sprintTasks?: SprintTaskDto[];
 }
 
+export interface SprintPlanInputDto {
+  SprintId?: number;
+  TenantId?: number;
+  StartDate?: string | null;
+  EndDate?: string | null;
+  SprintGoal?: string;
+  ProjectId?: number;
+  RequiredSprintEmployees: number;
+  SprintName?: string;
+  PlannedStoryPoints: number;
+  ActualStoryPoints: number;
+  Velocity: number;
+  Status: number;
+  StartedAt?: string | null;
+  CompletedAt?: string | null;
+  CreatedAt: string;
+  UpdatedAt?: string | null;
+}
+
 export interface SprintData {
   sprintPlan: SprintPlanDto;
   sprintEmployees: SprintEmployee[];
@@ -206,6 +225,11 @@ const apiService = {
 
   async updateSprintPlan(sprintPlan: Partial<SprintPlanDto>): Promise<void> {
     await axiosInstance.put('/api/sprint-tasks/single-sprint-plan', sprintPlan);
+  },
+
+  async createSprintPlan(sprintPlan: SprintPlanInputDto): Promise<number> {
+    const response = await axiosInstance.post('/api/sprint-tasks/single-sprint-plan', sprintPlan);
+    return response.data;
   },
 };
 
@@ -592,6 +616,15 @@ export const updateSprintPlanAPI = async (sprintPlan: Partial<SprintPlanDto>): P
     await apiService.updateSprintPlan(sprintPlan);
   } catch (error) {
     console.error('Failed to update sprint plan:', error);
+    throw error;
+  }
+};
+
+export const createSprintPlanAPI = async (sprintPlan: SprintPlanInputDto): Promise<number> => {
+  try {
+    return await apiService.createSprintPlan(sprintPlan);
+  } catch (error) {
+    console.error('Failed to create sprint plan:', error);
     throw error;
   }
 };

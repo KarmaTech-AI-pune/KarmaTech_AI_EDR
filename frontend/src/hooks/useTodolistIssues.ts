@@ -691,6 +691,7 @@ export const useTodolistIssues = () => {
     updateSubtaskComment,
     deleteSubtaskComment,
     fetchSubtaskComments,
-    teamMembers
+    teamMembers,
+    navigateToSprint: setSprintId // Expose setter to allow manual navigation
   };
 };

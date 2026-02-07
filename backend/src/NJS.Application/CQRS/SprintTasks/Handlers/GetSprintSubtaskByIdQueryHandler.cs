@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using NJS.Application.CQRS.SprintTasks.Queries;
 using NJS.Application.Dtos;
 using NJS.Domain.Database;
@@ -23,7 +24,9 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
         {
             _logger.LogInformation("Attempting to retrieve SprintSubtask with ID: {SubtaskId}", request.SubtaskId);
 
-            var subtask = await _context.SprintSubtasks.FindAsync(new object[] { request.SubtaskId }, cancellationToken);
+            var subtask = await _context.SprintSubtasks
+                                        .Where(st => st.TenantId == (_context.TenantId ?? 0))
+                                        .FirstOrDefaultAsync(st => st.SubtaskId == request.SubtaskId, cancellationToken);
 
             if (subtask == null)
             {

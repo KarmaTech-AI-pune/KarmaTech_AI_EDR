@@ -6,7 +6,7 @@ TODO: Add project description
 TODO: Add setup instructions
 
 ## Main Features
-TODO: List main features
+TODO: List main features 
 
 ## Technology Stack
 - Frontend: React with Material-UI

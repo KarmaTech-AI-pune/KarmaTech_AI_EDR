@@ -1,3 +1,8 @@
+---
+inclusion: manual
+keywords: react, forms, validation, react-hook-form, zod, formik
+---
+
 # React Forms and Validation Patterns
 
 ## Form Libraries in Use

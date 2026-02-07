@@ -1,3 +1,8 @@
+---
+inclusion: manual
+keywords: react, state, api, axios, hooks, context, integration
+---
+
 # React State Management and API Integration
 
 ## API Service Layer Architecture
