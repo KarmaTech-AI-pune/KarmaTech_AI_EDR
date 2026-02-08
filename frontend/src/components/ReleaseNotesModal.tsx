@@ -18,7 +18,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   Button,
   IconButton,
   Typography,
@@ -29,6 +28,7 @@ import {
   Chip,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   ListItemIcon,
   Accordion,
@@ -164,7 +164,6 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   const [releaseNotes, setReleaseNotes] = useState<ProcessedReleaseNotes | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState<number>(0);
   const [showErrorSnackbar, setShowErrorSnackbar] = useState<boolean>(false);
 
   // State for release history sidebar
@@ -210,7 +209,6 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     try {
       const notes = await releaseNotesApi.getReleaseNotes(ver);
       setReleaseNotes(notes);
-      setRetryCount(0);
     } catch (err) {
       // Try fallback release notes first
       const fallbackNotes = getFallbackReleaseNotes(ver);
@@ -218,7 +216,6 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
         console.log(`Using fallback release notes for version ${ver}`);
         setReleaseNotes(fallbackNotes);
         setError(null);
-        setRetryCount(0);
       } else {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load release notes';
         setError(errorMessage);
@@ -253,7 +250,6 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
       const timeoutId = setTimeout(() => {
         setReleaseNotes(null);
         setError(null);
-        setRetryCount(0);
         setShowErrorSnackbar(false);
         setHistory([]);
       }, 1000);
@@ -262,7 +258,6 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   }, [isOpen]);
 
   const handleRetry = useCallback(() => {
-    setRetryCount(prev => prev + 1);
     // Retry both
     fetchHistory();
     if (selectedVersion) {
@@ -295,8 +290,7 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
       <List component="nav" sx={{ width: '100%', bgcolor: 'background.paper' }}>
         {history.map((item) => (
           <React.Fragment key={item.version}>
-            <ListItem
-              button
+            <ListItemButton
               selected={selectedVersion === item.version || selectedVersion === `v${item.version}`}
               onClick={() => handleVersionClick(item.version)}
             >
@@ -317,7 +311,7 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
                   <FeatureIcon fontSize="small" color="primary" />
                 </ListItemIcon>
               )}
-            </ListItem>
+            </ListItemButton>
             <Divider component="li" />
           </React.Fragment>
         ))}
