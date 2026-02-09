@@ -2,6 +2,14 @@
 
 **Last Updated:** January 19, 2025
 
+**📚 Part of the AI-DLC Workflow System:**
+- **This Guide:** Quick decision tree for choosing which workflow to follow
+- **React Workflow:** `.kiro/steering/react-implementation-workflow.md` - Complete frontend workflow
+- **Enforcement Rules:** `.kiro/steering/workflow-enforcement-rules.md` - Backend and quality gates
+- **Visual Guide:** `.kiro/steering/REACT_WORKFLOW_VISUAL_GUIDE.md` - Flowcharts
+
+---
+
 ## 🎯 Which Workflow Should I Follow?
 
 Use this decision tree to determine which workflow applies to your work:

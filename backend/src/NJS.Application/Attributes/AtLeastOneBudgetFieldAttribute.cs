@@ -4,6 +4,7 @@ using NJS.Application.Dtos;
 namespace NJS.Application.Attributes
 {
     /// <summary>
+    ///add space
     /// Validation attribute to ensure at least one budget field is provided
     /// </summary>
     public class AtLeastOneBudgetFieldAttribute : ValidationAttribute

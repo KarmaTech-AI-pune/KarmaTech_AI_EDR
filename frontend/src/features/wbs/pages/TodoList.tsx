@@ -4,10 +4,12 @@ import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useTodolistIssues } from '../../../hooks/useTodolistIssues';
 import { useIssueFiltering } from '../../../hooks/useIssueFiltering';
 import { useModalState } from '../../../hooks/useModalState';
+import { useProject } from '../../../context/ProjectContext';
 import { TodolistHeader } from '../../../components/todolist/TodolistHeader';
 import { TodolistColumn } from '../../../components/todolist/TodolistColumn';
 import { CreateIssueModal } from '../../../components/todolist/modals/CreateIssueModal';
 import { IssueDetailModal } from '../../../components/todolist/modals/IssueDetailModal';
+import { CreateSprintModal } from '../../../components/todolist/modals/CreateSprintModal';
 import { Issue } from '../../../types/todolist';
 
 export default function TodoList() {
@@ -26,12 +28,15 @@ export default function TodoList() {
     deleteComment,
     fetchTaskComments,
     addSubtaskComment,
+
     updateSubtaskComment,
     deleteSubtaskComment,
     fetchSubtaskComments,
     teamMembers,
     sprintEmployees,
+    sprintPlan,
     completeSprint,
+    navigateToSprint,
   } = useTodolistIssues();
 
   const {
@@ -49,6 +54,18 @@ export default function TodoList() {
     setShowIssueDetail,
     setEditingIssue,
   } = useModalState();
+
+  const { projectId } = useProject();
+  const [showCreateSprintModal, setShowCreateSprintModal] = React.useState(false);
+
+  const handleCreateSprint = () => {
+    setShowCreateSprintModal(true);
+  };
+
+  const handleSprintCreated = (sprintId: number) => {
+    // Navigate to the new sprint immediately
+    navigateToSprint(sprintId);
+  };
 
   const handleDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -111,6 +128,8 @@ export default function TodoList() {
     setShowCreateModal(false);
   };
 
+
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'white' }}>
       <TodolistHeader
@@ -120,7 +139,9 @@ export default function TodoList() {
         setQuickFilters={(filters) => setQuickFilters(filters)}
         setShowCreateModal={setShowCreateModal}
         sprintEmployees={sprintEmployees}
+        sprintPlan={sprintPlan}
         onCompleteSprint={completeSprint}
+        onCreateSprint={handleCreateSprint}
       />
 
       <Box sx={{ py: 3 }}>
@@ -148,6 +169,7 @@ export default function TodoList() {
         newIssue={newIssueFormState}
         setNewIssue={setNewIssueFormState}
         createIssue={handleCreateIssue}
+        sprintName={sprintPlan?.sprintName}
       />
 
       <IssueDetailModal
@@ -169,6 +191,15 @@ export default function TodoList() {
         onDeleteSubtaskComment={deleteSubtaskComment}
         onFetchSubtaskComments={fetchSubtaskComments}
         teamMembers={teamMembers}
+      />
+
+
+
+      <CreateSprintModal
+        showCreateModal={showCreateSprintModal}
+        setShowCreateModal={setShowCreateSprintModal}
+        onSprintCreated={handleSprintCreated}
+        projectId={projectId ? parseInt(projectId) : 0}
       />
 
     </Box>
