@@ -1,0 +1,96 @@
+{
+  "version": "v1.1.0-dev.20260209",
+  "environment": "dev",
+  "releaseDate": "2026-02-09T05:57:41.765Z",
+  "buildNumber": "17",
+  "commitSha": "f9f64a7c913e4c747701b743881faa683148f790",
+  "branch": "release-notes-testing",
+  "features": [
+    {
+      "description": "adding a test feature to verify release notes",
+      "commitSha": "1b27f7582d778c91bed32b525fd179b82d427e2a",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": null,
+      "date": "2026-02-09T05:46:46.000Z"
+    },
+    {
+      "description": "add manual release workflow and updated generation script",
+      "commitSha": "caada31ca779bfcbce66e3f085bb1ecd02bda44a",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": "release",
+      "date": "2026-02-08T17:09:58.000Z"
+    },
+    {
+      "description": "integrate program-project relationship and remove graph from ProjectManagement",
+      "commitSha": "a911bb131fe6b6dffff53ec382e53704e3ef4689",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Koteswararao-Peddi7",
+      "scope": null,
+      "date": "2026-01-30T10:25:20.000Z"
+    },
+    {
+      "description": "add program management frontend implementation with routing and components",
+      "commitSha": "e467260e875280d66f60ae2621930d573b85b671",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Koteswararao-Peddi7",
+      "scope": null,
+      "date": "2026-01-20T09:47:13.000Z"
+    }
+  ],
+  "bugFixes": [
+    {
+      "description": "ensure release notes are committed back to repo",
+      "commitSha": "f9f64a7c913e4c747701b743881faa683148f790",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": "ci",
+      "date": "2026-02-09T05:57:21.000Z"
+    },
+    {
+      "description": "remove unnecessary npm install step",
+      "commitSha": "7eb2e81522cc1aa4322f509334c4cea2f8fef9bc",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": "ci",
+      "date": "2026-02-09T05:52:14.000Z"
+    },
+    {
+      "description": "resolve TypeScript errors in frontend",
+      "commitSha": "21e609ae5453ed28ed5a22f0b1ec53a497a308f5",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Koteswararao-Peddi7",
+      "scope": null,
+      "date": "2026-02-02T07:29:36.000Z"
+    },
+    {
+      "description": "simplify navigation paths to /program-management/project",
+      "commitSha": "b6f1c6f7d92d285689f72d7ae828433929216a9b",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Koteswararao-Peddi7",
+      "scope": null,
+      "date": "2026-01-27T11:49:55.000Z"
+    },
+    {
+      "description": "correct project navigation path to include program-management route",
+      "commitSha": "f4a228e4cf86357056b3b10c51fe02bcacab465e",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Koteswararao-Peddi7",
+      "scope": null,
+      "date": "2026-01-27T11:41:39.000Z"
+    }
+  ],
+  "improvements": [],
+  "breakingChanges": [],
+  "knownIssues": []
+}
