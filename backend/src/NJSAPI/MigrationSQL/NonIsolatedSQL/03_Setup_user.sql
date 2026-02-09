@@ -4,18 +4,20 @@
 
 -- Required once
 -- CREATE EXTENSION IF NOT EXISTS pgcrypto;
+DROP INDEX IF EXISTS "RoleNameIndex";
+--DROP INDEX IF EXISTS "uq_AspNetRoles_Name_TenantId";
 
 BEGIN;
 
 DO $$
 DECLARE
-v_tenant_id        INT := 4;              -- Target tenant
-    v_email            TEXT := 'tt@gmail.com';
-    v_role_name        TEXT := 'TenantAdmin';
-    v_permission_name  TEXT := 'Tenant_ADMIN';
+v_tenant_id        INT := {{TENANT_ID}};              -- Target tenant
+    v_email            TEXT := '{{USER_EMAIL}}';
+    v_role_name        TEXT := '{{ROLE_NAME}}';
+    v_permission_name  TEXT := '{{PERMISSION_NAME}}';
 
-    v_user_id          UUID;
-    v_role_id          UUID;
+    v_user_id          TEXT;
+    v_role_id          TEXT;
     v_permission_id    INT;
 BEGIN
     -------------------------------------------------------------------

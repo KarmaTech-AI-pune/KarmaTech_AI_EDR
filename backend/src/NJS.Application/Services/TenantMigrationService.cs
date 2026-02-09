@@ -602,7 +602,7 @@ namespace NJS.Application.Services
             }
         }
 
-        public async Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsync(string connectionString, int tenantId,
+        public async Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsyncSQL(string connectionString, int tenantId,
             string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
         {
             try
@@ -700,6 +700,104 @@ namespace NJS.Application.Services
                 return false;
             }
         }
+        
+        public async Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsync(string connectionString, int tenantId,
+                    string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
+                {
+                    try
+                    {
+                        if (!Directory.Exists(_nonIsolatedTenetScriptPath))
+                        {
+                            _logger.LogError("Migration scripts directory not found: {Path}", _nonIsolatedTenetScriptPath);
+                            return false;
+                        }
+        
+                        // Extract database name from connection string
+                        var builder = new NpgsqlConnectionStringBuilder(connectionString);
+                        var targetDatabaseName = builder.Database;
+        
+                        // If source database not provided, use the default from configuration
+                        if (string.IsNullOrEmpty(sourceDatabaseName))
+                        {
+                            var defaultConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                            if (!string.IsNullOrEmpty(defaultConnectionString))
+                            {
+                                var defaultBuilder = new NpgsqlConnectionStringBuilder(defaultConnectionString);
+                                sourceDatabaseName = defaultBuilder.Database;
+                            }
+                        }
+        
+                        var migrationScripts = new[]
+                        {
+                            "04_PMWorkFlow.Sql",
+                            "05_OpportunityStatuses.Sql",
+                            "03_Setup_user.Sql"
+                        };
+
+                        await using var connection = new NpgsqlConnection(connectionString);
+                        await connection.OpenAsync();
+        
+                        foreach (var scriptFileName in migrationScripts)
+                        {
+                            var scriptPath = Path.Combine(_nonIsolatedTenetScriptPath, scriptFileName);
+        
+                            if (!File.Exists(scriptPath))
+                            {
+                                _logger.LogWarning("Migration script not found: {ScriptPath}, skipping...", scriptPath);
+                                continue;
+                            }
+        
+                            _logger.LogInformation("Executing migration script: {ScriptName}", scriptFileName);
+        
+                            var scriptContent = await File.ReadAllTextAsync(scriptPath, Encoding.UTF8);
+        
+                            // Replace placeholders in the script
+                            scriptContent = ReplacePlaceholders(scriptContent, tenantId, targetDatabaseName, sourceDatabaseName,
+                                userEmail, roleName, permissionName);
+        
+                            // Split script into batches (by GO statements)
+                            var batches = SplitScriptIntoBatches(scriptContent);
+        
+                            foreach (var batch in batches)
+                            {
+                                if (string.IsNullOrWhiteSpace(batch))
+                                    continue;
+        
+                                try
+                                {
+                                    using var command = new NpgsqlCommand(batch, connection);
+                                    command.CommandTimeout = 300; // 5 minutes timeout for migrations
+                                    await command.ExecuteNonQueryAsync();
+        
+                                    _logger.LogDebug("Successfully executed batch from {ScriptName}", scriptFileName);
+                                }
+                                catch (SqlException ex)
+                                {
+                                    // Log error but continue with next batch for certain non-critical errors
+                                    _logger.LogWarning(ex,
+                                        "Error executing batch from {ScriptName}: {ErrorMessage} (Error Number: {ErrorNumber})",
+                                        scriptFileName, ex.Message, ex.Number);
+        
+                                    throw;
+                                }
+                            }
+        
+                            _logger.LogInformation("Completed migration script: {ScriptName}", scriptFileName);
+                        }
+        
+                        _logger.LogInformation(
+                            "All user migration scripts executed successfully for tenant {TenantId} and user {UserEmail}",
+                            tenantId, userEmail);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex,
+                            "Error executing tenant user migrations for tenant {TenantId} and user {UserEmail}", tenantId,
+                            userEmail);
+                        return false;
+                    }
+                }
 
         private string ReplacePlaceholdersSQL(string scriptContent, int tenantId, string targetDatabaseName,
             string? sourceDatabaseName, string? userEmail = null, string? roleName = null,
