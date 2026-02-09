@@ -2,7 +2,9 @@ name: Update Release Notes
 
 on:
   push:
-    branches: [ "Kiro/dev" ]
+    branches: 
+      - "Kiro/dev"
+      - "release-notes-testing"
 
 jobs:
   update-notes:
