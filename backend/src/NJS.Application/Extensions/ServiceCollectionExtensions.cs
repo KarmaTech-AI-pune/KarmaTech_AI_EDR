@@ -111,6 +111,9 @@ namespace NJS.Application.Extensions
             services.AddScoped<IReleaseNotesGeneratorService, ReleaseNotesGeneratorService>();
             services.AddScoped<IGitHubService, GitHubService>();
             services.AddScoped<IReleaseNotesRepository, ReleaseNotesRepository>();
+            
+            // Feature Authorization Service
+            services.AddScoped<IFeatureAuthorizationService, FeatureAuthorizationService>();
 
             return services;
         }
