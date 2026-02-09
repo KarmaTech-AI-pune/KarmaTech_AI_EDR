@@ -39,7 +39,7 @@ jobs:
     - name: Calculate Version & Update Files
       id: generate
       run: |
-        npm install --prefix .github/scripts
+
         # We don't pass --version, so it auto-calculates based on SemVer
         node .github/scripts/generate-release-notes.js --environment ${{ inputs.environment }}
       env:

@@ -25,7 +25,7 @@ jobs:
 
     - name: Generate Release Notes
       run: |
-        npm install --prefix .github/scripts
+
         # Calculate a "dev" version based on date or just use "latest-dev"
         VERSION="v1.1.0-dev.$(date +%Y%m%d)"
         node .github/scripts/generate-release-notes.js --version "$VERSION" --environment dev
