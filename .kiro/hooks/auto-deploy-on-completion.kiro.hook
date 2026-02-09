@@ -1,10 +1,10 @@
 {
   "enabled": true,
   "name": "Auto Deploy on Agent Completion",
-  "description": "Automatically deploys to dev server and AWS when agent execution completes after code changes",
+  "description": "Manually triggered deployment to dev server and AWS",
   "version": "1",
   "when": {
-    "type": "agentStop"
+    "type": "userTriggered"
   },
   "then": {
     "type": "runCommand",

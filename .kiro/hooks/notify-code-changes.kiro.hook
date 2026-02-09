@@ -1,17 +1,13 @@
 {
   "enabled": true,
   "name": "Notify Code Changes for Deployment",
-  "description": "Notifies when frontend or backend files are edited, asking if deployment should be triggered",
+  "description": "Notifies when user manually triggers, asking if deployment should be triggered",
   "version": "1",
   "when": {
-    "type": "fileEdited",
-    "patterns": [
-      "frontend/**/*",
-      "backend/**/*"
-    ]
+    "type": "userTriggered"
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Code changes detected in frontend/backend. Would you like me to:\n1. Run PublishProject.ps1 for dev server deployment\n2. Merge Kiro/dev to Saas/dev for AWS deployment\n\nReply 'deploy now' to proceed, or 'skip' to continue working."
+    "prompt": "Would you like me to:\n1. Run PublishProject.ps1 for dev server deployment\n2. Merge Kiro/dev to Saas/dev for AWS deployment\n\nReply 'deploy now' to proceed, or 'skip' to continue working."
   }
 }
