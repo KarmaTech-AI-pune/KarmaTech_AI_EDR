@@ -19,8 +19,7 @@ Write-Host "Step 1: Running Backend Tests..." -ForegroundColor Yellow
 
 if (Test-Path $BackendSln) {
     dotnet restore $BackendSln
-    # Standard dotnet test without timeouts
-    dotnet test $BackendSln --no-restore --logger "console;verbosity=minimal"
+    dotnet test $BackendSln --no-restore --verbosity minimal
     
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[FAIL] Backend tests failed." -ForegroundColor Red
