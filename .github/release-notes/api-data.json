@@ -1,0 +1,69 @@
+{
+  "version": "v1.1.0-dev.20260210",
+  "environment": "dev",
+  "releaseDate": "2026-02-10T05:38:27.557Z",
+  "buildNumber": "25",
+  "commitSha": "5dcefc25b0e4d5a1095bd274bc649a3eb5898e9a",
+  "branch": "Kiro/dev",
+  "features": [
+    {
+      "description": "adding a test feature to verify release notes",
+      "commitSha": "1b27f7582d778c91bed32b525fd179b82d427e2a",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": null,
+      "date": "2026-02-09T05:46:46.000Z"
+    },
+    {
+      "description": "add manual release workflow and updated generation script",
+      "commitSha": "caada31ca779bfcbce66e3f085bb1ecd02bda44a",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": "release",
+      "date": "2026-02-08T17:09:58.000Z"
+    },
+    {
+      "description": "test feature for release workflow",
+      "commitSha": "c21553195ac0fba4a191822b0278148a43711ffd",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": null,
+      "date": "2026-02-08T12:47:30.000Z"
+    }
+  ],
+  "bugFixes": [
+    {
+      "description": "ensure release notes are committed back to repo",
+      "commitSha": "f9f64a7c913e4c747701b743881faa683148f790",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": "ci",
+      "date": "2026-02-09T05:57:21.000Z"
+    },
+    {
+      "description": "remove unnecessary npm install step",
+      "commitSha": "7eb2e81522cc1aa4322f509334c4cea2f8fef9bc",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": "ci",
+      "date": "2026-02-09T05:52:14.000Z"
+    },
+    {
+      "description": "update subscription management UI and API integration",
+      "commitSha": "8aa52b249950089c0f1a1a8f43d5354d7a7603a1",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Koteswararao-Peddi7",
+      "scope": null,
+      "date": "2026-02-06T08:39:15.000Z"
+    }
+  ],
+  "improvements": [],
+  "breakingChanges": [],
+  "knownIssues": []
+}

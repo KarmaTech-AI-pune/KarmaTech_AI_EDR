@@ -1,0 +1,105 @@
+{
+  "version": "v1.1.0-dev.20260209",
+  "environment": "dev",
+  "releaseDate": "2026-02-09T11:54:17.070Z",
+  "buildNumber": "22",
+  "commitSha": "74afea39d6502e226c9c1d663ee1708c05ab0432",
+  "branch": "release-notes-testing",
+  "features": [
+    {
+      "description": "adding a test feature to verify release notes",
+      "commitSha": "1b27f7582d778c91bed32b525fd179b82d427e2a",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": null,
+      "date": "2026-02-09T05:46:46.000Z"
+    },
+    {
+      "description": "add manual release workflow and updated generation script",
+      "commitSha": "caada31ca779bfcbce66e3f085bb1ecd02bda44a",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": "release",
+      "date": "2026-02-08T17:09:58.000Z"
+    },
+    {
+      "description": "test feature for release workflow",
+      "commitSha": "c21553195ac0fba4a191822b0278148a43711ffd",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": null,
+      "date": "2026-02-08T12:47:30.000Z"
+    },
+    {
+      "description": "Add query handlers for retrieving sprint plans, tasks, subtasks, and project schedules.",
+      "commitSha": "55ad736646ebe4c4c5c2aa764080b465a19556e1",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "first github program",
+      "scope": null,
+      "date": "2026-02-06T08:08:09.000Z"
+    },
+    {
+      "description": "Implement todolist and project schedule management, including issues, subtasks, and sprints.",
+      "commitSha": "74db09bc1214264862191791e8ff3802550a139b",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "first github program",
+      "scope": null,
+      "date": "2026-02-06T05:13:51.000Z"
+    },
+    {
+      "description": "Add new database migration, appsettings.json, and CQRS handlers for sprint plan creation and updates.",
+      "commitSha": "aa807996ceeabcc2c4427fcfed9865efc6d4d693",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "first github program",
+      "scope": null,
+      "date": "2026-02-04T10:24:34.000Z"
+    }
+  ],
+  "bugFixes": [
+    {
+      "description": "ensure release notes are committed back to repo",
+      "commitSha": "f9f64a7c913e4c747701b743881faa683148f790",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": "ci",
+      "date": "2026-02-09T05:57:21.000Z"
+    },
+    {
+      "description": "remove unnecessary npm install step",
+      "commitSha": "7eb2e81522cc1aa4322f509334c4cea2f8fef9bc",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": "ci",
+      "date": "2026-02-09T05:52:14.000Z"
+    },
+    {
+      "description": "improve change control card layout to prevent icons from moving off screen with long descriptions",
+      "commitSha": "1ce76a67a864b901bafabb60184ec7eaaef00e03",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Koteswararao-Peddi7",
+      "scope": null,
+      "date": "2026-02-02T10:15:28.000Z"
+    },
+    {
+      "description": "resolve TypeScript errors in frontend",
+      "commitSha": "21e609ae5453ed28ed5a22f0b1ec53a497a308f5",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Koteswararao-Peddi7",
+      "scope": null,
+      "date": "2026-02-02T07:29:36.000Z"
+    }
+  ],
+  "improvements": [],
+  "breakingChanges": [],
+  "knownIssues": []
+}
