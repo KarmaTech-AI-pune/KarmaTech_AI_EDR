@@ -9,10 +9,8 @@ namespace NJS.Domain.Entities
         public string Name { get; set; }
 
         public string Description { get; set; }
-
-        public decimal? PriceUSD { get; set; }
-
-        public decimal? PriceINR { get; set; }
+        
+        public bool IsActive { get; set; } = true;
 
         public virtual ICollection<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
     }

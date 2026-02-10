@@ -19,5 +19,6 @@ namespace NJS.Application.Dtos
         public int? TenantId { get; set; }
         public string? TenantDomain { get; set; }
         public bool TwoFactorEnabled { get; set; } = false;
+        public List<string> Features { get; set; } = new List<string>();
     }
 }

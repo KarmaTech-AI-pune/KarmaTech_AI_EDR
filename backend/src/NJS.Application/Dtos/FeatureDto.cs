@@ -8,8 +8,6 @@ namespace NJS.Application.DTOs
 
         public string Description { get; set; }
 
-        public decimal? PriceUSD { get; set; }
-
-        public decimal? PriceINR { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

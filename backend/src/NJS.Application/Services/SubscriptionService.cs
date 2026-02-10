@@ -361,14 +361,15 @@ namespace NJS.Application.Services
                 MaxStorageGB = plan.MaxStorageGB,
                 IsActive = plan.IsActive,
                 StripePriceId = plan.StripePriceId,
-                Features = plan.SubscriptionPlanFeatures?.Select(spf => new FeatureDto
-                {
-                    Id = spf.Feature.Id,
-                    Name = spf.Feature.Name,
-                    Description = spf.Feature.Description,
-                    PriceUSD = spf.Feature.PriceUSD,
-                    PriceINR = spf.Feature.PriceINR
-                }).ToList() ?? new List<FeatureDto>()
+                Features = plan.SubscriptionPlanFeatures?
+                    .Where(spf => spf.Feature.IsActive)
+                    .Select(spf => new FeatureDto
+                    {
+                        Id = spf.Feature.Id,
+                        Name = spf.Feature.Name,
+                        Description = spf.Feature.Description,
+                        IsActive = spf.Feature.IsActive
+                    }).ToList() ?? new List<FeatureDto>()
             });
         }
 
@@ -378,17 +379,28 @@ namespace NJS.Application.Services
                 return null;
 
             // Static plan data based on the JSON payload provided
-            var plans = GetStaticPlans();
+            var plan = await _projectManagementContext.SubscriptionPlans
+                .Include(p => p.SubscriptionPlanFeatures)
+                .ThenInclude(spf => spf.Feature)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Name.ToLower() == planName.ToLower()); // Basic strict matching for now, relying on DB
 
-            return plans.FirstOrDefault(p =>
-                string.Equals(p.Name, planName, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(p.Slug, planName, StringComparison.OrdinalIgnoreCase));
+            if(plan == null) return null;
+
+            return MapToPlanByNameResponse(plan);
         }
 
         public async Task<List<PlanByNameResponseDto>> GetAllPlansAsync()
         {
             // Return all static plans
-            return GetStaticPlans();
+            var plans = await _projectManagementContext.SubscriptionPlans
+                .Include(p => p.SubscriptionPlanFeatures)
+                .ThenInclude(spf => spf.Feature)
+                .AsNoTracking()
+                .Where(p => p.IsActive)
+                .ToListAsync();
+
+            return plans.Select(MapToPlanByNameResponse).ToList();
         }
 
         public async Task<PlanFeaturesResponseDto?> GetFeaturesByPlanNameAsync(string planName)
@@ -465,178 +477,60 @@ namespace NJS.Application.Services
             }
         }
 
-        private List<PlanByNameResponseDto> GetStaticPlans()
+        // Helper to convert DB plan to DTO with consistent styling
+        private PlanByNameResponseDto MapToPlanByNameResponse(SubscriptionPlan plan)
         {
-            return new List<PlanByNameResponseDto>
-            {
-                new PlanByNameResponseDto
-                {
-                    Id = "plan_starter_2024",
-                    Name = "Starter",
-                    Slug = "starter",
-                    Description = "Perfect for individuals and small projects",
-                    Pricing = new PlanPricingDto
-                    {
-                        Monthly = new PlanMonthlyPriceDto
-                        {
-                            Amount = 100,
-                            Currency = "USD",
-                            Formatted = "$100"
-                        },
-                        MonthlyInr = new PlanMonthlyPriceDto
-                        {
-                            Amount = 8500,
-                            Currency = "INR",
-                            Formatted = "₹8,500"
-                        }
-                    },
-                    Features = new List<PlanFeatureItemDto>
-                    {
-                        new PlanFeatureItemDto { Id = "wbs", Name = "Work Breakdown Structure (WBS)" },
-                        new PlanFeatureItemDto { Id = "odc", Name = "ODC (Other Direct Cost) Table" },
-                        new PlanFeatureItemDto { Id = "job_start_form", Name = "Job Start Form" },
-                        new PlanFeatureItemDto { Id = "input_register", Name = "Input Register" },
-                        new PlanFeatureItemDto { Id = "email_notifications", Name = "Email Notifications" },
-                        new PlanFeatureItemDto { Id = "monthly_review", Name = "Monthly Progress Review" },
-                        new PlanFeatureItemDto { Id = "manpower_planning", Name = "Manpower Planning" },
-                        new PlanFeatureItemDto { Id = "user_experience", Name = "Basic UI" },
-                        new PlanFeatureItemDto { Id = "reporting", Name = "Basic Export (PDF)" }
-                    },
-                    Limitations = new PlanLimitationsDto
-                    {
-                        UsersIncluded = 5,
-                        Projects = 5,
-                        StorageGb = 10
-                    },
-                    Support = new PlanSupportDto
-                    {
-                        SlaSupport = "Email Only"
-                    }
-                },
-                new PlanByNameResponseDto
-                {
-                    Id = "plan_business_2024",
-                    Name = "Business",
-                    Slug = "business",
-                    Description = "For small to mid-sized teams with advanced needs",
-                    Pricing = new PlanPricingDto
-                    {
-                        Monthly = new PlanMonthlyPriceDto
-                        {
-                            Amount = 400,
-                            Currency = "USD",
-                            Formatted = "$400"
-                        },
-                        MonthlyInr = new PlanMonthlyPriceDto
-                        {
-                            Amount = 34000,
-                            Currency = "INR",
-                            Formatted = "₹34,000"
-                        }
-                    },
-                    Features = new List<PlanFeatureItemDto>
-                    {
-                        new PlanFeatureItemDto { Id = "wbs", Name = "Work Breakdown Structure (WBS)" },
-                        new PlanFeatureItemDto { Id = "odc", Name = "ODC (Other Direct Cost) Table" },
-                        new PlanFeatureItemDto { Id = "job_start_form", Name = "Job Start Form" },
-                        new PlanFeatureItemDto { Id = "estimated_expenses", Name = "Estimated Expenses Table" },
-                        new PlanFeatureItemDto { Id = "input_register", Name = "Input Register" },
-                        new PlanFeatureItemDto { Id = "email_notifications", Name = "Email Notifications" },
-                        new PlanFeatureItemDto { Id = "review_logs", Name = "Check & Review Logs" },
-                        new PlanFeatureItemDto { Id = "monthly_review", Name = "Monthly Progress Review" },
-                        new PlanFeatureItemDto { Id = "quarterly_review", Name = "Quarterly Progress Review" },
-                        new PlanFeatureItemDto { Id = "manpower_planning", Name = "Manpower Planning" },
-                        new PlanFeatureItemDto { Id = "user_experience", Name = "Enhanced UX" },
-                        new PlanFeatureItemDto { Id = "reporting", Name = "Basic Export (PDF)" }
-                    },
-                    Limitations = new PlanLimitationsDto
-                    {
-                        UsersIncluded = 20,
-                        Projects = 25,
-                        StorageGb = 100
-                    },
-                    Support = new PlanSupportDto
-                    {
-                        SlaSupport = "Email Only"
-                    }
-                },
-                new PlanByNameResponseDto
-                {
-                    Id = "plan_enterprise_2024",
-                    Name = "Enterprise",
-                    Slug = "enterprise",
-                    Description = "Custom solution for large organizations",
-                    Pricing = new PlanPricingDto
-                    {
-                        Custom = true,
-                        Currency = "USD",
-                        Formatted = "Contact Us"
-                    },
-                    Features = new List<PlanFeatureItemDto>
-                    {
-                        new PlanFeatureItemDto { Id = "wbs", Name = "Work Breakdown Structure (WBS)" },
-                        new PlanFeatureItemDto { Id = "wbs_v2", Name = "WBS Version 2.0" },
-                        new PlanFeatureItemDto { Id = "gantt_view", Name = "Gantt/Timeline View" },
-                        new PlanFeatureItemDto { Id = "odc", Name = "ODC (Other Direct Cost) Table" },
-                        new PlanFeatureItemDto { Id = "job_start_form", Name = "Job Start Form" },
-                        new PlanFeatureItemDto { Id = "estimated_expenses", Name = "Estimated Expenses Table" },
-                        new PlanFeatureItemDto { Id = "input_register", Name = "Input Register" },
-                        new PlanFeatureItemDto { Id = "email_notifications", Name = "Email Notifications" },
-                        new PlanFeatureItemDto { Id = "review_logs", Name = "Check & Review Logs" },
-                        new PlanFeatureItemDto { Id = "change_control", Name = "Change Control Register" },
-                        new PlanFeatureItemDto { Id = "monthly_review", Name = "Monthly Progress Review" },
-                        new PlanFeatureItemDto { Id = "quarterly_review", Name = "Quarterly Progress Review" },
-                        new PlanFeatureItemDto { Id = "weekly_review", Name = "Weekly/Daily Progress Review" },
-                        new PlanFeatureItemDto { Id = "milestone_tracking", Name = "Milestone Tracking" },
-                        new PlanFeatureItemDto { Id = "budget_analysis", Name = "Budget vs Actual Analysis" },
-                        new PlanFeatureItemDto { Id = "manpower_planning", Name = "Manpower Planning" },
-                        new PlanFeatureItemDto { Id = "api_integration", Name = "API Integration" },
-                        new PlanFeatureItemDto { Id = "user_experience", Name = "Tailored UI/UX" },
-                        new PlanFeatureItemDto { Id = "reporting", Name = "Basic Export (PDF)" }
-                    },
-                    Limitations = new PlanLimitationsDto
-                    {
-                        UsersIncluded = "Unlimited",
-                        Projects = "Unlimited",
-                        StorageGb = "Unlimited"
-                    },
-                    Support = new PlanSupportDto
-                    {
-                        SlaSupport = "24/7 Priority Support"
-                    }
-                },
-                new PlanByNameResponseDto
-                {
-                    Id = "plan_one_time_license",
-                    Name = "One-Time License",
-                    Slug = "one-time-license",
-                    Description = "Lifetime access with one-time payment",
-                    Pricing = new PlanPricingDto
-                    {
-                        Onetime = new PlanOnetimePriceDto
-                        {
-                            Amount = 100000,
-                            Currency = "INR",
-                            Formatted = "₹1,00,000"
-                        }
-                    },
-                    Features = new List<PlanFeatureItemDto>
-                    {
-                        new PlanFeatureItemDto { Id = "all_enterprise_features", Name = "All Enterprise Features Included" },
-                        new PlanFeatureItemDto { Id = "license_duration", Name = "Lifetime License" }
-                    },
-                    Limitations = new PlanLimitationsDto
-                    {
-                        UsersIncluded = "Unlimited",
-                        Projects = "Unlimited",
-                        StorageGb = "Unlimited"
-                    },
-                    Support = new PlanSupportDto
-                    {
-                        SlaSupport = "1 Year Included"
-                    }
-                }
-            };
+             var pricingStructure = CreatePricingStructure(plan);
+             var limitations = CreateLimitationsStructure(plan);
+             
+             var featureItems = plan.SubscriptionPlanFeatures?
+                .Where(spf => spf.Feature.IsActive)
+                .Select(spf => new PlanFeatureItemDto 
+                { 
+                    Id = MapFeatureToSlug(spf.Feature.Name) ?? spf.Feature.Name, 
+                    Name = spf.Feature.Name 
+                })
+                .ToList() ?? new List<PlanFeatureItemDto>();
+
+             return new PlanByNameResponseDto
+             {
+                 Id = plan.StripePriceId ?? $"plan_{plan.Id}",
+                 Name = plan.Name,
+                 Slug = plan.Name.ToLower().Replace(" ", "-"),
+                 Description = plan.Description,
+                 Pricing = new PlanPricingDto 
+                 { 
+                     Monthly = pricingStructure.Monthly != null ? new PlanMonthlyPriceDto 
+                     {
+                         Amount = pricingStructure.Monthly.Amount,
+                         Currency = pricingStructure.Monthly.Currency,
+                         Formatted = pricingStructure.Monthly.Formatted
+                     } : null,
+                     MonthlyInr = pricingStructure.MonthlyInr != null ? new PlanMonthlyPriceDto
+                     {
+                          Amount = pricingStructure.MonthlyInr.Amount,
+                          Currency = pricingStructure.MonthlyInr.Currency,
+                          Formatted = pricingStructure.MonthlyInr.Formatted
+                     } : null,
+                     Onetime = pricingStructure.Onetime != null ? new PlanOnetimePriceDto
+                     {
+                          Amount = pricingStructure.Onetime.Amount,
+                          Currency = pricingStructure.Onetime.Currency,
+                          Formatted = pricingStructure.Onetime.Formatted
+                     } : null,
+                     Custom = pricingStructure.Custom,
+                     Currency = pricingStructure.Currency,
+                     Formatted = pricingStructure.Formatted
+                 },
+                 Features = featureItems,
+                 Limitations = new PlanLimitationsDto
+                 {
+                     UsersIncluded = limitations.UsersIncluded,
+                     Projects = limitations.Projects,
+                     StorageGb = limitations.StorageGb
+                 },
+                 Support = new PlanSupportDto { SlaSupport = limitations.Support ?? "Email Only" }
+             };
         }
 
         public async Task<SubscriptionFeaturesResponseDto> GetAllSubscriptionFeaturesAsync()
@@ -662,7 +556,7 @@ namespace NJS.Application.Services
                     var featureNames = new List<string>();
                     if (plan.SubscriptionPlanFeatures != null)
                     {
-                        foreach (var spf in plan.SubscriptionPlanFeatures)
+                        foreach (var spf in plan.SubscriptionPlanFeatures.Where(f => f.Feature.IsActive))
                         {
                             var featureName = MapFeatureToSlug(spf.Feature.Name);
                             if (!string.IsNullOrEmpty(featureName))
@@ -697,31 +591,73 @@ namespace NJS.Application.Services
 
         private static string? MapFeatureToSlug(string featureName)
         {
-            return featureName?.ToLower() switch
+            if (string.IsNullOrWhiteSpace(featureName)) return null;
+            
+            return featureName.ToLowerInvariant()
+                .Replace(" ", "_")
+                .Replace("(", "")
+                .Replace(")", "")
+                .Replace("/", "_");
+        }
+
+        public async Task<bool> AddFeatureToPlanAsync(int planId, int featureId)
+        {
+            try
             {
-                "work breakdown structure (wbs)" => "wbs",
-                "wbs version 2.0" => "wbs_v2",
-                "gantt/timeline view" => "gantt_view",
-                "odc (other direct cost) table" => "odc",
-                "job start form" => "job_start_form",
-                "estimated expenses table" => "estimated_expenses",
-                "input register" => "input_register",
-                "email notifications" => "email_notifications",
-                "check & review logs" => "review_logs",
-                "change control register" => "change_control",
-                "monthly progress review" => "monthly_review",
-                "quarterly progress review" => "quarterly_review",
-                "weekly/daily progress review" => "weekly_review",
-                "milestone tracking" => "milestone_tracking",
-                "budget vs actual analysis" => "budget_analysis",
-                "manpower planning" => "manpower_planning",
-                "api integration" => "api_integration",
-                "basic ui" => "user_experience_basic",
-                "enhanced ux" => "user_experience_enhanced",
-                "tailored ui/ux" => "user_experience_tailored",
-                "basic export (pdf)" => "reporting_basic",
-                _ => null
-            };
+                var plan = await _projectManagementContext.SubscriptionPlans
+                    .Include(p => p.SubscriptionPlanFeatures)
+                    .FirstOrDefaultAsync(p => p.Id == planId);
+
+                var feature = await _projectManagementContext.Features.FindAsync(featureId);
+
+                if (plan == null || feature == null)
+                {
+                    _logger.LogWarning("Plan {PlanId} or Feature {FeatureId} not found", planId, featureId);
+                    return false;
+                }
+
+                if (plan.SubscriptionPlanFeatures.Any(spf => spf.FeatureId == featureId))
+                {
+                    return true; // Already exists
+                }
+
+                plan.SubscriptionPlanFeatures.Add(new SubscriptionPlanFeature
+                {
+                    SubscriptionPlanId = planId,
+                    FeatureId = featureId
+                });
+
+                await _projectManagementContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding feature {FeatureId} to plan {PlanId}", featureId, planId);
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveFeatureFromPlanAsync(int planId, int featureId)
+        {
+            try
+            {
+                var mapping = await _projectManagementContext.SubscriptionPlanFeatures
+                    .FirstOrDefaultAsync(spf => spf.SubscriptionPlanId == planId && spf.FeatureId == featureId);
+
+                if (mapping == null)
+                {
+                    return false; // Not found
+                }
+
+                _projectManagementContext.SubscriptionPlanFeatures.Remove(mapping);
+                await _projectManagementContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing feature {FeatureId} from plan {PlanId}", featureId, planId);
+                return false;
+            }
         }
 
         public async Task<SubscriptionFeaturesResponseDto> GetSubscriptionFeaturesByPlanIdAsync(int planId)
@@ -751,7 +687,7 @@ namespace NJS.Application.Services
                 var featureNames = new List<string>();
                 if (subscriptionPlan.SubscriptionPlanFeatures != null)
                 {
-                    foreach (var spf in subscriptionPlan.SubscriptionPlanFeatures)
+                    foreach (var spf in subscriptionPlan.SubscriptionPlanFeatures.Where(f => f.Feature.IsActive))
                     {
                         var featureName = MapFeatureToSlug(spf.Feature.Name);
                         if (!string.IsNullOrEmpty(featureName))

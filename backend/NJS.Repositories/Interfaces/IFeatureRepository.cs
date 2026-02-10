@@ -7,5 +7,8 @@ namespace NJS.Repositories.Interfaces
     {
         Task AddFeatureAsync(Feature feature);
         Task<System.Collections.Generic.List<Feature>> GetAllFeaturesAsync();
+        Task<Feature> GetFeatureByIdAsync(int id);
+        Task UpdateFeatureAsync(Feature feature);
+        Task DeleteFeatureAsync(int id);
     }
 }
