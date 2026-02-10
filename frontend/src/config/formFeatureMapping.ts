@@ -12,8 +12,13 @@ export interface FormFeatureMap {
  * Feature names must match exactly with the backend Feature.Name values
  */
 export const FORM_FEATURE_MAP: FormFeatureMap = {
-  // Project Management Forms
+  // Project Management Forms - WBS Sub-features
   'wbs': 'Work Breakdown Structure (WBS)',
+  'wbs-manpower': 'Manpower',
+  'wbs-odc': 'ODC (Other Direct Cost) Table',
+  'wbs-todo-list': 'Sprint Planning',
+  
+  // Other Project Management Forms
   'job-start': 'Job Start Form',
   'input-register': 'Input/Output Register',
   'correspondence': 'Email Notifications',
@@ -21,7 +26,7 @@ export const FORM_FEATURE_MAP: FormFeatureMap = {
   'change-control': 'Email Notifications', // Using Email Notifications as placeholder
   'progress-review': 'Monthly Progress Review',
   'closure': 'Email Notifications', // Using Email Notifications as placeholder
-  'monthly-reports': 'Monthly Progress Review',
+  'monthly-reports': 'monthly Reports',
   
   // Business Development Forms
   'opportunity-tracking': 'Email Notifications', // Using Email Notifications as placeholder
