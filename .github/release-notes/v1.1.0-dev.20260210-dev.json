@@ -1,9 +1,9 @@
 {
   "version": "v1.1.0-dev.20260210",
   "environment": "dev",
-  "releaseDate": "2026-02-10T05:38:27.557Z",
-  "buildNumber": "25",
-  "commitSha": "5dcefc25b0e4d5a1095bd274bc649a3eb5898e9a",
+  "releaseDate": "2026-02-10T05:56:04.086Z",
+  "buildNumber": "26",
+  "commitSha": "e39a8c746289c0ec6091e4e441e2bfec7011ae9a",
   "branch": "Kiro/dev",
   "features": [
     {
