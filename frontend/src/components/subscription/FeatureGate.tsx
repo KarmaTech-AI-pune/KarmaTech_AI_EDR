@@ -7,17 +7,25 @@ interface FeatureGateProps {
   children: ReactNode;
 }
 
-const FeatureGate: React.FC<FeatureGateProps> = ({ featureName, children }) => {
+const FeatureGate: React.FC<FeatureGateProps> = ({ 
+  featureName, 
+  children
+}) => {
   const { hasFeature, loading, error } = useUserSubscription();
 
   if (loading) return <div>Loading features...</div>;
 
   if (error) return <div style={{ color: 'red' }}>Error: {error}</div>; 
 
-  return hasFeature(featureName) ? (
-    <>{children}</>
-  ) : (
-    <LockedOverlay>{children}</LockedOverlay>
-  );
+  const isFeatureAvailable = hasFeature(featureName);
+
+  // If feature is available, render children normally
+  if (isFeatureAvailable) {
+    return <>{children}</>;
+  }
+
+  // If feature is not available, just show the LockedOverlay (without children)
+  return <LockedOverlay />;
 };
 export default FeatureGate;
+

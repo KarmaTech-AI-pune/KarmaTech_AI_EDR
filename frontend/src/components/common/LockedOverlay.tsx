@@ -3,14 +3,14 @@ import React, { ReactNode } from 'react'
 import LockIcon from '@mui/icons-material/Lock';
 
 interface LockedOverlayProps {
-  children: ReactNode;
+  children?: ReactNode;
 //   message?: string;
 }
 
 const LockedOverlay: React.FC<LockedOverlayProps> = ({children}) => {
   return (
    <Box position="relative" zIndex={1000} width={'100wh'} height={"100vh"}>
-      {/* Render children content */}
+      {/* Render children content if provided */}
       {children}
 
       {/* Overlay */}
