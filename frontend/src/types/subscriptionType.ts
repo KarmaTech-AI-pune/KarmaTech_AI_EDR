@@ -4,7 +4,5 @@ export interface Feature {
 }
 
 export interface SubscriptionData {
-  planId: number;
-  planName: string;
   features: Feature[];
 }
