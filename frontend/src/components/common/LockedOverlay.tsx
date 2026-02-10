@@ -9,7 +9,15 @@ interface LockedOverlayProps {
 
 const LockedOverlay: React.FC<LockedOverlayProps> = ({children}) => {
   return (
-   <Box position="relative" zIndex={1000} width={'100wh'} height={"100vh"}>
+   <Box 
+     position="fixed" 
+     top={0}
+     left={0}
+     width="100vw" 
+     height="100vh"
+     zIndex={1000}
+     overflow="hidden"
+   >
       {/* Render children content if provided */}
       {children}
 
