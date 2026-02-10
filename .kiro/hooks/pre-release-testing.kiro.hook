@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Pre-Release Testing",
+  "description": "Runs integration and regression test suites before release deployment",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "powershell -ExecutionPolicy Bypass -File \"d:\\KSmartBiz\\KarmaTech_AI_EDR\\Run-Integration-Tests.ps1\"; powershell -ExecutionPolicy Bypass -File \"d:\\KSmartBiz\\KarmaTech_AI_EDR\\Run-Regression-Tests.ps1\""
+  }
+}
