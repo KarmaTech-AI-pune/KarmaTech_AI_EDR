@@ -27,7 +27,8 @@ namespace NJS.Domain.Database
         {
             if (!string.IsNullOrEmpty(CurrentTenantConnectionString))
             {
-                optionsBuilder.UseSqlServer(CurrentTenantConnectionString);
+                optionsBuilder.UseSqlServer(CurrentTenantConnectionString,
+                    sqlOptions => sqlOptions.UseCompatibilityLevel(130)); // SQL Server 2016
             }
             base.OnConfiguring(optionsBuilder);
         }

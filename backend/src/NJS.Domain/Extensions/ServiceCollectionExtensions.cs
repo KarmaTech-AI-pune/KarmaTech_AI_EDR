@@ -104,6 +104,7 @@ namespace NJS.Domain.Extensions
                 options.UseSqlServer(connectionString,
                     sqlServerOptionsAction: sqlOptions =>
                     {
+                        sqlOptions.UseCompatibilityLevel(130); // SQL Server 2016
                         sqlOptions.EnableRetryOnFailure(
                             maxRetryCount: 5,
                             maxRetryDelay: TimeSpan.FromSeconds(30),
