@@ -1,9 +1,9 @@
 {
   "version": "v1.1.0-dev.20260211",
   "environment": "dev",
-  "releaseDate": "2026-02-11T05:34:27.211Z",
-  "buildNumber": "30",
-  "commitSha": "54a9417bbb097ab33d1a0361349b3f9023dc1455",
+  "releaseDate": "2026-02-11T05:48:09.816Z",
+  "buildNumber": "31",
+  "commitSha": "d4924095e061bfe9ee6a96cee6d2a68b29f63563",
   "branch": "Kiro/dev",
   "features": [
     {
@@ -32,46 +32,9 @@
       "author": "Cloud-Enthusiast",
       "scope": null,
       "date": "2026-02-10T10:09:04.000Z"
-    },
-    {
-      "description": "adding a test feature to verify release notes",
-      "commitSha": "1b27f7582d778c91bed32b525fd179b82d427e2a",
-      "jiraTicket": null,
-      "impact": "Medium",
-      "author": "Cloud-Enthusiast",
-      "scope": null,
-      "date": "2026-02-09T05:46:46.000Z"
-    },
-    {
-      "description": "add manual release workflow and updated generation script",
-      "commitSha": "caada31ca779bfcbce66e3f085bb1ecd02bda44a",
-      "jiraTicket": null,
-      "impact": "Medium",
-      "author": "Cloud-Enthusiast",
-      "scope": "release",
-      "date": "2026-02-08T17:09:58.000Z"
     }
   ],
-  "bugFixes": [
-    {
-      "description": "ensure release notes are committed back to repo",
-      "commitSha": "f9f64a7c913e4c747701b743881faa683148f790",
-      "jiraTicket": null,
-      "impact": "Medium",
-      "author": "Cloud-Enthusiast",
-      "scope": "ci",
-      "date": "2026-02-09T05:57:21.000Z"
-    },
-    {
-      "description": "remove unnecessary npm install step",
-      "commitSha": "7eb2e81522cc1aa4322f509334c4cea2f8fef9bc",
-      "jiraTicket": null,
-      "impact": "Medium",
-      "author": "Cloud-Enthusiast",
-      "scope": "ci",
-      "date": "2026-02-09T05:52:14.000Z"
-    }
-  ],
+  "bugFixes": [],
   "improvements": [],
   "breakingChanges": [],
   "knownIssues": []
