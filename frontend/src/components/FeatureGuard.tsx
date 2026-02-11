@@ -1,4 +1,4 @@
-import { hasFeature, getEnabledFeaturesFromToken } from '../utils/jwtUtils';
+import { hasFeature } from '../utils/jwtUtils';
 
 interface FeatureGuardProps {
     feature: string;
