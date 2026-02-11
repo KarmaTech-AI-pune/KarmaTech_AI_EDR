@@ -140,14 +140,19 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
             if (requiredEmployees > 0)
             {
                 // Step 3: Get all user IDs already assigned to previous sprints
-                var previouslyAssignedUserIds = await _context.SprintPlans
-                    .Where(sp => sp.SprintId < request.SprintId)
-                    .OrderBy(sp => sp.SprintId)
-                    .SelectMany(sp => _context.UserWBSTasks
-                        .OrderBy(uwt => uwt.Id)
-                        .Select(uwt => uwt.UserId)
-                        .Take(sp.RequiredSprintEmployees)
-                    )
+                // Step 3: Get the maximum number of employees required by any previous sprint in this project
+                var maxRequiredEmployees = await _context.SprintPlans
+                    .Where(sp => sp.ProjectId == sprintPlanEntity.ProjectId 
+                              && sp.SprintId < request.SprintId 
+                              && sp.TenantId == (_context.TenantId ?? 0))
+                    .MaxAsync(sp => (int?)sp.RequiredSprintEmployees, cancellationToken) ?? 0;
+
+                // Step 4: Get the user IDs corresponding to that maximum count from the master list
+                // This replaces the complex SelectMany/Take logic which was generating incompatible SQL for older versions
+                var previouslyAssignedUserIds = await _context.UserWBSTasks
+                    .OrderBy(uwt => uwt.Id)
+                    .Select(uwt => uwt.UserId)
+                    .Take(maxRequiredEmployees)
                     .Distinct()
                     .ToListAsync(cancellationToken);
 
