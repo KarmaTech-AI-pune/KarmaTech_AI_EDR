@@ -35,6 +35,41 @@ git checkout -b feature/[name]     # 4. Create clean feature branch
 
 ---
 
+## CONDITIONAL: Database Migration Update (ONLY IF ENTITY CHANGES)
+
+**⚠️ IMPORTANT**: Run database migration update ONLY when your feature includes changes to database entities:
+
+```powershell
+# CONDITIONAL - Execute ONLY if entity changes exist:
+cd backend                                    # 1. Navigate to backend directory
+.\update_db.bat                               # 2. Run migration update script
+```
+
+**When to run this:**
+- ✅ You modified existing entities in `backend/src/NJS.Domain/Entities/`
+- ✅ You added new entities in `backend/src/NJS.Domain/Entities/`
+- ✅ You changed entity properties, relationships, or constraints
+- ✅ Your feature requires database schema changes
+
+**When NOT to run this:**
+- ❌ No entity changes in your feature
+- ❌ Only frontend changes
+- ❌ Only API/controller changes without entity modifications
+- ❌ Only business logic changes without schema changes
+
+**What this script does:**
+1. Creates a new migration for your entity changes
+2. Updates local database with your new schema
+3. Ensures your changes are reflected in the database
+
+**✅ Success Indicators (if you ran the script):**
+- Script output shows: "Build succeeded"
+- Script output shows: "Done. To undo this action, use 'ef migrations remove'"
+- New migration file created in `backend/src/NJS.Domain/Migrations/`
+- Database updated with your schema changes
+
+---
+
 ## Mandatory 7-Step Process
 
 **CRITICAL**: Every feature implementation MUST follow the exact 7-step process outlined in `AI-DLC-Small-Feature-Example.md`. No exceptions, no shortcuts, no skipping steps.

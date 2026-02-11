@@ -1,3 +1,8 @@
+---
+inclusion: manual
+keywords: react, frontend, workflow, changelog, updates
+---
+
 # React Implementation Workflow - Complete Changelog
 
 **Last Updated:** January 21, 2025  

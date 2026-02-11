@@ -1,6 +1,18 @@
+---
+inclusion: manual
+keywords: react, frontend, component, ui, page, routing, workflow, visual
+---
+
 # React Implementation Workflow - Visual Guide
 
 **Last Updated:** January 21, 2025
+
+**📚 Part of the React Implementation Workflow:**
+- **Main Workflow:** `.kiro/steering/react-implementation-workflow.md` - Complete 11-step implementation guide
+- **This Guide:** Visual flowchart and skeleton-first approach explanation
+- **Reusability Guide:** `.kiro/steering/REACT_COMPONENT_REUSABILITY_GUIDE.md` - Component patterns and data flow
+
+---
 
 ## 🎯 The Correct Top-Down Flow
 

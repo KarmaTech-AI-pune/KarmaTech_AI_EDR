@@ -26,6 +26,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
 
             var sprintTask = await _context.SprintTasks
                                            .Include(st => st.Subtasks)
+                                           .Where(st => st.TenantId == (_context.TenantId ?? 0))
                                            .FirstOrDefaultAsync(st => st.Taskid == request.TaskId, cancellationToken);
 
             if (sprintTask == null)

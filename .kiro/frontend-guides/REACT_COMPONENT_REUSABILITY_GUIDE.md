@@ -1,7 +1,17 @@
+---
+inclusion: manual
+keywords: react, component, reusability, props, context, data-flow
+---
+
 # React Component Reusability & Data Flow Guide
 
 **Last Updated:** January 21, 2025  
 **Purpose:** Guidelines for creating reusable components and choosing the right data flow pattern
+
+**📚 Part of the React Implementation Workflow:**
+- **Main Workflow:** `.kiro/steering/react-implementation-workflow.md` - 11-step implementation process
+- **Visual Guide:** `.kiro/steering/REACT_WORKFLOW_VISUAL_GUIDE.md` - Flowcharts and diagrams
+- **This Guide:** Detailed reusability patterns and data flow decisions
 
 ---
 
@@ -598,6 +608,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ user, onClick }) => {
 
 **Last Updated:** January 21, 2025  
 **Related Documents:**
-- `.kiro/steering/react-implementation-workflow.md`
-- `.kiro/steering/react-component-patterns.md`
-- `.kiro/steering/react-state-api-integration.md`
+- `.kiro/steering/react-implementation-workflow.md` - Main workflow (Steps 7-8 reference this guide)
+- `.kiro/steering/react-component-patterns.md` - Component architecture patterns
+- `.kiro/steering/react-state-api-integration.md` - Context API implementation details

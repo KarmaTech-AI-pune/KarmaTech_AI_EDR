@@ -1,3 +1,8 @@
+---
+inclusion: manual
+keywords: react, component, patterns, typescript, best-practices
+---
+
 # React Component Patterns and Best Practices
 
 ## Component Structure Standards

@@ -9,6 +9,7 @@ interface CreateIssueModalProps {
   newIssue: NewIssueFormState;
   setNewIssue: React.Dispatch<React.SetStateAction<NewIssueFormState>>;
   createIssue: () => void;
+  sprintName?: string;
 }
 
 export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
@@ -17,6 +18,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   newIssue,
   setNewIssue,
   createIssue,
+  sprintName,
 }) => {
   const handleClose = () => setShowCreateModal(false);
 
@@ -32,12 +34,16 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
         <Box component="form" sx={{ '& .MuiTextField-root': { mb: 2 }, '& .MuiFormControl-root': { mb: 2 } }}>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Project *</InputLabel>
-                <Select value="Sample Project (PROJ)" label="Project *" disabled>
-                  <MenuItem value="Sample Project (PROJ)">Sample Project (PROJ)</MenuItem>
-                </Select>
-              </FormControl>
+              <TextField
+                fullWidth
+                label="Sprint"
+                value={sprintName || "Unknown Sprint"}
+                disabled
+                variant="filled"
+                InputProps={{
+                  readOnly: true,
+                }}
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>

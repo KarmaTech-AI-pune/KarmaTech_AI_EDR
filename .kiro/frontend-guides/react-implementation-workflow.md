@@ -1,4 +1,30 @@
+---
+inclusion: manual
+keywords: react, frontend, component, ui, page, routing, typescript, material-ui, mui
+---
+
 # React Implementation Workflow - Top-Down Approach
+
+## 🚨 ACTIVATION TRIGGER
+
+**CRITICAL RULE:** This workflow and all related frontend steering files are **INACTIVE BY DEFAULT**.
+
+**Activation Phrase:** "Use Frontend Steering Files in the Implementation"
+
+**When user says this phrase:**
+1. ✅ Read this file (`react-implementation-workflow.md`) completely
+2. ✅ Analyze the user's requirement
+3. ✅ Determine which specialized guides are needed based on requirement
+4. ✅ Read only the relevant specialized guides (not all)
+5. ✅ Generate design and tasks following the workflow
+
+**Until activation phrase is used:**
+- ❌ Do NOT apply this workflow
+- ❌ Do NOT read other frontend steering files
+- ❌ Do NOT enforce frontend implementation rules
+- ❌ Work flexibly based on user's direct instructions
+
+---
 
 ## Overview
 
@@ -55,6 +81,19 @@ This ensures proper component hierarchy and prevents dependency issues.
 - 🔧 Updating existing components (maintain current structure)
 - 🔧 Bug fixes (fix in place, don't restructure)
 - 🔧 Styling/CSS updates (no workflow needed)
+
+---
+
+## 📚 Related Guides
+
+For detailed information on specific topics, refer to these specialized guides:
+- **Component Reusability & Data Flow:** `.kiro/steering/REACT_COMPONENT_REUSABILITY_GUIDE.md`
+- **State Management & API Integration:** `.kiro/steering/react-state-api-integration.md`
+- **Routing & Navigation:** `.kiro/steering/react-routing-navigation.md`
+- **Forms & Validation:** `.kiro/steering/react-forms-validation.md`
+- **Material-UI Styling:** `.kiro/steering/material-ui-styling-guide.md`
+- **Visual Workflow Flowchart:** `.kiro/steering/REACT_WORKFLOW_VISUAL_GUIDE.md`
+- **Component Best Practices:** `.kiro/steering/react-component-patterns.md`
 
 ---
 
@@ -353,6 +392,10 @@ import UserProfile from '../pages/UserProfile'; // Skeleton already exists
 - ✅ Data is shared across many unrelated components
 - ✅ Example: Theme, authentication, global settings
 
+**📚 For detailed data flow patterns and Context API implementation:**
+- See `.kiro/steering/REACT_COMPONENT_REUSABILITY_GUIDE.md` - Complete data flow guide with examples
+- See `.kiro/steering/react-state-api-integration.md` - Context API implementation patterns
+
 #### Example:
 ```typescript
 // pages/UserProfile.tsx (STEP 7: PAGE STRUCTURE ONLY)
@@ -463,6 +506,10 @@ const ProjectDashboard: React.FC = () => {
 export default ProjectDashboard;
 ```
 
+**📚 For complete Context API patterns and advanced examples:**
+- See `.kiro/steering/react-state-api-integration.md` - Full Context implementation guide
+- See `.kiro/steering/REACT_COMPONENT_REUSABILITY_GUIDE.md` - Context vs Props decision guide
+
 #### Page Component Responsibilities (Step 7):
 - ✅ Route parameter extraction
 - ✅ Data fetching via hooks/services
@@ -536,7 +583,10 @@ Implementation Order:
 - ✅ Using composition over inheritance
 - ✅ Exporting components for use in other pages
 
-**Example: Reusable Component (Good)**
+**📚 For detailed reusability patterns, levels, and comprehensive examples:**
+- See `.kiro/steering/REACT_COMPONENT_REUSABILITY_GUIDE.md` - Complete reusability guide
+
+**Quick Example: Reusable Component**
 ```typescript
 // components/common/DataCard.tsx (REUSABLE)
 import React from 'react';
@@ -596,6 +646,9 @@ const ProfileCard: React.FC = () => {
   );
 };
 ```
+
+**📚 For more reusability examples and anti-patterns:**
+- See `.kiro/steering/REACT_COMPONENT_REUSABILITY_GUIDE.md` - Levels of reusability, composition patterns
 
 #### Example Implementation (Bottom-Up):
 
@@ -897,245 +950,31 @@ export default UserProfile;
 
 ## 📋 Component Reusability & Data Flow Patterns
 
-### 🎯 Reusability Principles
+**📚 IMPORTANT:** For comprehensive guides on these topics, see:
+- `.kiro/steering/REACT_COMPONENT_REUSABILITY_GUIDE.md` - Complete reusability and data flow guide
+- `.kiro/steering/react-state-api-integration.md` - Context API and state management patterns
 
-#### 1. Design Components to be Generic
+### Quick Reference: Component Reusability
 
-**❌ Bad: Specific to one use case**
-```typescript
-const UserNameDisplay: React.FC = () => {
-  const { user } = useUserProfile();
-  return <Typography>{user.name}</Typography>;
-};
-```
+**Design components to be generic:**
+- ✅ Accept data via props (not internal fetching)
+- ✅ Use generic prop names (`data`, `items`, `value`)
+- ✅ Keep components small and focused
+- ✅ Extract common patterns into shared components
 
-**✅ Good: Generic and reusable**
-```typescript
-interface NameDisplayProps {
-  name: string;
-  variant?: 'h4' | 'h5' | 'h6';
-}
+### Quick Reference: Data Flow Patterns
 
-const NameDisplay: React.FC<NameDisplayProps> = ({ name, variant = 'h5' }) => {
-  return <Typography variant={variant}>{name}</Typography>;
-};
-
-// Can be used for users, projects, teams, etc.
-```
-
-#### 2. Use Composition Over Inheritance
-
-**❌ Bad: Inheritance-based**
-```typescript
-class BaseCard extends React.Component { ... }
-class UserCard extends BaseCard { ... }
-class ProjectCard extends BaseCard { ... }
-```
-
-**✅ Good: Composition-based**
-```typescript
-const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <MuiCard>{children}</MuiCard>
-);
-
-const UserCard: React.FC<{ user: User }> = ({ user }) => (
-  <Card>
-    <Typography>{user.name}</Typography>
-  </Card>
-);
-
-const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
-  <Card>
-    <Typography>{project.name}</Typography>
-  </Card>
-);
-```
-
-#### 3. Extract Common Patterns
-
-**Identify repeated patterns and extract them:**
-```typescript
-// ✅ Reusable InfoRow component
-interface InfoRowProps {
-  label: string;
-  value: string | number;
-  icon?: React.ReactNode;
-}
-
-const InfoRow: React.FC<InfoRowProps> = ({ label, value, icon }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-    {icon}
-    <Typography variant="body2" color="text.secondary">{label}:</Typography>
-    <Typography variant="body1" fontWeight="medium">{value}</Typography>
-  </Box>
-);
-
-// Use in multiple components:
-<InfoRow label="Email" value={user.email} icon={<Email />} />
-<InfoRow label="Phone" value={user.phone} icon={<Phone />} />
-<InfoRow label="Location" value={user.location} icon={<Place />} />
-```
-
-### 🔄 Data Flow Patterns
-
-#### Pattern 1: Prop Drilling (Simple, Shallow Trees)
-
-**When to use:**
+**Use Props (Prop Drilling) when:**
 - Component tree is 1-3 levels deep
 - Data is simple (primitives, single objects)
 - Components are tightly related
 
-**Example:**
-```typescript
-// Page (Level 0)
-const UserProfile: React.FC = () => {
-  const { user } = useUserProfile();
-  
-  return (
-    <Container>
-      <ProfileHeader user={user} />        {/* Level 1 */}
-      <ProfileDetails user={user} />       {/* Level 1 */}
-    </Container>
-  );
-};
-
-// Component (Level 1)
-const ProfileDetails: React.FC<{ user: User }> = ({ user }) => (
-  <Box>
-    <InfoSection user={user} />            {/* Level 2 */}
-    <ContactSection user={user} />         {/* Level 2 */}
-  </Box>
-);
-
-// ✅ Only 2 levels deep - prop drilling is fine
-```
-
-#### Pattern 2: Context API (Complex, Deep Trees)
-
-**When to use:**
+**Use Context API when:**
 - Component tree is 4+ levels deep
 - Data is complex (multiple related objects)
 - Data is shared across many unrelated components
-- Avoiding "prop drilling hell"
 
-**Example:**
-```typescript
-// 1. Create Context
-interface ProjectContextType {
-  project: Project;
-  budget: Budget;
-  team: TeamMember[];
-  permissions: Permissions;
-  updateProject: (data: Partial<Project>) => Promise<void>;
-}
-
-const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
-
-// 2. Create Custom Hook
-export const useProjectContext = () => {
-  const context = useContext(ProjectContext);
-  if (!context) {
-    throw new Error('useProjectContext must be used within ProjectProvider');
-  }
-  return context;
-};
-
-// 3. Provide Context at Page Level
-const ProjectDashboard: React.FC = () => {
-  const { projectId } = useParams();
-  const { project, budget, team, permissions } = useProject(projectId!);
-  
-  const updateProject = async (data: Partial<Project>) => {
-    await projectService.update(projectId!, data);
-  };
-  
-  return (
-    <ProjectContext.Provider value={{ project, budget, team, permissions, updateProject }}>
-      <Container>
-        <ProjectHeader />                  {/* Level 1 */}
-        <ProjectTabs>                      {/* Level 2 */}
-          <ProjectOverview />              {/* Level 3 */}
-          <ProjectBudget />                {/* Level 3 */}
-        </ProjectTabs>
-      </Container>
-    </ProjectContext.Provider>
-  );
-};
-
-// 4. Consume Context in Deep Components
-const BudgetChart: React.FC = () => {
-  const { budget, permissions } = useProjectContext(); // ✅ No prop drilling!
-  
-  if (!permissions.canViewBudget) return null;
-  
-  return <Chart data={budget} />;
-};
-```
-
-#### Pattern 3: Hybrid Approach (Best of Both)
-
-**Combine props and context based on needs:**
-```typescript
-// Use Context for global/shared data
-const ProjectDashboard: React.FC = () => {
-  const { project, permissions } = useProject();
-  
-  return (
-    <ProjectContext.Provider value={{ project, permissions }}>
-      <Container>
-        {/* Use props for component-specific data */}
-        <ProjectHeader 
-          title={project.name}           {/* Prop: specific to header */}
-          onEdit={handleEdit}            {/* Prop: specific callback */}
-        />
-        
-        {/* Context used internally for shared data */}
-        <ProjectMetrics />               {/* Uses context internally */}
-        <ProjectBudget />                {/* Uses context internally */}
-      </Container>
-    </ProjectContext.Provider>
-  );
-};
-```
-
-### 📊 Decision Matrix: Props vs Context
-
-| Criteria | Props | Context |
-|----------|-------|---------|
-| **Tree Depth** | 1-3 levels | 4+ levels |
-| **Data Complexity** | Simple (1-2 objects) | Complex (3+ objects) |
-| **Number of Consumers** | 1-3 components | 4+ components |
-| **Update Frequency** | Frequent | Infrequent |
-| **Component Coupling** | Tight (parent-child) | Loose (unrelated) |
-| **Performance** | Better (no re-renders) | Good (with optimization) |
-| **Testability** | Easier (just props) | Harder (mock context) |
-
-### 🎯 Best Practices Summary
-
-**Component Reusability:**
-1. ✅ Accept data via props, not internal fetching
-2. ✅ Use generic prop names (`data`, `items`, `value`)
-3. ✅ Keep components small and focused
-4. ✅ Extract common patterns into shared components
-5. ✅ Use composition over inheritance
-6. ✅ Make components configurable (variants, sizes, colors)
-
-**Data Flow:**
-1. ✅ Start with props (simplest approach)
-2. ✅ Use context when prop drilling becomes painful (4+ levels)
-3. ✅ Combine props and context for optimal solution
-4. ✅ Keep context values stable (use useMemo)
-5. ✅ Split contexts by concern (AuthContext, ThemeContext, etc.)
-6. ✅ Document when and why context is used
-
-**Anti-Patterns to Avoid:**
-1. ❌ Fetching data inside reusable components
-2. ❌ Using context for everything (overkill)
-3. ❌ Prop drilling through 5+ levels (use context)
-4. ❌ Tightly coupling components to specific pages
-5. ❌ Creating components that can't be reused
-6. ❌ Mixing data fetching and UI logic in same component
-7. ❌ **Writing redundant code (violates DRY principle)**
+**For detailed examples, decision matrices, and implementation patterns, see the guides above.**
 
 ---
 
@@ -1802,3 +1641,28 @@ Use this checklist for every new feature:
 - ✅ Better collaboration
 
 **Remember:** Build the pieces first (components), then assemble them (page integration). Never start with the whole and try to break it down.
+
+---
+
+## 📚 Related Documentation
+
+### Detailed Guides (Deep Dives)
+- **`.kiro/steering/REACT_COMPONENT_REUSABILITY_GUIDE.md`** - Complete guide on component reusability, data flow patterns (props vs Context), decision matrices, and comprehensive examples
+- **`.kiro/steering/react-state-api-integration.md`** - State management, API integration, Context API patterns, custom hooks, and data fetching
+- **`.kiro/steering/react-routing-navigation.md`** - React Router patterns, navigation hooks, protected routes, and URL state management
+- **`.kiro/steering/react-forms-validation.md`** - Form handling with React Hook Form, Zod validation, Material-UI integration
+- **`.kiro/steering/material-ui-styling-guide.md`** - Material-UI theming, sx prop patterns, responsive design, and styling best practices
+- **`.kiro/steering/react-component-patterns.md`** - Component architecture patterns, TypeScript interfaces, and best practices
+
+### Quick References
+- **`.kiro/steering/REACT_WORKFLOW_VISUAL_GUIDE.md`** - Visual flowchart of the 11-step workflow with diagrams and comparisons
+- **`.kiro/steering/DEVELOPER_WORKFLOW_GUIDE.md`** - Decision tree for choosing which workflow to follow (backend, frontend, full-stack)
+- **`.kiro/steering/REACT_WORKFLOW_CHANGELOG.md`** - Complete history of workflow updates and improvements
+
+### Enforcement & Standards
+- **`.kiro/steering/workflow-enforcement-rules.md`** - AI-DLC enforcement rules, quality gates, and mandatory process steps
+
+---
+
+**Last Updated:** January 21, 2025  
+**Version:** 2.0 (Consolidated with cross-references)

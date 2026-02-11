@@ -102,12 +102,12 @@ interface ReleaseNotesModalProps {
    * The component will clean the version string automatically
    */
   version: string;
-  
+
   /** 
    * Whether the modal dialog is currently open
    */
   isOpen: boolean;
-  
+
   /** 
    * Callback function called when modal should be closed
    * Triggered by close button, escape key, or clicking outside modal
@@ -159,36 +159,65 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+
+  // State for the currently displayed release notes
   const [releaseNotes, setReleaseNotes] = useState<ProcessedReleaseNotes | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
   const [showErrorSnackbar, setShowErrorSnackbar] = useState<boolean>(false);
 
+  // State for release history sidebar
+  const [history, setHistory] = useState<ProcessedReleaseNotes[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
+  const [selectedVersion, setSelectedVersion] = useState<string>(version || '');
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState<boolean>(false);
+
   /**
-   * Fetches release notes from API with comprehensive error handling
-   * Includes fallback to hardcoded release notes and retry logic
+   * Fetches the release history list
    */
-  const fetchReleaseNotes = useCallback(async () => {
-    if (!version || !isOpen) {
-      return;
+  const fetchHistory = useCallback(async () => {
+    setLoadingHistory(true);
+    try {
+      // Fetch history (last 20 versions should be enough for the list)
+      const historyData = await releaseNotesApi.getReleaseHistory(undefined, 0, 20);
+      setHistory(historyData);
+    } catch (err) {
+      console.error('Failed to fetch release history:', err);
+      // We don't block the UI if history fails, just show the single version
+    } finally {
+      setLoadingHistory(false);
     }
+  }, []);
+
+  /**
+   * Fetches release notes for a specific version
+   */
+  const fetchReleaseNotes = useCallback(async (ver: string) => {
+    if (!ver) return;
 
     setLoading(true);
     setError(null);
 
+    // Check if we already have the data in our history list to avoid an API call
+    const cachedInHistory = history.find(n => n.version === ver || n.version === ver.replace('v', ''));
+    if (cachedInHistory) {
+      setReleaseNotes(cachedInHistory);
+      setLoading(false);
+      return;
+    }
+
     try {
-      const notes = await releaseNotesApi.getReleaseNotes(version);
+      const notes = await releaseNotesApi.getReleaseNotes(ver);
       setReleaseNotes(notes);
       setRetryCount(0);
     } catch (err) {
       // Try fallback release notes first
-      const fallbackNotes = getFallbackReleaseNotes(version);
+      const fallbackNotes = getFallbackReleaseNotes(ver);
       if (fallbackNotes) {
-        console.log(`Using fallback release notes for version ${version}`);
+        console.log(`Using fallback release notes for version ${ver}`);
         setReleaseNotes(fallbackNotes);
-        setError(null); // Clear error since we have fallback data
+        setError(null);
         setRetryCount(0);
       } else {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load release notes';
@@ -198,16 +227,27 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     } finally {
       setLoading(false);
     }
-  }, [version, isOpen]);
+  }, [history]);
 
-  // Fetch release notes when modal opens or version changes
+  // Initial fetch when modal opens
   useEffect(() => {
-    if (isOpen && version) {
-      fetchReleaseNotes();
+    if (isOpen) {
+      fetchHistory();
+      // If version is provided, start with that
+      if (version) {
+        setSelectedVersion(version);
+      }
     }
-  }, [isOpen, version, fetchReleaseNotes]);
+  }, [isOpen, version, fetchHistory]);
 
-  // Reset state when modal closes
+  // Fetch specific notes when selected version changes
+  useEffect(() => {
+    if (isOpen && selectedVersion) {
+      fetchReleaseNotes(selectedVersion);
+    }
+  }, [isOpen, selectedVersion, fetchReleaseNotes]);
+
+  // Reset state on close
   useEffect(() => {
     if (!isOpen) {
       const timeoutId = setTimeout(() => {
@@ -215,27 +255,192 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
         setError(null);
         setRetryCount(0);
         setShowErrorSnackbar(false);
+        setHistory([]);
       }, 1000);
-
       return () => clearTimeout(timeoutId);
     }
   }, [isOpen]);
 
-  /**
-   * Handles retry button click
-   */
   const handleRetry = useCallback(() => {
     setRetryCount(prev => prev + 1);
-    fetchReleaseNotes();
-  }, [fetchReleaseNotes]);
+    // Retry both
+    fetchHistory();
+    if (selectedVersion) {
+      fetchReleaseNotes(selectedVersion);
+    }
+  }, [fetchHistory, fetchReleaseNotes, selectedVersion]);
+
+  const handleClose = () => {
+    if (!loading) onClose();
+  };
+
+  const handleVersionClick = (ver: string) => {
+    setSelectedVersion(ver);
+    if (isMobile) setMobileDrawerOpen(false);
+  };
 
   /**
-   * Handles modal close
+   * Renders the sidebar list of versions
    */
-  const handleClose = () => {
-    if (!loading) {
-      onClose();
+  const renderSidebar = () => {
+    if (loadingHistory && history.length === 0) {
+      return (
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+          <CircularProgress size={24} />
+        </Box>
+      );
     }
+
+    return (
+      <List component="nav" sx={{ width: '100%', bgcolor: 'background.paper' }}>
+        {history.map((item) => (
+          <React.Fragment key={item.version}>
+            <ListItem
+              button
+              selected={selectedVersion === item.version || selectedVersion === `v${item.version}`}
+              onClick={() => handleVersionClick(item.version)}
+            >
+              <ListItemText
+                primary={
+                  <Typography variant="body2" fontWeight="bold">
+                    {item.version}
+                  </Typography>
+                }
+                secondary={
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(item.releaseDate).toLocaleDateString()}
+                  </Typography>
+                }
+              />
+              {(selectedVersion === item.version || selectedVersion === `v${item.version}`) && (
+                <ListItemIcon sx={{ minWidth: 'auto' }}>
+                  <FeatureIcon fontSize="small" color="primary" />
+                </ListItemIcon>
+              )}
+            </ListItem>
+            <Divider component="li" />
+          </React.Fragment>
+        ))}
+        {history.length === 0 && !loadingHistory && (
+          <ListItem>
+            <ListItemText primary="No history available" />
+          </ListItem>
+        )}
+      </List>
+    );
+  };
+
+  // ... (keep helper functions like getChangeTypeIcon, getChangeTypeColor, etc. if needed, or assume they are unchanged above this block) 
+  // Wait, I am replacing the whole component body, so I need to preserve the helper functions if they are inside. 
+  // In the original file, they were inside the component. I should keep them.
+
+  // Re-declaring helper functions inside the component as they were before
+  const getChangeTypeIcon = (changeType: string) => {
+    switch (changeType.toLowerCase()) {
+      case 'feature': return <FeatureIcon color="primary" />;
+      case 'bugfix': case 'bug': case 'fix': return <BugIcon color="error" />;
+      case 'improvement': case 'enhancement': return <ImprovementIcon color="success" />;
+      case 'breaking': case 'breakingchange': return <BreakingIcon color="warning" />;
+      default: return <ImprovementIcon color="success" />;
+    }
+  };
+
+  const getChangeTypeColor = (changeType: string): 'primary' | 'error' | 'success' | 'warning' | 'default' => {
+    switch (changeType.toLowerCase()) {
+      case 'feature': return 'primary';
+      case 'bugfix': case 'bug': case 'fix': return 'error';
+      case 'improvement': case 'enhancement': return 'success';
+      case 'breaking': case 'breakingchange': return 'warning';
+      default: return 'default';
+    }
+  };
+
+  const renderChangeItems = (items: ChangeItem[], title: string, icon: React.ReactNode) => {
+    if (!items || items.length === 0) return null;
+    return (
+      <Accordion defaultExpanded sx={{ mb: 1 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {icon}
+            <Typography variant="h6">{title} ({items.length})</Typography>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          <List dense>
+            {items.map((item, index) => (
+              <ListItem key={item.id || index} sx={{ pl: 0 }}>
+                <ListItemIcon sx={{ minWidth: 36 }}>{getChangeTypeIcon(item.changeType)}</ListItemIcon>
+                <ListItemText
+                  primary={item.description}
+                  secondary={
+                    <Box sx={{ mt: 0.5 }}>
+                      {item.author && <Chip icon={<AuthorIcon />} label={item.author} size="small" variant="outlined" sx={{ mr: 0.5, mb: 0.5 }} />}
+                      {item.commitSha && <Chip icon={<CommitIcon />} label={item.commitSha.substring(0, 7)} size="small" variant="outlined" sx={{ mr: 0.5, mb: 0.5 }} />}
+                      {item.jiraTicket && <Chip label={item.jiraTicket} size="small" variant="outlined" sx={{ mr: 0.5, mb: 0.5 }} />}
+                      {item.impact && <Chip label={`Impact: ${item.impact}`} size="small" color={getChangeTypeColor(item.impact)} sx={{ mr: 0.5, mb: 0.5 }} />}
+                    </Box>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </AccordionDetails>
+      </Accordion>
+    );
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 200, gap: 2 }}>
+          <CircularProgress size={48} />
+          <Typography variant="body1" color="text.secondary">Loading release notes for {selectedVersion}...</Typography>
+        </Box>
+      );
+    }
+
+    if (error) {
+      return (
+        <Box sx={{ py: 2 }}>
+          <Alert severity="error" icon={<ErrorIcon />} action={<Button color="inherit" size="small" onClick={() => fetchReleaseNotes(selectedVersion)} startIcon={<RefreshIcon />}>Retry</Button>}>
+            <Typography variant="body2"><strong>{error}</strong></Typography>
+          </Alert>
+        </Box>
+      );
+    }
+
+    if (!releaseNotes) {
+      return (
+        <Box sx={{ py: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary">Select a version to view details</Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Box sx={{ py: 1 }}>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h4" color="primary" gutterBottom>v{releaseNotes.version}</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <DateIcon color="action" fontSize="small" />
+              <Typography variant="body2" color="text.secondary">
+                Released: {new Date(releaseNotes.releaseDate).toLocaleDateString()}
+              </Typography>
+            </Box>
+            {releaseNotes.environment && <Chip label={`Env: ${releaseNotes.environment}`} size="small" variant="outlined" />}
+            {releaseNotes.branch && <Chip label={`Branch: ${releaseNotes.branch}`} size="small" variant="outlined" />}
+          </Box>
+        </Box>
+
+        <Divider sx={{ mb: 2 }} />
+
+        {renderChangeItems(releaseNotes.features, 'New Features', <FeatureIcon color="primary" />)}
+        {renderChangeItems(releaseNotes.improvements, 'Improvements', <ImprovementIcon color="success" />)}
+        {renderChangeItems(releaseNotes.bugFixes, 'Bug Fixes', <BugIcon color="error" />)}
+        {renderChangeItems(releaseNotes.breakingChanges, 'Breaking Changes', <BreakingIcon color="warning" />)}
+      </Box>
+    );
   };
 
   /**
@@ -254,369 +459,67 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     setShowErrorSnackbar(false);
   };
 
-  /**
-   * Gets the appropriate icon for a change type
-   */
-  const getChangeTypeIcon = (changeType: string) => {
-    switch (changeType.toLowerCase()) {
-      case 'feature':
-        return <FeatureIcon color="primary" />;
-      case 'bugfix':
-      case 'bug':
-      case 'fix':
-        return <BugIcon color="error" />;
-      case 'improvement':
-      case 'enhancement':
-        return <ImprovementIcon color="success" />;
-      case 'breaking':
-      case 'breakingchange':
-        return <BreakingIcon color="warning" />;
-      default:
-        return <ImprovementIcon color="success" />;
-    }
-  };
-
-  /**
-   * Gets the appropriate color for a change type chip
-   */
-  const getChangeTypeColor = (changeType: string): 'primary' | 'error' | 'success' | 'warning' | 'default' => {
-    switch (changeType.toLowerCase()) {
-      case 'feature':
-        return 'primary';
-      case 'bugfix':
-      case 'bug':
-      case 'fix':
-        return 'error';
-      case 'improvement':
-      case 'enhancement':
-        return 'success';
-      case 'breaking':
-      case 'breakingchange':
-        return 'warning';
-      default:
-        return 'default';
-    }
-  };
-
-  /**
-   * Renders a list of change items
-   */
-  const renderChangeItems = (items: ChangeItem[], title: string, icon: React.ReactNode) => {
-    if (items.length === 0) {
-      return null;
-    }
-
-    return (
-      <Accordion defaultExpanded sx={{ mb: 1 }}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {icon}
-            <Typography variant="h6">
-              {title} ({items.length})
-            </Typography>
-          </Box>
-        </AccordionSummary>
-        <AccordionDetails>
-          <List dense>
-            {items.map((item, index) => (
-              <ListItem key={item.id || index} sx={{ pl: 0 }}>
-                <ListItemIcon sx={{ minWidth: 36 }}>
-                  {getChangeTypeIcon(item.changeType)}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.description}
-                  secondary={
-                    <Box sx={{ mt: 0.5 }}>
-                      {item.author && (
-                        <Chip
-                          icon={<AuthorIcon />}
-                          label={item.author}
-                          size="small"
-                          variant="outlined"
-                          sx={{ mr: 0.5, mb: 0.5 }}
-                        />
-                      )}
-                      {item.commitSha && (
-                        <Chip
-                          icon={<CommitIcon />}
-                          label={item.commitSha.substring(0, 7)}
-                          size="small"
-                          variant="outlined"
-                          sx={{ mr: 0.5, mb: 0.5 }}
-                        />
-                      )}
-                      {item.jiraTicket && (
-                        <Chip
-                          label={item.jiraTicket}
-                          size="small"
-                          variant="outlined"
-                          sx={{ mr: 0.5, mb: 0.5 }}
-                        />
-                      )}
-                      {item.impact && (
-                        <Chip
-                          label={`Impact: ${item.impact}`}
-                          size="small"
-                          color={getChangeTypeColor(item.impact)}
-                          sx={{ mr: 0.5, mb: 0.5 }}
-                        />
-                      )}
-                    </Box>
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
-        </AccordionDetails>
-      </Accordion>
-    );
-  };
-
-  /**
-   * Renders the modal content based on current state
-   */
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: 200,
-            gap: 2,
-          }}
-        >
-          <CircularProgress size={48} />
-          <Typography variant="body1" color="text.secondary">
-            Loading release notes...
-          </Typography>
-          {retryCount > 0 && (
-            <Typography variant="body2" color="text.secondary">
-              Retry attempt: {retryCount}
-            </Typography>
-          )}
-        </Box>
-      );
-    }
-
-    if (error) {
-      return (
-        <Box sx={{ py: 2 }}>
-          <Alert 
-            severity="error"
-            icon={<ErrorIcon />}
-            action={
-              <Button 
-                color="inherit" 
-                size="small" 
-                onClick={handleRetry}
-                startIcon={<RefreshIcon />}
-                disabled={loading}
-              >
-                Retry
-              </Button>
-            }
-          >
-            <Typography variant="body2" component="div">
-              <strong>{error}</strong>
-            </Typography>
-            {retryCount > 0 && (
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                Retry attempt: {retryCount}
-              </Typography>
-            )}
-          </Alert>
-        </Box>
-      );
-    }
-
-    if (!releaseNotes) {
-      return (
-        <Box sx={{ py: 4, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No release notes available
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Release notes for version {version} could not be found.
-          </Typography>
-        </Box>
-      );
-    }
-
-    const hasAnyChanges = 
-      releaseNotes.features.length > 0 ||
-      releaseNotes.bugFixes.length > 0 ||
-      releaseNotes.improvements.length > 0 ||
-      releaseNotes.breakingChanges.length > 0;
-
-    if (!hasAnyChanges) {
-      return (
-        <Box sx={{ py: 4, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No changes documented
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            This version doesn't have any documented changes.
-          </Typography>
-        </Box>
-      );
-    }
-
-    return (
-      <Box sx={{ py: 1 }}>
-        {/* Release Info */}
-        <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <DateIcon color="action" fontSize="small" />
-            <Typography variant="body2" color="text.secondary">
-              Released: {new Date(releaseNotes.releaseDate).toLocaleDateString()}
-            </Typography>
-          </Box>
-          {releaseNotes.environment && (
-            <Chip
-              label={`Environment: ${releaseNotes.environment}`}
-              size="small"
-              variant="outlined"
-              sx={{ mr: 1 }}
-            />
-          )}
-          {releaseNotes.branch && (
-            <Chip
-              label={`Branch: ${releaseNotes.branch}`}
-              size="small"
-              variant="outlined"
-              sx={{ mr: 1 }}
-            />
-          )}
-        </Box>
-
-        <Divider sx={{ mb: 2 }} />
-
-        {/* Change Sections */}
-        {renderChangeItems(
-          releaseNotes.features,
-          'New Features',
-          <FeatureIcon color="primary" />
-        )}
-        
-        {renderChangeItems(
-          releaseNotes.improvements,
-          'Improvements',
-          <ImprovementIcon color="success" />
-        )}
-        
-        {renderChangeItems(
-          releaseNotes.bugFixes,
-          'Bug Fixes',
-          <BugIcon color="error" />
-        )}
-        
-        {renderChangeItems(
-          releaseNotes.breakingChanges,
-          'Breaking Changes',
-          <BreakingIcon color="warning" />
-        )}
-      </Box>
-    );
-  };
-
   return (
     <>
       <Dialog
         open={isOpen}
         onClose={handleClose}
         onKeyDown={handleKeyDown}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
         fullScreen={isMobile}
         scroll="paper"
-        aria-labelledby="release-notes-dialog-title"
-        aria-describedby="release-notes-dialog-content"
         PaperProps={{
-          sx: {
-            minHeight: isMobile ? '100vh' : 400,
-            maxHeight: isMobile ? '100vh' : '90vh',
-          },
+          sx: { height: isMobile ? '100vh' : '80vh', display: 'flex', flexDirection: 'column' }
         }}
       >
-        <DialogTitle
-          id="release-notes-dialog-title"
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            pb: 1,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box>
-              <Typography variant="h5" component="span">
-                Release Notes
-              </Typography>
-              <Typography variant="h6" color="primary" sx={{ ml: 1 }}>
-                v{version}
-              </Typography>
-            </Box>
-            
-            {error && (
-              <Chip
-                icon={<ErrorIcon />}
-                label="Error"
-                size="small"
-                color="error"
-                variant="outlined"
-                sx={{ ml: 1 }}
-              />
+        {/* Header */}
+        <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider', px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {isMobile && (
+              <IconButton edge="start" color="inherit" onClick={() => setMobileDrawerOpen(prev => !prev)} sx={{ mr: 1 }}>
+                <RefreshIcon sx={{ transform: 'rotate(90deg)' }} />
+                <Typography variant="button">History</Typography>
+              </IconButton>
             )}
+            <Typography variant="h6">Release Notes</Typography>
           </Box>
-          
-          <IconButton
-            aria-label="close"
-            onClick={handleClose}
-            disabled={loading}
-            sx={{
-              color: (theme) => theme.palette.grey[500],
-            }}
-          >
+          <IconButton onClick={handleClose} aria-label="close">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent
-          id="release-notes-dialog-content"
-          dividers
-          sx={{
-            px: isMobile ? 2 : 3,
-            py: 0,
-          }}
-        >
-          {renderContent()}
-        </DialogContent>
+        {/* Body with Sidebars */}
+        <DialogContent sx={{ p: 0, display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-        <DialogActions sx={{ px: 3, py: 2 }}>
-          {error && (
-            <Button
-              onClick={handleRetry}
-              disabled={loading}
-              startIcon={<RefreshIcon />}
-              variant="outlined"
-              color="primary"
-              sx={{ mr: 1 }}
-            >
-              Retry
-            </Button>
+          {/* Sidebar (Desktop) */}
+          {!isMobile && (
+            <Box sx={{ width: 280, borderRight: 1, borderColor: 'divider', overflowY: 'auto', bgcolor: 'grey.50' }}>
+              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+                <Typography variant="subtitle2" color="text.secondary">VERSION HISTORY</Typography>
+              </Box>
+              {renderSidebar()}
+            </Box>
           )}
-          <Button
-            onClick={handleClose}
-            disabled={loading}
-            variant="contained"
-            color="primary"
-          >
-            Close
-          </Button>
-        </DialogActions>
+
+          {/* Main Content */}
+          <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
+            {renderContent()}
+          </Box>
+
+        </DialogContent>
+        {/* Drawer for Mobile History */}
+        {isMobile && mobileDrawerOpen && (
+          <Box sx={{
+            position: 'absolute', top: 60, left: 0, bottom: 0, width: '80%', zIndex: 10,
+            bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', boxShadow: 3
+          }}>
+            <Box sx={{ p: 1, display: 'flex', justifyContent: 'flex-end' }}>
+              <Button size="small" onClick={() => setMobileDrawerOpen(false)}>Close Menu</Button>
+            </Box>
+            {renderSidebar()}
+          </Box>
+        )}
       </Dialog>
 
       {/* Error notification snackbar */}
@@ -626,9 +529,9 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
         onClose={handleCloseErrorSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert 
-          onClose={handleCloseErrorSnackbar} 
-          severity="error" 
+        <Alert
+          onClose={handleCloseErrorSnackbar}
+          severity="error"
           sx={{ width: '100%' }}
           action={
             error ? (
