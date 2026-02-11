@@ -54,7 +54,7 @@ $backendSolution = "backend/NJS_backend.sln"
 
 if (Test-Path $backendSolution) {
     Write-Host "Running: dotnet test..." -ForegroundColor Yellow
-    dotnet test "$backendSolution" --verbosity normal
+    dotnet test "$backendSolution" --verbosity minimal
     Check-Command "Backend .NET Tests"
 } else {
     Write-Host "⚠️ Backend solution file not found at $backendSolution!" -ForegroundColor Red

@@ -22,10 +22,9 @@ Write-Host "Step 1: Restoring NuGet Packages..." -ForegroundColor Yellow
 dotnet restore $BackendSln
 if ($LASTEXITCODE -ne 0) { throw "Restore failed" }
 
-# 2. Test with Hang Detection (Timeout: 60s)
-Write-Host "`nStep 2: Running Tests (Timeout: 60s)..." -ForegroundColor Yellow
-# --blame-hang is kept for diagnostics if needed, but timeout is removed
-dotnet test $BackendSln --no-restore --logger "console;verbosity=normal"
+# 2. Test with Minimal Verbosity
+Write-Host "`nStep 2: Running Tests..." -ForegroundColor Yellow
+dotnet test $BackendSln --no-restore --verbosity minimal
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "`n[FAIL] Backend tests failed." -ForegroundColor Red

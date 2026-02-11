@@ -1,11 +1,38 @@
 {
   "version": "v1.1.0-dev.20260210",
   "environment": "dev",
-  "releaseDate": "2026-02-10T05:56:04.086Z",
-  "buildNumber": "26",
-  "commitSha": "e39a8c746289c0ec6091e4e441e2bfec7011ae9a",
+  "releaseDate": "2026-02-10T13:29:23.468Z",
+  "buildNumber": "29",
+  "commitSha": "f0aad6a66b138ce3426023cde6022ea4eecd9462",
   "branch": "Kiro/dev",
   "features": [
+    {
+      "description": "Add tenant service for multi-tenancy context resolution and implement change control creation with just-in-time user provisioning.",
+      "commitSha": "f0aad6a66b138ce3426023cde6022ea4eecd9462",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "harshalHrs",
+      "scope": null,
+      "date": "2026-02-10T13:28:18.000Z"
+    },
+    {
+      "description": "Introduce SQL script for tenant data merge, a change control command handler, and a tenant service.",
+      "commitSha": "43b83bdea07928add5fd1ab4cb87dc0fe9600291",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "harshalHrs",
+      "scope": null,
+      "date": "2026-02-10T13:24:51.000Z"
+    },
+    {
+      "description": "Introduce pre-release testing infrastructure with a detailed report, testing hook, and frontend components for versioning and release notes.",
+      "commitSha": "ac2b5d288e7c86b97b0e4b2f06b1983845895a88",
+      "jiraTicket": null,
+      "impact": "Medium",
+      "author": "Cloud-Enthusiast",
+      "scope": null,
+      "date": "2026-02-10T10:09:04.000Z"
+    },
     {
       "description": "adding a test feature to verify release notes",
       "commitSha": "1b27f7582d778c91bed32b525fd179b82d427e2a",
@@ -23,15 +50,6 @@
       "author": "Cloud-Enthusiast",
       "scope": "release",
       "date": "2026-02-08T17:09:58.000Z"
-    },
-    {
-      "description": "test feature for release workflow",
-      "commitSha": "c21553195ac0fba4a191822b0278148a43711ffd",
-      "jiraTicket": null,
-      "impact": "Medium",
-      "author": "Cloud-Enthusiast",
-      "scope": null,
-      "date": "2026-02-08T12:47:30.000Z"
     }
   ],
   "bugFixes": [

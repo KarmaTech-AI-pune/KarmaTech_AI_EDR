@@ -7,7 +7,9 @@
     "type": "userTriggered"
   },
   "then": {
-    "type": "runCommand",
-    "command": "powershell -ExecutionPolicy Bypass -File \"d:\\KSmartBiz\\KarmaTech_AI_EDR\\Run-Integration-Tests.ps1\"; powershell -ExecutionPolicy Bypass -File \"d:\\KSmartBiz\\KarmaTech_AI_EDR\\Run-Regression-Tests.ps1\""
-  }
+    "type": "askAgent",
+    "prompt": "Run pre-release testing:\n1. Execute Run-Integration-Tests.ps1 (backend tests)\n2. Execute Run-Regression-Tests.ps1 (full stack tests)\n3. Generate test report\n\nProceed with testing now."
+  },
+  "workspaceFolderName": "KarmaTech_AI_EDR",
+  "shortName": "pre-release-testing"
 }

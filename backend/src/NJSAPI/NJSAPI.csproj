@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- Version information from VERSION file -->
     <Version>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/../../../VERSION').Trim())</Version>
-    <AssemblyVersion>$(Version)</AssemblyVersion>
-    <FileVersion>$(Version)</FileVersion>
+    <!-- <AssemblyVersion>$(Version)</AssemblyVersion> -->
+    <!-- <FileVersion>$(Version)</FileVersion> -->
     <AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
     <!-- Build metadata -->
     <AssemblyTitle>KarmaTech AI EDR API</AssemblyTitle>

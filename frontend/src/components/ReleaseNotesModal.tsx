@@ -58,6 +58,38 @@ import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/
  * This ensures users always see something meaningful
  */
 const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
+  '1.1.0-dev.20260209': {
+    version: '1.1.0-dev.20260209',
+    releaseDate: '2026-02-09',
+    environment: 'production',
+    features: [
+      { id: 11, changeType: 'Feature', description: 'adding a test feature to verify release notes', commitSha: '1b27f758' },
+      { id: 12, changeType: 'Feature', description: 'add manual release workflow and updated generation script (release)', commitSha: 'caada31c' },
+      { id: 13, changeType: 'Feature', description: 'test feature for release workflow', commitSha: 'c2155319' },
+      { id: 14, changeType: 'Feature', description: 'Add query handlers for retrieving sprint plans, tasks, subtasks, and project schedules.', commitSha: '55ad7366' },
+      { id: 15, changeType: 'Feature', description: 'Implement todolist and project schedule management, including issues, subtasks, and sprints.', commitSha: '74db09bc' },
+      { id: 16, changeType: 'Feature', description: 'Add new database migration, appsettings.json, and CQRS handlers for sprint plan creation and updates.', commitSha: 'aa807996' },
+    ],
+    bugFixes: [
+      { id: 21, changeType: 'BugFix', description: 'ensure release notes are committed back to repo (ci)', commitSha: 'f9f64a7c' },
+      { id: 22, changeType: 'BugFix', description: 'remove unnecessary npm install step (ci)', commitSha: '7eb2e815' },
+      { id: 23, changeType: 'BugFix', description: 'improve change control card layout to prevent icons from moving off screen with long descriptions', commitSha: '1ce76a67' },
+      { id: 24, changeType: 'BugFix', description: 'resolve TypeScript errors in frontend', commitSha: '21e609ae' },
+    ],
+    improvements: [
+      { id: 31, changeType: 'Improvement', description: 'auto-generated release notes for v1.1.0-dev.20260209 (release)', commitSha: '490591e0' },
+      { id: 32, changeType: 'Improvement', description: 'enable release workflow on release-notes-testing branch', commitSha: 'fdd710f1' },
+      { id: 33, changeType: 'Improvement', description: 'configure frontend steering files for manual loading only', commitSha: '1beb1bd0' },
+      { id: 34, changeType: 'Improvement', description: 'Merge pull request #207 from makshintre/Kiro-automatic-deploy', commitSha: '74afea39' },
+      { id: 35, changeType: 'Improvement', description: 'Automatic dev server and aws deployment hooks', commitSha: '27b6350f' },
+      { id: 36, changeType: 'Improvement', description: 'Change branch trigger for release notes update', commitSha: '27ebcffc' },
+      { id: 37, changeType: 'Improvement', description: 'resolved the frontend build errors in release notes.', commitSha: '32aba810' },
+      { id: 38, changeType: 'Improvement', description: 'Fixed the edit button in the wbs Form', commitSha: '0a829bcd' },
+      { id: 39, changeType: 'Improvement', description: 'Updated steering document with migration updation rule. Added release notes automatic trigger', commitSha: '6f725a15' },
+      { id: 40, changeType: 'Improvement', description: 'Implemented release management yml automation scripts and Kiro hook for automated testing of branches before release', commitSha: '8cd53df7' },
+    ],
+    breakingChanges: [],
+  },
   '1.0.38': {
     version: '1.0.38',
     releaseDate: '2025-12-25',
@@ -183,7 +215,11 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
       setHistory(historyData);
     } catch (err) {
       console.error('Failed to fetch release history:', err);
-      // We don't block the UI if history fails, just show the single version
+      // Fallback to static history if API fails
+      const fallbackHistory = Object.values(FALLBACK_RELEASE_NOTES).sort((a, b) =>
+        new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+      );
+      setHistory(fallbackHistory);
     } finally {
       setLoadingHistory(false);
     }
@@ -275,6 +311,13 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   };
 
   /**
+   * Helper to get display version (stripping -dev suffix)
+   */
+  const getDisplayVersion = (ver: string) => {
+    return ver.split('-')[0].replace('v', '');
+  };
+
+  /**
    * Renders the sidebar list of versions
    */
   const renderSidebar = () => {
@@ -297,7 +340,7 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
               <ListItemText
                 primary={
                   <Typography variant="body2" fontWeight="bold">
-                    {item.version}
+                    {getDisplayVersion(item.version)}
                   </Typography>
                 }
                 secondary={
@@ -414,7 +457,7 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     return (
       <Box sx={{ py: 1 }}>
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h4" color="primary" gutterBottom>v{releaseNotes.version}</Typography>
+          <Typography variant="h4" color="primary" gutterBottom>v{getDisplayVersion(releaseNotes.version)}</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <DateIcon color="action" fontSize="small" />
