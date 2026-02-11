@@ -130,6 +130,27 @@ namespace NJSAPI.Controllers
                         userDto.TenantDomain = currentTenant.Domain;
                     }
 
+                    // Extract features from JWT token and add to response
+                    var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                    var jwtToken = tokenHandler.ReadJwtToken(token);
+                    var featuresClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "Features")?.Value;
+                    
+                    if (!string.IsNullOrEmpty(featuresClaim))
+                    {
+                        if (featuresClaim == "*")
+                        {
+                            // Super admin has all features
+                            userDto.Features = new List<string> { "*" };
+                        }
+                        else
+                        {
+                            // Parse comma-separated features
+                            userDto.Features = featuresClaim.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                .Select(f => f.Trim())
+                                .ToList();
+                        }
+                    }
+
                     return Ok(new
                     {
                         success = true,

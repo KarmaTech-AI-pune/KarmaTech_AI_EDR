@@ -52,5 +52,71 @@ namespace NJSAPI.Controllers
                 return StatusCode(500, "Internal server error.");
             }
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetFeatureById(int id)
+        {
+            try
+            {
+                var query = new GetFeatureByIdQuery(id);
+                var feature = await _mediator.Send(query);
+                if (feature == null)
+                {
+                    return NotFound();
+                }
+                return Ok(feature);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting feature by id: {id}");
+                return StatusCode(500, "Internal server error.");
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateFeature(int id, [FromBody] UpdateFeatureCommand command)
+        {
+            if (id != command.Id)
+            {
+                return BadRequest("Feature ID mismatch");
+            }
+
+            try
+            {
+                var feature = await _mediator.Send(command);
+                if (feature == null)
+                {
+                    return NotFound();
+                }
+                return Ok(feature);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error updating feature: {id}");
+                return StatusCode(500, "Internal server error.");
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteFeature(int id)
+        {
+            try
+            {
+                var command = new DeleteFeatureCommand(id);
+                var result = await _mediator.Send(command);
+
+                if (!result)
+                {
+                    return NotFound();
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error deleting feature: {id}");
+                return StatusCode(500, "Internal server error.");
+            }
+        }
     }
 }

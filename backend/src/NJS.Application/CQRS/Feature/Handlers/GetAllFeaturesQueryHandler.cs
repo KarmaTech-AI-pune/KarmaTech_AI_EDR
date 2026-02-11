@@ -39,8 +39,7 @@ namespace NJS.Application.CQRS.Feature.Handlers
                     Id = feature.Id,
                     Name = feature.Name,
                     Description = feature.Description,
-                    PriceUSD = feature.PriceUSD,
-                    PriceINR = feature.PriceINR
+                    IsActive = feature.IsActive
                 });
             }
 

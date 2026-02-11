@@ -24,16 +24,20 @@ import {
   FormControlLabel,
   Alert,
   Tooltip,
+  CircularProgress,
+  Checkbox
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import StorageIcon from '@mui/icons-material/Storage';
 import * as subscriptionApi from '../../services/subscriptionApi';
-import { SubscriptionPlan } from '../../models/subscriptionModel';
+import { SubscriptionPlan, Feature } from '../../models/subscriptionModel';
 
 const SubscriptionManagement = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [availableFeatures, setAvailableFeatures] = useState<Feature[]>([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [formData, setFormData] = useState({
@@ -44,29 +48,39 @@ const SubscriptionManagement = () => {
     maxUsers: 10,
     maxProjects: 50,
     maxStorageGB: 10,
-    features: {
-      advancedReporting: false,
-      customBranding: false,
-      apiAccess: false,
-      prioritySupport: false,
-      whiteLabel: false,
-      sso: false,
-    },
+    featureIds: [] as number[],
+    isActive: true
   });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadPlans();
+    loadData();
   }, []);
 
-  const loadPlans = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      const fetchedPlans = await subscriptionApi.getSubscriptionPlans();
-      setPlans(fetchedPlans);
+      const [fetchedPlans, fetchedFeatures] = await Promise.all([
+        subscriptionApi.getSubscriptionPlans(),
+        subscriptionApi.getAllFeatures()
+      ]);
+      setPlans(fetchedPlans || []);
+      setAvailableFeatures(fetchedFeatures || []);
     } catch (error) {
-      console.error('Error loading subscription plans:', error);
-      setError('Failed to load subscription plans');
+      console.error('Error loading subscription data:', error);
+      setError('Failed to load subscription data');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const loadPlans = async () => {
+      try {
+        const fetchedPlans = await subscriptionApi.getSubscriptionPlans();
+        setPlans(fetchedPlans || []);
+      } catch (error) {
+        console.error('Error loading subscription plans:', error);
+      }
   };
 
   const handleOpen = () => {
@@ -80,14 +94,8 @@ const SubscriptionManagement = () => {
       maxUsers: 10,
       maxProjects: 50,
       maxStorageGB: 10,
-      features: {
-        advancedReporting: false,
-        customBranding: false,
-        apiAccess: false,
-        prioritySupport: false,
-        whiteLabel: false,
-        sso: false,
-      },
+      featureIds: [],
+      isActive: true
     });
     setError(null);
   };
@@ -108,25 +116,50 @@ const SubscriptionManagement = () => {
       maxUsers: plan.maxUsers,
       maxProjects: plan.maxProjects,
       maxStorageGB: plan.maxStorageGB,
-      features: plan.features || {
-        advancedReporting: false,
-        customBranding: false,
-        apiAccess: false,
-        prioritySupport: false,
-        whiteLabel: false,
-        sso: false,
-      },
+      featureIds: plan.features ? plan.features.map((f) => f.id) : [],
+      isActive: plan.isActive
     });
     setOpen(true);
   };
 
   const handleSubmit = async () => {
     try {
+      let planId: number;
+
       if (editingPlan) {
-        await subscriptionApi.updateSubscriptionPlan(editingPlan.id, { ...formData, id: editingPlan.id });
+        // 1. Update basic plan details
+        await subscriptionApi.updateSubscriptionPlan(editingPlan.id, { 
+            id: editingPlan.id,
+            ...formData 
+        });
+        planId = editingPlan.id;
+
+        // 2. Handle Feature Changes
+        const originalFeatureIds = editingPlan.features ? editingPlan.features.map(f => f.id) : [];
+        const newFeatureIds = formData.featureIds;
+
+        // Features to Add
+        const toAdd = newFeatureIds.filter(id => !originalFeatureIds.includes(id));
+        // Features to Remove
+        const toRemove = originalFeatureIds.filter(id => !newFeatureIds.includes(id));
+
+        // Execute additions
+        await Promise.all(toAdd.map(featureId => subscriptionApi.addFeatureToPlan(planId, featureId)));
+        
+        // Execute removals
+        await Promise.all(toRemove.map(featureId => subscriptionApi.removeFeatureFromPlan(planId, featureId)));
+
       } else {
-        await subscriptionApi.createSubscriptionPlan(formData);
+        // 1. Create the plan
+        const newPlan = await subscriptionApi.createSubscriptionPlan(formData);
+        planId = newPlan.id;
+
+        // 2. Add all selected features
+        if (formData.featureIds.length > 0) {
+             await Promise.all(formData.featureIds.map(featureId => subscriptionApi.addFeatureToPlan(planId, featureId)));
+        }
       }
+
       await loadPlans();
       handleClose();
     } catch (error) {
@@ -147,12 +180,26 @@ const SubscriptionManagement = () => {
     }
   };
 
+  const handleFeatureToggle = (featureId: number) => {
+    setFormData(prev => {
+        const currentIds = prev.featureIds;
+        const newIds = currentIds.includes(featureId)
+            ? currentIds.filter(id => id !== featureId)
+            : [...currentIds, featureId];
+        return { ...prev, featureIds: newIds };
+    });
+  };
+
   const calculateMonthlyRevenue = () => {
     return plans.reduce((sum, plan) => {
       const subscribers = plan.tenants?.length || 0;
       return sum + (plan.monthlyPrice * subscribers);
     }, 0);
   };
+
+  if (loading) {
+      return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
+  }
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -259,35 +306,13 @@ const SubscriptionManagement = () => {
                 </TableCell>
                 <TableCell>
                   <Box display="flex" flexWrap="wrap" gap={0.5}>
-                    {plan.features?.advancedReporting && (
-                      <Tooltip title="Advanced Reporting">
-                        <Chip label="Advanced Reporting" size="small" color="primary" />
-                      </Tooltip>
-                    )}
-                    {plan.features?.customBranding && (
-                      <Tooltip title="Custom Branding">
-                        <Chip label="Custom Branding" size="small" color="primary" />
-                      </Tooltip>
-                    )}
-                    {plan.features?.apiAccess && (
-                      <Tooltip title="API Access">
-                        <Chip label="API Access" size="small" color="primary" />
-                      </Tooltip>
-                    )}
-                    {plan.features?.prioritySupport && (
-                      <Tooltip title="Priority Support">
-                        <Chip label="Priority Support" size="small" color="primary" />
-                      </Tooltip>
-                    )}
-                    {plan.features?.whiteLabel && (
-                      <Tooltip title="White Label">
-                        <Chip label="White Label" size="small" color="primary" />
-                      </Tooltip>
-                    )}
-                    {plan.features?.sso && (
-                      <Tooltip title="Single Sign-On">
-                        <Chip label="SSO" size="small" color="primary" />
-                      </Tooltip>
+                    {plan.features?.map((feature) => (
+                        <Tooltip key={feature.id} title={feature.description || feature.name}>
+                            <Chip label={feature.name} size="small" color="primary" />
+                        </Tooltip>
+                    ))}
+                    {(!plan.features || plan.features.length === 0) && (
+                        <Typography variant="caption" color="textSecondary">No features</Typography>
                     )}
                   </Box>
                 </TableCell>
@@ -405,95 +430,44 @@ const SubscriptionManagement = () => {
                 required
               />
             </Grid>
+            <Grid item xs={12} md={4}>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={formData.isActive}
+                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                        />
+                    }
+                    label="Active"
+                />
+            </Grid>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
                 Features
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.features.advancedReporting}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      features: { ...formData.features, advancedReporting: e.target.checked }
-                    })}
+            {availableFeatures.map((feature) => (
+                <Grid item xs={12} md={6} key={feature.id}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.featureIds.includes(feature.id)}
+                        onChange={() => handleFeatureToggle(feature.id)}
+                      />
+                    }
+                    label={
+                        <Tooltip title={feature.description}>
+                            <Typography>{feature.name}</Typography>
+                        </Tooltip>
+                    }
                   />
-                }
-                label="Advanced Reporting"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.features.customBranding}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      features: { ...formData.features, customBranding: e.target.checked }
-                    })}
-                  />
-                }
-                label="Custom Branding"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.features.apiAccess}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      features: { ...formData.features, apiAccess: e.target.checked }
-                    })}
-                  />
-                }
-                label="API Access"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.features.prioritySupport}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      features: { ...formData.features, prioritySupport: e.target.checked }
-                    })}
-                  />
-                }
-                label="Priority Support"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.features.whiteLabel}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      features: { ...formData.features, whiteLabel: e.target.checked }
-                    })}
-                  />
-                }
-                label="White Label"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.features.sso}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      features: { ...formData.features, sso: e.target.checked }
-                    })}
-                  />
-                }
-                label="Single Sign-On (SSO)"
-              />
-            </Grid>
+                </Grid>
+            ))}
+             {availableFeatures.length === 0 && (
+                 <Grid item xs={12}>
+                     <Typography color="textSecondary" variant="body2">No features available. Please add features in the Feature Management section.</Typography>
+                 </Grid>
+             )}
           </Grid>
         </DialogContent>
         <DialogActions>

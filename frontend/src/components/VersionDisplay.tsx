@@ -14,32 +14,32 @@ interface VersionDisplayProps extends Omit<TypographyProps, 'children'> {
    * @default true
    */
   showBuildDate?: boolean;
-  
+
   /** 
    * Prefix text displayed before the version number
    * @default "Version"
    */
   prefix?: string;
-  
+
   /** 
    * Show development indicator (e.g., "(dev)") for development builds
    * @default true
    */
   showDevIndicator?: boolean;
-  
+
   /** 
    * Fetch version from API instead of using build-time injection
    * When true, makes API call to get current deployed version
    * @default false
    */
   fetchVersionFromAPI?: boolean;
-  
+
   /** 
    * Make version text clickable with hover effects
    * @default false
    */
   clickable?: boolean;
-  
+
   /** 
    * Callback function called when version is clicked (requires clickable=true)
    * @param version - The semantic version string (e.g., "1.0.38")
@@ -157,7 +157,7 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
     environment: isDev ? 'dev' : 'prod'
   };
 
-  const versionText = `${prefix} ${versionInfo.displayVersion}${isDev && showDevIndicator ? ' (dev)' : ''}`;
+  const versionText = `${prefix} ${versionInfo.displayVersion.split('-')[0].replace('v', '')}`;
 
   /**
    * Creates tooltip content with build information and error states
@@ -165,18 +165,18 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
    */
   const createTooltipContent = () => {
     const parts: string[] = [];
-    
+
     if (showBuildDate) {
       parts.push(`Build Date: ${new Date(versionInfo.buildDate).toLocaleString()}`);
     }
-    
+
     if (error && !apiVersionInfo) {
       parts.push(`⚠️ ${error}`);
       parts.push('Click the warning icon to retry');
     } else if (fetchVersionFromAPI && !apiVersionInfo) {
       parts.push('⚠️ Using fallback version');
     }
-    
+
     return parts.join('\n');
   };
 
@@ -203,12 +203,12 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
   if (isLoading && fetchVersionFromAPI) {
     return (
       <Box sx={{ display: 'inline-block' }}>
-        <Skeleton 
-          variant="text" 
-          width={120} 
+        <Skeleton
+          variant="text"
+          width={120}
           height={20}
           data-testid="version-skeleton"
-          sx={{ 
+          sx={{
             display: 'inline-block',
             verticalAlign: 'baseline'
           }}
@@ -249,14 +249,14 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
       >
         {versionText}
       </Typography>
-      
+
       {/* Warning icon with retry functionality */}
       {error && !apiVersionInfo && (
         <Tooltip title="Click to retry">
           <IconButton
             size="small"
             onClick={handleRetry}
-            sx={{ 
+            sx={{
               p: 0.25,
               color: 'warning.main'
             }}
@@ -279,7 +279,7 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
       ) : (
         versionElement
       )}
-      
+
       {/* Error notification snackbar */}
       <Snackbar
         open={showErrorSnackbar}
@@ -287,9 +287,9 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
         onClose={handleCloseErrorSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       >
-        <Alert 
-          onClose={handleCloseErrorSnackbar} 
-          severity="warning" 
+        <Alert
+          onClose={handleCloseErrorSnackbar}
+          severity="warning"
           sx={{ width: '100%' }}
           action={
             error ? (

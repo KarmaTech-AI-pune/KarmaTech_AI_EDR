@@ -2,7 +2,9 @@ name: Update Release Notes
 
 on:
   push:
-    branches: [ "" ]
+    branches: 
+
+      - "release-notes-testing"
 
 jobs:
   update-notes:
@@ -22,10 +24,20 @@ jobs:
         node-version: '20'
 
     - name: Generate Release Notes
+      id: generate
       run: |
-        npm install --prefix .github/scripts
-        # Calculate a "dev" version based on date or just use "latest-dev"
         VERSION="v1.1.0-dev.$(date +%Y%m%d)"
         node .github/scripts/generate-release-notes.js --version "$VERSION" --environment dev
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Commit and push release notes
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add .github/release-notes/
+        git commit -m "docs(release): auto-generated release notes for ${{ steps.generate.outputs.version }}" || echo "No changes to commit"
+        git push origin ${{ github.ref_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
