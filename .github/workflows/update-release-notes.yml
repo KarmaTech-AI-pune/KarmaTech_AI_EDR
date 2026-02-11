@@ -3,7 +3,7 @@ name: Update Release Notes
 on:
   push:
     branches: 
-      - "Kiro/dev"
+
       - "release-notes-testing"
 
 jobs:
