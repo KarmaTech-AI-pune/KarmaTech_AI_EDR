@@ -18,12 +18,11 @@ import { Feature } from '../../types/Feature';
 
 interface FeaturesListProps {
   features: Feature[];
-  loading: boolean;
   onEdit: (feature: Feature) => void;
   onDelete: (id: number) => void;
 }
 
-const FeaturesList: React.FC<FeaturesListProps> = ({ features, loading, onEdit, onDelete }) => {
+const FeaturesList: React.FC<FeaturesListProps> = ({ features, onEdit, onDelete }) => {
   if (features.length === 0) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" py={8}>

@@ -31,7 +31,6 @@ const FeaturesManagement: React.FC = () => {
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [featureToDelete, setFeatureToDelete] = useState<Feature | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   // Fetch features on mount
   useEffect(() => {
@@ -92,7 +91,6 @@ const FeaturesManagement: React.FC = () => {
   // Handle form submit (create or update)
   const handleFormSubmit = async (data: FeatureFormData) => {
     try {
-      setSubmitting(true);
       if (selectedFeature) {
         // Update existing feature
         await featureService.updateFeature({
@@ -109,8 +107,6 @@ const FeaturesManagement: React.FC = () => {
     } catch (err: any) {
       console.error('Error saving feature:', err);
       throw new Error(err.response?.data?.message || 'Failed to save feature');
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -119,7 +115,6 @@ const FeaturesManagement: React.FC = () => {
     if (!featureToDelete) return;
 
     try {
-      setSubmitting(true);
       await featureService.deleteFeature(featureToDelete.id);
       await fetchFeatures();
       setIsDeleteDialogOpen(false);
@@ -127,8 +122,6 @@ const FeaturesManagement: React.FC = () => {
     } catch (err: any) {
       console.error('Error deleting feature:', err);
       setError(err.response?.data?.message || 'Failed to delete feature');
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -189,7 +182,6 @@ const FeaturesManagement: React.FC = () => {
         ) : (
           <FeaturesList
             features={filteredFeatures}
-            loading={loading}
             onEdit={handleEditFeature}
             onDelete={handleDeleteFeature}
           />
