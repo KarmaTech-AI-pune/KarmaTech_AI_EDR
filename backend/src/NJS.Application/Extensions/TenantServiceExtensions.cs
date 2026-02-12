@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NJS.Application.Services;
+using NJS.Domain;
 using NJS.Domain.Database;
 using NJS.Repositories.Interfaces;
 
@@ -14,8 +15,20 @@ namespace NJS.Application.Extensions
            // services.AddDbContext<TenantDbContext>(options =>
               //  options.UseSqlServer(configuration.GetConnectionString("AppDbConnection")));
             
-            services.AddDbContext<TenantDbContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("AppDbConnection")));
+            var dbType = configuration[Constants.DbType];
+
+            if (dbType == Constants.DbServerType)
+            {
+                services.AddDbContext<TenantDbContext>(options =>
+                    options.UseNpgsql(configuration.GetConnectionString("AppDbConnection"),
+                        b => b.MigrationsAssembly("NJS.Domain.Migrations.PostgreSQL")));
+            }
+            else
+            {
+                services.AddDbContext<TenantDbContext>(options =>
+                    options.UseSqlServer(configuration.GetConnectionString("SqlDbConnection"),
+                        b => b.MigrationsAssembly("NJS.Domain.Migrations.SqlServer")));
+            }
 
             services.AddScoped<ITenantService, TenantService>();
 
