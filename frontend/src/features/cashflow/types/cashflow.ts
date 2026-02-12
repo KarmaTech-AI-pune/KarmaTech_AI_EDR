@@ -7,7 +7,7 @@
 
 export type CashFlowStatus = 'Completed' | 'Planned';
 
-export type ViewMode = 'Monthly' | 'Cumulative' | 'Milestones';
+export type ViewMode = 'Monthly' | 'Cumulative' | 'Milestones' | 'BudgetDashboard' | 'PaymentSchedule';
 
 export type CellAlignment = 'left' | 'center' | 'right';
 
@@ -33,10 +33,70 @@ export interface CashFlowTotals {
   netCashFlow: number;
 }
 
+// ============= Monthly Budget Interfaces =============
+
+export interface MonthlyBudgetColumn {
+  month: string; // e.g., "Jan-25", "Feb-25"
+  totalHours: number;
+  purePersonnel: number;
+  totalODCs: number;
+  totalProjectCost: number;
+  cumulativeMonthlyCosts: number;
+  revenue: number;
+  cumulativeRevenue: number;
+}
+
+export interface MonthlyBudgetData {
+  projectName: string; // e.g., "Barsley"
+  months: MonthlyBudgetColumn[];
+}
+
+// ============= Payment Schedule Interfaces =============
+
+export interface PaymentMilestone {
+  id?: number;
+  description: string;
+  percentage: number;
+  amountINR: number;
+  dueDate?: string;
+}
+
+export interface PaymentScheduleData {
+  milestones: PaymentMilestone[];
+  totalPercentage: number;
+  totalAmountINR: number;
+}
+
+// ============= Report Generation Interfaces =============
+
+export interface ReportItem {
+  name: string;
+  percentage: number;
+  selected: boolean;
+}
+
+export interface ReportGenerationData {
+  reports: ReportItem[];
+}
+
+// ============= Budget Summary Interfaces =============
+
+export interface BudgetSummary {
+  totalBudget: number;
+  totalRevenue: number;
+  gst: number;
+  quotedPrice: number;
+}
+
 export interface CashFlowData {
   projectId: string;
   rows: CashFlowRow[];
   totals?: CashFlowTotals;
+  // New dashboard data
+  monthlyBudget?: MonthlyBudgetData;
+  paymentSchedule?: PaymentScheduleData;
+  reportGeneration?: ReportGenerationData;
+  budgetSummary?: BudgetSummary;
 }
 
 // ============= Metrics & Calculations =============

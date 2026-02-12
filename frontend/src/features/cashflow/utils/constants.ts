@@ -7,12 +7,16 @@ export const VIEW_MODES = {
   MONTHLY: 'Monthly',
   CUMULATIVE: 'Cumulative',
   MILESTONES: 'Milestones',
+  BUDGET_DASHBOARD: 'BudgetDashboard',
+  PAYMENT_SCHEDULE: 'PaymentSchedule',
 } as const;
 
 export const VIEW_LABELS = {
   [VIEW_MODES.MONTHLY]: 'Monthly View',
   [VIEW_MODES.CUMULATIVE]: 'Cumulative View',
   [VIEW_MODES.MILESTONES]: 'Milestones',
+  [VIEW_MODES.BUDGET_DASHBOARD]: 'Budget Dashboard',
+  [VIEW_MODES.PAYMENT_SCHEDULE]: 'Payment Schedule',
 } as const;
 
 export const STATUS_CONFIG = {

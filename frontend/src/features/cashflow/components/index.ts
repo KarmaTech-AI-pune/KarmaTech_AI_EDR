@@ -13,6 +13,12 @@ export * from './CashFlowTableRow';
 export { CashFlowHeader } from './CashFlowHeader';
 export { CashFlowTable } from './CashFlowTable';
 
+// New Dashboard Components
+export { MonthlyBudgetTable } from './MonthlyBudgetTable';
+export { PaymentScheduleTable } from './PaymentScheduleTable';
+export { ReportGenerationSection } from './ReportGenerationSection';
+export { AddPaymentScheduleDialog } from './AddPaymentScheduleDialog';
+
 // Legacy components (keeping for backward compatibility)
 export { CashFlowHeader as CashFlowHeaderOld } from './CashFlowHeader';
 export { CashFlowTable as CashFlowTableOld } from './CashFlowTable';

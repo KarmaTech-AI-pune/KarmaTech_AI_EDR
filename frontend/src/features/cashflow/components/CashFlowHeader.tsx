@@ -4,13 +4,13 @@
  */
 
 import React from 'react';
-import { Box, Paper, FormControlLabel, Checkbox, Typography } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 import { useCashFlowDataContext, useCashFlowActionsContext } from '../context/CashFlowContext';
 import { ViewToggle } from './ViewToggle';
 
 export const CashFlowHeader: React.FC = () => {
-  const { viewMode, showProjections } = useCashFlowDataContext();
-  const { setViewMode, toggleProjections } = useCashFlowActionsContext();
+  const { viewMode } = useCashFlowDataContext();
+  const { setViewMode } = useCashFlowActionsContext();
 
   return (
     <Paper
@@ -25,36 +25,12 @@ export const CashFlowHeader: React.FC = () => {
     >
       <Box
         sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
           px: 3,
           py: 2,
         }}
       >
         {/* View Mode Tabs */}
-        <Box sx={{ flex: 1 }}>
-          <ViewToggle activeView={viewMode} onViewChange={setViewMode} />
-        </Box>
-
-        {/* Show Projections Checkbox */}
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={showProjections}
-                onChange={toggleProjections}
-                color="primary"
-                size="small"
-              />
-            }
-            label={
-              <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
-                Show Projections
-              </Typography>
-            }
-          />
-        </Box>
+        <ViewToggle activeView={viewMode} onViewChange={setViewMode} />
       </Box>
     </Paper>
   );

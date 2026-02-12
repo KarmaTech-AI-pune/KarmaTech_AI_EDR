@@ -29,16 +29,12 @@ export const ViewToggle: React.FC<ViewToggleProps> = ({ activeView, onViewChange
         }}
       >
         <Tab
-          label={VIEW_LABELS[VIEW_MODES.MONTHLY]}
-          value={VIEW_MODES.MONTHLY}
+          label={VIEW_LABELS[VIEW_MODES.BUDGET_DASHBOARD]}
+          value={VIEW_MODES.BUDGET_DASHBOARD}
         />
         <Tab
-          label={VIEW_LABELS[VIEW_MODES.CUMULATIVE]}
-          value={VIEW_MODES.CUMULATIVE}
-        />
-        <Tab
-          label={VIEW_LABELS[VIEW_MODES.MILESTONES]}
-          value={VIEW_MODES.MILESTONES}
+          label={VIEW_LABELS[VIEW_MODES.PAYMENT_SCHEDULE]}
+          value={VIEW_MODES.PAYMENT_SCHEDULE}
         />
       </Tabs>
     </Box>

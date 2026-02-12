@@ -38,7 +38,7 @@ export const CashFlowProvider: React.FC<CashFlowProviderProps> = ({ children }) 
   const { projectId } = useParams<{ projectId: string }>();
   
   // View and UI State
-  const [viewMode, setViewMode] = useState<ViewMode>('Monthly');
+  const [viewMode, setViewMode] = useState<ViewMode>('BudgetDashboard');
   const [showProjections, setShowProjections] = useState<boolean>(true);
   
   // Snackbar state
