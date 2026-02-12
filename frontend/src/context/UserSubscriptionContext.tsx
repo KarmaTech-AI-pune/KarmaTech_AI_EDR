@@ -1,6 +1,5 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { SubscriptionData } from '../types/subscriptionType';
-import {getUserSubscriptionDetails} from '../services/subscriptionApi'
 
 interface UserSubscriptionContextType {
   subscription: SubscriptionData | null;
@@ -21,12 +20,40 @@ export const UserSubscriptionProvider = ({ children }: { children: ReactNode }) 
     setLoading(true);
     setError(null);
     try {
-      const data = await getUserSubscriptionDetails(); // Corrected service call
-      console.log(data)
-      setSubscription(data);
+      // Get user from localStorage to access features
+      const storedUser = localStorage.getItem('user');
+      
+      if (!storedUser) {
+        console.warn('⚠️ UserSubscriptionContext - No user found in localStorage');
+        setError('No user data found. Please login again.');
+        setLoading(false);
+        return;
+      }
+
+      const user = JSON.parse(storedUser);
+      console.log('📦 UserSubscriptionContext - User from localStorage:', user);
+      
+      // Check if user has features from login response
+      if (!user.features || !Array.isArray(user.features)) {
+        console.warn('⚠️ UserSubscriptionContext - No features found in user object');
+        setError('No subscription features found.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ UserSubscriptionContext - Features found:', user.features);
+      
+      // Map user features directly to subscription format
+      const subscriptionData: SubscriptionData = {
+        features: user.features.map((name: string) => ({ name, enabled: true }))
+      };
+      
+      console.log('🎯 UserSubscriptionContext - Subscription data set:', subscriptionData);
+      setSubscription(subscriptionData);
+      
     } catch (err) {
-      setError('Failed to load subscription details.');
-      console.error('Error fetching subscription details:', err);
+      setError('Failed to load subscription details from user data.');
+      console.error('❌ UserSubscriptionContext - Error fetching subscription details:', err);
     } finally {
       setLoading(false);
     }

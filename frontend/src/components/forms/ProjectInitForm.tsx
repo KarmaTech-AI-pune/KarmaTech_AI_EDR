@@ -13,6 +13,8 @@ import { formatDateForInput, parseDateFromInput } from '../../utils/dateUtils.ts
 import { useCurrencyInput } from '../../hooks/useCurrencyInput';
 import { useFloatInput } from '../../hooks/useFloatInput.ts';
 import { useProject } from '../../context/ProjectContext';
+import { useFormDisabled } from '../../context/FormDisabledContext';
+
 
 // Use Project type directly for form data (excluding id)
 type ProjectFormData = Omit<Project, 'id'>;
@@ -35,6 +37,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
   seniorProjectManagers
 }) => {
   const { programId } = useProject();
+  const { isFormDisabled } = useFormDisabled();
 
   const [formData, setFormData] = useState<any>({
     name: project?.name || '',
@@ -147,6 +150,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               value={formData.name}
               onChange={handleChange}
               required
+              disabled={isFormDisabled}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -157,6 +161,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               value={formData.projectNo}
               onChange={handleChange}
               required
+              disabled={isFormDisabled}
             />
           </Grid>
           <Grid item xs={12}>
@@ -168,6 +173,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               onChange={handleChange}
               multiline
               rows={3}
+              disabled={isFormDisabled}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -178,6 +184,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               value={formData.clientName}
               onChange={handleChange}
               required
+              disabled={isFormDisabled}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -188,6 +195,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               name="typeOfClient"
               value={formData.typeOfClient}
               onChange={handleChange}
+              disabled={isFormDisabled}
             >
               <MenuItem value="Government">Government</MenuItem>
               <MenuItem value="Private">Private</MenuItem>
@@ -202,6 +210,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               value={formData.projectManagerId}
               onChange={handleChange}
               required
+              disabled={isFormDisabled}
             >
               {projectManagers.map((pm) => (
                 <MenuItem key={pm.id} value={pm.id}>
@@ -219,6 +228,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
               value={formData.seniorProjectManagerId}
               onChange={handleChange}
               required
+              disabled={isFormDisabled}
             >
               {seniorProjectManagers.map((spm) => (
                 <MenuItem key={spm.id} value={spm.id}>
@@ -426,6 +436,7 @@ export const ProjectInitForm: React.FC<ProjectFormType> = ({
                 type="submit"
                 variant="contained"
                 color="primary"
+                disabled={isFormDisabled}
               >
                 Submit
               </Button>

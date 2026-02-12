@@ -15,74 +15,114 @@ import { useParams } from 'react-router-dom';
 import { FormWrapper } from '../../components/forms/FormWrapper';
 import NotFound from '../NotFound';
 import FeatureGate from '../../components/subscription/FeatureGate';
+import { isValidFormId, getFormFeatureName } from '../../config/formFeatureMapping';
 
 const TodoList = lazy(() => import('../../features/wbs/pages/TodoList'));
-
-const validFormIds = [
-    'wbs',
-    'job-start',
-    'input-register',
-    'correspondence',
-    'check&review',
-    'change-control',
-    'progress-review',
-    'closure',
-    'monthly-reports',
-];
 
 const ProjectForms: React.FC = () => {
     const { formId, subFormId } = useParams<{ formId: string, subFormId: string }>();
 
     const renderForm = () => {
-        if (formId && !validFormIds.includes(formId)) {
+        if (formId && !isValidFormId(formId)) {
             return <NotFound />;
         }
 
+        // Get the correct feature name from the mapping
+        const featureName = formId ? getFormFeatureName(formId) : undefined;
+
         switch (formId) {
         case "wbs":
-            switch (subFormId) {
-                case "manpower":
-                    return <WorkBreakdownStructureForm formType="manpower" />;
-                case "odc":
-                    return <WorkBreakdownStructureForm formType="odc" />;
-                case "todo-list":
-                    return <TodoList />;
-                default:
-                    return <FormsOverview onFormSelect={() => {}} />;
+            // Check for sub-feature based on subFormId
+            if (subFormId === "manpower") {
+                const manpowerFeature = getFormFeatureName('wbs-manpower');
+                return (
+                    <FeatureGate featureName={manpowerFeature!}>
+                        <WorkBreakdownStructureForm formType="manpower" />
+                    </FeatureGate>
+                );
+            } else if (subFormId === "odc") {
+                const odcFeature = getFormFeatureName('wbs-odc');
+                return (
+                    <FeatureGate featureName={odcFeature!}>
+                        <WorkBreakdownStructureForm formType="odc" />
+                    </FeatureGate>
+                );
+            } else if (subFormId === "todo-list") {
+                const todoFeature = getFormFeatureName('wbs-todo-list');
+                return (
+                    <FeatureGate featureName={todoFeature!}>
+                        <TodoList />
+                    </FeatureGate>
+                );
+            } else {
+                // Default WBS overview - check for main WBS feature
+                return (
+                    <FeatureGate featureName={featureName!}>
+                        <FormsOverview onFormSelect={() => {}} />
+                    </FeatureGate>
+                );
             }
         
         case "job-start":
-            return(
-        <FeatureGate featureName={"job-start"} >
-          <JobStartForm />
-        </FeatureGate>
+            return (
+                <FeatureGate featureName={featureName!}>
+                    <JobStartForm />
+                </FeatureGate>
             );
 
         case "input-register":
-            return <InputRegisterForm />;
+            return (
+                <FeatureGate featureName={featureName!}>
+                    <InputRegisterForm />
+                </FeatureGate>
+            );
             
         case "correspondence":
-            return <CorrespondenceForm />;
+            return (
+                <FeatureGate featureName={featureName!}>
+                    <CorrespondenceForm />
+                </FeatureGate>
+            );
             
         case "check&review":
-            return <CheckReviewForm />;
+            return (
+                <FeatureGate featureName={featureName!}>
+                    <CheckReviewForm />
+                </FeatureGate>
+            );
 
         case "change-control":
-            return <ChangeControlForm />;
+            return (
+                <FeatureGate featureName={featureName!}>
+                    <ChangeControlForm />
+                </FeatureGate>
+            );
 
         case "progress-review":
-            return <MonthlyProgressForm />;
+            return (
+                <FeatureGate featureName={featureName!}>
+                    <MonthlyProgressForm />
+                </FeatureGate>
+            );
 
         case "closure":
-            return <ProjectClosureForm />;
+            return (
+                <FeatureGate featureName={featureName!}>
+                    <ProjectClosureForm />
+                </FeatureGate>
+            );
 
         case "monthly-reports":
-            return <MonthlyReports />;
+            return (
+                <FeatureGate featureName={featureName!}>
+                    <MonthlyReports />
+                </FeatureGate>
+            );
 
         default:
-        return <FormsOverview onFormSelect={() => {}} />;
+            return <FormsOverview onFormSelect={() => {}} />;
+        }
     }
-}
 
   return (
     <FormWrapper>
