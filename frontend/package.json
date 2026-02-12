@@ -1,7 +1,7 @@
 {
   "name": "njsprojectmanagement-frontend",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.1.0-dev.20260209",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,13 +13,20 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.0.1",
     "@mui/icons-material": "^6.5.0",
+    "@mui/lab": "^7.0.1-beta.19",
     "@mui/material": "^6.5.0",
     "@mui/x-date-pickers": "^7.22.2",
     "axios": "^1.7.7",
@@ -28,6 +35,7 @@
     "jwt-decode": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.66.0",
     "react-router-dom": "^7.6.1",
     "recharts": "^2.15.1",
     "uuid": "^11.0.3",
@@ -38,6 +46,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",
+    "@playwright/test": "^1.56.1",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",

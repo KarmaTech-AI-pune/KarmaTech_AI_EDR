@@ -30,6 +30,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
             comment.CommentText = request.CommentText;
             comment.UpdatedBy = request.UpdatedBy;
             comment.UpdatedDate = DateTime.UtcNow;
+            comment.TenantId = _context.TenantId ?? 0;
 
             await _context.SaveChangesAsync(cancellationToken);
 

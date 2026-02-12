@@ -50,9 +50,9 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                 WorkBreakdownStructureId = request.JobStartForm.WorkBreakdownStructureId,
                 FormTitle = request.JobStartForm.FormTitle ?? string.Empty,
                 Description = request.JobStartForm.Description ?? string.Empty,
-                StartDate = request.JobStartForm.StartDate,
+                StartDate = DateTime.SpecifyKind(request.JobStartForm.StartDate, DateTimeKind.Utc),
                 PreparedBy = request.JobStartForm.PreparedBy ?? string.Empty,
-                CreatedDate = DateTime.Now,
+                CreatedDate = DateTime.UtcNow,
 
                 TotalTimeCost = request.JobStartForm.TotalTimeCost,
                 TotalExpenses = request.JobStartForm.TotalExpenses,
@@ -95,7 +95,7 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                         Remarks = resource.Remarks ?? string.Empty,
                         EmployeeName = resource.EmployeeName ?? string.Empty, 
                         Name = resource.Name ?? string.Empty, 
-                        CreatedDate = DateTime.Now
+                        CreatedDate = DateTime.UtcNow
                     });
                 }
             }

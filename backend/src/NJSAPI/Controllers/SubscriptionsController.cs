@@ -353,6 +353,30 @@ namespace NJSAPI.Controllers
             }
         }
 
+        // POST: api/subscriptions/plans/{planId}/features/{featureId}
+        [HttpPost("plans/{planId}/features/{featureId}")]
+        public async Task<IActionResult> AddFeatureToPlan(int planId, int featureId)
+        {
+            var result = await _subscriptionService.AddFeatureToPlanAsync(planId, featureId);
+            if (result)
+            {
+                return Ok(new { message = "Feature added to plan successfully" });
+            }
+            return BadRequest(new { message = "Failed to add feature to plan" });
+        }
+
+        // DELETE: api/subscriptions/plans/{planId}/features/{featureId}
+        [HttpDelete("plans/{planId}/features/{featureId}")]
+        public async Task<IActionResult> RemoveFeatureFromPlan(int planId, int featureId)
+        {
+            var result = await _subscriptionService.RemoveFeatureFromPlanAsync(planId, featureId);
+            if (result)
+            {
+                return Ok(new { message = "Feature removed from plan successfully" });
+            }
+            return BadRequest(new { message = "Failed to remove feature from plan" });
+        }
+
         private bool SubscriptionPlanExists(int id)
         {
             return _projectManagementContext.SubscriptionPlans.Any(e => e.Id == id);

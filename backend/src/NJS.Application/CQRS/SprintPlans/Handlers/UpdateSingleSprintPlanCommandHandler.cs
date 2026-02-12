@@ -23,12 +23,23 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
 
         public async Task<bool> Handle(UpdateSingleSprintPlanCommand request, CancellationToken cancellationToken)
         {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
             var sprintPlanDto = request.SprintPlan;
 
             if (sprintPlanDto == null || !sprintPlanDto.SprintId.HasValue || sprintPlanDto.SprintId.Value == 0)
             {
                 _logger.LogError("SprintPlanDto or SprintId is null or invalid in the request.");
                 throw new ArgumentException("SprintPlan or SprintId cannot be null or invalid for update.");
+            }
+
+            if (!sprintPlanDto.ProjectId.HasValue)
+            {
+                _logger.LogError("ProjectId is null in the request. It is required for update.");
+                throw new ArgumentException("ProjectId cannot be null for update.");
             }
 
             _logger.LogInformation("Attempting to update SprintPlan with ID: {SprintId}", sprintPlanDto.SprintId.Value);
@@ -58,6 +69,7 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
             existingSprintPlan.CompletedAt = sprintPlanDto.CompletedAt;
             existingSprintPlan.CreatedAt = sprintPlanDto.CreatedAt;
             existingSprintPlan.UpdatedAt = sprintPlanDto.UpdatedAt;
+            existingSprintPlan.TenantId = _context.TenantId ?? 0;
 
             // SprintTasks and SprintSubtasks are NOT handled by this API, as per requirement.
 

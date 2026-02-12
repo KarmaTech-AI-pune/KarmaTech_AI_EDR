@@ -7,6 +7,7 @@ using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Application.Services.IContract;
 using NJS.Application.CQRS.Commands.GoNoGoDecision;
+using NJS.Application.Helpers;
 
 namespace NJS.Application.CQRS.Handlers.GoNoGoDecision
 {
@@ -27,6 +28,9 @@ namespace NJS.Application.CQRS.Handlers.GoNoGoDecision
             var dateTime = DateTime.UtcNow;
             var currentUserId = _userContext.GetCurrentUserId();
 
+            // Calculate raw total score from individual criteria scores (no capping)
+            int rawTotalScore = CalculateRawTotalFromCriteria(request.ScoringCriteria);
+
             var header = new GoNoGoDecisionHeader
             {
                 TypeOfBid = request.HeaderInfo.BidType,
@@ -35,7 +39,7 @@ namespace NJS.Application.CQRS.Handlers.GoNoGoDecision
                 BdHead = request.HeaderInfo.BdHead,              
                 TenderFee = request.HeaderInfo.TenderFee,
                 Emd = request.HeaderInfo.EmdAmount,
-                TotalScore = request.Summary.TotalScore,
+                TotalScore = rawTotalScore, // Store raw total score (0-120)
                 Status = request.Summary.Status,
                 OpportunityId = request.MetaData.OpprotunityId,
                 CreatedAt = dateTime,
@@ -92,6 +96,27 @@ namespace NJS.Application.CQRS.Handlers.GoNoGoDecision
                 CreatedBy = userId,
                 UpdatedBy = userId
             };
+        }
+
+        /// <summary>
+        /// Calculates the raw total score from individual scoring criteria
+        /// </summary>
+        /// <param name="criteria">The scoring criteria command containing all individual scores</param>
+        /// <returns>Sum of all individual criterion scores</returns>
+        private int CalculateRawTotalFromCriteria(ScoringCriteriaCommand criteria)
+        {
+            return (criteria.MarketingPlan?.Score ?? 0) +
+                   (criteria.ClientRelationship?.Score ?? 0) +
+                   (criteria.ProjectKnowledge?.Score ?? 0) +
+                   (criteria.TechnicalEligibility?.Score ?? 0) +
+                   (criteria.FinancialEligibility?.Score ?? 0) +
+                   (criteria.StaffAvailability?.Score ?? 0) +
+                   (criteria.CompetitionAssessment?.Score ?? 0) +
+                   (criteria.CompetitivePosition?.Score ?? 0) +
+                   (criteria.FutureWorkPotential?.Score ?? 0) +
+                   (criteria.Profitability?.Score ?? 0) +
+                   (criteria.ResourceAvailability?.Score ?? 0) +
+                   (criteria.BidSchedule?.Score ?? 0);
         }
     }
 }

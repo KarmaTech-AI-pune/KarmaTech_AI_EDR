@@ -115,7 +115,7 @@ namespace NJS.Repositories.Repositories
                     projectClosure.CreatedBy = existingClosure.CreatedBy;
 
                     // Set update metadata
-                    projectClosure.UpdatedAt = DateTime.Now;
+                    projectClosure.UpdatedAt = DateTime.UtcNow;
                     projectClosure.UpdatedBy = projectClosure.UpdatedBy ?? "System";
 
                     // Update the existing entry instead of creating a new one
@@ -134,7 +134,7 @@ namespace NJS.Repositories.Repositories
 
                 if (projectClosure.CreatedAt == default)
                 {
-                    projectClosure.CreatedAt = DateTime.Now;
+                    projectClosure.CreatedAt = DateTime.UtcNow;
                 }
 
                 // Log all the values being saved
@@ -173,12 +173,12 @@ namespace NJS.Repositories.Repositories
 
                 if (projectClosure.CreatedAt == default)
                 {
-                    projectClosure.CreatedAt = DateTime.Now;
+                    projectClosure.CreatedAt = DateTime.UtcNow;
                 }
 
                 if (projectClosure.UpdatedAt == null)
                 {
-                    projectClosure.UpdatedAt = DateTime.Now;
+                    projectClosure.UpdatedAt = DateTime.UtcNow;
                 }
 
                 // Explicitly detach any existing entity with the same ID

@@ -75,8 +75,6 @@ namespace NJS.Domain.Database
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name);
                 entity.Property(e => e.Description);
-                entity.Property(e => e.PriceUSD).HasPrecision(18, 2);
-                entity.Property(e => e.PriceINR).HasPrecision(18, 2);
             });
 
             // Configure SubscriptionPlanFeature entity

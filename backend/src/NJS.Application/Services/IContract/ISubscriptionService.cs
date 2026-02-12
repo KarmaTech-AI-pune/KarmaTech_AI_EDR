@@ -18,5 +18,7 @@ namespace NJS.Application.Services.IContract
         Task<PlanFeaturesResponseDto?> GetFeaturesByPlanNameAsync(string planName);
         Task<SubscriptionFeaturesResponseDto> GetAllSubscriptionFeaturesAsync();
         Task<SubscriptionFeaturesResponseDto> GetSubscriptionFeaturesByPlanIdAsync(int planId);
+        Task<bool> AddFeatureToPlanAsync(int planId, int featureId);
+        Task<bool> RemoveFeatureFromPlanAsync(int planId, int featureId);
     }
 }

@@ -4,6 +4,17 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Version information from VERSION file -->
+    <Version>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/../../../VERSION').Trim())</Version>
+    <!-- <AssemblyVersion>$(Version)</AssemblyVersion> -->
+    <!-- <FileVersion>$(Version)</FileVersion> -->
+    <AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
+    <!-- Build metadata -->
+    <AssemblyTitle>KarmaTech AI EDR API</AssemblyTitle>
+    <AssemblyDescription>Project Management API for KarmaTech AI EDR System</AssemblyDescription>
+    <AssemblyCompany>KarmaTech</AssemblyCompany>
+    <AssemblyProduct>AI EDR</AssemblyProduct>
+    <AssemblyCopyright>Copyright © KarmaTech 2024</AssemblyCopyright>
   </PropertyGroup>
 
   <ItemGroup>

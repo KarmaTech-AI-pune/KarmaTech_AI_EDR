@@ -12,6 +12,8 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LevelSelect from './LevelSelect';
+import PlannedHoursInput from './PlannedHoursInput';
+import TotalCostDisplay from './TotalCostDisplay';
 import { WBSRowData, WBSChildTotals } from '../types/wbs';
 import {
   useWBSRowLogic,
@@ -293,15 +295,12 @@ const WBSRow: React.FC<WBSRowProps> = ({
       {months.map((month: string) => (
         <TableCell key={month}>
           {row.level === 3 ? (
-            <NumberInput
-              type="text"
-              value={getPlannedHours(month)}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleHoursChange(row.id, month, e.target.value)}
-              min="0"
-              style={{
-                backgroundColor: editMode ? '#f5f5f5' : 'white'
-              }}
+            <PlannedHoursInput
+              rowId={row.id}
+              month={month}
+              initialValue={getPlannedHours(month)}
               disabled={editMode}
+              onValueChange={handleHoursChange}
             />
           ) : childTotals ? (
             <NumberInput
@@ -344,23 +343,9 @@ const WBSRow: React.FC<WBSRowProps> = ({
           </TableCell>
           <TableCell>
             {row.level === 3 ? (
-              <NumberInput
-                type="text"
-                value={row.odc || ''}
-                readOnly
-                style={{
-                  backgroundColor: '#f5f5f5'
-                }}
-              />
+              <TotalCostDisplay value={Number(row.odc || 0).toFixed(2)} />
             ) : childTotals ? (
-              <NumberInput
-                type="text"
-                value={childTotals.odc || ''}
-                readOnly
-                style={{
-                  backgroundColor: '#f5f5f5'
-                }}
-              />
+              <TotalCostDisplay value={Number(childTotals.odc || 0).toFixed(2)} />
             ) : (
               <Box sx={{ height: '40px' }} />
             )}
@@ -399,7 +384,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             {row.level === 3 ? (
               <NumberInput
                 type="text"
-                value={row.totalHours}
+                value={(row.totalHours).toFixed(2)}
                 readOnly
                 style={{
                   backgroundColor: '#f5f5f5'
@@ -408,7 +393,7 @@ const WBSRow: React.FC<WBSRowProps> = ({
             ) : childTotals ? (
               <NumberInput
                 type="text"
-                value={childTotals.totalHours || ''}
+                value={(childTotals.totalHours).toFixed(2)}
                 readOnly
                 style={{
                   backgroundColor: '#f5f5f5'
@@ -420,23 +405,9 @@ const WBSRow: React.FC<WBSRowProps> = ({
           </TableCell>
           <TableCell>
             {row.level === 3 ? (
-              <NumberInput
-                type="text"
-                value={row.totalCost}
-                readOnly
-                style={{
-                  backgroundColor: '#f5f5f5'
-                }}
-              />
+              <TotalCostDisplay value={Number(row.totalCost || 0).toFixed(2)} />
             ) : childTotals ? (
-              <NumberInput
-                type="text"
-                value={childTotals.totalCost || ''}
-                readOnly
-                style={{
-                  backgroundColor: '#f5f5f5'
-                }}
-              />
+              <TotalCostDisplay value={Number(childTotals.totalCost || 0).toFixed(2)} />
             ) : (
               <Box sx={{ height: '40px' }} />
             )}

@@ -95,8 +95,8 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
                             Remarks = resourceDto.Remarks ?? string.Empty,
                             EmployeeName = resourceDto.EmployeeName ?? string.Empty,
                             Name = resourceDto.Name ?? string.Empty,
-                            CreatedDate = DateTime.Now,
-                            UpdatedDate = DateTime.Now
+                            CreatedDate = DateTime.UtcNow,
+                            UpdatedDate = DateTime.UtcNow
                         });
                     }
                 }

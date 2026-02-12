@@ -1,5 +1,6 @@
 using Moq;
 using NJS.Application.Services;
+using NJS.Application.Services.IContract;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 using System;
@@ -11,19 +12,19 @@ namespace NJS.API.Tests.Services
     {
         private readonly Mock<IProjectRepository> _projectRepositoryMock;
         private readonly Mock<IWorkBreakdownStructureRepository> _wbsRepositoryMock;
-        private readonly Mock<IGoNoGoDecisionRepository> _goNoGoDecisionRepositoryMock;
+        private readonly Mock<IGoNoGoDecisionService> _goNoGoDecisionServiceMock;
         private readonly ProjectManagementService _service;
 
         public ProjectManagementServiceTests()
         {
             _projectRepositoryMock = new Mock<IProjectRepository>();
             _wbsRepositoryMock = new Mock<IWorkBreakdownStructureRepository>();
-            _goNoGoDecisionRepositoryMock = new Mock<IGoNoGoDecisionRepository>();
+            _goNoGoDecisionServiceMock = new Mock<IGoNoGoDecisionService>();
             
             _service = new ProjectManagementService(
                 _projectRepositoryMock.Object,
                 _wbsRepositoryMock.Object,
-                _goNoGoDecisionRepositoryMock.Object);
+                _goNoGoDecisionServiceMock.Object);
         }
 
         [Fact]
@@ -70,7 +71,7 @@ namespace NJS.API.Tests.Services
 
             // Assert
             Assert.Equal(decision, result);
-            _goNoGoDecisionRepositoryMock.Verify(r => r.Add(decision), Times.Once);
+            _goNoGoDecisionServiceMock.Verify(s => s.Add(decision), Times.Once);
         }
 
         [Fact]
@@ -80,7 +81,7 @@ namespace NJS.API.Tests.Services
             var projectId = 1;
             var decision = new GoNoGoDecision { Id = 1, ProjectId = projectId };
 
-            _goNoGoDecisionRepositoryMock.Setup(r => r.GetByProjectId(projectId))
+            _goNoGoDecisionServiceMock.Setup(s => s.GetByProjectId(projectId))
                 .Returns(decision);
 
             // Act

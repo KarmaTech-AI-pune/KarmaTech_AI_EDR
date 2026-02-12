@@ -41,7 +41,7 @@ namespace NJS.Repositories.Repositories
 
             try
             {
-                correspondenceInward.CreatedAt = DateTime.Now;
+                correspondenceInward.CreatedAt = DateTime.UtcNow;
                 _context.CorrespondenceInwards.Add(correspondenceInward);
                 await _context.SaveChangesAsync();
                 _logger.LogInformation($"Added correspondence inward with ID: {correspondenceInward.Id}");
@@ -62,7 +62,7 @@ namespace NJS.Repositories.Repositories
         {
             if (correspondenceInward == null) throw new ArgumentNullException(nameof(correspondenceInward));
 
-            correspondenceInward.UpdatedAt = DateTime.Now;
+            correspondenceInward.UpdatedAt = DateTime.UtcNow;
 
             _context.Entry(correspondenceInward).State = EntityState.Modified;
             await _context.SaveChangesAsync();

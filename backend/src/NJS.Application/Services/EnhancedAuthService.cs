@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using NJS.Application.Dtos;
 using NJS.Application.Services.IContract;
+using NJS.Domain.Database;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
 using System.Collections.Generic;
@@ -20,19 +22,22 @@ namespace NJS.Application.Services
         private readonly RoleManager<Role> _roleManager;
         private readonly IPermissionRepository _permissionRepository;
         private readonly ITenantService _tenantService;
+        private readonly TenantDbContext _tenantDbContext;
 
         public EnhancedAuthService(
             IConfiguration configuration,
             UserManager<User> userManager,
             RoleManager<Role> roleManager,
             IPermissionRepository permissionRepository,
-            ITenantService tenantService)
+            ITenantService tenantService,
+            TenantDbContext tenantDbContext)
         {
             _configuration = configuration;
             _userManager = userManager;
             _roleManager = roleManager;
             _permissionRepository = permissionRepository;
             _tenantService = tenantService;
+            _tenantDbContext = tenantDbContext;
         }
 
         public async Task<(bool success, User user, string token)> ValidateUserAsync(string email, string password)
@@ -161,6 +166,9 @@ namespace NJS.Application.Services
                 claims.Add(new Claim("IsSuperAdmin", "true"));
                 claims.Add(new Claim("UserType", "SuperAdmin"));
                 claims.Add(new Claim("TenantId", "0")); // Super admin has no specific tenant
+                
+                // Super admin has access to ALL features
+                claims.Add(new Claim("Features", "*")); // Wildcard for all features
             }
             else if (tenantRole.HasValue)
             {
@@ -171,6 +179,14 @@ namespace NJS.Application.Services
                     claims.Add(new Claim("TenantId", currentTenantId.Value.ToString()));
                     claims.Add(new Claim("TenantRole", tenantRole.Value.ToString()));
                     claims.Add(new Claim("UserType", "TenantUser"));
+                    
+                    // Add enabled features for this tenant
+                    var enabledFeatures = await GetTenantEnabledFeaturesAsync(currentTenantId.Value);
+                    if (enabledFeatures.Any())
+                    {
+                        var featuresString = string.Join(",", enabledFeatures);
+                        claims.Add(new Claim("Features", featuresString));
+                    }
                     
                     // Add tenant domain for additional context
                     var tenantDomain = await _tenantService.GetCurrentTenantDomain();
@@ -324,6 +340,26 @@ namespace NJS.Application.Services
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Get enabled features for a tenant based on their subscription plan
+        /// </summary>
+        private async Task<List<string>> GetTenantEnabledFeaturesAsync(int tenantId)
+        {
+            var tenant = await _tenantDbContext.Tenants
+                .Include(t => t.SubscriptionPlan)
+                .ThenInclude(sp => sp.SubscriptionPlanFeatures)
+                .ThenInclude(spf => spf.Feature)
+                .FirstOrDefaultAsync(t => t.Id == tenantId);
+
+            if (tenant?.SubscriptionPlan == null)
+                return new List<string>();
+
+            return tenant.SubscriptionPlan.SubscriptionPlanFeatures
+                .Where(spf => spf.Feature.IsActive) // Only globally active features
+                .Select(spf => spf.Feature.Name)
+                .ToList();
         }
     }
 }

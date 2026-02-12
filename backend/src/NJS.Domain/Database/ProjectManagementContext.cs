@@ -141,6 +141,7 @@ namespace NJS.Domain.Database
         public DbSet<CurrentBudgetInMIS> CurrentBudgetInMIS { get; set; }
         public DbSet<PercentCompleteOnCosts> PercentCompleteOnCosts { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<ProjectBudgetChangeHistory> ProjectBudgetChangeHistories { get; set; }
         public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
         public DbSet<SprintTask> SprintTasks { get; set; }
         public DbSet<SprintSubtask> SprintSubtasks { get; set; }
@@ -148,6 +149,7 @@ namespace NJS.Domain.Database
         public DbSet<SprintTaskComment> SprintTaskComments { get; set; }
         public DbSet<SprintSubtaskComment> SprintSubtaskComments { get; set; }
         public DbSet<SprintDailyProgress> SprintDailyProgresses { get; set; }
+        public DbSet<SprintWbsPlan> SprintWbsPlans { get; set; }
 
 
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
@@ -156,6 +158,10 @@ namespace NJS.Domain.Database
 
         public DbSet<SubscriptionPlanFeature> SubscriptionPlanFeatures { get; set; }
         public DbSet<MigrationResult> MigrationResults { get; set; }
+
+        // Release Notes entities
+        public DbSet<ReleaseNotes> ReleaseNotes { get; set; }
+        public DbSet<ChangeItem> ChangeItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -217,6 +223,14 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<Role>().HasQueryFilter(role => role.TenantId == TenantId);
             modelBuilder.Entity<Program>().HasQueryFilter(role => role.TenantId == TenantId);
             modelBuilder.Entity<WBSOption>().HasQueryFilter(w => w.TenantId == TenantId);
+
+            modelBuilder.Entity<SprintWbsPlan>().HasQueryFilter(p => p.TenantId == TenantId);
+
+            modelBuilder.Entity<SprintWbsPlan>()
+                .HasOne(s => s.Project)
+                .WithMany(p => p.SprintWbsPlans)
+                .HasForeignKey(s => s.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configure MonthlyProgress to Project relationship
             modelBuilder.Entity<MonthlyProgress>()
@@ -353,8 +367,7 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Cost).HasPrecision(18, 2);
             modelBuilder.Entity<ChangeOrder>().Property(co => co.Fee).HasPrecision(18, 2);
 
-            modelBuilder.Entity<Feature>().Property(f => f.PriceINR).HasPrecision(18, 2);
-            modelBuilder.Entity<Feature>().Property(f => f.PriceUSD).HasPrecision(18, 2);
+
 
             // Configure Identity tables
             modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
@@ -435,7 +448,7 @@ namespace NJS.Domain.Database
 
                 // Configure nullable foreign keys
                 entity.Property(p => p.Sector).IsRequired(false);
-                entity.Property(p => p.ProgramId).IsRequired(false);
+                entity.Property(p => p.ProgramId).IsRequired();
                 entity.Property(p => p.OpportunityTrackingId).IsRequired(false);
 
                 // Configure nullable relationships - fix shadow property issue
@@ -982,8 +995,8 @@ namespace NJS.Domain.Database
             modelBuilder.Entity<ChangeControl>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Originator).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Originator).IsRequired(false).HasMaxLength(100);
+                entity.Property(e => e.Description).IsRequired(false).HasMaxLength(500);
                 entity.Property(e => e.CostImpact).HasMaxLength(255).IsRequired(false);
                 entity.Property(e => e.TimeImpact).HasMaxLength(255).IsRequired(false);
                 entity.Property(e => e.ResourcesImpact).HasMaxLength(255).IsRequired(false);
@@ -1300,6 +1313,46 @@ namespace NJS.Domain.Database
                 .HasOne(spf => spf.Feature)
                 .WithMany(f => f.SubscriptionPlanFeatures)
                 .HasForeignKey(spf => spf.FeatureId);
+
+            // Configure ReleaseNotes entity
+            modelBuilder.Entity<ReleaseNotes>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Version).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ReleaseDate).IsRequired();
+                entity.Property(e => e.Environment).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.CommitSha).HasMaxLength(40);
+                entity.Property(e => e.Branch).HasMaxLength(100);
+                entity.Property(e => e.CreatedDate).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                // Create indexes for better performance
+                entity.HasIndex(e => e.Version).IsUnique();
+                entity.HasIndex(e => e.ReleaseDate);
+                entity.HasIndex(e => e.Environment);
+
+                // Configure relationship with ChangeItems
+                entity.HasMany(r => r.ChangeItems)
+                    .WithOne(c => c.ReleaseNotes)
+                    .HasForeignKey(c => c.ReleaseNotesId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure ChangeItem entity
+            modelBuilder.Entity<ChangeItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ReleaseNotesId).IsRequired();
+                entity.Property(e => e.ChangeType).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.CommitSha).HasMaxLength(40);
+                entity.Property(e => e.JiraTicket).HasMaxLength(20);
+                entity.Property(e => e.Impact).HasMaxLength(10);
+                entity.Property(e => e.Author).HasMaxLength(100);
+
+                // Create indexes for better performance
+                entity.HasIndex(e => e.ReleaseNotesId);
+                entity.HasIndex(e => e.ChangeType);
+            });
         }
 
         private void ConfigureProjectCascadingDeletes(ModelBuilder modelBuilder)

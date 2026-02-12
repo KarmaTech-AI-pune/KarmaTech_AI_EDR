@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using NJS.Domain.Services;
+using NJS.Domain.Entities;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using NJS.Domain.Entities; // Added for MigrationResult

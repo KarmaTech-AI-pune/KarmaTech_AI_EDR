@@ -28,7 +28,7 @@ namespace NJS.Application.CQRS.SprintTasks.Handlers
 
             var sprintTasks = await _context.SprintTasks
                                             .Include(st => st.SprintPlan) // Include SprintPlan to access ProjectId
-                                            .Where(st => st.SprintPlan != null && st.SprintPlan.ProjectId == request.ProjectId)
+                                            .Where(st => st.SprintPlan != null && st.SprintPlan.ProjectId == request.ProjectId && st.TenantId == (_context.TenantId ?? 0))
                                             .Select(st => new SprintTaskSummaryDto
                                             {
                                                 Taskid = st.Taskid,

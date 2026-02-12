@@ -32,12 +32,16 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                 return null;
             }
 
-            // Fetch the first SprintPlan for the given project, including its SprintTasks and SprintSubtasks
+            // Fetch the primary SprintPlan for the given project
+            // Priority selection:
+            // 1. First "Active" sprint (Status 1)
+            // 2. First "Planned" sprint (Status 0)
+            // 3. Last "Completed" sprint (Status 2) as fallback
             var sprintPlanEntity = await _context.SprintPlans
                 .Include(sp => sp.SprintTasks)
                     .ThenInclude(st => st.Subtasks!)
-                .Where(sp => sp.ProjectId == projectId)
-                .OrderByDescending(sp => sp.CreatedAt) // Assuming we want the most recent one if multiple exist
+                .Where(sp => sp.ProjectId == projectId && sp.Status == 0 && sp.TenantId == (_context.TenantId ?? 0)) // 0 = Not Completed / Active
+                .OrderBy(sp => sp.SprintId)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (sprintPlanEntity == null)
@@ -87,6 +91,7 @@ namespace NJS.Application.CQRS.ProjectSchedules.Handlers
                     TaskupdatedDate = t.TaskupdatedDate,
                     SprintPlanId = t.SprintPlanId,
                     WbsPlanId = t.WbsPlanId,
+                    SprintWbsPlanId = t.SprintWbsPlanId,
                     UserTaskId = t.UserTaskId,
                     AcceptanceCriteria = t.AcceptanceCriteria,
                     DisplayOrder = t.DisplayOrder,

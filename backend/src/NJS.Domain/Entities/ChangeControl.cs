@@ -22,13 +22,11 @@ namespace NJS.Domain.Entities
         [Required]
         public DateTime DateLogged { get; set; }
 
-        [Required]
         [StringLength(100)]
-        public string Originator { get; set; }
+        public string? Originator { get; set; }
 
-        [Required]
         [StringLength(500)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [StringLength(255)]
         public string CostImpact { get; set; }

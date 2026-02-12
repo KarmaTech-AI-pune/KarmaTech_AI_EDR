@@ -17,6 +17,7 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         using var loggerProvider = (NLogLoggerProvider)LoggerWebConfiguration.Configure();
         using var loggerFactory = new NLogLoggerFactory(loggerProvider);
         var logger = loggerFactory.CreateLogger<Program>();

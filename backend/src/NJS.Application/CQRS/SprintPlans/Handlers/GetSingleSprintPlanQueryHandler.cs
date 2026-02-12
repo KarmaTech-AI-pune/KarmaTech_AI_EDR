@@ -25,18 +25,31 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
 
         public async Task<SprintPlanDto?> Handle(GetSingleSprintPlanQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Attempting to retrieve SprintPlan with ID: {SprintId}", request.SprintId);
+            _logger.LogInformation("Attempting to retrieve SprintPlan with ID: {SprintId}, ProjectId filter: {ProjectId}", request.SprintId, request.ProjectId);
 
             var sprintPlanEntity = await _context.SprintPlans
                 .Include(sp => sp.SprintTasks!)
                     .ThenInclude(st => st.Subtasks!)
                 .AsNoTracking()
+                .Where(sp => sp.TenantId == (_context.TenantId ?? 0))
                 .FirstOrDefaultAsync(sp => sp.SprintId == request.SprintId, cancellationToken);
 
             if (sprintPlanEntity == null)
             {
                 _logger.LogWarning("SprintPlan with ID {SprintId} not found.", request.SprintId);
                 return null;
+            }
+
+            // Project validation: Ensure sprint belongs to the requested project
+            if (request.ProjectId.HasValue && sprintPlanEntity.ProjectId != request.ProjectId.Value)
+            {
+                _logger.LogWarning(
+                    "SprintPlan {SprintId} belongs to Project {ActualProjectId}, " +
+                    "but was requested for Project {RequestedProjectId}. Returning null.",
+                    request.SprintId,
+                    sprintPlanEntity.ProjectId,
+                    request.ProjectId.Value);
+                return null;  // Treat as not found for security
             }
 
             _logger.LogInformation("SprintPlan with ID {SprintId} found. Converting to DTO.", request.SprintId);
@@ -82,6 +95,7 @@ namespace NJS.Application.CQRS.SprintPlans.Handlers
                     TaskupdatedDate = t.TaskupdatedDate,
                     SprintPlanId = t.SprintPlanId,
                     WbsPlanId = t.WbsPlanId,
+                    SprintWbsPlanId = t.SprintWbsPlanId,
                     UserTaskId = t.UserTaskId,
                     AcceptanceCriteria = t.AcceptanceCriteria,
                     DisplayOrder = t.DisplayOrder,

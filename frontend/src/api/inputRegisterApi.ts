@@ -41,8 +41,11 @@ export const createInputRegister = async (data: Omit<InputRegisterRow, 'id'>): P
       id: response.data.id.toString(),
       projectId: response.data.projectId.toString()
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating input register:', error);
+    if (error.response && error.response.data) {
+        console.error('Backend error details:', error.response.data);
+    }
     throw error;
   }
 };

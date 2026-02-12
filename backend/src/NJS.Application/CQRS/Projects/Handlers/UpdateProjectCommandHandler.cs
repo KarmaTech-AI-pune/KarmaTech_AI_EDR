@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using NJS.Application.CQRS.Projects.Commands;
 using NJS.Domain.Entities;
 using NJS.Repositories.Interfaces;
@@ -11,10 +12,20 @@ namespace NJS.Application.CQRS.Projects.Handlers
     public class UpdateProjectCommandHandler : IRequestHandler<UpdateProjectCommand, Unit>
     {
         private readonly IProjectRepository _repository;
+        private readonly IProgramRepository _programRepository;
+        private readonly IMediator _mediator;
+        private readonly ILogger<UpdateProjectCommandHandler> _logger;
 
-        public UpdateProjectCommandHandler(IProjectRepository repository)
+        public UpdateProjectCommandHandler(
+            IProjectRepository repository, 
+            IProgramRepository programRepository,
+            IMediator mediator,
+            ILogger<UpdateProjectCommandHandler> logger)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _programRepository = programRepository ?? throw new ArgumentNullException(nameof(programRepository));
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<Unit> Handle(UpdateProjectCommand request, CancellationToken cancellationToken)
@@ -28,12 +39,33 @@ namespace NJS.Application.CQRS.Projects.Handlers
 
             var dto = request.ProjectDto;
 
-            // Log the incoming data for the problematic fields
-            Console.WriteLine($"Updating project {request.Id} with the following data:");
-            Console.WriteLine($"Office: '{dto.Office}'");
-            Console.WriteLine($"TypeOfJob: '{dto.TypeOfJob}'");
-            Console.WriteLine($"EstimatedProjectFee: {dto.EstimatedProjectFee}");
-            Console.WriteLine($"Priority: '{dto.Priority}'");
+            // Validate ProgramId if it's being changed
+            if (dto.ProgramId != existingProject.ProgramId)
+            {
+                if (dto.ProgramId <= 0)
+                {
+                    _logger.LogWarning("Project update failed: ProgramId is required and must be greater than 0");
+                    throw new ArgumentException("ProgramId is required. A project must belong to a program.", nameof(dto.ProgramId));
+                }
+
+                // Validate that the new Program exists
+                var program = await _programRepository.GetByIdAsync(dto.ProgramId, cancellationToken);
+                if (program == null)
+                {
+                    _logger.LogWarning("Project update failed: Program with ID {ProgramId} not found", dto.ProgramId);
+                    throw new ArgumentException($"Program with ID {dto.ProgramId} does not exist. Please provide a valid ProgramId.", nameof(dto.ProgramId));
+                }
+
+                // Validate tenant match (if multi-tenant)
+                if (existingProject.TenantId > 0 && program.TenantId != existingProject.TenantId)
+                {
+                    _logger.LogWarning("Project update failed: Program {ProgramId} belongs to different tenant", dto.ProgramId);
+                    throw new ArgumentException($"Program with ID {dto.ProgramId} does not belong to the same tenant as the project.", nameof(dto.ProgramId));
+                }
+
+                _logger.LogInformation("Project {ProjectId} program changed from {OldProgramId} to {NewProgramId}", 
+                    request.Id, existingProject.ProgramId, dto.ProgramId);
+            }
 
             // Update project properties
             existingProject.Name = dto.Name;
@@ -62,6 +94,7 @@ namespace NJS.Application.CQRS.Projects.Handlers
             existingProject.Percentage = dto.Percentage;
             existingProject.Details = dto.Details;
             existingProject.Priority = dto.Priority;
+            existingProject.ProgramId = dto.ProgramId; // Validated ProgramId
 
             existingProject.Status = dto.Status;
             existingProject.Progress = dto.Progress;
@@ -70,7 +103,6 @@ namespace NJS.Application.CQRS.Projects.Handlers
             // Update audit fields
             existingProject.LastModifiedAt = DateTime.UtcNow;
             existingProject.LastModifiedBy = dto.ProjectManagerId;
-            // Remove UpdatedAt and UpdatedBy as they don't exist in the Project entity
 
             // Calculate duration in months if not provided and dates are available
             if (!dto.DurationInMonths.HasValue && dto.StartDate.HasValue && dto.EndDate.HasValue)
@@ -80,30 +112,42 @@ namespace NJS.Application.CQRS.Projects.Handlers
                 existingProject.DurationInMonths = months;
             }
 
+            // Track budget changes if budget values have changed
+            var budgetChanged = existingProject.EstimatedProjectCost != dto.EstimatedProjectCost ||
+                               existingProject.EstimatedProjectFee != dto.EstimatedProjectFee;
+
+            if (budgetChanged)
+            {
+                try
+                {
+                    var budgetCommand = new UpdateProjectBudgetCommand
+                    {
+                        ProjectId = request.Id,
+                        EstimatedProjectCost = dto.EstimatedProjectCost,
+                        EstimatedProjectFee = dto.EstimatedProjectFee,
+                        Reason = dto.BudgetReason,
+                        ChangedBy = dto.ProjectManagerId ?? dto.LastModifiedBy
+                    };
+
+                    await _mediator.Send(budgetCommand, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error tracking budget change for project {ProjectId}", request.Id);
+                    // Continue with project update even if budget tracking fails
+                }
+            }
+
             try
             {
-                // Log the project state before update
-                Console.WriteLine($"Project state before update:");
-                Console.WriteLine($"Office: '{existingProject.Office}'");
-                Console.WriteLine($"TypeOfJob: '{existingProject.TypeOfJob}'");
-                Console.WriteLine($"EstimatedProjectFee: {existingProject.EstimatedProjectFee}");
-                Console.WriteLine($"Priority: '{existingProject.Priority}'");
-
                 _repository.Update(existingProject);
-
-                // Log the project state after update
-                var updatedProject = _repository.GetById(request.Id);
-                Console.WriteLine($"Project state after update:");
-                Console.WriteLine($"Office: '{updatedProject.Office}'");
-                Console.WriteLine($"TypeOfJob: '{updatedProject.TypeOfJob}'");
-                Console.WriteLine($"EstimatedProjectFee: {updatedProject.EstimatedProjectFee}");
-                Console.WriteLine($"Priority: '{updatedProject.Priority}'");
-
+                _logger.LogInformation("Project {ProjectId} updated successfully under Program {ProgramId}", 
+                    existingProject.Id, existingProject.ProgramId);
                 return Unit.Value;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating project: {ex.Message}");
+                _logger.LogError(ex, "Error updating project {ProjectId}", request.Id);
                 throw new ApplicationException("Error updating project", ex);
             }
         }

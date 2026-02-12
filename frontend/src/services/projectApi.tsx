@@ -1,6 +1,8 @@
 import { axiosInstance } from './axiosConfig';
-import { ProjectFormData } from '../types/index.tsx';
 import { Project } from '../models';
+
+// Use Project type directly for form data (excluding id)
+import { ProjectFormData } from '../types';
 
 export const projectApi = {
   createProject: async (projectData: ProjectFormData) => {
@@ -10,10 +12,11 @@ export const projectApi = {
         projectNo: parseInt(projectData.projectNo, 10),
         estimatedProjectCost: Number(projectData.estimatedProjectCost),
         estimatedProjectFee: Number(projectData.estimatedProjectFee || 0),
-        percentage: Number(projectData.percentage || 0),
+        percentage: Number((projectData as any).percentage || 0),
         startDate: projectData.startDate ? new Date(projectData.startDate).toISOString() : null,
         endDate: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
         opportunityTrackingId: projectData.opportunityTrackingId || 0,
+        programId: (projectData as any).programId || 0, // Ensure programId is included
       };
       const response = await axiosInstance.post(`api/Project`, formattedData);
       return response.data;
@@ -23,9 +26,9 @@ export const projectApi = {
     }
   },
 
-  getAll: async () => {
+  getAll: async (programId: number) => {
     try {
-      const response = await axiosInstance.get(`api/Project`);
+      const response = await axiosInstance.get(`api/Project?programId=${programId}`);
       return response.data;
     } catch (error) {
       console.error('Error getting all projects:', error);
@@ -54,7 +57,7 @@ export const projectApi = {
     }
   },
 
-  update: async (projectId: string, projectData: Project) => {
+  update: async (projectId: string, projectData: Project, budgetReason?: string) => {
     try {
       // Make sure we're sending the correct data format to the backend
       const formattedData = {
@@ -83,11 +86,14 @@ export const projectApi = {
         progress: 0, // Add missing required field
         letterOfAcceptance: projectData.letterOfAcceptance,
         opportunityTrackingId: projectData.opportunityTrackingId || 0, // Ensure it's not null
+        programId: (projectData as any).programId || 0, // Ensure programId is included
         // Add missing fields with default values
         createdAt: new Date(),
         lastModifiedAt: new Date(),
         createdBy: projectData.projectManagerId,
-        lastModifiedBy: projectData.projectManagerId
+        lastModifiedBy: projectData.projectManagerId,
+        // Include budget reason if provided
+        budgetReason: budgetReason || undefined
       };
 
       // Log the data being sent

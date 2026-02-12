@@ -26,6 +26,22 @@ namespace NJS.Domain.Extensions
                 {
                     var baseDbContext = scopeTenant.ServiceProvider.GetRequiredService<TenantDbContext>();
                     
+                    var dbType = configuration[Constants.DbType];
+                    if (dbType == Constants.DbServerType)
+                    {
+                         var connectionString = configuration.GetConnectionString("AppDbConnection");
+                         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+                         optionsBuilder.UseNpgsql(connectionString, b => b.MigrationsAssembly("NJS.Domain.Migrations.PostgreSQL"));
+                         baseDbContext.Database.SetConnectionString(connectionString);
+                    }
+                    else
+                    {
+                         var connectionString = configuration.GetConnectionString("SqlDbConnection");
+                         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+                         optionsBuilder.UseSqlServer(connectionString, b => b.MigrationsAssembly("NJS.Domain.Migrations.SqlServer"));
+                         baseDbContext.Database.SetConnectionString(connectionString);
+                    }
+
                     if (baseDbContext.Database.GetPendingMigrations().Any())
                     {
                         Console.ForegroundColor = ConsoleColor.Blue;
@@ -53,8 +69,35 @@ namespace NJS.Domain.Extensions
                                 var dbContext = scopeApplication.ServiceProvider.GetRequiredService<ProjectManagementContext>();
                                 
                                 // Configure context for this tenant
-                                dbContext.Database.SetConnectionString(connectionString);
-
+                                if (dbType == Constants.DbServerType)
+                                {
+                                     var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
+                                     optionsBuilder.UseNpgsql(connectionString, b => b.MigrationsAssembly("NJS.Domain.Migrations.PostgreSQL"));
+                                     dbContext.Database.SetConnectionString(connectionString);
+                                }
+                                else
+                                {
+                                     var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
+                                     optionsBuilder.UseSqlServer(connectionString, b => b.MigrationsAssembly("NJS.Domain.Migrations.SqlServer"));
+                                     dbContext.Database.SetConnectionString(connectionString);
+                                }
+                                
+                                // Note: SetConnectionString might not be enough if the provider changes (which shouldn't happen for a single run)
+                                // But since we are resolving the service, it's already configured in AddDatabaseServices.
+                                // However, AddAndMigrateTenantDatabases builds a temporary ServiceProvider. 
+                                // The issue is that GetRequiredService<ProjectManagementContext> uses the options configured in AddDatabaseServices.
+                                // In AddDatabaseServices, we use ITenantConnectionResolver which might not be available or fully set up in this isolated scope?
+                                // Actually, AddDatabaseServices is called AFTER AddAndMigrateTenantDatabases in Program.cs (usually). 
+                                // Wait, AddAndMigrateTenantDatabases is usually called after AddInfrastructure/AddPersistence.
+                                
+                                // Let's look at Program.cs again. 
+                                // It seems AddAndMigrateTenantDatabases is NOT called in Program.cs provided earlier? 
+                                // I see builder.Services.AddDatabaseServices(builder.Configuration);
+                                // but not AddAndMigrateTenantDatabases.
+                                
+                                // Ah, AddAndMigrateTenantDatabases is an extension method. Let's check where it is called.
+                                // Searching for usage of AddAndMigrateTenantDatabases...
+                                
                                 if (dbContext.Database.GetPendingMigrations().Any())
                                 {
                                     Console.ForegroundColor = ConsoleColor.Blue;
@@ -103,7 +146,7 @@ namespace NJS.Domain.Extensions
                 if (configuration[Constants.DbType] == Constants.DbServerType)
                 {
                     var connectionString = tenantConnectionResolver?.GetDefaultConnectionStringAsync().Result ?? configuration.GetConnectionString("AppDbConnection");
-                    options.UseNpgsql(connectionString);
+                    options.UseNpgsql(connectionString, b => b.MigrationsAssembly("NJS.Domain.Migrations.PostgreSQL"));
                 }
                 else
                 {
@@ -111,6 +154,7 @@ namespace NJS.Domain.Extensions
                     options.UseSqlServer(connectionString,
                         sqlServerOptionsAction: sqlOptions =>
                         {
+                            sqlOptions.MigrationsAssembly("NJS.Domain.Migrations.SqlServer");
                             sqlOptions.EnableRetryOnFailure(
                                 maxRetryCount: 5,
                                 maxRetryDelay: TimeSpan.FromSeconds(30),
@@ -159,7 +203,8 @@ namespace NJS.Domain.Extensions
             var dbType = configuration[Constants.DbType];
             return dbType switch
             {
-              Constants.DbServerType=>builder.UseNpgsql()  
+                Constants.DbServerType => builder.UseNpgsql(connectionString, b => b.MigrationsAssembly("NJS.Domain.Migrations.PostgreSQL")),
+                _ => builder.UseSqlServer(connectionString, b => b.MigrationsAssembly("NJS.Domain.Migrations.SqlServer"))
             };
         }
     }

@@ -23,6 +23,7 @@ import { projectManagementAppContext } from '../App';
 import { projectManagementAppContextType, Credentials } from '../types';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { Tenant } from '../models/tenantModel';
+import { VersionDisplay } from '../components/VersionDisplay';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -223,6 +224,13 @@ export const EnhancedLoginScreen: React.FC = () => {
                 >
                     Multi-Tenant Testing Environment
                 </Typography>
+                <VersionDisplay
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                    showBuildDate={true}
+                    showDevIndicator={true}
+                />
             </Container>
 
             <Card

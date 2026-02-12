@@ -83,17 +83,6 @@ namespace NJSAPI.Controllers
                 }
 
 
-                // Validate required fields
-                if (string.IsNullOrWhiteSpace(changeControlDto.Originator))
-                {
-                    return BadRequest(new { message = "Originator is required." });
-                }
-
-                if (string.IsNullOrWhiteSpace(changeControlDto.Description))
-                {
-                    return BadRequest(new { message = "Description is required." });
-                }
-
                 if (changeControlDto.ProjectId != projectId)
                 {
                     changeControlDto.ProjectId = projectId;
@@ -122,6 +111,10 @@ namespace NJSAPI.Controllers
                 var createdEntity = await _mediator.Send(query);
 
                 return CreatedAtAction(nameof(GetChangeControlById), new { projectId, id }, createdEntity);
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                return StatusCode(500, new { message = "Database error while creating change control.", details = dbEx.InnerException?.Message ?? dbEx.Message });
             }
             catch (Exception ex)
             {
@@ -154,17 +147,6 @@ namespace NJSAPI.Controllers
                     return BadRequest(new { message = "Project ID mismatch between route and request body." });
                 }
 
-
-                // Validate required fields
-                if (string.IsNullOrWhiteSpace(changeControlDto.Originator))
-                {
-                    return BadRequest(new { message = "Originator is required." });
-                }
-
-                if (string.IsNullOrWhiteSpace(changeControlDto.Description))
-                {
-                    return BadRequest(new { message = "Description is required." });
-                }
 
                 // Ensure string fields are not null
                 changeControlDto.Originator = changeControlDto.Originator ?? string.Empty;

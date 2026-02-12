@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "name": "Auto Deploy on Agent Completion",
+  "description": "Manually triggered deployment to dev server and AWS",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "git checkout Kiro/dev; git pull origin Kiro/dev; gh pr create --repo RamyaSuvarapu/EDR_Project_Deploy --base Saas/dev --head makshintre:Kiro/dev --title \"Deploy: Kiro/dev to Saas/dev\" --body \"Automated deployment from Kiro/dev branch\""
+  },
+  "workspaceFolderName": "KarmaTech_AI_EDR",
+  "shortName": "auto-deploy-on-completion"
+}
