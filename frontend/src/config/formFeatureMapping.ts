@@ -14,7 +14,7 @@ export interface FormFeatureMap {
 export const FORM_FEATURE_MAP: FormFeatureMap = {
   // Project Management Forms - WBS Sub-features
   'wbs': 'Work Breakdown Structure (WBS)',
-  'wbs-manpower': 'Manpower',
+  'wbs-manpower': 'Manpower Planning',
   'wbs-odc': 'ODC (Other Direct Cost) Table',
   'wbs-todo-list': 'Sprint Planning',
   
