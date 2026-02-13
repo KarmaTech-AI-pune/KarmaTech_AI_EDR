@@ -4,6 +4,7 @@ import { PermissionType } from '../models';
 
 const AdminPanel = lazy(() => import('../pages/AdminPanel'));
 const MigrationManagement = lazy(() => import('../pages/MigrationManagement'));
+const FeaturesManagement = lazy(() => import('../pages/FeaturesManagement'));
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -17,6 +18,10 @@ export const adminRoutes: RouteObject[] = [
       {
         path: 'migrations',
         element: <MigrationManagement />,
+      },
+      {
+        path: 'features',
+        element: <FeaturesManagement />,
       },
     ],
   },
