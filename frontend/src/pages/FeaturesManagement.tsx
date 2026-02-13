@@ -26,11 +26,21 @@ const FeaturesManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [featureToDelete, setFeatureToDelete] = useState<Feature | null>(null);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Fetch features on mount
   useEffect(() => {
@@ -54,9 +64,15 @@ const FeaturesManagement: React.FC = () => {
   // Filter features based on search and status
   const filteredFeatures = useMemo(() => {
     return features.filter(feature => {
+      // Null-safe search - handle undefined/null values
+      const featureName = feature.name?.toLowerCase() || '';
+      const featureDescription = feature.description?.toLowerCase() || '';
+      const search = debouncedSearchTerm.toLowerCase().trim();
+      
       const matchesSearch = 
-        feature.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        feature.description.toLowerCase().includes(searchTerm.toLowerCase());
+        search === '' || // If search is empty, show all
+        featureName.includes(search) ||
+        featureDescription.includes(search);
       
       const matchesStatus = 
         statusFilter === 'all' ||
@@ -65,7 +81,7 @@ const FeaturesManagement: React.FC = () => {
       
       return matchesSearch && matchesStatus;
     });
-  }, [features, searchTerm, statusFilter]);
+  }, [features, debouncedSearchTerm, statusFilter]);
 
   // Handle add feature
   const handleAddFeature = () => {
@@ -159,6 +175,11 @@ const FeaturesManagement: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by name or description"
+            helperText={
+              debouncedSearchTerm
+                ? `Found ${filteredFeatures.length} feature${filteredFeatures.length !== 1 ? 's' : ''}`
+                : `Total: ${features.length} feature${features.length !== 1 ? 's' : ''}`
+            }
           />
           <FormControl sx={{ minWidth: 200 }}>
             <InputLabel>Status</InputLabel>
