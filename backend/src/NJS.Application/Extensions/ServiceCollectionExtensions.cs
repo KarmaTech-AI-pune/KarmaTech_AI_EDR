@@ -90,7 +90,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
-            services.AddScoped<ITenantMigrationService, TenantMigrationService>();
+            
 
 
 

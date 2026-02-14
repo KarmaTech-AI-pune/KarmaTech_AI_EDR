@@ -2,21 +2,20 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NJS.Application.Services.IContract;
-using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using Npgsql;
 
 namespace NJS.Application.Services
 {
-    public class TenantMigrationService : ITenantMigrationService
+    public class TenantMigrationPostgresSqlService : ITenantMigrationService
     {
         private readonly IConfiguration _configuration;
-        private readonly ILogger<TenantMigrationService> _logger;
+        private readonly ILogger<TenantMigrationPostgresSqlService> _logger;
         private readonly string _migrationScriptsPath;
         private readonly string _nonIsolatedTenetScriptPath;
 
-        public TenantMigrationService(IConfiguration configuration, ILogger<TenantMigrationService> logger)
+        public TenantMigrationPostgresSqlService(IConfiguration configuration, ILogger<TenantMigrationPostgresSqlService> logger)
         {
             _configuration = configuration;
             _logger = logger;
