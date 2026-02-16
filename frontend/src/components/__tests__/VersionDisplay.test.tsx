@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { VersionDisplay } from '../VersionDisplay';
 import * as versionUtils from '../../utils/version';
 import { versionApi } from '../../services/versionApi';
@@ -22,6 +23,10 @@ vi.mock('../../services/versionApi', () => ({
 }));
 
 describe('VersionDisplay', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset to default mock values
@@ -132,3 +137,5 @@ describe('VersionDisplay', () => {
     });
   });
 });
+
+

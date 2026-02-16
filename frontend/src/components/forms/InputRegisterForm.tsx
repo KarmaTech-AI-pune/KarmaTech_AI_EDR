@@ -109,6 +109,7 @@ const InputRegisterForm: React.FC = () => {
         setRows([...rows, data]);
         setNotification({message: `Successfully created new input register entry (Database ID: ${data.id})`, open: true});
       }
+      setDialogOpen(false);
       setError('');
     } catch (err) {
       setError('Failed to save changes');

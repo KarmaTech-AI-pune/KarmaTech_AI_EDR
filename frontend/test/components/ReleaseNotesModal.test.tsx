@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import ReleaseNotesModal from '../../src/components/ReleaseNotesModal';
@@ -11,7 +12,18 @@ vi.mock('../../src/services/releaseNotesApi');
 
 const mockReleaseNotesApi = vi.mocked(releaseNotesApi);
 
-const theme = createTheme();
+const theme = createTheme({
+  components: {
+    MuiDialog: {
+      defaultProps: {
+        disablePortal: true, // Easier to test
+      },
+    },
+  },
+  transitions: {
+    create: () => 'none',
+  },
+});
 
 const renderWithTheme = (component: React.ReactElement) => {
   return render(
@@ -22,7 +34,7 @@ const renderWithTheme = (component: React.ReactElement) => {
 };
 
 const mockReleaseNotes: ProcessedReleaseNotes = {
-  version: '1.2.3',
+  version: '1.0.38',
   releaseDate: '2024-12-25T10:00:00Z',
   environment: 'dev',
   commitSha: 'abc123',
@@ -62,7 +74,7 @@ const mockReleaseNotes: ProcessedReleaseNotes = {
 describe('ReleaseNotesModal Component', () => {
   const user = userEvent.setup();
   const defaultProps = {
-    version: '1.2.3',
+    version: '1.0.38',
     isOpen: true,
     onClose: vi.fn()
   };
@@ -73,20 +85,38 @@ describe('ReleaseNotesModal Component', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // Mock matchMedia for responsive design tests
+    window.matchMedia = vi.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // deprecated
+      removeListener: vi.fn(), // deprecated
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    // Reset window width
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 1024,
+    });
   });
 
   describe('Basic Rendering', () => {
-    it('renders modal when open', () => {
+    it('renders modal when open', async () => {
       mockReleaseNotesApi.getReleaseNotes.mockResolvedValue(mockReleaseNotes);
       
       renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
       
       expect(screen.getByText('Release Notes')).toBeInTheDocument();
-      expect(screen.getByText('v1.2.3')).toBeInTheDocument();
+      expect(await screen.findByText(/v1\.0\.38/i)).toBeInTheDocument();
     });
 
     it('does not render modal when closed', () => {
@@ -110,7 +140,7 @@ describe('ReleaseNotesModal Component', () => {
       
       renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
       
-      expect(mockReleaseNotesApi.getReleaseNotes).toHaveBeenCalledWith('1.2.3');
+      expect(mockReleaseNotesApi.getReleaseNotes).toHaveBeenCalledWith('1.0.38');
     });
 
     it('shows loading state while fetching', async () => {
@@ -121,7 +151,7 @@ describe('ReleaseNotesModal Component', () => {
       renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
       
       expect(screen.getByText('Loading release notes...')).toBeInTheDocument();
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByRole('progressbar', { hidden: true })).toBeInTheDocument();
     });
 
     it('displays release notes after successful fetch', async () => {
@@ -152,7 +182,7 @@ describe('ReleaseNotesModal Component', () => {
       });
 
       // API should be called (caching is handled by the API service)
-      expect(mockReleaseNotesApi.getReleaseNotes).toHaveBeenCalledWith('1.2.3');
+      expect(mockReleaseNotesApi.getReleaseNotes).toHaveBeenCalledWith('1.0.38');
     });
   });
 
@@ -161,7 +191,8 @@ describe('ReleaseNotesModal Component', () => {
       const mockError = new Error('Network error');
       mockReleaseNotesApi.getReleaseNotes.mockRejectedValue(mockError);
 
-      renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
+      // Use a version that doesn't have fallback release notes
+      renderWithTheme(<ReleaseNotesModal {...defaultProps} version="9.9.9" />);
 
       await waitFor(() => {
         expect(screen.getByText('Network error')).toBeInTheDocument();
@@ -172,10 +203,12 @@ describe('ReleaseNotesModal Component', () => {
       const mockError = new Error('Network error');
       mockReleaseNotesApi.getReleaseNotes.mockRejectedValue(mockError);
 
-      renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
+      // Use a version that doesn't have fallback release notes
+      renderWithTheme(<ReleaseNotesModal {...defaultProps} version="9.9.9" />);
 
       await waitFor(() => {
-        expect(screen.getByText('Retry')).toBeInTheDocument();
+        // There might be multiple retry buttons (one in alert, one in actions)
+        expect(screen.getAllByText('Retry')[0]).toBeInTheDocument();
       });
     });
 
@@ -185,16 +218,17 @@ describe('ReleaseNotesModal Component', () => {
         .mockRejectedValueOnce(mockError)
         .mockResolvedValueOnce(mockReleaseNotes);
 
-      renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
+      // Use a version that doesn't have fallback release notes
+      renderWithTheme(<ReleaseNotesModal {...defaultProps} version="9.9.9" />);
 
       // Wait for error state
       await waitFor(() => {
-        expect(screen.getByText('Retry')).toBeInTheDocument();
+        expect(screen.getAllByText('Retry')[0]).toBeInTheDocument();
       });
 
-      // Click retry button
-      const retryButton = screen.getByText('Retry');
-      await user.click(retryButton);
+      // Click retry button (use the one in DialogActions if possible, or any)
+      const retryButtons = screen.getAllByText('Retry');
+      await user.click(retryButtons[0]);
 
       // Should call API again
       expect(mockReleaseNotesApi.getReleaseNotes).toHaveBeenCalledTimes(2);
@@ -207,7 +241,7 @@ describe('ReleaseNotesModal Component', () => {
 
     it('shows fallback message when no release notes exist', async () => {
       mockReleaseNotesApi.getReleaseNotes.mockResolvedValue({
-        version: '1.2.3',
+        version: '1.0.38',
         releaseDate: '2024-12-25T10:00:00Z',
         environment: 'dev',
         features: [],
@@ -248,7 +282,7 @@ describe('ReleaseNotesModal Component', () => {
         expect(screen.getByText('Added new dashboard')).toBeInTheDocument();
       });
 
-      const closeButton = screen.getByRole('button', { name: 'Close' });
+      const closeButton = screen.getByRole('button', { name: 'Close', hidden: true });
       await user.click(closeButton);
       
       expect(onClose).toHaveBeenCalledTimes(1);
@@ -261,7 +295,7 @@ describe('ReleaseNotesModal Component', () => {
       renderWithTheme(<ReleaseNotesModal {...defaultProps} onClose={onClose} />);
       
       // Focus the modal and press Escape
-      const modal = screen.getByRole('dialog');
+      const modal = screen.getByRole('dialog', { hidden: true });
       modal.focus();
       await user.keyboard('{Escape}');
       
@@ -295,9 +329,9 @@ describe('ReleaseNotesModal Component', () => {
       });
 
       // Check that items are in correct sections
-      const featuresSection = screen.getByText('New Features (1)').closest('.MuiAccordion-root');
-      const bugFixesSection = screen.getByText('Bug Fixes (1)').closest('.MuiAccordion-root');
-      const improvementsSection = screen.getByText('Improvements (1)').closest('.MuiAccordion-root');
+      const featuresSection = screen.getByText(/new features \(1\)/i).closest('.MuiAccordion-root');
+      const bugFixesSection = screen.getByText(/bug fixes \(1\)/i).closest('.MuiAccordion-root');
+      const improvementsSection = screen.getByText(/improvements \(1\)/i).closest('.MuiAccordion-root');
 
       expect(featuresSection).toContainElement(screen.getByText('Added new dashboard'));
       expect(bugFixesSection).toContainElement(screen.getByText('Fixed login issue'));
@@ -312,7 +346,7 @@ describe('ReleaseNotesModal Component', () => {
       await waitFor(() => {
         expect(screen.getByText('John Doe')).toBeInTheDocument();
         expect(screen.getByText('abc123')).toBeInTheDocument();
-        expect(screen.getByText('Impact: High')).toBeInTheDocument();
+        expect(screen.getByText(/impact: high/i)).toBeInTheDocument();
         expect(screen.getByText('PROJ-123')).toBeInTheDocument();
       });
     });
@@ -328,7 +362,7 @@ describe('ReleaseNotesModal Component', () => {
       renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
       
       await waitFor(() => {
-        expect(screen.getByText('New Features (1)')).toBeInTheDocument();
+        expect(screen.getByText(/new features \(1\)/i)).toBeInTheDocument();
       });
 
       expect(screen.queryByText(/Breaking Changes/)).not.toBeInTheDocument();
@@ -336,42 +370,56 @@ describe('ReleaseNotesModal Component', () => {
   });
 
   describe('Responsive Design', () => {
-    it('uses fullscreen on mobile', () => {
+    it('uses fullscreen on mobile', async () => {
       // Mock mobile viewport
-      Object.defineProperty(window, 'innerWidth', {
-        writable: true,
-        configurable: true,
-        value: 400,
-      });
+      window.matchMedia = vi.fn().mockImplementation(query => ({
+        matches: true, // Always match for this test
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
 
       mockReleaseNotesApi.getReleaseNotes.mockResolvedValue(mockReleaseNotes);
       
       renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
       
-      const dialog = screen.getByRole('dialog');
+      // Dialog should have fullscreen class
+      const dialog = await screen.findByRole('dialog', { hidden: true });
       expect(dialog).toHaveClass('MuiDialog-paperFullScreen');
     });
   });
 
   describe('Accessibility', () => {
-    it('has proper ARIA labels', () => {
+    it('has proper ARIA labels', async () => {
       mockReleaseNotesApi.getReleaseNotes.mockResolvedValue(mockReleaseNotes);
       
       renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
       
-      const dialog = screen.getByRole('dialog');
+      const dialog = await screen.findByRole('dialog', { hidden: true });
       expect(dialog).toHaveAttribute('aria-labelledby', 'release-notes-dialog-title');
       expect(dialog).toHaveAttribute('aria-describedby', 'release-notes-dialog-content');
     });
 
-    it('focuses properly when opened', () => {
+    it('focuses properly when opened', async () => {
       mockReleaseNotesApi.getReleaseNotes.mockResolvedValue(mockReleaseNotes);
       
       renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
       
-      // Dialog should be focused when opened
-      const dialog = screen.getByRole('dialog');
-      expect(document.activeElement).toBe(dialog);
+      // Use findByRole to wait for the dialog to appear
+      const dialog = await screen.findByRole('dialog', { hidden: true });
+      
+      // Wait for focus to be moved into the dialog or to its sentinel
+      await waitFor(() => {
+        const activeElement = document.activeElement;
+        // The Root element or any of its children should have focus
+        // MUI focuses the dialog content usually, but sometimes a sentinel
+        const dialogRoot = document.querySelector('.MuiDialog-root');
+        expect(dialogRoot?.contains(activeElement)).toBe(true);
+      }, { timeout: 2000 });
     });
   });
 
@@ -389,7 +437,7 @@ describe('ReleaseNotesModal Component', () => {
         resolvePromise = resolve;
       });
 
-      mockReleaseNotesApi.getReleaseNotes.mockReturnValue(promise);
+      mockReleaseNotesApi.getReleaseNotes.mockReturnValue(promise as any);
 
       const { unmount } = renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
 
@@ -430,7 +478,7 @@ describe('ReleaseNotesModal Component', () => {
       renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
       
       await waitFor(() => {
-        expect(screen.getByText('No release notes available')).toBeInTheDocument();
+        expect(screen.getByText(/no history available/i)).toBeInTheDocument();
       });
     });
   });

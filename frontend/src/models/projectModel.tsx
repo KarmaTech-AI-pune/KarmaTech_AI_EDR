@@ -1,4 +1,4 @@
-import { ProjectStatus } from "../types/index";
+import { ProjectStatus } from "./types";
 
 export type Project = {
     id: string;

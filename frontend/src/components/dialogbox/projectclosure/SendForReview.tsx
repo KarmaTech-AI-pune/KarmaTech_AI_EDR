@@ -231,6 +231,7 @@ const SendForReview: React.FC<SendForReviewProps> = ({
                 onChange={handleReviewerChange}
                 label="Senior Project Manager"
                 onClick={stopEventPropagation}
+                data-testid="reviewer-select"
                 MenuProps={{
                   onClick: stopEventPropagation
                 }}

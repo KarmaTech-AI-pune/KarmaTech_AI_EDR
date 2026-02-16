@@ -45,5 +45,6 @@ export default defineConfig({
     __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
   // Also set environment variables for runtime access
-  envPrefix: ['VITE_', 'REACT_APP_']
+  envPrefix: ['VITE_', 'REACT_APP_'],
+
 })

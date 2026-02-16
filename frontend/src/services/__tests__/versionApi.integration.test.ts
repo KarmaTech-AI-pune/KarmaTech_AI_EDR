@@ -7,10 +7,7 @@ import { versionApi } from '../versionApi';
  * Run only when backend is available
  */
 describe('versionApi Integration Tests', () => {
-  // Skip these tests in CI/CD or when backend is not available
-  const shouldRunIntegrationTests = process.env.RUN_INTEGRATION_TESTS === 'true';
-  
-  describe.skipIf(!shouldRunIntegrationTests)('Real API Integration', () => {
+  describe('Real API Integration', () => {
     it('should fetch current version from real API', async () => {
       try {
         const result = await versionApi.getCurrentVersion();

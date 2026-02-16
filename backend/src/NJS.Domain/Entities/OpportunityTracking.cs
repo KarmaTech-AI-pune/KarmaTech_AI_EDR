@@ -15,7 +15,7 @@ namespace NJS.Domain.Entities
         public string? BidNumber { get; set; }
         
         [Required]
-        public string StrategicRanking { get; set; }
+        public string? StrategicRanking { get; set; }
         
         [Column(TypeName = "decimal(18,2)")]
         public decimal? BidFees { get; set; }

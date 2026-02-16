@@ -1687,9 +1687,11 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FormTitle")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("GrandTotal")
@@ -1700,6 +1702,7 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("PreparedBy")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Profit")
@@ -2547,7 +2550,9 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ClientName")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("ContractType")
                         .HasColumnType("nvarchar(max)");
@@ -2556,10 +2561,14 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Currency")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
 
                     b.Property<string>("Details")
                         .HasColumnType("nvarchar(max)");
@@ -2594,7 +2603,9 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Office")
                         .HasColumnType("nvarchar(max)");
@@ -2628,7 +2639,8 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Sector")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("SeniorProjectManagerId")
                         .HasColumnType("nvarchar(450)");
@@ -2643,7 +2655,8 @@ namespace NJS.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("TypeOfClient")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("TypeOfJob")
                         .HasColumnType("nvarchar(max)");

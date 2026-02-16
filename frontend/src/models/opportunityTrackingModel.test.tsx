@@ -1,3 +1,4 @@
+import { vi, describe, it, expect } from 'vitest';
 import { normalizeOpportunityTracking, prepareOpportunityTrackingForSubmission } from './opportunityTrackingModel';
 
 describe('OpportunityTracking Model', () => {
@@ -203,3 +204,4 @@ describe('OpportunityTracking Model', () => {
     });
   });
 });
+

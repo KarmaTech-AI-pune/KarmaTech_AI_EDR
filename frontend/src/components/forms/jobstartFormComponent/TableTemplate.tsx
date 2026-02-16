@@ -216,6 +216,7 @@ const TableTemplate = ({
         onChange={() => handleAccordionChange(sectionId)}
         elevation={0}
         sx={tableStyles.accordion}
+        slotProps={{ transition: { unmountOnExit: true } }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography sx={{ fontWeight: 'bold' }}>{title}</Typography>
@@ -262,6 +263,7 @@ const TableTemplate = ({
                         value={remarks[resource.id.toString()] || resource.remarks || ''}
                         onChange={(e) => handleRemarksChange(resource.id, e.target.value)}
                         sx={tableStyles.textField}
+                        inputProps={{ 'aria-label': 'Remarks' }}
                       />
                     </TableCell>
                   </TableRow>
@@ -281,6 +283,7 @@ const TableTemplate = ({
                           type="text"
                           onChange={(e) => handleCustomRowChange(row.id, 'rate', e.target.value)}
                           sx={{ ...tableStyles.textField, width: '120px' }} // Apply width here
+                          inputProps={{ 'aria-label': 'Rate' }}
                         />
                       ) : null}
                     </TableCell>
@@ -294,6 +297,7 @@ const TableTemplate = ({
                             value={row.units || '0'}
                             onChange={(e) => handleCustomRowChange(row.id, 'units', e.target.value)}
                             sx={{ ...tableStyles.textField, width: '120px' }} // Apply width here
+                            inputProps={{ 'aria-label': 'Units' }}
                             // Using slotProps instead of InputProps (which is deprecated)
                             slotProps={{
                               input: {
@@ -303,7 +307,22 @@ const TableTemplate = ({
                         />
                       ) : null}
                     </TableCell>
-                    <TableCell align="center">{row.budgetedCost ? formatToIndianNumber(row.budgetedCost) : '0.00'}</TableCell>
+                    <TableCell align="center">
+                      {!row.hasRateField && !row.hasUnitsField ? (
+                        <TextField
+                          size="small"
+                          variant="outlined"
+                          placeholder="Cost"
+                          type="text"
+                          value={row.budgetedCost || ''}
+                          onChange={(e) => handleCustomRowChange(row.id, 'budgetedCost', e.target.value)}
+                          sx={{ ...tableStyles.textField, width: '120px' }}
+                          inputProps={{ 'aria-label': 'Budgeted Cost' }}
+                        />
+                      ) : (
+                        row.budgetedCost ? formatToIndianNumber(row.budgetedCost) : '0.00'
+                      )}
+                    </TableCell>
                     <TableCell>
                       <TextField
                         fullWidth
@@ -313,6 +332,7 @@ const TableTemplate = ({
                         value={row.remarks || ''}
                         onChange={(e) => handleCustomRowChange(row.id, 'remarks', e.target.value)}
                         sx={tableStyles.textField}
+                        inputProps={{ 'aria-label': 'Remarks' }}
                       />
                     </TableCell>
                   </TableRow>

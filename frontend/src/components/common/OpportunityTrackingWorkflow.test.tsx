@@ -1,8 +1,9 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
 import { OpportunityTrackingWorkflow } from './OpportunityTrackingWorkflow';
 import { projectManagementAppContext } from '../../App';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { OpportunityHistory } from '../../models/opportunityHistoryModel';
 import { OpportunityTracking } from '../../models';
 
@@ -48,6 +49,10 @@ vi.mock('../../dummyapi/database/dummyOpporunityWorkflow', () => ({
 }));
 
 describe('OpportunityTrackingWorkflow Component - Edge Cases and Error Handling', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   // Mock context values
   const defaultContextValue = {
     screenState: 'opportunity',
@@ -228,7 +233,7 @@ describe('OpportunityTrackingWorkflow Component - Edge Cases and Error Handling'
     expect(screen.getByTestId('send-for-review-dialog')).toBeInTheDocument();
 
     // Click submit button and handle potential errors
-    await fireEvent.click(screen.getByText('Submit'));
+    await fireEvent.click(screen.getByRole("button", { name: /submit/i }));
 
     // Wait for async operations to complete with a longer timeout
     await waitFor(() => {
@@ -267,7 +272,7 @@ describe('OpportunityTrackingWorkflow Component - Edge Cases and Error Handling'
     expect(screen.getByTestId('send-for-review-dialog')).toBeInTheDocument();
 
     // Click cancel button
-    fireEvent.click(screen.getByText('Cancel'));
+    fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
     // Dialog should be closed
     expect(screen.queryByTestId('send-for-review-dialog')).not.toBeInTheDocument();
@@ -276,3 +281,6 @@ describe('OpportunityTrackingWorkflow Component - Edge Cases and Error Handling'
     expect(onOpportunityUpdated).not.toHaveBeenCalled();
   });
 });
+
+
+

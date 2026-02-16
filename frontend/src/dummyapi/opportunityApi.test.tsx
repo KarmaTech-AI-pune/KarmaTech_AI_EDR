@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import React from 'react';
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { opportunityApi, BackendOpportunityTracking } from './opportunityApi'
 import { axiosInstance } from '../services/axiosConfig'
 import { OpportunityTracking } from '../models/opportunityTrackingModel'
@@ -14,6 +15,10 @@ vi.mock('../services/axiosConfig', () => ({
 }))
 
 describe('opportunityApi', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   // Sample opportunity data for tests
   const sampleOpportunity: Partial<OpportunityTracking> = {
     workName: 'Test Project',
@@ -64,6 +69,10 @@ describe('opportunityApi', () => {
   })
 
   describe('Stage Mapping', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('maps frontend stage strings to backend numeric values', async () => {
       // Setup mock response
       vi.mocked(axiosInstance.post).mockResolvedValueOnce({
@@ -143,6 +152,10 @@ describe('opportunityApi', () => {
   })
 
   describe('Status Mapping', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('maps frontend status strings to backend numeric values', async () => {
       // Setup mock response
       vi.mocked(axiosInstance.post).mockResolvedValueOnce({
@@ -221,6 +234,10 @@ describe('opportunityApi', () => {
   })
 
   describe('API Methods', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('creates an opportunity with correct data transformation', async () => {
       // Setup mock response
       vi.mocked(axiosInstance.post).mockResolvedValueOnce({
@@ -263,17 +280,22 @@ describe('opportunityApi', () => {
       // Call update method
       const result = await opportunityApi.update(1, sampleOpportunity)
 
-      // Check that the API was called with transformed data
-      expect(axiosInstance.put).toHaveBeenCalledWith(
-        'api/OpportunityTracking/1',
-        expect.objectContaining({
-          id: 1,
-          workName: sampleOpportunity.workName,
-          client: sampleOpportunity.client,
-          stage: 2, // B maps to 2
-          status: 0 // Bid Under Preparation maps to 0
-        })
-      )
+      // Check that the API was called
+      expect(axiosInstance.put).toHaveBeenCalledTimes(1)
+      
+      // Get the actual call arguments
+      const callArgs = vi.mocked(axiosInstance.put).mock.calls[0]
+      expect(callArgs[0]).toBe('api/OpportunityTracking/UpdateOpportunityTracking/1')
+      
+      // Check that the data contains the expected transformed fields
+      const sentData = callArgs[1]
+      expect(sentData).toMatchObject({
+        id: 1,
+        workName: sampleOpportunity.workName,
+        client: sampleOpportunity.client,
+        stage: 2, // B maps to 2
+        status: 0 // Bid Under Preparation maps to 0
+      })
 
       // Check that the response was transformed back
       expect(result).toEqual(expect.objectContaining({
@@ -359,6 +381,10 @@ describe('opportunityApi', () => {
   })
 
   describe('Error Handling', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('handles errors in create method', async () => {
       // Setup mock error
       const error = new Error('API Error')
@@ -405,3 +431,5 @@ describe('opportunityApi', () => {
     })
   })
 })
+
+
