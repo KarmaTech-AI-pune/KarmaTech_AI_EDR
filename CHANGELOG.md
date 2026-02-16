@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-16
+
+### ✨ Features
+- **Program Management**: Comprehensive tools for managing programs, objectives, and key results.
+- **Sprint Management**: New capabilities for sprint planning, tracking, and execution.
+
+### 🐛 Bug Fixes
+- Resolved issue with task assignment notifications impacting team workflow.
+- Fixed data synchronization lag in project dashboard metrics.
+- Corrected responsive layout glitches on mobile views for the reporting module.
+- Patched security vulnerability in user session handling.
+
 ## [Unreleased]
 
 ### Added
