@@ -1,23 +1,23 @@
+import { vi, describe, it, expect, afterEach } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BTimeline } from './BTimeline';
 
 // Mock Material-UI components to avoid complex rendering issues in unit tests
-jest.mock('@mui/material/Box', () => ({
+// Consolidating into a single mock for @mui/material to support named imports
+vi.mock('@mui/material', () => ({
   __esModule: true,
-  default: jest.fn(({ children, ...props }) => <div {...props} data-testid="mock-box">{children}</div>),
-}));
-jest.mock('@mui/material/Paper', () => ({
-  __esModule: true,
-  default: jest.fn(({ children, ...props }) => <div {...props} data-testid="mock-paper">{children}</div>),
-}));
-jest.mock('@mui/material/Typography', () => ({
-  __esModule: true,
-  default: jest.fn(({ children, variant, ...props }) => <span data-testid={`mock-typography-${variant}`} {...props}>{children}</span>),
+  Box: vi.fn(({ children, ...props }) => <div {...props} data-testid="mock-box">{children}</div>),
+  Paper: vi.fn(({ children, ...props }) => <div {...props} data-testid="mock-paper">{children}</div>),
+  Typography: vi.fn(({ children, variant, ...props }) => <span data-testid={`mock-typography-${variant}`} {...props}>{children}</span>),
 }));
 
 describe('BTimeline', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('renders the Timeline title and placeholder text', () => {
     render(<BTimeline />);
 

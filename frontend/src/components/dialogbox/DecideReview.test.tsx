@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import DecideReview from './DecideReview';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
 import { OpportunityTracking } from '../../models'; // Assuming OpportunityTracking is defined here
 
 // Import the actual modules to be mocked
@@ -60,6 +62,10 @@ const defaultProps = {
 };
 
 describe('DecideReview', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -68,8 +74,8 @@ describe('DecideReview', () => {
     mockSendToApproval.mockResolvedValue({ ...mockOpportunityData, status: 'Pending Approval' } as OpportunityTracking);
     mockRejectByRegionManagerSentToBidManager.mockResolvedValue({ ...mockOpportunityData, status: 'Review Rejected' } as OpportunityTracking);
     mockGetUserById.mockResolvedValue(mockUserData as any); // Cast to any if User type is not defined or known
-    mockLogReviewDecision.mockResolvedValue(undefined);
-    mockLogStatusChange.mockResolvedValue(undefined);
+    mockLogReviewDecision.mockResolvedValue(undefined as any);
+    mockLogStatusChange.mockResolvedValue(undefined as any);
   });
 
   it('should render correctly with default props', () => {
@@ -109,11 +115,9 @@ describe('DecideReview', () => {
   it('should show validation error if decision is not selected and submit is clicked', async () => {
     render(<DecideReview {...defaultProps} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Submit Decision' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Please select a decision')).toBeInTheDocument();
-    });
+    // Submit button should be disabled when no decision is selected
+    const submitButton = screen.getByRole('button', { name: 'Submit Decision' });
+    expect(submitButton).toBeDisabled();
   });
 
   it('should show validation error if rejection comments are empty and submit is clicked', async () => {
@@ -124,11 +128,10 @@ describe('DecideReview', () => {
     fireEvent.mouseDown(decisionInput);
     fireEvent.click(screen.getByText('Reject'));
 
-    // Try to submit without comments
-    fireEvent.click(screen.getByRole('button', { name: 'Submit Decision' }));
-
+    // Submit button should be disabled when rejecting without comments
     await waitFor(() => {
-      expect(screen.getByText('Comments are required for rejection')).toBeInTheDocument();
+      const submitButton = screen.getByRole('button', { name: 'Submit Decision' });
+      expect(submitButton).toBeDisabled();
     });
   });
 
@@ -337,7 +340,7 @@ describe('DecideReview', () => {
   });
 
   it('should display an error if no Regional Director is assigned', async () => {
-    mockGetOpportunityById.mockResolvedValue({ ...mockOpportunityData, approvalManagerId: null } as OpportunityTracking);
+    mockGetOpportunityById.mockResolvedValue({ ...mockOpportunityData, approvalManagerId: null } as any);
 
     render(<DecideReview {...defaultProps} />);
 
@@ -419,3 +422,9 @@ describe('DecideReview', () => {
     }
   });
 });
+
+
+
+
+
+

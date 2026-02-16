@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -7,61 +8,61 @@ import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext
 import { OpportunityTracking } from '../../models';
 
 // Mock react-router-dom hooks
-jest.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', () => ({
   __esModule: true,
-  useOutletContext: jest.fn(),
-  useNavigate: jest.fn(),
+  useOutletContext: vi.fn(),
+  useNavigate: vi.fn(),
 }));
 
 // Mock BusinessDevelopmentContext
-jest.mock('../../context/BusinessDevelopmentContext', () => ({
+vi.mock('../../context/BusinessDevelopmentContext', () => ({
   __esModule: true,
-  useBusinessDevelopment: jest.fn(),
+  useBusinessDevelopment: vi.fn(),
 }));
 
 // Mock Material-UI components
-jest.mock('@mui/material/Box', () => ({
+vi.mock('@mui/material/Box', () => ({
   __esModule: true,
-  default: jest.fn(({ children, ...props }) => <div {...props} data-testid="mock-box">{children}</div>),
+  default: vi.fn(({ children, ...props }) => <div {...props} data-testid="mock-box">{children}</div>),
 }));
-jest.mock('@mui/material/Grid', () => ({
+vi.mock('@mui/material/Grid', () => ({
   __esModule: true,
-  default: jest.fn(({ children, ...props }) => <div {...props} data-testid="mock-grid">{children}</div>),
+  default: vi.fn(({ children, ...props }) => <div {...props} data-testid="mock-grid">{children}</div>),
 }));
-jest.mock('@mui/material/Card', () => ({
+vi.mock('@mui/material/Card', () => ({
   __esModule: true,
-  default: jest.fn(({ children, ...props }) => <div {...props} data-testid="mock-card">{children}</div>),
+  default: vi.fn(({ children, ...props }) => <div {...props} data-testid="mock-card">{children}</div>),
 }));
-jest.mock('@mui/material/CardContent', () => ({
+vi.mock('@mui/material/CardContent', () => ({
   __esModule: true,
-  default: jest.fn(({ children }) => <div data-testid="mock-card-content">{children}</div>),
+  default: vi.fn(({ children }) => <div data-testid="mock-card-content">{children}</div>),
 }));
-jest.mock('@mui/material/Typography', () => ({
+vi.mock('@mui/material/Typography', () => ({
   __esModule: true,
-  default: jest.fn(({ children, variant, ...props }) => <span data-testid={`mock-typography-${variant}`} {...props}>{children}</span>),
+  default: vi.fn(({ children, variant, ...props }) => <span data-testid={`mock-typography-${variant}`} {...props}>{children}</span>),
 }));
-jest.mock('@mui/material/Button', () => ({
+vi.mock('@mui/material/Button', () => ({
   __esModule: true,
-  default: jest.fn(({ children, onClick, ...props }) => (
+  default: vi.fn(({ children, onClick, ...props }) => (
     <button onClick={onClick} data-testid={`mock-button-${children}`} {...props}>
       {children}
     </button>
   )),
 }));
-jest.mock('@mui/icons-material/Description', () => ({
+vi.mock('@mui/icons-material/Description', () => ({
   __esModule: true,
-  default: jest.fn(() => <span data-testid="mock-description-icon" />),
+  default: vi.fn(() => <span data-testid="mock-description-icon" />),
 }));
-jest.mock('@mui/icons-material/Assessment', () => ({
+vi.mock('@mui/icons-material/Assessment', () => ({
   __esModule: true,
-  default: jest.fn(() => <span data-testid="mock-assessment-icon" />),
+  default: vi.fn(() => <span data-testid="mock-assessment-icon" />),
 }));
-jest.mock('@mui/icons-material/Assignment', () => ({
+vi.mock('@mui/icons-material/Assignment', () => ({
   __esModule: true,
-  default: jest.fn(() => <span data-testid="mock-assignment-icon" />),
+  default: vi.fn(() => <span data-testid="mock-assignment-icon" />),
 }));
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
 const mockOpportunityApproved: OpportunityTracking = {
   id: 1,
@@ -96,17 +97,21 @@ const mockOpportunityPending: OpportunityTracking = {
 };
 
 describe('BForms', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
-    (useBusinessDevelopment as jest.Mock).mockReturnValue({
+    vi.clearAllMocks();
+    (useNavigate as vi.Mock).mockReturnValue(mockNavigate);
+    (useBusinessDevelopment as vi.Mock).mockReturnValue({
       goNoGoDecisionStatus: 'NO-GO',
       goNoGoVersionNumber: 1,
     });
   });
 
   it('renders all form cards and titles', () => {
-    (useOutletContext as jest.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
+    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
     render(<BForms />);
 
     expect(screen.getByText('Forms Overview')).toBeInTheDocument();
@@ -116,17 +121,17 @@ describe('BForms', () => {
   });
 
   it('Opportunity Tracking button is always enabled and navigates correctly', () => {
-    (useOutletContext as jest.Mock).mockReturnValue({ opportunity: mockOpportunityPending });
+    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityPending });
     render(<BForms />);
 
-    const opportunityButton = screen.getByRole('button', { name: /View Form/i });
+    const opportunityButton = screen.getAllByRole('button', { name: /View Form/i })[0];
     expect(opportunityButton).not.toBeDisabled(); // Should be enabled
     fireEvent.click(opportunityButton);
     expect(mockNavigate).toHaveBeenCalledWith('/business-development/details/forms/opportunity-tracking');
   });
 
   it('Go/No-Go Decision button is disabled if opportunity is not approved', () => {
-    (useOutletContext as jest.Mock).mockReturnValue({ opportunity: mockOpportunityPending });
+    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityPending });
     render(<BForms />);
 
     const goNoGoButton = screen.getAllByRole('button', { name: /View Form/i })[1]; // Assuming it's the second button
@@ -135,7 +140,7 @@ describe('BForms', () => {
   });
 
   it('Go/No-Go Decision button is enabled if opportunity is approved and navigates correctly', () => {
-    (useOutletContext as jest.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
+    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
     render(<BForms />);
 
     const goNoGoButton = screen.getAllByRole('button', { name: /View Form/i })[1]; // Second "View Form" button
@@ -145,8 +150,8 @@ describe('BForms', () => {
   });
 
   it('Bid Preparation button is disabled if Go/No-Go status is not "GO" or version is not 3', () => {
-    (useOutletContext as jest.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
-    (useBusinessDevelopment as jest.Mock).mockReturnValue({
+    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
+    (useBusinessDevelopment as vi.Mock).mockReturnValue({
       goNoGoDecisionStatus: 'NO-GO', // Not GO
       goNoGoVersionNumber: 1, // Not 3
     });
@@ -157,8 +162,8 @@ describe('BForms', () => {
   });
 
   it('Bid Preparation button is enabled if Go/No-Go status is "GO" and version is 3 and navigates correctly', () => {
-    (useOutletContext as jest.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
-    (useBusinessDevelopment as jest.Mock).mockReturnValue({
+    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityApproved });
+    (useBusinessDevelopment as vi.Mock).mockReturnValue({
       goNoGoDecisionStatus: 'GO',
       goNoGoVersionNumber: 3,
     });
@@ -178,7 +183,7 @@ describe('BForms', () => {
         { id: 2, opportunityId: 1, statusId: 6, status: 'Approved', action: 'Approved', assignedToId: 'user1', date: '2023-01-02T11:00:00Z', description: 'Opportunity approved' }, // Approved status in array
       ],
     };
-    (useOutletContext as jest.Mock).mockReturnValue({ opportunity: mockOpportunityArrayHistory });
+    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunityArrayHistory });
     render(<BForms />);
 
     const goNoGoButton = screen.getAllByRole('button', { name: /View Form/i })[1];
@@ -199,7 +204,7 @@ describe('BForms', () => {
         description: 'Opportunity approved',
       }, // Approved status as single object
     };
-    (useOutletContext as jest.Mock).mockReturnValue({ opportunity: mockOpportunitySingleHistory });
+    (useOutletContext as vi.Mock).mockReturnValue({ opportunity: mockOpportunitySingleHistory });
     render(<BForms />);
 
     const goNoGoButton = screen.getAllByRole('button', { name: /View Form/i })[1];

@@ -174,38 +174,41 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
     >
       <DialogTitle>Send for Approval</DialogTitle>
       <DialogContent onClick={stopEventPropagation}>
-        <FormControl
+        {manager && (
+          <div style={{
+            fontSize: '16px',
+            padding: '8px 0',
+            textAlign: 'center'
+          }}>
+            Send to {manager} for approval?
+          </div>
+        )}
+
+        <TextField
+          label="Comments"
+          multiline
+          rows={4}
           fullWidth
           margin="normal"
-          error={!!error}
-        >
-          {manager && (
-            <div style={{
-              fontSize: '16px',
-              padding: '8px 0',
-              textAlign: 'center'
-            }}>
-              Send to {manager} for approval?
-            </div>
-          )}
+          value={comments}
+          onChange={handleCommentsChange}
+          placeholder="Add your comments here (optional)"
+        />
 
-          <TextField
-            label="Comments"
-            multiline
-            rows={4}
-            fullWidth
-            margin="normal"
-            value={comments}
-            onChange={handleCommentsChange}
-            placeholder="Add your comments here (optional)"
-          />
-
-          {error && (
-            <FormHelperText error>
-              {error}
-            </FormHelperText>
-          )}
-        </FormControl>
+        {error && (
+          <FormHelperText 
+            error 
+            sx={{ 
+              mt: 2, 
+              mb: 1,
+              fontSize: '0.75rem',
+              color: 'error.main'
+            }}
+            data-testid="error-message"
+          >
+            {error}
+          </FormHelperText>
+        )}
       </DialogContent>
       <DialogActions onClick={stopEventPropagation}>
         <Button onClick={handleCancel} color="inherit">

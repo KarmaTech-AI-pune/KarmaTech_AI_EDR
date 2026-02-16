@@ -1,5 +1,6 @@
+
+import { vi, describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
 import FormSection from './FormSection';
 import { Typography } from '@mui/material';
 
@@ -68,3 +69,4 @@ describe('FormSection', () => {
     expect(expandIcon).toHaveAttribute('aria-hidden', 'true');
   });
 });
+

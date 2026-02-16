@@ -1,5 +1,6 @@
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import JobStartTable from './jobstartTable';
 
@@ -9,10 +10,10 @@ describe('JobStartTable', () => {
     { id: 'row-2', activity: 'Activity 2', responsibility: 'Resp 2', targetDate: '2023-01-02', status: 'In Progress', remarks: 'Remark 2' },
   ];
 
-  const mockOnRowsChange = jest.fn();
+  const mockOnRowsChange = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders correctly with initial rows', () => {
@@ -33,12 +34,12 @@ describe('JobStartTable', () => {
     expect(screen.getByText('Actions')).toBeInTheDocument();
 
     // Check if initial rows are rendered
-    expect(screen.getByText('Activity 1')).toBeInTheDocument();
-    expect(screen.getByText('Resp 1')).toBeInTheDocument();
-    expect(screen.getByText('Remark 1')).toBeInTheDocument();
-    expect(screen.getByText('Activity 2')).toBeInTheDocument();
-    expect(screen.getByText('Resp 2')).toBeInTheDocument();
-    expect(screen.getByText('Remark 2')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Activity 1')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Resp 1')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Remark 1')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Activity 2')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Resp 2')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Remark 2')).toBeInTheDocument();
   });
 
   it('adds a new row when "Add Activity" button is clicked', () => {
@@ -72,7 +73,7 @@ describe('JobStartTable', () => {
     );
 
     // Find the delete button for the first row
-    const firstRowElement = screen.getByText('Activity 1').closest('tr');
+    const firstRowElement = screen.getByDisplayValue('Activity 1').closest('tr');
     const deleteButton = within(firstRowElement!).getByRole('button', { name: /delete/i });
     fireEvent.click(deleteButton);
 
@@ -90,7 +91,7 @@ describe('JobStartTable', () => {
     );
 
     // Find the activity text field for the first row and change its value
-    const firstRowElement = screen.getByText('Activity 1').closest('tr');
+    const firstRowElement = screen.getByDisplayValue('Activity 1').closest('tr');
     const activityInput = within(firstRowElement!).getByRole('textbox', { name: /activity/i });
     fireEvent.change(activityInput, { target: { value: 'Updated Activity 1' } });
 
@@ -102,7 +103,7 @@ describe('JobStartTable', () => {
     ]);
   });
 
-  it('renders in read-only mode correctly', () => {
+  it('renders in read-only mode correctly', async () => {
     render(
       <JobStartTable
         rows={mockRows}
@@ -112,7 +113,7 @@ describe('JobStartTable', () => {
     );
 
     // Check that action buttons are not present
-    expect(screen.queryByText('Actions')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Actions')).not.toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Add Activity/i })).not.toBeInTheDocument();
 
@@ -133,3 +134,5 @@ describe('JobStartTable', () => {
     expect(screen.getByText('No activities added yet.')).toBeInTheDocument();
   });
 });
+
+

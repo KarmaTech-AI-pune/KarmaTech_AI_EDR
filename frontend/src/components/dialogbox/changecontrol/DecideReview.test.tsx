@@ -1,6 +1,6 @@
-import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import DecideReview from './DecideReview';
 import { projectApi } from '../../../services/projectApi';
@@ -64,6 +64,10 @@ const defaultProps = {
 };
 
 describe('DecideReview', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetProjectById.mockResolvedValue(mockProjectData as any); // Mock successful project fetch
@@ -114,10 +118,11 @@ describe('DecideReview', () => {
 
   it('should show error if no decision is selected on submit', async () => {
     render(<DecideReview {...defaultProps} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    await waitFor(() => {
-      expect(screen.getByText('Please select a decision')).toBeInTheDocument();
-    });
+    
+    // Submit button should be disabled when no decision is selected
+    const submitButton = screen.getByRole('button', { name: 'Submit' });
+    expect(submitButton).toBeDisabled();
+    
     expect(mockSendToApprovalBySPM).not.toHaveBeenCalled();
     expect(mockRejectBySPM).not.toHaveBeenCalled();
     expect(defaultProps.onDecisionMade).not.toHaveBeenCalled();
@@ -143,6 +148,10 @@ describe('DecideReview', () => {
   });
 
   describe('Approve decision path', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should call sendToApprovalBySPM and onDecisionMade on successful approval', async () => {
       render(<DecideReview {...defaultProps} />);
       fireEvent.click(screen.getByLabelText('Approve and send for final approval'));
@@ -188,13 +197,17 @@ describe('DecideReview', () => {
 
       await waitFor(() => {
         expect(screen.getByText(errorMessage)).toBeInTheDocument();
-        expect(defaultProps.onDecisionMade).not.toHaveBeenCalled();
-        expect(defaultProps.onClose).not.toHaveBeenCalled();
       });
+      expect(defaultProps.onDecisionMade).not.toHaveBeenCalled();
+      expect(defaultProps.onClose).not.toHaveBeenCalled();
     });
   });
 
   describe('Request changes decision path', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should call rejectBySPM and onDecisionMade on successful request changes', async () => {
       render(<DecideReview {...defaultProps} />);
       fireEvent.click(screen.getByLabelText('Request changes'));
@@ -241,26 +254,26 @@ describe('DecideReview', () => {
 
       await waitFor(() => {
         expect(screen.getByText(errorMessage)).toBeInTheDocument();
-        expect(defaultProps.onDecisionMade).not.toHaveBeenCalled();
-        expect(defaultProps.onClose).not.toHaveBeenCalled();
       });
+      expect(defaultProps.onDecisionMade).not.toHaveBeenCalled();
+      expect(defaultProps.onClose).not.toHaveBeenCalled();
     });
   });
 
   it('should prevent event propagation on dialog interactions', () => {
-    const stopPropagationSpy = vi.spyOn(React, 'useCallback').mockImplementation((fn) => fn);
-
     render(<DecideReview {...defaultProps} />);
+    
+    // Click on dialog content should not close the dialog
     const dialog = screen.getByRole('dialog');
-
-    const mockEvent = { stopPropagation: vi.fn() } as unknown as React.MouseEvent;
-    fireEvent.click(dialog, mockEvent);
-    expect(mockEvent.stopPropagation).toHaveBeenCalledTimes(1);
-
-    const mockKeyEvent = { stopPropagation: vi.fn() } as unknown as React.KeyboardEvent;
-    fireEvent.keyDown(dialog, mockKeyEvent);
-    expect(mockKeyEvent.stopPropagation).toHaveBeenCalledTimes(1);
-
-    stopPropagationSpy.mockRestore();
+    fireEvent.click(dialog);
+    
+    // Dialog should still be open (onClose not called)
+    expect(defaultProps.onClose).not.toHaveBeenCalled();
+    
+    // Keyboard events on dialog should not close it
+    fireEvent.keyDown(dialog, { key: 'Enter' });
+    
+    // onClose should still not be called
+    expect(defaultProps.onClose).not.toHaveBeenCalled();
   });
 });

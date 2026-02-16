@@ -1,5 +1,6 @@
+import React from 'react';
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { useUsers } from './useUsers';
 import * as usersApi from '../services/userApi';
 import { AuthUser } from '../models/userModel';
@@ -13,6 +14,10 @@ vi.mock('../services/userApi', () => ({
 }));
 
 describe('useUsers', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const mockUsers: AuthUser[] = [
     { id: '1', userName: 'user1', email: 'user1@example.com', name: 'User One', password: 'password1', roles: [], standardRate: 0, isConsultant: false, createdAt: '' },
     { id: '2', userName: 'user2', email: 'user2@example.com', name: 'User Two', password: 'password2', roles: [], standardRate: 0, isConsultant: false, createdAt: '' },
@@ -199,3 +204,5 @@ describe('useUsers', () => {
     });
   });
 });
+
+

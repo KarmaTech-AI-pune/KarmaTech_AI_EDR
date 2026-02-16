@@ -11,12 +11,11 @@ namespace NJS.Domain.Tests
 {
     public class RepositoryTests
     {
-        private DbContextOptions<ProjectManagementContext> _options;
-        public RepositoryTests()
+        private DbContextOptions<ProjectManagementContext> GetInMemoryDbOptions()
         {
-            // Set up in-memory database options
-            _options = new DbContextOptionsBuilder<ProjectManagementContext>()
-                .UseInMemoryDatabase(databaseName: "TestDatabase")
+            // Use a unique database name for each test to avoid interference
+            return new DbContextOptionsBuilder<ProjectManagementContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
         }
 
@@ -25,7 +24,8 @@ namespace NJS.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
+            currentTenantService.Setup(x => x.TenantId).Returns(1); // Set tenant ID
+            using var context = new ProjectManagementContext(GetInMemoryDbOptions(), currentTenantService.Object);
             var repository = new Repository<Project>(context);
 
             var project = new Project
@@ -41,7 +41,8 @@ namespace NJS.Domain.Tests
                 ContractType = "ContractType",
                 CreatedBy = "Test",
                 Currency = "INR",
-                Sector = "Tet"
+                Sector = "Tet",
+                TenantId = 1 // Explicitly set TenantId for test
             };
 
             // Act
@@ -59,7 +60,8 @@ namespace NJS.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
+            currentTenantService.Setup(x => x.TenantId).Returns(1); // Set tenant ID
+            using var context = new ProjectManagementContext(GetInMemoryDbOptions(), currentTenantService.Object);
             context.Projects.Add(new Project
             {
                 Name = "City Water Supply Upgrade",
@@ -73,7 +75,8 @@ namespace NJS.Domain.Tests
                 ContractType = "ContractType",
                 CreatedBy = "Test",
                 Currency = "INR",
-                Sector = "Tet"
+                Sector = "Tet",
+                TenantId = 1 // Explicitly set TenantId for test
             });
             context.Projects.Add(new Project
             {
@@ -88,7 +91,8 @@ namespace NJS.Domain.Tests
                 ContractType = "ContractType",
                 CreatedBy = "Test",
                 Currency = "INR",
-                Sector = "Tet"
+                Sector = "Tet",
+                TenantId = 1 // Explicitly set TenantId for test
             });
             context.SaveChanges();
 
@@ -96,10 +100,17 @@ namespace NJS.Domain.Tests
 
             // Act
             var authors = await repository.GetAllAsync().ConfigureAwait(true);
+            
+            // Debug: Check what's actually in the database
+            var allProjectsIgnoringFilters = await context.Projects.IgnoreQueryFilters().ToListAsync();
+            var projectsWithTenantFilter = await context.Projects.ToListAsync();
 
             // Assert
-
-            Assert.True(authors.ToList().Count > 0);
+            Assert.True(authors.ToList().Count > 0, 
+                $"Expected projects but got 0. " +
+                $"Total projects ignoring filters: {allProjectsIgnoringFilters.Count}, " +
+                $"Projects with tenant filter: {projectsWithTenantFilter.Count}, " +
+                $"Context TenantId: {context.TenantId}");
         }
 
         [Fact]
@@ -107,7 +118,8 @@ namespace NJS.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
+            currentTenantService.Setup(x => x.TenantId).Returns(1); // Set tenant ID
+            using var context = new ProjectManagementContext(GetInMemoryDbOptions(),currentTenantService.Object);
 
             var project = new Project
             {
@@ -123,7 +135,8 @@ namespace NJS.Domain.Tests
                 ContractType = "ContractType",
                 CreatedBy = "Test",
                 Currency = "INR",
-                Sector = "Tet"
+                Sector = "Tet",
+                TenantId = 1 // Explicitly set TenantId for test
             };
             await context.Projects.AddAsync(project).ConfigureAwait(true);
             await context.SaveChangesAsync().ConfigureAwait(true);
@@ -143,7 +156,8 @@ namespace NJS.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
+            currentTenantService.Setup(x => x.TenantId).Returns(1); // Set tenant ID
+            using var context = new ProjectManagementContext(GetInMemoryDbOptions(),currentTenantService.Object);
             var project = new Project
             {
                 Id = 11,
@@ -158,7 +172,8 @@ namespace NJS.Domain.Tests
                 ContractType = "ContractType",
                 CreatedBy = "Test",
                 Currency = "INR",
-                Sector = "Tet"
+                Sector = "Tet",
+                TenantId = 1 // Explicitly set TenantId for test
             };
             context.Projects.Add(project);
             await context.SaveChangesAsync().ConfigureAwait(true);
@@ -179,7 +194,8 @@ namespace NJS.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
+            currentTenantService.Setup(x => x.TenantId).Returns(1); // Set tenant ID
+            using var context = new ProjectManagementContext(GetInMemoryDbOptions(),currentTenantService.Object);
             context.Projects.Add(new Project
             {
                 Name = "City Water Supply Upgrade",
@@ -193,7 +209,8 @@ namespace NJS.Domain.Tests
                 ContractType= "ContractType",
                 CreatedBy="Test",
                 Currency="INR",
-                Sector="Tet"
+                Sector="Tet",
+                TenantId = 1 // Explicitly set TenantId for test
             });
             context.Projects.Add(new Project
             {
@@ -208,7 +225,8 @@ namespace NJS.Domain.Tests
                 ContractType = "ContractType",
                 CreatedBy = "Test",
                 Currency = "INR",
-                Sector = "Tet"
+                Sector = "Tet",
+                TenantId = 1 // Explicitly set TenantId for test
             });
             context.SaveChanges();
 
@@ -228,7 +246,8 @@ namespace NJS.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
+            currentTenantService.Setup(x => x.TenantId).Returns(1); // Set tenant ID
+            using var context = new ProjectManagementContext(GetInMemoryDbOptions(),currentTenantService.Object);
             context.Projects.Add(new Project
             {
                 Name = "City Water Supply Upgrade",
@@ -242,7 +261,8 @@ namespace NJS.Domain.Tests
                 ContractType = "ContractType",
                 CreatedBy = "Test",
                 Currency = "INR",
-                Sector = "Tet"
+                Sector = "Tet",
+                TenantId = 1 // Explicitly set TenantId for test
             });
             context.Projects.Add(new Project
             {
@@ -257,7 +277,8 @@ namespace NJS.Domain.Tests
                 ContractType = "ContractType",
                 CreatedBy = "Test",
                 Currency = "INR",
-                Sector = "Tet"
+                Sector = "Tet",
+                TenantId = 1 // Explicitly set TenantId for test
             });
             context.SaveChanges();
 
@@ -267,7 +288,11 @@ namespace NJS.Domain.Tests
             var result = repository.Query().Where(a => a.Name.StartsWith("City")).ToList();
 
             // Assert
-            Assert.Equal("City Water Supply Upgrade", result[0].Name);
+            Assert.True(result.Count > 0, "Expected at least one project but got none");
+            if (result.Count > 0)
+            {
+                Assert.Equal("City Water Supply Upgrade", result[0].Name);
+            }
         }
 
     }

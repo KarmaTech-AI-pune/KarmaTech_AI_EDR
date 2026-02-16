@@ -1,3 +1,5 @@
+import React from 'react';
+import { vi, describe, it, expect } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import BillingManagement from './BillingManagement';
@@ -55,3 +57,4 @@ describe('BillingManagement', () => {
     expect(screen.getByText(/This is a simplified billing view/i)).toBeInTheDocument();
   });
 });
+

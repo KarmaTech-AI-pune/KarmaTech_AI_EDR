@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import DeleteWBSDialog from './DeleteWBSDialog';
+import React from 'react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import DeleteWBSDialog from '../../features/wbs/components/DeleteWBSDialog'; // Fixed import path
+import '@testing-library/jest-dom/vitest';
 
 const defaultProps = {
   open: true,
@@ -18,7 +20,7 @@ describe('DeleteWBSDialog', () => {
     render(<DeleteWBSDialog {...defaultProps} />);
     
     expect(screen.getByText('Confirm Deletion')).toBeInTheDocument();
-    expect(screen.getByText('This action will delete this row and 3 rows. Are you sure you want to proceed?')).toBeInTheDocument();
+    expect(screen.getByText('This action will delete this row and 3 child rows. Are you sure you want to proceed?')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
@@ -26,7 +28,7 @@ describe('DeleteWBSDialog', () => {
   it('should render correct text when childCount is 1', () => {
     render(<DeleteWBSDialog {...defaultProps} childCount={1} />);
     
-    expect(screen.getByText('This action will delete this row and 1 row. Are you sure you want to proceed?')).toBeInTheDocument();
+    expect(screen.getByText('This action will delete this row and 1 child row. Are you sure you want to proceed?')).toBeInTheDocument();
   });
 
   it('should call onCancel when Cancel button is clicked', () => {
@@ -49,10 +51,13 @@ describe('DeleteWBSDialog', () => {
     expect(defaultProps.onCancel).not.toHaveBeenCalled();
   });
 
-  it('should not render if open prop is false', () => {
+  it('should not render if open prop is false', async () => {
     render(<DeleteWBSDialog {...defaultProps} open={false} />);
     
     // Check if the dialog title is not in the document
-    expect(screen.queryByText('Confirm Deletion')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Confirm Deletion')).not.toBeInTheDocument());
   });
 });
+
+
+

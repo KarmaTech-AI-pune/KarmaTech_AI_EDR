@@ -1,7 +1,9 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
 import { ChangeControlWorkflow } from './ChangeControlWorkflow';
 import { projectManagementAppContext } from '../../App';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { ChangeControl } from '../../models';
 import { WorkflowHistory } from '../../models/changeControlModel'; // Import specific WorkflowHistory
 
@@ -110,6 +112,10 @@ const mockContext = {
 };
 
 describe('ChangeControlWorkflow', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -156,14 +162,14 @@ describe('ChangeControlWorkflow', () => {
   });
 
   // Test Case 3: "Initial" status, canProjectSubmitForReview is true -> "Send for Review" button
-  it('renders "Send for Review" button for "Initial" status if canProjectSubmitForReview', () => {
+  it('renders "Send for Review" button for "Initial" status if canProjectSubmitForReview', async () => {
     renderComponent(mockChangeControl, { canProjectSubmitForReview: true });
     expect(screen.getByRole('button', { name: /Send for Review/i })).toBeInTheDocument();
-    expect(screen.queryByText('Initial')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => expect(screen.queryByText('Initial')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 
   // Test Case 4: "Sent for Review" status, canProjectSubmitForApproval is true -> "Decide Review" button
-  it('renders "Decide Review" button for "Sent for Review" status if canProjectSubmitForApproval', () => {
+  it('renders "Decide Review" button for "Sent for Review" status if canProjectSubmitForApproval', async () => {
     const sentForReviewCC: ChangeControl = {
       ...mockChangeControl,
       workflowStatusId: 2,
@@ -178,11 +184,11 @@ describe('ChangeControlWorkflow', () => {
     };
     renderComponent(sentForReviewCC, { canProjectSubmitForApproval: true });
     expect(screen.getByRole('button', { name: /Decide Review/i })).toBeInTheDocument();
-    expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 
   // Test Case 5: "Sent for Approval" status, canProjectCanApprove is true -> "Decide Approval" button
-  it('renders "Decide Approval" button for "Sent for Approval" status if canProjectCanApprove', () => {
+  it('renders "Decide Approval" button for "Sent for Approval" status if canProjectCanApprove', async () => {
     const sentForApprovalCC: ChangeControl = {
       ...mockChangeControl,
       workflowStatusId: 4,
@@ -197,7 +203,7 @@ describe('ChangeControlWorkflow', () => {
     };
     renderComponent(sentForApprovalCC, { canProjectCanApprove: true });
     expect(screen.getByRole('button', { name: /Decide Approval/i })).toBeInTheDocument();
-    expect(screen.queryByText('Sent for Approval')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => expect(screen.queryByText('Sent for Approval')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 
   // Test Case 6: "Sent for Approval" status, canProjectCanApprove is false, canProjectSubmitForApproval is true -> Chip with "Sent for Approval"
@@ -232,7 +238,7 @@ describe('ChangeControlWorkflow', () => {
     renderComponent(mockChangeControl, { canProjectSubmitForReview: true, canProjectSubmitForApproval: true }, onChangeControlUpdated); // Add canProjectSubmitForApproval to show "Decide Review" button
 
     fireEvent.click(screen.getByRole('button', { name: /Send for Review/i }));
-    fireEvent.click(screen.getByText('Submit')); // Click the submit button in the mock dialog
+    fireEvent.click(screen.getByRole("button", { name: /submit/i })); // Click the submit button in the mock dialog
 
     await waitFor(() => {
       expect(screen.queryByTestId('send-for-review-dialog')).not.toBeInTheDocument();
@@ -241,7 +247,7 @@ describe('ChangeControlWorkflow', () => {
     // After successful update, status becomes "Sent for Review" (id 2).
     // With canProjectSubmitForApproval: true, it should show "Decide Review" button.
     expect(screen.getByRole('button', { name: /Decide Review/i })).toBeInTheDocument();
-    expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 
   // Test Case 9: `onChangeControlUpdated` error handling
@@ -251,7 +257,7 @@ describe('ChangeControlWorkflow', () => {
     renderComponent(mockChangeControl, { canProjectSubmitForReview: true, canProjectSubmitForApproval: true }, onChangeControlUpdated); // Add canProjectSubmitForApproval
 
     fireEvent.click(screen.getByRole('button', { name: /Send for Review/i }));
-    fireEvent.click(screen.getByText('Submit'));
+    fireEvent.click(screen.getByRole("button", { name: /submit/i }));
 
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(new Error('Update failed'));
@@ -259,7 +265,7 @@ describe('ChangeControlWorkflow', () => {
     consoleErrorSpy.mockRestore();
     // Even with error, localStatusId updates. With canProjectSubmitForApproval: true, it should show "Decide Review" button.
     expect(screen.getByRole('button', { name: /Decide Review/i })).toBeInTheDocument();
-    expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 
   // Test Case 10: Dialog cancellation
@@ -274,6 +280,11 @@ describe('ChangeControlWorkflow', () => {
     expect(onChangeControlUpdated).not.toHaveBeenCalled();
     // Status remains "Initial". With canProjectSubmitForReview: true, it should still show "Send for Review" button.
     expect(screen.getByRole('button', { name: /Send for Review/i })).toBeInTheDocument();
-    expect(screen.queryByText('Initial')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => expect(screen.queryByText('Initial')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 });
+
+
+
+
+

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
 import { BrowserRouter, Navigate } from 'react-router-dom';
 import { LoginScreen } from './LoginScreen';
 import { authApi } from '../services/authApi';
@@ -6,7 +6,9 @@ import { projectManagementAppContext } from '../App';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { User } from '../models'; // Corrected import path for User
 import { projectManagementAppContextType } from '../types'; // Import the full type
-import { vi, describe, test, beforeEach, expect } from 'vitest'; // Explicitly import vitest globals
+import { vi, describe, test, beforeEach, expect, afterEach } from 'vitest'; // Explicitly import vitest globals
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 // Mock the authApi
 vi.mock('../services/authApi', () => ({
@@ -25,7 +27,36 @@ vi.mock('../hooks/useAppNavigation', () => ({
 // Mock the projectManagementAppContext
 const mockSetIsAuthenticated = vi.fn();
 const mockSetUser = vi.fn();
-const mockNavigateToHome = vi.fn();
+// Mock other services to prevent network calls
+vi.mock('../services/versionApi', () => ({
+    versionApi: {
+        getCurrentVersion: vi.fn().mockResolvedValue({ version: '1.0.0' }),
+    },
+}));
+
+vi.mock('../services/releaseNotesApi', () => ({
+    releaseNotesApi: {
+        getReleaseNotes: vi.fn().mockResolvedValue([]),
+    },
+}));
+
+vi.mock('../components/VersionDisplay', () => ({
+    VersionDisplay: () => <div data-testid="mock-version-display">Version Display</div>,
+}));
+
+vi.mock('../components/ReleaseNotesModal', () => ({
+    __esModule: true,
+    default: () => <div data-testid="mock-release-notes-modal">Release Notes Modal</div>,
+}));
+
+vi.mock('../components/OTPVerification', () => ({
+    OTPVerification: () => <div data-testid="mock-otp-verification">OTP Verification</div>,
+}));
+
+import UserSubscriptionContext from '../context/UserSubscriptionContext';
+
+const mockRefreshSubscription = vi.fn();
+const mockNavigateToHome = vi.fn(); // Restore mockNavigateToHome
 
 const renderLoginScreen = (isAuthenticated: boolean = false) => {
     (useAppNavigation as vi.Mock).mockReturnValue({
@@ -70,23 +101,54 @@ const renderLoginScreen = (isAuthenticated: boolean = false) => {
                     setProjectCanApprove: vi.fn(),
                 } as projectManagementAppContextType} // Cast to the full type
             >
-                <LoginScreen />
+                <UserSubscriptionContext.Provider value={{
+                    refreshSubscription: mockRefreshSubscription,
+                    subscription: null,
+                    loading: false, // Correct property name
+                    error: null,
+                    hasFeature: vi.fn().mockReturnValue(true) // Add missing property
+                }}>
+                    <LoginScreen />
+                </UserSubscriptionContext.Provider>
             </projectManagementAppContext.Provider>
         </BrowserRouter>
     );
 };
 
 describe('LoginScreen', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     let localStorageSetItemSpy: vi.SpyInstance;
     let localStorageGetItemSpy: vi.SpyInstance;
 
     beforeEach(() => {
         vi.clearAllMocks(); // Use vi.clearAllMocks
-        localStorage.clear();
 
-        // Mock localStorage.setItem and getItem for the specific test case
-        localStorageSetItemSpy = vi.spyOn(Storage.prototype, 'setItem');
-        localStorageGetItemSpy = vi.spyOn(Storage.prototype, 'getItem');
+        const store: Record<string, string> = {};
+        const localStorageMock = {
+            getItem: vi.fn((key: string) => store[key] || null),
+            setItem: vi.fn((key: string, value: string) => {
+                store[key] = value.toString();
+            }),
+            removeItem: vi.fn((key: string) => {
+                delete store[key];
+            }),
+            clear: vi.fn(() => {
+                for (const key in store) delete store[key];
+            }),
+            length: 0,
+            key: vi.fn(),
+        };
+
+        Object.defineProperty(window, 'localStorage', {
+            value: localStorageMock,
+            writable: true
+        });
+
+        localStorageSetItemSpy = window.localStorage.setItem as unknown as vi.SpyInstance;
+        localStorageGetItemSpy = window.localStorage.getItem as unknown as vi.SpyInstance;
     });
 
     test('renders login form elements', () => {
@@ -173,12 +235,10 @@ describe('LoginScreen', () => {
         fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
         fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
-        await waitFor(() => {
-            expect(screen.getByText(/an error occurred\. please try again\./i)).toBeInTheDocument();
-            expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
-            expect(mockSetUser).not.toHaveBeenCalled();
-            expect(mockNavigateToHome).not.toHaveBeenCalled();
-        });
+        await waitFor(() => expect(screen.getByText(/Network error/i)).toBeInTheDocument());
+        expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
+        expect(mockSetUser).not.toHaveBeenCalled();
+        expect(mockNavigateToHome).not.toHaveBeenCalled();
     });
 
     test('displays error if token fails to set in local storage', async () => {
@@ -198,30 +258,11 @@ describe('LoginScreen', () => {
             user: mockUser,
         });
 
-        // Mock localStorage.setItem to simulate failure or not setting the item
-        localStorageSetItemSpy.mockImplementation((key: string, value: string) => {
-            if (key === 'token') {
-                // Simulate failure to set token by not actually setting it
-                // or by immediately clearing it for the purpose of this test
-                // For a more realistic scenario, we'd mock getItem to return null after setItem
-            } else {
-                Object.defineProperty(window, 'localStorage', {
-                    value: {
-                        ...window.localStorage,
-                        [key]: value,
-                    },
-                    writable: true,
-                });
-            }
-        });
+        // Mock localStorage.setItem to do nothing
+        localStorageSetItemSpy.mockImplementation(() => {});
 
-        // Mock localStorage.getItem to return null for 'token' after setItem is called
-        localStorageGetItemSpy.mockImplementation((key: string) => {
-            if (key === 'token') {
-                return null; // Simulate token not being found after setting
-            }
-            return null;
-        });
+        // Mock localStorage.getItem to return null (simulate token not found)
+        localStorageGetItemSpy.mockImplementation(() => null);
 
 
         renderLoginScreen();
@@ -234,13 +275,20 @@ describe('LoginScreen', () => {
             expect(authApi.login).toHaveBeenCalled();
             expect(localStorageSetItemSpy).toHaveBeenCalledWith('token', 'mock-token');
             expect(localStorageGetItemSpy).toHaveBeenCalledWith('token');
-            expect(screen.getByText(/failed to set authentication token/i)).toBeInTheDocument();
-            expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
-            expect(mockSetUser).not.toHaveBeenCalled();
-            expect(mockNavigateToHome).not.toHaveBeenCalled();
         });
+        await waitFor(() => expect(screen.getByText(/failed to set authentication token/i)).toBeInTheDocument());
+        
+        expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
+        expect(mockSetUser).not.toHaveBeenCalled();
+        expect(mockNavigateToHome).not.toHaveBeenCalled();
 
         localStorageSetItemSpy.mockRestore();
         localStorageGetItemSpy.mockRestore();
     });
 });
+
+
+
+
+
+

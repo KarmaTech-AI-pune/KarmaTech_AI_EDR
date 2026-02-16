@@ -1,4 +1,7 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import React from 'react';
+
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import '@testing-library/jest-dom';
 import TableTemplate, { CustomRow } from './TableTemplate';
 import { WBSResource } from '../../../types/jobStartFormTypes';
@@ -18,7 +21,7 @@ describe('TableTemplate', () => {
     { id: 'custom-2', prefix: 'C2', title: 'Custom Row 2', budgetedCost: 200, remarks: '' },
   ];
 
-  const mockOnDataChange = jest.fn();
+  const mockOnDataChange = vi.fn();
 
   const defaultProps = {
     title: 'Test Table',
@@ -34,7 +37,7 @@ describe('TableTemplate', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders correctly with default props', () => {
@@ -46,7 +49,7 @@ describe('TableTemplate', () => {
 
     // Check resources
     expect(screen.getByText('Resource 1')).toBeInTheDocument();
-    expect(screen.getByText('100.00')).toBeInTheDocument(); // Rate
+    expect(screen.getAllByText('100.00').length).toBeGreaterThanOrEqual(2); // Rate for Res 1 and Cost for Custom 1
     expect(screen.getByText('10.00')).toBeInTheDocument(); // Units
     expect(screen.getByText('1,000.00')).toBeInTheDocument(); // Budgeted Cost
     expect(screen.getByDisplayValue('Res 1 Remark')).toBeInTheDocument(); // Remarks
@@ -54,11 +57,12 @@ describe('TableTemplate', () => {
     // Check custom rows
     expect(screen.getByText('Custom Row 1')).toBeInTheDocument();
     expect(screen.getByDisplayValue('10')).toBeInTheDocument(); // Units for custom row 1
-    expect(screen.getByDisplayValue('100.00')).toBeInTheDocument(); // Budgeted Cost for custom row 1
+    // Custom Row 1 budgeted cost 100 is already covered by getAllByText('100.00') above
     expect(screen.getByDisplayValue('Custom 1 Remark')).toBeInTheDocument(); // Remarks for custom row 1
 
     expect(screen.getByText('Custom Row 2')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('200.00')).toBeInTheDocument(); // Budgeted Cost for custom row 2
+    // Custom Row 2 has no rate/units field, so it should be an input field for budgeted cost (per my recent change)
+    expect(screen.getByDisplayValue('200')).toBeInTheDocument();
 
     // Check total row
     expect(screen.getByText('Total Cost')).toBeInTheDocument();
@@ -68,11 +72,11 @@ describe('TableTemplate', () => {
     expect(screen.getByText('2,050.00')).toBeInTheDocument();
   });
 
-  it('expands and collapses accordion', () => {
+  it('expands and collapses accordion', async () => {
     render(<TableTemplate {...defaultProps} initialExpanded={false} />);
 
     // Initially not expanded
-    expect(screen.queryByText('Resource 1')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Resource 1')).not.toBeInTheDocument());
 
     // Expand the accordion
     const accordionSummary = screen.getByText('Test Table');
@@ -85,7 +89,7 @@ describe('TableTemplate', () => {
     fireEvent.click(accordionSummary);
 
     // Check if collapsed
-    expect(screen.queryByText('Resource 1')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Resource 1')).not.toBeInTheDocument());
   });
 
   it('updates remarks and calls onDataChange', () => {

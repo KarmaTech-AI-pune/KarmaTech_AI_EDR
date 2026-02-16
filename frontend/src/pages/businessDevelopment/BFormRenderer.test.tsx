@@ -1,4 +1,5 @@
-import React from 'react';
+import { vi, Mock, describe, it, expect, beforeEach, afterEach } from 'vitest';
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BFormRenderer } from './BFormRenderer';
@@ -11,29 +12,30 @@ import { useBusinessDevelopment } from '../../context/BusinessDevelopmentContext
 import { OpportunityTracking } from '../../models';
 
 // Mock react-router-dom hooks
-jest.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', () => ({
   __esModule: true,
-  useOutletContext: jest.fn(),
-  useParams: jest.fn(),
+  useOutletContext: vi.fn(),
+  useParams: vi.fn(),
+  Navigate: vi.fn(({ to }) => <div data-testid="mock-navigate" data-to={to} />),
 }));
 
 // Mock form components
-jest.mock('../../components/forms/OpportunityForm', () => ({
+vi.mock('../../components/forms/OpportunityForm', () => ({
   __esModule: true,
-  OpportunityForm: jest.fn(({ onSubmit, project }) => (
+  OpportunityForm: vi.fn(({ onSubmit, project }) => (
     <form data-testid="mock-opportunity-form" onSubmit={(e) => { e.preventDefault(); onSubmit(project); }}>
       <input data-testid="opportunity-form-input" value={project?.workName || ''} readOnly />
       <button type="submit">Submit Opportunity</button>
     </form>
   )),
 }));
-jest.mock('../../components/forms/BidPreparationForm', () => ({
+vi.mock('../../components/forms/BidPreparationForm', () => ({
   __esModule: true,
-  default: jest.fn(() => <div data-testid="mock-bid-preparation-form" />),
+  default: vi.fn(() => <div data-testid="mock-bid-preparation-form" />),
 }));
-jest.mock('../../components/forms/GoNoGoForm', () => ({
+vi.mock('../../components/forms/GoNoGoForm', () => ({
   __esModule: true,
-  default: jest.fn(({ onDecisionStatusChange }) => (
+  default: vi.fn(({ onDecisionStatusChange }) => (
     <div data-testid="mock-gonogo-form">
       <button onClick={() => onDecisionStatusChange('GO', 3)}>Set GO</button>
       <button onClick={() => onDecisionStatusChange('NO-GO', 1)}>Set NO-GO</button>
@@ -42,21 +44,21 @@ jest.mock('../../components/forms/GoNoGoForm', () => ({
 }));
 
 // Mock API and context
-jest.mock('../../dummyapi/opportunityApi');
-jest.mock('../../context/BusinessDevelopmentContext');
+vi.mock('../../dummyapi/opportunityApi');
+vi.mock('../../context/BusinessDevelopmentContext');
 
 // Mock Material-UI components
-jest.mock('@mui/material/Box', () => ({
+vi.mock('@mui/material/Box', () => ({
   __esModule: true,
-  default: jest.fn(({ children, ...props }) => <div {...props} data-testid="mock-box">{children}</div>),
+  default: vi.fn(({ children, ...props }) => <div {...props} data-testid="mock-box">{children}</div>),
 }));
-jest.mock('@mui/material/Paper', () => ({
+vi.mock('@mui/material/Paper', () => ({
   __esModule: true,
-  default: jest.fn(({ children, ...props }) => <div {...props} data-testid="mock-paper">{children}</div>),
+  default: vi.fn(({ children, ...props }) => <div {...props} data-testid="mock-paper">{children}</div>),
 }));
-jest.mock('@mui/material/Typography', () => ({
+vi.mock('@mui/material/Typography', () => ({
   __esModule: true,
-  default: jest.fn(({ children, variant, ...props }) => <span data-testid={`mock-typography-${variant}`} {...props}>{children}</span>),
+  default: vi.fn(({ children, variant, ...props }) => <span data-testid={`mock-typography-${variant}`} {...props}>{children}</span>),
 }));
 
 const mockOpportunity: OpportunityTracking = {
@@ -94,26 +96,30 @@ const mockOpportunity: OpportunityTracking = {
   currentHistory: [],
 };
 
-const mockHandleOpportunityUpdate = jest.fn();
-const mockSetGoNoGoDecisionStatus = jest.fn();
-const mockSetGoNoGoVersionNumber = jest.fn();
+const mockHandleOpportunityUpdate = vi.fn();
+const mockSetGoNoGoDecisionStatus = vi.fn();
+const mockSetGoNoGoVersionNumber = vi.fn();
 
 describe('BFormRenderer', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useOutletContext as jest.Mock).mockReturnValue({
+    vi.clearAllMocks();
+    (useOutletContext as Mock).mockReturnValue({
       opportunity: mockOpportunity,
       handleOpportunityUpdate: mockHandleOpportunityUpdate,
     });
-    (useBusinessDevelopment as jest.Mock).mockReturnValue({
+    (useBusinessDevelopment as Mock).mockReturnValue({
       setGoNoGoDecisionStatus: mockSetGoNoGoDecisionStatus,
       setGoNoGoVersionNumber: mockSetGoNoGoVersionNumber,
     });
-    (opportunityApi.update as jest.Mock).mockResolvedValue({});
+    (opportunityApi.update as Mock).mockResolvedValue({});
   });
 
   it('renders OpportunityForm when formId is "opportunity-tracking"', () => {
-    (useParams as jest.Mock).mockReturnValue({ formId: 'opportunity-tracking' });
+    (useParams as Mock).mockReturnValue({ formId: 'opportunity-tracking' });
     render(<BFormRenderer />);
     expect(screen.getByTestId('mock-opportunity-form')).toBeInTheDocument();
     expect(screen.getByText('Opportunity Tracking Form')).toBeInTheDocument();
@@ -127,7 +133,7 @@ describe('BFormRenderer', () => {
   });
 
   it('renders GoNoGoForm when formId is "gonogo"', () => {
-    (useParams as jest.Mock).mockReturnValue({ formId: 'gonogo' });
+    (useParams as Mock).mockReturnValue({ formId: 'gonogo' });
     render(<BFormRenderer />);
     expect(screen.getByTestId('mock-gonogo-form')).toBeInTheDocument();
     expect(GoNoGoForm).toHaveBeenCalledWith(
@@ -139,7 +145,7 @@ describe('BFormRenderer', () => {
   });
 
   it('renders BidPreparationForm when formId is "bid-preparation"', () => {
-    (useParams as jest.Mock).mockReturnValue({ formId: 'bid-preparation' });
+    (useParams as Mock).mockReturnValue({ formId: 'bid-preparation' });
     render(<BFormRenderer />);
     expect(screen.getByTestId('mock-bid-preparation-form')).toBeInTheDocument();
     expect(screen.getByText('Bid Preparation Form')).toBeInTheDocument();
@@ -147,13 +153,13 @@ describe('BFormRenderer', () => {
   });
 
   it('renders "Form not found" for an unknown formId', () => {
-    (useParams as jest.Mock).mockReturnValue({ formId: 'unknown-form' });
+    (useParams as Mock).mockReturnValue({ formId: 'unknown-form' });
     render(<BFormRenderer />);
     expect(screen.getByText('Form not found')).toBeInTheDocument();
   });
 
   it('handles OpportunityForm submission correctly', async () => {
-    (useParams as jest.Mock).mockReturnValue({ formId: 'opportunity-tracking' });
+    (useParams as Mock).mockReturnValue({ formId: 'opportunity-tracking' });
     render(<BFormRenderer />);
 
     const submitButton = screen.getByRole('button', { name: /Submit Opportunity/i });
@@ -166,7 +172,7 @@ describe('BFormRenderer', () => {
   });
 
   it('handles GoNoGoForm decision status change', () => {
-    (useParams as jest.Mock).mockReturnValue({ formId: 'gonogo' });
+    (useParams as Mock).mockReturnValue({ formId: 'gonogo' });
     render(<BFormRenderer />);
 
     fireEvent.click(screen.getByRole('button', { name: /Set GO/i }));
@@ -176,9 +182,9 @@ describe('BFormRenderer', () => {
   });
 
   it('logs error if opportunity update fails', async () => {
-    (useParams as jest.Mock).mockReturnValue({ formId: 'opportunity-tracking' });
-    (opportunityApi.update as jest.Mock).mockRejectedValue(new Error('API Error'));
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (useParams as Mock).mockReturnValue({ formId: 'opportunity-tracking' });
+    (opportunityApi.update as Mock).mockRejectedValue(new Error('API Error'));
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(<BFormRenderer />);
 
@@ -191,3 +197,5 @@ describe('BFormRenderer', () => {
     consoleErrorSpy.mockRestore();
   });
 });
+
+

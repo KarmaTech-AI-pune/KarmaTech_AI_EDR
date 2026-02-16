@@ -35,11 +35,19 @@ export const ctcAndEacSchema = z.object({
   grossProfitPercentage: z.number().nullable(),
 });
 
+// ISO 8601 date format validation (YYYY-MM-DD)
+const dateStringSchema = z.union([
+  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
+    message: "Date must be in ISO 8601 format (YYYY-MM-DD)"
+  }),
+  z.null()
+]);
+
 export const scheduleSchema = z.object({
-  dateOfIssueWOLOI: z.string().nullable(),
-  completionDateAsPerContract: z.string().nullable(),
-  completionDateAsPerExtension: z.string().nullable(),
-  expectedCompletionDate: z.string().nullable(),
+  dateOfIssueWOLOI: dateStringSchema,
+  completionDateAsPerContract: dateStringSchema,
+  completionDateAsPerExtension: dateStringSchema,
+  expectedCompletionDate: dateStringSchema,
 });
 
 // Budget Table Schema
@@ -122,12 +130,12 @@ export const manpowerPlanningSchema = z.object({
 
 export const deliverableSchema = z.object({
   milestone: z.string().nullable(),
-  dueDateContract: z.string().nullable(),
-  dueDatePlanned: z.string().nullable(),
-  achievedDate: z.string().nullable(),
+  dueDateContract: dateStringSchema,
+  dueDatePlanned: dateStringSchema,
+  achievedDate: dateStringSchema,
   paymentDue: z.number().nullable(),
-  invoiceDate: z.string().nullable(),
-  paymentReceivedDate: z.string().nullable(),
+  invoiceDate: dateStringSchema,
+  paymentReceivedDate: dateStringSchema,
   deliverableComments: z.string().nullable(),
 });
 
@@ -155,13 +163,13 @@ export const earlyWarningsSchema = z.object({
 
 export const lastMonthActionSchema = z.object({
   actions: z.string().nullable(),
-  date: z.string().nullable(),
+  date: dateStringSchema,
   comments: z.string().nullable(),
 });
 
 export const currentMonthActionSchema = z.object({
   actions: z.string().nullable(),
-  date: z.string().nullable(),
+  date: dateStringSchema,
   comments: z.string().nullable(),
   priority: z.enum(["H", "M", "L"]).nullable(),
 });

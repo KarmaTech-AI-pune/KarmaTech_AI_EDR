@@ -1,7 +1,9 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
 import { ProjectClosureWorkflow } from './ProjectClosureWorkflow';
 import { projectManagementAppContext } from '../../App';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { ProjectClosureRow, WorkflowHistory } from '../../models/projectClosureRowModel';
 
 // Mock the dialog components
@@ -175,6 +177,10 @@ const mockContext = {
 };
 
 describe('ProjectClosureWorkflow', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -221,14 +227,14 @@ describe('ProjectClosureWorkflow', () => {
   });
 
   // Test Case 3: "Initial" status, canProjectSubmitForReview is true -> "Send for Review" button
-  it('renders "Send for Review" button for "Initial" status if canProjectSubmitForReview', () => {
+  it('renders "Send for Review" button for "Initial" status if canProjectSubmitForReview', async () => {
     renderComponent(mockProjectClosure, { canProjectSubmitForReview: true });
     expect(screen.getByRole('button', { name: /Send for Review/i })).toBeInTheDocument();
-    expect(screen.queryByText('Initial')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => expect(screen.queryByText('Initial')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 
   // Test Case 4: "Sent for Review" status, canProjectSubmitForApproval is true -> "Decide Review" button
-  it('renders "Decide Review" button for "Sent for Review" status if canProjectSubmitForApproval', () => {
+  it('renders "Decide Review" button for "Sent for Review" status if canProjectSubmitForApproval', async () => {
     const sentForReviewPC: ProjectClosureRow & { workflowStatusId?: number; id?: number; } = {
       ...mockProjectClosure,
       workflowStatusId: 2,
@@ -243,11 +249,11 @@ describe('ProjectClosureWorkflow', () => {
     };
     renderComponent(sentForReviewPC, { canProjectSubmitForApproval: true });
     expect(screen.getByRole('button', { name: /Decide Review/i })).toBeInTheDocument();
-    expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 
   // Test Case 5: "Sent for Approval" status, canProjectCanApprove is true -> "Decide Approval" button
-  it('renders "Decide Approval" button for "Sent for Approval" status if canProjectCanApprove', () => {
+  it('renders "Decide Approval" button for "Sent for Approval" status if canProjectCanApprove', async () => {
     const sentForApprovalPC: ProjectClosureRow & { workflowStatusId?: number; id?: number; } = {
       ...mockProjectClosure,
       workflowStatusId: 4,
@@ -262,7 +268,7 @@ describe('ProjectClosureWorkflow', () => {
     };
     renderComponent(sentForApprovalPC, { canProjectCanApprove: true });
     expect(screen.getByRole('button', { name: /Decide Approval/i })).toBeInTheDocument();
-    expect(screen.queryByText('Sent for Approval')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => expect(screen.queryByText('Sent for Approval')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 
   // Test Case 6: "Sent for Approval" status, canProjectCanApprove is false, canProjectSubmitForApproval is true -> Chip with "Sent for Approval"
@@ -293,38 +299,90 @@ describe('ProjectClosureWorkflow', () => {
 
   // Test Case 8: Dialog close with success updates status and renders "Decide Review" button
   it('dialog close with success updates status and renders "Decide Review" button', async () => {
-    const onProjectClosureUpdated = vi.fn();
-    renderComponent(mockProjectClosure, { canProjectSubmitForReview: true, canProjectSubmitForApproval: true }, onProjectClosureUpdated);
+    const onProjectClosureUpdated = vi.fn((updatedClosure) => {
+      // Simulate the parent component updating the projectClosure prop
+      // The component will re-render with the new status
+      if (updatedClosure) {
+        mockProjectClosure.workflowHistory = {
+          ...mockProjectClosure.workflowHistory!,
+          statusId: 2, // Status changed to "Sent for Review"
+        };
+      }
+    });
+    
+    const { rerender } = renderComponent(mockProjectClosure, { canProjectSubmitForReview: true, canProjectSubmitForApproval: true }, onProjectClosureUpdated);
 
     fireEvent.click(screen.getByRole('button', { name: /Send for Review/i }));
-    fireEvent.click(screen.getByText('Submit')); // Click the submit button in the mock dialog
+    fireEvent.click(screen.getByRole("button", { name: /submit/i })); // Click the submit button in the mock dialog
 
     await waitFor(() => {
       expect(screen.queryByTestId('send-for-review-dialog')).not.toBeInTheDocument();
     });
     expect(onProjectClosureUpdated).toHaveBeenCalledTimes(1);
-    // After successful update, status becomes "Sent for Review" (id 2).
+    
+    // Simulate parent component re-rendering with updated status
+    const updatedProjectClosure = {
+      ...mockProjectClosure,
+      workflowHistory: {
+        ...mockProjectClosure.workflowHistory!,
+        statusId: 2, // Status changed to "Sent for Review"
+      }
+    };
+    
+    rerender(
+      <projectManagementAppContext.Provider value={{ ...mockContext, canProjectSubmitForReview: true, canProjectSubmitForApproval: true }}>
+        <ProjectClosureWorkflow
+          projectClosure={updatedProjectClosure}
+          onProjectClosureUpdated={onProjectClosureUpdated}
+        />
+      </projectManagementAppContext.Provider>
+    );
+    
+    // After successful update and re-render, status becomes "Sent for Review" (id 2).
     // With canProjectSubmitForApproval: true, it should show "Decide Review" button.
-    expect(screen.getByRole('button', { name: /Decide Review/i })).toBeInTheDocument();
-    expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Decide Review/i })).toBeInTheDocument();
+    });
+    await waitFor(() => expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 
   // Test Case 9: `onProjectClosureUpdated` error handling
   it('logs error if onProjectClosureUpdated fails', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const onProjectClosureUpdated = vi.fn(() => { throw new Error('Update failed'); });
-    renderComponent(mockProjectClosure, { canProjectSubmitForReview: true, canProjectSubmitForApproval: true }, onProjectClosureUpdated);
+    const { rerender } = renderComponent(mockProjectClosure, { canProjectSubmitForReview: true, canProjectSubmitForApproval: true }, onProjectClosureUpdated);
 
     fireEvent.click(screen.getByRole('button', { name: /Send for Review/i }));
-    fireEvent.click(screen.getByText('Submit'));
+    fireEvent.click(screen.getByRole("button", { name: /submit/i }));
 
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(new Error('Update failed'));
     });
     consoleErrorSpy.mockRestore();
+    
+    // Simulate parent component re-rendering with updated status (even though callback threw error)
+    const updatedProjectClosure = {
+      ...mockProjectClosure,
+      workflowHistory: {
+        ...mockProjectClosure.workflowHistory!,
+        statusId: 2, // Status changed to "Sent for Review"
+      }
+    };
+    
+    rerender(
+      <projectManagementAppContext.Provider value={{ ...mockContext, canProjectSubmitForReview: true, canProjectSubmitForApproval: true }}>
+        <ProjectClosureWorkflow
+          projectClosure={updatedProjectClosure}
+          onProjectClosureUpdated={onProjectClosureUpdated}
+        />
+      </projectManagementAppContext.Provider>
+    );
+    
     // Even with error, localStatusId updates. With canProjectSubmitForApproval: true, it should show "Decide Review" button.
-    expect(screen.getByRole('button', { name: /Decide Review/i })).toBeInTheDocument();
-    expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Decide Review/i })).toBeInTheDocument();
+    });
+    await waitFor(() => expect(screen.queryByText('Sent for Review')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 
   // Test Case 10: Dialog cancellation
@@ -339,6 +397,11 @@ describe('ProjectClosureWorkflow', () => {
     expect(onProjectClosureUpdated).not.toHaveBeenCalled();
     // Status remains "Initial". With canProjectSubmitForReview: true, it should still show "Send for Review" button.
     expect(screen.getByRole('button', { name: /Send for Review/i })).toBeInTheDocument();
-    expect(screen.queryByText('Initial')).not.toBeInTheDocument(); // Ensure Chip is not rendered
+    await waitFor(() => expect(screen.queryByText('Initial')).not.toBeInTheDocument()); // Ensure Chip is not rendered
   });
 });
+
+
+
+
+

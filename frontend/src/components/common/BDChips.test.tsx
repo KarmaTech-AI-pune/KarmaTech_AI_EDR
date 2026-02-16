@@ -1,3 +1,6 @@
+import React from 'react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { act } from '@testing-library/react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BDChips } from './BDChips';
@@ -10,6 +13,16 @@ vi.mock('../../dummyapi/opportunityWorkflowApi');
 const mockGetWorkflowByOpportunityId = opportunityWorkflowApi.getWorkflowByOpportunityId as vi.Mock;
 
 describe('BDChips', () => {
+  let consoleErrorSpy: any;
+
+  beforeEach(() => {
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -32,8 +45,9 @@ describe('BDChips', () => {
     expect(screen.getByText('FB03 Bid Preparation')).toBeInTheDocument();
 
     // All should be inactive (default color)
-    const chips = screen.getAllByRole('button'); // Chips are rendered as buttons
-    chips.forEach(chip => {
+    const labels = ['FB01 Opportunity Tracking', 'FB02 Go/NoGo', 'FB03 Bid Preparation'];
+    labels.forEach(label => {
+      const chip = screen.getByText(label).closest('.MuiChip-root');
       expect(chip).toHaveClass('MuiChip-colorDefault');
     });
   });
@@ -59,9 +73,9 @@ describe('BDChips', () => {
       expect(mockGetWorkflowByOpportunityId).toHaveBeenCalledWith(opportunityId);
     });
 
-    expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorWarning'); // Pending
-    expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorDefault'); // Inactive
-    expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorDefault'); // Inactive
+    expect(screen.getByText('FB01 Opportunity Tracking').closest('.MuiChip-root')).toHaveClass('MuiChip-colorWarning'); // Pending
+    expect(screen.getByText('FB02 Go/NoGo').closest('.MuiChip-root')).toHaveClass('MuiChip-colorDefault'); // Inactive
+    expect(screen.getByText('FB03 Bid Preparation').closest('.MuiChip-root')).toHaveClass('MuiChip-colorDefault'); // Inactive
   });
 
   it('renders correctly for "goNoGo" formStage', async () => {
@@ -85,9 +99,9 @@ describe('BDChips', () => {
       expect(mockGetWorkflowByOpportunityId).toHaveBeenCalledWith(opportunityId);
     });
 
-    expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorSuccess'); // Completed
-    expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorWarning'); // Pending
-    expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorDefault'); // Inactive
+    expect(screen.getByText('FB01 Opportunity Tracking').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
+    expect(screen.getByText('FB02 Go/NoGo').closest('.MuiChip-root')).toHaveClass('MuiChip-colorWarning'); // Pending
+    expect(screen.getByText('FB03 Bid Preparation').closest('.MuiChip-root')).toHaveClass('MuiChip-colorDefault'); // Inactive
   });
 
   it('renders correctly for "bidPreparation" formStage', async () => {
@@ -111,9 +125,9 @@ describe('BDChips', () => {
       expect(mockGetWorkflowByOpportunityId).toHaveBeenCalledWith(opportunityId);
     });
 
-    expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorSuccess'); // Completed
-    expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorSuccess'); // Completed
-    expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorWarning'); // Pending
+    expect(screen.getByText('FB01 Opportunity Tracking').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
+    expect(screen.getByText('FB02 Go/NoGo').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
+    expect(screen.getByText('FB03 Bid Preparation').closest('.MuiChip-root')).toHaveClass('MuiChip-colorWarning'); // Pending
   });
 
   it('renders correctly for "bidSubmitted" formStage (all completed)', async () => {
@@ -134,9 +148,9 @@ describe('BDChips', () => {
 
     // Assert
     await waitFor(() => {
-      expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorSuccess'); // Completed
-      expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorSuccess'); // Completed
-      expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB01 Opportunity Tracking').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB02 Go/NoGo').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB03 Bid Preparation').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
     });
   });
 
@@ -158,9 +172,9 @@ describe('BDChips', () => {
 
     // Assert
     await waitFor(() => {
-      expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorSuccess'); // Completed
-      expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorSuccess'); // Completed
-      expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB01 Opportunity Tracking').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB02 Go/NoGo').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB03 Bid Preparation').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
     });
   });
 
@@ -182,9 +196,9 @@ describe('BDChips', () => {
 
     // Assert
     await waitFor(() => {
-      expect(screen.getByText('FB01 Opportunity Tracking')).toHaveClass('MuiChip-colorSuccess'); // Completed
-      expect(screen.getByText('FB02 Go/NoGo')).toHaveClass('MuiChip-colorSuccess'); // Completed
-      expect(screen.getByText('FB03 Bid Preparation')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB01 Opportunity Tracking').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB02 Go/NoGo').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
+      expect(screen.getByText('FB03 Bid Preparation').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess'); // Completed
     });
   });
 
@@ -204,8 +218,9 @@ describe('BDChips', () => {
     });
 
     // All chips should still render as inactive (default color)
-    const chips = screen.getAllByRole('button');
-    chips.forEach(chip => {
+    const labels = ['FB01 Opportunity Tracking', 'FB02 Go/NoGo', 'FB03 Bid Preparation'];
+    labels.forEach(label => {
+      const chip = screen.getByText(label).closest('.MuiChip-root');
       expect(chip).toHaveClass('MuiChip-colorDefault');
     });
   });

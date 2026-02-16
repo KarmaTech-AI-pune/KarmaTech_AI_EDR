@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest'; // Import vi directly
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'; // Import vi directly
 import { useRoles } from './useRoles';
 import * as rolesApi from '../services/rolesApi';
 import { RoleDefinition } from '../models';
@@ -29,6 +29,10 @@ const localStorageMock = (() => {
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 describe('useRoles', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const mockRoles: RoleDefinition[] = [
     { id: '1', name: 'Admin', permissions: [] },
     { id: '2', name: 'User', permissions: [] },
@@ -123,3 +127,4 @@ describe('useRoles', () => {
     expect(result.current.currentUserRole).toBeNull();
   });
 });
+

@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom'; // for extend expect with dom matchers
@@ -51,3 +52,4 @@ describe('{{componentName}} Component', () => {
     });
   });
 });
+

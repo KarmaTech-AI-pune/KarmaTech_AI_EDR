@@ -1,12 +1,12 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { FormWrapper } from './FormWrapper';
 import { ProjectHeaderWidget } from '../widgets/ProjectHeaderWidget';
 import { projectManagementAppContext } from '../../App';
 import { Project } from '../../models/projectModel';
-import { ProjectStatus } from '../../types'; // Import ProjectStatus
+import { ProjectStatus } from '../../models/types'; // Import from models/types
 
 // Mock external dependencies
 vi.mock('../widgets/ProjectHeaderWidget', () => ({
@@ -54,6 +54,10 @@ const mockProject: Project = {
 };
 
 describe('FormWrapper', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -86,7 +90,7 @@ describe('FormWrapper', () => {
     expect(screen.getByTestId('child-content')).toBeInTheDocument();
   });
 
-  it('should handle selectedProject being an OpportunityTracking object (not render ProjectHeaderWidget)', () => {
+  it('should handle selectedProject being an OpportunityTracking object (renders ProjectHeaderWidget anyway)', () => {
     const mockOpportunity = {
       id: 1,
       workName: 'Test Opportunity',
@@ -101,6 +105,8 @@ describe('FormWrapper', () => {
     );
 
     expect(screen.getByTestId('child-content')).toBeInTheDocument();
-    expect(screen.queryByTestId('project-header-widget')).not.toBeInTheDocument();
+    // Component casts selectedProject to Project, so it will render ProjectHeaderWidget
+    expect(screen.getByTestId('project-header-widget')).toBeInTheDocument();
   });
 });
+

@@ -120,6 +120,27 @@ export const BudgetUpdateDialog: React.FC<BudgetUpdateDialogProps> = ({
     return Object.keys(errors).length === 0;
   };
 
+  // Handle dialog close
+  const handleClose = React.useCallback(() => {
+    if (!loading) {
+      onClose();
+    }
+  }, [loading, onClose]);
+
+  // Handle success auto-close
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (success) {
+      timer = setTimeout(() => {
+        onUpdate();
+        handleClose();
+      }, 1500);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [success, onUpdate, handleClose]);
+
   // Handle form submission
   const handleSubmit = async () => {
     if (!validateForm()) {
@@ -143,22 +164,11 @@ export const BudgetUpdateDialog: React.FC<BudgetUpdateDialogProps> = ({
       await projectBudgetApi.updateBudget(project.projectId, request);
 
       setSuccess(true);
-      setTimeout(() => {
-        onUpdate();
-        handleClose();
-      }, 1500);
     } catch (err) {
       console.error('Error updating budget:', err);
       setError(err instanceof Error ? err.message : 'Failed to update budget');
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Handle dialog close
-  const handleClose = () => {
-    if (!loading) {
-      onClose();
     }
   };
 

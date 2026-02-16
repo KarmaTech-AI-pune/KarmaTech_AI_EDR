@@ -1,12 +1,14 @@
+import { vi, describe, it, expect } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import JobstartGrandTotal from './JobstartGrandTotal';
+import { formatToIndianNumber } from '../../../utils/numberFormatting';
 
 describe('JobstartGrandTotal', () => {
   const mockTimeCost = 15000.50;
   const mockOdcExpensesCost = 25000.75;
-  const expectedGrandTotal = (mockTimeCost + mockOdcExpensesCost).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const expectedGrandTotal = formatToIndianNumber(mockTimeCost + mockOdcExpensesCost);
 
   it('renders correctly with provided costs', () => {
     render(
@@ -34,7 +36,7 @@ describe('JobstartGrandTotal', () => {
     expect(screen.getByText('0.00')).toBeInTheDocument();
   });
 
-  it('formats the grand total with commas and two decimal places', () => {
+  it('formats the grand total with Indian number formatting', () => {
     render(
       <JobstartGrandTotal
         timeCost={1234567.89}
@@ -42,10 +44,11 @@ describe('JobstartGrandTotal', () => {
       />
     );
 
-    const expectedFormattedTotal = (1234567.89 + 9876543.21).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const expectedFormattedTotal = formatToIndianNumber(1234567.89 + 9876543.21);
     expect(screen.getByText('GRAND TOTAL')).toBeInTheDocument();
     expect(screen.getByText(expectedFormattedTotal)).toBeInTheDocument();
   });
 
-  // Add more tests if there are specific interactions or edge cases to cover
+  // Add more tests if there are specific interactions or edge-case handling, or outdated tests.
 });
+

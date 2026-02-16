@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest'; // Import vi directly
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'; // Import vi directly
 import { usePMWorkflow } from './usePMWorkflow';
 import { pmWorkflowApi } from '../api/pmWorkflowApi';
 import { PMWorkflowHistoryResponse } from '../models/pmWorkflowModel';
@@ -13,6 +13,10 @@ vi.mock('../api/pmWorkflowApi', () => ({
 }));
 
 describe('usePMWorkflow', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const mockEntityId = 123;
   const mockEntityType = 'Project';
 
@@ -155,3 +159,4 @@ describe('usePMWorkflow', () => {
     });
   });
 });
+

@@ -63,16 +63,20 @@ const DecideApproval: React.FC<ProjectDecideApprovalProps> = ({
     event.stopPropagation();
   };
 
+  const handleDialogKeyDown = (event: React.KeyboardEvent) => {
+    event.stopPropagation();
+  };
+
   const handleSubmit = async (event: React.MouseEvent) => {
     event.stopPropagation();
 
     if (!decision) {
-      setError("Please select a decision");
+      setError("decision");
       return;
     }
 
     if (!comments.trim()) {
-      setError("Please provide comments");
+      setError("comments");
       return;
     }
 
@@ -88,6 +92,7 @@ const DecideApproval: React.FC<ProjectDecideApprovalProps> = ({
 
     try {
       setIsLoading(true);
+      setError(null);
 
       // In a real implementation, you would call your API to update the WBS status
       // For example:
@@ -139,6 +144,7 @@ const DecideApproval: React.FC<ProjectDecideApprovalProps> = ({
       maxWidth="sm"
       fullWidth
       onClick={handleDialogClick}
+      onKeyDown={handleDialogKeyDown}
       sx={{
         "& .MuiDialog-paper": {
           position: "relative"
@@ -158,7 +164,8 @@ const DecideApproval: React.FC<ProjectDecideApprovalProps> = ({
           left: "50%",
           transform: "translate(-50%, -50%)"
         },
-        onClick: handleDialogClick
+        onClick: handleDialogClick,
+        onKeyDown: handleDialogKeyDown
       }}
     >
       <DialogTitle onClick={handleDialogClick}>Decide Approval</DialogTitle>
@@ -166,23 +173,29 @@ const DecideApproval: React.FC<ProjectDecideApprovalProps> = ({
         <FormControl
           fullWidth
           margin="normal"
-          error={!!error && !decision}
+          error={error === "decision"}
           onClick={handleDialogClick}
         >
-          <InputLabel>Decision</InputLabel>
+          <InputLabel id="decision-label" htmlFor="decision-select">Decision</InputLabel>
           <Select
+            labelId="decision-label"
+            id="decision-select"
             label="Decision"
             value={decision}
             onChange={handleDecisionChange}
             onClick={handleDialogClick}
+            inputProps={{
+              'data-testid': 'decision-select-input'
+            }}
           >
             <MenuItem value="approve" onClick={(e) => e.stopPropagation()}>Approve</MenuItem>
             <MenuItem value="reject" onClick={(e) => e.stopPropagation()}>Reject</MenuItem>
           </Select>
-          {error && !decision && <FormHelperText>Please select a decision</FormHelperText>}
+          {error === "decision" && <FormHelperText>Please select a decision</FormHelperText>}
         </FormControl>
 
         <TextField
+          id="comments-input"
           margin="normal"
           label="Comments"
           multiline
@@ -194,8 +207,8 @@ const DecideApproval: React.FC<ProjectDecideApprovalProps> = ({
             "Enter your approval comments"}
           value={comments}
           onChange={handleCommentsChange}
-          error={!!error && !comments.trim()}
-          helperText={error && !comments.trim() ? "Comments are required" : error}
+          error={error === "comments"}
+          helperText={error === "comments" ? "Comments are required" : (error && error !== "decision" && error !== "comments" ? error : "")}
           onClick={handleDialogClick}
         />
       </DialogContent>

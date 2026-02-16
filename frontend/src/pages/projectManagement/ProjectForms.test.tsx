@@ -1,3 +1,4 @@
+import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -18,32 +19,46 @@ import {
 import NotFound from '../NotFound';
 
 // Mock react-router-dom's useParams
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useParams: jest.fn(),
+vi.mock('react-router-dom', async () => ({
+  ...await vi.importActual<any>('react-router-dom'),
+  useParams: vi.fn(),
 }));
 
 // Mock all form components and NotFound
-jest.mock('../../components/forms', () => ({
-  WorkBreakdownStructureForm: jest.fn(() => <div data-testid="wbs-form" />),
-  JobStartForm: jest.fn(() => <div data-testid="job-start-form" />),
-  InputRegisterForm: jest.fn(() => <div data-testid="input-register-form" />),
-  CorrespondenceForm: jest.fn(() => <div data-testid="correspondence-form" />),
-  CheckReviewForm: jest.fn(() => <div data-testid="check-review-form" />),
-  ChangeControlForm: jest.fn(() => <div data-testid="change-control-form" />),
-  MonthlyProgressForm: jest.fn(() => <div data-testid="monthly-progress-form" />),
-  ProjectClosureForm: jest.fn(() => <div data-testid="project-closure-form" />),
-  FormsOverview: jest.fn(() => <div data-testid="forms-overview" />),
-  MonthlyReports: jest.fn(() => <div data-testid="monthly-reports-form" />),
+vi.mock('../../components/forms', () => ({
+  WorkBreakdownStructureForm: vi.fn(() => <div data-testid="wbs-form" />),
+  JobStartForm: vi.fn(() => <div data-testid="job-start-form" />),
+  InputRegisterForm: vi.fn(() => <div data-testid="input-register-form" />),
+  CorrespondenceForm: vi.fn(() => <div data-testid="correspondence-form" />),
+  CheckReviewForm: vi.fn(() => <div data-testid="check-review-form" />),
+  ChangeControlForm: vi.fn(() => <div data-testid="change-control-form" />),
+  MonthlyProgressForm: vi.fn(() => <div data-testid="monthly-progress-form" />),
+  ProjectClosureForm: vi.fn(() => <div data-testid="project-closure-form" />),
+  FormsOverview: vi.fn(() => <div data-testid="forms-overview" />),
+  MonthlyReports: vi.fn(() => <div data-testid="monthly-reports-form" />),
 }));
 
-jest.mock('../NotFound', () => jest.fn(() => <div data-testid="not-found" />));
+vi.mock('../NotFound', () => ({
+  default: vi.fn(() => <div data-testid="not-found" />)
+}));
 
-const mockUseParams = useParams as jest.Mock;
+vi.mock('../../components/subscription/FeatureGate', () => ({
+  default: vi.fn(({ children }) => <>{children}</>)
+}));
+
+vi.mock('../../components/forms/FormWrapper', () => ({
+  FormWrapper: vi.fn(({ children }) => <div data-testid="form-wrapper">{children}</div>)
+}));
+
+const mockUseParams = useParams as vi.Mock;
 
 describe('ProjectForms Component', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Default mock for useParams to render FormsOverview
     mockUseParams.mockReturnValue({});
   });
@@ -131,3 +146,5 @@ describe('ProjectForms Component', () => {
     expect(MonthlyReports).toHaveBeenCalled();
   });
 });
+
+

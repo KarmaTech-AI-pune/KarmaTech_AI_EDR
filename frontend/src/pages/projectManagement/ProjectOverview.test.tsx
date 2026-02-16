@@ -1,3 +1,4 @@
+import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -7,14 +8,18 @@ import { Project } from '../../models';
 import { ProjectStatus } from '../../types/index'; // Import ProjectStatus
 
 // Mock the useProjectDetailsContext hook
-jest.mock('./ProjectDetails', () => ({
-  ...jest.requireActual('./ProjectDetails'),
-  useProjectDetailsContext: jest.fn(),
+vi.mock('./ProjectDetails', async () => ({
+  ...await vi.importActual<any>('./ProjectDetails'),
+  useProjectDetailsContext: vi.fn(),
 }));
 
-const mockUseProjectDetailsContext = useProjectDetailsContext as jest.Mock;
+const mockUseProjectDetailsContext = useProjectDetailsContext as vi.Mock;
 
 describe('ProjectOverview Component', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const mockProject: Project = {
     id: '1',
     name: 'Test Project',
@@ -52,7 +57,7 @@ describe('ProjectOverview Component', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseProjectDetailsContext.mockReturnValue({
       project: mockProject,
       managerNames: mockManagerNames,
@@ -124,7 +129,7 @@ describe('ProjectOverview Component', () => {
 
     render(<ProjectOverview />);
 
-    expect(screen.getAllByText('Not specified')).toHaveLength(2); // For Project Number and Start Date
+    expect(screen.getAllByText('Not specified')).toHaveLength(3); // For Project Number, Client Name, and Start Date
   });
 
   test('should display "Not assigned" for missing manager IDs', () => {
@@ -132,7 +137,7 @@ describe('ProjectOverview Component', () => {
       ...mockProject,
       projectManagerId: undefined,
       seniorProjectManagerId: null,
-      regionalManagerId: 'nonExistentId',
+      regionalManagerId: undefined,
     };
     mockUseProjectDetailsContext.mockReturnValue({
       project: projectWithMissingManagers,
@@ -156,3 +161,5 @@ describe('ProjectOverview Component', () => {
     expect(screen.getByText('December 31, 2023')).toBeInTheDocument();
   });
 });
+
+

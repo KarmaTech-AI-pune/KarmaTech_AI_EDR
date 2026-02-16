@@ -1,11 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useNavigate } from 'react-router-dom';
 import { useAppNavigation } from './useAppNavigation';
 import { projectManagementAppContext } from '../App';
 import { useProject } from '../context/ProjectContext';
 import { Project, OpportunityTracking } from '../models';
-import { ProjectStatus } from '../types';
+import { ProjectStatus } from '../models/types';
+
+// Hoist mock variables using vi.hoisted()
+const { mockSetSelectedProject, mockSetProjectId, mockNavigate } = vi.hoisted(() => ({
+  mockSetSelectedProject: vi.fn(),
+  mockSetProjectId: vi.fn(),
+  mockNavigate: vi.fn()
+}));
 
 // Mock react-router-dom's useNavigate
 vi.mock('react-router-dom', () => ({
@@ -13,7 +20,6 @@ vi.mock('react-router-dom', () => ({
 }));
 
 // Mock projectManagementAppContext
-const mockSetSelectedProject = vi.fn();
 vi.mock('../App', () => ({
   projectManagementAppContext: {
     // Mock useContext to return a specific value
@@ -26,7 +32,6 @@ vi.mock('../App', () => ({
 }));
 
 // Mock useProject context
-const mockSetProjectId = vi.fn();
 vi.mock('../context/ProjectContext', () => ({
   useProject: () => ({
     setProjectId: mockSetProjectId,
@@ -34,7 +39,9 @@ vi.mock('../context/ProjectContext', () => ({
 }));
 
 describe('useAppNavigation', () => {
-  const mockNavigate = vi.fn();
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -82,6 +89,10 @@ describe('useAppNavigation', () => {
   });
 
 describe('navigateToBusinessDevelopmentDetails', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     const mockProject: Project = { id: '123', name: 'Test Project', description: '', status: ProjectStatus.ACTIVE, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' };
 
     it('should navigate to business development details with project ID if project is provided', () => {
@@ -104,6 +115,10 @@ describe('navigateToBusinessDevelopmentDetails', () => {
   });
 
   describe('navigateToProjectDetails', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     const mockProject: Project = { id: '456', name: 'Another Project', description: '', status: ProjectStatus.COMPLETED, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' };
 
     it('should navigate to project details with project ID if project is provided', () => {
@@ -113,7 +128,7 @@ describe('navigateToBusinessDevelopmentDetails', () => {
       });
       expect(mockSetSelectedProject).toHaveBeenCalledWith(mockProject);
       expect(mockSetProjectId).toHaveBeenCalledWith(String(mockProject.id));
-      expect(mockNavigate).toHaveBeenCalledWith(`/project-management/project`);
+      expect(mockNavigate).toHaveBeenCalledWith(`/program-management/projects/project`);
     });
 
     it('should navigate to project management without project ID if no project is provided', () => {
@@ -123,11 +138,15 @@ describe('navigateToBusinessDevelopmentDetails', () => {
       });
       expect(mockSetSelectedProject).not.toHaveBeenCalled();
       expect(mockSetProjectId).not.toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith('/project-management');
+      expect(mockNavigate).toHaveBeenCalledWith('/program-management');
     });
   });
 
   describe('navigateToGoNoGoForm', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     const mockProject: OpportunityTracking = { id: 789, name: 'GoNoGo Opp', description: '', status: ProjectStatus.PENDING, type: '' };
 
     it('should navigate to GoNoGo form with project ID if project is provided', () => {
@@ -150,6 +169,10 @@ describe('navigateToBusinessDevelopmentDetails', () => {
   });
 
   describe('navigateToBidPreparation', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     const mockProject: OpportunityTracking = { id: 101, name: 'Bid Prep Opp', description: '', status: ProjectStatus.IN_PROGRESS, type: '' };
 
     it('should navigate to Bid Preparation with project ID if project is provided', () => {
@@ -172,6 +195,10 @@ describe('navigateToBusinessDevelopmentDetails', () => {
   });
 
   describe('navigateToProjectResources', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     const mockProject: Project = { id: '202', name: 'Project Resources', description: '', status: ProjectStatus.ACTIVE, projectNo: '', typeOfJob: '', sector: '', priority: '', clientName: '', typeOfClient: '', region: '', office: '', currency: '', estimatedProjectFee: 0, details: '', createdAt: '', updatedAt: '', seniorProjectManagerId: '', regionalManagerId: '', projectManagerId: '', estimatedProjectCost: 0, letterOfAcceptance: false, opportunityTrackingId: 0, feeType: '' };
 
     it('should navigate to project resources with project ID if project is provided', () => {
@@ -181,7 +208,7 @@ describe('navigateToBusinessDevelopmentDetails', () => {
       });
       expect(mockSetSelectedProject).toHaveBeenCalledWith(mockProject);
       expect(mockSetProjectId).toHaveBeenCalledWith(String(mockProject.id));
-      expect(mockNavigate).toHaveBeenCalledWith(`/project-management/project/resources`);
+      expect(mockNavigate).toHaveBeenCalledWith(`/program-management/project/resources`);
     });
 
     it('should navigate to project management without project ID if no project is provided', () => {
@@ -191,7 +218,8 @@ describe('navigateToBusinessDevelopmentDetails', () => {
       });
       expect(mockSetSelectedProject).not.toHaveBeenCalled();
       expect(mockSetProjectId).not.toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith('/project-management');
+      expect(mockNavigate).toHaveBeenCalledWith('/program-management');
     });
   });
 });
+

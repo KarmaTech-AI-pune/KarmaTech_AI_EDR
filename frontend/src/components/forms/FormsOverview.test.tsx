@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import FormsOverview from './FormsOverview';
@@ -22,6 +22,10 @@ const mockUseProject = vi.mocked(useProject);
 const mockGanttChart = vi.mocked(GanttChart);
 
 describe('FormsOverview', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -54,3 +58,4 @@ describe('FormsOverview', () => {
     expect(mockOnFormSelect).not.toHaveBeenCalled();
   });
 });
+

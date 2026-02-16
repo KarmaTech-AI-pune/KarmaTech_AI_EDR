@@ -85,23 +85,38 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!selectedApprover) {
-      setError('Please select a Regional Director');
-      return;
-    }
-
+    console.log('handleSubmit called');
+    console.log('projectClosureId:', projectClosureId);
+    console.log('projectId:', projectId);
+    console.log('currentUser:', currentUser);
+    console.log('selectedApprover:', selectedApprover);
+    
+    // Clear any existing errors first
+    setError(null);
+    
     if (!projectClosureId) {
+      console.log('Setting error: Project Closure ID is missing');
       setError('Project Closure ID is missing');
+      console.log('Error state after setting:', error);
       return;
     }
 
     if (!projectId) {
+      console.log('Setting error: Project ID is missing');
       setError('Project ID is missing');
+      console.log('Error state after setting:', error);
       return;
     }
 
     if (!currentUser) {
+      console.log('Setting error: Current user information is missing');
       setError('Current user information is missing');
+      return;
+    }
+
+    if (!selectedApprover) {
+      console.log('Setting error: Please select a Regional Director');
+      setError('Please select a Regional Director');
       return;
     }
 
@@ -177,38 +192,41 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
     >
       <DialogTitle>Send for Approval</DialogTitle>
       <DialogContent onClick={stopEventPropagation}>
-        <FormControl
+        {manager && (
+          <div style={{
+            fontSize: '16px',
+            padding: '8px 0',
+            textAlign: 'center'
+          }}>
+            Send to {manager} for approval?
+          </div>
+        )}
+
+        <TextField
+          label="Comments"
+          multiline
+          rows={4}
           fullWidth
           margin="normal"
-          error={!!error}
-        >
-          {manager && (
-            <div style={{
-              fontSize: '16px',
-              padding: '8px 0',
-              textAlign: 'center'
-            }}>
-              Send to {manager} for approval?
-            </div>
-          )}
+          value={comments}
+          onChange={handleCommentsChange}
+          placeholder="Add your comments here (optional)"
+        />
 
-          <TextField
-            label="Comments"
-            multiline
-            rows={4}
-            fullWidth
-            margin="normal"
-            value={comments}
-            onChange={handleCommentsChange}
-            placeholder="Add your comments here (optional)"
-          />
-
-          {error && (
-            <FormHelperText error>
-              {error}
-            </FormHelperText>
-          )}
-        </FormControl>
+        {error && (
+          <FormHelperText 
+            error 
+            sx={{ 
+              mt: 2, 
+              mb: 1,
+              fontSize: '0.75rem',
+              color: 'error.main'
+            }}
+            data-testid="error-message"
+          >
+            {error}
+          </FormHelperText>
+        )}
       </DialogContent>
       <DialogActions onClick={stopEventPropagation}>
         <Button onClick={handleCancel} color="inherit">
@@ -218,7 +236,7 @@ const SendForApproval: React.FC<SendForApprovalProps> = ({
           onClick={handleSubmit}
           variant="contained"
           color="primary"
-          disabled={!selectedApprover}
+          disabled={!!error || !selectedApprover}
         >
           Send
         </Button>

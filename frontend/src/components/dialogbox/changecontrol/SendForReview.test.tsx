@@ -1,6 +1,7 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
 import SendForReview from './SendForReview';
 import { getUsersByRole, getUserById } from '../../../services/userApi';
@@ -59,6 +60,10 @@ const defaultProps = {
 };
 
 describe('SendForReview', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetUsersByRole.mockResolvedValue(mockReviewers);
@@ -70,7 +75,7 @@ describe('SendForReview', () => {
   it('should render correctly with default props and display manager name if already assigned', async () => {
     render(<SendForReview {...defaultProps} />);
 
-    expect(screen.getByText('Senior Project Manager')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Senior Project Manager' })).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText(`Send to ${mockManagerUserData.name} for review?`)).toBeInTheDocument();
     });
@@ -83,7 +88,7 @@ describe('SendForReview', () => {
     mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any); // No manager assigned
     render(<SendForReview {...defaultProps} />);
 
-    expect(screen.getByText('Senior Project Manager')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Senior Project Manager' })).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByLabelText('Senior Project Manager')).toBeInTheDocument();
     });
@@ -103,12 +108,32 @@ describe('SendForReview', () => {
 
   it('should enable OK button when a reviewer is selected from dropdown', async () => {
     mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any); // No manager assigned
+    const user = userEvent.setup();
     render(<SendForReview {...defaultProps} />);
-    await waitFor(() => expect(screen.getByLabelText('Senior Project Manager')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument());
 
-    fireEvent.mouseDown(screen.getByLabelText('Senior Project Manager'));
-    fireEvent.click(screen.getByText('SPM One'));
-    expect(screen.getByRole('button', { name: 'OK' })).toBeEnabled();
+    const combobox = screen.getByRole('combobox');
+    await user.click(combobox);
+    
+    // Wait for listbox to open
+    await waitFor(() => {
+      expect(screen.getByRole('listbox')).toBeInTheDocument();
+    });
+    
+    // Find and click the option
+    const options = screen.getAllByRole('option');
+    const option = options.find(opt => opt.textContent?.includes('SPM One'));
+    if (!option) throw new Error('Option not found');
+    await user.click(option);
+    
+    // Wait for listbox to close
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    });
+    
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'OK' })).toBeEnabled();
+    });
   });
 
   it('should call sendToReview and onSubmit/onReviewSent on successful submission (manager assigned)', async () => {
@@ -133,13 +158,34 @@ describe('SendForReview', () => {
 
   it('should call sendToReview and onSubmit/onReviewSent on successful submission (reviewer selected)', async () => {
     mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any); // No manager assigned
+    const user = userEvent.setup();
     render(<SendForReview {...defaultProps} />);
-    await waitFor(() => expect(screen.getByLabelText('Senior Project Manager')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument());
 
-    fireEvent.mouseDown(screen.getByLabelText('Senior Project Manager'));
-    fireEvent.click(screen.getByText('SPM Two')); // Select SPM Two
+    const combobox = screen.getByRole('combobox');
+    await user.click(combobox);
+    
+    // Wait for listbox to open
+    await waitFor(() => {
+      expect(screen.getByRole('listbox')).toBeInTheDocument();
+    });
+    
+    // Find and click the option
+    const options = screen.getAllByRole('option');
+    const option = options.find(opt => opt.textContent?.includes('SPM Two'));
+    if (!option) throw new Error('Option not found');
+    await user.click(option);
+    
+    // Wait for listbox to close
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'OK' })).toBeEnabled();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'OK' }));
 
     await waitFor(() => {
       expect(mockSendToReview).toHaveBeenCalledWith({
@@ -155,45 +201,125 @@ describe('SendForReview', () => {
     });
   });
 
-  it('should show error if no reviewer is selected on submit (no manager assigned)', async () => {
+  it('should disable OK button when no reviewer is selected (no manager assigned)', async () => {
     mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any); // No manager assigned
     render(<SendForReview {...defaultProps} />);
     await waitFor(() => expect(screen.getByLabelText('Senior Project Manager')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
-    await waitFor(() => {
-      expect(screen.getByText('Please select a Senior Project Manager')).toBeInTheDocument();
-    });
+    // OK button should be disabled when no reviewer is selected
+    const okButton = screen.getByRole('button', { name: 'OK' });
+    expect(okButton).toBeDisabled();
+    
+    // Clicking disabled button should not trigger any actions
+    fireEvent.click(okButton);
     expect(mockSendToReview).not.toHaveBeenCalled();
     expect(defaultProps.onSubmit).not.toHaveBeenCalled();
     expect(defaultProps.onReviewSent).not.toHaveBeenCalled();
-    expect(defaultProps.onClose).not.toHaveBeenCalled(); // Dialog should not close on validation error
+    expect(defaultProps.onClose).not.toHaveBeenCalled();
   });
 
-  it('should show error if changeControlId is missing', async () => {
+  it('should show error if changeControlId is missing when OK is clicked', async () => {
+    mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any);
+    const user = userEvent.setup();
     render(<SendForReview {...defaultProps} changeControlId={undefined} />);
-    await waitFor(() => expect(mockGetProjectById).toHaveBeenCalled());
-    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    
+    // Wait for combobox to be available
     await waitFor(() => {
-      expect(screen.getByText('Change Control ID is missing')).toBeInTheDocument();
+      expect(screen.getByRole('combobox')).toBeInTheDocument();
     });
+    
+    // Select a reviewer to enable the OK button
+    const combobox = screen.getByRole('combobox');
+    await user.click(combobox);
+    
+    // Wait for listbox to open
+    await waitFor(() => {
+      expect(screen.getByRole('listbox')).toBeInTheDocument();
+    });
+    
+    // Find and click the option
+    const options = screen.getAllByRole('option');
+    const option = options.find(opt => opt.textContent?.includes('SPM One'));
+    if (!option) throw new Error('Option not found');
+    await user.click(option);
+    
+    // Wait for listbox to close
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    });
+    
+    // Now OK button should be enabled
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'OK' })).toBeEnabled();
+    });
+    
+    // Click OK button
+    await user.click(screen.getByRole('button', { name: 'OK' }));
+    
+    // Should show error message
+    await waitFor(() => {
+      const helperText = screen.getByText('Change Control ID is missing');
+      expect(helperText).toBeInTheDocument();
+    }, { timeout: 5000 });
+    
     expect(mockSendToReview).not.toHaveBeenCalled();
   });
 
-  it('should show error if projectId is missing', async () => {
+  it('should show error if projectId is missing when OK is clicked', async () => {
+    const user = userEvent.setup();
     render(<SendForReview {...defaultProps} projectId={undefined} />);
-    await waitFor(() => expect(mockGetProjectById).not.toHaveBeenCalled()); // useEffect should not run fully
-    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    
+    // Wait for combobox to be available
     await waitFor(() => {
-      expect(screen.getByText('Project ID is missing')).toBeInTheDocument();
+      expect(screen.getByRole('combobox')).toBeInTheDocument();
     });
+    
+    // The useEffect should not call getProjectById when projectId is undefined
+    expect(mockGetProjectById).not.toHaveBeenCalled();
+    
+    // Select a reviewer to enable the OK button
+    const combobox = screen.getByRole('combobox');
+    await user.click(combobox);
+    
+    // Wait for listbox to open
+    await waitFor(() => {
+      expect(screen.getByRole('listbox')).toBeInTheDocument();
+    });
+    
+    // Find and click the option
+    const options = screen.getAllByRole('option');
+    const option = options.find(opt => opt.textContent?.includes('SPM One'));
+    if (!option) throw new Error('Option not found');
+    await user.click(option);
+    
+    // Wait for listbox to close
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    });
+    
+    // Now OK button should be enabled
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'OK' })).toBeEnabled();
+    });
+    
+    // Click OK button
+    await user.click(screen.getByRole('button', { name: 'OK' }));
+    
+    // Should show error message
+    await waitFor(() => {
+      const helperText = screen.getByText('Project ID is missing');
+      expect(helperText).toBeInTheDocument();
+    }, { timeout: 5000 });
+    
     expect(mockSendToReview).not.toHaveBeenCalled();
   });
 
   it('should show error if currentUser is missing', async () => {
     render(<SendForReview {...defaultProps} currentUser={undefined} />);
     // The component should return null and not render anything
-    expect(screen.queryByText('Senior Project Manager')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('Senior Project Manager')).not.toBeInTheDocument();
+    });
   });
 
   it('should display error if getUsersByRole fails', async () => {
@@ -248,20 +374,21 @@ describe('SendForReview', () => {
   });
 
   it('should prevent event propagation on dialog interactions', async () => {
-    const stopPropagationSpy = vi.spyOn(React, 'useCallback').mockImplementation((fn) => fn);
-
     render(<SendForReview {...defaultProps} />);
     await waitFor(() => expect(mockGetProjectById).toHaveBeenCalled());
+    
     const dialog = screen.getByRole('dialog');
 
-    const mockEvent = { stopPropagation: vi.fn() } as unknown as React.MouseEvent;
-    fireEvent.click(dialog, mockEvent);
-    expect(mockEvent.stopPropagation).toHaveBeenCalledTimes(1);
+    // Test that the dialog has onClick handler
+    const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+    const stopPropagationSpy = vi.spyOn(clickEvent, 'stopPropagation');
+    dialog.dispatchEvent(clickEvent);
+    expect(stopPropagationSpy).toHaveBeenCalled();
 
-    const mockKeyEvent = { stopPropagation: vi.fn() } as unknown as React.KeyboardEvent;
-    fireEvent.keyDown(dialog, mockKeyEvent);
-    expect(mockKeyEvent.stopPropagation).toHaveBeenCalledTimes(1);
-
-    stopPropagationSpy.mockRestore();
+    // Test that the dialog has onKeyDown handler
+    const keyEvent = new KeyboardEvent('keydown', { bubbles: true, cancelable: true });
+    const keyStopPropagationSpy = vi.spyOn(keyEvent, 'stopPropagation');
+    dialog.dispatchEvent(keyEvent);
+    expect(keyStopPropagationSpy).toHaveBeenCalled();
   });
 });

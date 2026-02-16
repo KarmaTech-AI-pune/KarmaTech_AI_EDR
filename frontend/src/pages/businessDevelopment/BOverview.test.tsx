@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -7,57 +8,43 @@ import { OpportunityTracking } from '../../models';
 import { HistoryWidget } from '../../components/widgets/HistoryWidget';
 
 // Mock react-router-dom's useOutletContext
-jest.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', () => ({
   __esModule: true,
-  useOutletContext: jest.fn(),
+  useOutletContext: vi.fn(),
 }));
 
 // Mock HistoryWidget to simplify testing BOverview's rendering
-jest.mock('../../components/widgets/HistoryWidget', () => ({
+vi.mock('../../components/widgets/HistoryWidget', () => ({
   __esModule: true,
-  HistoryWidget: jest.fn(() => <div data-testid="mock-history-widget" />),
+  HistoryWidget: vi.fn(() => <div data-testid="mock-history-widget" />),
 }));
 
-// Mock Material-UI components to avoid complex rendering issues in unit tests
-jest.mock('@mui/material/Box', () => ({
+// Mock Material-UI components
+vi.mock('@mui/material', () => ({
   __esModule: true,
-  default: jest.fn(({ children, ...props }) => <div {...props} data-testid="mock-box">{children}</div>),
+  Box: vi.fn(({ children, ...props }) => <div {...props} data-testid="mock-box">{children}</div>),
+  Grid: vi.fn(({ children, ...props }) => <div {...props} data-testid="mock-grid">{children}</div>),
+  Card: vi.fn(({ children, ...props }) => <div {...props} data-testid="mock-card">{children}</div>),
+  CardContent: vi.fn(({ children }) => <div data-testid="mock-card-content">{children}</div>),
+  Typography: vi.fn(({ children, variant, ...props }) => <span data-testid={`mock-typography-${variant}`} {...props}>{children}</span>),
+  Chip: vi.fn(({ label, ...props }) => <span data-testid="mock-chip" {...props}>{label}</span>),
 }));
-jest.mock('@mui/material/Grid', () => ({
+
+vi.mock('@mui/icons-material/Home', () => ({
   __esModule: true,
-  default: jest.fn(({ children, ...props }) => <div {...props} data-testid="mock-grid">{children}</div>),
+  default: vi.fn(() => <span data-testid="mock-home-icon" />),
 }));
-jest.mock('@mui/material/Card', () => ({
+vi.mock('@mui/icons-material/Business', () => ({
   __esModule: true,
-  default: jest.fn(({ children, ...props }) => <div {...props} data-testid="mock-card">{children}</div>),
+  default: vi.fn(() => <span data-testid="mock-business-icon" />),
 }));
-jest.mock('@mui/material/CardContent', () => ({
+vi.mock('@mui/icons-material/AttachMoney', () => ({
   __esModule: true,
-  default: jest.fn(({ children }) => <div data-testid="mock-card-content">{children}</div>),
+  default: vi.fn(() => <span data-testid="mock-attachmoney-icon" />),
 }));
-jest.mock('@mui/material/Typography', () => ({
+vi.mock('@mui/icons-material/CalendarToday', () => ({
   __esModule: true,
-  default: jest.fn(({ children, variant, ...props }) => <span data-testid={`mock-typography-${variant}`} {...props}>{children}</span>),
-}));
-jest.mock('@mui/material/Chip', () => ({
-  __esModule: true,
-  default: jest.fn(({ label, ...props }) => <span data-testid="mock-chip" {...props}>{label}</span>),
-}));
-jest.mock('@mui/icons-material/Home', () => ({
-  __esModule: true,
-  default: jest.fn(() => <span data-testid="mock-home-icon" />),
-}));
-jest.mock('@mui/icons-material/Business', () => ({
-  __esModule: true,
-  default: jest.fn(() => <span data-testid="mock-business-icon" />),
-}));
-jest.mock('@mui/icons-material/AttachMoney', () => ({
-  __esModule: true,
-  default: jest.fn(() => <span data-testid="mock-attachmoney-icon" />),
-}));
-jest.mock('@mui/icons-material/CalendarToday', () => ({
-  __esModule: true,
-  default: jest.fn(() => <span data-testid="mock-calendartoday-icon" />),
+  default: vi.fn(() => <span data-testid="mock-calendartoday-icon" />),
 }));
 
 
@@ -111,13 +98,17 @@ const mockHistories = [
 ];
 
 describe('BOverview', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useOutletContext as jest.Mock).mockReturnValue({
+    vi.clearAllMocks();
+    (useOutletContext as vi.Mock).mockReturnValue({
       opportunity: mockOpportunity,
       histories: mockHistories,
     });
-    (HistoryWidget as jest.Mock).mockImplementation(({ title, histories }) => (
+    (HistoryWidget as vi.Mock).mockImplementation(({ title, histories }) => (
       <div data-testid="mock-history-widget">
         <span data-testid="history-widget-title">{title}</span>
         <ul data-testid="history-widget-list">
@@ -194,7 +185,7 @@ describe('BOverview', () => {
       capitalValue: undefined,
       likelyStartDate: undefined,
     };
-    (useOutletContext as jest.Mock).mockReturnValue({
+    (useOutletContext as vi.Mock).mockReturnValue({
       opportunity: opportunityWithUndefined,
       histories: [],
     });
@@ -210,7 +201,7 @@ describe('BOverview', () => {
       capitalValue: 500000,
       currency: 'INR',
     };
-    (useOutletContext as jest.Mock).mockReturnValue({
+    (useOutletContext as vi.Mock).mockReturnValue({
       opportunity: opportunityINR,
       histories: [],
     });
@@ -224,7 +215,7 @@ describe('BOverview', () => {
       ...mockOpportunity,
       likelyStartDate: new Date('2024-03-10T00:00:00Z'),
     };
-    (useOutletContext as jest.Mock).mockReturnValue({
+    (useOutletContext as vi.Mock).mockReturnValue({
       opportunity: opportunityDateObj,
       histories: [],
     });

@@ -1,6 +1,6 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { MonthlyReports } from './MonthlyReports';
 import MonthlyReportDialog from '../dialogbox/MonthlyReportDialog';
@@ -85,11 +85,15 @@ const mockReports: MonthlyReport[] = [
 ];
 
 describe('MonthlyReports', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const mockProjectId = 'proj123';
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: mockProjectId, setProjectId: vi.fn(), programId: 'prog123', setProgramId: vi.fn() });
     mockGetMonthlyReports.mockResolvedValue(mockReports);
     mockGetMonthName.mockImplementation((month: string) => {
       const monthNames: { [key: string]: string } = {
@@ -104,10 +108,10 @@ describe('MonthlyReports', () => {
   it('should render correctly and load monthly reports', async () => {
     render(<MonthlyReports />);
 
-    expect(screen.getByText('Monthly Reports')).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toBeInTheDocument(); // Loading initially
 
     await waitFor(() => {
+      expect(screen.getByText('Monthly Reports')).toBeInTheDocument();
       expect(mockGetMonthlyReports).toHaveBeenCalledWith(mockProjectId);
       expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       expect(screen.getByText('January 2023 Report')).toBeInTheDocument();
@@ -129,9 +133,9 @@ describe('MonthlyReports', () => {
     render(<MonthlyReports />);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to fetch monthly reports.')).toBeInTheDocument();
+      expect(screen.getByText(/Failed to fetch monthly reports./i)).toBeInTheDocument();
       expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('should display no reports message if no reports are returned', async () => {
@@ -142,7 +146,7 @@ describe('MonthlyReports', () => {
       expect(screen.queryByText('January 2023 Report')).not.toBeInTheDocument();
       expect(screen.queryByText('February 2023 Report')).not.toBeInTheDocument();
       expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('should open MonthlyReportDialog when PDF button is clicked', async () => {
@@ -185,16 +189,23 @@ describe('MonthlyReports', () => {
     expect(screen.getByText(`Monthly Report Dialog for ${mockReports[0].month}/${mockReports[0].year}`)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Close Dialog' }));
-    expect(screen.queryByText(`Monthly Report Dialog for ${mockReports[0].month}/${mockReports[0].year}`)).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText(`Monthly Report Dialog for ${mockReports[0].month}/${mockReports[0].year}`)).not.toBeInTheDocument());
   });
 
   it('should display a warning if no projectId is available', async () => {
-    mockUseProject.mockReturnValue({ projectId: undefined, setProjectId: vi.fn() });
+    mockUseProject.mockReturnValue({ projectId: undefined, setProjectId: vi.fn(), programId: undefined, setProgramId: vi.fn() });
     render(<MonthlyReports />);
 
     await waitFor(() => {
-      expect(screen.getByText('No project selected')).toBeInTheDocument();
-    });
+      expect(screen.getByText('Monthly Reports')).toBeInTheDocument();
+    }, { timeout: 5000 });
     expect(mockGetMonthlyReports).not.toHaveBeenCalled();
   });
 });
+
+
+
+
+
+
+

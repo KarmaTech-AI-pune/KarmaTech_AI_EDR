@@ -1,3 +1,4 @@
+import { vi, describe, expect, test } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -96,3 +97,4 @@ describe('ProgrammeScheduleTab', () => {
     expect(textArea).toHaveValue('Test programme description');
   });
 });
+

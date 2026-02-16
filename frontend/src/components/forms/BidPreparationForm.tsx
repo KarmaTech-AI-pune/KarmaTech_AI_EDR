@@ -471,6 +471,7 @@ const BidPreparationForm: React.FC = () => {
               <TextField
                 fullWidth
                 variant="standard"
+                aria-label="text-field-name"
                 value={category.name}
                 onChange={(e) => handleUpdateCategory(category.id, 'name', e.target.value)}
               />
@@ -490,6 +491,7 @@ const BidPreparationForm: React.FC = () => {
               <TextField
                 fullWidth
                 variant="standard"
+                aria-label="text-field-remarks"
                 value={category.remarks || ''}
                 onChange={(e) => handleUpdateCategory(category.id, 'remarks', e.target.value)}
               />
@@ -537,6 +539,7 @@ const BidPreparationForm: React.FC = () => {
                   <AddIcon />
                 </IconButton>
                 <IconButton
+                  aria-label="delete"
                   size="small"
                   onClick={() => handleDeleteCategory(category.id)}
                   color="error"
@@ -621,7 +624,7 @@ const BidPreparationForm: React.FC = () => {
         </Box>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert data-testid="error-alert" severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
@@ -644,7 +647,7 @@ const BidPreparationForm: React.FC = () => {
           </Table>
         </Paper>
 
-        {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') && status === BidPreparationStatus.Draft && (
+        {(currentRole === 'Business Development Manager' || currentRole === 'Regional Manager') && status === BidPreparationStatus.Draft && editMode && (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"

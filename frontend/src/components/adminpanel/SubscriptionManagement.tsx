@@ -148,7 +148,7 @@ const SubscriptionManagement = () => {
   };
 
   const calculateMonthlyRevenue = () => {
-    return plans.reduce((sum, plan) => {
+    return (plans || []).reduce((sum, plan) => {
       const subscribers = plan.tenants?.length || 0;
       return sum + (plan.monthlyPrice * subscribers);
     }, 0);
@@ -176,7 +176,7 @@ const SubscriptionManagement = () => {
               <Typography color="textSecondary" gutterBottom>
                 Total Plans
               </Typography>
-              <Typography variant="h4">{plans.length}</Typography>
+              <Typography variant="h4">{(plans || []).length}</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -187,7 +187,7 @@ const SubscriptionManagement = () => {
                 Active Plans
               </Typography>
               <Typography variant="h4">
-                {plans.filter(p => p.isActive).length}
+                {(plans || []).filter(p => p.isActive).length}
               </Typography>
             </CardContent>
           </Card>
@@ -199,7 +199,7 @@ const SubscriptionManagement = () => {
                 Total Subscribers
               </Typography>
               <Typography variant="h4">
-                {plans.reduce((sum, plan) => sum + (plan.tenants?.length || 0), 0)}
+                {(plans || []).reduce((sum, plan) => sum + (plan.tenants?.length || 0), 0)}
               </Typography>
             </CardContent>
           </Card>
@@ -232,7 +232,7 @@ const SubscriptionManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {plans.map((plan) => (
+            {(plans || []).map((plan) => (
               <TableRow key={plan.id}>
                 <TableCell>
                   <Typography variant="h6">{plan.name}</Typography>

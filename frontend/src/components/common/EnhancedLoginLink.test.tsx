@@ -1,5 +1,6 @@
+
+import { vi, describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import EnhancedLoginLink from './EnhancedLoginLink';
 
@@ -14,6 +15,10 @@ vi.mock('react-router-dom', async () => {
 });
 
 describe('EnhancedLoginLink', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('renders the component with correct text and buttons', () => {
     render(
       <MemoryRouter>
@@ -49,3 +54,5 @@ describe('EnhancedLoginLink', () => {
     expect(mockedNavigate).toHaveBeenCalledWith('/admin');
   });
 });
+
+

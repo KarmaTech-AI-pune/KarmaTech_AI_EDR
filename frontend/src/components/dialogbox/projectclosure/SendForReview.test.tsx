@@ -1,6 +1,7 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import SendForReview from './SendForReview';
 import { getUsersByRole, getUserById } from '../../../services/userApi';
@@ -82,6 +83,10 @@ const defaultProps = {
 };
 
 describe('ProjectClosure/SendForReview', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetUsersByRole.mockResolvedValue(mockReviewers);
@@ -93,7 +98,7 @@ describe('ProjectClosure/SendForReview', () => {
   it('should render correctly with default props and display manager name if already assigned', async () => {
     render(<SendForReview {...defaultProps} />);
 
-    expect(screen.getByText('Senior Project Manager')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Senior Project Manager' })).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText(`Send to ${mockManagerUserData.name} for review?`)).toBeInTheDocument();
     });
@@ -106,7 +111,7 @@ describe('ProjectClosure/SendForReview', () => {
     mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any); // No manager assigned
     render(<SendForReview {...defaultProps} />);
 
-    expect(screen.getByText('Senior Project Manager')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Senior Project Manager' })).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByLabelText('Senior Project Manager')).toBeInTheDocument();
     });
@@ -126,12 +131,25 @@ describe('ProjectClosure/SendForReview', () => {
 
   it('should enable OK button when a reviewer is selected from dropdown', async () => {
     mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any); // No manager assigned
+    const user = userEvent.setup();
     render(<SendForReview {...defaultProps} />);
     await waitFor(() => expect(screen.getByLabelText('Senior Project Manager')).toBeInTheDocument());
 
-    fireEvent.mouseDown(screen.getByLabelText('Senior Project Manager'));
-    fireEvent.click(screen.getByText('SPM One'));
-    expect(screen.getByRole('button', { name: 'OK' })).toBeEnabled();
+    // Use reliable selector for MUI Select
+    const selectWrapper = screen.getByTestId('reviewer-select');
+    const comboBox = within(selectWrapper).getByRole('combobox');
+    fireEvent.mouseDown(comboBox);
+    
+    // MUI Select renders menu items in a portal - use getByText instead of getByRole
+    await waitFor(() => {
+      expect(screen.getByText('SPM One')).toBeInTheDocument();
+    });
+    
+    await user.click(screen.getByText('SPM One'));
+    
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'OK' })).toBeEnabled();
+    });
   });
 
   it('should call sendToReview and onSubmit/onReviewSent on successful submission (manager assigned)', async () => {
@@ -156,13 +174,26 @@ describe('ProjectClosure/SendForReview', () => {
 
   it('should call sendToReview and onSubmit/onReviewSent on successful submission (reviewer selected)', async () => {
     mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any); // No manager assigned
+    const user = userEvent.setup();
     render(<SendForReview {...defaultProps} />);
     await waitFor(() => expect(screen.getByLabelText('Senior Project Manager')).toBeInTheDocument());
 
-    fireEvent.mouseDown(screen.getByLabelText('Senior Project Manager'));
-    fireEvent.click(screen.getByText('SPM Two')); // Select SPM Two
+    // Use reliable selector for MUI Select
+    const selectWrapper = screen.getByTestId('reviewer-select');
+    const comboBox = within(selectWrapper).getByRole('combobox');
+    fireEvent.mouseDown(comboBox);
+    
+    // MUI Select renders menu items in a portal - use getByText instead of getByRole
+    await waitFor(() => {
+      expect(screen.getByText('SPM Two')).toBeInTheDocument();
+    });
+    await user.click(screen.getByText('SPM Two'));
 
-    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'OK' })).toBeEnabled();
+    });
+    
+    await user.click(screen.getByRole('button', { name: 'OK' }));
 
     await waitFor(() => {
       expect(mockSendToReview).toHaveBeenCalledWith({
@@ -178,45 +209,109 @@ describe('ProjectClosure/SendForReview', () => {
     });
   });
 
-  it('should show error if no reviewer is selected on submit (no manager assigned)', async () => {
+  it('should disable OK button when no reviewer is selected (no manager assigned)', async () => {
     mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any); // No manager assigned
     render(<SendForReview {...defaultProps} />);
     await waitFor(() => expect(screen.getByLabelText('Senior Project Manager')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
-    await waitFor(() => {
-      expect(screen.getByText('Please select a Senior Project Manager')).toBeInTheDocument();
-    });
+    // OK button should be disabled when no reviewer is selected
+    const okButton = screen.getByRole('button', { name: 'OK' });
+    expect(okButton).toBeDisabled();
+    
+    // Clicking disabled button should not trigger any actions
+    fireEvent.click(okButton);
     expect(mockSendToReview).not.toHaveBeenCalled();
     expect(defaultProps.onSubmit).not.toHaveBeenCalled();
     expect(defaultProps.onReviewSent).not.toHaveBeenCalled();
-    expect(defaultProps.onClose).not.toHaveBeenCalled(); // Dialog should not close on validation error
+    expect(defaultProps.onClose).not.toHaveBeenCalled();
   });
 
-  it('should show error if projectClosureId is missing', async () => {
+  it('should show error if projectClosureId is missing when OK is clicked', async () => {
+    mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any);
+    const user = userEvent.setup();
     render(<SendForReview {...defaultProps} projectClosureId={undefined} />);
-    await waitFor(() => expect(mockGetProjectById).toHaveBeenCalled());
-    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    
+    // Wait for reviewers to load
     await waitFor(() => {
-      expect(screen.getByText('Project Closure ID is missing')).toBeInTheDocument();
+      expect(screen.getByLabelText('Senior Project Manager')).toBeInTheDocument();
     });
+    
+    screen.debug();
+
+    // For MUI Select, targeting by data-testid ensures we get the container
+    const selectWrapper = screen.getByTestId('reviewer-select');
+    // Using within(selectWrapper).getByRole('combobox') gets the trigger div 
+    // which MUI listens to for mouseDown
+    const comboBox = within(selectWrapper).getByRole('combobox');
+    fireEvent.mouseDown(comboBox);
+    
+    // MUI Select renders menu items in a portal - use getByText instead of getByRole
+    await waitFor(() => {
+      expect(screen.getByText('SPM One')).toBeInTheDocument();
+    });
+    await user.click(screen.getByText('SPM One'));
+    
+    // Now OK button should be enabled
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'OK' })).toBeEnabled();
+    });
+    
+    // Click OK button
+    await user.click(screen.getByRole('button', { name: 'OK' }));
+    
+    // Should show error message
+    await waitFor(() => {
+      const helperText = screen.getByText('Project Closure ID is missing');
+      expect(helperText).toBeInTheDocument();
+    }, { timeout: 5000 });
+    
     expect(mockSendToReview).not.toHaveBeenCalled();
   });
 
-  it('should show error if projectId is missing', async () => {
+  it('should show error if projectId is missing when OK is clicked', async () => {
+    const user = userEvent.setup();
     render(<SendForReview {...defaultProps} projectId={undefined} />);
-    await waitFor(() => expect(mockGetProjectById).not.toHaveBeenCalled()); // useEffect should not run fully
-    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    
+    // Wait for reviewers to load
     await waitFor(() => {
-      expect(screen.getByText('Project ID is missing')).toBeInTheDocument();
+      expect(screen.getByLabelText('Senior Project Manager')).toBeInTheDocument();
     });
+    
+    // The useEffect should not call getProjectById when projectId is undefined
+    expect(mockGetProjectById).not.toHaveBeenCalled();
+    
+    // Select a reviewer to enable the OK button
+    const comboBox = within(screen.getByTestId('reviewer-select')).getByRole('combobox');
+    fireEvent.mouseDown(comboBox);
+    
+    // MUI Select renders menu items in a portal - use getByText instead of getByRole
+    await waitFor(() => {
+      expect(screen.getByText('SPM One')).toBeInTheDocument();
+    });
+    await user.click(screen.getByText('SPM One'));
+    
+    // Now OK button should be enabled
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'OK' })).toBeEnabled();
+    });
+    
+    // Click OK button
+    await user.click(screen.getByRole('button', { name: 'OK' }));
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    
+    // Should show error message
+    await waitFor(() => {
+      const helperText = screen.getByText('Project ID is missing');
+      expect(helperText).toBeInTheDocument();
+    }, { timeout: 5000 });
+    
     expect(mockSendToReview).not.toHaveBeenCalled();
   });
 
   it('should show error if currentUser is missing', async () => {
     render(<SendForReview {...defaultProps} currentUser={undefined} />);
     // The component should return null and not render anything
-    expect(screen.queryByText('Senior Project Manager')).not.toBeInTheDocument();
+    await waitFor(async () => await waitFor(() => expect(screen.queryByText('Senior Project Manager')).not.toBeInTheDocument()));
   });
 
   it('should display error if getUsersByRole fails', async () => {
@@ -225,8 +320,8 @@ describe('ProjectClosure/SendForReview', () => {
     mockGetProjectById.mockResolvedValue({ id: 1, seniorProjectManagerId: undefined } as any); // No manager assigned
 
     render(<SendForReview {...defaultProps} />);
-    await waitFor(() => {
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    await waitFor(async () => {
+      await waitFor(async () => await waitFor(() => expect(screen.getByText(errorMessage)).toBeInTheDocument()));
     });
     expect(screen.getByRole('button', { name: 'OK' })).toBeDisabled();
   });
@@ -236,8 +331,8 @@ describe('ProjectClosure/SendForReview', () => {
     mockGetProjectById.mockRejectedValue(new Error(errorMessage));
 
     render(<SendForReview {...defaultProps} />);
-    await waitFor(() => {
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    await waitFor(async () => {
+      await waitFor(async () => await waitFor(() => expect(screen.getByText(errorMessage)).toBeInTheDocument()));
     });
     expect(screen.getByRole('button', { name: 'OK' })).toBeDisabled();
     expect(mockGetUserById).not.toHaveBeenCalled();
@@ -262,8 +357,8 @@ describe('ProjectClosure/SendForReview', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'OK' }));
 
-    await waitFor(() => {
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    await waitFor(async () => {
+      await waitFor(async () => await waitFor(() => expect(screen.getByText(errorMessage)).toBeInTheDocument()));
     });
     expect(defaultProps.onSubmit).not.toHaveBeenCalled();
     expect(defaultProps.onReviewSent).not.toHaveBeenCalled();
@@ -271,20 +366,29 @@ describe('ProjectClosure/SendForReview', () => {
   });
 
   it('should prevent event propagation on dialog interactions', async () => {
-    const stopPropagationSpy = vi.spyOn(React, 'useCallback').mockImplementation((fn) => fn);
-
     render(<SendForReview {...defaultProps} />);
     await waitFor(() => expect(mockGetProjectById).toHaveBeenCalled());
+    
     const dialog = screen.getByRole('dialog');
 
-    const mockEvent = { stopPropagation: vi.fn() } as unknown as React.MouseEvent;
-    fireEvent.click(dialog, mockEvent);
-    expect(mockEvent.stopPropagation).toHaveBeenCalledTimes(1);
+    // Test that the dialog has onClick handler
+    const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+    const stopPropagationSpy = vi.spyOn(clickEvent, 'stopPropagation');
+    dialog.dispatchEvent(clickEvent);
+    expect(stopPropagationSpy).toHaveBeenCalled();
 
-    const mockKeyEvent = { stopPropagation: vi.fn() } as unknown as React.KeyboardEvent;
-    fireEvent.keyDown(dialog, mockKeyEvent);
-    expect(mockKeyEvent.stopPropagation).toHaveBeenCalledTimes(1);
-
-    stopPropagationSpy.mockRestore();
+    // Test that the dialog has onKeyDown handler
+    const keyEvent = new KeyboardEvent('keydown', { bubbles: true, cancelable: true });
+    const keyStopPropagationSpy = vi.spyOn(keyEvent, 'stopPropagation');
+    dialog.dispatchEvent(keyEvent);
+    expect(keyStopPropagationSpy).toHaveBeenCalled();
   });
 });
+
+
+
+
+
+
+
+

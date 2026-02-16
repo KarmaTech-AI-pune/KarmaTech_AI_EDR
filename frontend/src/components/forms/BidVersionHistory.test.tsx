@@ -1,5 +1,6 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { waitFor } from '@testing-library/react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import BidVersionHistory from './BidVersionHistory';
@@ -9,7 +10,15 @@ import { format } from 'date-fns';
 
 // Mock external dependencies
 vi.mock('../../utils/statusUtils', () => ({
-  getStatusLabel: vi.fn((status: BidPreparationStatus) => status),
+  getStatusLabel: vi.fn((status: BidPreparationStatus) => {
+    const labels = {
+      [BidPreparationStatus.Draft]: 'Draft',
+      [BidPreparationStatus.PendingApproval]: 'Pending Approval',
+      [BidPreparationStatus.Approved]: 'Approved',
+      [BidPreparationStatus.Rejected]: 'Rejected',
+    };
+    return labels[status] || status.toString();
+  }),
 }));
 
 vi.mock('date-fns', async (importOriginal) => {
@@ -34,23 +43,23 @@ const mockFormat = vi.mocked(format);
 
 const mockVersionHistory: BidVersionHistoryType[] = [
   {
-    id: 1, // Changed to number
+    id: 101,
     version: 1,
     status: BidPreparationStatus.Draft,
     comments: 'Initial draft',
-    modifiedBy: 'User A',
     modifiedDate: new Date('2023-01-01T10:00:00Z'),
+    modifiedBy: 'User A',
   },
   {
-    id: 2, // Changed to number
+    id: 102,
     version: 2,
     status: BidPreparationStatus.PendingApproval,
     comments: 'Submitted for approval',
+    modifiedDate: new Date('2023-01-02T10:00:00Z'),
     modifiedBy: 'User B',
-    modifiedDate: new Date('2023-01-02T11:00:00Z'),
   },
   {
-    id: 3, // Changed to number
+    id: 103,
     version: 3,
     status: BidPreparationStatus.Approved,
     comments: 'Approved by RD',
@@ -58,7 +67,7 @@ const mockVersionHistory: BidVersionHistoryType[] = [
     modifiedDate: new Date('2023-01-03T12:00:00Z'),
   },
   {
-    id: 4, // Changed to number
+    id: 104,
     version: 4,
     status: BidPreparationStatus.Rejected,
     comments: 'Rejected by RD',
@@ -68,9 +77,21 @@ const mockVersionHistory: BidVersionHistoryType[] = [
 ];
 
 describe('BidVersionHistory', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetStatusLabel.mockImplementation((status: BidPreparationStatus) => status.toString()); // Return string representation
+    mockGetStatusLabel.mockImplementation((status: BidPreparationStatus) => {
+      const labels = {
+        [BidPreparationStatus.Draft]: 'Draft',
+        [BidPreparationStatus.PendingApproval]: 'Pending Approval',
+        [BidPreparationStatus.Approved]: 'Approved',
+        [BidPreparationStatus.Rejected]: 'Rejected',
+      };
+      return labels[status] || status.toString();
+    });
     mockFormat.mockImplementation((date: Date | number, formatStr: string) => {
       if (typeof date === 'number') {
         date = new Date(date);
@@ -93,10 +114,19 @@ describe('BidVersionHistory', () => {
     expect(screen.getByText('Comments')).toBeInTheDocument();
 
     // Check for each version entry
-    mockVersionHistory.forEach((version) => {
-      expect(screen.getByText(version.version.toString())).toBeInTheDocument();
+    const versionCells = screen.getAllByTestId('version-cell');
+    mockVersionHistory.forEach((version, index) => {
+      expect(versionCells[index]).toHaveTextContent(version.version.toString());
       expect(screen.getByText(version.modifiedBy || '')).toBeInTheDocument();
-      expect(screen.getByText(version.status)).toBeInTheDocument();
+      
+      const labels = {
+        [BidPreparationStatus.Draft]: 'Draft',
+        [BidPreparationStatus.PendingApproval]: 'Pending Approval',
+        [BidPreparationStatus.Approved]: 'Approved',
+        [BidPreparationStatus.Rejected]: 'Rejected',
+      };
+      expect(screen.getByText(labels[version.status])).toBeInTheDocument();
+      
       expect(screen.getByText(`formatted-${version.modifiedDate?.toISOString()}`)).toBeInTheDocument();
       expect(screen.getByText(version.comments || '')).toBeInTheDocument();
     });
@@ -112,21 +142,22 @@ describe('BidVersionHistory', () => {
   it('should apply correct chip colors based on status', () => {
     render(<BidVersionHistory versionHistory={mockVersionHistory} />);
 
-    expect(screen.getByText(BidPreparationStatus.Draft)).toHaveClass('MuiChip-colorDefault');
-    expect(screen.getByText(BidPreparationStatus.PendingApproval)).toHaveClass('MuiChip-colorWarning');
-    expect(screen.getByText(BidPreparationStatus.Approved)).toHaveClass('MuiChip-colorSuccess');
-    expect(screen.getByText(BidPreparationStatus.Rejected)).toHaveClass('MuiChip-colorError');
+    const statusChips = screen.getAllByTestId('status-chip');
+    expect(statusChips[0]).toHaveClass('MuiChip-colorDefault');
+    expect(statusChips[1]).toHaveClass('MuiChip-colorWarning');
+    expect(statusChips[2]).toHaveClass('MuiChip-colorSuccess');
+    expect(statusChips[3]).toHaveClass('MuiChip-colorError');
   });
 
-  it('should handle missing modifiedBy and comments gracefully', () => {
+  it('should handle missing modifiedBy and comments gracefully', async () => {
     const partialHistory: BidVersionHistoryType[] = [
       {
-        id: 5, // Changed to number
+        id: 105,
         version: 5,
         status: BidPreparationStatus.Draft,
+        modifiedBy: '',
+        comments: '',
         modifiedDate: new Date('2023-01-05T14:00:00Z'),
-        modifiedBy: '', // Added missing property
-        comments: '', // Added missing property
       },
     ];
     render(<BidVersionHistory versionHistory={partialHistory} />);
@@ -134,6 +165,6 @@ describe('BidVersionHistory', () => {
     expect(screen.getByText('5')).toBeInTheDocument();
     expect(screen.getByText('Draft')).toBeInTheDocument();
     expect(screen.getByText(`formatted-${partialHistory[0].modifiedDate?.toISOString()}`)).toBeInTheDocument();
-    expect(screen.queryByText('undefined')).not.toBeInTheDocument(); // Ensure undefined is not rendered
+    await waitFor(() => expect(screen.queryByText('undefined')).not.toBeInTheDocument()); // Ensure undefined is not rendered
   });
 });

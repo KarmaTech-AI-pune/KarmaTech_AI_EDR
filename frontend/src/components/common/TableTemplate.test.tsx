@@ -1,5 +1,6 @@
+
+import { vi, describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
 import TableTemplate from './TableTemplate';
 import { TableRow, TableCell } from '@mui/material';
 
@@ -114,3 +115,4 @@ describe('TableTemplate', () => {
     // No explicit assertion for onToggleExpand as it's a default no-op function
   });
 });
+

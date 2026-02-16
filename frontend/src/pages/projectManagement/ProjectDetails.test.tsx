@@ -1,53 +1,65 @@
+import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { ProjectDetails, useProjectDetailsContext } from './ProjectDetails';
+import ProjectDetails, { useProjectDetailsContext, getProjectTitle } from './ProjectDetails';
 import { useProject } from '../../context/ProjectContext';
 import { projectApi } from '../../services/projectApi';
 import { getUserById } from '../../services/userApi';
-import { Outlet, useOutletContext } from 'react-router-dom';
+import { Outlet, useOutletContext, MemoryRouter } from 'react-router-dom';
 import { Project } from '../../models';
+import { ProjectStatus } from '../../models/types';
 
 // Mock the external dependencies
-jest.mock('../../context/ProjectContext');
-jest.mock('../../services/projectApi');
-jest.mock('../../services/userApi');
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  Outlet: jest.fn(() => <div data-testid="outlet" />),
-  useOutletContext: jest.fn(),
+vi.mock('../../context/ProjectContext');
+vi.mock('../../services/projectApi');
+vi.mock('../../services/userApi');
+vi.mock('react-router-dom', async () => ({
+  ...await vi.importActual<any>('react-router-dom'),
+  Outlet: vi.fn(() => <div data-testid="outlet" />),
+  useOutletContext: vi.fn(),
 }));
 
-const mockUseProject = useProject as jest.Mock;
-const mockProjectApiGetById = projectApi.getById as jest.Mock;
-const mockGetUserById = getUserById as jest.Mock;
-const mockUseOutletContext = useOutletContext as jest.Mock;
+const mockUseProject = useProject as any;
+const mockProjectApiGetById = projectApi.getById as any;
+const mockGetUserById = getUserById as any;
+const mockUseOutletContext = useOutletContext as any;
 
 describe('ProjectDetails Component', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const mockProject: Project = {
     id: '1',
+    projectNo: 'P1',
     name: 'Test Project',
     projectManagerId: 'pm1',
     seniorProjectManagerId: 'spm1',
     regionalManagerId: 'rm1',
-    workName: 'Test Work Name',
-    status: 'Active',
+    status: ProjectStatus.InProgress,
     startDate: '2023-01-01',
     endDate: '2023-12-31',
-    budget: 100000,
+    estimatedProjectCost: 100000,
+    estimatedProjectFee: 20000,
     currency: 'USD',
-    progress: 50,
-    lastUpdated: '2023-06-01',
-    client: 'Test Client',
-    description: 'A test project description',
-    opportunityId: 'opp1',
-    bidPreparationId: 'bid1',
-    jobStartFormId: 'jsf1',
-    goNoGoDecisionId: 'gng1',
+    feeType: 'Fixed',
+    sector: 'IT',
+    priority: 'High',
+    clientName: 'Test Client',
+    typeOfClient: 'Private',
+    region: 'Global',
+    office: 'Headquarters',
+    typeOfJob: 'Dev',
+    letterOfAcceptance: true,
+    createdAt: '2023-01-01',
+    updatedAt: '2023-01-01',
+    details: 'A test project description',
+    opportunityTrackingId: 1,
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseProject.mockReturnValue({ projectId: '1' });
     mockProjectApiGetById.mockResolvedValue(mockProject);
     mockGetUserById.mockImplementation((id: string) => {
@@ -61,21 +73,31 @@ describe('ProjectDetails Component', () => {
 
   test('should display a loading spinner when project data is being fetched', () => {
     mockProjectApiGetById.mockReturnValueOnce(new Promise(() => {})); // Never resolves
-    render(<ProjectDetails />);
+    render(
+      <MemoryRouter>
+        <ProjectDetails />
+      </MemoryRouter>
+    );
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   test('should display an error message if fetching project data fails', async () => {
     mockProjectApiGetById.mockRejectedValueOnce(new Error('Network error'));
-    render(<ProjectDetails />);
-    await waitFor(() => {
-      expect(screen.getByText('Network error')).toBeInTheDocument();
-    });
+    render(
+      <MemoryRouter>
+        <ProjectDetails />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(screen.getByText('Network error')).toBeInTheDocument());
   });
 
   test('should display a warning if no project ID is provided', async () => {
     mockUseProject.mockReturnValue({ projectId: null });
-    render(<ProjectDetails />);
+    render(
+      <MemoryRouter>
+        <ProjectDetails />
+      </MemoryRouter>
+    );
     await waitFor(() => {
       expect(screen.getByText('No project selected')).toBeInTheDocument();
     });
@@ -83,14 +105,22 @@ describe('ProjectDetails Component', () => {
 
   test('should display a warning if project is not found', async () => {
     mockProjectApiGetById.mockResolvedValueOnce(null);
-    render(<ProjectDetails />);
+    render(
+      <MemoryRouter>
+        <ProjectDetails />
+      </MemoryRouter>
+    );
     await waitFor(() => {
       expect(screen.getByText('Project not found')).toBeInTheDocument();
     });
   });
 
   test('should display project title and manager names on successful data fetch', async () => {
-    render(<ProjectDetails />);
+    render(
+      <MemoryRouter>
+        <ProjectDetails />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
@@ -107,7 +137,7 @@ describe('ProjectDetails Component', () => {
   });
 
   test('should handle cases where manager IDs are null or undefined', async () => {
-    const projectWithoutManagers: Project = {
+    const projectWithoutManagers: any = {
       ...mockProject,
       projectManagerId: undefined,
       seniorProjectManagerId: null,
@@ -115,7 +145,11 @@ describe('ProjectDetails Component', () => {
     };
     mockProjectApiGetById.mockResolvedValueOnce(projectWithoutManagers);
 
-    render(<ProjectDetails />);
+    render(
+      <MemoryRouter>
+        <ProjectDetails />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Test Project')).toBeInTheDocument();
@@ -126,25 +160,21 @@ describe('ProjectDetails Component', () => {
   });
 
   test('getProjectTitle should return project name if available', () => {
-    const { getProjectTitle } = require('./ProjectDetails'); // Import directly to test
-    const projectWithName = { name: 'Project A' };
+    const projectWithName = { name: 'Project A', id: '1', projectNo: 'P1', typeOfJob: 'Dev', sector: 'IT', priority: 'High', clientName: 'C', typeOfClient: 'P', region: 'R', office: 'O', projectManagerId: 'pm', seniorProjectManagerId: 'spm', regionalManagerId: 'rm', estimatedProjectCost: 1, estimatedProjectFee: 1, currency: 'USD', feeType: 'F', startDate: 'S', endDate: 'E', status: ProjectStatus.InProgress, letterOfAcceptance: true, createdAt: 'C', updatedAt: 'U' } as Project;
     expect(getProjectTitle(projectWithName)).toBe('Project A');
   });
 
   test('getProjectTitle should return workName if name is not available', () => {
-    const { getProjectTitle } = require('./ProjectDetails');
-    const projectWithWorkName = { workName: 'Work B' };
+    const projectWithWorkName = { workName: 'Work B' } as any;
     expect(getProjectTitle(projectWithWorkName)).toBe('Work B');
   });
 
   test('getProjectTitle should return "Project Details" if neither name nor workName are available', () => {
-    const { getProjectTitle } = require('./ProjectDetails');
-    const projectWithoutNameOrWorkName = { id: '1' };
+    const projectWithoutNameOrWorkName = { id: '1' } as any;
     expect(getProjectTitle(projectWithoutNameOrWorkName)).toBe('Project Details');
   });
 
   test('getProjectTitle should return "Project Details" for null project', () => {
-    const { getProjectTitle } = require('./ProjectDetails');
     expect(getProjectTitle(null)).toBe('Project Details');
   });
 
@@ -162,8 +192,18 @@ describe('ProjectDetails Component', () => {
       );
     };
 
-    render(<TestComponent />);
+    render(
+      <MemoryRouter>
+        <TestComponent />
+      </MemoryRouter>
+    );
     expect(screen.getByText('Test Project')).toBeInTheDocument();
     expect(screen.getByText('Project Manager')).toBeInTheDocument();
   });
 });
+
+
+
+
+
+

@@ -1,3 +1,4 @@
+import { vi, describe, expect } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -11,3 +12,4 @@ describe('ProjectTimeline Component', () => {
     expect(screen.getByText('Project timeline section will be implemented here')).toBeInTheDocument();
   });
 });
+

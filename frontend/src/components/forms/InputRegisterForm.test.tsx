@@ -1,6 +1,6 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import InputRegisterForm from './InputRegisterForm';
 import InputRegisterDialog from './InputRegisterformcomponents/InputRegisterDialog';
@@ -20,15 +20,15 @@ vi.mock('../../context/ProjectContext', () => ({
 
 vi.mock('./InputRegisterformcomponents/InputRegisterDialog', () => ({
   default: vi.fn(({ open, onClose, onSave, initialData, projectId }) => (
-    <div data-testid="input-register-dialog">
-      {open && (
+    open ? (
+      <div data-testid="input-register-dialog">
         <div>
           <span>Input Register Dialog</span>
           <button onClick={() => onSave(initialData || { id: 'new-id', projectId: projectId, dataReceived: 'New Data', receiptDate: '2023-01-01', receivedFrom: 'New Sender', filesFormat: 'PDF', noOfFiles: 1, storagePath: 'Path', check: true, checkedBy: 'Checker', checkedDate: '2023-01-01', custodian: 'Custodian', remarks: '', fitForPurpose: true })}>Save</button>
           <button onClick={onClose}>Close</button>
         </div>
-      )}
-    </div>
+      </div>
+    ) : null
   )),
 }));
 
@@ -73,6 +73,10 @@ const mockInputRows: InputRegisterRow[] = [
 ];
 
 describe('InputRegisterForm', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const mockProjectId = '123';
 
   beforeEach(() => {
@@ -96,7 +100,7 @@ describe('InputRegisterForm', () => {
       expect(screen.getByText('#2')).toBeInTheDocument();
       expect(screen.getByText('Data 2')).toBeInTheDocument();
       expect(screen.getByText('Sender B')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('should display a warning if no project is selected', () => {
@@ -123,7 +127,9 @@ describe('InputRegisterForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add Entry' }));
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
 
-    expect(screen.queryByText('Input Register Dialog')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByTestId('input-register-dialog')).not.toBeInTheDocument();
+    });
   });
 
   it('should create a new input register entry', async () => {
@@ -135,7 +141,13 @@ describe('InputRegisterForm', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Successfully created new input register entry (Database ID: new-id)')).toBeInTheDocument();
-      expect(screen.queryByText('Input Register Dialog')).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('input-register-dialog')).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
       expect(screen.getByText('#3')).toBeInTheDocument(); // New entry should be added
     });
   });
@@ -144,7 +156,8 @@ describe('InputRegisterForm', () => {
     render(<InputRegisterForm />);
     await waitFor(() => expect(mockGetInputRegisterByProject).toHaveBeenCalled());
 
-    fireEvent.click(screen.getAllByLabelText('Edit')[0]); // Click edit for the first item (id: 1)
+    const editButtons = screen.getAllByTestId('EditIcon');
+    fireEvent.click(editButtons[0]); // Click edit for the first item (id: 1)
 
     expect(screen.getByTestId('input-register-dialog')).toBeInTheDocument();
     expect(screen.getByText('Input Register Dialog')).toBeInTheDocument();
@@ -153,7 +166,10 @@ describe('InputRegisterForm', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Successfully updated input register entry (Database ID: 1)')).toBeInTheDocument();
-      expect(screen.queryByText('Input Register Dialog')).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('input-register-dialog')).not.toBeInTheDocument();
     });
   });
 
@@ -161,11 +177,15 @@ describe('InputRegisterForm', () => {
     render(<InputRegisterForm />);
     await waitFor(() => expect(mockGetInputRegisterByProject).toHaveBeenCalled());
 
-    fireEvent.click(screen.getAllByLabelText('Delete')[0]); // Click delete for the first item (id: 1)
+    const deleteButtons = screen.getAllByTestId('DeleteIcon');
+    fireEvent.click(deleteButtons[0]); // Click delete for the first item (id: 1)
 
     await waitFor(() => {
       expect(mockDeleteInputRegister).toHaveBeenCalledWith('1');
       expect(screen.getByText('Successfully deleted input register entry (Database ID: 1)')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
       expect(screen.queryByText('Data 1')).not.toBeInTheDocument(); // Verify item is removed from display
     });
   });
@@ -175,7 +195,7 @@ describe('InputRegisterForm', () => {
     render(<InputRegisterForm />);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to load input register data')).toBeInTheDocument();
+      expect(screen.getByText(/Failed to load input register data/i)).toBeInTheDocument();
     });
   });
 
@@ -184,10 +204,11 @@ describe('InputRegisterForm', () => {
     render(<InputRegisterForm />);
     await waitFor(() => expect(mockGetInputRegisterByProject).toHaveBeenCalled());
 
-    fireEvent.click(screen.getAllByLabelText('Delete')[0]);
+    const deleteButtons = screen.getAllByTestId('DeleteIcon');
+    fireEvent.click(deleteButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to delete entry')).toBeInTheDocument();
+      expect(screen.getByText(/Failed to delete entry/i)).toBeInTheDocument();
     });
   });
 
@@ -195,40 +216,52 @@ describe('InputRegisterForm', () => {
     render(<InputRegisterForm />);
     await waitFor(() => expect(mockGetInputRegisterByProject).toHaveBeenCalled());
 
-    const fitForPurposeChip = screen.getAllByText('Fit for Purpose')[0];
+    const chips = screen.getAllByText('Fit for Purpose');
+    const fitForPurposeChip = chips[0];
     expect(fitForPurposeChip).toBeInTheDocument();
-    expect(fitForPurposeChip.closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess');
-    expect(fitForPurposeChip.closest('.MuiChip-root')).toContainHTML('svg[data-testid="CheckCircleIcon"]');
+    
+    const chipRoot = fitForPurposeChip.closest('.MuiChip-root');
+    expect(chipRoot).toHaveClass('MuiChip-colorSuccess');
+    expect(within(chipRoot as HTMLElement).getByTestId('CheckCircleIcon')).toBeInTheDocument();
   });
 
   it('should show "Fit for Purpose" chip with default color if false', async () => {
     render(<InputRegisterForm />);
     await waitFor(() => expect(mockGetInputRegisterByProject).toHaveBeenCalled());
 
-    const fitForPurposeChip = screen.getAllByText('Fit for Purpose')[1];
+    const chips = screen.getAllByText('Fit for Purpose');
+    const fitForPurposeChip = chips[1];
     expect(fitForPurposeChip).toBeInTheDocument();
-    expect(fitForPurposeChip.closest('.MuiChip-root')).toHaveClass('MuiChip-colorDefault');
-    expect(fitForPurposeChip.closest('.MuiChip-root')).toContainHTML('svg[data-testid="CancelIcon"]');
+    
+    const chipRoot = fitForPurposeChip.closest('.MuiChip-root');
+    expect(chipRoot).toHaveClass('MuiChip-colorDefault');
+    expect(within(chipRoot as HTMLElement).getByTestId('CancelIcon')).toBeInTheDocument();
   });
 
   it('should show "Checked" chip with success color if true', async () => {
     render(<InputRegisterForm />);
     await waitFor(() => expect(mockGetInputRegisterByProject).toHaveBeenCalled());
 
-    const checkedChip = screen.getAllByText('Checked')[0];
+    const chips = screen.getAllByText('Checked');
+    const checkedChip = chips[0];
     expect(checkedChip).toBeInTheDocument();
-    expect(checkedChip.closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess');
-    expect(checkedChip.closest('.MuiChip-root')).toContainHTML('svg[data-testid="CheckCircleIcon"]');
+    
+    const chipRoot = checkedChip.closest('.MuiChip-root');
+    expect(chipRoot).toHaveClass('MuiChip-colorSuccess');
+    expect(within(chipRoot as HTMLElement).getByTestId('CheckCircleIcon')).toBeInTheDocument();
   });
 
   it('should show "Checked" chip with default color if false', async () => {
     render(<InputRegisterForm />);
     await waitFor(() => expect(mockGetInputRegisterByProject).toHaveBeenCalled());
 
-    const checkedChip = screen.getAllByText('Checked')[1];
+    const chips = screen.getAllByText('Checked');
+    const checkedChip = chips[1];
     expect(checkedChip).toBeInTheDocument();
-    expect(checkedChip.closest('.MuiChip-root')).toHaveClass('MuiChip-colorDefault');
-    expect(checkedChip.closest('.MuiChip-root')).toContainHTML('svg[data-testid="CancelIcon"]');
+    
+    const chipRoot = checkedChip.closest('.MuiChip-root');
+    expect(chipRoot).toHaveClass('MuiChip-colorDefault');
+    expect(within(chipRoot as HTMLElement).getByTestId('CancelIcon')).toBeInTheDocument();
   });
 
   it('should expand and collapse accordion details', async () => {
@@ -239,15 +272,23 @@ describe('InputRegisterForm', () => {
     expect(firstAccordionSummary).toBeInTheDocument();
 
     // Initially collapsed, details should not be visible
-    expect(screen.queryByText('Files Information')).not.toBeVisible();
+    const filesInfos = screen.queryAllByText('Files Information');
+    expect(filesInfos.length).toBeGreaterThan(0);
+    expect(filesInfos[0]).not.toBeVisible();
 
     // Expand
     fireEvent.click(firstAccordionSummary!);
-    expect(screen.getByText('Files Information')).toBeVisible();
+    await waitFor(() => {
+      const fileInfosVisible = screen.getAllByText('Files Information');
+      expect(fileInfosVisible[0]).toBeVisible();
+    });
 
     // Collapse
     fireEvent.click(firstAccordionSummary!);
-    expect(screen.queryByText('Files Information')).not.toBeVisible();
+    await waitFor(() => {
+      const fileInfosHidden = screen.queryAllByText('Files Information');
+      expect(fileInfosHidden[0]).not.toBeVisible();
+    });
   });
 
   it('should handle rapid clicks on Add Entry button without opening multiple dialogs', async () => {
@@ -263,3 +304,10 @@ describe('InputRegisterForm', () => {
     expect(screen.getAllByText('Input Register Dialog')).toHaveLength(1);
   });
 });
+
+
+
+
+
+
+

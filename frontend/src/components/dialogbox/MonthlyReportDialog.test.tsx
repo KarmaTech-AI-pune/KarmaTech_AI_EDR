@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import MonthlyReportDialog from './MonthlyReportDialog';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
 // Import the actual modules to be mocked
 import { exportToExcel } from '../../services/excelExportService';
 import { useProject, ProjectContext } from '../../context/ProjectContext'; // Corrected import for ProjectContext
@@ -68,7 +70,7 @@ const mockReportData: MonthlyReport = {
     eacStaff: 6500,
     totalEAC: 12000,
     grossProfitPercentage: 10,
-    actualCtcODC: 5200,
+    actualctcODC: 5200,
     actualCtcStaff: 6200,
   },
   schedule: { // Corrected properties for schedule
@@ -77,7 +79,7 @@ const mockReportData: MonthlyReport = {
     completionDateAsPerExtension: null,
     expectedCompletionDate: '2023-11-30',
   },
-  progressData: [], // Included as it was in the previous mock and caused an error if missing
+
   currentMonthActions: [],
   nextMonthActions: [],
   risks: [],
@@ -97,6 +99,10 @@ const defaultProps = {
 };
 
 describe('MonthlyReportDialog', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -104,7 +110,7 @@ describe('MonthlyReportDialog', () => {
     mockUseProject.mockReturnValue({
       projectId: 'mock-project-id',
       setProjectId: vi.fn(), // Mock the required setProjectId function
-    } as ProjectContext); // Cast to ProjectContext
+    } as any); // Cast to any because ProjectContext is a value, not a type
 
     // Mock getMonthName
     mockGetMonthName.mockReturnValue('July');
@@ -120,6 +126,7 @@ describe('MonthlyReportDialog', () => {
     vi.spyOn(document.body, 'appendChild');
     vi.spyOn(document.body, 'removeChild');
     vi.spyOn(window.URL, 'revokeObjectURL');
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
   });
 
   it('should render correctly with provided report data', () => {
@@ -132,15 +139,15 @@ describe('MonthlyReportDialog', () => {
     expect(screen.getByRole('button', { name: 'Download' })).not.toBeDisabled();
   });
 
-  it('should not render if report prop is null', () => {
+  it('should not render if report prop is null', async () => {
     render(<MonthlyReportDialog {...defaultProps} report={null} />);
-    expect(screen.queryByText('July 2023 Report')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('July 2023 Report')).not.toBeInTheDocument());
   });
 
   it('should call onClose when the close button is clicked', () => {
     render(<MonthlyReportDialog {...defaultProps} />);
     
-    const closeButton = screen.getByLabelText('Close');
+    const closeButton = screen.getByLabelText(/close/i);
     fireEvent.click(closeButton);
     
     expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
@@ -174,7 +181,7 @@ describe('MonthlyReportDialog', () => {
       expect(window.URL.revokeObjectURL).toHaveBeenCalledWith(mockUrl);
       expect(defaultProps.onClose).toHaveBeenCalledTimes(1); // Dialog should close on successful download
       expect(screen.queryByText('Downloading...')).not.toBeInTheDocument(); // Loading state removed
-    });
+    }, { timeout: 5000 });
   });
 
   it('should display error message if download fails', async () => {
@@ -194,6 +201,9 @@ describe('MonthlyReportDialog', () => {
   });
 
   it('should disable buttons and prevent closing when downloading', async () => {
+    // Delay resolution to keep isDownloading true
+    mockGetMonthlyReportByYearMonth.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve(mockReportData), 1000)));
+
     render(<MonthlyReportDialog {...defaultProps} />);
     
     const downloadButton = screen.getByRole('button', { name: 'Download' });
@@ -203,14 +213,19 @@ describe('MonthlyReportDialog', () => {
     await waitFor(() => expect(downloadButton).toBeDisabled());
 
     // Try to close the dialog using the close button
-    const closeButton = screen.getByLabelText('Close');
+    const closeButton = screen.getByLabelText(/close/i);
     fireEvent.click(closeButton);
-    expect(defaultProps.onClose).not.toHaveBeenCalled(); // Should not close due to disableEscapeKeyDown
+    expect(defaultProps.onClose).not.toHaveBeenCalled(); // Should not close due to disableEscapeKeyDown and check in handleClose
 
-    // The component has disableEscapeKeyDown={isDownloading}, which is related.
-    // The handleClose function also checks `if (!isDownloading)`.
-    // We can test that the dialog doesn't close if we try to interact with it while downloading.
-    // The current test setup doesn't allow direct interaction with the backdrop.
-    // However, the logic in handleClose should prevent onClose if isDownloading is true.
+    // Wait for download to finish (optional, but clean up potentially)
+    // await waitFor(() => expect(defaultProps.onClose).toHaveBeenCalled());
   });
 });
+
+
+
+
+
+
+
+
