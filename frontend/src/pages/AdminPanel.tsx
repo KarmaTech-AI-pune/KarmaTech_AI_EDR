@@ -21,6 +21,7 @@ import TuneIcon from '@mui/icons-material/Tune'; // New import
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import DnsIcon from '@mui/icons-material/Dns'; // New icon for migrations
+import ExtensionIcon from '@mui/icons-material/Extension'; // Icon for features
 
 import UsersManagement from '../components/adminpanel/UsersManagement';
 import RolesManagement from '../components/adminpanel/RolesManagement';
@@ -31,6 +32,7 @@ import BillingManagement from '../components/adminpanel/BillingManagement';
 import SystemSettings from '../components/adminpanel/SystemSettings';
 import GeneralSettings from '../features/generalSettings/pages/GeneralSettings';
 import MigrationManagement from '../pages/MigrationManagement'; // Import the new component
+import FeaturesManagement from '../pages/FeaturesManagement'; // Import Features Management
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 65;
@@ -41,7 +43,7 @@ const AdminPanel: React.FC = () => {
   const { isSuperAdmin } = useTenantContext();
   const [hasSystemAdminPermission, setHasSystemAdminPermission] = useState(false);
   const [hasTenantAdminPermission, setHasTenantAdminPermission] = useState(false);
-  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'settings'>('settings');
+  const [selectedSection, setSelectedSection] = useState<'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'features' | 'settings'>('settings');
 
 
   useEffect(() => {
@@ -78,7 +80,7 @@ const AdminPanel: React.FC = () => {
   }, [isSuperAdmin]);
 
   interface MenuItem {
-    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'settings';
+    id: 'users' | 'roles' | 'tenants' | 'tenantUsers' | 'subscriptions' | 'billing' | 'generalSettings' | 'migrations' | 'features' | 'settings';
     text: string;
     icon: JSX.Element;
     requiresSystemAdmin?: boolean;
@@ -90,6 +92,7 @@ const AdminPanel: React.FC = () => {
     { id: 'tenants', text: 'Tenant Management', icon: <BusinessIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
     { id: 'tenantUsers', text: 'Tenant Users', icon: <PeopleIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
     { id: 'subscriptions', text: 'Subscription Plans', icon: <AttachMoneyIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
+    { id: 'features', text: 'Features Management', icon: <ExtensionIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
     { id: 'billing', text: 'Billing Management', icon: <ReceiptIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false },
     { id: 'migrations', text: 'Migration Management', icon: <DnsIcon />, requiresSystemAdmin: true, requiresTenantAdmin: false }, // New migration item
     // Tenant Admin menu items
@@ -148,6 +151,8 @@ const AdminPanel: React.FC = () => {
         return <TenantUsersManagement />;
       case 'subscriptions':
         return <SubscriptionManagement />;
+      case 'features':
+        return <FeaturesManagement />;
       case 'billing':
         return <BillingManagement />;
       case 'users':
@@ -201,7 +206,7 @@ const AdminPanel: React.FC = () => {
           {visibleMenuItems.map((item) => (
             <ListItemButton
               key={item.id}
-              onClick={() => setSelectedSection(item.id as 'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'generalSettings' | 'settings')}
+              onClick={() => setSelectedSection(item.id as 'users' | 'roles' | 'tenants' | 'subscriptions' | 'billing' | 'generalSettings' | 'features' | 'migrations' | 'settings')}
               selected={selectedSection === item.id}
               sx={{
                 minHeight: 48,

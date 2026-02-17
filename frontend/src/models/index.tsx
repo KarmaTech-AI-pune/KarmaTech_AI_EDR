@@ -25,6 +25,7 @@ export interface User {
     tenantId?: number;
     tenantDomain?: string;
     twoFactorEnabled?: boolean;
+    features?: string[]; // Array of feature names from subscription
 }
 
 export interface Role {

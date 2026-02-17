@@ -12,8 +12,8 @@ using NJS.Domain.Database;
 namespace NJS.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20260210054236_feature-migration")]
-    partial class featuremigration
+    [Migration("20260212073101_BaseLine-migration")]
+    partial class BaseLinemigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

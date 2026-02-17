@@ -58,6 +58,23 @@ import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/
  * This ensures users always see something meaningful
  */
 const FALLBACK_RELEASE_NOTES: Record<string, ProcessedReleaseNotes> = {
+  '1.2.0': {
+    version: '1.2.0',
+    releaseDate: '2026-02-16',
+    environment: 'production',
+    features: [
+      { id: 101, changeType: 'Feature', description: 'Program Management: Comprehensive tools for managing programs, objectives, and key results.', commitSha: 'manual' },
+      { id: 102, changeType: 'Feature', description: 'Sprint Management: New capabilities for sprint planning, tracking, and execution.', commitSha: 'manual' },
+    ],
+    bugFixes: [
+      { id: 103, changeType: 'BugFix', description: 'Resolved issue with task assignment notifications impacting team workflow.', commitSha: 'manual' },
+      { id: 104, changeType: 'BugFix', description: 'Fixed data synchronization lag in project dashboard metrics.', commitSha: 'manual' },
+      { id: 105, changeType: 'BugFix', description: 'Corrected responsive layout glitches on mobile views for the reporting module.', commitSha: 'manual' },
+      { id: 106, changeType: 'BugFix', description: 'Patched security vulnerability in user session handling.', commitSha: 'manual' },
+    ],
+    improvements: [],
+    breakingChanges: [],
+  },
   '1.1.0-dev.20260209': {
     version: '1.1.0-dev.20260209',
     releaseDate: '2026-02-09',

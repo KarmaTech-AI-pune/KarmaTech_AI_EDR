@@ -74,6 +74,7 @@ export const authApi = {
           tenantId: response.data.user.tenantId,
           tenantDomain: response.data.user.tenantDomain,
           twoFactorEnabled: response.data.user.twoFactorEnabled,
+          features: response.data.user.features || [], // Store features from login response
         };
 
         // Store user information
