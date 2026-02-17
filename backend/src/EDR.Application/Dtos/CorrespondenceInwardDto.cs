@@ -8,7 +8,7 @@ namespace EDR.Application.DTOs
         public int ProjectId { get; set; }
         public string IncomingLetterNo { get; set; }
         public DateTime LetterDate { get; set; }
-        public string NjsInwardNo { get; set; }
+        public string EdrInwardNo { get; set; }
         public DateTime ReceiptDate { get; set; }
         public string From { get; set; }
         public string Subject { get; set; }
@@ -23,4 +23,5 @@ namespace EDR.Application.DTOs
         public string UpdatedBy { get; set; }
     }
 }
+
 

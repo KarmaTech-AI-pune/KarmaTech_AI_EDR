@@ -5,8 +5,8 @@
 # CONFIGURATION
 # -------------------------------
 $frontendPath = "D:\KSmartBiz\KarmaTech_AI_EDR\frontend\"     # React app folder
-$backendPath  = "D:\KSmartBiz\KarmaTech_AI_EDR\backend\src\NJSAPI"  # Main .NET project folder
-$publishPath  = "D:\KSmartBiz\KarmaTech_AI_EDR\backend\src\NJSAPI\bin\Release\net8.0\publish"       # Publish output folder
+$backendPath  = "D:\KSmartBiz\KarmaTech_AI_EDR\backend\src\EDR.API"  # Main .NET project folder
+$publishPath  = "D:\KSmartBiz\KarmaTech_AI_EDR\backend\src\EDR.API\bin\Release\net8.0\publish"       # Publish output folder
 $envName      = "Production"      # Environment: Development/Production
 
 # -------------------------------
@@ -45,7 +45,7 @@ Set-Location "$backendPath"
 $env:ASPNETCORE_ENVIRONMENT = $envName
 
 # Run publish command (explicit .csproj reference)
-dotnet publish ".\NJSAPI.csproj" -c Release -o "$publishPath"
+dotnet publish ".\EDR.API.csproj" -c Release -o "$publishPath"
 Check-LastCommand
 
 Write-Host "✅ .NET backend published successfully to '$publishPath'."

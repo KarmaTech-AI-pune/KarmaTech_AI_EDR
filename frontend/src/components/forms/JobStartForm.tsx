@@ -202,9 +202,9 @@ const JobStartForm: React.FC = () => {
             id: taskId,
             taskType: allocation.taskType,
             description: allocation.taskTitle,
-            rate: allocation.costRate,
-            units: allocation.totalHours,
-            budgetedCost: allocation.totalCost,
+            rate: existingResource ? existingResource.rate : allocation.costRate,
+            units: existingResource ? existingResource.units : allocation.totalHours,
+            budgetedCost: existingResource ? existingResource.budgetedCost : allocation.totalCost,
             // Use existing remarks if available, otherwise empty string
             remarks: existingResource?.remarks || '',
             employeeName: allocation.employeeName !== 'null' ? allocation.employeeName : null,
@@ -444,117 +444,117 @@ const JobStartForm: React.FC = () => {
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{
         width: '100%',
-          maxHeight: 'calc(100vh - 200px)',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          pr: 1,
-          pb: 4
-        }}>
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              border: '1px solid #e0e0e0',
-              borderRadius: 1
-            }}
-          >
-            <JobStartFormHeader
-              title="PMD1. Job Start Form"
-              projectId={projectId}
-              formId={formId !== null ? formId : undefined}
-              status={formStatus}
-              editMode={editMode}
-              onEditModeToggle={handleEditModeToggle}
-              onStatusUpdate={handleStatusUpdate}
-            />
+        maxHeight: 'calc(100vh - 200px)',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        pr: 1,
+        pb: 4
+      }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            border: '1px solid #e0e0e0',
+            borderRadius: 1
+          }}
+        >
+          <JobStartFormHeader
+            title="PMD1. Job Start Form"
+            projectId={projectId}
+            formId={formId !== null ? formId : undefined}
+            status={formStatus}
+            editMode={editMode}
+            onEditModeToggle={handleEditModeToggle}
+            onStatusUpdate={handleStatusUpdate}
+          />
 
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                <CircularProgress />
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Typography color="error" sx={{ my: 2 }}>{error}</Typography>
+          ) : (
+            <>
+
+              <JobstartTime
+                wbsResources={wbsResources.filter(resource => resource.taskType === 0)}
+                initialTimeContingencyUnits={timeCustomRows.find(row => row.id === 'time-contingencies')?.units}
+                initialTimeContingencyRemarks={timeCustomRows.find(row => row.id === 'time-contingencies')?.remarks}
+                initialSubtotalRemarks={timeCustomRows.find(row => row.id === 'time-subtotal')?.remarks}
+                onTotalCostChange={(data) => {
+                  // Calculate total using only the time-related custom rows (subtotal and contingencies)
+                  const timeTotal = data.customRows
+                    .filter(row =>
+                      row.id === 'time-subtotal' ||
+                      row.id === 'time-contingencies'
+                    )
+                    .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+
+                  // Save the resources and custom rows for submission
+                  setTimeResources(data.resources);
+                  setTimeCustomRows(data.customRows);
+                  setTotalTimeCost(timeTotal);
+                }}
+              />
+              <EstimatedExpenses
+                wbsResources={wbsResources.filter(resource => resource.taskType === 1)}
+                initialContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.units}
+                initialContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.remarks}
+                initialExpenseContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.units}
+                initialExpenseContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.remarks}
+                initialSubtotalRemarks={expensesCustomRows.find(row => row.id === 'expenses-subtotal')?.remarks}
+                onTotalCostChange={(data) => {
+                  // Calculate total using only the expense-related custom rows
+                  const expensesTotal = data.customRows
+                    .filter(row =>
+                      row.id === 'expenses-subtotal' ||
+                      row.id === 'expenses-contingencies' ||
+                      row.id === 'expenses-expense-contingencies'
+                    )
+                    .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
+
+                  // Save the resources and custom rows for submission
+                  setExpensesResources(data.resources);
+                  setExpensesCustomRows(data.customRows);
+                  setTotalODCExpensesCost(expensesTotal);
+                }}
+              />
+              <JobstartGrandTotal
+                timeCost={totalTimeCost}
+                odcExpensesCost={totalODCExpensesCost}
+              />
+              <JobstartSummary
+                grandTotal={totalTimeCost + totalODCExpensesCost}
+                initialProjectFees={summaryData.projectFees}
+                initialServiceTaxPercentage={summaryData.serviceTaxPercentage}
+                onDataChange={setSummaryData}
+              />
+
+              {/* Submit Button */}
+              <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+                <LoadingButton
+                  onClick={handleSubmit}
+                  disabled={
+                    submitting ||
+                    ['Sent for Review', 'Sent for Approval', 'Approved'].includes(formStatus)
+                  }
+                  loading={submitting}
+                  text={isUpdating ? 'Update Form' : 'Submit Form'}
+                  loadingText={isUpdating ? 'Updating...' : 'Submitting...'}
+                  sx={{
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: 1,
+                    fontWeight: 'bold',
+                    boxShadow: 2
+                  }}
+                />
               </Box>
-            ) : error ? (
-              <Typography color="error" sx={{ my: 2 }}>{error}</Typography>
-            ) : (
-              <>
-
-                <JobstartTime
-                  wbsResources={wbsResources.filter(resource => resource.taskType === 0)}
-                  initialTimeContingencyUnits={timeCustomRows.find(row => row.id === 'time-contingencies')?.units}
-                  initialTimeContingencyRemarks={timeCustomRows.find(row => row.id === 'time-contingencies')?.remarks}
-                  initialSubtotalRemarks={timeCustomRows.find(row => row.id === 'time-subtotal')?.remarks}
-                  onTotalCostChange={(data) => {
-                    // Calculate total using only the time-related custom rows (subtotal and contingencies)
-                    const timeTotal = data.customRows
-                      .filter(row =>
-                        row.id === 'time-subtotal' ||
-                        row.id === 'time-contingencies'
-                      )
-                      .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
-
-                    // Save the resources and custom rows for submission
-                    setTimeResources(data.resources);
-                    setTimeCustomRows(data.customRows);
-                    setTotalTimeCost(timeTotal);
-                  }}
-                />
-                <EstimatedExpenses
-                  wbsResources={wbsResources.filter(resource => resource.taskType === 1)}
-                  initialContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.units}
-                  initialContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-contingencies')?.remarks}
-                  initialExpenseContingencyUnits={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.units}
-                  initialExpenseContingencyRemarks={expensesCustomRows.find(row => row.id === 'expenses-expense-contingencies')?.remarks}
-                  initialSubtotalRemarks={expensesCustomRows.find(row => row.id === 'expenses-subtotal')?.remarks}
-                  onTotalCostChange={(data) => {
-                    // Calculate total using only the expense-related custom rows
-                    const expensesTotal = data.customRows
-                      .filter(row =>
-                        row.id === 'expenses-subtotal' ||
-                        row.id === 'expenses-contingencies' ||
-                        row.id === 'expenses-expense-contingencies'
-                      )
-                      .reduce((sum, row) => sum + (row.budgetedCost || 0), 0);
-
-                    // Save the resources and custom rows for submission
-                    setExpensesResources(data.resources);
-                    setExpensesCustomRows(data.customRows);
-                    setTotalODCExpensesCost(expensesTotal);
-                  }}
-                />
-                <JobstartGrandTotal
-                  timeCost={totalTimeCost}
-                  odcExpensesCost={totalODCExpensesCost}
-                />
-                <JobstartSummary
-                  grandTotal={totalTimeCost + totalODCExpensesCost}
-                  initialProjectFees={summaryData.projectFees}
-                  initialServiceTaxPercentage={summaryData.serviceTaxPercentage}
-                  onDataChange={setSummaryData}
-                />
-
-                {/* Submit Button */}
-                <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
-                  <LoadingButton
-                    onClick={handleSubmit}
-                    disabled={
-                      submitting ||
-                      ['Sent for Review', 'Sent for Approval', 'Approved'].includes(formStatus)
-                    }
-                    loading={submitting}
-                    text={isUpdating ? 'Update Form' : 'Submit Form'}
-                    loadingText={isUpdating ? 'Updating...' : 'Submitting...'}
-                    sx={{
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: 1,
-                      fontWeight: 'bold',
-                      boxShadow: 2
-                    }}
-                  />
-                </Box>
-              </>
-            )}
-          </Paper>
-        </Box>
+            </>
+          )}
+        </Paper>
+      </Box>
 
       {/* Success/Error Snackbar */}
       <Snackbar

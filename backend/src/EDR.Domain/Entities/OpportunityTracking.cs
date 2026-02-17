@@ -39,7 +39,7 @@ namespace EDR.Domain.Entities
         public decimal? PercentageChanceOfProjectHappening { get; set; }
         
         [Column(TypeName = "decimal(18,2)")]
-        public decimal? PercentageChanceOfNJSSuccess { get; set; }
+        public decimal? PercentageChanceOfEDRSuccess { get; set; }
         
         public string? LikelyCompetition { get; set; }
         
@@ -47,7 +47,7 @@ namespace EDR.Domain.Entities
         public decimal? GrossRevenue { get; set; }
         
         [Column(TypeName = "decimal(18,2)")]
-        public decimal? NetNJSRevenue { get; set; }
+        public decimal? NetEDRRevenue { get; set; }
         
         public string? FollowUpComments { get; set; }
         
@@ -107,4 +107,5 @@ namespace EDR.Domain.Entities
         public ICollection<OpportunityHistory> OpportunityHistories { get; set; } = [];
     }
 }
+
 

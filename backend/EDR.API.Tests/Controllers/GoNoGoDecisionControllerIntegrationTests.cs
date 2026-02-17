@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using MediatR;
+﻿using System.Security.Claims;using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -11,8 +10,7 @@ using EDR.API.Controllers;
 using Xunit;
 using System.Diagnostics;
 
-namespace EDR.API.Tests.Controllers
-{
+namespace EDR.API.Tests.Controllers{
     /// <summary>
     /// Integration tests for GoNoGoDecisionController API endpoints
     /// Tests percentage information inclusion and full score range handling (0-120)

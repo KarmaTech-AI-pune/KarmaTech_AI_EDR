@@ -1,13 +1,11 @@
 ﻿using MediatR;
 using EDR.Domain.GenericRepository;
-using EDR.Domain.Entities;
-using System.Threading;
+using EDR.Domain.Entities;using System.Threading;
 using System.Threading.Tasks;
 using System;
 using System.Linq;
 
-namespace EDR.Application.CQRS.SprintTasks.Commands
-{
+namespace EDR.Application.CQRS.SprintTasks.Commands{
     public class UpdateSprintTaskTimeCommandHandler : IRequestHandler<UpdateSprintTaskTimeCommand, bool>
     {
         private readonly IRepository<SprintTask> _sprintTaskRepository;
@@ -71,7 +69,7 @@ namespace EDR.Application.CQRS.SprintTasks.Commands
             // The existing patterns suggest simply calling Update() might save or we need a SaveChanges.
             // Checking existing handlers... usually Update calls Save internally in simple setups or we await a Save.
             // Assume Repos saves on Update or context is shared. 
-            // Wait, standard NJS handlers usually don't show explicit SaveChanges call in the snippet I saw?
+            // Wait, standard EDR handlers usually don't show explicit SaveChanges call in the snippet I saw?
             // Let's verify standard repo usage in next step if needed. 
             // But generic repo usually implements Save in Update or has a separate Save.
             // I'll assume Update commits or I'll add logic if I see it elsewhere. 
@@ -83,4 +81,6 @@ namespace EDR.Application.CQRS.SprintTasks.Commands
         }
     }
 }
+
+
 

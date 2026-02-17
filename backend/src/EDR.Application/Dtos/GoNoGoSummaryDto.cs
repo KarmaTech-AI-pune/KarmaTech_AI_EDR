@@ -1,8 +1,7 @@
 ﻿using EDR.Domain.Enums;
 using System;
 
-namespace EDR.Application.Dtos
-{
+namespace EDR.Application.Dtos{
     /// <summary>
     /// Summary Data Transfer Object for Go/No-Go Decision with percentage-based scoring
     /// </summary>
@@ -23,13 +22,11 @@ namespace EDR.Application.Dtos
         
         /// <summary>
         /// Score expressed as percentage of maximum possible score (range: 0-100%)
-        /// Calculated as: (RawTotalScore / 120) Ã— 100
-        /// </summary>
+        /// Calculated as: (RawTotalScore / 120) Ã— 100        /// </summary>
         public int ScorePercentage { get; set; }
         
         /// <summary>
-        /// Maximum possible total score (always 120 = 12 criteria Ã— 10 points each)
-        /// </summary>
+        /// Maximum possible total score (always 120 = 12 criteria Ã— 10 points each)        /// </summary>
         public int MaxPossibleScore { get; set; } = 120;
         
         /// <summary>

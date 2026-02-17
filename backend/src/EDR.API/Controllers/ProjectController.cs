@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using EDR.Application.CQRS.Projects.Commands;
 using EDR.Application.CQRS.Projects.Queries;
@@ -6,8 +6,7 @@ using EDR.Application.Dtos;
 using EDR.Application.DTOs;
 using EDR.Application.Services.IContract;
 using EDR.Domain.Entities;
-using EDR.Repositories.Interfaces;
-using System;
+using EDR.Repositories.Interfaces;using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 
@@ -312,3 +311,4 @@ namespace EDR.API.Controllers
 
     }
 }
+

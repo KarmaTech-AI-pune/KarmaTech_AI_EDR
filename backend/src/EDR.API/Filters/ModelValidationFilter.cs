@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Linq;
 
-namespace EDR.API.Filters
-{
+namespace EDR.API.Filters{
     /// <summary>
     /// Action filter to validate model state and return proper error responses
     /// </summary>

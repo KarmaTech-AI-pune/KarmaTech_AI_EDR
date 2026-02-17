@@ -1,7 +1,6 @@
 ﻿using EDR.Domain.Entities;
 
-namespace EDR.Application.Services.IContract
-{
+namespace EDR.Application.Services.IContract{
     /// <summary>
     /// Service for generating release notes from Git commits and GitHub tags
     /// </summary>

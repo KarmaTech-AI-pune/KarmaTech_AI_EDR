@@ -112,6 +112,10 @@ namespace EDR.API.Controllers
 
                 return CreatedAtAction(nameof(GetChangeControlById), new { projectId, id }, createdEntity);
             }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                return StatusCode(500, new { message = "Database error while creating change control.", details = dbEx.InnerException?.Message ?? dbEx.Message });
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred while creating change control.", error = ex.Message });

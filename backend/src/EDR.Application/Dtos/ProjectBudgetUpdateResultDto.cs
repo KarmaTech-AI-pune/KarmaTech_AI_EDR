@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace EDR.Application.Dtos
-{
+namespace EDR.Application.Dtos{
     public class ProjectBudgetUpdateResultDto
     {
         public bool Success { get; set; }

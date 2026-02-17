@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace EDR.Application.Dtos
-{
+namespace EDR.Application.Dtos{
     public class CurrentSprintWbsPlanResponseDto
     {
         public WbsProjectDto? Project { get; set; }
@@ -40,4 +39,5 @@ namespace EDR.Application.Dtos
         public string? TaskDescription { get; set; }
     }
 }
+
 

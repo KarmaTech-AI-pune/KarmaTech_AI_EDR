@@ -20,7 +20,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Commands
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -49,7 +49,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Commands
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -98,7 +98,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Commands
             Assert.False(validationResult.IsValid);
             Assert.Contains(validationResult.Errors, e => e.PropertyName == "ProjectId");
             Assert.Contains(validationResult.Errors, e => e.PropertyName == "IncomingLetterNo");
-            Assert.Contains(validationResult.Errors, e => e.PropertyName == "NjsInwardNo");
+            Assert.Contains(validationResult.Errors, e => e.PropertyName == "EdrInwardNo");
             Assert.Contains(validationResult.Errors, e => e.PropertyName == "From");
             Assert.Contains(validationResult.Errors, e => e.PropertyName == "Subject");
         }
@@ -118,7 +118,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Commands
             Assert.Contains(validationResult.Errors, e => e.PropertyName == "Id");
             Assert.Contains(validationResult.Errors, e => e.PropertyName == "ProjectId");
             Assert.Contains(validationResult.Errors, e => e.PropertyName == "IncomingLetterNo");
-            Assert.Contains(validationResult.Errors, e => e.PropertyName == "NjsInwardNo");
+            Assert.Contains(validationResult.Errors, e => e.PropertyName == "EdrInwardNo");
             Assert.Contains(validationResult.Errors, e => e.PropertyName == "From");
             Assert.Contains(validationResult.Errors, e => e.PropertyName == "Subject");
         }
@@ -147,7 +147,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Commands
                 ProjectId = 1,
                 IncomingLetterNo = new string('A', 256), // Too long
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -171,4 +171,5 @@ namespace EDR.API.Tests.CQRS.Correspondence.Commands
         }
     }
 }
+
 

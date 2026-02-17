@@ -1,4 +1,4 @@
-# NJS Project Management - Configuration Management
+﻿# EDR Project Management - Configuration Management
 
 ## Overview
 
@@ -91,3 +91,4 @@ The application uses a multi-environment configuration approach with JSON-based 
 - Implement multi-factor authentication
 - Regularly update dependencies
 - Monitor and log authentication events
+

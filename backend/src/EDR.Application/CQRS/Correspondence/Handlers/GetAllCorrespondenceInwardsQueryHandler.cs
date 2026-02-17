@@ -29,7 +29,7 @@ namespace EDR.Application.CQRS.Correspondence.Handlers
                 ProjectId = ci.ProjectId,
                 IncomingLetterNo = ci.IncomingLetterNo,
                 LetterDate = ci.LetterDate,
-                NjsInwardNo = ci.NjsInwardNo,
+                EdrInwardNo = ci.EdrInwardNo,
                 ReceiptDate = ci.ReceiptDate,
                 From = ci.From,
                 Subject = ci.Subject,
@@ -46,4 +46,5 @@ namespace EDR.Application.CQRS.Correspondence.Handlers
         }
     }
 }
+
 

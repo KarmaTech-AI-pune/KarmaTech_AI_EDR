@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
 using EDR.Repositories.Interfaces;

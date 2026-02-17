@@ -1,8 +1,7 @@
 ﻿using MediatR;
 using System.ComponentModel.DataAnnotations;
 
-namespace EDR.Application.CQRS.SprintTasks.Commands
-{
+namespace EDR.Application.CQRS.SprintTasks.Commands{
     public class UpdateSprintTaskTimeCommand : IRequest<bool>
     {
         [Required]
@@ -17,4 +16,5 @@ namespace EDR.Application.CQRS.SprintTasks.Commands
         public int RemainingHours { get; set; } // Optional: update task's remaining hours too
     }
 }
+
 

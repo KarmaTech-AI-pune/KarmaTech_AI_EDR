@@ -5,8 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using EDR.Application.CQRS.Feature.Commands;
 
-namespace EDR.Application.CQRS.Feature.Handlers
-{
+namespace EDR.Application.CQRS.Feature.Handlers{
     public class DeleteFeatureCommandHandler : IRequestHandler<DeleteFeatureCommand, bool>
     {
         private readonly IFeatureRepository _featureRepository;
@@ -34,4 +33,5 @@ namespace EDR.Application.CQRS.Feature.Handlers
         }
     }
 }
+
 

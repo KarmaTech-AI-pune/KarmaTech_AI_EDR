@@ -1,10 +1,9 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using EDR.Application.CQRS.SprintTasks.Queries;
 using EDR.Application.Dtos;
-using EDR.Domain.Database;
-using System.Threading;
+using EDR.Domain.Database;using System.Threading;
 using System.Threading.Tasks;
 
 namespace EDR.Application.CQRS.SprintTasks.Handlers
@@ -62,4 +61,5 @@ namespace EDR.Application.CQRS.SprintTasks.Handlers
         }
     }
 }
+
 

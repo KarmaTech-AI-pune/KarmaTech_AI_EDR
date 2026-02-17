@@ -2,8 +2,7 @@
 using EDR.Application.Services.IContract;
 using System.Reflection;
 
-namespace EDR.Application.Services
-{
+namespace EDR.Application.Services{
     /// <summary>
     /// Service for logging deployment-related events with version context
     /// </summary>
@@ -29,8 +28,7 @@ namespace EDR.Application.Services
             });
 
             _logger.LogInformation(
-                "ðŸš€ DEPLOYMENT STARTED - Version: {Version}, Environment: {Environment}, Commit: {CommitHash}",
-                version, environment, commitHash ?? "unknown");
+                "ðŸš€ DEPLOYMENT STARTED - Version: {Version}, Environment: {Environment}, Commit: {CommitHash}",                version, environment, commitHash ?? "unknown");
         }
 
         public void LogDeploymentSuccess(string version, string environment, TimeSpan duration)
@@ -44,8 +42,7 @@ namespace EDR.Application.Services
             });
 
             _logger.LogInformation(
-                "âœ… DEPLOYMENT SUCCESSFUL - Version: {Version}, Environment: {Environment}, Duration: {Duration:F2}s",
-                version, environment, duration.TotalSeconds);
+                "âœ… DEPLOYMENT SUCCESSFUL - Version: {Version}, Environment: {Environment}, Duration: {Duration:F2}s",                version, environment, duration.TotalSeconds);
         }
 
         public void LogDeploymentFailure(string version, string environment, Exception error, TimeSpan duration)
@@ -60,8 +57,7 @@ namespace EDR.Application.Services
             });
 
             _logger.LogError(error,
-                "âŒ DEPLOYMENT FAILED - Version: {Version}, Environment: {Environment}, Duration: {Duration:F2}s, Error: {ErrorMessage}",
-                version, environment, duration.TotalSeconds, error.Message);
+                "âŒ DEPLOYMENT FAILED - Version: {Version}, Environment: {Environment}, Duration: {Duration:F2}s, Error: {ErrorMessage}",                version, environment, duration.TotalSeconds, error.Message);
         }
 
         public void LogDatabaseMigration(string version, string migrationName, bool success)
@@ -77,14 +73,12 @@ namespace EDR.Application.Services
             if (success)
             {
                 _logger.LogInformation(
-                    "ðŸ—„ï¸ DATABASE MIGRATION SUCCESSFUL - Version: {Version}, Migration: {MigrationName}",
-                    version, migrationName);
+                    "ðŸ—„ï¸ DATABASE MIGRATION SUCCESSFUL - Version: {Version}, Migration: {MigrationName}",                    version, migrationName);
             }
             else
             {
                 _logger.LogError(
-                    "ðŸ—„ï¸ DATABASE MIGRATION FAILED - Version: {Version}, Migration: {MigrationName}",
-                    version, migrationName);
+                    "ðŸ—„ï¸ DATABASE MIGRATION FAILED - Version: {Version}, Migration: {MigrationName}",                    version, migrationName);
             }
         }
 
@@ -100,8 +94,7 @@ namespace EDR.Application.Services
             var logLevel = status.ToLowerInvariant() == "healthy" ? LogLevel.Information : LogLevel.Warning;
             
             _logger.Log(logLevel,
-                "ðŸ¥ HEALTH CHECK - Version: {Version}, Status: {Status}, Details: {Details}",
-                version, status, details != null ? string.Join(", ", details.Select(kvp => $"{kvp.Key}={kvp.Value}")) : "none");
+                "ðŸ¥ HEALTH CHECK - Version: {Version}, Status: {Status}, Details: {Details}",                version, status, details != null ? string.Join(", ", details.Select(kvp => $"{kvp.Key}={kvp.Value}")) : "none");
         }
 
         public void LogVersionMismatch(string expectedVersion, string actualVersion, string location)
@@ -115,8 +108,7 @@ namespace EDR.Application.Services
             });
 
             _logger.LogWarning(
-                "âš ï¸ VERSION MISMATCH DETECTED - Expected: {ExpectedVersion}, Actual: {ActualVersion}, Location: {Location}",
-                expectedVersion, actualVersion, location);
+                "âš ï¸ VERSION MISMATCH DETECTED - Expected: {ExpectedVersion}, Actual: {ActualVersion}, Location: {Location}",                expectedVersion, actualVersion, location);
         }
 
         /// <summary>

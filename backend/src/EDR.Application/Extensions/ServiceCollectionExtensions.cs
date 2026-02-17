@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +25,6 @@ using EDR.Application.CQRS.SprintSubtasks.Queries; // Added for SprintSubtask qu
 using FluentValidation;
 using EDR.Application.Behaviors;
 
-
 namespace EDR.Application.Extensions
 {
     public static class ServiceCollectionExtensions
@@ -41,8 +40,7 @@ namespace EDR.Application.Extensions
             {
                 cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly); // EDR.Application assembly
                 cfg.RegisterServicesFromAssembly(typeof(ProjectManagementContext).Assembly); // EDR.Domain assembly
-                cfg.RegisterServicesFromAssembly(typeof(ProjectRepository).Assembly); // EDR.Repositories assembly
-                
+                cfg.RegisterServicesFromAssembly(typeof(ProjectRepository).Assembly); // EDR.Repositories assembly                
                 // Add validation behavior to MediatR pipeline
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             });
@@ -90,7 +88,7 @@ namespace EDR.Application.Extensions
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
-            services.AddScoped<ITenantMigrationService, TenantMigrationService>();
+            
 
 
 
@@ -120,4 +118,5 @@ namespace EDR.Application.Extensions
 
     }
 }
+
 

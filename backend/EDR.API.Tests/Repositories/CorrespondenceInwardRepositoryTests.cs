@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EDR.Domain.Services;
 using Xunit;
+using Microsoft.Extensions.Configuration;
 
 namespace EDR.API.Tests.Repositories
 {
@@ -23,7 +24,7 @@ namespace EDR.API.Tests.Repositories
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
-            var context = new ProjectManagementContext(options,currentTenantService.Object);
+            var context = new ProjectManagementContext(options, currentTenantService.Object, Mock.Of<IConfiguration>());
             context.Database.EnsureCreated();
             return context;
         }
@@ -36,7 +37,7 @@ namespace EDR.API.Tests.Repositories
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -55,7 +56,7 @@ namespace EDR.API.Tests.Repositories
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/002",
                 LetterDate = new DateTime(2024, 1, 20),
-                NjsInwardNo = "NJS/IN/2024/002",
+                EdrInwardNo = "EDR/IN/2024/002",
                 ReceiptDate = new DateTime(2024, 1, 21),
                 From = "Public Health Engineering Department",
                 Subject = "Water Quality Parameters Update",
@@ -74,7 +75,7 @@ namespace EDR.API.Tests.Repositories
                 ProjectId = 2,
                 IncomingLetterNo = "PHED/2024/003",
                 LetterDate = new DateTime(2024, 2, 5),
-                NjsInwardNo = "NJS/IN/2024/003",
+                EdrInwardNo = "EDR/IN/2024/003",
                 ReceiptDate = new DateTime(2024, 2, 6),
                 From = "Public Health Engineering Department",
                 Subject = "Project 2 Correspondence",
@@ -191,7 +192,7 @@ namespace EDR.API.Tests.Repositories
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/004",
                 LetterDate = new DateTime(2024, 2, 10),
-                NjsInwardNo = "NJS/IN/2024/004",
+                EdrInwardNo = "EDR/IN/2024/004",
                 ReceiptDate = new DateTime(2024, 2, 11),
                 From = "Public Health Engineering Department",
                 Subject = "New Correspondence",
@@ -250,7 +251,7 @@ namespace EDR.API.Tests.Repositories
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design"
@@ -344,4 +345,7 @@ namespace EDR.API.Tests.Repositories
         }
     }
 }
+
+
+
 

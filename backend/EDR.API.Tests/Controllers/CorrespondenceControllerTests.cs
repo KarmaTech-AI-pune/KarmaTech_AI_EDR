@@ -41,7 +41,7 @@ namespace EDR.API.Tests.Controllers
                     ProjectId = 1,
                     IncomingLetterNo = "PHED/2024/001",
                     LetterDate = new DateTime(2024, 1, 10),
-                    NjsInwardNo = "NJS/IN/2024/001",
+                    EdrInwardNo = "EDR/IN/2024/001",
                     ReceiptDate = new DateTime(2024, 1, 11),
                     From = "Public Health Engineering Department",
                     Subject = "Revised Population Projections for STP Design"
@@ -52,7 +52,7 @@ namespace EDR.API.Tests.Controllers
                     ProjectId = 1,
                     IncomingLetterNo = "PHED/2024/002",
                     LetterDate = new DateTime(2024, 1, 20),
-                    NjsInwardNo = "NJS/IN/2024/002",
+                    EdrInwardNo = "EDR/IN/2024/002",
                     ReceiptDate = new DateTime(2024, 1, 21),
                     From = "Public Health Engineering Department",
                     Subject = "Water Quality Parameters Update"
@@ -81,7 +81,7 @@ namespace EDR.API.Tests.Controllers
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design"
@@ -127,7 +127,7 @@ namespace EDR.API.Tests.Controllers
                     ProjectId = projectId,
                     IncomingLetterNo = "PHED/2024/001",
                     LetterDate = new DateTime(2024, 1, 10),
-                    NjsInwardNo = "NJS/IN/2024/001",
+                    EdrInwardNo = "EDR/IN/2024/001",
                     ReceiptDate = new DateTime(2024, 1, 11),
                     From = "Public Health Engineering Department",
                     Subject = "Revised Population Projections for STP Design"
@@ -138,7 +138,7 @@ namespace EDR.API.Tests.Controllers
                     ProjectId = projectId,
                     IncomingLetterNo = "PHED/2024/002",
                     LetterDate = new DateTime(2024, 1, 20),
-                    NjsInwardNo = "NJS/IN/2024/002",
+                    EdrInwardNo = "EDR/IN/2024/002",
                     ReceiptDate = new DateTime(2024, 1, 21),
                     From = "Public Health Engineering Department",
                     Subject = "Water Quality Parameters Update"
@@ -167,7 +167,7 @@ namespace EDR.API.Tests.Controllers
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design"
@@ -179,7 +179,7 @@ namespace EDR.API.Tests.Controllers
                 ProjectId = command.ProjectId,
                 IncomingLetterNo = command.IncomingLetterNo,
                 LetterDate = command.LetterDate,
-                NjsInwardNo = command.NjsInwardNo,
+                EdrInwardNo = command.EdrInwardNo,
                 ReceiptDate = command.ReceiptDate,
                 From = command.From,
                 Subject = command.Subject,
@@ -219,7 +219,7 @@ namespace EDR.API.Tests.Controllers
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001-Updated",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001-Updated",
+                EdrInwardNo = "EDR/IN/2024/001-Updated",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design-Updated"
@@ -231,7 +231,7 @@ namespace EDR.API.Tests.Controllers
                 ProjectId = command.ProjectId,
                 IncomingLetterNo = command.IncomingLetterNo,
                 LetterDate = command.LetterDate,
-                NjsInwardNo = command.NjsInwardNo,
+                EdrInwardNo = command.EdrInwardNo,
                 ReceiptDate = command.ReceiptDate,
                 From = command.From,
                 Subject = command.Subject,
@@ -318,7 +318,7 @@ namespace EDR.API.Tests.Controllers
                 {
                     Id = 1,
                     ProjectId = 1,
-                    LetterNo = "NJS/OUT/2024/001",
+                    LetterNo = "EDR/OUT/2024/001",
                     LetterDate = new DateTime(2024, 1, 15),
                     To = "Public Health Engineering Department",
                     Subject = "Response to Population Projections for STP Design"
@@ -327,7 +327,7 @@ namespace EDR.API.Tests.Controllers
                 {
                     Id = 2,
                     ProjectId = 1,
-                    LetterNo = "NJS/OUT/2024/002",
+                    LetterNo = "EDR/OUT/2024/002",
                     LetterDate = new DateTime(2024, 1, 24),
                     To = "Public Health Engineering Department",
                     Subject = "Advanced Oxidation Process Integration Plan"
@@ -354,7 +354,7 @@ namespace EDR.API.Tests.Controllers
             {
                 Id = 1,
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/001",
+                LetterNo = "EDR/OUT/2024/001",
                 LetterDate = new DateTime(2024, 1, 15),
                 To = "Public Health Engineering Department",
                 Subject = "Response to Population Projections for STP Design"
@@ -398,7 +398,7 @@ namespace EDR.API.Tests.Controllers
                 {
                     Id = 1,
                     ProjectId = projectId,
-                    LetterNo = "NJS/OUT/2024/001",
+                    LetterNo = "EDR/OUT/2024/001",
                     LetterDate = new DateTime(2024, 1, 15),
                     To = "Public Health Engineering Department",
                     Subject = "Response to Population Projections for STP Design"
@@ -407,7 +407,7 @@ namespace EDR.API.Tests.Controllers
                 {
                     Id = 2,
                     ProjectId = projectId,
-                    LetterNo = "NJS/OUT/2024/002",
+                    LetterNo = "EDR/OUT/2024/002",
                     LetterDate = new DateTime(2024, 1, 24),
                     To = "Public Health Engineering Department",
                     Subject = "Advanced Oxidation Process Integration Plan"
@@ -434,7 +434,7 @@ namespace EDR.API.Tests.Controllers
             var command = new CreateCorrespondenceOutwardCommand
             {
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/001",
+                LetterNo = "EDR/OUT/2024/001",
                 LetterDate = new DateTime(2024, 1, 15),
                 To = "Public Health Engineering Department",
                 Subject = "Response to Population Projections for STP Design"
@@ -482,7 +482,7 @@ namespace EDR.API.Tests.Controllers
             {
                 Id = id,
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/001-Updated",
+                LetterNo = "EDR/OUT/2024/001-Updated",
                 LetterDate = new DateTime(2024, 1, 15),
                 To = "Public Health Engineering Department",
                 Subject = "Response to Population Projections for STP Design-Updated"
@@ -589,4 +589,5 @@ namespace EDR.API.Tests.Controllers
         }
     }
 }
+
 

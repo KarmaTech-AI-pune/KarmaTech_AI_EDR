@@ -32,7 +32,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -62,7 +62,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
             Assert.Equal(correspondenceInward.ProjectId, result.ProjectId);
             Assert.Equal(correspondenceInward.IncomingLetterNo, result.IncomingLetterNo);
             Assert.Equal(correspondenceInward.LetterDate, result.LetterDate);
-            Assert.Equal(correspondenceInward.NjsInwardNo, result.NjsInwardNo);
+            Assert.Equal(correspondenceInward.EdrInwardNo, result.EdrInwardNo);
             Assert.Equal(correspondenceInward.ReceiptDate, result.ReceiptDate);
             Assert.Equal(correspondenceInward.From, result.From);
             Assert.Equal(correspondenceInward.Subject, result.Subject);
@@ -110,4 +110,5 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
         }
     }
 }
+
 

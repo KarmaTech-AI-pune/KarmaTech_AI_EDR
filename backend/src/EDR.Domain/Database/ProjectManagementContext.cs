@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using EDR.Domain.Entities;
 using EDR.Domain.Services;
+using EDR.Domain;
 
 namespace EDR.Domain.Database
 {
@@ -11,28 +13,38 @@ namespace EDR.Domain.Database
         public int? TenantId { get; private set; }
         private readonly ICurrentTenantService _currentTenantService;
         public string CurrentTenantConnectionString { get; set; }
+        private readonly IConfiguration _configuration;
 
 
         public ProjectManagementContext(
             DbContextOptions<ProjectManagementContext> options,
-            ICurrentTenantService currentTenantService
-           ) : base(options)
+            ICurrentTenantService currentTenantService,
+            IConfiguration configuration
+        ) : base(options)
         {
             _currentTenantService = currentTenantService;
             TenantId = _currentTenantService?.TenantId ?? 1;
             CurrentTenantConnectionString = _currentTenantService?.ConnectionString;
+            _configuration = configuration;
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!string.IsNullOrEmpty(CurrentTenantConnectionString))
             {
-                optionsBuilder.UseSqlServer(CurrentTenantConnectionString,
-                    sqlOptions => sqlOptions.UseCompatibilityLevel(130)); // SQL Server 2016
+                if (_configuration[Constants.DbType] == Constants.DbServerType)
+                {
+                    optionsBuilder.UseNpgsql(CurrentTenantConnectionString);
+                }
+                else
+                {
+                    optionsBuilder.UseSqlServer(CurrentTenantConnectionString,
+                        sqlOptions => sqlOptions.UseCompatibilityLevel(130)); // SQL Server 2016
+                }
             }
+
             base.OnConfiguring(optionsBuilder);
         }
-
 
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -47,6 +59,7 @@ namespace EDR.Domain.Database
                         break;
                 }
             }
+
             return base.SaveChangesAsync(cancellationToken);
         }
 
@@ -57,6 +70,7 @@ namespace EDR.Domain.Database
         public DbSet<Program> Programs { get; set; }
         public new DbSet<User> Users { get; set; }
         public new DbSet<Role> Roles { get; set; }
+
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<GoNoGoDecision> GoNoGoDecisions { get; set; }
         public DbSet<WBSHeader> WBSHeaders { get; set; } // Added for WBS Master
@@ -210,7 +224,15 @@ namespace EDR.Domain.Database
             modelBuilder.Entity<User>().HasQueryFilter(p => p.TenantId == TenantId);
             modelBuilder.Entity<Role>().HasQueryFilter(role => role.TenantId == TenantId);
             modelBuilder.Entity<Program>().HasQueryFilter(role => role.TenantId == TenantId);
-            modelBuilder.Entity<WBSOption>().HasQueryFilter(w=>w.TenantId == TenantId);
+            modelBuilder.Entity<WBSOption>().HasQueryFilter(w => w.TenantId == TenantId);
+
+            modelBuilder.Entity<SprintWbsPlan>().HasQueryFilter(p => p.TenantId == TenantId);
+
+            modelBuilder.Entity<SprintWbsPlan>()
+                .HasOne(s => s.Project)
+                .WithMany(p => p.SprintWbsPlans)
+                .HasForeignKey(s => s.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<SprintWbsPlan>().HasQueryFilter(p => p.TenantId == TenantId);
 
@@ -378,7 +400,7 @@ namespace EDR.Domain.Database
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.UserId).IsRequired();
-                entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.DocumentCategoriesJson);
                 entity.Property(e => e.CreatedBy).IsRequired(false);
                 entity.Property(e => e.UpdatedBy).IsRequired(false);
                 entity.Property(e => e.Comments).IsRequired(false);
@@ -403,7 +425,7 @@ namespace EDR.Domain.Database
             modelBuilder.Entity<BidVersionHistory>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.DocumentCategoriesJson).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.DocumentCategoriesJson);
                 entity.Property(e => e.Comments).IsRequired(false);
                 entity.Property(e => e.ModifiedBy).IsRequired();
 
@@ -457,13 +479,13 @@ namespace EDR.Domain.Database
                 .Property(o => o.PercentageChanceOfProjectHappening)
                 .HasPrecision(5, 2);
             modelBuilder.Entity<OpportunityTracking>()
-                .Property(o => o.PercentageChanceOfNJSSuccess)
+                .Property(o => o.PercentageChanceOfEDRSuccess)
                 .HasPrecision(5, 2);
             modelBuilder.Entity<OpportunityTracking>()
                 .Property(o => o.GrossRevenue)
                 .HasPrecision(18, 2);
             modelBuilder.Entity<OpportunityTracking>()
-                .Property(o => o.NetNJSRevenue)
+                .Property(o => o.NetEDRRevenue)
                 .HasPrecision(18, 2);
             modelBuilder.Entity<OpportunityTracking>().Property(o => o.CreatedBy).IsRequired(false);
             modelBuilder.Entity<OpportunityTracking>().Property(o => o.UpdatedBy).IsRequired(false);
@@ -477,7 +499,8 @@ namespace EDR.Domain.Database
                 .HasForeignKey(oh => oh.OpportunityId);
             //modelBuilder.Entity<OpportunityHistory>()
             //.HasOne(oh => oh.ActionUser).WithMany(u => u.OpportunityHistories).HasForeignKey(oh => oh.ActionBy);
-            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories).HasForeignKey(oh => oh.StatusId);
+            modelBuilder.Entity<OpportunityHistory>().HasOne(oh => oh.Status).WithMany(s => s.OpportunityHistories)
+                .HasForeignKey(oh => oh.StatusId);
 
             modelBuilder.Entity<WBSHistory>()
                 .HasOne(ph => ph.WBSTaskPlannedHourHeader)
@@ -492,9 +515,12 @@ namespace EDR.Domain.Database
             modelBuilder.Entity<WBSHistory>()
                 .Property(ph => ph.Comments).IsRequired(false);
 
-            modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoringCriterias).WithMany(s => s.GoNoGoDecisionOpportunities).HasForeignKey(oh => oh.ScoringCriteriaId);
-            modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoreRanges).WithMany(s => s.GoNoGoDecisionOpportunitiesScoring).HasForeignKey(oh => oh.ScoreRangeId);
-            modelBuilder.Entity<ScoringDescriptionSummarry>().HasOne(oh => oh.ScoringDescriptions).WithMany(s => s.ScoringDescriptionSummarry).HasForeignKey(oh => oh.ScoringDescriptionID);
+            modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoringCriterias)
+                .WithMany(s => s.GoNoGoDecisionOpportunities).HasForeignKey(oh => oh.ScoringCriteriaId);
+            modelBuilder.Entity<GoNoGoDecisionOpportunity>().HasOne(oh => oh.ScoreRanges)
+                .WithMany(s => s.GoNoGoDecisionOpportunitiesScoring).HasForeignKey(oh => oh.ScoreRangeId);
+            modelBuilder.Entity<ScoringDescriptionSummarry>().HasOne(oh => oh.ScoringDescriptions)
+                .WithMany(s => s.ScoringDescriptionSummarry).HasForeignKey(oh => oh.ScoringDescriptionID);
 
             // Configure GoNoGoDecisionTransaction relationships
             modelBuilder.Entity<GoNoGoDecisionTransaction>()
@@ -545,9 +571,9 @@ namespace EDR.Domain.Database
 
                 // Configure relationship with WorkBreakdownStructure
                 entity.HasOne(t => t.WorkBreakdownStructure)
-                      .WithMany(w => w.Tasks)
-                  .HasForeignKey(t => t.WorkBreakdownStructureId)
-                  .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
+                    .WithMany(w => w.Tasks)
+                    .HasForeignKey(t => t.WorkBreakdownStructureId)
+                    .OnDelete(DeleteBehavior.Cascade); // Deleting WBS deletes its tasks
             });
 
             // Configure JobStartForm entity
@@ -566,25 +592,25 @@ namespace EDR.Domain.Database
                 entity.Property(e => e.TotalTimeCost).HasPrecision(18, 2);
 
                 entity.HasOne(jsf => jsf.Project)
-                      .WithMany()
-                      .HasForeignKey(jsf => jsf.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany()
+                    .HasForeignKey(jsf => jsf.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(jsf => jsf.WorkBreakdownStructure)
-                      .WithMany(wbs => wbs.JobStartForms)
-                      .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
-                      .IsRequired(false)
-                      .OnDelete(DeleteBehavior.NoAction);
+                    .WithMany(wbs => wbs.JobStartForms)
+                    .HasForeignKey(jsf => jsf.WorkBreakdownStructureId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasMany(jsf => jsf.Selections)
-                      .WithOne(s => s.JobStartForm)
-                      .HasForeignKey(s => s.FormId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithOne(s => s.JobStartForm)
+                    .HasForeignKey(s => s.FormId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(jsf => jsf.Resources)
-                      .WithOne(r => r.JobStartForm)
-                      .HasForeignKey(r => r.FormId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithOne(r => r.JobStartForm)
+                    .HasForeignKey(r => r.FormId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasIndex(jsf => jsf.ProjectId);
             });
@@ -606,9 +632,9 @@ namespace EDR.Domain.Database
                 entity.Property(e => e.BudgetedCost).HasPrecision(18, 2);
 
                 entity.HasOne(r => r.JobStartForm)
-                      .WithMany(j => j.Resources)
-                      .HasForeignKey(r => r.FormId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany(j => j.Resources)
+                    .HasForeignKey(r => r.FormId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasIndex(r => r.FormId); // Index for faster lookup by form
             });
@@ -622,22 +648,20 @@ namespace EDR.Domain.Database
 
                 // Configure relationships
                 entity.HasOne(ut => ut.WBSTask)
-                      .WithMany(t => t.UserWBSTasks)
-                      .HasForeignKey(ut => ut.WBSTaskId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany(t => t.UserWBSTasks)
+                    .HasForeignKey(ut => ut.WBSTaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(ut => ut.User)
-                      .WithMany(u => u.UserWBSTasks)
-                      .HasForeignKey(ut => ut.UserId)
-                      .OnDelete(DeleteBehavior.SetNull);
+                    .WithMany(u => u.UserWBSTasks)
+                    .HasForeignKey(ut => ut.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
 
                 entity.HasOne(ut => ut.ResourceRole)
-                      .WithMany()
-                      .HasForeignKey(ut => ut.ResourceRoleId)
-                      .OnDelete(DeleteBehavior.SetNull);
-
+                    .WithMany()
+                    .HasForeignKey(ut => ut.ResourceRoleId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
-
 
 
             // Configure WBSHeader entity
@@ -646,33 +670,33 @@ namespace EDR.Domain.Database
                 entity.HasQueryFilter(h => h.TenantId == TenantId);
 
                 entity.HasOne(h => h.Project)
-                      .WithMany()
-                      .HasForeignKey(h => h.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany()
+                    .HasForeignKey(h => h.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(h => h.WorkBreakdownStructures)
-                      .WithOne(wbs => wbs.WBSHeader)
-                      .HasForeignKey(wbs => wbs.WBSHeaderId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithOne(wbs => wbs.WBSHeader)
+                    .HasForeignKey(wbs => wbs.WBSHeaderId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(h => h.VersionHistories)
-                      .WithOne(vh => vh.WBSHeader)
-                      .HasForeignKey(vh => vh.WBSHeaderId)
-                      .OnDelete(DeleteBehavior.Cascade); // Allow deletion of WBSHeader even if it has version histories
+                    .WithOne(vh => vh.WBSHeader)
+                    .HasForeignKey(vh => vh.WBSHeaderId)
+                    .OnDelete(DeleteBehavior.Cascade); // Allow deletion of WBSHeader even if it has version histories
 
                 // Configure the relationship for ActiveVersion
                 entity.HasOne(h => h.ActiveVersion)
-                      .WithMany()
-                      .HasForeignKey(h => h.ActiveVersionHistoryId)
-                      .OnDelete(DeleteBehavior.NoAction)
-                      .IsRequired(false);
+                    .WithMany()
+                    .HasForeignKey(h => h.ActiveVersionHistoryId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired(false);
 
                 // Configure the relationship for LatestVersion
                 entity.HasOne(h => h.LatestVersion)
-                      .WithMany()
-                      .HasForeignKey(h => h.LatestVersionHistoryId)
-                      .OnDelete(DeleteBehavior.NoAction)
-                      .IsRequired(false);
+                    .WithMany()
+                    .HasForeignKey(h => h.LatestVersionHistoryId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired(false);
             });
 
             // Configure WorkBreakdownStructure entity (now WBS Groups)
@@ -709,19 +733,19 @@ namespace EDR.Domain.Database
                 entity.Property(v => v.Comments).HasMaxLength(1000);
 
                 entity.HasOne(v => v.Status)
-                      .WithMany()
-                      .HasForeignKey(v => v.StatusId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(v => v.StatusId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(v => v.CreatedByUser)
-                      .WithMany()
-                      .HasForeignKey(v => v.CreatedBy)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(v => v.CreatedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(v => v.ApprovedByUser)
-                      .WithMany()
-                      .HasForeignKey(v => v.ApprovedBy)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(v => v.ApprovedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(v => v.WBSHeaderId); // Updated to WBSHeaderId
                 entity.HasIndex(v => v.Version);
@@ -742,9 +766,9 @@ namespace EDR.Domain.Database
                 entity.Property(t => t.Description).HasMaxLength(1000);
 
                 entity.HasOne(t => t.WBSVersionHistory)
-                      .WithMany(v => v.TaskVersions)
-                      .HasForeignKey(t => t.WBSVersionHistoryId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany(v => v.TaskVersions)
+                    .HasForeignKey(t => t.WBSVersionHistoryId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasIndex(t => t.WBSVersionHistoryId);
                 entity.HasIndex(t => t.OriginalTaskId);
@@ -759,19 +783,19 @@ namespace EDR.Domain.Database
                 entity.Property(h => h.Comments).HasMaxLength(1000);
 
                 entity.HasOne(h => h.Status)
-                      .WithMany()
-                      .HasForeignKey(h => h.StatusId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(h => h.StatusId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(h => h.ActionUser)
-                      .WithMany()
-                      .HasForeignKey(h => h.ActionBy)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(h => h.ActionBy)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(h => h.AssignedTo)
-                      .WithMany()
-                      .HasForeignKey(h => h.AssignedToId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(h => h.AssignedToId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(h => h.WBSVersionHistoryId);
                 entity.HasIndex(h => h.ActionDate);
@@ -786,9 +810,9 @@ namespace EDR.Domain.Database
                 entity.Property(ph => ph.CreatedBy).HasMaxLength(100);
 
                 entity.HasOne(ph => ph.WBSTaskVersionHistory)
-                      .WithMany(t => t.PlannedHours)
-                      .HasForeignKey(ph => ph.WBSTaskVersionHistoryId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany(t => t.PlannedHours)
+                    .HasForeignKey(ph => ph.WBSTaskVersionHistoryId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasIndex(ph => ph.WBSTaskVersionHistoryId);
             });
@@ -805,19 +829,19 @@ namespace EDR.Domain.Database
                 entity.Property(ut => ut.ResourceRoleId).IsRequired(false);
 
                 entity.HasOne(ut => ut.WBSTaskVersionHistory)
-                      .WithMany(t => t.UserAssignments)
-                      .HasForeignKey(ut => ut.WBSTaskVersionHistoryId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany(t => t.UserAssignments)
+                    .HasForeignKey(ut => ut.WBSTaskVersionHistoryId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(ut => ut.User)
-                      .WithMany()
-                      .HasForeignKey(ut => ut.UserId)
-                      .OnDelete(DeleteBehavior.SetNull);
+                    .WithMany()
+                    .HasForeignKey(ut => ut.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
 
                 entity.HasOne(ut => ut.ResourceRole)
-                      .WithMany()
-                      .HasForeignKey(ut => ut.ResourceRoleId)
-                      .OnDelete(DeleteBehavior.SetNull);
+                    .WithMany()
+                    .HasForeignKey(ut => ut.ResourceRoleId)
+                    .OnDelete(DeleteBehavior.SetNull);
 
                 entity.HasIndex(ut => ut.WBSTaskVersionHistoryId);
                 entity.HasIndex(ut => ut.UserId);
@@ -895,9 +919,9 @@ namespace EDR.Domain.Database
 
                 // Configure relationship with Project
                 entity.HasOne(i => i.Project)
-                      .WithMany()
-                      .HasForeignKey(i => i.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany()
+                    .HasForeignKey(i => i.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Configure CorrespondenceInward entity
@@ -905,7 +929,7 @@ namespace EDR.Domain.Database
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.IncomingLetterNo).IsRequired().HasMaxLength(255);
-                entity.Property(e => e.NjsInwardNo).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.EdrInwardNo).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.From).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.Subject).IsRequired().HasMaxLength(500);
                 entity.Property(e => e.AttachmentDetails).HasMaxLength(500).IsRequired(false);
@@ -920,9 +944,9 @@ namespace EDR.Domain.Database
 
                 // Configure relationship with Project
                 entity.HasOne(i => i.Project)
-                      .WithMany()
-                      .HasForeignKey(i => i.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany()
+                    .HasForeignKey(i => i.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Configure CorrespondenceOutward entity
@@ -945,9 +969,9 @@ namespace EDR.Domain.Database
 
                 // Configure relationship with Project
                 entity.HasOne(i => i.Project)
-                      .WithMany()
-                      .HasForeignKey(i => i.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany()
+                    .HasForeignKey(i => i.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Configure CheckReview entity
@@ -972,9 +996,9 @@ namespace EDR.Domain.Database
 
                 // Configure relationship with Project
                 entity.HasOne(i => i.Project)
-                      .WithMany()
-                      .HasForeignKey(i => i.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany()
+                    .HasForeignKey(i => i.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Configure ChangeControl entity
@@ -998,24 +1022,24 @@ namespace EDR.Domain.Database
 
                 // Configure relationship with Project
                 entity.HasOne(cc => cc.Project)
-                      .WithMany()
-                      .HasForeignKey(cc => cc.ProjectId)
-                      .OnDelete(DeleteBehavior.NoAction)
-                      .IsRequired();
+                    .WithMany()
+                    .HasForeignKey(cc => cc.ProjectId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
 
                 // Configure relationship with PMWorkflowStatus - Use NO ACTION to prevent cascade delete cycles
                 entity.HasOne(cc => cc.WorkflowStatus)
-                      .WithMany()
-                      .HasForeignKey(cc => cc.WorkflowStatusId)
-                      .OnDelete(DeleteBehavior.NoAction)
-                      .IsRequired();
+                    .WithMany()
+                    .HasForeignKey(cc => cc.WorkflowStatusId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
 
                 // Configure relationship with Project - Enforce Cascade Delete
                 entity.HasOne(cc => cc.Project)
-                      .WithMany()
-                      .HasForeignKey(cc => cc.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade)
-                      .IsRequired();
+                    .WithMany()
+                    .HasForeignKey(cc => cc.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
             });
 
             // Configure ProjectClosure entity
@@ -1100,15 +1124,15 @@ namespace EDR.Domain.Database
 
                 // Configure relationship with Project
                 entity.HasOne(pc => pc.Project)
-                      .WithMany()
-                      .HasForeignKey(pc => pc.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany()
+                    .HasForeignKey(pc => pc.ProjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
                 entity.HasOne(pc => pc.WorkflowStatus)
-                      .WithMany()
-                      .HasForeignKey(pc => pc.WorkflowStatusId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(pc => pc.WorkflowStatusId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
 
@@ -1126,30 +1150,30 @@ namespace EDR.Domain.Database
 
                 // ChangeControl → WorkflowHistories: Cascade (primary deletion path)
                 entity.HasOne(h => h.ChangeControl)
-                      .WithMany(h => h.WorkflowHistories)
-                      .HasForeignKey(h => h.ChangeControlId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany(h => h.WorkflowHistories)
+                    .HasForeignKey(h => h.ChangeControlId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 // PMWorkflowStatus: NO ACTION (prevent multiple cascade paths)
                 entity.HasOne(h => h.Status)
-                      .WithMany()
-                      .HasForeignKey(h => h.StatusId)
-                      .OnDelete(DeleteBehavior.NoAction)
-                      .IsRequired();
+                    .WithMany()
+                    .HasForeignKey(h => h.StatusId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
 
                 // User (ActionBy): NO ACTION (prevent multiple cascade paths)
                 entity.HasOne(h => h.ActionUser)
-                      .WithMany()
-                      .HasForeignKey(h => h.ActionBy)
-                      .OnDelete(DeleteBehavior.NoAction)
-                      .IsRequired();
+                    .WithMany()
+                    .HasForeignKey(h => h.ActionBy)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
 
                 // User (AssignedTo): NO ACTION, optional (prevent multiple cascade paths)
                 entity.HasOne(h => h.AssignedTo)
-                      .WithMany()
-                      .HasForeignKey(h => h.AssignedToId)
-                      .OnDelete(DeleteBehavior.NoAction)
-                      .IsRequired(false);
+                    .WithMany()
+                    .HasForeignKey(h => h.AssignedToId)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired(false);
             });
 
             // Configure ProjectClosureWorkflowHistory entity
@@ -1166,28 +1190,28 @@ namespace EDR.Domain.Database
 
                 // Configure relationship with ProjectClosure
                 entity.HasOne(h => h.ProjectClosure)
-                      .WithMany(h => h.WorkflowHistories)
-                      .HasForeignKey(h => h.ProjectClosureId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany(h => h.WorkflowHistories)
+                    .HasForeignKey(h => h.ProjectClosureId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 // Configure relationship with PMWorkflowStatus - Use Restrict to prevent cascade delete cycles
                 entity.HasOne(h => h.Status)
-                      .WithMany()
-                      .HasForeignKey(h => h.StatusId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(h => h.StatusId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 // Configure relationship with User (ActionBy)
                 entity.HasOne(h => h.ActionUser)
-                      .WithMany()
-                      .HasForeignKey(h => h.ActionBy)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(h => h.ActionBy)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 // Configure relationship with User (AssignedTo)
                 entity.HasOne(h => h.AssignedTo)
-                      .WithMany()
-                      .HasForeignKey(h => h.AssignedToId)
-                      .OnDelete(DeleteBehavior.Restrict)
-                      .IsRequired(false);
+                    .WithMany()
+                    .HasForeignKey(h => h.AssignedToId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
             });
 
             modelBuilder.Entity<WBSTaskPlannedHour>()
@@ -1208,21 +1232,21 @@ namespace EDR.Domain.Database
 
                 // Configure relationship with JobStartForm
                 entity.HasOne(h => h.JobStartForm)
-                      .WithOne(f => f.Header)
-                      .HasForeignKey<JobStartFormHeader>(h => h.FormId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithOne(f => f.Header)
+                    .HasForeignKey<JobStartFormHeader>(h => h.FormId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 // Configure relationship with Project
                 entity.HasOne(h => h.Project)
-                      .WithMany()
-                      .HasForeignKey(h => h.ProjectId)
-                      .OnDelete(DeleteBehavior.NoAction);
+                    .WithMany()
+                    .HasForeignKey(h => h.ProjectId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 // Configure relationship with PMWorkflowStatus
                 entity.HasOne(h => h.Status)
-                      .WithMany()
-                      .HasForeignKey(h => h.StatusId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(h => h.StatusId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // Configure JobStartFormHistory entity
@@ -1239,28 +1263,28 @@ namespace EDR.Domain.Database
 
                 // Configure relationship with JobStartFormHeader
                 entity.HasOne(h => h.JobStartFormHeader)
-                      .WithMany(h => h.JobStartFormHistories)
-                      .HasForeignKey(h => h.JobStartFormHeaderId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                    .WithMany(h => h.JobStartFormHistories)
+                    .HasForeignKey(h => h.JobStartFormHeaderId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 // Configure relationship with PMWorkflowStatus
                 entity.HasOne(h => h.Status)
-                      .WithMany()
-                      .HasForeignKey(h => h.StatusId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(h => h.StatusId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 // Configure relationship with User (ActionBy)
                 entity.HasOne(h => h.ActionUser)
-                      .WithMany()
-                      .HasForeignKey(h => h.ActionBy)
-                      .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(h => h.ActionBy)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 // Configure relationship with User (AssignedTo)
                 entity.HasOne(h => h.AssignedTo)
-                      .WithMany()
-                      .HasForeignKey(h => h.AssignedToId)
-                      .OnDelete(DeleteBehavior.Restrict)
-                      .IsRequired(false);
+                    .WithMany()
+                    .HasForeignKey(h => h.AssignedToId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
             });
 
 
@@ -1309,7 +1333,7 @@ namespace EDR.Domain.Database
                 entity.Property(e => e.Environment).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.CommitSha).HasMaxLength(40);
                 entity.Property(e => e.Branch).HasMaxLength(100);
-                entity.Property(e => e.CreatedDate).IsRequired().HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.CreatedDate).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 // Create indexes for better performance
                 entity.HasIndex(e => e.Version).IsUnique();
@@ -1339,7 +1363,6 @@ namespace EDR.Domain.Database
                 entity.HasIndex(e => e.ReleaseNotesId);
                 entity.HasIndex(e => e.ChangeType);
             });
-
         }
 
         private void ConfigureProjectCascadingDeletes(ModelBuilder modelBuilder)
@@ -1379,8 +1402,6 @@ namespace EDR.Domain.Database
                 .HasForeignKey(mp => mp.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
-
     }
-
 }
 

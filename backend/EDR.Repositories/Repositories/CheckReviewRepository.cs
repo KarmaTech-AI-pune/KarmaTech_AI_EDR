@@ -40,7 +40,7 @@ namespace EDR.Repositories.Repositories
         {
             if (checkReview == null) throw new ArgumentNullException(nameof(checkReview));
 
-            checkReview.CreatedAt = DateTime.Now;
+            checkReview.CreatedAt = DateTime.UtcNow;
 
             _context.CheckReviews.Add(checkReview);
             await _context.SaveChangesAsync();
@@ -58,7 +58,7 @@ namespace EDR.Repositories.Repositories
 
             // Update the entity
             _context.Entry(existingReview).CurrentValues.SetValues(checkReview);
-            existingReview.UpdatedAt = DateTime.Now;
+            existingReview.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
         }

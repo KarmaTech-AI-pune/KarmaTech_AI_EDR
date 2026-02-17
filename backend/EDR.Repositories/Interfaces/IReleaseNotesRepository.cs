@@ -1,4 +1,4 @@
-﻿using EDR.Domain.Entities;
+using EDR.Domain.Entities;
 
 namespace EDR.Repositories.Interfaces
 {

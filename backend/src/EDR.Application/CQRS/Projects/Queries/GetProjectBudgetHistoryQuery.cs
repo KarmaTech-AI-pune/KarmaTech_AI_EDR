@@ -2,8 +2,7 @@
 using EDR.Application.Dtos;
 using System.Collections.Generic;
 
-namespace EDR.Application.CQRS.Projects.Queries
-{
+namespace EDR.Application.CQRS.Projects.Queries{
     public record GetProjectBudgetHistoryQuery : IRequest<ProjectBudgetHistoryResponseDto>
     {
         public int ProjectId { get; init; }

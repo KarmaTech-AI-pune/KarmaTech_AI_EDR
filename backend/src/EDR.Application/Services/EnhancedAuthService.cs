@@ -6,8 +6,7 @@ using EDR.Application.Dtos;
 using EDR.Application.Services.IContract;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
-using EDR.Repositories.Interfaces;
-using System.Collections.Generic;
+using EDR.Repositories.Interfaces;using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.AccessControl;
 using System.Security.Claims;
@@ -363,4 +362,5 @@ namespace EDR.Application.Services
         }
     }
 }
+
 

@@ -24,11 +24,11 @@ namespace EDR.API.Tests.Validation
                 .Must(date => date <= DateTime.Now)
                 .WithMessage("LetterDate cannot be in the future");
 
-            RuleFor(x => x.NjsInwardNo)
+            RuleFor(x => x.EdrInwardNo)
                 .NotEmpty()
-                .WithMessage("NjsInwardNo cannot be empty")
+                .WithMessage("EdrInwardNo cannot be empty")
                 .MaximumLength(255)
-                .WithMessage("NjsInwardNo must not exceed 255 characters");
+                .WithMessage("EdrInwardNo must not exceed 255 characters");
 
             RuleFor(x => x.ReceiptDate)
                 .NotEmpty()
@@ -74,4 +74,5 @@ namespace EDR.API.Tests.Validation
         }
     }
 }
+
 

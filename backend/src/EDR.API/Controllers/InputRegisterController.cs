@@ -86,10 +86,15 @@ namespace EDR.API.Controllers
                 var result = await _mediator.Send(command);
                 return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
             }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                _logger.LogError(dbEx, "Database error creating input register");
+                return StatusCode(500, new { message = "Database error", details = dbEx.InnerException?.Message ?? dbEx.Message });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating input register");
-                return StatusCode(500, new { message = "An error occurred while creating the input register" });
+                return StatusCode(500, new { message = ex.Message, details = ex.ToString() });
             }
         }
 

@@ -1,6 +1,7 @@
-@NJSAPI_HostAddress = http://localhost:5245
+﻿@EDR.API_HostAddress = http://localhost:5245
 
-GET {{NJSAPI_HostAddress}}/weatherforecast/
+GET {{EDR.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+

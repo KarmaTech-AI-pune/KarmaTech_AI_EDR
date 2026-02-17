@@ -1,7 +1,6 @@
 ﻿using System;
 
-namespace EDR.Application.Dtos
-{
+namespace EDR.Application.Dtos{
     public class ProjectBudgetChangeHistoryDto
     {
         public int Id { get; set; }

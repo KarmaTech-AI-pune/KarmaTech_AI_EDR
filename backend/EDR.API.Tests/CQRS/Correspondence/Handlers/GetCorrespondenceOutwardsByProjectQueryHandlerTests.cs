@@ -35,7 +35,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                 {
                     Id = 1,
                     ProjectId = projectId,
-                    LetterNo = "NJS/OUT/2024/001",
+                    LetterNo = "EDR/OUT/2024/001",
                     LetterDate = new DateTime(2024, 1, 15),
                     To = "Public Health Engineering Department",
                     Subject = "Response to Population Projections for STP Design",
@@ -51,7 +51,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                 {
                     Id = 2,
                     ProjectId = projectId,
-                    LetterNo = "NJS/OUT/2024/002",
+                    LetterNo = "EDR/OUT/2024/002",
                     LetterDate = new DateTime(2024, 1, 24),
                     To = "Public Health Engineering Department",
                     Subject = "Advanced Oxidation Process Integration Plan",
@@ -136,4 +136,5 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
         }
     }
 }
+
 

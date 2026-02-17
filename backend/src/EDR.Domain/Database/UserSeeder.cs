@@ -10,7 +10,7 @@ namespace EDR.Domain.Database
             RoleManager<Role> roleManager)
         {
             // Check if admin user already exists
-            var adminEmail = "admin@njs.com";
+            var adminEmail = "admin@edr.com";
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
             if (adminUser == null)
@@ -25,7 +25,7 @@ namespace EDR.Domain.Database
                 };
 
                 // Create user with a strong password
-                var result = await userManager.CreateAsync(adminUser, "NJSAdmin@2024!");
+                var result = await userManager.CreateAsync(adminUser, "EDRAdmin@2024!");
 
                 if (result.Succeeded)
                 {
@@ -48,4 +48,5 @@ namespace EDR.Domain.Database
         }
     }
 }
+
 

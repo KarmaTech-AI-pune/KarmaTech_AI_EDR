@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System;using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Metrics;
 using EDR.Domain.Entities;
 
@@ -49,4 +48,5 @@ namespace EDR.Application.Dtos
         public string? BudgetReason { get; set; } // Optional reason for budget changes
     }
 }
+
 

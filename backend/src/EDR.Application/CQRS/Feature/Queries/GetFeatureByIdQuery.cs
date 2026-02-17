@@ -1,8 +1,7 @@
 ﻿using MediatR;
 using EDR.Application.DTOs;
 
-namespace EDR.Application.CQRS.Feature.Queries
-{
+namespace EDR.Application.CQRS.Feature.Queries{
     public class GetFeatureByIdQuery : IRequest<FeatureDto>
     {
         public int Id { get; set; }
@@ -13,4 +12,5 @@ namespace EDR.Application.CQRS.Feature.Queries
         }
     }
 }
+
 

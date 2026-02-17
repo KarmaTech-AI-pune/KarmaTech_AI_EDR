@@ -1,14 +1,12 @@
 ﻿using MediatR;
 using EDR.Application.CQRS.Projects.Queries;
 using EDR.Application.Dtos;
-using EDR.Repositories.Interfaces;
-using System;
+using EDR.Repositories.Interfaces;using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EDR.Application.CQRS.Projects.Handlers
-{
+namespace EDR.Application.CQRS.Projects.Handlers{
     public class GetProjectBudgetHistoryQueryHandler : IRequestHandler<GetProjectBudgetHistoryQuery, ProjectBudgetHistoryResponseDto>
     {
         private readonly IProjectBudgetChangeHistoryRepository _historyRepository;

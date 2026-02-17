@@ -1,5 +1,4 @@
-﻿namespace EDR.Application.Services.IContract
-{
+﻿namespace EDR.Application.Services.IContract{
     /// <summary>
     /// Service for interacting with GitHub API and Git operations
     /// </summary>

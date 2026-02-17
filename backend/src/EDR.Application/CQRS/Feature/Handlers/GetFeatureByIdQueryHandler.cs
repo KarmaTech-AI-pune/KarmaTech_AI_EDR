@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using EDR.Application.CQRS.Feature.Queries;
 
-namespace EDR.Application.CQRS.Feature.Handlers
-{
+namespace EDR.Application.CQRS.Feature.Handlers{
     public class GetFeatureByIdQueryHandler : IRequestHandler<GetFeatureByIdQuery, FeatureDto>
     {
         private readonly IFeatureRepository _featureRepository;
@@ -40,4 +39,5 @@ namespace EDR.Application.CQRS.Feature.Handlers
         }
     }
 }
+
 

@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using EDR.Application.Services.IContract;
 
-namespace EDR.API.Attributes
-{
+namespace EDR.API.Attributes{
     /// <summary>
     /// Authorization attribute to restrict access to features based on tenant subscription plan
     /// </summary>
@@ -38,4 +37,5 @@ namespace EDR.API.Attributes
         }
     }
 }
+
 

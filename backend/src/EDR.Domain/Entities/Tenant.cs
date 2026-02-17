@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EDR.Domain.Entities
 {
+    [Table("Tenants")]
     public class Tenant
     {
         [Key]

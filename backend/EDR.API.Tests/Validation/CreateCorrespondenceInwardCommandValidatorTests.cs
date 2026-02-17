@@ -24,7 +24,7 @@ namespace EDR.API.Tests.Validation
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -53,7 +53,7 @@ namespace EDR.API.Tests.Validation
                 ProjectId = 0, // Invalid ProjectId
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -77,7 +77,7 @@ namespace EDR.API.Tests.Validation
                 ProjectId = 1,
                 IncomingLetterNo = "", // Empty IncomingLetterNo
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -101,7 +101,7 @@ namespace EDR.API.Tests.Validation
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(1), // Future date
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -117,7 +117,7 @@ namespace EDR.API.Tests.Validation
         }
 
         [Fact]
-        public async Task Validate_WithEmptyNjsInwardNo_ShouldFail()
+        public async Task Validate_WithEmptyEdrInwardNo_ShouldFail()
         {
             // Arrange
             var command = new CreateCorrespondenceInwardCommand
@@ -125,7 +125,7 @@ namespace EDR.API.Tests.Validation
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "", // Empty NjsInwardNo
+                EdrInwardNo = "", // Empty EdrInwardNo
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -137,7 +137,7 @@ namespace EDR.API.Tests.Validation
 
             // Assert
             Assert.False(result.IsValid);
-            Assert.Contains(result.Errors, e => e.PropertyName == "NjsInwardNo");
+            Assert.Contains(result.Errors, e => e.PropertyName == "EdrInwardNo");
         }
 
         [Fact]
@@ -149,7 +149,7 @@ namespace EDR.API.Tests.Validation
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now.AddDays(1), // Future date
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -173,7 +173,7 @@ namespace EDR.API.Tests.Validation
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "", // Empty From
                 Subject = "Revised Population Projections for STP Design",
@@ -197,7 +197,7 @@ namespace EDR.API.Tests.Validation
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "", // Empty Subject
@@ -221,7 +221,7 @@ namespace EDR.API.Tests.Validation
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -238,4 +238,5 @@ namespace EDR.API.Tests.Validation
         }
     }
 }
+
 

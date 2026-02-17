@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
+﻿using Microsoft.AspNetCore.Mvc;using System.Reflection;
 using System.Text.Json;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
-namespace EDR.API.Controllers
-{
+namespace EDR.API.Controllers{
     /// <summary>
     /// Version information API controller
     /// Provides application version, build information, and health status
@@ -114,8 +112,7 @@ namespace EDR.API.Controllers
                 
                 // Log error with version context (Requirement: 8.4)
                 _logger.LogError(ex, 
-                    "âŒ VERSION API ERROR - Error retrieving version information. ResponseTime: {ResponseTime}ms",
-                    requestStart.ElapsedMilliseconds);
+                    "âŒ VERSION API ERROR - Error retrieving version information. ResponseTime: {ResponseTime}ms",                    requestStart.ElapsedMilliseconds);
                     
                 return StatusCode(500, new
                 {
@@ -201,8 +198,7 @@ namespace EDR.API.Controllers
                 });
 
                 _logger.LogInformation(
-                    "ðŸ¥ HEALTH CHECK - Version: {Version}, Environment: {Environment}, Uptime: {Uptime}",
-                    versionInfo.Version, environment, uptime);
+                    "ðŸ¥ HEALTH CHECK - Version: {Version}, Environment: {Environment}, Uptime: {Uptime}",                    versionInfo.Version, environment, uptime);
                 
                 // Perform health checks
                 var versionFileStatus = CheckVersionFile();
@@ -244,8 +240,7 @@ namespace EDR.API.Controllers
                 if (!isHealthy)
                 {
                     _logger.LogWarning(
-                        "âš ï¸ HEALTH CHECK DEGRADED - Version: {Version}, VersionFile: {VersionFile}, VersionSync: {VersionSync}",
-                        versionInfo.Version, versionFileStatus, versionSyncStatus);
+                        "âš ï¸ HEALTH CHECK DEGRADED - Version: {Version}, VersionFile: {VersionFile}, VersionSync: {VersionSync}",                        versionInfo.Version, versionFileStatus, versionSyncStatus);
                 }
 
                 return Ok(new
@@ -262,8 +257,7 @@ namespace EDR.API.Controllers
                 
                 // Log health check failure with version context (Requirement: 8.4)
                 _logger.LogError(ex, 
-                    "âŒ HEALTH CHECK FAILED - Error: {ErrorMessage}, ResponseTime: {ResponseTime}ms", 
-                    ex.Message, requestStart.ElapsedMilliseconds);
+                    "âŒ HEALTH CHECK FAILED - Error: {ErrorMessage}, ResponseTime: {ResponseTime}ms",                     ex.Message, requestStart.ElapsedMilliseconds);
                     
                 return StatusCode(503, new
                 {
@@ -301,8 +295,7 @@ namespace EDR.API.Controllers
                 }
                 
                 _logger.LogWarning(
-                    "âš ï¸ VERSION MISMATCH DETECTED - Expected: {Expected}, File: {File}",
-                    expectedVersion, versionFromFile);
+                    "âš ï¸ VERSION MISMATCH DETECTED - Expected: {Expected}, File: {File}",                    expectedVersion, versionFromFile);
                     
                 return "mismatch";
             }
@@ -505,23 +498,19 @@ namespace EDR.API.Controllers
                 {
                     case "start":
                         _logger.LogInformation(
-                            "ðŸš€ DEPLOYMENT STARTED - Version: {Version}, Environment: {Environment}, Commit: {CommitHash}",
-                            request.Version, request.Environment, request.CommitHash);
+                            "ðŸš€ DEPLOYMENT STARTED - Version: {Version}, Environment: {Environment}, Commit: {CommitHash}",                            request.Version, request.Environment, request.CommitHash);
                         break;
                     case "success":
                         _logger.LogInformation(
-                            "âœ… DEPLOYMENT SUCCESSFUL - Version: {Version}, Environment: {Environment}, Duration: {Duration}s",
-                            request.Version, request.Environment, request.Duration ?? 0);
+                            "âœ… DEPLOYMENT SUCCESSFUL - Version: {Version}, Environment: {Environment}, Duration: {Duration}s",                            request.Version, request.Environment, request.Duration ?? 0);
                         break;
                     case "failure":
                         _logger.LogError(
-                            "âŒ DEPLOYMENT FAILED - Version: {Version}, Environment: {Environment}, Error: {Error}",
-                            request.Version, request.Environment, request.Error ?? "Unknown error");
+                            "âŒ DEPLOYMENT FAILED - Version: {Version}, Environment: {Environment}, Error: {Error}",                            request.Version, request.Environment, request.Error ?? "Unknown error");
                         break;
                     default:
                         _logger.LogInformation(
-                            "ðŸ“ DEPLOYMENT EVENT - Type: {EventType}, Version: {Version}, Environment: {Environment}",
-                            request.EventType, request.Version, request.Environment);
+                            "ðŸ“ DEPLOYMENT EVENT - Type: {EventType}, Version: {Version}, Environment: {Environment}",                            request.EventType, request.Version, request.Environment);
                         break;
                 }
 
@@ -642,8 +631,7 @@ namespace EDR.API.Controllers
                 if (!isSynchronized)
                 {
                     _logger.LogWarning(
-                        "âš ï¸ VERSION SYNC CHECK - Mismatch detected: {Locations}",
-                        string.Join(", ", locations.Select(kv => $"{kv.Key}={kv.Value}")));
+                        "âš ï¸ VERSION SYNC CHECK - Mismatch detected: {Locations}",                        string.Join(", ", locations.Select(kv => $"{kv.Key}={kv.Value}")));
                 }
                 
                 requestStart.Stop();

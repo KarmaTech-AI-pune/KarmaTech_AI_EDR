@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EDR.Domain.Services;
 using Xunit;
+using Microsoft.Extensions.Configuration;
 
 namespace EDR.API.Tests.Repositories
 {
@@ -30,7 +31,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -49,7 +50,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -69,7 +70,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -85,7 +86,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -104,7 +105,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -120,7 +121,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             // Create a mock repository to avoid calling ResetIdentitySeedAsync which uses SQL commands
             var mockRepository = new Mock<IInputRegisterRepository>();
             mockRepository.Setup(r => r.AddAsync(It.IsAny<InputRegister>()))
@@ -160,7 +161,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             var repository = new InputRegisterRepository(context);
 
             // Act & Assert
@@ -172,7 +173,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -205,7 +206,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             var repository = new InputRegisterRepository(context);
 
             // Act & Assert
@@ -217,7 +218,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -238,7 +239,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -258,7 +259,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -274,7 +275,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -290,7 +291,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             var repository = new InputRegisterRepository(context);
 
             // Act
@@ -305,7 +306,7 @@ namespace EDR.API.Tests.Repositories
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options, currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             await SeedTestDataAsync(context);
             var repository = new InputRegisterRepository(context);
 
@@ -379,3 +380,5 @@ namespace EDR.API.Tests.Repositories
         }
     }
 }
+
+

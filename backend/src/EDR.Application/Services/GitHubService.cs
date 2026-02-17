@@ -3,8 +3,7 @@ using EDR.Application.Services.IContract;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
-namespace EDR.Application.Services
-{
+namespace EDR.Application.Services{
     /// <summary>
     /// Service for interacting with GitHub API and Git operations
     /// </summary>

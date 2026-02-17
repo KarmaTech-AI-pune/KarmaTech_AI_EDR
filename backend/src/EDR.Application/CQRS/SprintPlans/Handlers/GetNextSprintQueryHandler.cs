@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using EDR.Application.Dtos;
-using EDR.Domain.Database;
-using System;
+using EDR.Domain.Database;using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +8,7 @@ using Microsoft.Extensions.Logging;
 using EDR.Application.CQRS.SprintPlans.Queries;
 using System.Linq;
 
-namespace EDR.Application.CQRS.SprintPlans.Handlers
-{
+namespace EDR.Application.CQRS.SprintPlans.Handlers{
     public class GetNextSprintQueryHandler : IRequestHandler<GetNextSprintQuery, SprintPlanDto?>
     {
         private readonly ProjectManagementContext _context;
@@ -74,4 +72,5 @@ namespace EDR.Application.CQRS.SprintPlans.Handlers
         }
     }
 }
+
 

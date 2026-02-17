@@ -1,5 +1,4 @@
-﻿namespace EDR.Application.Services.IContract
-{
+﻿namespace EDR.Application.Services.IContract{
     /// <summary>
     /// Service for logging deployment-related events with version context
     /// </summary>

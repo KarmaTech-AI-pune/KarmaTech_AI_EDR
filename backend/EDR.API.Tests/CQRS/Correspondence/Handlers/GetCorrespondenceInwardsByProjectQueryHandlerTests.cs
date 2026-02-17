@@ -37,7 +37,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                     ProjectId = projectId,
                     IncomingLetterNo = "PHED/2024/001",
                     LetterDate = new DateTime(2024, 1, 10),
-                    NjsInwardNo = "NJS/IN/2024/001",
+                    EdrInwardNo = "EDR/IN/2024/001",
                     ReceiptDate = new DateTime(2024, 1, 11),
                     From = "Public Health Engineering Department",
                     Subject = "Revised Population Projections for STP Design",
@@ -55,7 +55,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                     ProjectId = projectId,
                     IncomingLetterNo = "PHED/2024/002",
                     LetterDate = new DateTime(2024, 1, 20),
-                    NjsInwardNo = "NJS/IN/2024/002",
+                    EdrInwardNo = "EDR/IN/2024/002",
                     ReceiptDate = new DateTime(2024, 1, 21),
                     From = "Public Health Engineering Department",
                     Subject = "Water Quality Parameters Update",
@@ -94,7 +94,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
             Assert.Equal(expectedFirstItem.Id, firstItem.Id);
             Assert.Equal(expectedFirstItem.IncomingLetterNo, firstItem.IncomingLetterNo);
             Assert.Equal(expectedFirstItem.LetterDate, firstItem.LetterDate);
-            Assert.Equal(expectedFirstItem.NjsInwardNo, firstItem.NjsInwardNo);
+            Assert.Equal(expectedFirstItem.EdrInwardNo, firstItem.EdrInwardNo);
             Assert.Equal(expectedFirstItem.ReceiptDate, firstItem.ReceiptDate);
             Assert.Equal(expectedFirstItem.From, firstItem.From);
             Assert.Equal(expectedFirstItem.Subject, firstItem.Subject);
@@ -137,4 +137,5 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
         }
     }
 }
+
 

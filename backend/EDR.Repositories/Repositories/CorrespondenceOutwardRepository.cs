@@ -45,7 +45,7 @@ namespace EDR.Repositories.Repositories
 
             try
             {
-                correspondenceOutward.CreatedAt = DateTime.Now;
+                correspondenceOutward.CreatedAt = DateTime.UtcNow;
                 _context.CorrespondenceOutwards.Add(correspondenceOutward);
                 await _context.SaveChangesAsync();
 
@@ -68,7 +68,7 @@ namespace EDR.Repositories.Repositories
         {
             if (correspondenceOutward == null) throw new ArgumentNullException(nameof(correspondenceOutward));
 
-            correspondenceOutward.UpdatedAt = DateTime.Now;
+            correspondenceOutward.UpdatedAt = DateTime.UtcNow;
 
             _context.Entry(correspondenceOutward).State = EntityState.Modified;
             await _context.SaveChangesAsync();

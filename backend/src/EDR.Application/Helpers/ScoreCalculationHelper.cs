@@ -1,15 +1,13 @@
 ﻿using EDR.Domain.Entities;
 
-namespace EDR.Application.Helpers
-{
+namespace EDR.Application.Helpers{
     /// <summary>
     /// Helper class for Go No-Go Decision score calculations with percentage logic
     /// </summary>
     public static class ScoreCalculationHelper
     {
         /// <summary>
-        /// Maximum possible total score for Go No-Go Decision (12 criteria Ã— 10 points each)
-        /// </summary>
+        /// Maximum possible total score for Go No-Go Decision (12 criteria Ã— 10 points each)        /// </summary>
         public const int MAX_POSSIBLE_SCORE = 120;
 
         /// <summary>

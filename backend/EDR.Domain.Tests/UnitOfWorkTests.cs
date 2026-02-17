@@ -6,6 +6,7 @@ using EDR.Domain.Entities;
 using EDR.Domain.GenericRepository;
 using EDR.Domain.Services;
 using EDR.Domain.UnitWork;
+using Microsoft.Extensions.Configuration;
 
 namespace EDR.Domain.Tests
 {
@@ -26,7 +27,7 @@ namespace EDR.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            await using var context = new ProjectManagementContext(_options,currentTenantService.Object);
+            await using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             var unitOfWork = new UnitOfWork(context);
 
             var project = new Project
@@ -59,7 +60,7 @@ namespace EDR.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             var unitOfWork = new UnitOfWork(context);
 
             // Act
@@ -75,7 +76,7 @@ namespace EDR.Domain.Tests
         {
             // Arrange
             var currentTenantService = new Mock<ICurrentTenantService>();
-            using var context = new ProjectManagementContext(_options,currentTenantService.Object);
+            using var context = new ProjectManagementContext(_options, currentTenantService.Object, Mock.Of<IConfiguration>());
             var unitOfWork = new UnitOfWork(context);
 
             // Act

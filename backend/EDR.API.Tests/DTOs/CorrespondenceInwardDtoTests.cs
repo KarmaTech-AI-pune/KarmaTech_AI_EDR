@@ -18,7 +18,7 @@ namespace EDR.API.Tests.DTOs
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = DateTime.Now,
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -46,7 +46,7 @@ namespace EDR.API.Tests.DTOs
             // Arrange
             var expectedProperties = new List<string>
             {
-                "Id", "ProjectId", "IncomingLetterNo", "LetterDate", "NjsInwardNo",
+                "Id", "ProjectId", "IncomingLetterNo", "LetterDate", "EdrInwardNo",
                 "ReceiptDate", "From", "Subject", "AttachmentDetails", "ActionTaken",
                 "StoragePath", "Remarks", "RepliedDate", "CreatedAt", "UpdatedAt",
                 "CreatedBy", "UpdatedBy"
@@ -70,7 +70,7 @@ namespace EDR.API.Tests.DTOs
             var projectIdProperty = typeof(CorrespondenceInwardDto).GetProperty("ProjectId");
             var incomingLetterNoProperty = typeof(CorrespondenceInwardDto).GetProperty("IncomingLetterNo");
             var letterDateProperty = typeof(CorrespondenceInwardDto).GetProperty("LetterDate");
-            var njsInwardNoProperty = typeof(CorrespondenceInwardDto).GetProperty("NjsInwardNo");
+            var edrInwardNoProperty = typeof(CorrespondenceInwardDto).GetProperty("EdrInwardNo");
             var receiptDateProperty = typeof(CorrespondenceInwardDto).GetProperty("ReceiptDate");
             var fromProperty = typeof(CorrespondenceInwardDto).GetProperty("From");
             var subjectProperty = typeof(CorrespondenceInwardDto).GetProperty("Subject");
@@ -83,7 +83,7 @@ namespace EDR.API.Tests.DTOs
             Assert.Equal(typeof(int), projectIdProperty.PropertyType);
             Assert.Equal(typeof(string), incomingLetterNoProperty.PropertyType);
             Assert.Equal(typeof(DateTime), letterDateProperty.PropertyType);
-            Assert.Equal(typeof(string), njsInwardNoProperty.PropertyType);
+            Assert.Equal(typeof(string), edrInwardNoProperty.PropertyType);
             Assert.Equal(typeof(DateTime), receiptDateProperty.PropertyType);
             Assert.Equal(typeof(string), fromProperty.PropertyType);
             Assert.Equal(typeof(string), subjectProperty.PropertyType);
@@ -101,4 +101,5 @@ namespace EDR.API.Tests.DTOs
         }
     }
 }
+
 

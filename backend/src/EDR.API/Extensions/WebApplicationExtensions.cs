@@ -4,8 +4,8 @@ using EDR.Domain.Database;
 using EDR.Domain.Extensions;
 using EDR.API.Configurations;
 using EDR.API.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
 using NLog.Web.LayoutRenderers;
-
 namespace EDR.API.Extensions;
 
 public static class WebApplicationExtensions
@@ -13,14 +13,18 @@ public static class WebApplicationExtensions
     public static WebApplication ConfigureApplication(this WebApplication app)
     {
         var pathBase = app.Configuration["Api:PathBase"];
- 
-       
-        if (!string.IsNullOrWhiteSpace(pathBase))
+
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
-            pathBase = "/";
+            ForwardedHeaders =
+                ForwardedHeaders.XForwardedFor |
+                ForwardedHeaders.XForwardedProto
+        });
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseHttpsRedirection();
         }
-        app.UsePathBase(pathBase);
-        app.UseHttpsRedirection();
+
 
         app.UseRouting();
 
@@ -31,15 +35,13 @@ public static class WebApplicationExtensions
         app.UseSwaggerUI(options =>
 
         {
-
             var swaggerSettings = app.Services.GetRequiredService<IOptions<SwaggerSettings>>().Value;
 
-            options.SwaggerEndpoint($"{pathBase}/swagger/{swaggerSettings.Version}/swagger.json", $"{swaggerSettings.Title}");
-
+            options.SwaggerEndpoint($"{pathBase}/swagger/{swaggerSettings.Version}/swagger.json",
+                $"{swaggerSettings.Title}");
         });
 
         app.UseResponseCompression();
-
 
         app.UseMiddleware<TenantResolverMiddleware>();
 
@@ -50,22 +52,18 @@ public static class WebApplicationExtensions
         app.UseMiddleware<TenantMiddleware>();
 
         using (var scope = app.Services.CreateScope())
-
         {
-
             var db = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
 
             db.Database.Migrate();
 
             SeedExtensions.InitializeDatabaseAsync(app).Wait();
-
         }
 
         app.MapControllers();
 
-        // app.MapFallbackToFile("index.html");       
 
         return app;
-
     }
 }
+

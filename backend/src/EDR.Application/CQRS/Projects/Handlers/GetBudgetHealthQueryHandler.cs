@@ -1,13 +1,11 @@
 ﻿using MediatR;
 using EDR.Application.CQRS.Projects.Queries;
 using EDR.Application.Dtos;
-using EDR.Repositories.Interfaces;
-using System;
+using EDR.Repositories.Interfaces;using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EDR.Application.CQRS.Projects.Handlers
-{
+namespace EDR.Application.CQRS.Projects.Handlers{
     public class GetBudgetHealthQueryHandler : IRequestHandler<GetBudgetHealthQuery, BudgetHealthDto>
     {
         private readonly IProjectRepository _repository;
@@ -64,4 +62,5 @@ namespace EDR.Application.CQRS.Projects.Handlers
         }
     }
 }
+
 

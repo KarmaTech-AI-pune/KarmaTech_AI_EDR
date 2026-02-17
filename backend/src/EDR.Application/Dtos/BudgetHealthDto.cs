@@ -1,5 +1,4 @@
-﻿namespace EDR.Application.Dtos
-{
+﻿namespace EDR.Application.Dtos{
     /// <summary>
     /// DTO representing the budget health status of a project
     /// </summary>
@@ -31,4 +30,5 @@
         public decimal ActualCost { get; set; }
     }
 }
+
 

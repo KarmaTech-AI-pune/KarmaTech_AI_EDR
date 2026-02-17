@@ -32,7 +32,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001-Updated",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001-Updated",
+                EdrInwardNo = "EDR/IN/2024/001-Updated",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department-Updated",
                 Subject = "Revised Population Projections for STP Design-Updated",
@@ -50,7 +50,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -79,7 +79,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
             Assert.Equal(command.ProjectId, result.ProjectId);
             Assert.Equal(command.IncomingLetterNo, result.IncomingLetterNo);
             Assert.Equal(command.LetterDate, result.LetterDate);
-            Assert.Equal(command.NjsInwardNo, result.NjsInwardNo);
+            Assert.Equal(command.EdrInwardNo, result.EdrInwardNo);
             Assert.Equal(command.ReceiptDate, result.ReceiptDate);
             Assert.Equal(command.From, result.From);
             Assert.Equal(command.Subject, result.Subject);
@@ -98,7 +98,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                 ci.ProjectId == command.ProjectId &&
                 ci.IncomingLetterNo == command.IncomingLetterNo &&
                 ci.LetterDate == command.LetterDate &&
-                ci.NjsInwardNo == command.NjsInwardNo &&
+                ci.EdrInwardNo == command.EdrInwardNo &&
                 ci.ReceiptDate == command.ReceiptDate &&
                 ci.From == command.From &&
                 ci.Subject == command.Subject &&
@@ -122,7 +122,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001-Updated",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001-Updated",
+                EdrInwardNo = "EDR/IN/2024/001-Updated",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department-Updated",
                 Subject = "Revised Population Projections for STP Design-Updated",
@@ -148,7 +148,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001-Updated",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001-Updated",
+                EdrInwardNo = "EDR/IN/2024/001-Updated",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department-Updated",
                 Subject = "Revised Population Projections for STP Design-Updated",
@@ -161,7 +161,7 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
                 ProjectId = 1,
                 IncomingLetterNo = "PHED/2024/001",
                 LetterDate = new DateTime(2024, 1, 10),
-                NjsInwardNo = "NJS/IN/2024/001",
+                EdrInwardNo = "EDR/IN/2024/001",
                 ReceiptDate = new DateTime(2024, 1, 11),
                 From = "Public Health Engineering Department",
                 Subject = "Revised Population Projections for STP Design",
@@ -183,4 +183,5 @@ namespace EDR.API.Tests.CQRS.Correspondence.Handlers
         }
     }
 }
+
 

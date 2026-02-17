@@ -135,7 +135,7 @@ public class AccountCreationEmailNotificationHandler : INotificationHandler<Acco
     {
         return $@"
             <h2>New Account Created</h2>
-            <p>A new account has been created in the NJS Project Management system.</p>
+            <p>A new account has been created in the EDR Project Management system.</p>
 
             <h3>Account Details:</h3>
             <table style='border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;'>
@@ -175,7 +175,8 @@ public class AccountCreationEmailNotificationHandler : INotificationHandler<Acco
 
             <p style='margin-top: 20px;'>Please review the account details and take any necessary action.</p>
 
-            <p>Best regards,<br>NJS Project Management System</p>";
+            <p>Best regards,<br>EDR Project Management System</p>";
     }
 }
+
 

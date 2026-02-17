@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Security.Claims;
+﻿using System.Diagnostics;using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,8 +10,7 @@ using EDR.Application.Dtos;
 using EDR.API.Controllers;
 using Xunit;
 
-namespace EDR.API.Tests.Controllers
-{
+namespace EDR.API.Tests.Controllers{
     /// <summary>
     /// Performance and Security tests for ProjectBudgetController
     /// Tests performance benchmarks, load testing, authentication, authorization, input validation, and data protection
@@ -556,4 +554,3 @@ namespace EDR.API.Tests.Controllers
         #endregion
     }
 }
-

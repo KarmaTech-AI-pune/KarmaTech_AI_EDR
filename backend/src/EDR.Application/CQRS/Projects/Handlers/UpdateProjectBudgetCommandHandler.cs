@@ -2,14 +2,12 @@
 using EDR.Application.CQRS.Projects.Commands;
 using EDR.Application.Dtos;
 using EDR.Domain.Entities;
-using EDR.Repositories.Interfaces;
-using System;
+using EDR.Repositories.Interfaces;using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EDR.Application.CQRS.Projects.Handlers
-{
+namespace EDR.Application.CQRS.Projects.Handlers{
     public class UpdateProjectBudgetCommandHandler : IRequestHandler<UpdateProjectBudgetCommand, ProjectBudgetUpdateResultDto>
     {
         private readonly IProjectRepository _projectRepository;

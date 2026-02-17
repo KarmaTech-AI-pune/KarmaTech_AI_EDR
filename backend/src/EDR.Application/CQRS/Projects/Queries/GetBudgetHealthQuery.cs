@@ -1,8 +1,7 @@
 ﻿using MediatR;
 using EDR.Application.Dtos;
 
-namespace EDR.Application.CQRS.Projects.Queries
-{
+namespace EDR.Application.CQRS.Projects.Queries{
     /// <summary>
     /// Query to get budget health status for a project
     /// </summary>
@@ -14,4 +13,5 @@ namespace EDR.Application.CQRS.Projects.Queries
         public int ProjectId { get; init; }
     }
 }
+
 

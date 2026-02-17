@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
-
+using Npgsql;
 namespace EDR.API.Strategies;
 
 public abstract class TenantUserMigrationStrategyBase
@@ -26,7 +26,14 @@ public abstract class TenantUserMigrationStrategyBase
         }
 
         var source = _configuration.GetConnectionString("AppDbConnection");
-        var sourceDb = new SqlConnectionStringBuilder(source).InitialCatalog;
+        string? sourceDb = null;
+
+        if (!string.IsNullOrWhiteSpace(source))
+        {
+            var npgsqlBuilder = new NpgsqlConnectionStringBuilder(source);
+            sourceDb = npgsqlBuilder.Database; 
+        }
+
         return (tenantDb.ConnectionString, sourceDb);
     }
 
@@ -36,3 +43,4 @@ public abstract class TenantUserMigrationStrategyBase
     protected static string MapPermission(TenantUserRole role) =>
         TenantRoleMapper.MapPermissionName(role);
 }
+

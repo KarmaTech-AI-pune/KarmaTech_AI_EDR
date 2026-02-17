@@ -4,8 +4,7 @@ using EDR.Domain.Entities;
 using EDR.Repositories.Interfaces;
 using System.Text.RegularExpressions;
 
-namespace EDR.Application.Services
-{
+namespace EDR.Application.Services{
     /// <summary>
     /// Service for generating release notes from Git commits and GitHub tags
     /// </summary>

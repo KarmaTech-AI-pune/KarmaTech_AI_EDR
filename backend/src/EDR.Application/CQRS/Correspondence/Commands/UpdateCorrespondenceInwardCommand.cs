@@ -22,7 +22,7 @@ namespace EDR.Application.CQRS.Correspondence.Commands
         
         [Required]
         [StringLength(255)]
-        public string NjsInwardNo { get; set; }
+        public string EdrInwardNo { get; set; }
         
         [Required]
         public DateTime ReceiptDate { get; set; }
@@ -52,4 +52,5 @@ namespace EDR.Application.CQRS.Correspondence.Commands
         public string UpdatedBy { get; set; }
     }
 }
+
 

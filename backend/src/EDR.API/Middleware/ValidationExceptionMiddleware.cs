@@ -1,16 +1,14 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using EDR.Application.Exceptions;
-using System;
+using EDR.Application.Exceptions;using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace EDR.API.Middleware
-{
+namespace EDR.API.Middleware{
     /// <summary>
     /// Middleware to handle validation exceptions and return proper error responses
     /// </summary>

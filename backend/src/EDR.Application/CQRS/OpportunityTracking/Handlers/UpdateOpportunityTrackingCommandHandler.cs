@@ -43,10 +43,10 @@ namespace EDR.Application.CQRS.OpportunityTracking.Handlers
             existingEntity.ContactPersonAtClient = request.ContactPersonAtClient;
             existingEntity.DateOfSubmission = request.DateOfSubmission;
             existingEntity.PercentageChanceOfProjectHappening = request.PercentageChanceOfProjectHappening;
-            existingEntity.PercentageChanceOfNJSSuccess = request.PercentageChanceOfNJSSuccess;
+            existingEntity.PercentageChanceOfEDRSuccess = request.PercentageChanceOfEDRSuccess;
             existingEntity.LikelyCompetition = request.LikelyCompetition;
             existingEntity.GrossRevenue = request.GrossRevenue;
-            existingEntity.NetNJSRevenue = request.NetNJSRevenue;
+            existingEntity.NetEDRRevenue = request.NetEDRRevenue;
             existingEntity.FollowUpComments = request.FollowUpComments;
             existingEntity.Notes = request.Notes;
             existingEntity.ProbableQualifyingCriteria = request.ProbableQualifyingCriteria;
@@ -81,10 +81,10 @@ namespace EDR.Application.CQRS.OpportunityTracking.Handlers
                 ContactPersonAtClient = existingEntity.ContactPersonAtClient,
                 DateOfSubmission = existingEntity.DateOfSubmission,
                 PercentageChanceOfProjectHappening = existingEntity.PercentageChanceOfProjectHappening,
-                PercentageChanceOfNJSSuccess = existingEntity.PercentageChanceOfNJSSuccess,
+                PercentageChanceOfEDRSuccess = existingEntity.PercentageChanceOfEDRSuccess,
                 LikelyCompetition = existingEntity.LikelyCompetition,
                 GrossRevenue = existingEntity.GrossRevenue,
-                NetNJSRevenue = existingEntity.NetNJSRevenue,
+                NetEDRRevenue = existingEntity.NetEDRRevenue,
                 FollowUpComments = existingEntity.FollowUpComments,
                 Notes = existingEntity.Notes,
                 ProbableQualifyingCriteria = existingEntity.ProbableQualifyingCriteria,
@@ -103,4 +103,5 @@ namespace EDR.Application.CQRS.OpportunityTracking.Handlers
         }
     }
 }
+
 

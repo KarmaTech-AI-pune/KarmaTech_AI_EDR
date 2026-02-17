@@ -1,7 +1,6 @@
 ﻿using EDR.Domain.Entities;
 
-namespace EDR.Repositories.Interfaces
-{
+namespace EDR.Repositories.Interfaces{
     public interface IProjectBudgetChangeHistoryRepository
     {
         Task<IEnumerable<ProjectBudgetChangeHistory>> GetAll();

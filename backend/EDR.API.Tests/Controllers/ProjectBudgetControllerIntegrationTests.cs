@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using MediatR;
+﻿using System.Security.Claims;using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -11,8 +10,7 @@ using EDR.API.Controllers;
 using Xunit;
 using System.Diagnostics;
 
-namespace EDR.API.Tests.Controllers
-{
+namespace EDR.API.Tests.Controllers{
     /// <summary>
     /// Integration tests for ProjectBudgetController API endpoints
     /// Tests authentication, authorization, endpoint functionality, error scenarios, and performance
@@ -48,8 +46,7 @@ namespace EDR.API.Tests.Controllers
         public async Task UpdateBudget_ValidCostUpdate_ReturnsSuccess()
         {
             // Arrange
-            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest
-            {
+            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest            {
                 EstimatedProjectCost = 150000.00m,
                 Reason = "Budget increase for additional scope"
             };
@@ -396,8 +393,7 @@ namespace EDR.API.Tests.Controllers
         public async Task UpdateBudget_NonExistentProject_Returns404()
         {
             // Arrange
-            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest
-            {
+            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest            {
                 EstimatedProjectCost = 150000.00m
             };
 
@@ -437,8 +433,7 @@ namespace EDR.API.Tests.Controllers
         public async Task UpdateBudget_NoFieldsProvided_Returns400()
         {
             // Arrange
-            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest
-            {
+            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest            {
                 // No fields provided
                 Reason = "Test"
             };
@@ -457,8 +452,7 @@ namespace EDR.API.Tests.Controllers
         public async Task UpdateBudget_NoChanges_Returns400()
         {
             // Arrange
-            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest
-            {
+            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest            {
                 EstimatedProjectCost = 100000.00m, // Same as current value
                 Reason = "No actual change"
             };
@@ -516,8 +510,7 @@ namespace EDR.API.Tests.Controllers
         public async Task UpdateBudget_Response_ContainsAllRequiredFields()
         {
             // Arrange
-            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest
-            {
+            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest            {
                 EstimatedProjectCost = 150000.00m,
                 Reason = "Test update"
             };
@@ -573,8 +566,7 @@ namespace EDR.API.Tests.Controllers
         public async Task UpdateBudget_Response_VarianceCalculationsCorrect()
         {
             // Arrange
-            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest
-            {
+            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest            {
                 EstimatedProjectCost = 150000.00m // Increase from 100000
             };
 
@@ -652,8 +644,7 @@ namespace EDR.API.Tests.Controllers
         public async Task UpdateBudget_ResponseTime_LessThan500ms()
         {
             // Arrange
-            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest
-            {
+            var request = new EDR.Application.Dtos.UpdateProjectBudgetRequest            {
                 EstimatedProjectCost = 150000.00m
             };
 
@@ -752,5 +743,3 @@ namespace EDR.API.Tests.Controllers
         #endregion
     }
 }
-
-

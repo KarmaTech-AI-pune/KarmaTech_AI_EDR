@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 
-namespace EDR.API.Middleware
-{
+namespace EDR.API.Middleware{
     /// <summary>
     /// Middleware to add version context to all requests and error responses
     /// </summary>

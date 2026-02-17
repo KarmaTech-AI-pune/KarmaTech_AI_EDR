@@ -18,10 +18,10 @@ namespace EDR.Application.Dtos
         public string? ContactPersonAtClient { get; set; }
         public DateTime? DateOfSubmission { get; set; }
         public decimal? PercentageChanceOfProjectHappening { get; set; }
-        public decimal? PercentageChanceOfNJSSuccess { get; set; }
+        public decimal? PercentageChanceOfEDRSuccess { get; set; }
         public string? LikelyCompetition { get; set; }
         public decimal? GrossRevenue { get; set; }
-        public decimal? NetNJSRevenue { get; set; }
+        public decimal? NetEDRRevenue { get; set; }
         public string? FollowUpComments { get; set; }
         public string? Notes { get; set; }
         public string? ProbableQualifyingCriteria { get; set; }
@@ -39,4 +39,5 @@ namespace EDR.Application.Dtos
         public OpportunityHistoryDto CurrentHistory { get; set; }
     }
 }
+
 

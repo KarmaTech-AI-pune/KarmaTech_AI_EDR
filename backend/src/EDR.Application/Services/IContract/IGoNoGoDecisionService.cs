@@ -1,7 +1,6 @@
 ﻿using EDR.Domain.Entities;
 using EDR.Domain.Enums;
-using EDR.Application.Dtos;
-using System;
+using EDR.Application.Dtos;using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -44,4 +43,5 @@ namespace EDR.Application.Services.IContract
         IEnumerable<GoNoGoSummaryDto> GetAllWithCappingInfo();
     }
 }
+
 

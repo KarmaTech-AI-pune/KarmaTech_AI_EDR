@@ -1,8 +1,8 @@
-# Contributing to NJS Project Management Backend
+﻿# Contributing to EDR Project Management Backend
 
 ## Welcome Contributors!
 
-We appreciate your interest in contributing to the NJS Project Management Backend. This document provides guidelines for contributing to the project.
+We appreciate your interest in contributing to the EDR Project Management Backend. This document provides guidelines for contributing to the project.
 
 ## Code of Conduct
 
@@ -160,7 +160,7 @@ dotnet test
 
 - GitHub Issues
 - Project Discussion Forums
-- Email: contribute@njs-project.com
+- Email: contribute@edr-project.com
 
 ## Licensing
 
@@ -175,4 +175,5 @@ Contributors will be acknowledged in:
 
 ## Thank You!
 
-Your contributions help improve the NJS Project Management Backend for everyone.
+Your contributions help improve the EDR Project Management Backend for everyone.
+

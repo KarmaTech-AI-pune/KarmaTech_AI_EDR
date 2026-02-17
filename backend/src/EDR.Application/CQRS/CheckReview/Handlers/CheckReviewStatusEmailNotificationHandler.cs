@@ -84,7 +84,8 @@ public class CheckReviewStatusEmailNotificationHandler : INotificationHandler<Ch
 
             <p>Please review and take necessary action.</p>
             
-            <p>Best regards,<br>NJS Project Management Team</p>";
+            <p>Best regards,<br>EDR Project Management Team</p>";
     }
 }
+
 

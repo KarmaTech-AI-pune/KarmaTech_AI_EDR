@@ -6,6 +6,7 @@ using EDR.Domain.Entities;
 using EDR.Domain.Services;
 using EDR.Repositories.Interfaces;
 using EDR.Repositories.Repositories;
+using Microsoft.Extensions.Configuration;
 
 namespace EDR.API.Tests.Repositories
 {
@@ -18,7 +19,7 @@ namespace EDR.API.Tests.Repositories
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
-            var context = new ProjectManagementContext(options,currentTenantService.Object);
+            var context = new ProjectManagementContext(options, currentTenantService.Object, Mock.Of<IConfiguration>());
             context.Database.EnsureCreated();
             return context;
         }
@@ -29,7 +30,7 @@ namespace EDR.API.Tests.Repositories
             {
                 Id = 1,
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/001",
+                LetterNo = "EDR/OUT/2024/001",
                 LetterDate = new DateTime(2024, 1, 15),
                 To = "Public Health Engineering Department",
                 Subject = "Response to Population Projections for STP Design",
@@ -46,7 +47,7 @@ namespace EDR.API.Tests.Repositories
             {
                 Id = 2,
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/002",
+                LetterNo = "EDR/OUT/2024/002",
                 LetterDate = new DateTime(2024, 1, 24),
                 To = "Public Health Engineering Department",
                 Subject = "Advanced Oxidation Process Integration Plan",
@@ -63,7 +64,7 @@ namespace EDR.API.Tests.Repositories
             {
                 Id = 3,
                 ProjectId = 2,
-                LetterNo = "NJS/OUT/2024/003",
+                LetterNo = "EDR/OUT/2024/003",
                 LetterDate = new DateTime(2024, 2, 10),
                 To = "Public Health Engineering Department",
                 Subject = "Project 2 Correspondence",
@@ -112,7 +113,7 @@ namespace EDR.API.Tests.Repositories
             // Assert
             Assert.NotNull(result);
             Assert.Equal(expectedId, result.Id);
-            Assert.Equal("NJS/OUT/2024/001", result.LetterNo);
+            Assert.Equal("EDR/OUT/2024/001", result.LetterNo);
         }
 
         [Fact]
@@ -179,7 +180,7 @@ namespace EDR.API.Tests.Repositories
             var newCorrespondenceOutward = new CorrespondenceOutward
             {
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/004",
+                LetterNo = "EDR/OUT/2024/004",
                 LetterDate = new DateTime(2024, 2, 15),
                 To = "Public Health Engineering Department",
                 Subject = "New Outward Correspondence",
@@ -236,7 +237,7 @@ namespace EDR.API.Tests.Repositories
             {
                 Id = id,
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/001",
+                LetterNo = "EDR/OUT/2024/001",
                 LetterDate = new DateTime(2024, 1, 15),
                 To = "Public Health Engineering Department",
                 Subject = "Response to Population Projections for STP Design"
@@ -330,4 +331,7 @@ namespace EDR.API.Tests.Repositories
         }
     }
 }
+
+
+
 

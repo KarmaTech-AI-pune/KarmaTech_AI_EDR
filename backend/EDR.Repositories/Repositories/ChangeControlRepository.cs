@@ -41,7 +41,7 @@ namespace EDR.Repositories.Repositories
         {
             if (changeControl == null) throw new ArgumentNullException(nameof(changeControl));
            
-            changeControl.CreatedAt = DateTime.Now;
+            changeControl.CreatedAt = DateTime.UtcNow;
 
             _context.ChangeControls.Add(changeControl);
             await _context.SaveChangesAsync();
@@ -58,7 +58,7 @@ namespace EDR.Repositories.Repositories
                 throw new KeyNotFoundException($"ChangeControl with ID {changeControl.Id} not found.");
           
             changeControl.CreatedAt = existingEntity.CreatedAt;
-            changeControl.UpdatedAt = DateTime.Now;
+            changeControl.UpdatedAt = DateTime.UtcNow;
 
             _context.Entry(existingEntity).CurrentValues.SetValues(changeControl);
             await _context.SaveChangesAsync();

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using EDR.Domain.Entities;
 using EDR.Repositories.Interfaces;
 using EDR.Application.Dtos;
@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Authorization;
 using EDR.Application.Services.IContract;
 using EDR.Application.CQRS.Commands.GoNoGoDecision;
 using EDR.Application.Helpers;
-
 namespace EDR.API.Controllers
 {
     [ApiController]
@@ -444,4 +443,5 @@ namespace EDR.API.Controllers
         }
     }
 }
+
 

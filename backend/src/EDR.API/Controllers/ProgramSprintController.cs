@@ -6,8 +6,7 @@ using EDR.Application.Dtos;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace EDR.API.Controllers
-{
+namespace EDR.API.Controllers{
     [Route("api/[controller]")]
     [ApiController]
     public class ProgramSprintController : ControllerBase
@@ -28,8 +27,7 @@ namespace EDR.API.Controllers
         }
 
         [HttpGet("{projectId}")]
-        public async Task<ActionResult<List<EDR.Domain.Entities.SprintWbsPlan>>> Get(int projectId)
-        {
+        public async Task<ActionResult<List<EDR.Domain.Entities.SprintWbsPlan>>> Get(int projectId)        {
             var result = await _mediator.Send(new GetSprintWbsPlansByProjectQuery(projectId));
             return Ok(result);
         }
@@ -48,4 +46,5 @@ namespace EDR.API.Controllers
         }
     }
 }
+
 

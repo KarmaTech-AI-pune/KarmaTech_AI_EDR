@@ -1,8 +1,7 @@
 ﻿using MediatR;
 using EDR.Application.Dtos;
 
-namespace EDR.Application.CQRS.Projects.Commands
-{
+namespace EDR.Application.CQRS.Projects.Commands{
     public record UpdateProjectBudgetCommand : IRequest<ProjectBudgetUpdateResultDto>
     {
         public int ProjectId { get; init; }

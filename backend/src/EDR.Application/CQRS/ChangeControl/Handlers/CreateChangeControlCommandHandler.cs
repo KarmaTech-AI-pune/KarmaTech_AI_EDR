@@ -6,7 +6,6 @@ using EDR.Domain.Entities;
 using EDR.Domain.Enums;
 using EDR.Domain.GenericRepository;
 using EDR.Repositories.Interfaces;
-
 namespace EDR.Application.CQRS.ChangeControl.Handlers
 {
     public class CreateChangeControlCommandHandler : IRequestHandler<CreateChangeControlCommand, int>
@@ -102,13 +101,11 @@ namespace EDR.Application.CQRS.ChangeControl.Handlers
                     }
                 }
 
-            var entity = new EDR.Domain.Entities.ChangeControl();
-            var histories = new List<Domain.Entities.ChangeControlWorkflowHistory>();
+            var entity = new EDR.Domain.Entities.ChangeControl();            var histories = new List<Domain.Entities.ChangeControlWorkflowHistory>();
 
             entity.ProjectId = request.ChangeControlDto.ProjectId;
             entity.SrNo = request.ChangeControlDto.SrNo;
-            entity.DateLogged = request.ChangeControlDto.DateLogged;
-            entity.Originator = request.ChangeControlDto.Originator;
+            entity.DateLogged = request.ChangeControlDto.DateLogged;            entity.Originator = request.ChangeControlDto.Originator;
             entity.Description = request.ChangeControlDto.Description;
             entity.CostImpact = request.ChangeControlDto.CostImpact ?? string.Empty;
             entity.TimeImpact = request.ChangeControlDto.TimeImpact ?? string.Empty;
@@ -170,4 +167,5 @@ namespace EDR.Application.CQRS.ChangeControl.Handlers
         }
     }
 }
+
 

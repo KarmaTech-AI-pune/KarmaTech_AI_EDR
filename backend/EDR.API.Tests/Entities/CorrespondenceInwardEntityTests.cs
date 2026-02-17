@@ -80,10 +80,10 @@ namespace EDR.API.Tests.Entities
         }
 
         [Fact]
-        public void CorrespondenceInward_NjsInwardNoHasRequiredAndStringLengthAttributes()
+        public void CorrespondenceInward_EdrInwardNoHasRequiredAndStringLengthAttributes()
         {
             // Arrange & Act
-            var property = typeof(CorrespondenceInward).GetProperty("NjsInwardNo");
+            var property = typeof(CorrespondenceInward).GetProperty("EdrInwardNo");
             var requiredAttribute = property.GetCustomAttribute<RequiredAttribute>();
             var stringLengthAttribute = property.GetCustomAttribute<StringLengthAttribute>();
 
@@ -203,4 +203,5 @@ namespace EDR.API.Tests.Entities
         }
     }
 }
+
 

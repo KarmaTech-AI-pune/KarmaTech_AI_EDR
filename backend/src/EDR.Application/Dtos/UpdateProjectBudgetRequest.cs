@@ -1,8 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using EDR.Application.Attributes;
 
-namespace EDR.Application.Dtos
-{
+namespace EDR.Application.Dtos{
     /// <summary>
     /// Request model for updating project budget fields
     /// </summary>

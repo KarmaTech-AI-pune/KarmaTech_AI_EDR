@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace EDR.Application.Dtos
-{
+namespace EDR.Application.Dtos{
     /// <summary>
     /// Standard API response wrapper for consistent response format
     /// </summary>

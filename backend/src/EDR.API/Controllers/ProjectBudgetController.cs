@@ -7,8 +7,7 @@ using EDR.Application.Dtos;
 using EDR.API.Filters;
 using System.Security.Claims;
 
-namespace EDR.API.Controllers
-{
+namespace EDR.API.Controllers{
     /// <summary>
     /// Controller for managing project budget operations and change history
     /// </summary>

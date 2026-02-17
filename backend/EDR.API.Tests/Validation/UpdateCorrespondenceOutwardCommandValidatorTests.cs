@@ -23,7 +23,7 @@ namespace EDR.API.Tests.Validation
             {
                 Id = 1,
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/001",
+                LetterNo = "EDR/OUT/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
                 To = "Public Health Engineering Department",
                 Subject = "Response to Population Projections for STP Design",
@@ -51,7 +51,7 @@ namespace EDR.API.Tests.Validation
             {
                 Id = 0, // Invalid Id
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/001",
+                LetterNo = "EDR/OUT/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
                 To = "Public Health Engineering Department",
                 Subject = "Response to Population Projections for STP Design",
@@ -74,7 +74,7 @@ namespace EDR.API.Tests.Validation
             {
                 Id = 1,
                 ProjectId = 0, // Invalid ProjectId
-                LetterNo = "NJS/OUT/2024/001",
+                LetterNo = "EDR/OUT/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
                 To = "Public Health Engineering Department",
                 Subject = "Response to Population Projections for STP Design",
@@ -120,7 +120,7 @@ namespace EDR.API.Tests.Validation
             {
                 Id = 1,
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/001",
+                LetterNo = "EDR/OUT/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
                 To = "Public Health Engineering Department",
                 Subject = "Response to Population Projections for STP Design",
@@ -143,7 +143,7 @@ namespace EDR.API.Tests.Validation
             {
                 Id = 1,
                 ProjectId = 1,
-                LetterNo = "NJS/OUT/2024/001",
+                LetterNo = "EDR/OUT/2024/001",
                 LetterDate = DateTime.Now.AddDays(-1),
                 To = "Public Health Engineering Department",
                 Subject = "Response to Population Projections for STP Design",
@@ -160,4 +160,5 @@ namespace EDR.API.Tests.Validation
         }
     }
 }
+
 

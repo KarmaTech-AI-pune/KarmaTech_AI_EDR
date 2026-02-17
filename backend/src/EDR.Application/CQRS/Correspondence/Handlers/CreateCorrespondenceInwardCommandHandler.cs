@@ -25,7 +25,7 @@ namespace EDR.Application.CQRS.Correspondence.Handlers
                 ProjectId = request.ProjectId,
                 IncomingLetterNo = request.IncomingLetterNo,
                 LetterDate = request.LetterDate,
-                NjsInwardNo = request.NjsInwardNo,
+                EdrInwardNo = request.EdrInwardNo,
                 ReceiptDate = request.ReceiptDate,
                 From = request.From,
                 Subject = request.Subject,
@@ -47,7 +47,7 @@ namespace EDR.Application.CQRS.Correspondence.Handlers
                 ProjectId = correspondenceInward.ProjectId,
                 IncomingLetterNo = correspondenceInward.IncomingLetterNo,
                 LetterDate = correspondenceInward.LetterDate,
-                NjsInwardNo = correspondenceInward.NjsInwardNo,
+                EdrInwardNo = correspondenceInward.EdrInwardNo,
                 ReceiptDate = correspondenceInward.ReceiptDate,
                 From = correspondenceInward.From,
                 Subject = correspondenceInward.Subject,
@@ -62,4 +62,5 @@ namespace EDR.Application.CQRS.Correspondence.Handlers
         }
     }
 }
+
 

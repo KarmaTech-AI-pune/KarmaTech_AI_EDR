@@ -6,8 +6,7 @@ using EDR.Domain.Entities;
 using EDR.Repositories.Interfaces;
 using Xunit;
 
-namespace EDR.API.Tests.Services
-{
+namespace EDR.API.Tests.Services{
     public class ReleaseNotesGeneratorServiceTests
     {
         private readonly Mock<ILogger<ReleaseNotesGeneratorService>> _loggerMock;

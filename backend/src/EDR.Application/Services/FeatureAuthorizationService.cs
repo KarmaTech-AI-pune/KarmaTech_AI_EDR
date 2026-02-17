@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using EDR.Application.Services.IContract;
 
-namespace EDR.Application.Services
-{
+namespace EDR.Application.Services{
     public class FeatureAuthorizationService : IFeatureAuthorizationService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -57,4 +56,5 @@ namespace EDR.Application.Services
         }
     }
 }
+
 

@@ -4,8 +4,7 @@ using EDR.Application.Services.IContract;
 using EDR.Domain.Entities;
 using EDR.Repositories.Interfaces;
 
-namespace EDR.API.Controllers
-{
+namespace EDR.API.Controllers{
     /// <summary>
     /// API Controller for managing release notes
     /// </summary>

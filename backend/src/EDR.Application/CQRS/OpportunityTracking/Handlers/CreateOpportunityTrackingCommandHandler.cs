@@ -51,10 +51,10 @@ namespace EDR.Application.CQRS.OpportunityTracking.Handlers
                 ContactPersonAtClient = request.ContactPersonAtClient,
                 DateOfSubmission = request.DateOfSubmission,
                 PercentageChanceOfProjectHappening = request.PercentageChanceOfProjectHappening,
-                PercentageChanceOfNJSSuccess = request.PercentageChanceOfNJSSuccess,
+                PercentageChanceOfEDRSuccess = request.PercentageChanceOfEDRSuccess,
                 LikelyCompetition = request.LikelyCompetition,
                 GrossRevenue = request.GrossRevenue,
-                NetNJSRevenue = request.NetNJSRevenue,
+                NetEDRRevenue = request.NetEDRRevenue,
                 FollowUpComments = request.FollowUpComments,
                 Notes = request.Notes,
                 ProbableQualifyingCriteria = request.ProbableQualifyingCriteria,
@@ -131,10 +131,10 @@ namespace EDR.Application.CQRS.OpportunityTracking.Handlers
                 ContactPersonAtClient = result.ContactPersonAtClient,
                 DateOfSubmission = result.DateOfSubmission,
                 PercentageChanceOfProjectHappening = result.PercentageChanceOfProjectHappening,
-                PercentageChanceOfNJSSuccess = result.PercentageChanceOfNJSSuccess,
+                PercentageChanceOfEDRSuccess = result.PercentageChanceOfEDRSuccess,
                 LikelyCompetition = result.LikelyCompetition,
                 GrossRevenue = result.GrossRevenue,
-                NetNJSRevenue = result.NetNJSRevenue,
+                NetEDRRevenue = result.NetEDRRevenue,
                 FollowUpComments = result.FollowUpComments,
                 Notes = result.Notes,
                 ProbableQualifyingCriteria = result.ProbableQualifyingCriteria,
@@ -153,4 +153,5 @@ namespace EDR.Application.CQRS.OpportunityTracking.Handlers
         }
     }
 }
+
 

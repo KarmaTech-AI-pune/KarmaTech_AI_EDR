@@ -12,6 +12,7 @@ using EDR.Domain.GenericRepository;
 using EDR.Domain.Models;
 using EDR.Domain.Services;
 using EDR.Domain.UnitWork;
+using EDR.Domain;
 
 namespace EDR.Domain.Extensions
 {
@@ -26,6 +27,22 @@ namespace EDR.Domain.Extensions
                 {
                     var baseDbContext = scopeTenant.ServiceProvider.GetRequiredService<TenantDbContext>();
                     
+                    var dbType = configuration[Constants.DbType];
+                    if (dbType == Constants.DbServerType)
+                    {
+                         var connectionString = configuration.GetConnectionString("AppDbConnection");
+                         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+                         optionsBuilder.UseNpgsql(connectionString, b => b.MigrationsAssembly("EDR.Domain"));
+                         baseDbContext.Database.SetConnectionString(connectionString);
+                    }
+                    else
+                    {
+                         var connectionString = configuration.GetConnectionString("SqlDbConnection");
+                         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+                         optionsBuilder.UseSqlServer(connectionString, b => b.MigrationsAssembly("EDR.Domain"));
+                         baseDbContext.Database.SetConnectionString(connectionString);
+                    }
+
                     if (baseDbContext.Database.GetPendingMigrations().Any())
                     {
                         Console.ForegroundColor = ConsoleColor.Blue;
@@ -53,8 +70,35 @@ namespace EDR.Domain.Extensions
                                 var dbContext = scopeApplication.ServiceProvider.GetRequiredService<ProjectManagementContext>();
                                 
                                 // Configure context for this tenant
-                                dbContext.Database.SetConnectionString(connectionString);
-
+                                if (dbType == Constants.DbServerType)
+                                {
+                                     var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
+                                     optionsBuilder.UseNpgsql(connectionString, b => b.MigrationsAssembly("EDR.Domain"));
+                                     dbContext.Database.SetConnectionString(connectionString);
+                                }
+                                else
+                                {
+                                     var optionsBuilder = new DbContextOptionsBuilder<ProjectManagementContext>();
+                                     optionsBuilder.UseSqlServer(connectionString, b => b.MigrationsAssembly("EDR.Domain"));
+                                     dbContext.Database.SetConnectionString(connectionString);
+                                }
+                                
+                                // Note: SetConnectionString might not be enough if the provider changes (which shouldn't happen for a single run)
+                                // But since we are resolving the service, it's already configured in AddDatabaseServices.
+                                // However, AddAndMigrateTenantDatabases builds a temporary ServiceProvider. 
+                                // The issue is that GetRequiredService<ProjectManagementContext> uses the options configured in AddDatabaseServices.
+                                // In AddDatabaseServices, we use ITenantConnectionResolver which might not be available or fully set up in this isolated scope?
+                                // Actually, AddDatabaseServices is called AFTER AddAndMigrateTenantDatabases in Program.cs (usually). 
+                                // Wait, AddAndMigrateTenantDatabases is usually called after AddInfrastructure/AddPersistence.
+                                
+                                // Let's look at Program.cs again. 
+                                // It seems AddAndMigrateTenantDatabases is NOT called in Program.cs provided earlier? 
+                                // I see builder.Services.AddDatabaseServices(builder.Configuration);
+                                // but not AddAndMigrateTenantDatabases.
+                                
+                                // Ah, AddAndMigrateTenantDatabases is an extension method. Let's check where it is called.
+                                // Searching for usage of AddAndMigrateTenantDatabases...
+                                
                                 if (dbContext.Database.GetPendingMigrations().Any())
                                 {
                                     Console.ForegroundColor = ConsoleColor.Blue;
@@ -99,17 +143,24 @@ namespace EDR.Domain.Extensions
                 var tenantConnectionResolver = provider.GetService<ITenantConnectionResolver>();
                 // Use the default connection string during service registration.
                 // The actual tenant-specific connection will be resolved at runtime by TenantConnectionResolver.
-                var connectionString = tenantConnectionResolver?.GetDefaultConnectionStringAsync().Result ?? configuration.GetConnectionString("AppDbConnection");
-
-                options.UseSqlServer(connectionString,
-                    sqlServerOptionsAction: sqlOptions =>
-                    {
-                        sqlOptions.UseCompatibilityLevel(130); // SQL Server 2016
-                        sqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: 5,
-                            maxRetryDelay: TimeSpan.FromSeconds(30),
-                            errorNumbersToAdd: null);
-                    });
+                if (configuration[Constants.DbType] == Constants.DbServerType)
+                {
+                    var connectionString = tenantConnectionResolver?.GetDefaultConnectionStringAsync().Result ?? configuration.GetConnectionString("AppDbConnection");
+                    options.UseNpgsql(connectionString, b => b.MigrationsAssembly("EDR.Domain"));
+                }
+                else
+                {
+                    var connectionString = tenantConnectionResolver?.GetDefaultConnectionStringAsync().Result ?? configuration.GetConnectionString("SqlDbConnection");
+                    options.UseSqlServer(connectionString,
+                        sqlServerOptionsAction: sqlOptions =>
+                        {
+                            sqlOptions.MigrationsAssembly("EDR.Domain");
+                            sqlOptions.EnableRetryOnFailure(
+                                maxRetryCount: 5,
+                                maxRetryDelay: TimeSpan.FromSeconds(30),
+                                errorNumbersToAdd: null);
+                        });
+                }
 
                 // Add audit interceptor if audit services are available
                 var auditSubject = provider.GetService<IAuditSubject>();
@@ -141,7 +192,21 @@ namespace EDR.Domain.Extensions
            // services.AddScoped<ITenantConnectionResolver, TenantConnectionResolver>();
            
             return services;
-        }       
+        }
+
+        public static DbContextOptionsBuilder UseConfiguredDatabase(
+            this DbContextOptionsBuilder builder,
+            IConfiguration configuration,
+            string connectionString)
+        {
+            var dbType = configuration[Constants.DbType];
+            return dbType switch
+            {
+                Constants.DbServerType => builder.UseNpgsql(connectionString, b => b.MigrationsAssembly("EDR.Domain")),
+                _ => builder.UseSqlServer(connectionString, b => b.MigrationsAssembly("EDR.Domain"))
+            };
+        }
     }
 }
+
 

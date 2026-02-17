@@ -36,7 +36,7 @@ namespace EDR.Repositories.Repositories
         {
             if (inputRegister == null) throw new ArgumentNullException(nameof(inputRegister));
 
-            inputRegister.CreatedAt = DateTime.Now;
+            inputRegister.CreatedAt = DateTime.UtcNow;
 
             _context.InputRegisters.Add(inputRegister);
             await _context.SaveChangesAsync();
@@ -48,7 +48,7 @@ namespace EDR.Repositories.Repositories
         {
             if (inputRegister == null) throw new ArgumentNullException(nameof(inputRegister));
 
-            inputRegister.UpdatedAt = DateTime.Now;
+            inputRegister.UpdatedAt = DateTime.UtcNow;
 
             _context.Entry(inputRegister).State = EntityState.Modified;
             // Prevent changing the creation date

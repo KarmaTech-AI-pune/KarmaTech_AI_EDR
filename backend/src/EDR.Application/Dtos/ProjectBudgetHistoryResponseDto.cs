@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace EDR.Application.Dtos
-{
+namespace EDR.Application.Dtos{
     public class ProjectBudgetHistoryResponseDto
     {
         public List<ProjectBudgetChangeHistoryDto> History { get; set; } = new();

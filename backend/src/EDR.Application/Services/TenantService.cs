@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
-using EDR.Repositories.Interfaces;
-using System.Security.Claims;
+using EDR.Repositories.Interfaces;using System.Security.Claims;
 using System.Linq;
 
 namespace EDR.Application.Services
@@ -207,4 +206,5 @@ namespace EDR.Application.Services
         }
     }
 }
+
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -8,7 +8,6 @@ using EDR.Domain.Entities;
 using EDR.Application.Services.IContract;
 using EDR.Application.CQRS.Commands.GoNoGoDecision;
 using EDR.Application.Helpers;
-
 namespace EDR.Application.CQRS.Handlers.GoNoGoDecision
 {
 
@@ -120,4 +119,5 @@ namespace EDR.Application.CQRS.Handlers.GoNoGoDecision
         }
     }
 }
+
 

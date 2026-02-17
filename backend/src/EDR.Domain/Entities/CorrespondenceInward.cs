@@ -27,7 +27,7 @@ namespace EDR.Domain.Entities
 
         [Required]
         [StringLength(255)]
-        public string NjsInwardNo { get; set; }
+        public string EdrInwardNo { get; set; }
 
         [Required]
         public DateTime ReceiptDate { get; set; }
@@ -61,4 +61,5 @@ namespace EDR.Domain.Entities
         public string UpdatedBy { get; set; }
     }
 }
+
 
