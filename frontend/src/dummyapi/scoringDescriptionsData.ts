@@ -1,4 +1,4 @@
-// export const scoringDescriptions = {
+﻿// export const scoringDescriptions = {
 //     "marketingplan": {
 //         "high": "Fits well with marketing strategy",
 //         "medium": "Fits somewhat into the marketing strategy",
@@ -30,14 +30,14 @@
 //         "low": "Major outsourcing required"
 //     },
 //     "projectcompetition": {
-//         "high": "NJS has inside track, and competition is manageable",
-//         "medium": "NJS faces formidable competition, and have limited intelligence on it",
+//         "high": "EDR has inside track, and competition is manageable",
+//         "medium": "EDR faces formidable competition, and have limited intelligence on it",
 //         "low": "Project appears to be wired for competition"
 //     },
 //     "competitionposition": {
-//         "high": "NJS qualifications are technically superior",
+//         "high": "EDR qualifications are technically superior",
 //         "medium": "Qualifications are equivalent to competition, or we may have a slight edge",
-//         "low": "NJS qualifications are lower to the competition"
+//         "low": "EDR qualifications are lower to the competition"
 //     },
 //     "futureworkpotential": {
 //         "high": "Project will lead to future work",
@@ -62,3 +62,4 @@
 // } as const;
 
 // export type ScoringDescriptions = typeof scoringDescriptions;
+

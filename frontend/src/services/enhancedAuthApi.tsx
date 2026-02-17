@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { LoginResponse, UserWithRole } from '../types';
 import { Credentials } from '../types/auth';
@@ -211,7 +211,7 @@ export const enhancedAuthApi = {
           return true;
         } else {
           // In production, super admin should be on main domain
-          const mainDomain = process.env.VITE_MAIN_DOMAIN || 'njs.com';
+          const mainDomain = process.env.VITE_MAIN_DOMAIN || 'edr.com';
           if (!currentHost.includes(mainDomain) || currentHost.split('.')[0] !== mainDomain.split('.')[0]) {
             console.warn('Super admin on wrong domain', { currentHost, mainDomain });
             return false;
@@ -299,3 +299,4 @@ export const enhancedAuthApi = {
     }
   }
 };
+

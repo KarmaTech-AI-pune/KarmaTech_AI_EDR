@@ -1,0 +1,84 @@
+﻿using MediatR;
+using EDR.Application.CQRS.WorkBreakdownStructures.Queries;
+using EDR.Application.Dtos;
+using EDR.Domain.Entities;
+using EDR.Repositories.Interfaces;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace EDR.Application.CQRS.WorkBreakdownStructures.Handlers
+{
+    public class GetWBSOptionsQueryHandler : IRequestHandler<GetWBSOptionsQuery, WBSLevelOptionsDto>
+    {
+        private readonly IWBSOptionRepository _wbsOptionRepository;
+
+        public GetWBSOptionsQueryHandler(IWBSOptionRepository wbsOptionRepository)
+        {
+            _wbsOptionRepository = wbsOptionRepository ?? throw new ArgumentNullException(nameof(wbsOptionRepository));
+        }
+
+        public async Task<WBSLevelOptionsDto> Handle(GetWBSOptionsQuery request, CancellationToken cancellationToken)
+        {
+            // Fetch WBS options based on form type if specified
+            IEnumerable<EDR.Domain.Entities.WBSOption> allOptions;
+            if (request.FormType.HasValue)
+            {
+                allOptions = await _wbsOptionRepository.GetByFormTypeAsync(request.FormType.Value);
+            }
+            else
+            {
+                allOptions = await _wbsOptionRepository.GetAllAsync();
+            }
+
+            var result = new WBSLevelOptionsDto
+            {
+                Level1 = allOptions
+                    .Where(o => o.Level == 1)
+                    .Select(o => new WBSOptionDto
+                    {
+                        Id = o.Id,
+                        Value = o.Value,
+                        Label = o.Label,
+                        Level = o.Level,
+                        ParentId = o.ParentId,
+                        FormType = (int)o.FormType
+                    })
+                    .ToList(),
+
+                Level2 = allOptions
+                    .Where(o => o.Level == 2)
+                    .Select(o => new WBSOptionDto
+                    {
+                        Id = o.Id,
+                        Value = o.Value,
+                        Label = o.Label,
+                        Level = o.Level,
+                        ParentId = o.ParentId,
+                        FormType = (int)o.FormType
+                    })
+                    .ToList(),
+
+                Level3 = allOptions
+                    .Where(o => o.Level == 3)
+                    .GroupBy(o => o.ParentId?.ToString() ?? string.Empty)
+                    .ToDictionary(
+                        g => g.Key ?? string.Empty,
+                        g => g.Select(o => new WBSOptionDto
+                        {
+                            Id = o.Id,
+                            Value = o.Value,
+                            Label = o.Label,
+                            Level = o.Level,
+                            ParentId = o.ParentId,
+                            FormType = (int)o.FormType,
+                        }).ToList()
+                    )
+            };
+
+            return result;
+        }
+    }
+}
+

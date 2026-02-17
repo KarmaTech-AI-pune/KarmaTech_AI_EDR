@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+﻿import React, { useState, useContext, useEffect } from 'react';
 import {
   Button,
   TextField,
@@ -61,10 +61,10 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     contactPersonAtClient: project?.contactPersonAtClient || '',
     dateOfSubmission: project?.dateOfSubmission || undefined,
     percentageChanceOfProjectHappening: project?.percentageChanceOfProjectHappening || 0,
-    percentageChanceOfNJSSuccess: project?.percentageChanceOfNJSSuccess || 0,
+    percentageChanceOfEDRSuccess: project?.percentageChanceOfEDRSuccess || 0,
     likelyCompetition: project?.likelyCompetition || '',
     grossRevenue: project?.grossRevenue || 0,
-    netNJSRevenue: project?.netNJSRevenue || 0,
+    netEDRRevenue: project?.netEDRRevenue || 0,
     followUpComments: project?.followUpComments || '',
     notes: project?.notes || '',
     probableQualifyingCriteria: project?.probableQualifyingCriteria || '',
@@ -323,9 +323,9 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
       percentageChanceOfProjectHappening: typeof formData.percentageChanceOfProjectHappening === 'string'
         ? parseFloat(formData.percentageChanceOfProjectHappening as any) || 0
         : formData.percentageChanceOfProjectHappening,
-      percentageChanceOfNJSSuccess: typeof formData.percentageChanceOfNJSSuccess === 'string'
-        ? parseFloat(formData.percentageChanceOfNJSSuccess as any) || 0
-        : formData.percentageChanceOfNJSSuccess,
+      percentageChanceOfEDRSuccess: typeof formData.percentageChanceOfEDRSuccess === 'string'
+        ? parseFloat(formData.percentageChanceOfEDRSuccess as any) || 0
+        : formData.percentageChanceOfEDRSuccess,
     };
 
     onSubmit(submissionData as OpportunityTracking);
@@ -768,11 +768,11 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Chance of NJS Success (%)"
-                  name="percentageChanceOfNJSSuccess"
+                  label="Chance of EDR Success (%)"
+                  name="percentageChanceOfEDRSuccess"
                   type="text"
                   inputProps={{ min: 0, max: 100, step: 0.01 }}
-                  value={formData.percentageChanceOfNJSSuccess || 0}
+                  value={formData.percentageChanceOfEDRSuccess || 0}
                   onChange={handleNumberChange}
                 />
               </Grid>
@@ -846,3 +846,4 @@ export const OpportunityForm: React.FC<OpportunityFormProps> = ({
     </Box>
   );
 };
+

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 
 /**
  * DEMO: Project Budget Health Indicator Feature
@@ -105,9 +105,9 @@ test.describe('Budget Health Indicator Demo', () => {
     
     console.log('WHERE IS THE FEATURE?\n');
     console.log('  BACKEND:');
-    console.log('  - backend/src/NJS.Application/CQRS/Projects/Queries/GetBudgetHealthQuery.cs');
-    console.log('  - backend/src/NJS.Application/CQRS/Projects/Handlers/GetBudgetHealthQueryHandler.cs');
-    console.log('  - backend/src/NJS.Application/Dtos/BudgetHealthDto.cs');
+    console.log('  - backend/src/EDR.Application/CQRS/Projects/Queries/GetBudgetHealthQuery.cs');
+    console.log('  - backend/src/EDR.Application/CQRS/Projects/Handlers/GetBudgetHealthQueryHandler.cs');
+    console.log('  - backend/src/EDR.Application/Dtos/BudgetHealthDto.cs');
     console.log('');
     console.log('  FRONTEND:');
     console.log('  - frontend/src/components/Projects/BudgetHealthIndicator.tsx');
@@ -130,3 +130,4 @@ test.describe('Budget Health Indicator Demo', () => {
     expect(true).toBe(true);
   });
 });
+

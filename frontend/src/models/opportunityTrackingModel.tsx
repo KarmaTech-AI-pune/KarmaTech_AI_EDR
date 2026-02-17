@@ -1,4 +1,4 @@
-import { OpportunityHistory } from "./opportunityHistoryModel";
+﻿import { OpportunityHistory } from "./opportunityHistoryModel";
 
 // Local type definitions
 export type OpportunityStage = 'A' | 'B' | 'C' | 'D' | 'E' | string;
@@ -37,10 +37,10 @@ export interface OpportunityTracking {
   contactPersonAtClient?: string;
   dateOfSubmission?: Date | string;
   percentageChanceOfProjectHappening?: number;
-  percentageChanceOfNJSSuccess?: number;
+  percentageChanceOfEDRSuccess?: number;
   likelyCompetition?: string;
   grossRevenue?: number;
-  netNJSRevenue?: number;
+  netEDRRevenue?: number;
   followUpComments?: string;
   notes?: string;
   probableQualifyingCriteria?: string;
@@ -136,3 +136,4 @@ export function prepareOpportunityTrackingForSubmission(opp: Partial<Opportunity
 
   return prepared;
 }
+
