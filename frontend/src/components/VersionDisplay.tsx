@@ -244,7 +244,7 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
             handleClick();
           }
         } : undefined}
-        aria-label={clickable ? `Version ${versionInfo.displayVersion}, click to view release notes` : undefined}
+        aria-label={clickable ? `${versionText}, click to view release notes` : undefined}
         {...typographyProps}
       >
         {versionText}

@@ -27,7 +27,6 @@ import {
   List,
   ListItem,
   ListItemButton,
-  ListItemButton,
   ListItemText,
   ListItemIcon,
   Accordion,
@@ -36,6 +35,7 @@ import {
   useTheme,
   useMediaQuery,
   Snackbar,
+  DialogActions,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -46,6 +46,7 @@ import {
   Warning as BreakingIcon,
   Code as CommitIcon,
   Person as AuthorIcon,
+  CalendarToday as DateIcon,
 } from '@mui/icons-material';
 import { releaseNotesApi, ProcessedReleaseNotes, ChangeItem } from '../services/releaseNotesApi';
 
@@ -123,7 +124,6 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
   const [history, setHistory] = useState<ProcessedReleaseNotes[]>([]);
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
   const [selectedVersion, setSelectedVersion] = useState<string>(version || '');
-  const [showErrorSnackbar, setShowErrorSnackbar] = useState<boolean>(false);
 
   const fetchHistory = useCallback(async () => {
     setLoadingHistory(true);
@@ -192,13 +192,7 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     }
   }, [isOpen]);
 
-  const handleRetry = useCallback(() => {
-    // Retry both
-    fetchHistory();
-    if (selectedVersion) {
-      fetchReleaseNotes(selectedVersion);
-    }
-  }, [fetchHistory, fetchReleaseNotes, selectedVersion]);
+
 
   const handleClose = () => {
     if (!loading) onClose();
@@ -206,7 +200,6 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
 
   const handleVersionClick = (ver: string) => {
     setSelectedVersion(ver);
-    if (isMobile) setMobileDrawerOpen(false);
   };
 
   /**
@@ -316,36 +309,12 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
     );
   };
 
-  const renderSidebar = () => {
-    return (
-      <List component="nav">
-        {(history || []).map((item) => (
-          <ListItem
-            key={item.version}
-            disablePadding
-          >
-            <ListItemButton
-              selected={selectedVersion === item.version || selectedVersion === `v${item.version}`}
-              onClick={() => handleVersionClick(item.version)}
-            >
-              <ListItemText
-                primary={item.version}
-                secondary={new Date(item.releaseDate).toLocaleDateString()}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-        {history.length === 0 && !loadingHistory && (
-          <ListItem><ListItemText primary="No history available" /></ListItem>
-        )}
-      </List>
-    );
-  };
+
 
   const renderContent = () => {
     if (loading) return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 5 }}>
-        <CircularProgress />
+        <CircularProgress data-testid="content-loading" />
         <Typography sx={{ mt: 2 }}>Loading release notes...</Typography>
       </Box>
     );
@@ -384,6 +353,12 @@ const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = React.memo(({
             </Box>
             {releaseNotes.environment && <Chip label={`Env: ${releaseNotes.environment}`} size="small" variant="outlined" />}
             {releaseNotes.branch && <Chip label={`Branch: ${releaseNotes.branch}`} size="small" variant="outlined" />}
+          </Box>
+        </Box>
+        {!hasChanges ? (
+          <Box sx={{ mt: 1 }}>
+            <Typography variant="h6" fontWeight="bold">No changes documented</Typography>
+            <Typography color="text.secondary">This version doesn't have any documented changes.</Typography>
           </Box>
         ) : (
           <>

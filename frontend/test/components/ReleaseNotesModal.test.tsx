@@ -151,7 +151,7 @@ describe('ReleaseNotesModal Component', () => {
       renderWithTheme(<ReleaseNotesModal {...defaultProps} />);
       
       expect(screen.getByText('Loading release notes...')).toBeInTheDocument();
-      expect(screen.getByRole('progressbar', { hidden: true })).toBeInTheDocument();
+      expect(screen.getByTestId('content-loading', { hidden: true })).toBeInTheDocument();
     });
 
     it('displays release notes after successful fetch', async () => {

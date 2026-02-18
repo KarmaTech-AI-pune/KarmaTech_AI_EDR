@@ -4,10 +4,16 @@ import '@testing-library/jest-dom';
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import SubscriptionManagement from './SubscriptionManagement';
 import * as subscriptionApi from '../../services/subscriptionApi';
-import { SubscriptionPlan } from '../../models/subscriptionModel';
+import { SubscriptionPlan, Feature } from '../../models/subscriptionModel';
 
 // Mock the API service
 vi.mock('../../services/subscriptionApi');
+
+const mockFeatures: Feature[] = [
+  { id: 1, name: 'Advanced Reporting', description: 'Detailed analytics and charts', isActive: true },
+  { id: 2, name: 'Custom Branding', description: 'Use your own logo and colors', isActive: true },
+  { id: 3, name: 'API Access', description: 'Programmatic access to data', isActive: true },
+];
 
 const mockPlans: SubscriptionPlan[] = [
   {
@@ -19,14 +25,7 @@ const mockPlans: SubscriptionPlan[] = [
     maxUsers: 5,
     maxProjects: 20,
     maxStorageGB: 5,
-    features: {
-      advancedReporting: false,
-      customBranding: false,
-      apiAccess: false,
-      prioritySupport: false,
-      whiteLabel: false,
-      sso: false,
-    },
+    features: [mockFeatures[0]],
     isActive: true,
     tenants: [{ id: 101, name: 'Tenant A' }],
   },
@@ -39,14 +38,7 @@ const mockPlans: SubscriptionPlan[] = [
     maxUsers: 20,
     maxProjects: 100,
     maxStorageGB: 50,
-    features: {
-      advancedReporting: true,
-      customBranding: true,
-      apiAccess: false,
-      prioritySupport: true,
-      whiteLabel: false,
-      sso: false,
-    },
+    features: [mockFeatures[0], mockFeatures[1]],
     isActive: true,
     tenants: [{ id: 102, name: 'Tenant B' }, { id: 103, name: 'Tenant C' }],
   },
@@ -57,6 +49,8 @@ describe('SubscriptionManagement', () => {
     vi.clearAllMocks();
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
+    vi.mocked(subscriptionApi.getAllFeatures).mockResolvedValue(mockFeatures);
   });
 
   afterEach(() => {
@@ -65,11 +59,11 @@ describe('SubscriptionManagement', () => {
 
   // Test 1: Initial render and loading of plans
   test('renders subscription plans and summary cards on initial load', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
-    
     render(<SubscriptionManagement />);
 
-    expect(screen.getByText('Subscription Plans')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Subscription Plans')).toBeInTheDocument();
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Basic Plan')).toBeInTheDocument();
@@ -98,14 +92,12 @@ describe('SubscriptionManagement', () => {
     await waitFor(() => {
       const alert = screen.getByRole('alert');
       expect(alert).toBeInTheDocument();
-      expect(alert).toHaveTextContent('Failed to load subscription plans');
+      expect(alert).toHaveTextContent('Failed to load subscription data');
     }, { timeout: 5000 });
   });
 
   // Test 3: Add New Plan - Dialog opens and closes
   test('opens and closes the Add New Plan dialog', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
-    
     render(<SubscriptionManagement />);
 
     await waitFor(() => {
@@ -129,7 +121,6 @@ describe('SubscriptionManagement', () => {
 
   // Test 4: Add New Plan - Successful creation
   test('successfully creates a new subscription plan', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
     vi.mocked(subscriptionApi.createSubscriptionPlan).mockResolvedValue({
       id: 3,
       name: 'New Plan',
@@ -139,14 +130,7 @@ describe('SubscriptionManagement', () => {
       maxUsers: 50,
       maxProjects: 200,
       maxStorageGB: 100,
-      features: {
-        advancedReporting: true,
-        customBranding: false,
-        apiAccess: false,
-        prioritySupport: false,
-        whiteLabel: false,
-        sso: false,
-      },
+      features: [mockFeatures[0]],
       isActive: true,
       tenants: [],
     });
@@ -172,8 +156,8 @@ describe('SubscriptionManagement', () => {
     fireEvent.change(screen.getByLabelText(/Max Storage \(GB\)/i), { target: { value: '100' } });
     
     const dialog = screen.getByRole('dialog');
-    const advancedReportingSwitch = within(dialog).getByLabelText(/Advanced Reporting/i);
-    fireEvent.click(advancedReportingSwitch);
+    const advancedReportingCheckbox = within(dialog).getByLabelText(/Advanced Reporting/i);
+    fireEvent.click(advancedReportingCheckbox);
 
     fireEvent.click(screen.getByRole('button', { name: /Create/i }));
 
@@ -182,7 +166,7 @@ describe('SubscriptionManagement', () => {
         name: 'New Plan',
         monthlyPrice: 30,
         maxUsers: 50,
-        features: expect.objectContaining({ advancedReporting: true }),
+        featureIds: [1],
       }));
     });
     
@@ -193,7 +177,6 @@ describe('SubscriptionManagement', () => {
 
   // Test 5: Add New Plan - Error during creation
   test('displays error alert if creating a plan fails', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
     vi.mocked(subscriptionApi.createSubscriptionPlan).mockRejectedValue(new Error('Creation failed'));
     
     render(<SubscriptionManagement />);
@@ -228,8 +211,6 @@ describe('SubscriptionManagement', () => {
 
   // Test 6: Edit Plan - Dialog opens with pre-filled data
   test('opens the Edit Subscription Plan dialog with pre-filled data', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
-    
     render(<SubscriptionManagement />);
     await waitFor(() => {
       expect(screen.getByText('Basic Plan')).toBeInTheDocument();
@@ -251,18 +232,17 @@ describe('SubscriptionManagement', () => {
     expect(screen.getByLabelText(/Max Users/i)).toHaveValue(5);
     
     const dialog = screen.getByRole('dialog');
-    const advancedReportingSwitch = within(dialog).getByLabelText(/Advanced Reporting/i);
-    expect(advancedReportingSwitch).not.toBeChecked();
+    const advancedReportingCheckbox = within(dialog).getByLabelText(/Advanced Reporting/i);
+    expect(advancedReportingCheckbox).toBeChecked();
   });
 
   // Test 7: Edit Plan - Successful update
   test('successfully updates an existing subscription plan', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
     vi.mocked(subscriptionApi.updateSubscriptionPlan).mockResolvedValue({
       ...mockPlans[0],
       name: 'Updated Basic Plan',
       monthlyPrice: 15,
-      features: { ...mockPlans[0].features, advancedReporting: true },
+      features: [mockFeatures[0], mockFeatures[1]],
     });
     
     render(<SubscriptionManagement />);
@@ -283,8 +263,8 @@ describe('SubscriptionManagement', () => {
     fireEvent.change(screen.getByLabelText(/Monthly Price \(\$\)/i), { target: { value: '15' } });
     
     const dialog = screen.getByRole('dialog');
-    const advancedReportingSwitch = within(dialog).getByLabelText(/Advanced Reporting/i);
-    fireEvent.click(advancedReportingSwitch);
+    const customBrandingCheckbox = within(dialog).getByLabelText(/Custom Branding/i);
+    fireEvent.click(customBrandingCheckbox);
 
     fireEvent.click(screen.getByRole('button', { name: /Update/i }));
 
@@ -294,7 +274,7 @@ describe('SubscriptionManagement', () => {
         expect.objectContaining({
           name: 'Updated Basic Plan',
           monthlyPrice: 15,
-          features: expect.objectContaining({ advancedReporting: true }),
+          featureIds: [1, 2],
         })
       );
     });
@@ -306,7 +286,6 @@ describe('SubscriptionManagement', () => {
 
   // Test 8: Edit Plan - Error during update
   test('displays error alert if updating a plan fails', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
     vi.mocked(subscriptionApi.updateSubscriptionPlan).mockRejectedValue(new Error('Update failed'));
     
     render(<SubscriptionManagement />);
@@ -338,7 +317,6 @@ describe('SubscriptionManagement', () => {
 
   // Test 9: Delete Plan - Successful deletion
   test('successfully deletes a subscription plan', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
     vi.mocked(subscriptionApi.deleteSubscriptionPlan).mockResolvedValue(undefined);
     
     render(<SubscriptionManagement />);
@@ -361,7 +339,6 @@ describe('SubscriptionManagement', () => {
 
   // Test 10: Delete Plan - Error during deletion
   test('displays error alert if deleting a plan fails', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
     vi.mocked(subscriptionApi.deleteSubscriptionPlan).mockRejectedValue(new Error('Deletion failed'));
     
     render(<SubscriptionManagement />);
@@ -383,8 +360,6 @@ describe('SubscriptionManagement', () => {
 
   // Test 11: calculateMonthlyRevenue function
   test('calculateMonthlyRevenue displays correct total', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
-    
     render(<SubscriptionManagement />);
     await waitFor(() => {
       expect(screen.getByText('Monthly Revenue')).toBeInTheDocument();
@@ -433,10 +408,8 @@ describe('SubscriptionManagement', () => {
     });
   });
 
-  // Test 14: Feature switches in dialog
-  test('feature switches in dialog update form data correctly', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
-    
+  // Test 14: Feature checkboxes in dialog
+  test('feature checkboxes in dialog update form data correctly', async () => {
     render(<SubscriptionManagement />);
     
     await waitFor(() => {
@@ -450,17 +423,17 @@ describe('SubscriptionManagement', () => {
     });
 
     const dialog = screen.getByRole('dialog');
-    const advancedReportingSwitch = within(dialog).getByLabelText(/Advanced Reporting/i);
-    expect(advancedReportingSwitch).not.toBeChecked();
+    const advancedReportingCheckbox = within(dialog).getByLabelText(/Advanced Reporting/i);
+    expect(advancedReportingCheckbox).not.toBeChecked();
 
-    fireEvent.click(advancedReportingSwitch);
-    expect(advancedReportingSwitch).toBeChecked();
+    fireEvent.click(advancedReportingCheckbox);
+    expect(advancedReportingCheckbox).toBeChecked();
 
-    const customBrandingSwitch = within(dialog).getByLabelText(/Custom Branding/i);
-    expect(customBrandingSwitch).not.toBeChecked();
+    const customBrandingCheckbox = within(dialog).getByLabelText(/Custom Branding/i);
+    expect(customBrandingCheckbox).not.toBeChecked();
 
-    fireEvent.click(customBrandingSwitch);
-    expect(customBrandingSwitch).toBeChecked();
+    fireEvent.click(customBrandingCheckbox);
+    expect(customBrandingCheckbox).toBeChecked();
 
     fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
     await waitFor(() => {
@@ -470,8 +443,6 @@ describe('SubscriptionManagement', () => {
 
   // Test 15: Input fields handle various types correctly
   test('input fields handle number and text types correctly', async () => {
-    vi.mocked(subscriptionApi.getSubscriptionPlans).mockResolvedValue(mockPlans);
-    
     render(<SubscriptionManagement />);
     
     await waitFor(() => {

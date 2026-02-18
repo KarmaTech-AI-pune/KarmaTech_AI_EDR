@@ -127,7 +127,7 @@ describe('LoginScreen Integration Tests', () => {
 
       // Wait for version to load
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
       // Verify API was called
@@ -139,11 +139,11 @@ describe('LoginScreen Integration Tests', () => {
 
       // Wait for version to load
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
       // Click on version
-      const versionElement = screen.getByText(/Version v1\.2\.3/);
+      const versionElement = screen.getByText(/Version 1\.2\.3/);
       await user.click(versionElement);
 
       // Should open release notes modal
@@ -161,10 +161,10 @@ describe('LoginScreen Integration Tests', () => {
 
       // Wait for version to load and click it
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
-      const versionElement = screen.getByText(/Version v1\.2\.3/);
+      const versionElement = screen.getByText(/Version 1\.2\.3/);
       await user.click(versionElement);
       // Wait for modal and release notes to load
       expect(await screen.findByText('Release Notes')).toBeInTheDocument();
@@ -180,10 +180,10 @@ describe('LoginScreen Integration Tests', () => {
 
       // Open modal
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
-      const versionElement = screen.getByText(/Version v1\.2\.3/);
+      const versionElement = screen.getByText(/Version 1\.2\.3/);
       await user.click(versionElement);
 
       await waitFor(() => {
@@ -228,10 +228,10 @@ describe('LoginScreen Integration Tests', () => {
 
       // Wait for version to load and click it
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
-      const versionElement = screen.getByText(/Version v1\.2\.3/);
+      const versionElement = screen.getByText(/Version 1\.2\.3/);
       await user.click(versionElement);
 
       // Modal should open but show error state
@@ -258,11 +258,11 @@ describe('LoginScreen Integration Tests', () => {
 
       // Step 2: Version loads dynamically
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
       // Step 3: User clicks on version
-      const versionElement = screen.getByText(/Version v1\.2\.3/);
+      const versionElement = screen.getByText(/Version 1\.2\.3/);
       // Remove cursor style assertion - not all browsers/test environments apply this
       await user.click(versionElement);
 
@@ -296,11 +296,11 @@ describe('LoginScreen Integration Tests', () => {
 
       // Wait for version to load
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
       // Focus version element and press Enter
-      const versionElement = screen.getByText(/Version v1\.2\.3/);
+      const versionElement = screen.getByText(/Version 1\.2\.3/);
       versionElement.focus();
       await user.keyboard('{Enter}');
 
@@ -323,7 +323,7 @@ describe('LoginScreen Integration Tests', () => {
 
       // Wait for version to load
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
       // Fill in login form
@@ -344,7 +344,7 @@ describe('LoginScreen Integration Tests', () => {
       });
 
       // Version display should still be functional
-      const versionElement = screen.getByText(/Version v1\.2\.3/);
+      const versionElement = screen.getByText(/Version 1\.2\.3/);
       await user.click(versionElement);
 
       await waitFor(() => {
@@ -371,11 +371,11 @@ describe('LoginScreen Integration Tests', () => {
 
       // Wait for version to load
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
       // Click version to open modal
-      const versionElement = screen.getByText(/Version v1\.2\.3/);
+      const versionElement = screen.getByText(/Version 1\.2\.3/);
       await user.click(versionElement);
 
       // Should show loading state in modal
@@ -394,11 +394,11 @@ describe('LoginScreen Integration Tests', () => {
 
       // Wait for initial version load
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
       // Quickly click version multiple times
-      const versionElement = screen.getByText(/Version v1\.2\.3/);
+      const versionElement = screen.getByText(/Version 1\.2\.3/);
       await user.click(versionElement);
       await user.click(versionElement);
       await user.click(versionElement);
@@ -426,10 +426,10 @@ describe('LoginScreen Integration Tests', () => {
 
       // Wait for version to load and click it
       await waitFor(() => {
-        expect(screen.getByText(/Version v1\.2\.3/)).toBeInTheDocument();
+        expect(screen.getByText(/Version 1\.2\.3/)).toBeInTheDocument();
       });
 
-      const versionElement = screen.getByText(/Version v1\.2\.3/);
+      const versionElement = screen.getByText(/Version 1\.2\.3/);
       await user.click(versionElement);
 
       // Should show error state

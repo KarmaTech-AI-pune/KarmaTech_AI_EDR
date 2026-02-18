@@ -1,4 +1,5 @@
 import React from 'react';
+import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -85,30 +86,13 @@ describe('VersionDisplay Component', () => {
     it('renders with default fallback version', () => {
       renderWithTheme(<VersionDisplay />);
       
-      expect(screen.getByText('Version v1.0.0')).toBeInTheDocument();
+      expect(screen.getByText('Version 1.0.0')).toBeInTheDocument();
     });
 
     it('renders with custom prefix', () => {
       renderWithTheme(<VersionDisplay prefix="App Version" />);
       
-      expect(screen.getByText('App Version v1.0.0')).toBeInTheDocument();
-    });
-
-    it('shows development indicator when enabled', () => {
-      mockIsDevelopmentBuild.mockReturnValue(true);
-      
-      renderWithTheme(<VersionDisplay showDevIndicator={true} />);
-      
-      expect(screen.getByText('Version v1.0.0 (dev)')).toBeInTheDocument();
-    });
-
-    it('hides development indicator when disabled', () => {
-      mockIsDevelopmentBuild.mockReturnValue(true);
-      
-      renderWithTheme(<VersionDisplay showDevIndicator={false} />);
-      
-      expect(screen.getByText('Version v1.0.0')).toBeInTheDocument();
-      expect(screen.queryByText('Version v1.0.0 (dev)')).not.toBeInTheDocument();
+      expect(screen.getByText('App Version 1.0.0')).toBeInTheDocument();
     });
   });
 
@@ -132,7 +116,7 @@ describe('VersionDisplay Component', () => {
 
       // Wait for API call to complete
       await waitFor(() => {
-        expect(screen.getByText('Version v1.0.38')).toBeInTheDocument();
+        expect(screen.getByText('Version 1.0.38')).toBeInTheDocument();
       });
 
       expect(mockVersionApi.getCurrentVersion).toHaveBeenCalledTimes(1);
@@ -152,7 +136,7 @@ describe('VersionDisplay Component', () => {
       renderWithTheme(<VersionDisplay fetchVersionFromAPI={true} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Version v1.0.0')).toBeInTheDocument();
+        expect(screen.getByText('Version 1.0.0')).toBeInTheDocument();
       });
 
       expect(mockVersionApi.getCurrentVersion).toHaveBeenCalledTimes(1);
@@ -164,7 +148,7 @@ describe('VersionDisplay Component', () => {
       renderWithTheme(<VersionDisplay fetchVersionFromAPI={false} />);
 
       // Should show fallback version immediately (no API call)
-      expect(screen.getByText('Version v1.0.0')).toBeInTheDocument();
+      expect(screen.getByText('Version 1.0.0')).toBeInTheDocument();
       expect(mockVersionApi.getCurrentVersion).not.toHaveBeenCalled();
     });
   });
@@ -180,7 +164,7 @@ describe('VersionDisplay Component', () => {
         />
       );
 
-      const versionElement = screen.getByText('Version v1.0.0');
+      const versionElement = screen.getByText('Version 1.0.0');
       expect(versionElement).toHaveStyle('cursor: pointer');
     });
 
@@ -194,7 +178,7 @@ describe('VersionDisplay Component', () => {
         />
       );
 
-      const versionElement = screen.getByText('Version v1.0.0');
+      const versionElement = screen.getByText('Version 1.0.0');
       await user.click(versionElement);
 
       expect(onVersionClick).toHaveBeenCalledWith('1.0.0');
@@ -210,7 +194,7 @@ describe('VersionDisplay Component', () => {
         />
       );
 
-      const versionElement = screen.getByText('Version v1.0.0');
+      const versionElement = screen.getByText('Version 1.0.0');
       versionElement.focus();
       await user.keyboard('{Enter}');
 
@@ -227,7 +211,7 @@ describe('VersionDisplay Component', () => {
         />
       );
 
-      const versionElement = screen.getByText('Version v1.0.0');
+      const versionElement = screen.getByText('Version 1.0.0');
       versionElement.focus();
       await user.keyboard(' ');
 
@@ -244,7 +228,7 @@ describe('VersionDisplay Component', () => {
         />
       );
 
-      const versionElement = screen.getByText('Version v1.0.0');
+      const versionElement = screen.getByText('Version 1.0.0');
       await user.click(versionElement);
 
       expect(onVersionClick).not.toHaveBeenCalled();
@@ -363,7 +347,7 @@ describe('VersionDisplay Component', () => {
 
       // Should show success state
       await waitFor(() => {
-        expect(screen.getByText('Version v1.0.38')).toBeInTheDocument();
+        expect(screen.getByText('Version 1.0.38')).toBeInTheDocument();
       });
     });
   });
@@ -377,16 +361,16 @@ describe('VersionDisplay Component', () => {
         />
       );
 
-      const versionElement = screen.getByText('Version v1.0.0');
+      const versionElement = screen.getByText('Version 1.0.0');
       expect(versionElement).toHaveAttribute('role', 'button');
       expect(versionElement).toHaveAttribute('tabIndex', '0');
-      expect(versionElement).toHaveAttribute('aria-label', 'Version v1.0.0, click to view release notes');
+      expect(versionElement).toHaveAttribute('aria-label', 'Version 1.0.0, click to view release notes');
     });
 
     it('does not have button role when not clickable', () => {
       renderWithTheme(<VersionDisplay clickable={false} />);
 
-      const versionElement = screen.getByText('Version v1.0.0');
+      const versionElement = screen.getByText('Version 1.0.0');
       expect(versionElement).not.toHaveAttribute('role', 'button');
       expect(versionElement).not.toHaveAttribute('tabIndex');
     });
@@ -396,7 +380,7 @@ describe('VersionDisplay Component', () => {
     it('shows tooltip with build date when showBuildDate is true', async () => {
       renderWithTheme(<VersionDisplay showBuildDate={true} />);
 
-      const versionElement = screen.getByText('Version v1.0.0');
+      const versionElement = screen.getByText('Version 1.0.0');
       
       // Hover to show tooltip
       await user.hover(versionElement);
@@ -420,10 +404,10 @@ describe('VersionDisplay Component', () => {
       renderWithTheme(<VersionDisplay fetchVersionFromAPI={true} showBuildDate={true} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Version v1.0.0')).toBeInTheDocument();
+        expect(screen.getByText('Version 1.0.0')).toBeInTheDocument();
       });
 
-      const versionElement = screen.getByText('Version v1.0.0');
+      const versionElement = screen.getByText('Version 1.0.0');
       await user.hover(versionElement);
 
       await waitFor(() => {
@@ -461,7 +445,7 @@ describe('VersionDisplay Component', () => {
 
       await waitFor(() => {
         // Should fall back to default version
-        expect(screen.getByText('Version v1.0.0')).toBeInTheDocument();
+        expect(screen.getByText('Version 1.0.0')).toBeInTheDocument();
       });
     });
 

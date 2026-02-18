@@ -61,6 +61,9 @@ export interface Project {
     letterOfAcceptance: boolean;
     opportunityTrackingId: number;   
     feeType:string; 
+    fundingStream: string;
+    contractType: string;
+    programId: number;
     percentage?: number;
 }
 

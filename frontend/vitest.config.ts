@@ -25,6 +25,11 @@ export default defineConfig({
       '**/*.test.{ts,tsx}',
       '**/*.spec.{ts,tsx}',
       '**/test/**/*.test.{ts,tsx}'
-    ]
+    ],
+    server: {
+      deps: {
+        inline: [/@mui\/material/, /@mui\/lab/],
+      },
+    }
   },
 })
