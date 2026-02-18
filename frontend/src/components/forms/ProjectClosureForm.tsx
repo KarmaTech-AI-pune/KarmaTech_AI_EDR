@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { isAxiosError } from 'axios';
 import {
   Box,
   TextField,
@@ -724,7 +724,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
           deleteError = error;
 
           // If it's a 404 error, treat it as success
-          if (axios.isAxiosError(error) && error.response?.status === 404) {           
+          if (isAxiosError(error) && error.response?.status === 404) {           
             deleteSuccess = true;
             break;
           }
@@ -754,7 +754,7 @@ const ProjectClosureForm: React.FC<ProjectClosureFormProps> = ({
     } catch (error: any) {      
 
       // More detailed error logging
-      if (axios.isAxiosError(error)) {
+      if (isAxiosError(error)) {
         console.error('Axios error details:', {
           status: error.response?.status,
           statusText: error.response?.statusText,

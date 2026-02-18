@@ -1,5 +1,7 @@
+import React from 'react';
+import { waitFor } from '@testing-library/react';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ProgramCard from './ProgramCard';
 import { Program } from '../../types/program';
 
@@ -39,13 +41,15 @@ describe('ProgramCard', () => {
     expect(screen.getByText(/End:/)).toBeInTheDocument();
   });
 
-  it('does not render end date when not provided', () => {
+  it('does not render end date when not provided', async () => {
     const programWithoutEndDate: Program = {
       ...mockProgram,
       endDate: null
     };
     render(<ProgramCard program={programWithoutEndDate} />);
-    expect(screen.queryByText(/End:/)).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText(/End:/)).not.toBeInTheDocument();
+    });
   });
 
   it('displays N/A for null start date', () => {
@@ -105,4 +109,7 @@ describe('ProgramCard', () => {
     expect(screen.getByText('B'.repeat(200))).toBeInTheDocument();
   });
 });
+
+
+
 

@@ -1,3 +1,5 @@
+import React from 'react';
+import { vi, describe, it, expect } from 'vitest';
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import { ReportsList } from './ReportsList';
@@ -31,3 +33,4 @@ describe('ReportsList Component', () => {
     expect(screen.getByText(/Generated on: 2023-05-30/i)).toBeInTheDocument();
   });
 });
+

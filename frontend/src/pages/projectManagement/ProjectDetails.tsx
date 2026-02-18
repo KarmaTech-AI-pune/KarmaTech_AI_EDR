@@ -40,7 +40,7 @@ export const ProjectDetails: React.FC = () => {
             setError('Project not found');
           }
         } else {
-          setError('No project ID provided');
+          setError('No project selected');
         }
       } catch (err) {
         console.error('Error fetching project:', err);
@@ -90,7 +90,7 @@ export const ProjectDetails: React.FC = () => {
     fetchManagerData();
   }, [project]);
 
-  if (isLoading || !projectId) {
+  if (isLoading) {
     return (
       <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
         <CircularProgress />
@@ -113,13 +113,6 @@ export const ProjectDetails: React.FC = () => {
       </Container>
     );
   }
-
-  const getProjectTitle = (project: Project | OpportunityTracking | null) => {
-    if (!project) return 'Project Details';
-    if ('name' in project) return project.name;
-    if ('workName' in project) return project.workName;
-    return 'Project Details';
-  };
 
   return (
     <Box
@@ -150,6 +143,13 @@ export const ProjectDetails: React.FC = () => {
       </Box>
     </Box>
   );
+};
+
+export const getProjectTitle = (project: Project | OpportunityTracking | null) => {
+  if (!project) return 'Project Details';
+  if ('name' in project) return project.name;
+  if ('workName' in project) return project.workName;
+  return 'Project Details';
 };
 
 export default ProjectDetails;

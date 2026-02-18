@@ -11,7 +11,7 @@ const validateRequiredFields = (project: Omit<Project, 'id'>) => {
     { field: 'projectManagerId', label: 'Project Manager' },
     { field: 'projectNo', label: 'Project Number' },
     { field: 'seniorProjectManagerId', label: 'Senior Project Manager' },
-    { field: 'estimatedCost', label: 'Estimated Cost' },
+    { field: 'estimatedProjectCost', label: 'Estimated Cost' },
     { field: 'currency', label: 'Currency' },
     { field: 'regionalManagerId', label: 'Regional Manager' }
   ];

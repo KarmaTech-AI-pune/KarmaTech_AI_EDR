@@ -79,6 +79,7 @@ const JobStartFormHeader: React.FC<JobStartFormHeaderProps> = ({
         // If we can't fetch the status, use the provided status
         setCurrentStatus(status);
         setCurrentStatusId(getStatusId(status));
+        onStatusUpdate(status);
       } finally {
         setIsLoading(false);
       }

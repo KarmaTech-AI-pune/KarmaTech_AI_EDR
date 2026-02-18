@@ -34,7 +34,9 @@ namespace NJS.API.Tests.Services
             // Arrange
             var mockScope = new Mock<IServiceScope>();
             var mockScopeFactory = new Mock<IServiceScopeFactory>();
-            var mockContext = new Mock<ProjectManagementContext>();
+            var mockOptions = new Mock<DbContextOptions<ProjectManagementContext>>();
+            var mockCurrentTenantService = new Mock<ICurrentTenantService>();
+            var mockContext = new Mock<ProjectManagementContext>(mockOptions.Object, mockCurrentTenantService.Object);
             var mockAuditLogs = new Mock<DbSet<AuditLog>>();
 
             _serviceProviderMock.Setup(x => x.GetService(typeof(IServiceScopeFactory)))
@@ -77,7 +79,9 @@ namespace NJS.API.Tests.Services
             // Arrange
             var mockScope = new Mock<IServiceScope>();
             var mockScopeFactory = new Mock<IServiceScopeFactory>();
-            var mockContext = new Mock<ProjectManagementContext>();
+            var mockOptions = new Mock<DbContextOptions<ProjectManagementContext>>();
+            var mockCurrentTenantService = new Mock<ICurrentTenantService>();
+            var mockContext = new Mock<ProjectManagementContext>(mockOptions.Object, mockCurrentTenantService.Object);
             var mockAuditLogs = new Mock<DbSet<AuditLog>>();
 
             var testLogs = new List<AuditLog>
@@ -114,7 +118,9 @@ namespace NJS.API.Tests.Services
             // Arrange
             var mockScope = new Mock<IServiceScope>();
             var mockScopeFactory = new Mock<IServiceScopeFactory>();
-            var mockContext = new Mock<ProjectManagementContext>();
+            var mockOptions = new Mock<DbContextOptions<ProjectManagementContext>>();
+            var mockCurrentTenantService = new Mock<ICurrentTenantService>();
+            var mockContext = new Mock<ProjectManagementContext>(mockOptions.Object, mockCurrentTenantService.Object);
             var mockAuditLogs = new Mock<DbSet<AuditLog>>();
 
             _serviceProviderMock.Setup(x => x.GetService(typeof(IServiceScopeFactory)))

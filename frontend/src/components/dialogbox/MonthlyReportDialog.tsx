@@ -94,7 +94,7 @@ export const MonthlyReportDialog: React.FC<MonthlyReportDialogProps> = ({
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">{getMonthName(report.month)} {report.year} Report</Typography>
-          <IconButton onClick={handleClose} disabled={isDownloading}>
+          <IconButton onClick={handleClose} disabled={isDownloading} aria-label="close">
             <CloseIcon />
           </IconButton>
         </Box>

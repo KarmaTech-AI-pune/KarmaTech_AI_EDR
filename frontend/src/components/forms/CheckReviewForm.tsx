@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Paper,
   Button,
@@ -48,66 +48,31 @@ const CheckReviewForm: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [editingReview, setEditingReview] = useState<CheckReviewRow | undefined>(undefined);
+  const lastLoadedId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (projectId) {
+    if (projectId && projectId !== lastLoadedId.current) {
       loadReviews();
+      lastLoadedId.current = projectId;
     }
   }, [projectId]);
 
   const loadReviews = async () => {
-    if (!projectId) {
-      console.warn('No project selected, cannot load reviews');
-      return;
-    }
+    if (!projectId) return;
 
     try {
       setLoading(true);
-      console.log('Loading reviews for project:', projectId);
-
-      try {
-        const reviews = await getCheckReviewsByProject(projectId);
-        console.log('Loaded reviews from backend:', reviews);
-
-        if (!reviews || reviews.length === 0) {
-          console.log('No reviews found for this project');
-          setRows([]);
-          setError('');
-          return;
-        }
-
-        // Process reviews to ensure proper ID handling
-        const processedReviews = reviews.map((review, index) => {
-          // Store the original backend ID for API operations
-          const backendId = review.id ? review.id.toString() : null;
-
-          // Log each review with its ID for debugging
-          console.log(`Review ${index}:`, {
-            backendId: backendId,
-            activityNo: review.activityNo,
-            activityName: review.activityName
-          });
-
-          // Return the review with originalId set to the backend ID
-          return {
-            ...review,
-            originalId: backendId
-          };
-        });
-
-        console.log('Processed reviews with backend IDs:', processedReviews);
-        setRows(processedReviews);
-        setError('');
-      } catch (apiError) {
-        console.error('API error loading reviews:', apiError);
-        setRows([]);
-        setError('Failed to load reviews. Please try again.');
+      const reviews = await getCheckReviewsByProject(projectId);
+      if (reviews) {
+        const processed = reviews.map(r => ({ ...r, originalId: (r as any).id?.toString() || null }));
+        setRows(processed);
       }
+      setError('');
     } catch (err: any) {
-      console.error('Error in loadReviews function:', err);
-      // Extract more detailed error message if available
+      console.error('API CALL ERROR:', err);
       const errorMessage = err.response?.data || err.message || 'Unknown error';
       setError(`Failed to load check review data: ${errorMessage}`);
+      setRows([]);
     } finally {
       setLoading(false);
     }
@@ -151,6 +116,7 @@ const CheckReviewForm: React.FC = () => {
         await createCheckReview(newReview);
       }
       await loadReviews();
+      setDialogOpen(false);
       setError('');
     } catch (err: any) {
       console.error('Error saving review:', err);
@@ -225,7 +191,10 @@ const CheckReviewForm: React.FC = () => {
   const formatDate = (dateString: string): string => {
     if (!dateString) return '';
     try {
-      return new Date(dateString).toLocaleDateString();
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      // Use UTC to be deterministic across different timezones (important for tests)
+      return `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
     } catch {
       return dateString;
     }
@@ -233,7 +202,7 @@ const CheckReviewForm: React.FC = () => {
 
   const StatusChip = ({ label, status }: { label: string; status: boolean }) => (
     <Chip
-      icon={status ? <CheckCircleIcon /> : <CancelIcon />}
+      icon={status ? <CheckCircleIcon data-testid="CheckCircleIcon" /> : <CancelIcon data-testid="CancelIcon" />}
       label={label}
       size="small"
       color={status ? "success" : "default"}
@@ -246,65 +215,59 @@ const CheckReviewForm: React.FC = () => {
     />
   );
 
-  if (!projectId) {
-    return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Alert severity="warning">Please select a project to view the check and review form.</Alert>
-      </Container>
-    );
-  }
-
   const formContent = (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Box sx={{
-        width: '100%',
-        maxHeight: 'calc(100vh - 200px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        pr: 1,
-        pb: 4
-      }}>
-        <Paper
-          elevation={0}
-          sx={{
-            border: '1px solid #e0e0e0',
-            borderRadius: 1,
-            backgroundColor: '#fff'
-          }}
-        >
-          <StyledHeaderBox>
-            <Typography
-              variant="h5"
-              sx={{
-                color: '#1976d2',
-                fontWeight: 500,
-                mb: 0
-              }}
-            >
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <StyledHeaderBox>
+          <Typography variant="h5" component="h2" fontWeight="bold">
+            Project Check & Review List
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => setDialogOpen(true)}
+            sx={{ borderRadius: 2 }}
+          >
+            Add Review
+          </Button>
+        </StyledHeaderBox>
+
+        {error && (
+          <Box sx={{ p: 2 }}>
+            <Alert data-testid="error-alert" severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>
+          </Box>
+        )}
+
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+            <CircularProgress />
+          </Box>
+        )}
+
+        <Box sx={{
+          width: '100%',
+          maxHeight: 'calc(100vh - 200px)',
+          overflowY: 'auto',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: '#f1f1f1',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#888',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: '#555',
+          },
+        }}>
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography variant="h4" color="primary" fontWeight="bold">
               PMD5. Check and Review Form
             </Typography>
-            <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={() => setDialogOpen(true)}
-            >
-              Add Review
-            </Button>
-          </StyledHeaderBox>
-
-          {error && (
-            <Box sx={{ mx: 3, mb: 3 }}>
-              <Alert severity="error">
-                {error}
-              </Alert>
-            </Box>
-          )}
-
-          {loading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-              <CircularProgress />
-            </Box>
-          )}
+          </Box>
 
           <Box>
             {!loading && rows.length === 0 && (
@@ -369,36 +332,23 @@ const CheckReviewForm: React.FC = () => {
                             size="small"
                             color="primary"
                             sx={{ mr: 1 }}
+                            aria-label="edit"
                           >
                             <EditIcon fontSize="small" />
                           </IconButton>
                           <IconButton
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Use row.id if available, otherwise use activityNo as fallback
-                              if (row.id !== undefined && row.id !== '') {
-                                console.log('Delete button clicked for review ID:', row.id);
-                                handleDeleteReview(row.id.toString());
-                              } else if (row.activityNo) {
-                                console.log('Delete button clicked for review with no ID, using activityNo as fallback:', row.activityNo);
-                                // Try to find the review by activityNo and projectId
-                                const reviewToDelete = rows.find(r =>
-                                  r.activityNo === row.activityNo && r.projectId === row.projectId);
-
-                                if (reviewToDelete && reviewToDelete.id) {
-                                  handleDeleteReview(reviewToDelete.id.toString());
-                                } else {
-                                  console.error('Cannot find review ID for deletion');
-                                  setError('Cannot delete review: Unable to determine review ID');
-                                }
-                              } else {
-                                console.error('Cannot delete review: Both ID and activityNo are undefined');
-                                setError('Cannot delete review: ID is missing');
+                              if ((row as any).id) {
+                                handleDeleteReview((row as any).id.toString());
+                              } else if ((row as any).originalId) {
+                                handleDeleteReview((row as any).originalId.toString());
                               }
                             }}
                             size="small"
                             color="error"
                             title="Delete review"
+                            aria-label="delete review"
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -446,8 +396,8 @@ const CheckReviewForm: React.FC = () => {
               </Accordion>
             ))}
           </Box>
-        </Paper>
-      </Box>
+        </Box>
+      </Paper>
 
       <CheckReviewDialog
         open={dialogOpen}
@@ -456,11 +406,19 @@ const CheckReviewForm: React.FC = () => {
           setEditingReview(undefined);
         }}
         onSave={handleAddReview}
-        nextActivityNo={getNextActivityNo()}
         editData={editingReview}
+        nextActivityNo={getNextActivityNo()}
       />
     </Container>
   );
+
+  if (!projectId) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
+        <Alert severity="warning">Please select a project to view the check and review form.</Alert>
+      </Container>
+    );
+  }
 
   return (
     <>

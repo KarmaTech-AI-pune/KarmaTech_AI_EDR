@@ -1,3 +1,4 @@
+import { describe, it } from 'vitest';
 import { ModelNamePlaceholder } from '../../src/models/ModelNamePlaceholder';
 
 describe('ModelNamePlaceholder Model', () => {
@@ -29,3 +30,4 @@ describe('ModelNamePlaceholder Model', () => {
     });
   });
 });
+

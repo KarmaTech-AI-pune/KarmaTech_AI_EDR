@@ -1,6 +1,8 @@
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, test, afterEach } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import ProgramManagement from './ProgramManagement';
 import { usePrograms } from '../../hooks/usePrograms';
 import { programApi } from '../../services/api/programApi';
@@ -10,11 +12,27 @@ import { Program } from '../../types/program';
 vi.mock('../../hooks/usePrograms');
 vi.mock('../../services/api/programApi');
 
+// Mock useProject context
+vi.mock('../../context/ProjectContext', () => ({
+  useProject: () => ({
+    setProgramId: vi.fn()
+  })
+}));
+
 // Mock window.confirm
 const mockConfirm = vi.fn();
 global.confirm = mockConfirm;
 
+// Helper to render with Router
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(<BrowserRouter>{component}</BrowserRouter>);
+};
+
 describe('ProgramManagement', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const mockPrograms: Program[] = [
     {
       id: 1,
@@ -47,11 +65,11 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('displays error message when error occurs', () => {
+  it('displays error message when error occurs', async () => {
     vi.mocked(usePrograms).mockReturnValue({
       programs: [],
       isLoading: false,
@@ -59,8 +77,8 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
-    expect(screen.getByText('Failed to load programs')).toBeInTheDocument();
+    renderWithRouter(<ProgramManagement />);
+    await waitFor(() => expect(screen.getByText(/Failed to load programs/i)).toBeInTheDocument());
   });
 
   it('displays retry button on error', async () => {
@@ -72,7 +90,7 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     const retryButton = screen.getByRole('button', { name: /Retry/i });
     await user.click(retryButton);
 
@@ -87,7 +105,7 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     expect(screen.getByText('Program 1')).toBeInTheDocument();
     expect(screen.getByText('Program 2')).toBeInTheDocument();
   });
@@ -100,7 +118,7 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     expect(screen.getByText('No programs found')).toBeInTheDocument();
   });
 
@@ -113,13 +131,13 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     
     const searchInput = screen.getByPlaceholderText('Search programs');
     await user.type(searchInput, 'Program 1');
 
     expect(screen.getByText('Program 1')).toBeInTheDocument();
-    expect(screen.queryByText('Program 2')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Program 2')).not.toBeInTheDocument());
   });
 
   it('displays message when search returns no results', async () => {
@@ -131,7 +149,7 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     
     const searchInput = screen.getByPlaceholderText('Search programs');
     await user.type(searchInput, 'Nonexistent Program');
@@ -148,7 +166,7 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     
     const createButton = screen.getByRole('button', { name: /Create Program/i });
     await user.click(createButton);
@@ -165,7 +183,7 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     
     const editButtons = screen.getAllByRole('button');
     const editButton = editButtons.find(btn => btn.querySelector('svg[data-testid="EditIcon"]'));
@@ -187,7 +205,7 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     
     const deleteButtons = screen.getAllByRole('button');
     const deleteButton = deleteButtons.find(btn => btn.querySelector('svg[data-testid="DeleteIcon"]'));
@@ -210,7 +228,7 @@ describe('ProgramManagement', () => {
     });
     vi.mocked(programApi.delete).mockResolvedValue();
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     
     const deleteButtons = screen.getAllByRole('button');
     const deleteButton = deleteButtons.find(btn => btn.querySelector('svg[data-testid="DeleteIcon"]'));
@@ -248,7 +266,7 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     
     // Should show pagination component
     const paginationButtons = screen.getAllByRole('button').filter(
@@ -265,7 +283,7 @@ describe('ProgramManagement', () => {
       refetch: mockRefetch
     });
 
-    render(<ProgramManagement />);
+    renderWithRouter(<ProgramManagement />);
     
     // Check for formatted date (dd-MM-yyyy format) - text is split across elements
     const startLabels = screen.getAllByText('Start:');
@@ -273,3 +291,10 @@ describe('ProgramManagement', () => {
     expect(screen.getByText('01-01-2025')).toBeInTheDocument();
   });
 });
+
+
+
+
+
+
+

@@ -36,6 +36,31 @@ const navLinks = [
   },
 ];
 
+
+
+const LogoComponent = () => (
+  <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+    <Box
+      sx={{
+        height: '50px',
+        display: 'flex',
+        alignItems: 'center',
+        cursor: 'pointer',
+      }}
+    >
+      <img
+        src="/KarmaTech_logo.png"
+        alt="KarmaTech AI"
+        style={{
+          height: '100%',
+          width: 'auto',
+          objectFit: 'contain',
+        }}
+      />
+    </Box>
+  </Link>
+);
+
 export const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
@@ -122,28 +147,7 @@ export const Navbar = () => {
     handleCloseUserMenu();
   };
 
-  const LogoComponent = () => (
-    <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-      <Box
-        sx={{
-          height: '50px',
-          display: 'flex',
-          alignItems: 'center',
-          cursor: 'pointer',
-        }}
-      >
-        <img
-          src="/KarmaTech_logo.png"
-          alt="KarmaTech AI"
-          style={{
-            height: '100%',
-            width: 'auto',
-            objectFit: 'contain',
-          }}
-        />
-      </Box>
-    </Link>
-  );
+
 
   return (
     <AppBar

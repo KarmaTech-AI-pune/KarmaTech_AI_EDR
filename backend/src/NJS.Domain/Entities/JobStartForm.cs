@@ -28,9 +28,16 @@ namespace NJS.Domain.Entities
         public virtual WorkBreakdownStructure WorkBreakdownStructure { get; set; }
 
         // Basic form details
+        [Required]
         public string? FormTitle { get; set; }
+        
+        [Required]
         public string? Description { get; set; }
+        
+        [Required]
         public DateTime StartDate { get; set; }
+        
+        [Required]
         public string? PreparedBy { get; set; }
 
         // Calculated and financial fields - Stored directly
@@ -54,6 +61,7 @@ namespace NJS.Domain.Entities
         public virtual JobStartFormHeader Header { get; set; }
 
         // Audit fields
+        [Required]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedDate { get; set; }
         public bool IsDeleted { get; set; } = false;

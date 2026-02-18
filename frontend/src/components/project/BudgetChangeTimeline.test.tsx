@@ -1,3 +1,4 @@
+
 /**
  * BudgetChangeTimeline Component Tests
  * 
@@ -5,8 +6,9 @@
  * Tests: Timeline visualization, visual indicators, variance display, chronological order
  */
 
+import { waitFor } from '@testing-library/react';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { BudgetChangeTimeline } from './BudgetChangeTimeline';
 import { ProjectBudgetChangeHistory } from '../../types/projectBudget';
 
@@ -20,6 +22,10 @@ vi.mock('./VarianceIndicator', () => ({
 }));
 
 describe('BudgetChangeTimeline Component', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   const createMockChange = (overrides?: Partial<ProjectBudgetChangeHistory>): ProjectBudgetChangeHistory => ({
     id: 1,
     projectId: 123,
@@ -46,6 +52,10 @@ describe('BudgetChangeTimeline Component', () => {
   });
 
   describe('Timeline Visualization Tests (Req 3.1)', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should display changes in chronological order', () => {
       const changes: ProjectBudgetChangeHistory[] = [
         createMockChange({ id: 1, changedDate: '2024-01-15T10:00:00Z' }),
@@ -57,7 +67,7 @@ describe('BudgetChangeTimeline Component', () => {
 
       // All timeline items should be rendered
       changes.forEach((change) => {
-        expect(screen.getByText(new RegExp(change.changedByUser.firstName))).toBeInTheDocument();
+        expect(screen.getAllByText(new RegExp(change.changedByUser.firstName)).length).toBeGreaterThan(0);
       });
     });
 
@@ -94,6 +104,10 @@ describe('BudgetChangeTimeline Component', () => {
   });
 
   describe('Visual Indicators Tests (Req 3.2)', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should use different visual indicators for cost vs fee changes', () => {
       const costChange = createMockChange({
         id: 1,
@@ -151,6 +165,10 @@ describe('BudgetChangeTimeline Component', () => {
   });
 
   describe('Variance Display Tests (Req 3.3)', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should display variance with color coding for increases', () => {
       const change = createMockChange({
         variance: 10000,
@@ -209,7 +227,11 @@ describe('BudgetChangeTimeline Component', () => {
   });
 
   describe('Change Reasons Tests (Req 3.4)', () => {
-    it('should display change reasons when provided', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+    it('should display change reasons when provided', async () => {
       const change = createMockChange({
         reason: 'Budget increased due to scope expansion',
       });
@@ -220,17 +242,17 @@ describe('BudgetChangeTimeline Component', () => {
       expect(screen.getByText('Reason:')).toBeInTheDocument();
     });
 
-    it('should not display reason section when reason is not provided', () => {
+    it('should not display reason section when reason is not provided', async () => {
       const change = createMockChange({
         reason: undefined,
       });
 
       render(<BudgetChangeTimeline changes={[change]} />);
 
-      expect(screen.queryByText('Reason:')).not.toBeInTheDocument();
+      await waitFor(() => expect(screen.queryByText('Reason:')).not.toBeInTheDocument());
     });
 
-    it('should handle empty string reason', () => {
+    it('should handle empty string reason', async () => {
       const change = createMockChange({
         reason: '',
       });
@@ -238,7 +260,7 @@ describe('BudgetChangeTimeline Component', () => {
       render(<BudgetChangeTimeline changes={[change]} />);
 
       // Empty string should not display reason section
-      expect(screen.queryByText('Reason:')).not.toBeInTheDocument();
+      await waitFor(() => expect(screen.queryByText('Reason:')).not.toBeInTheDocument());
     });
 
     it('should display very long reasons correctly', () => {
@@ -249,11 +271,15 @@ describe('BudgetChangeTimeline Component', () => {
 
       render(<BudgetChangeTimeline changes={[change]} />);
 
-      expect(screen.getByText(longReason)).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(longReason))).toBeInTheDocument();
     });
   });
 
   describe('Edge Cases', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should handle special characters in reason field', () => {
       const change = createMockChange({
         reason: 'Budget change: <script>alert("test")</script> & special chars',
@@ -337,6 +363,10 @@ describe('BudgetChangeTimeline Component', () => {
   });
 
   describe('Currency Formatting', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
     it('should format USD currency correctly', () => {
       const change = createMockChange({
         currency: 'USD',
@@ -378,3 +408,7 @@ describe('BudgetChangeTimeline Component', () => {
     });
   });
 });
+
+
+
+

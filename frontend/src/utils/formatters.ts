@@ -1,4 +1,8 @@
-export const formatCurrency = (amount: number): string => {
+export const formatCurrency = (amount: number | null | undefined): string => {
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    return '0';
+  }
+  
   if (amount >= 1000000) {
     return `$${(amount / 1000000).toFixed(1)}M`;
   }
