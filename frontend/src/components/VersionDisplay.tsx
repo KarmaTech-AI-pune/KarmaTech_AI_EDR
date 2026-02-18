@@ -45,6 +45,12 @@ interface VersionDisplayProps extends Omit<TypographyProps, 'children'> {
    * @param version - The semantic version string (e.g., "1.0.38")
    */
   onVersionClick?: (version: string) => void;
+
+  /**
+   * Manually override the displayed version text.
+   * If provided, this string is used directly, bypassing API checks.
+   */
+  forceVersion?: string;
 }
 
 /**
@@ -98,6 +104,7 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
   fetchVersionFromAPI = false,
   clickable = false,
   onVersionClick,
+  forceVersion,
   ...typographyProps
 }) => {
   const [apiVersionInfo, setApiVersionInfo] = useState<ApiVersionInfo | null>(null);
@@ -114,7 +121,7 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
    * Includes timeout management and user-friendly error messages
    */
   const fetchVersion = useCallback(async () => {
-    if (!fetchVersionFromAPI) {
+    if (!fetchVersionFromAPI || forceVersion) {
       return;
     }
 
@@ -150,12 +157,23 @@ export const VersionDisplay: React.FC<VersionDisplayProps> = ({
    * Determines which version info to use (API or fallback)
    * Provides consistent interface regardless of data source
    */
-  const versionInfo = apiVersionInfo || {
-    displayVersion: fallbackVersionInfo.displayVersion,
-    buildDate: fallbackVersionInfo.buildDate,
-    version: fallbackVersionInfo.version,
-    environment: isDev ? 'dev' : 'prod'
-  };
+  const versionInfo = forceVersion
+    ? {
+      displayVersion: forceVersion.startsWith('v') ? forceVersion : `v${forceVersion}`,
+      buildDate: new Date().toISOString(),
+      version: forceVersion,
+      environment: 'manual-override',
+      fullVersion: forceVersion,
+      commitHash: 'manual'
+    } as ApiVersionInfo
+    : (apiVersionInfo || {
+      displayVersion: fallbackVersionInfo.displayVersion,
+      buildDate: fallbackVersionInfo.buildDate,
+      version: fallbackVersionInfo.version,
+      environment: isDev ? 'dev' : 'prod',
+      fullVersion: fallbackVersionInfo.version,
+      commitHash: 'unknown'
+    } as unknown as ApiVersionInfo);
 
   const versionText = `${prefix} ${versionInfo.displayVersion.split('-')[0].replace('v', '')}`;
 

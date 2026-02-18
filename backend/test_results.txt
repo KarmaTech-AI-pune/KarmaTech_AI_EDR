@@ -1,0 +1,109 @@
+Build started 17-02-2026 15:14:26.
+Test run for d:\NJS Application%282%29\NJSProjectManagementApp\backend\NJS.API.Tests\bin\Debug\net8.0\NJS.API.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.12.0 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 8.0.21)
+[xUnit.net 00:00:01.25]   Discovering: NJS.API.Tests
+[xUnit.net 00:00:01.36]   Discovered:  NJS.API.Tests
+[xUnit.net 00:00:01.37]   Starting:    NJS.API.Tests
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.CreateSprintSubtask_ShouldReturnBadRequest_WhenTaskIdMismatch [841 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetAllSprintSubtasksByTaskId_ShouldReturnNotFound_WhenEmpty [13 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetAllSprintSubtasksByTaskId_ShouldReturnOk_WhenFound [1 ms]
+  Passed NJS.API.Tests.Controllers.ProgramSprintControllerTests.Get_ShouldReturnOk_WithEmptyList_WhenNoPlansExist [859 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSingleSprintPlan_ShouldReturnOk_WhenFound [4 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.CreateSprintDailyProgress_ShouldReturnCreatedAtAction_WhenSuccessful [860 ms]
+  Passed NJS.API.Tests.Controllers.ProgramSprintControllerTests.GetCurrent_ShouldReturnNoContent_WhenNoCurrentSprintExists [2 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.UpdateSprintDailyProgress_ShouldReturnBadRequest_WhenIdMismatch [2 ms]
+  Passed NJS.API.Tests.Controllers.ProgramSprintControllerTests.BulkCreate_ShouldReturnOk_WithEmptyList_WhenNoItems [2 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.UpdateSprintDailyProgress_ShouldReturnNotFound_WhenKeyNotFoundExceptionThrown [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.CreateSingleSprintPlan_ShouldReturn500_WhenExceptionThrown [5 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.GetSprintDailyProgressBySprintPlanId_ShouldReturnNotFound_WhenKeyNotFoundExceptionThrown [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.CreateSprintDailyProgress_ShouldReturnNotFound_WhenKeyNotFoundExceptionThrown [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.UpdateSprintDailyProgress_ShouldReturnStatusCode500_WhenExceptionThrown [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintSubtaskComment_ShouldReturnOk_WhenSuccessful [3 ms]
+  Passed NJS.API.Tests.Controllers.ProgramSprintControllerTests.GetCurrent_ShouldVerifyMediatorCalled_WithCorrectProjectId [4 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintSubtaskComment_ShouldReturnBadRequest_WhenIdInvalid [< 1 ms]
+  Passed NJS.API.Tests.Controllers.ProgramSprintControllerTests.BulkCreate_ShouldReturnOk_WithListOfIds [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.GetSprintDailyProgressBySprintPlanId_ShouldReturnOk_WithProgressList [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.CreateSprintDailyProgress_ShouldReturnStatusCode500_WhenExceptionThrown [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.CreateSingleSprintTask_ShouldReturnCreatedAtAction_WhenSuccessful [2 ms]
+  Passed NJS.API.Tests.Controllers.ProgramSprintControllerTests.Get_ShouldReturnOk_WithSprintWbsPlans [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.UpdateSprintDailyProgress_ShouldReturnOk_WhenSuccessful [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSingleSprintPlan_ShouldReturnOk_WhenSuccessful [2 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.GetSprintDailyProgressBySprintPlanId_ShouldVerifyMediatorCalledWithCorrectId [2 ms]
+  Passed NJS.API.Tests.Controllers.ProgramSprintControllerTests.GetCurrent_ShouldReturnOk_WhenCurrentSprintExists [3 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSprintSubtask_ShouldReturnBadRequest_WhenSubtaskIdMismatch [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintDailyProgressControllerTests.GetSprintDailyProgressBySprintPlanId_ShouldReturnStatusCode500_WhenExceptionThrown [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSingleSprintPlan_ShouldReturnNotFound_WhenNull [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.CreateSprintSubtask_ShouldReturnCreatedAtAction_WhenSuccessful [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.AddSprintTaskComment_ShouldReturnBadRequest_WhenModelStateInvalid [3 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintSubtaskComment_ShouldReturnNotFound_WhenNotFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintSubtask_ShouldReturnNotFound_WhenNotFound [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.CreateSingleSprintTask_ShouldReturnBadRequest_WhenArgumentExceptionThrown [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSprintSubtask_ShouldReturnOk_WhenSuccessful [2 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSingleSprintTask_ShouldReturnBadRequest_WhenModelStateInvalid [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintTaskCommentsByTaskId_ShouldReturnNotFound_WhenEmpty [3 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintSubtaskCommentsBySubtaskId_ShouldReturnOk_WhenFound [3 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.CreateSingleSprintPlan_ShouldReturnBadRequest_WhenArgumentExceptionThrown [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintSubtask_ShouldReturnBadRequest_WhenIdInvalid [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.CreateSingleSprintTask_ShouldReturnBadRequest_WhenModelStateInvalid [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.CreateSingleSprintTask_ShouldReturn500_WhenExceptionThrown [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSprintTaskTime_ShouldReturnOk_WhenSuccessful [2 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetNextSprint_ShouldReturnNotFound_WhenNull [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSingleSprintTask_ShouldReturnNotFound_WhenNotFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSprintTaskTime_ShouldReturnNotFound_WhenNotFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintSubtaskCommentById_ShouldReturnNotFound_WhenNull [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSingleSprintPlan_ShouldReturnBadRequest_WhenArgumentExceptionThrown [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintTasksByProjectId_ShouldReturnNotFound_WhenNoTasks [2 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSingleSprintPlan_ShouldReturnBadRequest_WhenModelStateInvalid [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintTaskCommentById_ShouldReturnNotFound_WhenNull [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintTask_ShouldReturnBadRequest_WhenIdInvalid [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintTask_ShouldReturn500_WhenExceptionThrown [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintTask_ShouldReturnBadRequest_WhenArgumentExceptionThrown [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintTaskCommentsByTaskId_ShouldReturnOk_WhenFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintTaskCommentById_ShouldReturnOk_WhenFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSprintSubtaskComment_ShouldReturnOk_WhenSuccessful [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintTask_ShouldReturnOk_WhenSuccessful [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSingleSprintTask_ShouldReturnOk_WhenSuccessful [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSingleSprintPlan_ShouldReturnNotFound_WhenNotFound [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.AddSprintSubtaskComment_ShouldReturn201_WhenSuccessful [2 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintSubtaskCommentsBySubtaskId_ShouldReturnNotFound_WhenEmpty [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSingleSprintTask_ShouldReturnOk_WhenFound [2 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.AddSprintSubtaskComment_ShouldReturnNotFound_WhenSubtaskNotFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSingleSprintPlan_ShouldReturn500_WhenExceptionThrown [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintSubtask_ShouldReturnOk_WhenSuccessful [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.CreateSingleSprintPlan_ShouldReturnCreatedAtAction_WhenSuccessful [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSprintTaskTime_ShouldReturnBadRequest_WhenModelStateInvalid [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSprintSubtaskComment_ShouldReturnNotFound_WhenNotFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.AddSprintTaskComment_ShouldReturn201_WhenSuccessful [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSingleSprintTask_ShouldReturnNotFound_WhenNull [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintTaskComment_ShouldReturnNotFound_WhenNotFound [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintTask_ShouldReturnNotFound_WhenNotFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSprintTaskComment_ShouldReturnOk_WhenSuccessful [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintSubtaskById_ShouldReturnNotFound_WhenNull [2 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.CreateSingleSprintPlan_ShouldReturnBadRequest_WhenModelStateInvalid [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintTaskComment_ShouldReturnBadRequest_WhenIdInvalid [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSingleSprintTask_ShouldReturn500_WhenExceptionThrown [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintSubtaskCommentById_ShouldReturnOk_WhenFound [1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetNextSprint_ShouldReturnOk_WhenFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintSubtaskById_ShouldReturnOk_WhenFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.AddSprintTaskComment_ShouldReturnNotFound_WhenTaskNotFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.UpdateSprintTaskComment_ShouldReturnNotFound_WhenNotFound [< 1 ms]
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.DeleteSprintTaskComment_ShouldReturnOk_WhenSuccessful [< 1 ms]
+[xUnit.net 00:00:02.36]   Finished:    NJS.API.Tests
+  Passed NJS.API.Tests.Controllers.SprintTaskControllerTests.GetSprintTasksByProjectId_ShouldReturnOk_WhenTasksFound [< 1 ms]
+
+Test Run Successful.
+Total tests: 85
+     Passed: 85
+ Total time: 5.3810 Seconds
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.59
+
+Workload updates are available. Run `dotnet workload list` for more information.
