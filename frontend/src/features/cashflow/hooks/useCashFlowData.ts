@@ -16,22 +16,73 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Transform API rows to MonthlyBudgetData format
+  const transformToMonthlyBudget = (apiData: CashFlowData) => {
+    if (!apiData.rows || apiData.rows.length === 0) {
+      return apiData;
+    }
+
+    // Transform rows to monthly budget format
+    const months = apiData.rows.map((row, index) => {
+      // Calculate cumulative costs
+      const cumulativeCosts = apiData.rows
+        .slice(0, index + 1)
+        .reduce((sum, r) => sum + r.totalCosts, 0);
+      
+      // Calculate cumulative revenue
+      const cumulativeRevenue = apiData.rows
+        .slice(0, index + 1)
+        .reduce((sum, r) => sum + r.revenue, 0);
+
+      return {
+        month: row.period, // e.g., "Feb-26"
+        totalHours: row.hours,
+        purePersonnel: row.personnel,
+        totalODCs: row.odc,
+        totalProjectCost: row.totalCosts,
+        cumulativeMonthlyCosts: cumulativeCosts,
+        revenue: row.revenue,
+        cumulativeRevenue: cumulativeRevenue,
+      };
+    });
+
+    // Add monthlyBudget structure to the data
+    return {
+      ...apiData,
+      monthlyBudget: {
+        projectName: `Project ${apiData.projectId}`, // You can enhance this with actual project name
+        months: months,
+      },
+    };
+  };
+
   // Fetch data from API
   const fetchData = useCallback(async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      console.warn('useCashFlowData: Cannot fetch - projectId is empty');
+      return;
+    }
 
+    console.log('useCashFlowData: Starting fetch for projectId:', projectId);
     setLoading(true);
     setError(null);
 
     try {
       const result = await CashFlowAPI.getProjectCashFlow(projectId);
-      setData(result);
+      console.log('useCashFlowData: Raw API data:', result);
+      
+      // Transform the data to include monthlyBudget structure
+      const transformedData = transformToMonthlyBudget(result);
+      console.log('useCashFlowData: Transformed data:', transformedData);
+      
+      setData(transformedData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch cash flow data';
+      console.error('useCashFlowData: Error fetching cash flow data:', err);
       setError(errorMessage);
-      console.error('Error fetching cash flow data:', err);
     } finally {
       setLoading(false);
+      console.log('useCashFlowData: Fetch completed');
     }
   }, [projectId]);
 

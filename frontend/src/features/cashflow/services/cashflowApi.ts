@@ -9,10 +9,16 @@ export const CashFlowAPI = {
    */
   getProjectCashFlow: async (projectId: string): Promise<CashFlowData> => {
     try {
-      const response = await axiosInstance.get(`/api/projects/${projectId}/cashflows`);
+      console.log('CashFlowAPI: Fetching cashflow for projectId:', projectId);
+      const url = `/api/projects/${projectId}/cashflows`;
+      console.log('CashFlowAPI: Request URL:', url);
+      
+      const response = await axiosInstance.get(url);
+      
+      console.log('CashFlowAPI: Response received:', response.data);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching cashflow for project ${projectId}:`, error);
+      console.error(`CashFlowAPI: Error fetching cashflow for project ${projectId}:`, error);
       throw error;
     }
   },

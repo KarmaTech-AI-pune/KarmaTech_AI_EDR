@@ -5,7 +5,6 @@
  */
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
 import {
   CashFlowData,
   CashFlowRow,
@@ -19,6 +18,7 @@ import {
 import { useCashFlowData } from '../hooks/useCashFlowData';
 import { useCashFlowFilters } from '../hooks/useCashFlowFilters';
 import { useCashFlowCalculations } from '../hooks/useCashFlowCalculations';
+import { useProject } from '../../../context/ProjectContext';
 
 // ============= Create Contexts =============
 
@@ -35,7 +35,8 @@ interface CashFlowProviderProps {
 // ============= Main Provider Component =============
 
 export const CashFlowProvider: React.FC<CashFlowProviderProps> = ({ children }) => {
-  const { projectId } = useParams<{ projectId: string }>();
+  // Get projectId from ProjectContext (session storage)
+  const { projectId } = useProject();
   
   // View and UI State
   const [viewMode, setViewMode] = useState<ViewMode>('BudgetDashboard');
@@ -59,8 +60,12 @@ export const CashFlowProvider: React.FC<CashFlowProviderProps> = ({ children }) 
 
   // Fetch data on mount
   useEffect(() => {
+    console.log('CashFlowContext: projectId changed:', projectId);
     if (projectId) {
+      console.log('CashFlowContext: Fetching cashflow data for project:', projectId);
       fetchData();
+    } else {
+      console.warn('CashFlowContext: No projectId available');
     }
   }, [projectId, fetchData]);
 

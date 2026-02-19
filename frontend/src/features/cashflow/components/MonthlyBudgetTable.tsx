@@ -59,11 +59,53 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
     { description: 'Quoted Price', percentage: null, total: 9964492 },
   ];
 
-  // Default months
-  const defaultMonths = ['Jan-26', 'Feb-26', 'Mar-26', 'Apr-26', 'May-26', 'Jun-26', 
-                         'Jul-26', 'Aug-26', 'Sep-26', 'Oct-26', 'Nov-26', 'Dec-26'];
-  
+  // Get dynamic months from data
   const months = data?.months || [];
+  
+  // Extract unique month labels from the data (dynamic)
+  const monthLabels = months.length > 0 
+    ? months.map(m => m.month) 
+    : [];
+
+  // Show empty state if no data
+  if (monthLabels.length === 0) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          overflow: 'hidden',
+          mb: 3,
+        }}
+      >
+        <Box
+          sx={{
+            px: 3,
+            py: 2.5,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: '#fafafa',
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+            Monthly Budget Breakdown
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            p: 6,
+            textAlign: 'center',
+          }}
+        >
+          <Typography variant="body1" color="text.secondary">
+            No monthly budget data available. Please ensure WBS data is configured for this project.
+          </Typography>
+        </Box>
+      </Paper>
+    );
+  }
 
   return (
     <Paper
@@ -116,8 +158,8 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
                 Months
               </TableCell>
 
-              {/* Month columns */}
-              {defaultMonths.map((month) => (
+              {/* Month columns - Dynamic based on data */}
+              {monthLabels.map((month) => (
                 <TableCell
                   key={month}
                   align="center"
@@ -168,8 +210,8 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
                   {row.label}
                 </TableCell>
 
-                {/* Month values */}
-                {defaultMonths.map((month) => {
+                {/* Month values - Dynamic based on data */}
+                {monthLabels.map((month) => {
                   const monthData = months.find(m => m.month === month);
                   const value = monthData ? (monthData[row.key as keyof typeof monthData] as number) : 0;
                   return (
