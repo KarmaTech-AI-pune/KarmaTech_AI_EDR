@@ -1,6 +1,6 @@
 using System;
 
-namespace NJS.Application.DTOs
+namespace NJS.Application.Dtos
 {
     public class CashflowDto
     {
@@ -13,8 +13,8 @@ namespace NJS.Application.DTOs
         public decimal? TotalProjectCost { get; set; }
         public decimal? CumulativeCost { get; set; }
         public decimal? Revenue { get; set; }
+        public decimal? CumulativeRevenue { get; set; } // NEW: Cumulative revenue
         public decimal? CashFlow { get; set; }
         public string? Status { get; set; }
-       
     }
 }

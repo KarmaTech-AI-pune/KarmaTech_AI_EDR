@@ -35,23 +35,55 @@ namespace NJSAPI.Controllers
             try
             {
                 var query = new GetAllCashflowsQuery { ProjectId = projectId };
-                var cashflows = await _mediator.Send(query);
+                var result = await _mediator.Send(query);
                 
                 // Transform to frontend expected format (camelCase)
                 var response = new
                 {
                     projectId = projectId.ToString(),
-                    rows = cashflows.Select(c => new
+                    projectName = result.ProjectName,
+                    rows = result.Cashflows.Select(c => new
                     {
                         period = c.Month,
                         hours = c.Hours ?? 0,
                         personnel = c.PersonnelCost ?? 0,
                         odc = c.OdcCost ?? 0,
                         totalCosts = c.TotalProjectCost ?? 0,
+                        cumulativeCost = c.CumulativeCost ?? 0,
                         revenue = c.Revenue ?? 0,
+                        cumulativeRevenue = c.CumulativeRevenue ?? 0,
                         netCashFlow = c.CashFlow ?? 0,
                         status = c.Status
-                    }).ToList()
+                    }).ToList(),
+                    summary = new
+                    {
+                        pureManpowerCost = result.Summary.PureManpowerCost,
+                        otherODC = result.Summary.OtherODC,
+                        total = result.Summary.Total,
+                        manpowerContingencies = new
+                        {
+                            percentage = result.Summary.ManpowerContingencies.Percentage,
+                            amount = result.Summary.ManpowerContingencies.Amount
+                        },
+                        odcContingencies = new
+                        {
+                            percentage = result.Summary.OdcContingencies.Percentage,
+                            amount = result.Summary.OdcContingencies.Amount
+                        },
+                        subTotal = result.Summary.SubTotal,
+                        profit = new
+                        {
+                            percentage = result.Summary.Profit.Percentage,
+                            amount = result.Summary.Profit.Amount
+                        },
+                        totalProjectCost = result.Summary.TotalProjectCost,
+                        gst = new
+                        {
+                            percentage = result.Summary.GST.Percentage,
+                            amount = result.Summary.GST.Amount
+                        },
+                        quotedPrice = result.Summary.QuotedPrice
+                    }
                 };
                 
                 return Ok(response);
