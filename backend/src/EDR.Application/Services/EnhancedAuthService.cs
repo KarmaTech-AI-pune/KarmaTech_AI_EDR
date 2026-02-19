@@ -167,7 +167,17 @@ namespace EDR.Application.Services
                 claims.Add(new Claim("TenantId", "0")); // Super admin has no specific tenant
                 
                 // Super admin has access to ALL features
-                claims.Add(new Claim("Features", "*")); // Wildcard for all features
+                // Get all active features from database
+                var allFeatures = await _tenantDbContext.Features
+                    .Where(f => f.IsActive)
+                    .Select(f => f.Name)
+                    .ToListAsync();
+                
+                if (allFeatures.Any())
+                {
+                    var featuresString = string.Join(",", allFeatures);
+                    claims.Add(new Claim("Features", featuresString));
+                }
             }
             else if (tenantRole.HasValue)
             {

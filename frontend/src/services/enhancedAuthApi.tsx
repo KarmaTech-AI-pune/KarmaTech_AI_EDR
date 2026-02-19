@@ -24,6 +24,7 @@ interface EnhancedDecodedToken {
   'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': string;
   'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': string;
   Permissions: string;
+  Features?: string;
   IsSuperAdmin?: string;
   UserType?: string;
   TenantRole?: string;
@@ -42,7 +43,7 @@ export const enhancedAuthApi = {
       // debugger;
       // Determine API endpoint based on tenant context
       let apiUrl = `${API_BASE_URL}api/user/login`;
-      
+
       // If tenant context is provided, use tenant-specific endpoint
       if (tenantContext) {
         // For now, use the main API endpoint but pass tenant context in headers
@@ -54,19 +55,25 @@ export const enhancedAuthApi = {
       if (tenantContext) {
         headers['X-Tenant-Context'] = tenantContext;
       }
-      
+
       const response = await axios.post(apiUrl, credentials, { headers });
       const { success, token } = response.data;
-      
+
       if (success && token) {
         // Store token
         localStorage.setItem('token', token);
-        
+
         // Decode token and extract user information
         const decodedToken = jwtDecode<EnhancedDecodedToken>(token);
         const role = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
         const permissions = normalizePermissions(decodedToken.Permissions);
-        
+
+        // Extract features
+        let features: string[] = [];
+        if (decodedToken.Features) {
+          features = decodedToken.Features.split(',').map(f => f.trim()).filter(Boolean);
+        }
+
         // Determine user type
         const isSuperAdmin = decodedToken.IsSuperAdmin === 'true';
         const userType = decodedToken.UserType;
@@ -98,12 +105,13 @@ export const enhancedAuthApi = {
           tenantRole: tenantRole,
           tenantContext: tenantContext,
           tenantId: decodedToken.TenantId ? parseInt(decodedToken.TenantId) : undefined,
-          tenantDomain: decodedToken.TenantDomain
+          tenantDomain: decodedToken.TenantDomain,
+          features: features
         };
 
         // Store user information
         localStorage.setItem('user', JSON.stringify(userWithRole));
-        
+
         return {
           success: true,
           user: userWithRole,
@@ -111,7 +119,7 @@ export const enhancedAuthApi = {
           message: 'Login successful'
         };
       }
-      
+
       return response.data;
     } catch (error: any) {
       return {
@@ -148,14 +156,14 @@ export const enhancedAuthApi = {
       if (token) {
         const decodedToken = jwtDecode<EnhancedDecodedToken>(token);
         const isSuperAdmin = decodedToken.IsSuperAdmin === 'true';
-        
+
         // Use appropriate logout endpoint
         let logoutUrl = `${API_BASE_URL}/user/logout`;
         if (!isSuperAdmin && decodedToken.UserType === 'TenantUser') {
           // Tenant-specific logout
           logoutUrl = `${API_BASE_URL.replace('localhost:5000', 'tenant1.localhost:5000')}/user/logout`;
         }
-        
+
         await axios.post(logoutUrl);
       }
     } catch (error) {
@@ -172,7 +180,7 @@ export const enhancedAuthApi = {
       if (!token) return false;
 
       const decodedToken = jwtDecode<EnhancedDecodedToken>(token);
-      
+
       // Check if token is expired
       if (decodedToken.exp * 1000 < Date.now()) {
         await enhancedAuthApi.logout();
@@ -183,7 +191,7 @@ export const enhancedAuthApi = {
       if (decodedToken.UserType === 'TenantUser') {
         const currentHost = window.location.hostname;
         const tenantDomain = decodedToken.TenantDomain;
-        
+
         // Validate tenant domain matches current host
         if (tenantDomain && !currentHost.includes(tenantDomain)) {
           console.warn('Tenant domain mismatch', { tenantDomain, currentHost });
@@ -195,7 +203,7 @@ export const enhancedAuthApi = {
           // Ensure user is on the correct subdomain
           const expectedSubdomain = tenantDomain?.split('.')[0];
           const currentSubdomain = currentHost.split('.')[0];
-          
+
           if (expectedSubdomain && currentSubdomain !== expectedSubdomain) {
             console.warn('Tenant subdomain mismatch', { expectedSubdomain, currentSubdomain });
             return false;
@@ -229,16 +237,16 @@ export const enhancedAuthApi = {
   getCurrentUser: async (): Promise<UserWithRole | null> => {
     try {
       const storedUser = localStorage.getItem('user');
-      
+
       if (storedUser) {
         const user = JSON.parse(storedUser);
-        
+
         // Verify user type matches current context
         const token = localStorage.getItem('token');
         if (token) {
           const decodedToken = jwtDecode<EnhancedDecodedToken>(token);
           const currentHost = window.location.hostname;
-          
+
           // For tenant users, ensure they're on the correct subdomain
           if (decodedToken.UserType === 'TenantUser' && !currentHost.includes('localhost:5173')) {
             const tenantSubdomain = currentHost.split('.')[0];
@@ -249,7 +257,7 @@ export const enhancedAuthApi = {
             }
           }
         }
-        
+
         return user;
       }
 
