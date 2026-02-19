@@ -44,11 +44,31 @@ export interface MonthlyBudgetColumn {
   cumulativeMonthlyCosts: number;
   revenue: number;
   cumulativeRevenue: number;
+  cashFlow: number; // NEW: Cash Flow = Cumulative Revenue - Cumulative Cost
+}
+
+export interface ContingencyItem {
+  percentage: number;
+  amount: number;
+}
+
+export interface MonthlyBudgetSummary {
+  pureManpowerCost: number;
+  otherODC: number;
+  total: number;
+  manpowerContingencies: ContingencyItem;
+  odcContingencies: ContingencyItem;
+  subTotal: number;
+  profit: ContingencyItem;
+  totalProjectCost: number;
+  gst: ContingencyItem;
+  quotedPrice: number;
 }
 
 export interface MonthlyBudgetData {
   projectName: string; // e.g., "Barsley"
   months: MonthlyBudgetColumn[];
+  summary?: MonthlyBudgetSummary; // NEW: Summary from API
 }
 
 // ============= Payment Schedule Interfaces =============

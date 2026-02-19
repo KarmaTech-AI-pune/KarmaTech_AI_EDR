@@ -17,41 +17,63 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
   const [error, setError] = useState<string | null>(null);
 
   // Transform API rows to MonthlyBudgetData format
-  const transformToMonthlyBudget = (apiData: CashFlowData) => {
+  const transformToMonthlyBudget = (apiData: any) => {
     if (!apiData.rows || apiData.rows.length === 0) {
-      return apiData;
+      return {
+        projectId: apiData.projectId || '',
+        rows: [],
+        monthlyBudget: {
+          projectName: apiData.projectName || 'Unknown Project',
+          months: [],
+          summary: apiData.summary || undefined,
+        },
+      };
     }
 
     // Transform rows to monthly budget format
-    const months = apiData.rows.map((row, index) => {
-      // Calculate cumulative costs
-      const cumulativeCosts = apiData.rows
-        .slice(0, index + 1)
-        .reduce((sum, r) => sum + r.totalCosts, 0);
-      
-      // Calculate cumulative revenue
-      const cumulativeRevenue = apiData.rows
-        .slice(0, index + 1)
-        .reduce((sum, r) => sum + r.revenue, 0);
-
-      return {
-        month: row.period, // e.g., "Feb-26"
-        totalHours: row.hours,
-        purePersonnel: row.personnel,
-        totalODCs: row.odc,
-        totalProjectCost: row.totalCosts,
-        cumulativeMonthlyCosts: cumulativeCosts,
-        revenue: row.revenue,
-        cumulativeRevenue: cumulativeRevenue,
-      };
-    });
+    const months = apiData.rows.map((row: any) => ({
+      month: row.period, // e.g., "Feb-26"
+      totalHours: row.hours || 0,
+      purePersonnel: row.personnel || 0,
+      totalODCs: row.odc || 0,
+      totalProjectCost: row.totalCosts || 0,
+      cumulativeMonthlyCosts: row.cumulativeCost || 0,
+      revenue: row.revenue || 0,
+      cumulativeRevenue: row.cumulativeRevenue || 0,
+      cashFlow: row.netCashFlow || 0, // NEW: Cash Flow from API
+    }));
 
     // Add monthlyBudget structure to the data
     return {
-      ...apiData,
+      projectId: apiData.projectId || '',
+      rows: apiData.rows,
       monthlyBudget: {
-        projectName: `Project ${apiData.projectId}`, // You can enhance this with actual project name
+        projectName: apiData.projectName || 'Unknown Project',
         months: months,
+        summary: apiData.summary ? {
+          pureManpowerCost: apiData.summary.pureManpowerCost || 0,
+          otherODC: apiData.summary.otherODC || 0,
+          total: apiData.summary.total || 0,
+          manpowerContingencies: {
+            percentage: apiData.summary.manpowerContingencies?.percentage || 0,
+            amount: apiData.summary.manpowerContingencies?.amount || 0,
+          },
+          odcContingencies: {
+            percentage: apiData.summary.odcContingencies?.percentage || 0,
+            amount: apiData.summary.odcContingencies?.amount || 0,
+          },
+          subTotal: apiData.summary.subTotal || 0,
+          profit: {
+            percentage: apiData.summary.profit?.percentage || 0,
+            amount: apiData.summary.profit?.amount || 0,
+          },
+          totalProjectCost: apiData.summary.totalProjectCost || 0,
+          gst: {
+            percentage: apiData.summary.gst?.percentage || 0,
+            amount: apiData.summary.gst?.amount || 0,
+          },
+          quotedPrice: apiData.summary.quotedPrice || 0,
+        } : undefined,
       },
     };
   };

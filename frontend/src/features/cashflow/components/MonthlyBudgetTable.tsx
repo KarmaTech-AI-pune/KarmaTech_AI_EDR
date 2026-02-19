@@ -43,21 +43,25 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
     { key: 'cumulativeMonthlyCosts', label: 'Cumulative Monthly Costs', format: formatCurrency },
     { key: 'revenue', label: 'Revenue', format: formatCurrency },
     { key: 'cumulativeRevenue', label: 'Cumulative Revenue', format: formatCurrency },
+    { key: 'cashFlow', label: 'Cash Flow', format: formatCurrency },
   ];
 
-  // Summary rows (Description, Percentage, Totals in INR)
-  const summaryData = [
-    { description: 'Pure manpower cost', percentage: null, total: 2724250 },
-    { description: 'Other ODC', percentage: null, total: 4000000 },
-    { description: 'Total', percentage: null, total: 6724250 },
-    { description: 'Manpower Contingencies', percentage: 20, total: 544850 },
-    { description: 'ODC Contingencies', percentage: 10, total: 400000 },
-    { description: 'Sub total', percentage: null, total: 7669100 },
-    { description: 'Profit', percentage: 16, total: 1766810 },
-    { description: 'Total Project Cost', percentage: null, total: 8436910 },
-    { description: 'GST', percentage: 18, total: 1518632 },
-    { description: 'Quoted Price', percentage: null, total: 9964492 },
-  ];
+  // Get summary data from API (dynamic)
+  const summary = data?.summary;
+
+  // Summary rows (Description, Percentage, Totals in INR) - Dynamic from API
+  const summaryData = summary ? [
+    { description: 'Pure manpower cost', percentage: null, total: summary.pureManpowerCost },
+    { description: 'Other ODC', percentage: null, total: summary.otherODC },
+    { description: 'Total', percentage: null, total: summary.total },
+    { description: 'Manpower Contingencies', percentage: summary.manpowerContingencies.percentage, total: summary.manpowerContingencies.amount },
+    { description: 'ODC Contingencies', percentage: summary.odcContingencies.percentage, total: summary.odcContingencies.amount },
+    { description: 'Sub total', percentage: null, total: summary.subTotal },
+    { description: 'Profit', percentage: summary.profit.percentage, total: summary.profit.amount },
+    { description: 'Total Project Cost', percentage: null, total: summary.totalProjectCost },
+    { description: 'GST', percentage: summary.gst.percentage, total: summary.gst.amount },
+    { description: 'Quoted Price', percentage: null, total: summary.quotedPrice },
+  ] : [];
 
   // Get dynamic months from data
   const months = data?.months || [];
@@ -194,7 +198,7 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
                 {/* Row label */}
                 <TableCell
                   sx={{
-                    fontWeight: 600,
+                    fontWeight: row.key === 'cashFlow' ? 700 : 600,
                     fontSize: '0.875rem',
                     color: '#374151',
                     py: 1.5,
@@ -214,16 +218,19 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
                 {monthLabels.map((month) => {
                   const monthData = months.find(m => m.month === month);
                   const value = monthData ? (monthData[row.key as keyof typeof monthData] as number) : 0;
+                  const isNegative = value < 0;
+                  
                   return (
                     <TableCell
                       key={`${row.key}-${month}`}
                       align="center"
                       sx={{
                         fontSize: '0.8rem',
-                        color: value === 0 ? '#9ca3af' : '#374151',
+                        color: isNegative ? '#dc2626' : (value === 0 ? '#9ca3af' : '#374151'),
                         py: 1.5,
                         px: 1.5,
                         fontFamily: 'monospace',
+                        fontWeight: row.key === 'cashFlow' ? 700 : 400,
                         backgroundColor: rowIndex === 4 ? '#bfdbfe' : 'inherit',
                         borderRight: '1px solid',
                         borderColor: 'divider',
@@ -239,118 +246,120 @@ export const MonthlyBudgetTable: React.FC<MonthlyBudgetTableProps> = ({ data }) 
         </Table>
       </TableContainer>
 
-      {/* Summary Section (Description, Percentage, Totals in INR) */}
-      <Box sx={{ borderTop: '2px solid', borderColor: 'divider', mt: 2 }}>
-        <Table sx={{ minWidth: 600 }}>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: '#e0f2fe' }}>
-              <TableCell
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                  color: '#374151',
-                  py: 1.5,
-                  px: 2,
-                  width: '60%',
-                }}
-              >
-                Description
-              </TableCell>
-              <TableCell
-                align="center"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                  color: '#374151',
-                  py: 1.5,
-                  px: 2,
-                  width: '20%',
-                }}
-              >
-                Percentage
-              </TableCell>
-              <TableCell
-                align="right"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                  color: '#374151',
-                  py: 1.5,
-                  px: 2,
-                  width: '20%',
-                }}
-              >
-                Totals in INR
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {summaryData.map((item, index) => (
-              <TableRow
-                key={index}
-                sx={{
-                  backgroundColor: 
-                    item.description === 'Total' || 
-                    item.description === 'Sub total' || 
-                    item.description === 'Total Project Cost' ||
-                    item.description === 'Quoted Price'
-                      ? '#bfdbfe'
-                      : '#ffffff',
-                }}
-              >
+      {/* Summary Section (Description, Percentage, Totals in INR) - Dynamic from API */}
+      {summaryData.length > 0 && (
+        <Box sx={{ borderTop: '2px solid', borderColor: 'divider', mt: 2 }}>
+          <Table sx={{ minWidth: 600 }}>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#e0f2fe' }}>
                 <TableCell
                   sx={{
-                    fontSize: '0.875rem',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
                     color: '#374151',
                     py: 1.5,
                     px: 2,
-                    fontWeight: 
-                      item.description === 'Total' || 
-                      item.description === 'Sub total' || 
-                      item.description === 'Total Project Cost' ||
-                      item.description === 'Quoted Price'
-                        ? 700
-                        : 400,
+                    width: '60%',
                   }}
                 >
-                  {item.description}
+                  Description
                 </TableCell>
                 <TableCell
                   align="center"
                   sx={{
-                    fontSize: '0.875rem',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
                     color: '#374151',
                     py: 1.5,
                     px: 2,
-                    fontFamily: 'monospace',
+                    width: '20%',
                   }}
                 >
-                  {item.percentage ? `${item.percentage}%` : '-'}
+                  Percentage
                 </TableCell>
                 <TableCell
                   align="right"
                   sx={{
-                    fontSize: '0.875rem',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
                     color: '#374151',
                     py: 1.5,
                     px: 2,
-                    fontFamily: 'monospace',
-                    fontWeight: 
+                    width: '20%',
+                  }}
+                >
+                  Totals in INR
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {summaryData.map((item, index) => (
+                <TableRow
+                  key={index}
+                  sx={{
+                    backgroundColor: 
                       item.description === 'Total' || 
                       item.description === 'Sub total' || 
                       item.description === 'Total Project Cost' ||
                       item.description === 'Quoted Price'
-                        ? 700
-                        : 400,
+                        ? '#bfdbfe'
+                        : '#ffffff',
                   }}
                 >
-                  {formatCurrency(item.total)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Box>
+                  <TableCell
+                    sx={{
+                      fontSize: '0.875rem',
+                      color: '#374151',
+                      py: 1.5,
+                      px: 2,
+                      fontWeight: 
+                        item.description === 'Total' || 
+                        item.description === 'Sub total' || 
+                        item.description === 'Total Project Cost' ||
+                        item.description === 'Quoted Price'
+                          ? 700
+                          : 400,
+                    }}
+                  >
+                    {item.description}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontSize: '0.875rem',
+                      color: '#374151',
+                      py: 1.5,
+                      px: 2,
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    {item.percentage ? `${item.percentage}%` : '-'}
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontSize: '0.875rem',
+                      color: '#374151',
+                      py: 1.5,
+                      px: 2,
+                      fontFamily: 'monospace',
+                      fontWeight: 
+                        item.description === 'Total' || 
+                        item.description === 'Sub total' || 
+                        item.description === 'Total Project Cost' ||
+                        item.description === 'Quoted Price'
+                          ? 700
+                          : 400,
+                    }}
+                  >
+                    {formatCurrency(item.total)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Box>
+      )}
     </Paper>
   );
 };
