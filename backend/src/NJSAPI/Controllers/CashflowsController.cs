@@ -8,6 +8,7 @@ using NJS.Application.CQRS.Cashflow.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
 
@@ -28,14 +29,32 @@ namespace NJSAPI.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<CashflowDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<CashflowDto>>> GetAllCashflows(int projectId)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult> GetAllCashflows(int projectId)
         {
             try
             {
                 var query = new GetAllCashflowsQuery { ProjectId = projectId };
                 var cashflows = await _mediator.Send(query);
-                return Ok(cashflows);
+                
+                // Transform to frontend expected format (camelCase)
+                var response = new
+                {
+                    projectId = projectId.ToString(),
+                    rows = cashflows.Select(c => new
+                    {
+                        period = c.Month,
+                        hours = c.Hours ?? 0,
+                        personnel = c.PersonnelCost ?? 0,
+                        odc = c.OdcCost ?? 0,
+                        totalCosts = c.TotalProjectCost ?? 0,
+                        revenue = c.Revenue ?? 0,
+                        netCashFlow = c.CashFlow ?? 0,
+                        status = c.Status
+                    }).ToList()
+                };
+                
+                return Ok(response);
             }
             catch (Exception ex)
             {

@@ -7,6 +7,7 @@ namespace NJS.Application.DTOs
         public int? Id { get; set; }
         public int? ProjectId { get; set; }
         public string? Month { get; set; }
+        public int? Hours { get; set; }
         public decimal? PersonnelCost { get; set; }
         public decimal? OdcCost { get; set; }
         public decimal? TotalProjectCost { get; set; }
