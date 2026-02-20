@@ -12,26 +12,30 @@ export interface FormFeatureMap {
  * Feature names must match exactly with the backend Feature.Name values
  */
 export const FORM_FEATURE_MAP: FormFeatureMap = {
-  // Project Management Forms - WBS Sub-features
+  // Dashboard & Program
+  'dashboard': 'Dashboard',
+  'program': 'Program Management',
+
+  // WBS & Sub-features
   'wbs': 'Work Breakdown Structure (WBS)',
   'wbs-manpower': 'Manpower Planning',
   'wbs-odc': 'ODC (Other Direct Cost) Table',
   'wbs-todo-list': 'Sprint Planning',
-  
-  // Other Project Management Forms
+
+  // Project Management Forms
   'job-start': 'Job Start Form',
   'input-register': 'Input/Output Register',
-  'correspondence': 'Email Notifications',
-  'check&review': 'Email Notifications', // Using Email Notifications as placeholder
-  'change-control': 'Email Notifications', // Using Email Notifications as placeholder
+  'correspondence': 'Correspondence',
+  'check&review': 'Check & Review',
+  'change-control': 'Change Control',
   'progress-review': 'Monthly Progress Review',
-  'closure': 'Email Notifications', // Using Email Notifications as placeholder
-  'monthly-reports': 'monthly Reports',
-  
+  'closure': 'Project Closure',
+  'monthly-reports': 'Monthly Reports',
+
   // Business Development Forms
-  'opportunity-tracking': 'Email Notifications', // Using Email Notifications as placeholder
-  'gonogo': 'Email Notifications', // Using Email Notifications as placeholder
-  'bid-preparation': 'Email Notifications', // Using Email Notifications as placeholder
+  'opportunity-tracking': 'Opportunity Tracking',
+  'gonogo': 'Go/No Go Decision',
+  'bid-preparation': 'Bid Preparation',
 };
 
 /**
