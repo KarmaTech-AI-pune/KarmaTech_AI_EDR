@@ -73,9 +73,9 @@ export const commentService = {
     // --- Subtask Comments ---
 
     // Get all comments for a subtask
-    async getCommentsBySubtaskId(subtaskId: number): Promise<SubtaskCommentResponse[]> {
+    async getCommentsBySubtaskId(taskId: number, subtaskId: number): Promise<SubtaskCommentResponse[]> {
         const response = await axiosInstance.get<SubtaskCommentResponse[]>(
-            `/api/sprint-tasks/subtasks/${subtaskId}/comments`
+            `/api/sprint-tasks/${taskId}/subtasks/${subtaskId}/comments`
         );
         return response.data;
     },

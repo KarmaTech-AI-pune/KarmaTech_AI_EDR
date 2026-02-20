@@ -77,6 +77,22 @@ The AI-DLC workflow now includes **automatic GitHub operations** at key points:
 13. 🤖 AUTOMATIC: Merge & deploy (Step 7)
     └─ gh pr merge --delete-branch
     └─ Triggers deploy-dev-with-tags.yml
+   ↓
+14. 🏁 RELEASE MANAGEMENT: Quality Gates
+    └─ 100% Pass: Unit/Integration, Regression, Smoke
+   ↓
+15. 🏗️ BUILD: Artifact Generation
+    └─ .\PublishProject.ps1
+   ↓
+16. 🌿 RELEASE: Branch Creation
+    └─ git checkout -b release/vX.X.X from Kiro/dev
+   ↓
+17. 🚀 DEPLOY: AWS Production
+    └─ After successful E2E validation
+   ↓
+18. 🔗 PROMOTION: Dual PR Strategy
+    └─ PR 1: External (makshintre -> RamyaSuvarapu/EDR_Project_Deploy:Saas/dev)
+    └─ PR 2: Internal (release/vX.X.X -> master)
 ```
 
 **Result:** 90% automation, 85% faster delivery, 95% fewer errors
@@ -1736,6 +1752,37 @@ gh pr merge [PR-number] --merge --delete-branch
 
 # 7. Check Deployment Status
 gh run list --workflow=deploy-dev-with-tags.yml --limit 1
+
+# 8. Release Quality Gates (Step 14)
+# Ensure 100% pass on Unit, Integration, Regression, and Smoke tests
+
+# 9. Build Artifacts (Step 15)
+.\PublishProject.ps1
+
+# 10. Create Release Branch (Step 16)
+git checkout Kiro/dev
+git pull origin Kiro/dev
+git checkout -b release/vX.X.X
+git push -u origin release/vX.X.X
+
+# 11. Deploy to AWS (Step 17)
+# Triggered after E2E validation passes
+
+# 12. Dual PR Promotion (Step 18)
+# PR 1: External Deployment (To SaaS)
+gh pr create \
+  --repo RamyaSuvarapu/EDR_Project_Deploy \
+  --base Saas/dev \
+  --head makshintre:release/vX.X.X \
+  --title "release: vX.X.X" \
+  --body "Release vX.X.X promotion to SaaS production."
+
+# PR 2: Internal Sync (To Master)
+gh pr create \
+  --base master \
+  --head release/vX.X.X \
+  --title "release: vX.X.X" \
+  --body "Merging release vX.X.X back to master."
 ```
 
 ### **When Human Intervention is Needed:**

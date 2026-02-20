@@ -22,6 +22,8 @@ import ReleaseNotesModal from '../components/ReleaseNotesModal';
 import { releaseNotesApi } from '../services/releaseNotesApi';
 import { versionApi } from '../services/versionApi';
 
+const MANUAL_VERSION_OVERRIDE = '1.2.0'; // Set this to e.g. '1.5.0' to force a version display
+
 export const LoginScreen: React.FC = () => {
     const [email, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -58,7 +60,7 @@ export const LoginScreen: React.FC = () => {
 
         // Start preloading after a short delay to not block UI
         const timeoutId = setTimeout(preloadReleaseNotes, 1000);
-        
+
         return () => clearTimeout(timeoutId);
     }, []); // Run once when component mounts
 
@@ -74,7 +76,7 @@ export const LoginScreen: React.FC = () => {
 
         try {
             const result = await authApi.login(credentials);
-// debugger;
+            // debugger;
             if (result.success) {
                 if (result.requiresOtp) {
                     // 2FA is required, show OTP verification
@@ -186,6 +188,7 @@ export const LoginScreen: React.FC = () => {
                     fetchVersionFromAPI={true}
                     clickable={true}
                     onVersionClick={handleVersionClick}
+                    forceVersion={MANUAL_VERSION_OVERRIDE}
                 />
             </Container>
 
@@ -252,10 +255,10 @@ export const LoginScreen: React.FC = () => {
                         </Button>
                     </form>
                     <Typography variant="body2" align="center" sx={{ mt: 2, color: '#666' }}>
-                        <Link 
-                            href="/forgot-password" 
-                            sx={{ 
-                                color: '#1976d2', 
+                        <Link
+                            href="/forgot-password"
+                            sx={{
+                                color: '#1976d2',
                                 textDecoration: 'none',
                                 cursor: 'pointer'
                             }}

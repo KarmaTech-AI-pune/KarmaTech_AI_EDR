@@ -630,7 +630,12 @@ export const createSprintPlanAPI = async (sprintPlan: SprintPlanInputDto): Promi
 };
 
 // Keep static team members for now (you might want to fetch these from API too)
-export const teamMembers: TeamMember[] = [];
+// Keep static team members for now (you might want to fetch these from API too)
+export const teamMembers: TeamMember[] = [
+  { id: '1', name: 'User 1', avatar: 'U1' },
+  { id: '2', name: 'User 2', avatar: 'U2' },
+  { id: 'current-user', name: 'Current User', avatar: 'CU' }
+];
 
 export const fetchIssuesForSprintAPI = async (sprintId: number, projectId?: number): Promise<SprintData> => {
   try {
