@@ -1,4 +1,4 @@
-import { OpportunityTracking } from '../../models'
+﻿import { OpportunityTracking } from '../../models'
 import { Card, CardContent, Typography, Grid, Chip, Divider, Box } from '@mui/material';
 import { getWorkflowStatusById } from '../../dummyapi/database/dummyOpporunityWorkflow';
 import { getUserById } from '../../services/userApi';
@@ -172,10 +172,10 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
                   /> : 'Not specified'}
               </Typography>
               <Typography variant="body1">
-                NJS Success Rate: {opportunity.percentageChanceOfNJSSuccess !== undefined ? 
+                EDR Success Rate: {opportunity.percentageChanceOfEDRSuccess !== undefined ? 
                   <Chip 
-                    label={`${opportunity.percentageChanceOfNJSSuccess}%`}
-                    color={opportunity.percentageChanceOfNJSSuccess > 50 ? 'success' : 'warning'}
+                    label={`${opportunity.percentageChanceOfEDRSuccess}%`}
+                    color={opportunity.percentageChanceOfEDRSuccess > 50 ? 'success' : 'warning'}
                     size="small"
                   /> : 'Not specified'}
               </Typography>
@@ -204,7 +204,7 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
                 Gross Revenue: <strong>{formatNumber(opportunity.grossRevenue, opportunity.currency)}</strong>
               </Typography>
               <Typography variant="body1">
-                Net NJS Revenue: <strong>{formatNumber(opportunity.netNJSRevenue, opportunity.currency)}</strong>
+                Net EDR Revenue: <strong>{formatNumber(opportunity.netEDRRevenue, opportunity.currency)}</strong>
               </Typography>
             </Box>
           </Grid>
@@ -264,3 +264,4 @@ export const BusinessDevelopmentWidget = ({ opportunity }: BusinessDevelopmentWi
     </Card>
   );
 };
+

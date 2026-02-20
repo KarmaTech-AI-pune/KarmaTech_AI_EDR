@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+<Project Sdk="Microsoft.NET.Sdk">
+=======
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+>>>>>>> origin/feature/Add-postgresql
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,3 +12,7 @@
   </PropertyGroup>
 
 </Project>
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/feature/Add-postgresql

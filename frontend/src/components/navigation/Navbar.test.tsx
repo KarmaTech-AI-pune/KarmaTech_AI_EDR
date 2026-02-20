@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Navbar } from './Navbar';
 import { projectManagementAppContext } from '../../App';
@@ -121,7 +121,7 @@ describe('Navbar Component', () => {
     renderWithContext();
 
     // Check for logo image
-    const logoImage = screen.getAllByAltText('NJSEI ISO 9000');
+    const logoImage = screen.getAllByAltText('EDREI ISO 9000');
     expect(logoImage.length).toBeGreaterThan(0); // Should have at least one logo (mobile or desktop)
   });
 
@@ -296,7 +296,7 @@ describe('Navbar Component', () => {
     renderWithContext();
 
     // Find and click the logo
-    const logoImages = screen.getAllByAltText('NJSEI ISO 9000');
+    const logoImages = screen.getAllByAltText('EDREI ISO 9000');
     fireEvent.click(logoImages[0]); // Click the first logo (could be mobile or desktop)
 
     // Verify navigation to Dashboard
@@ -402,3 +402,4 @@ describe('Navbar Component', () => {
     console.error = originalConsoleError;
   });
 });
+

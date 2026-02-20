@@ -1,15 +1,15 @@
-:: @echo off
+﻿:: @echo off
 :: echo Dropping database...
-:: dotnet ef database drop --project src/NJS.Domain --startup-project src/NJSAPI --force
+:: dotnet ef database drop --project src/EDR.Domain --startup-project src/EDR.API --force
 
 :: echo Removing migrations...
-:: dotnet ef migrations remove --project src/NJS.Domain --startup-project src/NJSAPI
+:: dotnet ef migrations remove --project src/EDR.Domain --startup-project src/EDR.API
 
 :: echo Adding initial migration...
-:: dotnet ef migrations add InitialCreate --project src/NJS.Domain --startup-project src/NJSAPI
+:: dotnet ef migrations add InitialCreate --project src/EDR.Domain --startup-project src/EDR.API
 
 :: echo Updating database...
-:: dotnet ef database update --project src/NJS.Domain --startup-project src/NJSAPI
+:: dotnet ef database update --project src/EDR.Domain --startup-project src/EDR.API
 
 :: pause
 
@@ -28,15 +28,16 @@ if "%migrationName%"=="" (
 :: Output the migration name for confirmation
 echo Migration name: %migrationName%
 :: echo Dropping database...
-:: dotnet ef database drop --project src/NJS.Domain --startup-project src/NJSAPI --force
+:: dotnet ef database drop --project src/EDR.Domain --startup-project src/EDR.API --force
 
 ::echo Removing migrations...
-::dotnet ef migrations remove --project src/NJS.Domain --startup-project src/NJSAPI
+::dotnet ef migrations remove --project src/EDR.Domain --startup-project src/EDR.API
 
 echo Adding migration: %migrationName%...
-dotnet ef migrations add %migrationName% --context ProjectManagementContext --project src/NJS.Domain --startup-project src/NJSAPI
+dotnet ef migrations add %migrationName% --context ProjectManagementContext --project src/EDR.Domain --startup-project src/EDR.API
 
 echo Updating database...
-dotnet ef database update --context ProjectManagementContext --project src/NJS.Domain --startup-project src/NJSAPI
+dotnet ef database update --context ProjectManagementContext --project src/EDR.Domain --startup-project src/EDR.API
 
 pause
+

@@ -1,0 +1,45 @@
+﻿using MediatR;
+using EDR.Application.CQRS.SprintTasks.Queries;
+using EDR.Application.Dtos;
+using EDR.Domain.Database;
+using Microsoft.EntityFrameworkCore;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace EDR.Application.CQRS.SprintTasks.Handlers
+{
+    public class GetSprintTaskCommentByIdQueryHandler : IRequestHandler<GetSprintTaskCommentByIdQuery, SprintTaskCommentDto?>
+    {
+        private readonly ProjectManagementContext _context;
+
+        public GetSprintTaskCommentByIdQueryHandler(ProjectManagementContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<SprintTaskCommentDto> Handle(GetSprintTaskCommentByIdQuery request, CancellationToken cancellationToken)
+        {
+            var comment = await _context.SprintTaskComments
+                                        .AsNoTracking()
+                                        .Where(c => c.TenantId == (_context.TenantId ?? 0))
+                                        .FirstOrDefaultAsync(c => c.CommentId == request.CommentId, cancellationToken);
+
+            if (comment == null)
+            {
+                return null; // Comment not found
+            }
+
+            return new SprintTaskCommentDto
+            {
+                CommentId = comment.CommentId,
+                Taskid = comment.Taskid,
+                CommentText = comment.CommentText,
+                CreatedBy = comment.CreatedBy,
+                CreatedDate = comment.CreatedDate,
+                UpdatedBy = comment.UpdatedBy,
+                UpdatedDate = comment.UpdatedDate
+            };
+        }
+    }
+}
+

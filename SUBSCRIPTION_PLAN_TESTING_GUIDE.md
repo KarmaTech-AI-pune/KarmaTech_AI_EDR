@@ -1,4 +1,4 @@
-# Subscription Plan and Feature Management - Manual Testing Guide
+﻿# Subscription Plan and Feature Management - Manual Testing Guide
 
 **Version:** 1.0  
 **Date:** February 11, 2026  
@@ -7,7 +7,7 @@
 
 ---
 
-## 📋 Table of Contents
+## ðŸ“‹ Table of Contents
 
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
@@ -23,7 +23,7 @@
 
 ---
 
-## 🎯 Overview
+## ðŸŽ¯ Overview
 
 This guide provides step-by-step instructions for manually testing the Subscription Plan and Feature Management functionality in the KarmaTech EDR application.
 
@@ -37,7 +37,7 @@ This guide provides step-by-step instructions for manually testing the Subscript
 
 ---
 
-## ✅ Prerequisites
+## âœ… Prerequisites
 
 ### Required Tools
 
@@ -61,13 +61,13 @@ You'll need accounts with different roles:
 
 ---
 
-## 🔧 Test Environment Setup
+## ðŸ”§ Test Environment Setup
 
 ### Step 1: Start the Backend API
 
 ```powershell
 # Navigate to backend directory
-cd backend/src/NJSAPI
+cd backend/src/EDR.API
 
 # Run the API
 dotnet run
@@ -140,7 +140,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-## 📦 Subscription Plan Management Tests
+## ðŸ“¦ Subscription Plan Management Tests
 
 ### Test 1: Get All Subscription Plans
 
@@ -438,7 +438,7 @@ Authorization: Bearer {{token}}
 
 ---
 
-## 🎨 Feature Management Tests
+## ðŸŽ¨ Feature Management Tests
 
 ### Test 7: Get All Features
 
@@ -588,7 +588,7 @@ Authorization: Bearer {{token}}
 
 ---
 
-## 🔗 Plan-Feature Mapping Tests
+## ðŸ”— Plan-Feature Mapping Tests
 
 ### Test 12: Add Feature to Plan
 
@@ -690,7 +690,7 @@ Authorization: Bearer {{token}}
 
 ---
 
-## 👥 Tenant Subscription Tests
+## ðŸ‘¥ Tenant Subscription Tests
 
 ### Test 15: Create Tenant Subscription
 
@@ -798,7 +798,7 @@ Authorization: Bearer {{token}}
 
 ---
 
-## 📊 Integration Tests
+## ðŸ“Š Integration Tests
 
 ### Test 18: Complete Subscription Workflow
 
@@ -905,7 +905,7 @@ WHERE t.Status = 'Active';
 
 ---
 
-## 🔒 Security & Authorization Tests
+## ðŸ”’ Security & Authorization Tests
 
 ### Test 20: Unauthorized Access
 
@@ -978,7 +978,7 @@ Content-Type: application/json
 
 ---
 
-## ⚡ Performance Tests
+## âš¡ Performance Tests
 
 ### Test 24: Load Testing - Get All Plans
 
@@ -1021,7 +1021,7 @@ GET {{baseUrl}}/api/subscriptions/plans?includeFeatures=true
 
 ---
 
-## 📚 Test Data Reference
+## ðŸ“š Test Data Reference
 
 ### Seeded Subscription Plans
 
@@ -1029,8 +1029,8 @@ GET {{baseUrl}}/api/subscriptions/plans?includeFeatures=true
 |----|------|---------|--------|-------|----------|---------|
 | 1 | Starter | $100 | $1,000 | 5 | 5 | 10 GB |
 | 2 | Business | $400 | $4,000 | 20 | 25 | 100 GB |
-| 3 | Enterprise | Custom | Custom | ∞ | ∞ | ∞ |
-| 4 | One-Time License | $0 | $0 | ∞ | ∞ | ∞ |
+| 3 | Enterprise | Custom | Custom | âˆž | âˆž | âˆž |
+| 4 | One-Time License | $0 | $0 | âˆž | âˆž | âˆž |
 
 ### Seeded Features (Starter Plan)
 
@@ -1062,7 +1062,7 @@ GET {{baseUrl}}/api/subscriptions/plans?includeFeatures=true
 
 ---
 
-## 🔧 Troubleshooting
+## ðŸ”§ Troubleshooting
 
 ### Issue 1: "Subscription plan not found"
 
@@ -1127,7 +1127,7 @@ GET {{baseUrl}}/api/subscriptions/plans?includeFeatures=true
 
 ---
 
-## ✅ Test Completion Checklist
+## âœ… Test Completion Checklist
 
 ### Subscription Plan Management
 - [ ] Get all plans
@@ -1171,7 +1171,7 @@ GET {{baseUrl}}/api/subscriptions/plans?includeFeatures=true
 
 ---
 
-## 📝 Test Report Template
+## ðŸ“ Test Report Template
 
 After completing all tests, document results:
 
@@ -1215,7 +1215,7 @@ After completing all tests, document results:
 
 ---
 
-## 🎯 Next Steps
+## ðŸŽ¯ Next Steps
 
 After completing manual testing:
 
@@ -1241,7 +1241,7 @@ Contact the development team or refer to:
 
 ---
 
-# 🖥️ FRONTEND APPLICATION TESTING
+# ðŸ–¥ï¸ FRONTEND APPLICATION TESTING
 
 ## Overview
 
@@ -1249,7 +1249,7 @@ This section covers manual testing of the subscription plan and feature manageme
 
 ---
 
-## 🚀 Frontend Environment Setup
+## ðŸš€ Frontend Environment Setup
 
 ### Step 1: Start the Frontend Application
 
@@ -1268,9 +1268,9 @@ npm run dev
 ```
 VITE v5.x.x  ready in xxx ms
 
-➜  Local:   http://localhost:5173/
-➜  Network: use --host to expose
-➜  press h + enter to show help
+âžœ  Local:   http://localhost:5173/
+âžœ  Network: use --host to expose
+âžœ  press h + enter to show help
 ```
 
 ### Step 2: Access the Application
@@ -1292,7 +1292,7 @@ VITE v5.x.x  ready in xxx ms
 
 ---
 
-## 📋 Frontend Test Cases
+## ðŸ“‹ Frontend Test Cases
 
 ---
 
@@ -1304,7 +1304,7 @@ VITE v5.x.x  ready in xxx ms
 
 **Steps:**
 1. Login as admin user
-2. Click on the **hamburger menu** (☰) or **Admin Panel** link
+2. Click on the **hamburger menu** (â˜°) or **Admin Panel** link
 3. Look for **"Subscription Plans"** in the sidebar menu
 4. Click on **"Subscription Plans"**
 
@@ -1783,7 +1783,7 @@ WHERE t.Name = 'Test Company Inc';
 **Purpose:** Verify graceful handling of network errors
 
 **Steps:**
-1. Open browser DevTools → Network tab
+1. Open browser DevTools â†’ Network tab
 2. Set throttling to "Offline"
 3. Try to load Subscription Plans page
 4. Try to create/edit a plan
@@ -1900,7 +1900,7 @@ WHERE t.Name = 'Test Company Inc';
 
 ---
 
-## 📊 Frontend Test Results Template
+## ðŸ“Š Frontend Test Results Template
 
 ```markdown
 # Frontend Test Execution Report
@@ -1920,51 +1920,51 @@ WHERE t.Name = 'Test Company Inc';
 ## Test Results by Suite
 
 ### Suite 1: Admin Panel Access (F1-F3)
-- F1: ☐ Pass ☐ Fail - Navigate to Subscription Management
-- F2: ☐ Pass ☐ Fail - View Statistics Dashboard
-- F3: ☐ Pass ☐ Fail - View Plans Table
+- F1: â˜ Pass â˜ Fail - Navigate to Subscription Management
+- F2: â˜ Pass â˜ Fail - View Statistics Dashboard
+- F3: â˜ Pass â˜ Fail - View Plans Table
 
 ### Suite 2: Create Subscription Plan (F4-F6)
-- F4: ☐ Pass ☐ Fail - Open Create Dialog
-- F5: ☐ Pass ☐ Fail - Create Plan Success
-- F6: ☐ Pass ☐ Fail - Validation Errors
+- F4: â˜ Pass â˜ Fail - Open Create Dialog
+- F5: â˜ Pass â˜ Fail - Create Plan Success
+- F6: â˜ Pass â˜ Fail - Validation Errors
 
 ### Suite 3: Edit Subscription Plan (F7-F9)
-- F7: ☐ Pass ☐ Fail - Open Edit Dialog
-- F8: ☐ Pass ☐ Fail - Update Plan Success
-- F9: ☐ Pass ☐ Fail - Cancel Changes
+- F7: â˜ Pass â˜ Fail - Open Edit Dialog
+- F8: â˜ Pass â˜ Fail - Update Plan Success
+- F9: â˜ Pass â˜ Fail - Cancel Changes
 
 ### Suite 4: Delete Subscription Plan (F10-F11)
-- F10: ☐ Pass ☐ Fail - Delete Success
-- F11: ☐ Pass ☐ Fail - Delete Error (In Use)
+- F10: â˜ Pass â˜ Fail - Delete Success
+- F11: â˜ Pass â˜ Fail - Delete Error (In Use)
 
 ### Suite 5: Feature Management (F12-F13)
-- F12: ☐ Pass ☐ Fail - View Features
-- F13: ☐ Pass ☐ Fail - Add/Remove Features
+- F12: â˜ Pass â˜ Fail - View Features
+- F13: â˜ Pass â˜ Fail - Add/Remove Features
 
 ### Suite 6: Tenant Subscription (F14-F17)
-- F14: ☐ Pass ☐ Fail - Navigate to Tenants
-- F15: ☐ Pass ☐ Fail - Assign Subscription
-- F16: ☐ Pass ☐ Fail - Upgrade Subscription
-- F17: ☐ Pass ☐ Fail - Remove Subscription
+- F14: â˜ Pass â˜ Fail - Navigate to Tenants
+- F15: â˜ Pass â˜ Fail - Assign Subscription
+- F16: â˜ Pass â˜ Fail - Upgrade Subscription
+- F17: â˜ Pass â˜ Fail - Remove Subscription
 
 ### Suite 7: Responsive Design (F18-F20)
-- F18: ☐ Pass ☐ Fail - Mobile Responsiveness
-- F19: ☐ Pass ☐ Fail - Tablet Responsiveness
-- F20: ☐ Pass ☐ Fail - Browser Compatibility
+- F18: â˜ Pass â˜ Fail - Mobile Responsiveness
+- F19: â˜ Pass â˜ Fail - Tablet Responsiveness
+- F20: â˜ Pass â˜ Fail - Browser Compatibility
 
 ### Suite 8: Error Handling (F21-F23)
-- F21: ☐ Pass ☐ Fail - Network Errors
-- F22: ☐ Pass ☐ Fail - Loading States
-- F23: ☐ Pass ☐ Fail - Empty States
+- F21: â˜ Pass â˜ Fail - Network Errors
+- F22: â˜ Pass â˜ Fail - Loading States
+- F23: â˜ Pass â˜ Fail - Empty States
 
 ### Suite 9: Data Persistence (F24-F25)
-- F24: ☐ Pass ☐ Fail - After Refresh
-- F25: ☐ Pass ☐ Fail - Real-time Updates
+- F24: â˜ Pass â˜ Fail - After Refresh
+- F25: â˜ Pass â˜ Fail - Real-time Updates
 
 ### Suite 10: Security (F26-F27)
-- F26: ☐ Pass ☐ Fail - Non-Admin Access
-- F27: ☐ Pass ☐ Fail - Session Timeout
+- F26: â˜ Pass â˜ Fail - Non-Admin Access
+- F27: â˜ Pass â˜ Fail - Session Timeout
 
 ## Failed Tests Details
 
@@ -2002,7 +2002,7 @@ WHERE t.Name = 'Test Company Inc';
 
 ---
 
-## 🎯 Frontend Testing Best Practices
+## ðŸŽ¯ Frontend Testing Best Practices
 
 ### Before Testing
 1. Clear browser cache and cookies
@@ -2027,7 +2027,7 @@ WHERE t.Name = 'Test Company Inc';
 
 ---
 
-## 🔍 Common Frontend Issues & Solutions
+## ðŸ” Common Frontend Issues & Solutions
 
 ### Issue 1: "Plans not loading"
 **Symptoms:** Empty table, loading spinner forever
@@ -2089,7 +2089,7 @@ WHERE t.Name = 'Test Company Inc';
 
 ---
 
-## ✅ Frontend Testing Completion Checklist
+## âœ… Frontend Testing Completion Checklist
 
 ### Pre-Testing
 - [ ] Frontend application running
@@ -2151,4 +2151,5 @@ WHERE t.Name = 'Test Company Inc';
 **End of Frontend Testing Section**
 
 ---
+
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+﻿import React, { useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 import {
   Box,
@@ -300,7 +300,7 @@ const CorrespondenceForm: React.FC = () => {
 
         // Map inwardNo to NjsInwardNo for backend compatibility
         if (formattedData.inwardNo) {
-          formattedData.njsInwardNo = formattedData.inwardNo;
+          formattedData.edrInwardNo = formattedData.inwardNo;
           delete formattedData.inwardNo;
         }
 
@@ -393,7 +393,7 @@ const CorrespondenceForm: React.FC = () => {
 
         // Validate required fields
         const requiredFields = tabValue === 0
-          ? ['projectId', 'incomingLetterNo', 'letterDate', 'njsInwardNo', 'receiptDate', 'from', 'subject', 'createdBy']
+          ? ['projectId', 'incomingLetterNo', 'letterDate', 'edrInwardNo', 'receiptDate', 'from', 'subject', 'createdBy']
           : ['projectId', 'letterNo', 'letterDate', 'to', 'subject', 'createdBy'];
 
         const missingFields = requiredFields.filter(field => {
@@ -906,3 +906,4 @@ const CorrespondenceForm: React.FC = () => {
 };
 
 export default CorrespondenceForm;
+

@@ -20,6 +20,7 @@ export interface UserWithRole extends User {
     tenantId?: number;
     tenantDomain?: string;
     twoFactorEnabled?: boolean;
+    features?: string[];
 }
 
 export interface projectManagementAppContextType {
