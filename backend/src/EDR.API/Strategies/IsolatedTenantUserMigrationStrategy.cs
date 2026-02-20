@@ -29,9 +29,22 @@ public class IsolatedTenantUserMigrationStrategy : TenantUserMigrationStrategyBa
         var (connectionString, sourceDb) = await ResolveDbAsync(tenant.Id);
         if (connectionString == null) return;
 
-        var success = await _tenantMigrationService.ExecuteTenantUserMigrationsAsync(connectionString,
-            tenant.Id, user.Email, TenantRoleMapper.MapRoleName(role), TenantRoleMapper.MapPermissionName(role),
-            sourceDb);
+        var dbType = _configuration["DbType"] ?? "postgresql";
+        bool success;
+
+        if (dbType.Equals("sqlserver", StringComparison.OrdinalIgnoreCase))
+        {
+            success = await _tenantMigrationService.ExecuteTenantUserMigrationsAsyncSQL(connectionString,
+                tenant.Id, user.Email, TenantRoleMapper.MapRoleName(role), TenantRoleMapper.MapPermissionName(role),
+                sourceDb);
+        }
+        else
+        {
+            success = await _tenantMigrationService.ExecuteTenantUserMigrationsAsync(connectionString,
+                tenant.Id, user.Email, TenantRoleMapper.MapRoleName(role), TenantRoleMapper.MapPermissionName(role),
+                sourceDb);
+        }
+
         LogResult(success, tenant.Id, user.Email);
     }
 
