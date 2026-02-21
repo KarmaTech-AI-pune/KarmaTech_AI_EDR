@@ -10,11 +10,8 @@
         /// <param name="sourceDatabaseName">Optional source database name for user migration</param>
         /// <returns>True if all migrations executed successfully, false otherwise</returns>
         Task<bool> ExecuteTenantMigrationsAsync(string connectionString, int tenantId, string? sourceDatabaseName = null);
-        Task<bool> ExecuteTenantMigrationsAsyncSQL(string connectionString, int tenantId, string? sourceDatabaseName = null);
         Task<bool> ExecuteTenantUserMigrationsAsync(string connectionString, int tenantId, string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null);
-        Task<bool> ExecuteTenantUserMigrationsAsyncSQL(string connectionString, int tenantId, string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null);
-        Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsync(string connectionString, int tenantId, string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null);
-        Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsyncSQL(string connectionString, int tenantId, string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null);
+        Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsync(string connectionString, int tenantId, string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)   ;
         Task<bool> ExecuteNonIsolatedTenantMigrationsAsync(string connectionString, int tenantId, string? sourceDatabaseName = null);
     }
 }
