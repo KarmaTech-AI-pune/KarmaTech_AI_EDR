@@ -31,7 +31,6 @@ namespace EDR.Application.CQRS.SprintPlans.Handlers
                 .Include(sp => sp.SprintTasks!)
                     .ThenInclude(st => st.Subtasks!)
                 .AsNoTracking()
-                .Where(sp => sp.TenantId == (_context.TenantId ?? 0))
                 .FirstOrDefaultAsync(sp => sp.SprintId == request.SprintId, cancellationToken);
 
             if (sprintPlanEntity == null)
