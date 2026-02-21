@@ -87,7 +87,7 @@ namespace EDR.Application.Extensions
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
-            services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
+           
             
 
 

@@ -5,34 +5,34 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using EDR.Application.Services.IContract;
 using EDR.Domain.Database;
-using Npgsql;
+
 namespace EDR.Application.Services
 {
     public class DatabaseManagementService : IDatabaseManagementService
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<DatabaseManagementService> _logger;
-        private readonly TenantDbContext _tenantDbContext;
         private readonly IServiceProvider _serviceProvider;
-        public DatabaseManagementService(TenantDbContext tenantDbContext, IServiceProvider serviceProvider, IConfiguration configuration, ILogger<DatabaseManagementService> logger)
+
+        public DatabaseManagementService(IServiceProvider serviceProvider,
+            IConfiguration configuration, ILogger<DatabaseManagementService> logger)
         {
             _configuration = configuration;
-            _tenantDbContext = tenantDbContext;
             _serviceProvider = serviceProvider;
             _logger = logger;
         }
 
-        public async Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsyncSQL(string subDomain, bool isIsolated)
+        public async Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsyncSQL(
+            string subDomain, bool isIsolated)
         {
-
             string mainConnectionString = _configuration.GetConnectionString("AppDbConnection");
             SqlConnectionStringBuilder builder = new(mainConnectionString);
             string mainDatabaseName = builder.InitialCatalog; // retrieve the database name
             string tenantDbName = mainDatabaseName + "-" + subDomain;
             builder.InitialCatalog = tenantDbName; // set new database name
             string modifiedConnectionString = builder.ConnectionString; // create new connection string
-                                                                        // Use the main database for all tenants
-                                                                        //var databaseName = mainConnectionString;
+            // Use the main database for all tenants
+            //var databaseName = mainConnectionString;
 
 
             //string modifiedConnectionString = builder.ConnectionString; // create new connection string
@@ -70,12 +70,12 @@ namespace EDR.Application.Services
             //}
             try
             {
-
                 if (isIsolated)
                 {
                     // create a new tenant database and bring current with any pending migrations from ApplicationDbContext
                     using IServiceScope scopeTenant = _serviceProvider.CreateScope();
-                    ProjectManagementContext dbContext = scopeTenant.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+                    ProjectManagementContext dbContext =
+                        scopeTenant.ServiceProvider.GetRequiredService<ProjectManagementContext>();
                     dbContext.Database.SetConnectionString(modifiedConnectionString);
                     if (dbContext.Database.GetPendingMigrations().Any())
                     {
@@ -84,107 +84,56 @@ namespace EDR.Application.Services
                         Console.ResetColor();
                         dbContext.Database.Migrate();
                     }
+
                     return new(true, tenantDbName, modifiedConnectionString);
                 }
                 else
                 {
                     return new(true, mainDatabaseName, mainConnectionString!);
                 }
-
-
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating database {DatabaseName}", tenantDbName);
             }
+
             return new(false, null!, null!);
         }
 
-        
-         public async Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsync(string subDomain, bool isIsolated)
+
+        public async Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsync(
+            string subDomain, bool isIsolated)
         {
-            var dbType = _configuration["DbType"] ?? "postgresql";
-            bool isSqlServer = dbType.Equals("sqlserver", StringComparison.OrdinalIgnoreCase);
+            string mainConnectionString = _configuration.GetConnectionString("SqlDbConnection");
+            var mainBuilder = new SqlConnectionStringBuilder(mainConnectionString);
+            string mainDatabaseName = mainBuilder.InitialCatalog;
+            string tenantDbName = $"{mainDatabaseName}-{subDomain}";
+            mainBuilder.InitialCatalog = tenantDbName;
+            string tenantConnectionString = mainBuilder.ConnectionString;
 
-            if (isSqlServer)
+            if (!isIsolated)
             {
-                // ── SQL Server branch ───────────────────────────────────────────
-                string mainConnectionString = _configuration.GetConnectionString("SqlDbConnection");
-                var mainBuilder = new SqlConnectionStringBuilder(mainConnectionString);
-                string mainDatabaseName = mainBuilder.InitialCatalog;
-                string tenantDbName = $"{mainDatabaseName}-{subDomain}";
-                mainBuilder.InitialCatalog = tenantDbName;
-                string tenantConnectionString = mainBuilder.ConnectionString;
-
-                if (!isIsolated)
-                {
-                    return new(true, mainDatabaseName, mainConnectionString!);
-                }
-
-                try
-                {
-                    using IServiceScope scopeTenant = _serviceProvider.CreateScope();
-                    var dbContext = scopeTenant.ServiceProvider.GetRequiredService<ProjectManagementContext>();
-                    dbContext.Database.SetConnectionString(tenantConnectionString);
-                    if (dbContext.Database.GetPendingMigrations().Any())
-                    {
-                        _logger.LogInformation("Applying SQL Server migrations for new tenant DB '{TenantDbName}'", tenantDbName);
-                        dbContext.Database.Migrate();
-                    }
-                    return new(true, tenantDbName, tenantConnectionString);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error creating SQL Server database {DatabaseName}", tenantDbName);
-                    return new(false, null!, null!);
-                }
+                return new(true, mainDatabaseName, mainConnectionString!);
             }
-            else
+
+            try
             {
-                // ── PostgreSQL branch (default) ─────────────────────────────────
-                string mainConnectionString = _configuration.GetConnectionString("AppDbConnection");
-                var mainBuilder = new NpgsqlConnectionStringBuilder(mainConnectionString);
-                var mainDatabaseName = mainBuilder.Database;
-                var tenantDbName = $"{mainDatabaseName}_{subDomain}".ToLowerInvariant();
-
-                if (!isIsolated)
+                using IServiceScope scopeTenant = _serviceProvider.CreateScope();
+                var dbContext = scopeTenant.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+                dbContext.Database.SetConnectionString(tenantConnectionString);
+                if (dbContext.Database.GetPendingMigrations().Any())
                 {
-                    return new(true, mainDatabaseName, mainConnectionString!);
+                    _logger.LogInformation("Applying SQL Server migrations for new tenant DB '{TenantDbName}'",
+                        tenantDbName);
+                    dbContext.Database.Migrate();
                 }
 
-                try
-                {
-                    await using var adminConn = new NpgsqlConnection(mainConnectionString);
-                    await adminConn.OpenAsync();
-
-                    var existsCmd = new NpgsqlCommand("SELECT 1 FROM pg_database WHERE datname = @db", adminConn);
-                    existsCmd.Parameters.AddWithValue("db", tenantDbName);
-                    var exists = await existsCmd.ExecuteScalarAsync();
-
-                    if (exists == null)
-                    {
-                        var createDbCmd = new NpgsqlCommand($"CREATE DATABASE \"{tenantDbName}\"", adminConn);
-                        await createDbCmd.ExecuteNonQueryAsync();
-                    }
-
-                    var tenantBuilder = new NpgsqlConnectionStringBuilder(mainConnectionString)
-                    {
-                        Database = tenantDbName
-                    };
-                    var tenantConnectionString = tenantBuilder.ConnectionString;
-
-                    using var scope = _serviceProvider.CreateScope();
-                    var dbContext = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
-                    dbContext.Database.SetConnectionString(tenantConnectionString);
-                    await dbContext.Database.MigrateAsync();
-
-                    return (true, tenantDbName, tenantConnectionString);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error creating PostgreSQL database {DatabaseName}", tenantDbName);
-                    return new(false, null!, null!);
-                }
+                return new(true, tenantDbName, tenantConnectionString);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating SQL Server database {DatabaseName}", tenantDbName);
+                return new(false, null!, null!);
             }
         }
 
@@ -259,7 +208,8 @@ namespace EDR.Application.Services
                 using var command = new SqlCommand(backupSql, connection);
                 await command.ExecuteNonQueryAsync();
 
-                _logger.LogInformation("Successfully backed up database {DatabaseName} to {BackupPath}", databaseName, backupPath);
+                _logger.LogInformation("Successfully backed up database {DatabaseName} to {BackupPath}", databaseName,
+                    backupPath);
                 return true;
             }
             catch (Exception ex)
@@ -286,7 +236,8 @@ namespace EDR.Application.Services
                 using var command = new SqlCommand(restoreSql, connection);
                 await command.ExecuteNonQueryAsync();
 
-                _logger.LogInformation("Successfully restored database {DatabaseName} from {BackupPath}", databaseName, backupPath);
+                _logger.LogInformation("Successfully restored database {DatabaseName} from {BackupPath}", databaseName,
+                    backupPath);
                 return true;
             }
             catch (Exception ex)
@@ -357,4 +308,3 @@ namespace EDR.Application.Services
         }
     }
 }
-
