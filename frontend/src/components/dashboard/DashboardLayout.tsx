@@ -150,7 +150,7 @@ const DashboardLayout: React.FC = () => {
     approvalDelaysChangeType: 'negative'
   };
 
-  const mappedProjects: Project[] = projectsAtRisk?.projects.map(p => ({
+  const mappedProjects: Project[] = projectsAtRisk?.projects?.map(p => ({
     id: p.projectId.toString(),
     name: p.projectName,
     severity: p.priority === 'High' ? 'P3' : 'P5', // Simple mapping
@@ -180,7 +180,7 @@ const DashboardLayout: React.FC = () => {
     profit: r.profit
   }));
 
-  const mappedPendingApprovals: PendingApproval[] = pendingForms?.pendingForms.map(f => ({
+  const mappedPendingApprovals: PendingApproval[] = pendingForms?.pendingForms?.map(f => ({
     id: f.formId,
     project: f.projectName,
     formName: f.formName,
