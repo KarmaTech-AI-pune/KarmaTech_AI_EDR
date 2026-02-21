@@ -103,68 +103,89 @@ namespace EDR.Application.Services
         
          public async Task<(bool isDbCreated, string dbName, string connectionString)> CreateTenantDatabaseAsync(string subDomain, bool isIsolated)
         {
+            var dbType = _configuration["DbType"] ?? "postgresql";
+            bool isSqlServer = dbType.Equals("sqlserver", StringComparison.OrdinalIgnoreCase);
 
-            string mainConnectionString = _configuration.GetConnectionString("AppDbConnection");
-            var mainBuilder = new NpgsqlConnectionStringBuilder(mainConnectionString);
-            var mainDatabaseName = mainBuilder.Database;
-
-            var tenantDbName = $"{mainDatabaseName}_{subDomain}".ToLowerInvariant();
-
-
-            if (!isIsolated)
+            if (isSqlServer)
             {
-                return new(true, mainDatabaseName, mainConnectionString!);
-            }
-            try
-            {
+                // ── SQL Server branch ───────────────────────────────────────────
+                string mainConnectionString = _configuration.GetConnectionString("SqlDbConnection");
+                var mainBuilder = new SqlConnectionStringBuilder(mainConnectionString);
+                string mainDatabaseName = mainBuilder.InitialCatalog;
+                string tenantDbName = $"{mainDatabaseName}-{subDomain}";
+                mainBuilder.InitialCatalog = tenantDbName;
+                string tenantConnectionString = mainBuilder.ConnectionString;
 
-               
-                await using var adminConn = new NpgsqlConnection(mainConnectionString);
-                await adminConn.OpenAsync();
-
-                // 2? Check if tenant DB already exists
-                var existsCmd = new NpgsqlCommand(
-                    "SELECT 1 FROM pg_database WHERE datname = @db",
-                    adminConn);
-
-                existsCmd.Parameters.AddWithValue("db", tenantDbName);
-
-                var exists = await existsCmd.ExecuteScalarAsync();
-                if (exists == null)
+                if (!isIsolated)
                 {
-                    // 3 Create tenant database
-                    var createDbCmd = new NpgsqlCommand(
-                        $"CREATE DATABASE \"{tenantDbName}\"",
-                        adminConn);
-
-                    await createDbCmd.ExecuteNonQueryAsync();
+                    return new(true, mainDatabaseName, mainConnectionString!);
                 }
 
-                // 4? Build tenant connection string
-                var tenantBuilder = new NpgsqlConnectionStringBuilder(mainConnectionString)
+                try
                 {
-                    Database = tenantDbName
-                };
-
-                var tenantConnectionString = tenantBuilder.ConnectionString;
-
-                // 5? Apply EF Core migrations
-                using var scope = _serviceProvider.CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
-
-                dbContext.Database.SetConnectionString(tenantConnectionString);
-                await dbContext.Database.MigrateAsync();
-
-                return (true, tenantDbName, tenantConnectionString);
-               
-
-
+                    using IServiceScope scopeTenant = _serviceProvider.CreateScope();
+                    var dbContext = scopeTenant.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+                    dbContext.Database.SetConnectionString(tenantConnectionString);
+                    if (dbContext.Database.GetPendingMigrations().Any())
+                    {
+                        _logger.LogInformation("Applying SQL Server migrations for new tenant DB '{TenantDbName}'", tenantDbName);
+                        dbContext.Database.Migrate();
+                    }
+                    return new(true, tenantDbName, tenantConnectionString);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error creating SQL Server database {DatabaseName}", tenantDbName);
+                    return new(false, null!, null!);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error creating database {DatabaseName}", tenantDbName);
+                // ── PostgreSQL branch (default) ─────────────────────────────────
+                string mainConnectionString = _configuration.GetConnectionString("AppDbConnection");
+                var mainBuilder = new NpgsqlConnectionStringBuilder(mainConnectionString);
+                var mainDatabaseName = mainBuilder.Database;
+                var tenantDbName = $"{mainDatabaseName}_{subDomain}".ToLowerInvariant();
+
+                if (!isIsolated)
+                {
+                    return new(true, mainDatabaseName, mainConnectionString!);
+                }
+
+                try
+                {
+                    await using var adminConn = new NpgsqlConnection(mainConnectionString);
+                    await adminConn.OpenAsync();
+
+                    var existsCmd = new NpgsqlCommand("SELECT 1 FROM pg_database WHERE datname = @db", adminConn);
+                    existsCmd.Parameters.AddWithValue("db", tenantDbName);
+                    var exists = await existsCmd.ExecuteScalarAsync();
+
+                    if (exists == null)
+                    {
+                        var createDbCmd = new NpgsqlCommand($"CREATE DATABASE \"{tenantDbName}\"", adminConn);
+                        await createDbCmd.ExecuteNonQueryAsync();
+                    }
+
+                    var tenantBuilder = new NpgsqlConnectionStringBuilder(mainConnectionString)
+                    {
+                        Database = tenantDbName
+                    };
+                    var tenantConnectionString = tenantBuilder.ConnectionString;
+
+                    using var scope = _serviceProvider.CreateScope();
+                    var dbContext = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
+                    dbContext.Database.SetConnectionString(tenantConnectionString);
+                    await dbContext.Database.MigrateAsync();
+
+                    return (true, tenantDbName, tenantConnectionString);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error creating PostgreSQL database {DatabaseName}", tenantDbName);
+                    return new(false, null!, null!);
+                }
             }
-            return new(false, null!, null!);
         }
 
         public async Task<bool> DeleteTenantDatabaseAsync(string databaseName)

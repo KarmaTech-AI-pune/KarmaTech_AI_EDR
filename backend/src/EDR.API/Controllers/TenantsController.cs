@@ -143,36 +143,41 @@ namespace EDR.API.Controllers
                 _tenantDbContext.TenantDatabases.Add(tenantDb);
                 await _tenantDbContext.SaveChangesAsync();
 
-                // Execute SQL migration scripts for isolated tenants
+                // Execute migration scripts for isolated tenants (dynamically based on DbType)
                 if (tenant.IsIsolated && !string.IsNullOrEmpty(result.connectionString))
                 {
                     _logger.LogInformation("Executing migration scripts for tenant {TenantId} database {DatabaseName}",
                         tenant.Id, result.dbName);
 
-                    // Get source database name from configuration for user migration script
-                    var sourceDatabaseName = _configuration.GetConnectionString("AppDbConnection");
-                    if (!string.IsNullOrEmpty(sourceDatabaseName))
-                    {
-                        var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(sourceDatabaseName);
-                        sourceDatabaseName = builder.InitialCatalog;
-                    }
+                    var dbType = _configuration["DbType"] ?? "postgresql";
+                    bool isSqlServer = dbType.Equals("sqlserver", StringComparison.OrdinalIgnoreCase);
 
-                    var migrationSuccess = await _tenantMigrationService.ExecuteTenantMigrationsAsync(
-                        result.connectionString,
-                        tenant.Id,
-                        sourceDatabaseName);
+                    string sourceDatabaseName;
+                    bool migrationSuccess;
 
-                    if (!migrationSuccess)
+                    if (isSqlServer)
                     {
-                        _logger.LogWarning("Some migration scripts failed for tenant {TenantId}, but continuing...",
-                            tenant.Id);
-                        // Note: We continue even if migrations fail, as some scripts might be optional
+                        var sqlConnStr = _configuration.GetConnectionString("SqlDbConnection");
+                        var sqlBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(sqlConnStr);
+                        sourceDatabaseName = sqlBuilder.InitialCatalog;
+
+                        migrationSuccess = await _tenantMigrationService.ExecuteTenantMigrationsAsyncSQL(
+                            result.connectionString, tenant.Id, sourceDatabaseName);
                     }
                     else
                     {
-                        _logger.LogInformation("Successfully executed all migration scripts for tenant {TenantId}",
-                            tenant.Id);
+                        var pgConnStr = _configuration.GetConnectionString("AppDbConnection");
+                        var pgBuilder = new Npgsql.NpgsqlConnectionStringBuilder(pgConnStr);
+                        sourceDatabaseName = pgBuilder.Database;
+
+                        migrationSuccess = await _tenantMigrationService.ExecuteTenantMigrationsAsync(
+                            result.connectionString, tenant.Id, sourceDatabaseName);
                     }
+
+                    if (!migrationSuccess)
+                        _logger.LogWarning("Some migration scripts failed for tenant {TenantId}, but continuing...", tenant.Id);
+                    else
+                        _logger.LogInformation("Successfully executed all migration scripts for tenant {TenantId}", tenant.Id);
                 }
 
 
@@ -240,17 +245,26 @@ namespace EDR.API.Controllers
 
                 await transaction.CommitAsync();
 
-                // 5️ Execute tenant data migrations (POST-COMMIT)
+                // Execute tenant data migrations (POST-COMMIT) — dynamically based on DbType
                 if (tenant.IsIsolated && !string.IsNullOrEmpty(connectionString))
                 {
                     _logger.LogInformation(
                         "Executing tenant data migrations for TenantId={TenantId}",
                         tenant.Id);
 
-                    var migrationSuccess =
-                        await _tenantMigrationService.ExecuteTenantMigrationsAsync(
-                            connectionString,
-                            tenant.Id);
+                    var dbType = _configuration["DbType"] ?? "postgresql";
+                    bool migrationSuccess;
+
+                    if (dbType.Equals("sqlserver", StringComparison.OrdinalIgnoreCase))
+                    {
+                        migrationSuccess = await _tenantMigrationService.ExecuteTenantMigrationsAsyncSQL(
+                            connectionString, tenant.Id);
+                    }
+                    else
+                    {
+                        migrationSuccess = await _tenantMigrationService.ExecuteTenantMigrationsAsync(
+                            connectionString, tenant.Id);
+                    }
 
                     if (!migrationSuccess)
                     {

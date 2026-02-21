@@ -278,6 +278,19 @@ public class TenantMigrationSqlService : ITenantMigrationService
     }
 
 
+    // SQL-named aliases — delegates to the SQL Server implementations above
+    public Task<bool> ExecuteTenantMigrationsAsyncSQL(string connectionString, int tenantId,
+        string? sourceDatabaseName = null)
+        => ExecuteTenantMigrationsAsync(connectionString, tenantId, sourceDatabaseName);
+
+    public Task<bool> ExecuteTenantUserMigrationsAsyncSQL(string connectionString, int tenantId,
+        string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
+        => ExecuteTenantUserMigrationsAsync(connectionString, tenantId, userEmail, roleName, permissionName, sourceDatabaseName);
+
+    public Task<bool> ExecuteNonIsolatedTenantUserMigrationsAsyncSQL(string connectionString, int tenantId,
+        string userEmail, string roleName, string permissionName, string? sourceDatabaseName = null)
+        => ExecuteNonIsolatedTenantUserMigrationsAsync(connectionString, tenantId, userEmail, roleName, permissionName, sourceDatabaseName);
+
     public async Task<bool> ExecuteNonIsolatedTenantMigrationsAsync(string connectionString, int tenantId,
         string? sourceDatabaseName = null)
     {

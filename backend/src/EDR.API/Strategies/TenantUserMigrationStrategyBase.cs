@@ -8,7 +8,7 @@ namespace EDR.API.Strategies;
 public abstract class TenantUserMigrationStrategyBase
 {
     private readonly TenantDbContext _tenantDbContext;
-    private readonly IConfiguration _configuration;
+    protected readonly IConfiguration _configuration;
 
     public TenantUserMigrationStrategyBase(TenantDbContext context,
         IConfiguration configuration)
@@ -25,13 +25,26 @@ public abstract class TenantUserMigrationStrategyBase
             return (null, null);
         }
 
-        var source = _configuration.GetConnectionString("AppDbConnection");
+        var dbType = _configuration["DbType"] ?? "postgresql";
         string? sourceDb = null;
 
-        if (!string.IsNullOrWhiteSpace(source))
+        if (dbType.Equals("sqlserver", StringComparison.OrdinalIgnoreCase))
         {
-            var npgsqlBuilder = new NpgsqlConnectionStringBuilder(source);
-            sourceDb = npgsqlBuilder.Database; 
+            var source = _configuration.GetConnectionString("SqlDbConnection");
+            if (!string.IsNullOrWhiteSpace(source))
+            {
+                var sqlBuilder = new SqlConnectionStringBuilder(source);
+                sourceDb = sqlBuilder.InitialCatalog;
+            }
+        }
+        else
+        {
+            var source = _configuration.GetConnectionString("AppDbConnection");
+            if (!string.IsNullOrWhiteSpace(source))
+            {
+                var npgsqlBuilder = new NpgsqlConnectionStringBuilder(source);
+                sourceDb = npgsqlBuilder.Database;
+            }
         }
 
         return (tenantDb.ConnectionString, sourceDb);
