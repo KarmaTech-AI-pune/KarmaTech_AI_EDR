@@ -1,197 +1,170 @@
-using Microsoft.EntityFrameworkCore;
-using NJS.Domain.Database;
-using NJS.Domain.Entities;
-using NJS.Domain.Repositories;
-using NJS.Repositories.Repositories;
-using System;
+using Moq;
+using EDR.Domain.Entities;
+using EDR.Repositories.Interfaces;
+using EDR.Repositories.Repositories;
+using EDR.Domain.GenericRepository;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using System;
+using Microsoft.EntityFrameworkCore;
+using EDR.Domain.Database;
+using EDR.Domain.Services;
+using Microsoft.Extensions.Configuration;
 
-namespace NJS.API.Tests.Repositories
+namespace EDR.API.Tests.Repositories
 {
     public class ProjectRepositoryTests
     {
-        private readonly DbContextOptions<ProjectManagementContext> _options;
+        private readonly ProjectManagementContext _dbContext;
+        private readonly ProjectRepository _projectRepository;
+        private readonly Mock<ILogger<ProjectRepository>> _loggerMock;
 
         public ProjectRepositoryTests()
         {
-            // Create a fresh in-memory database for each test
-            _options = new DbContextOptionsBuilder<ProjectManagementContext>()
+            var options = new DbContextOptionsBuilder<ProjectManagementContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
+
+            var tenantServiceMock = new Mock<ICurrentTenantService>();
+            var configMock = new Mock<IConfiguration>();
+            _dbContext = new ProjectManagementContext(options, tenantServiceMock.Object, configMock.Object);
+
+            var repository = new Repository<Project>(_dbContext);
+            var goNoGoDecisionRepositoryMock = new Mock<IGoNoGoDecisionRepository>();
+            _loggerMock = new Mock<ILogger<ProjectRepository>>();
+
+            _projectRepository = new ProjectRepository(
+                repository,
+                goNoGoDecisionRepositoryMock.Object,
+                _loggerMock.Object);
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnAllProjects()
+        public async Task GetAll_ShouldReturnAllProjects()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new ProjectRepository(context);
-            
-            // Add test data
-            await context.Projects.AddRangeAsync(
-                new Project { Id = 1, Name = "Project 1" },
-                new Project { Id = 2, Name = "Project 2" },
-                new Project { Id = 3, Name = "Project 3" }
-            );
-            await context.SaveChangesAsync();
-
-            // Act
-            var projects = await repository.GetAllAsync();
-
-            // Assert
-            Assert.Equal(3, projects.Count());
-            Assert.Contains(projects, p => p.Name == "Project 1");
-            Assert.Contains(projects, p => p.Name == "Project 2");
-            Assert.Contains(projects, p => p.Name == "Project 3");
-        }
-
-        [Fact]
-        public async Task GetByIdAsync_WithValidId_ShouldReturnProject()
-        {
-            // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new ProjectRepository(context);
-            
-            // Add test data
-            var project = new Project { Id = 1, Name = "Test Project" };
-            await context.Projects.AddAsync(project);
-            await context.SaveChangesAsync();
-
-            // Act
-            var result = await repository.GetByIdAsync(project.Id);
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(project.Id, result.Id);
-            Assert.Equal("Test Project", result.Name);
-        }
-
-        [Fact]
-        public async Task GetByIdAsync_WithInvalidId_ShouldReturnNull()
-        {
-            // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new ProjectRepository(context);
-
-            // Act
-            var result = await repository.GetByIdAsync(999);
-
-            // Assert
-            Assert.Null(result);
-        }
-
-        [Fact]
-        public async Task AddAsync_ShouldAddProjectToDatabase()
-        {
-            // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new ProjectRepository(context);
-            var project = new Project
+            _dbContext.Projects.AddRange(new List<Project>
             {
-                Name = "New Project",
-                Description = "Description",
-                StartDate = DateTime.Now,
-                EndDate = DateTime.Now.AddMonths(3)
-            };
+                new Project { Id = 1, Name = "Project 1", TenantId = 1 },
+                new Project { Id = 2, Name = "Project 2", TenantId = 1 }
+            });
+            await _dbContext.SaveChangesAsync();
 
             // Act
-            await repository.AddAsync(project);
-            await context.SaveChangesAsync();
+            var result = await _projectRepository.GetAll();
 
             // Assert
-            Assert.NotEqual(0, project.Id); // ID should be set
-            var savedProject = await context.Projects.FindAsync(project.Id);
-            Assert.NotNull(savedProject);
-            Assert.Equal("New Project", savedProject.Name);
+            Assert.Equal(2, result.Count());
         }
 
         [Fact]
-        public async Task UpdateAsync_ShouldUpdateProjectInDatabase()
+        public async Task GetById_WithValidId_ShouldReturnProject()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new ProjectRepository(context);
-            
-            // Add test data
-            var project = new Project { Id = 1, Name = "Original Name" };
-            await context.Projects.AddAsync(project);
-            await context.SaveChangesAsync();
+            var project = new Project { Id = 1, Name = "Test Project", TenantId = 1 };
+            _dbContext.Projects.Add(project);
+            await _dbContext.SaveChangesAsync();
 
             // Act
-            project.Name = "Updated Name";
-            await repository.UpdateAsync(project);
-            await context.SaveChangesAsync();
-
-            // Assert
-            var updatedProject = await context.Projects.FindAsync(project.Id);
-            Assert.NotNull(updatedProject);
-            Assert.Equal("Updated Name", updatedProject.Name);
-        }
-
-        [Fact]
-        public async Task DeleteAsync_ShouldRemoveProjectFromDatabase()
-        {
-            // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new ProjectRepository(context);
-            
-            // Add test data
-            var project = new Project { Id = 1, Name = "Project to Delete" };
-            await context.Projects.AddAsync(project);
-            await context.SaveChangesAsync();
-            
-            // Verify project exists
-            Assert.NotNull(await context.Projects.FindAsync(project.Id));
-
-            // Act
-            await repository.DeleteAsync(project.Id);
-            await context.SaveChangesAsync();
-
-            // Assert
-            Assert.Null(await context.Projects.FindAsync(project.Id));
-        }
-
-        [Fact]
-        public async Task GetByNameAsync_WithValidName_ShouldReturnProject()
-        {
-            // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new ProjectRepository(context);
-            
-            // Add test data
-            var projectName = "Unique Project Name";
-            await context.Projects.AddRangeAsync(
-                new Project { Id = 1, Name = projectName },
-                new Project { Id = 2, Name = "Other Project" }
-            );
-            await context.SaveChangesAsync();
-
-            // Act
-            var result = await repository.GetByNameAsync(projectName);
+            var result = _projectRepository.GetById(1);
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(projectName, result.Name);
+            Assert.Equal(1, result.Id);
         }
 
         [Fact]
-        public async Task GetByNameAsync_WithInvalidName_ShouldReturnNull()
+        public async Task Add_ShouldAddProjectAndSave()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new ProjectRepository(context);
-            
-            // Add test data
-            await context.Projects.AddAsync(new Project { Id = 1, Name = "Existing Project" });
-            await context.SaveChangesAsync();
+            var project = new Project { Id = 3, Name = "New Project", TenantId = 1 };
 
             // Act
-            var result = await repository.GetByNameAsync("Nonexistent Project");
+            await _projectRepository.Add(project);
 
             // Assert
-            Assert.Null(result);
+            var added = await _dbContext.Projects.FindAsync(3);
+            Assert.NotNull(added);
+            Assert.Equal("New Project", added.Name);
+        }
+
+        [Fact]
+        public async Task Update_ShouldCallUpdateAndSave()
+        {
+            // Arrange
+            var project = new Project { Id = 4, Name = "Initial Project", TenantId = 1 };
+            _dbContext.Projects.Add(project);
+            await _dbContext.SaveChangesAsync();
+
+            project.Name = "Updated Project";
+
+            // Act
+            _projectRepository.Update(project);
+
+            // Assert
+            var updated = await _dbContext.Projects.FindAsync(4);
+            Assert.Equal("Updated Project", updated.Name);
+        }
+
+        [Fact]
+        public async Task Delete_ShouldCallRemoveAndSave_WhenProjectExists()
+        {
+            // Arrange
+            var project = new Project { Id = 5, TenantId = 1 };
+            _dbContext.Projects.Add(project);
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            _projectRepository.Delete(5);
+
+            // Assert
+            var deleted = await _dbContext.Projects.FindAsync(5);
+            Assert.Null(deleted);
+        }
+
+        [Fact]
+        public async Task GetAllByProgramId_ShouldReturnFilteredProjects()
+        {
+            // Arrange
+            var programId = 10;
+            _dbContext.Projects.AddRange(new List<Project>
+            {
+                new Project { Id = 11, ProgramId = programId, TenantId = 1 },
+                new Project { Id = 12, ProgramId = programId, TenantId = 1 },
+                new Project { Id = 13, ProgramId = 20, TenantId = 1 }
+            });
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _projectRepository.GetAllByProgramId(programId);
+
+            // Assert
+            Assert.Equal(2, result.Count());
+            Assert.All(result, p => Assert.Equal(programId, p.ProgramId));
+        }
+
+        [Fact]
+        public async Task GetAllByUserId_ShouldReturnUserProjects()
+        {
+            // Arrange
+            var userId = "user1";
+            _dbContext.Projects.AddRange(new List<Project>
+            {
+                new Project { Id = 21, ProjectManagerId = userId, TenantId = 1 },
+                new Project { Id = 22, SeniorProjectManagerId = userId, TenantId = 1 },
+                new Project { Id = 23, RegionalManagerId = userId, TenantId = 1 },
+                new Project { Id = 24, ProjectManagerId = "other", TenantId = 1 }
+            });
+            await _dbContext.SaveChangesAsync();
+
+            // Act
+            var result = await _projectRepository.GetAllByUserId(userId);
+
+            // Assert
+            Assert.Equal(3, result.Count());
         }
     }
 }

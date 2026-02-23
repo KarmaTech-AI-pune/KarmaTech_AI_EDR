@@ -1,12 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
-using NJS.Domain.Database;
-using NJS.Domain.Entities;
-using NJS.Domain.Enums;
+using EDR.Domain.Database;
+using EDR.Domain.Entities;
+using EDR.Domain.Enums;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace NJS.API.Tests.Infrastructure
+namespace EDR.API.Tests.Infrastructure
 {
     /// <summary>
     /// Base class for integration tests. Provides HttpClient, database seeding, and JSON helpers.
@@ -37,7 +37,7 @@ namespace NJS.API.Tests.Infrastructure
             using var scope = Factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
 
-            var program = new NJS.Domain.Entities.Program
+            var program = new EDR.Domain.Entities.Program
             {
                 TenantId = 1,
                 Name = "Test Program",
@@ -87,7 +87,7 @@ namespace NJS.API.Tests.Infrastructure
             using var scope = Factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ProjectManagementContext>();
 
-            var program = new NJS.Domain.Entities.Program
+            var program = new EDR.Domain.Entities.Program
             {
                 TenantId = 1,
                 Name = "Test Program",

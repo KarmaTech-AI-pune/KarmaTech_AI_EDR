@@ -1,80 +1,58 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using EDR.Application.CQRS.Commands.BidPreparation;
 using EDR.Application.CQRS.Handlers.BidPreparation;
-using EDR.Application.CQRS.Queries.BidPreparation;
+using EDR.Application.Dtos;
 using EDR.Domain.Database;
 using EDR.Domain.Entities;
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace EDR.API.Tests.CQRS.BidPreparation
 {
-    public class GetBidPreparationQueryHandlerTests
+    public class UpdateBidPreparationCommandHandlerTests
     {
         private readonly Mock<ProjectManagementContext> _contextMock;
-        private readonly GetBidPreparationQueryHandler _handler;
+        private readonly UpdateBidPreparationCommandHandler _handler;
 
-        public GetBidPreparationQueryHandlerTests()
+        public UpdateBidPreparationCommandHandlerTests()
         {
             _contextMock = new Mock<ProjectManagementContext>(new DbContextOptions<ProjectManagementContext>());
-            _handler = new GetBidPreparationQueryHandler(_contextMock.Object);
+            _handler = new UpdateBidPreparationCommandHandler(_contextMock.Object);
         }
 
         [Fact]
-        public async Task Handle_WithValidOpportunityId_ReturnsBidPreparationDto()
+        public async Task Handle_WithValidCommand_CreatesBidIfNotFoundAndReturnsTrue()
         {
             // Arrange
             var opportunityId = 1;
             var userId = "user1";
-            var bid = new EDR.Domain.Entities.BidPreparation
+            var command = new UpdateBidPreparationCommand
             {
-                Id = 1,
                 OpportunityId = opportunityId,
                 UserId = userId,
                 DocumentCategoriesJson = "{}",
-                Status = BidPreparationStatus.Draft,
-                CreatedAt = DateTime.Now,
+                Comments = "New Bid",
                 CreatedBy = userId
             };
 
-            var mockDbSet = MockDbSet(new[] { bid });
-            _contextMock.Setup(c => c.BidPreparations).Returns(mockDbSet.Object);
-
-            var query = new GetBidPreparationQuery { OpportunityId = opportunityId, UserId = userId };
-
-            // Act
-            var result = await _handler.Handle(query, CancellationToken.None);
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(bid.Id, result.Id);
-            Assert.Equal(opportunityId, result.OpportunityId);
-            Assert.Equal(bid.DocumentCategoriesJson, result.DocumentCategoriesJson);
-            Assert.Equal(bid.Status, result.Status);
-            Assert.Equal(bid.CreatedBy, result.CreatedBy);
-        }
-
-        [Fact]
-        public async Task Handle_WithInvalidId_ReturnsNull()
-        {
-            // Arrange
-            var opportunityId = 999;
-            var userId = "user1";
             var bids = new EDR.Domain.Entities.BidPreparation[] { };
-
             var mockDbSet = MockDbSet(bids);
             _contextMock.Setup(c => c.BidPreparations).Returns(mockDbSet.Object);
+            _contextMock.Setup(c => c.OpportunityTrackings).Returns(new Mock<DbSet<EDR.Domain.Entities.OpportunityTracking>>().Object);
 
-            var query = new GetBidPreparationQuery { OpportunityId = opportunityId, UserId = userId };
+            _contextMock.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1);
 
             // Act
-            var result = await _handler.Handle(query, CancellationToken.None);
+            var result = await _handler.Handle(command, CancellationToken.None);
 
             // Assert
-            Assert.Null(result);
+            Assert.True(result);
+            _contextMock.Verify(c => c.BidPreparations.Add(It.IsAny<EDR.Domain.Entities.BidPreparation>()), Times.Once);
+            _contextMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         private static Mock<DbSet<T>> MockDbSet<T>(T[] entities) where T : class

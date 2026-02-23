@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Moq;
-using NJS.Application.Dtos;
-using NJS.Application.Services.IContract;
-using NJS.Domain.Entities;
-using NJS.Domain.Enums;
-using NJS.Repositories.Interfaces;
+using EDR.Application.Dtos;
+using EDR.Application.Services;
+using EDR.Application.Services.IContract;
+using EDR.Domain.Entities;
+using EDR.Domain.Enums;
+using EDR.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace NJS.API.Tests.Services
+namespace EDR.API.Tests.Services
 {
     public class GoNoGoDecisionServiceTests
     {
@@ -50,8 +51,8 @@ namespace NJS.API.Tests.Services
             // Arrange
             var decisions = new List<GoNoGoDecision>
             {
-                new GoNoGoDecision { Id = 1, ProjectName = "Project 1" },
-                new GoNoGoDecision { Id = 2, ProjectName = "Project 2" }
+                new GoNoGoDecision { Id = 1 },
+                new GoNoGoDecision { Id = 2 }
             };
 
             _repositoryMock.Setup(r => r.GetAll())
@@ -62,8 +63,6 @@ namespace NJS.API.Tests.Services
 
             // Assert
             Assert.Equal(2, result.Count());
-            Assert.Contains(result, d => d.ProjectName == "Project 1");
-            Assert.Contains(result, d => d.ProjectName == "Project 2");
         }
 
         [Fact]
@@ -71,7 +70,7 @@ namespace NJS.API.Tests.Services
         {
             // Arrange
             var decisionId = 1;
-            var decision = new GoNoGoDecision { Id = decisionId, ProjectName = "Test Project" };
+            var decision = new GoNoGoDecision { Id = decisionId };
 
             _repositoryMock.Setup(r => r.GetById(decisionId))
                 .Returns(decision);
@@ -82,7 +81,6 @@ namespace NJS.API.Tests.Services
             // Assert
             Assert.NotNull(result);
             Assert.Equal(decisionId, result.Id);
-            Assert.Equal("Test Project", result.ProjectName);
         }
 
         [Fact]
@@ -90,7 +88,7 @@ namespace NJS.API.Tests.Services
         {
             // Arrange
             var projectId = 1;
-            var decision = new GoNoGoDecision { Id = 1, ProjectId = projectId, ProjectName = "Test Project" };
+            var decision = new GoNoGoDecision { Id = 1, ProjectId = projectId };
 
             _repositoryMock.Setup(r => r.GetByProjectId(projectId))
                 .Returns(decision);
@@ -101,14 +99,13 @@ namespace NJS.API.Tests.Services
             // Assert
             Assert.NotNull(result);
             Assert.Equal(projectId, result.ProjectId);
-            Assert.Equal("Test Project", result.ProjectName);
         }
 
         [Fact]
         public void Add_ShouldCallRepositoryAdd()
         {
             // Arrange
-            var decision = new GoNoGoDecision { ProjectName = "New Project" };
+            var decision = new GoNoGoDecision { ProjectId = 1 };
 
             // Act
             _service.Add(decision);
@@ -121,7 +118,7 @@ namespace NJS.API.Tests.Services
         public void Update_ShouldCallRepositoryUpdate()
         {
             // Arrange
-            var decision = new GoNoGoDecision { Id = 1, ProjectName = "Updated Project" };
+            var decision = new GoNoGoDecision { Id = 1, ProjectId = 1 };
 
             // Act
             _service.Update(decision);

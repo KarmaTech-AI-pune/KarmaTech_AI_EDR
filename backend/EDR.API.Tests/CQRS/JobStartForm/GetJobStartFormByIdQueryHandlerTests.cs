@@ -1,30 +1,31 @@
 using Moq;
-using NJS.Application.CQRS.JobStartForm.Handlers;
-using NJS.Application.CQRS.JobStartForm.Queries;
-using NJS.Domain.Entities;
-using NJS.Domain.GenericRepository;
+using EDR.Application.CQRS.JobStartForm.Handlers;
+using EDR.Application.CQRS.JobStartForm.Queries;
+using EDR.Domain.Entities;
+using EDR.Domain.GenericRepository;
+using EDR.Domain.UnitWork;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace NJS.API.Tests.CQRS.JobStartForm
+namespace EDR.API.Tests.CQRS.JobStartForm
 {
     public class GetJobStartFormByIdQueryHandlerTests
     {
         private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-        private readonly Mock<IRepository<JobStartForm>> _repositoryMock;
-        private readonly GetJobStartFormByIdQueryHandler _handler;
+        private readonly Mock<IRepository<EDR.Domain.Entities.JobStartForm>> _repositoryMock;
+        private readonly EDR.Application.CQRS.JobStartForm.Handlers.GetJobStartFormByIdQueryHandler _handler;
 
         public GetJobStartFormByIdQueryHandlerTests()
         {
             _unitOfWorkMock = new Mock<IUnitOfWork>();
-            _repositoryMock = new Mock<IRepository<JobStartForm>>();
+            _repositoryMock = new Mock<IRepository<EDR.Domain.Entities.JobStartForm>>();
             
-            _unitOfWorkMock.Setup(u => u.GetRepository<JobStartForm>())
+            _unitOfWorkMock.Setup(u => u.GetRepository<EDR.Domain.Entities.JobStartForm>())
                 .Returns(_repositoryMock.Object);
             
-            _handler = new GetJobStartFormByIdQueryHandler(_unitOfWorkMock.Object);
+            _handler = new EDR.Application.CQRS.JobStartForm.Handlers.GetJobStartFormByIdQueryHandler(_unitOfWorkMock.Object);
         }
 
         [Fact]
@@ -32,7 +33,7 @@ namespace NJS.API.Tests.CQRS.JobStartForm
         {
             // Arrange
             var formId = 1;
-            var form = new JobStartForm
+            var form = new EDR.Domain.Entities.JobStartForm
             {
                 FormId = formId,
                 ProjectId = 1,
@@ -69,7 +70,7 @@ namespace NJS.API.Tests.CQRS.JobStartForm
             var formId = 999;
 
             _repositoryMock.Setup(r => r.GetByIdAsync(formId))
-                .ReturnsAsync((JobStartForm)null);
+                .ReturnsAsync((EDR.Domain.Entities.JobStartForm)null);
 
             var query = new GetJobStartFormByIdQuery(formId);
 

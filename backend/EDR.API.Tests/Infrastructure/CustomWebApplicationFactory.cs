@@ -10,15 +10,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NJS.Application.Extensions;
-using NJS.Application.Services;
-using NJS.Application.Services.IContract;
-using NJS.Domain.Database;
-using NJS.Domain.Entities;
-using NJS.Domain.Extensions;
-using NJS.Domain.Services;
-using NJSAPI.Extensions;
-using NJSAPI.Strategies;
+using EDR.Application.Extensions;
+using EDR.Application.Services;
+using EDR.Application.Services.IContract;
+using EDR.Domain.Database;
+using EDR.Domain.Entities;
+using EDR.Domain.Extensions;
+using EDR.Domain.Services;
+using EDR.API.Extensions;
+using EDR.API.Strategies;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -26,14 +26,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 
-namespace NJS.API.Tests.Infrastructure
+namespace EDR.API.Tests.Infrastructure
 {
     /// <summary>
     /// Custom WebApplicationFactory that builds the host from scratch,
     /// bypassing Program.Main (which has NLog and SQL Server dependencies
     /// that are incompatible with the test environment).
     /// </summary>
-    public class CustomWebApplicationFactory : WebApplicationFactory<NJSAPI.Program>
+    public class CustomWebApplicationFactory : WebApplicationFactory<EDR.API.Program>
     {
         private readonly string _dbName;
 
@@ -64,7 +64,7 @@ namespace NJS.API.Tests.Infrastructure
 
             // --- Core Services (from Program.cs) ---
             appBuilder.Services.AddControllers()
-                .AddApplicationPart(typeof(NJSAPI.Program).Assembly);
+                .AddApplicationPart(typeof(EDR.API.Program).Assembly);
 
             appBuilder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
@@ -96,8 +96,8 @@ namespace NJS.API.Tests.Infrastructure
                 .AddEntityFrameworkStores<ProjectManagementContext>();
 
             // UnitOfWork & generic repository
-            appBuilder.Services.AddScoped<NJS.Domain.UnitWork.IUnitOfWork, NJS.Domain.UnitWork.UnitOfWork>();
-            appBuilder.Services.AddScoped(typeof(NJS.Domain.GenericRepository.IRepository<>), typeof(NJS.Domain.GenericRepository.Repository<>));
+            appBuilder.Services.AddScoped<EDR.Domain.UnitWork.IUnitOfWork, EDR.Domain.UnitWork.UnitOfWork>();
+            appBuilder.Services.AddScoped(typeof(EDR.Domain.GenericRepository.IRepository<>), typeof(EDR.Domain.GenericRepository.Repository<>));
 
             // --- Application Services (MediatR, AutoMapper, Repositories) ---
             appBuilder.Services.AddApplicationServices();

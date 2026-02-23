@@ -1,18 +1,23 @@
 using Microsoft.EntityFrameworkCore;
-using NJS.Domain.Database;
-using NJS.Domain.Entities;
-using NJS.Domain.GenericRepository;
+using Microsoft.Extensions.Configuration;
+using Moq;
+using EDR.Domain.Database;
+using EDR.Domain.Entities;
+using EDR.Domain.GenericRepository;
+using EDR.Domain.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace NJS.API.Tests.Repositories
+namespace EDR.API.Tests.Repositories
 {
     public class GenericRepositoryTests
     {
         private readonly DbContextOptions<ProjectManagementContext> _options;
+        private readonly Mock<ICurrentTenantService> _currentTenantServiceMock;
+        private readonly Mock<IConfiguration> _configurationMock;
 
         public GenericRepositoryTests()
         {
@@ -20,18 +25,25 @@ namespace NJS.API.Tests.Repositories
             _options = new DbContextOptionsBuilder<ProjectManagementContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
+            _currentTenantServiceMock = new Mock<ICurrentTenantService>();
+            _configurationMock = new Mock<IConfiguration>();
+        }
+
+        private ProjectManagementContext GetContext()
+        {
+            return new ProjectManagementContext(_options, _currentTenantServiceMock.Object, _configurationMock.Object);
         }
 
         [Fact]
         public async Task AddAsync_ShouldAddEntityToDatabase()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new Repository<Project>(context);
             var project = new Project
             {
                 Name = "Test Project",
-                Description = "Test Description",
+                Details = "Test Description",
                 StartDate = DateTime.Now,
                 EndDate = DateTime.Now.AddMonths(3)
             };
@@ -51,7 +63,7 @@ namespace NJS.API.Tests.Repositories
         public async Task GetAllAsync_ShouldReturnAllEntities()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new Repository<Project>(context);
             
             // Add test data
@@ -76,7 +88,7 @@ namespace NJS.API.Tests.Repositories
         public async Task GetByIdAsync_WithValidId_ShouldReturnEntity()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new Repository<Project>(context);
             
             // Add test data
@@ -97,7 +109,7 @@ namespace NJS.API.Tests.Repositories
         public async Task GetByIdAsync_WithInvalidId_ShouldReturnNull()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new Repository<Project>(context);
 
             // Act
@@ -111,7 +123,7 @@ namespace NJS.API.Tests.Repositories
         public async Task Query_ShouldReturnQueryableEntities()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new Repository<Project>(context);
             
             // Add test data
@@ -136,7 +148,7 @@ namespace NJS.API.Tests.Repositories
         public async Task UpdateAsync_ShouldUpdateEntityInDatabase()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new Repository<Project>(context);
             
             // Add test data
@@ -159,7 +171,7 @@ namespace NJS.API.Tests.Repositories
         public async Task RemoveAsync_ShouldRemoveEntityFromDatabase()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new Repository<Project>(context);
             
             // Add test data
@@ -172,6 +184,7 @@ namespace NJS.API.Tests.Repositories
 
             // Act
             await repository.RemoveAsync(project);
+            await context.SaveChangesAsync();
 
             // Assert
             Assert.Null(await context.Projects.FindAsync(project.Id));

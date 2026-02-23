@@ -8,7 +8,9 @@ namespace EDR.Application.Dtos
     {
         public int Id { get; set; }
         public int? TenantId { get; set; } // Added for multi-tenant support
+        [Required]
         public string? Name { get; set; }
+        [Required]
         public string? ClientName { get; set; }
 		public int? ProjectNo { get; set; }
 		public string? TypeOfClient { get; set; }

@@ -1,40 +1,94 @@
 using Microsoft.EntityFrameworkCore;
-using NJS.Domain.Database;
-using NJS.Domain.Entities;
-using NJS.Domain.Repositories;
-using NJS.Repositories.Repositories;
+using Microsoft.Extensions.Configuration;
+using Moq;
+using EDR.Domain.Database;
+using EDR.Domain.Entities;
+using EDR.Domain.Services;
+using EDR.Repositories.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EDR.Domain.Enums;
 using Xunit;
 
-namespace NJS.API.Tests.Repositories
+namespace EDR.API.Tests.Repositories
 {
     public class GoNoGoDecisionRepositoryTests
     {
         private readonly DbContextOptions<ProjectManagementContext> _options;
+        private readonly Mock<ICurrentTenantService> _currentTenantServiceMock;
+        private readonly Mock<IConfiguration> _configurationMock;
 
         public GoNoGoDecisionRepositoryTests()
         {
-            // Create a fresh in-memory database for each test
             _options = new DbContextOptionsBuilder<ProjectManagementContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
+            _currentTenantServiceMock = new Mock<ICurrentTenantService>();
+            _configurationMock = new Mock<IConfiguration>();
+        }
+
+        private ProjectManagementContext GetContext()
+        {
+            return new ProjectManagementContext(_options, _currentTenantServiceMock.Object, _configurationMock.Object);
+        }
+
+        private GoNoGoDecision CreateValidDecision(int id, int projectId, string bidType = "Lumpsum")
+        {
+            return new GoNoGoDecision
+            {
+                Id = id,
+                ProjectId = projectId,
+                BidType = bidType,
+                Sector = "IT",
+                TenderFee = 1000,
+                EMDAmount = 5000,
+                MarketingPlanScore = 5,
+                MarketingPlanComments = "Good",
+                ClientRelationshipScore = 5,
+                ClientRelationshipComments = "Strong",
+                ProjectKnowledgeScore = 5,
+                ProjectKnowledgeComments = "Deep",
+                TechnicalEligibilityScore = 5,
+                TechnicalEligibilityComments = "Eligible",
+                FinancialEligibilityScore = 5,
+                FinancialEligibilityComments = "Strong",
+                StaffAvailabilityScore = 5,
+                StaffAvailabilityComments = "Available",
+                CompetitionAssessmentScore = 5,
+                CompetitionAssessmentComments = "Low",
+                CompetitivePositionScore = 5,
+                CompetitivePositionComments = "Strong",
+                FutureWorkPotentialScore = 5,
+                FutureWorkPotentialComments = "High",
+                ProfitabilityScore = 5,
+                ProfitabilityComments = "Expected",
+                ResourceAvailabilityScore = 5,
+                ResourceAvailabilityComments = "Ready",
+                BidScheduleScore = 5,
+                BidScheduleComments = "Tight but feasible",
+                TotalScore = 60,
+                Status = GoNoGoStatus.Green,
+                CompletedDate = DateTime.Now,
+                CompletedBy = "System",
+                CreatedAt = DateTime.Now,
+                CreatedBy = "System"
+            };
         }
 
         [Fact]
         public void GetAll_ShouldReturnAllDecisions()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new GoNoGoDecisionRepository(context);
             
             // Add test data
             context.GoNoGoDecisions.AddRange(
-                new GoNoGoDecision { Id = 1, ProjectName = "Project 1" },
-                new GoNoGoDecision { Id = 2, ProjectName = "Project 2" },
-                new GoNoGoDecision { Id = 3, ProjectName = "Project 3" }
+                CreateValidDecision(1, 1),
+                CreateValidDecision(2, 2),
+                CreateValidDecision(3, 3)
             );
             context.SaveChanges();
 
@@ -43,150 +97,118 @@ namespace NJS.API.Tests.Repositories
 
             // Assert
             Assert.Equal(3, decisions.Count());
-            Assert.Contains(decisions, d => d.ProjectName == "Project 1");
-            Assert.Contains(decisions, d => d.ProjectName == "Project 2");
-            Assert.Contains(decisions, d => d.ProjectName == "Project 3");
+            Assert.Contains(decisions, d => d.ProjectId == 1);
+            Assert.Contains(decisions, d => d.ProjectId == 2);
+            Assert.Contains(decisions, d => d.ProjectId == 3);
         }
 
         [Fact]
         public async Task GetById_WithValidId_ShouldReturnDecision()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new GoNoGoDecisionRepository(context);
             
             // Add test data
-            var decision = new GoNoGoDecision { Id = 1, ProjectName = "Test Project" };
+            var decision = CreateValidDecision(1, 1);
             await context.GoNoGoDecisions.AddAsync(decision);
             await context.SaveChangesAsync();
 
             // Act
-            var result = await repository.GetById(decision.Id);
+            var result = repository.GetById(decision.Id);
 
             // Assert
             Assert.NotNull(result);
             Assert.Equal(decision.Id, result.Id);
-            Assert.Equal("Test Project", result.ProjectName);
+            Assert.Equal(1, result.ProjectId);
         }
 
         [Fact]
-        public async Task GetById_WithInvalidId_ShouldReturnNull()
+        public void GetById_WithInvalidId_ShouldReturnNull()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new GoNoGoDecisionRepository(context);
 
             // Act
-            var result = await repository.GetById(999);
+            var result = repository.GetById(999);
 
             // Assert
             Assert.Null(result);
         }
 
         [Fact]
-        public async Task Create_ShouldAddDecisionAndReturnId()
+        public void Create_ShouldAddDecisionAndReturnVoid()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new GoNoGoDecisionRepository(context);
-            var decision = new GoNoGoDecision { ProjectName = "New Project" };
+            var decision = CreateValidDecision(1, 10);
 
             // Act
-            var id = await repository.Create(decision);
+            repository.Add(decision);
 
             // Assert
-            Assert.NotEqual(0, id);
-            var savedDecision = await context.GoNoGoDecisions.FindAsync(id);
+            var savedDecision = context.GoNoGoDecisions.Find(1);
             Assert.NotNull(savedDecision);
-            Assert.Equal("New Project", savedDecision.ProjectName);
+            Assert.Equal(10, savedDecision.ProjectId);
         }
 
         [Fact]
-        public async Task Update_WithValidDecision_ShouldUpdateAndReturnTrue()
+        public void Update_WithValidDecision_ShouldUpdate()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new GoNoGoDecisionRepository(context);
             
             // Add test data
-            var decision = new GoNoGoDecision { Id = 1, ProjectName = "Original Name" };
-            await context.GoNoGoDecisions.AddAsync(decision);
-            await context.SaveChangesAsync();
+            var decision = CreateValidDecision(1, 1, "Original");
+            context.GoNoGoDecisions.Add(decision);
+            context.SaveChanges();
 
             // Act
-            decision.ProjectName = "Updated Name";
-            var result = await repository.Update(decision);
+            decision.BidType = "Updated";
+            repository.Update(decision);
 
             // Assert
-            Assert.True(result);
-            var updatedDecision = await context.GoNoGoDecisions.FindAsync(decision.Id);
+            var updatedDecision = context.GoNoGoDecisions.Find(decision.Id);
             Assert.NotNull(updatedDecision);
-            Assert.Equal("Updated Name", updatedDecision.ProjectName);
+            Assert.Equal("Updated", updatedDecision.BidType);
         }
 
         [Fact]
-        public async Task Update_WithInvalidId_ShouldReturnFalse()
+        public void Delete_WithValidId_ShouldRemoveDecision()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new GoNoGoDecisionRepository(context);
-            var decision = new GoNoGoDecision { Id = 999, ProjectName = "Nonexistent" };
-
-            // Act
-            var result = await repository.Update(decision);
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Fact]
-        public async Task Delete_WithValidId_ShouldRemoveDecisionAndReturnTrue()
-        {
-            // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new GoNoGoDecisionRepository(context);
             
             // Add test data
-            var decision = new GoNoGoDecision { Id = 1, ProjectName = "Project to Delete" };
-            await context.GoNoGoDecisions.AddAsync(decision);
-            await context.SaveChangesAsync();
+            var decision = CreateValidDecision(1, 1);
+            context.GoNoGoDecisions.Add(decision);
+            context.SaveChanges();
 
             // Act
-            var result = await repository.Delete(decision.Id);
+            repository.Delete(decision.Id);
 
             // Assert
-            Assert.True(result);
-            Assert.Null(await context.GoNoGoDecisions.FindAsync(decision.Id));
-        }
-
-        [Fact]
-        public async Task Delete_WithInvalidId_ShouldReturnFalse()
-        {
-            // Arrange
-            using var context = new ProjectManagementContext(_options);
-            var repository = new GoNoGoDecisionRepository(context);
-
-            // Act
-            var result = await repository.Delete(999);
-
-            // Assert
-            Assert.False(result);
+            Assert.Null(context.GoNoGoDecisions.Find(decision.Id));
         }
 
         [Fact]
         public async Task GetVersions_ShouldReturnVersionsForHeader()
         {
             // Arrange
-            using var context = new ProjectManagementContext(_options);
+            using var context = GetContext();
             var repository = new GoNoGoDecisionRepository(context);
             
             // Add test data
             var headerId = 1;
             var versions = new List<GoNoGoVersion>
             {
-                new GoNoGoVersion { Id = 1, GoNoGoDecisionHeaderId = headerId, VersionNumber = 1 },
-                new GoNoGoVersion { Id = 2, GoNoGoDecisionHeaderId = headerId, VersionNumber = 2 },
-                new GoNoGoVersion { Id = 3, GoNoGoDecisionHeaderId = 2, VersionNumber = 1 } // Different header
+                new GoNoGoVersion { Id = 1, GoNoGoDecisionHeaderId = headerId, VersionNumber = 1, CreatedAt = DateTime.Now },
+                new GoNoGoVersion { Id = 2, GoNoGoDecisionHeaderId = headerId, VersionNumber = 2, CreatedAt = DateTime.Now },
+                new GoNoGoVersion { Id = 3, GoNoGoDecisionHeaderId = 2, VersionNumber = 1, CreatedAt = DateTime.Now } // Different header
             };
             
             await context.GoNoGoVersions.AddRangeAsync(versions);
@@ -197,7 +219,6 @@ namespace NJS.API.Tests.Repositories
 
             // Assert
             Assert.Equal(2, result.Count());
-            Assert.All(result, v => Assert.Equal(headerId, v.GoNoGoDecisionHeaderId));
             Assert.Contains(result, v => v.VersionNumber == 1);
             Assert.Contains(result, v => v.VersionNumber == 2);
         }

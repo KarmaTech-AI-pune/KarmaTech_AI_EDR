@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Identity;
 using Moq;
-using NJS.Application.CQRS.Users.Handlers;
-using NJS.Application.CQRS.Users.Queries;
-using NJS.Domain.Entities;
+using EDR.Application.CQRS.Users.Handlers;
+using EDR.Application.CQRS.Users.Queries;
+using EDR.Domain.Entities;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace NJS.API.Tests.CQRS.Users
+namespace EDR.API.Tests.CQRS.Users
 {
     public class GetUserByIdQueryHandlerTests
     {
@@ -54,7 +54,7 @@ namespace NJS.API.Tests.CQRS.Users
             _userManagerMock.Setup(m => m.GetRolesAsync(user))
                 .ReturnsAsync(roles);
 
-            var query = new GetUserByIdQuery { Id = userId };
+            var query = new GetUserByIdQuery(userId);
 
             // Act
             var result = await _handler.Handle(query, CancellationToken.None);
@@ -81,7 +81,7 @@ namespace NJS.API.Tests.CQRS.Users
             _userManagerMock.Setup(m => m.FindByIdAsync(userId))
                 .ReturnsAsync((User)null);
 
-            var query = new GetUserByIdQuery { Id = userId };
+            var query = new GetUserByIdQuery(userId);
 
             // Act
             var result = await _handler.Handle(query, CancellationToken.None);
