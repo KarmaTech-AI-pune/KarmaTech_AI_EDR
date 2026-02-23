@@ -3,10 +3,8 @@
  * Handles all payment milestone related API calls
  */
 
-import axios from 'axios';
+import { axiosInstance } from '../../../services/axiosConfig';
 import { PaymentScheduleData, PaymentMilestone } from '../types/cashflow';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5245/api';
 
 export const PaymentScheduleAPI = {
   /**
@@ -16,8 +14,8 @@ export const PaymentScheduleAPI = {
     console.log('PaymentScheduleAPI: Fetching payment milestones for projectId:', projectId);
     
     try {
-      const response = await axios.get<PaymentScheduleData>(
-        `${API_BASE_URL}/projects/${projectId}/cashflows/payment-milestones`
+      const response = await axiosInstance.get<PaymentScheduleData>(
+        `/api/projects/${projectId}/cashflows/payment-milestones`
       );
       
       console.log('PaymentScheduleAPI: Payment milestones fetched successfully:', response.data);
@@ -29,7 +27,7 @@ export const PaymentScheduleAPI = {
   },
 
   /**
-   * Add a new payment milestone (Future implementation)
+   * Add a new payment milestone
    */
   addPaymentMilestone: async (
     projectId: string,
@@ -38,8 +36,8 @@ export const PaymentScheduleAPI = {
     console.log('PaymentScheduleAPI: Adding payment milestone for projectId:', projectId, milestone);
     
     try {
-      const response = await axios.post<PaymentMilestone>(
-        `${API_BASE_URL}/projects/${projectId}/cashflows/payment-milestones`,
+      const response = await axiosInstance.post<PaymentMilestone>(
+        `/api/projects/${projectId}/cashflows/payment-milestones`,
         milestone
       );
       

@@ -9,7 +9,7 @@ namespace NJS.Application.CQRS.Cashflow.Commands
         public string Description { get; set; }
         public decimal Percentage { get; set; }
         public decimal AmountINR { get; set; }
-        public string DueDate { get; set; }
-        public string Status { get; set; }
+        public string? DueDate { get; set; }
+        public string? ChangedBy { get; set; } // Made optional - will be set by controller
     }
 }

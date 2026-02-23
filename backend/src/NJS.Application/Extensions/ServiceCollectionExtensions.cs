@@ -52,6 +52,7 @@ namespace NJS.Application.Extensions
             services.AddScoped<IMonthlyProgressRepository, MonthlyProgressRepository>(); // Added for Monthly Progress module
             services.AddScoped<IScoringDescriptionRepository, ScoringDescriptionRepository>();
             services.AddScoped<IScoringDescriptionService, ScoringDescriptionService>();
+            services.AddScoped<IPaymentMilestoneRepository, PaymentMilestoneRepository>(); // Added for Payment Schedule
 
             services.AddScoped<IWorkBreakdownStructureRepository, WorkBreakdownStructureRepository>();
             services.AddScoped<IWBSTaskRepository, WBSTaskRepository>(); // Add this line

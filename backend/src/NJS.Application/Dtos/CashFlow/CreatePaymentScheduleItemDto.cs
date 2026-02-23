@@ -1,10 +1,7 @@
-using System;
-
-namespace NJS.Application.Dtos
+namespace NJS.Application.Dtos.Cashflow
 {
-    public class PaymentMilestoneDto
+    public class CreatePaymentScheduleItemDto
     {
-        public int? Id { get; set; }
         public string Description { get; set; }
         public decimal Percentage { get; set; }
         public decimal AmountINR { get; set; }

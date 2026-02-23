@@ -103,6 +103,7 @@ namespace NJS.Domain.Database
         public DbSet<CheckReview> CheckReviews { get; set; }
         public DbSet<ChangeControl> ChangeControls { get; set; }
         public DbSet<ProjectClosure> ProjectClosures { get; set; }
+        public DbSet<PaymentMilestone> PaymentMilestones { get; set; }
         
 
         // PM Workflow entities

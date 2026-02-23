@@ -158,8 +158,22 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
         const newMilestone = await PaymentScheduleAPI.addPaymentMilestone(projectId, milestone);
         console.log('useCashFlowData: Milestone added successfully:', newMilestone);
         
-        // Refresh data to get updated list
-        await fetchData();
+        // Refresh ONLY payment schedule data (not entire cashflow)
+        try {
+          const paymentScheduleResult = await PaymentScheduleAPI.getPaymentMilestones(projectId);
+          console.log('useCashFlowData: Refreshed payment schedule data:', paymentScheduleResult);
+          
+          // Update only the payment schedule in the existing data
+          if (data) {
+            setData({
+              ...data,
+              paymentSchedule: paymentScheduleResult,
+            });
+          }
+        } catch (refreshError) {
+          console.error('useCashFlowData: Error refreshing payment schedule:', refreshError);
+          // Don't throw - milestone was added successfully
+        }
         
         return newMilestone;
       } catch (err) {
@@ -169,7 +183,7 @@ export const useCashFlowData = ({ projectId }: UseCashFlowDataProps) => {
         throw err;
       }
     },
-    [projectId, fetchData]
+    [projectId, data]
   );
 
   return {

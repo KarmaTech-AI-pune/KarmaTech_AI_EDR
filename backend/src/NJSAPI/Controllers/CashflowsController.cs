@@ -130,6 +130,11 @@ namespace NJSAPI.Controllers
                     totalAmountINR += milestone.AmountINR;
                 }
                 
+                // Get the monthly budget summary to get the QuotedPrice (Total Project Fee)
+                var cashflowQuery = new GetAllCashflowsQuery { ProjectId = projectId };
+                var cashflowResult = await _mediator.Send(cashflowQuery);
+                var totalProjectFee = cashflowResult.Summary.QuotedPrice;
+                
                 // Transform to frontend expected format (camelCase)
                 var response = new
                 {
@@ -139,11 +144,11 @@ namespace NJSAPI.Controllers
                         description = m.Description,
                         percentage = m.Percentage,
                         amountINR = m.AmountINR,
-                        dueDate = m.DueDate,
-                        status = m.Status
+                        dueDate = m.DueDate
                     }).ToList(),
                     totalPercentage = totalPercentage,
-                    totalAmountINR = totalAmountINR
+                    totalAmountINR = totalAmountINR,
+                    totalProjectFee = totalProjectFee
                 };
                 
                 return Ok(response);
@@ -160,8 +165,13 @@ namespace NJSAPI.Controllers
         {
             try
             {
+                _logger.LogInformation("CreatePaymentMilestone: Received request for projectId={ProjectId}, Command={@Command}", projectId, command);
+                
                 // Set the projectId from route parameter
                 command.ProjectId = projectId;
+                
+                // Set ChangedBy from current user (you can get from JWT token if needed)
+                command.ChangedBy = command.ChangedBy ?? "system"; // Use provided value or default to "system"
                 
                 var result = await _mediator.Send(command);
                 
@@ -172,8 +182,7 @@ namespace NJSAPI.Controllers
                     description = result.Description,
                     percentage = result.Percentage,
                     amountINR = result.AmountINR,
-                    dueDate = result.DueDate,
-                    status = result.Status
+                    dueDate = result.DueDate
                 };
                 
                 return CreatedAtAction(
@@ -184,8 +193,8 @@ namespace NJSAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while creating payment milestone for project {projectId}.", projectId);
-                return StatusCode(500, new { message = $"An error occurred while creating payment milestone for project {projectId}.", error = ex.Message });
+                _logger.LogError(ex, "An error occurred while creating payment milestone for project {projectId}. Error: {ErrorMessage}", projectId, ex.Message);
+                return BadRequest(new { message = $"Failed to create payment milestone: {ex.Message}", error = ex.ToString() });
             }
         }
     }

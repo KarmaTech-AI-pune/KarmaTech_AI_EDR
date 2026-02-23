@@ -85,6 +85,7 @@ export interface PaymentScheduleData {
   milestones: PaymentMilestone[];
   totalPercentage: number;
   totalAmountINR: number;
+  totalProjectFee?: number;
 }
 
 // ============= Report Generation Interfaces =============

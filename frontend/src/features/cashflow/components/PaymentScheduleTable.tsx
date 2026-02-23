@@ -43,6 +43,7 @@ export const PaymentScheduleTable: React.FC<PaymentScheduleTableProps> = ({
   const milestones = data?.milestones || [];
   const totalPercentage = data?.totalPercentage || 0;
   const totalAmountINR = data?.totalAmountINR || 0;
+  const totalProjectFee = data?.totalProjectFee || 0;
 
   const handleAddMilestone = (milestone: Omit<PaymentMilestone, 'id'>) => {
     if (onAddMilestone) {
@@ -308,7 +309,7 @@ export const PaymentScheduleTable: React.FC<PaymentScheduleTableProps> = ({
       open={dialogOpen}
       onClose={() => setDialogOpen(false)}
       onAdd={handleAddMilestone}
-      totalAmountINR={totalAmountINR}
+      totalAmountINR={totalProjectFee}
     />
   </>
   );
