@@ -12,17 +12,12 @@ namespace NJS.Domain.Entities
 
         public int TenantId { get; set; }
 
-        [Required]
-        [StringLength(100)]
         public string? Name { get; set; }
 
-        [Required]
-        [StringLength(100)]
         public string? ClientName { get; set; }
 
         public int? ProjectNo { get; set; }
 
-        [StringLength(50)]
         public string? TypeOfClient { get; set; }
 
         public string? ProjectManagerId { get; set; }
@@ -43,8 +38,6 @@ namespace NJS.Domain.Entities
 
         public string? TypeOfJob { get; set; }
 
-        [Required]
-        [StringLength(50)]
         public string? Sector { get; set; }
 
         public string? FeeType { get; set; }
@@ -59,8 +52,6 @@ namespace NJS.Domain.Entities
 
         public string? Priority { get; set; }
 
-        [Required]
-        [StringLength(3)]
         public string? Currency { get; set; }
 
         public DateTime? StartDate { get; set; }
@@ -89,8 +80,6 @@ namespace NJS.Domain.Entities
 
         public DateTime CreatedAt { get; set; }
 
-        [Required]
-        [StringLength(100)]
         public string? CreatedBy { get; set; }
 
         public DateTime? LastModifiedAt { get; set; }

@@ -27,11 +27,11 @@ namespace NJS.Application.CQRS.JobStartForm.Handlers
 
         public async Task<int> Handle(CreateJobStartFormCommand request, CancellationToken cancellationToken)
         {
-            if (request?.JobStartForm == null)
-                throw new ArgumentNullException("JobStartForm", "Job Start Form cannot be null");
+            if (request.JobStartForm == null)
+                throw new ArgumentNullException(nameof(request.JobStartForm), "Job Start Form cannot be null");
 
             if (request.JobStartForm.ProjectId <= 0)
-                throw new ArgumentException("Invalid ProjectId", "ProjectId");
+                throw new ArgumentException("Invalid ProjectId", nameof(request.JobStartForm.ProjectId));
 
             if (request.JobStartForm.FormId != 0)
                 throw new ArgumentException("FormID must not be provided for new entries. Use update instead.");
