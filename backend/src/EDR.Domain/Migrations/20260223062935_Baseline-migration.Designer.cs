@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EDR.Domain.Migrations
 {
     [DbContext(typeof(ProjectManagementContext))]
-    [Migration("20260220043204_proper-migration")]
-    partial class propermigration
+    [Migration("20260223062935_Baseline-migration")]
+    partial class Baselinemigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
